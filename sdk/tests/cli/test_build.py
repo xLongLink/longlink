@@ -178,6 +178,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
         dockerfile_path.write_text("FROM scratch\n", encoding="utf-8")
         return dockerfile_path, "dev", "Demo App"
 
+
     def fake_run(command: list[str], check: bool) -> None:
         """Capture Docker commands and write the expected build image id."""
 
@@ -188,6 +189,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
         if command[1] == "build":
             image_id_path = Path(command[command.index("--iidfile") + 1])
             image_id_path.write_text("sha256:demo\n", encoding="utf-8")
+
 
     def fake_which(command: str) -> str | None:
         """Resolve only the Docker executable."""

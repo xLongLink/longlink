@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
+import { describe, expect, it } from 'vitest';
 import { setupContext } from '@/xml/core/context';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
 
 describe('State', () => {
     /* Multiple state attributes should seed a proxied object slot. */

@@ -1,18 +1,14 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
-from datetime import timedelta
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus, ApplicationStatus
+from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
-from src.models.operations import OperationStatus
-from src.adapters.storage.base import StorageRuntimeCredentials
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -22,21 +18,13 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    infrastructure = await create_ready_infrastructure(user, slug=f"{prefix}-compute", name=f"{prefix} compute")
+    await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
     organization = await create_organization(
-        infrastructure,
         user,
         name=f"{prefix}-org",
         slug=f"{prefix}-org",
     )
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    application = await create_application(organization, user, name="Dashboard")
     return user, organization, application
 
 
@@ -57,14 +45,14 @@ async def create_user(prefix: str) -> User:
         return user
 
 
-async def test_create_requires_running_organization_and_coalesces_compute_reconciliation() -> None:
-    """Create Applications only for running Organizations and coalesce compute work."""
+async def test_create_requires_running_organization_and_queues_application_lifecycle() -> None:
+    """Create Applications only for running Organizations and queue separate lifecycle work."""
 
     # Arrange
     user = await create_user("app")
-    infrastructure = await create_ready_infrastructure(user)
-    organization = await create_organization(infrastructure, user)
-    open_before = [item for item in await operations.fetch() if item.stopped_at is None]
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(user)
+    open_before = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -72,7 +60,8 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
             organization.id,
             "Dashboard",
             slug="dashboard",
-            image="ghcr.io/longlink/dashboard:latest",
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
             user=user,
         )
     await mark_organization_running(organization)
@@ -80,26 +69,38 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
         organization.id,
         "Dashboard",
         slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
+        image="ghcr.io/longlink/dashboard@sha256:test",
+        digest="sha256:test",
+        sdk="1.2.3",
+        version="2.0.0",
         user=user,
     )
     reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_after = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_after = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert exc.value.status_code == 409
     assert exc.value.detail == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
-    assert operation.id == open_before[0].id
+    assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
+    assert application.digest == "sha256:test"
+    assert application.sdk == "1.2.3"
+    assert application.version == "2.0.0"
+    assert operation.id != open_before[0].id
+    assert operation.kind == OperationKind.application_create
+    assert open_before[0].kind == OperationKind.organization_create
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
+    assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
     assert len(open_before) == 1
-    assert [item.id for item in open_after] == [open_before[0].id]
-    assert open_after[0].compute_id == infrastructure.compute.id
-    assert open_after[0].platform_version == env.VERSION
-    assert open_after[0].status == OperationStatus.scheduled
+    assert {item.id for item in open_after} == {open_before[0].id, operation.id}
+    assert {(item.kind, item.target_id) for item in open_after} == {
+        (OperationKind.organization_create, organization.id),
+        (OperationKind.application_create, application.id),
+    }
+    assert all(item.platform_version == env.VERSION for item in open_after)
+    assert all(item.status == OperationStatus.scheduled for item in open_after)
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
@@ -114,7 +115,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
             organization.id,
             "Duplicate dashboard",
             slug="dashboard",
-            image="ghcr.io/longlink/dashboard:latest",
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
             user=user,
         )
 
@@ -132,7 +134,8 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         organization.id,
         "Reports",
         slug="reports",
-        image="ghcr.io/longlink/reports:latest",
+        image="ghcr.io/longlink/reports@sha256:test",
+        digest="sha256:test",
         user=user,
     )
     await applications.soft_delete(deleted_application.id, user)
@@ -175,16 +178,9 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
     async with Session() as session:
@@ -220,16 +216,9 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
     async with Session() as session:
@@ -289,88 +278,23 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
     assert restored_role == ApplicationRoles.maintain
 
 
-async def test_set_status_and_update_runtime_modify_active_applications() -> None:
-    """Update application status and runtime metadata for active applications."""
+async def test_set_status_modifies_active_applications() -> None:
+    """Update application status only for active Applications in the expected state."""
 
     # Arrange
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.set_status(application.id, ApplicationStatus.running)
-    await applications.set_status(uuid4(), ApplicationStatus.running)
+    await applications.set_status(uuid4(), Status.creating, Status.running)
+    await applications.set_status(application.id, Status.creating, Status.running)
     running = await applications.get(application.id)
-    updated = await applications.update_runtime(
-        application.id,
-        "ghcr.io/longlink/dashboard:2.0.0",
-        user,
-        version="2.0.0",
-        sdk="1.2.3",
-        description="Updated dashboard",
-        digest="sha256:abc123",
-        icon="activity",
-    )
     await applications.soft_delete(application.id, user)
-    deleted_runtime = await applications.update_runtime(
-        application.id,
-        "ghcr.io/longlink/dashboard:3.0.0",
-        user,
-    )
+    deleted_status = await applications.set_status(application.id, Status.running, Status.failed)
 
     # Assert
     assert running is not None
-    assert running.status == ApplicationStatus.running
-    assert updated is not None
-    assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
-    assert updated.status == ApplicationStatus.creating
-    assert updated.version == "2.0.0"
-    assert updated.sdk == "1.2.3"
-    assert updated.description == "Updated dashboard"
-    assert updated.digest == "sha256:abc123"
-    assert updated.icon == "activity"
-    assert updated.updated_id == user.id
-    assert deleted_runtime is None
-
-
-async def test_provision_storage_credentials_rejects_stale_operation_lease() -> None:
-    """Do not persist generated storage credentials from a stale worker lease."""
-
-    # Arrange
-    user, organization, application = await create_application_context("storage-lease")
-    operation = await operations.enqueue(organization.compute_id)
-    claimed = await operations.claim_next()
-    assert claimed is not None
-    Session = await get_session()
-    async with Session() as session:
-        row = await session.get(Operation, operation.id)
-        assert row is not None
-        row.lease_expires_at = utcnow() - timedelta(seconds=1)
-        await session.commit()
-
-    async def provision() -> StorageRuntimeCredentials:
-        """Fail if stale lease validation reaches credential provisioning."""
-
-        raise AssertionError("stale workers must not provision credentials")
-
-    async def discard(credentials: StorageRuntimeCredentials) -> None:
-        """Fail if no credentials were generated."""
-
-        raise AssertionError(f"unexpected credentials: {credentials}")
-
-    # Act
-    result = await applications.provision_storage_credentials(
-        application.id,
-        operation.id,
-        claimed.attempt_count,
-        env.VERSION,
-        provision,
-        discard,
-    )
-    reloaded = await applications.get(application.id)
-
-    # Assert
-    assert result is None
-    assert reloaded is not None
-    assert applications.storage_credentials(reloaded) is None
+    assert running.status == Status.running
+    assert deleted_status is False
 
 
 async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
@@ -387,7 +311,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     second_delete = await applications.soft_delete(application.id, user)
     missing_delete = await applications.soft_delete(uuid4(), user)
     compute_after = await compute.get(organization.compute_id)
-    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert result is not None
@@ -397,13 +321,19 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert role is None
-    assert second_delete is None
+    assert second_delete is not None
+    assert second_delete[1].id == operation.id
     assert missing_delete is None
     assert compute_after is not None
-    assert compute_after.status == ComputeStatus.ready
+    assert compute_after.status == Status.running
     assert compute_after.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].id == operation.id
-    assert open_operations[0].compute_id == organization.compute_id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
+    assert {item.kind for item in open_operations} == {
+        OperationKind.application_create,
+        OperationKind.application_delete,
+        OperationKind.organization_create,
+    }
+    deletion = next(item for item in open_operations if item.id == operation.id)
+    assert deletion.kind == OperationKind.application_delete
+    assert deletion.target_id == application.id
+    assert deletion.platform_version == env.VERSION
+    assert deletion.status == OperationStatus.scheduled

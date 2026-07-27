@@ -5,16 +5,7 @@ class PlatformRoles(StrEnum):
     """Supported platform access roles."""
 
     user = "user"
-    support = "support"
     administrator = "administrator"
-
-
-class PlatformRoleRanks(IntEnum):
-    """Comparable privilege ranks for platform roles."""
-
-    user = 1
-    support = 2
-    administrator = 3
 
 
 class OrganizationRoles(StrEnum):
@@ -56,4 +47,4 @@ APPLICATION_PROXY_METHOD_ROLES = {
 APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_ROLES)
 
 
-RoleName = PlatformRoles | OrganizationRoles | ApplicationRoles
+RoleName = OrganizationRoles | ApplicationRoles

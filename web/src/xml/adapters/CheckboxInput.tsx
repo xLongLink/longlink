@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import type { Props } from '@/xml/types';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { toXmlBoolean, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,

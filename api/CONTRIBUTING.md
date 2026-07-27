@@ -7,10 +7,13 @@ Run from `api/`:
 ```bash
 uv sync --extra dev                # Create the development environment
 uv run alembic upgrade head        # Apply database migrations
+uv run python setup.py             # Schedule release migration operations
 uv run python seed.py              # Seed the database
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run isort .                     # Format imports
 ```
+
+Production images start the Platform API without applying schema changes. Before rolling out API replicas, the deployment pipeline must run `alembic upgrade head` and then `python setup.py` once with the target image and shared database.
 
 ## Architecture
 
@@ -18,13 +21,13 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 
 ## Keep changes aligned
 
-- Define constrained values with shared Enums (for example `ApplicationStatus`) instead of raw strings.
+- Define constrained values with shared Enums (for example `Status`) instead of raw strings.
 - For fixed access levels, keep the role names in an Enum and store the chosen role on the membership row instead of creating a standalone roles table.
 - Use a `permissions` table for fine-grained capabilities and a `role_permissions` association table when mapping fixed roles to permissions.
 - Use association tables for `user -> organization` and `user -> application` membership records, including the role column on those rows.
 - Use Pydantic models (`BaseModel`) to validate external JSON responses.
 - Use `model_validate()` (Pydantic v2) for parse + validation in one step.
-- Let FastAPI typing handle request/query validation automatically (for example `ApplicationStatus | None`).
+- Let FastAPI typing handle request/query validation automatically (for example `Status | None`).
 - Centralize validation in schemas, not route handlers.
 - Provide defaults at schema level when a model owns the default value.
 - Keep route handlers focused on orchestration.

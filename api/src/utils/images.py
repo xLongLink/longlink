@@ -23,7 +23,18 @@ SUPPORTED_REGISTRIES = {
 }
 
 
-async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
+def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
+    """Return sorted image-required environment names missing from submitted values."""
+
+    # Platform-reserved requirements cannot be supplied by users and remain unsatisfied.
+    return sorted(
+        item.name
+        for item in metadata.environments
+        if item.required and (item.name.startswith("LONGLINK_") or not envs.get(item.name, "").strip())
+    )
+
+
+async def metadata(image: Image) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     # Resolve the supported registry before opening a network client.
@@ -48,9 +59,9 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                 return None
 
             manifest, digest = manifest_result
-            manifest_config = manifest.get("config", {})
 
-            # Require a config object in the manifest.
+            # Require the manifest config lookup to yield a string-keyed object.
+            manifest_config = manifest.get("config", {})
             if not isinstance(manifest_config, dict) or not all(isinstance(key, str) for key in manifest_config):
                 return None
             manifest_config = cast(dict[str, object], manifest_config)
@@ -60,9 +71,8 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             if not isinstance(config_digest, str) or not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
-            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
-
             # Stop when the config blob cannot be fetched.
+            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
             if not blob_response.is_success:
                 return None
 
@@ -82,44 +92,32 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             raw_labels = image_config.get("Labels")
             if raw_labels is None:
                 labels: dict[str, str] = {}
-            elif isinstance(raw_labels, dict) and all(
-                isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()
-            ):
+            elif isinstance(raw_labels, dict) and all(isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()):
                 labels = cast(dict[str, str], raw_labels)
             else:
                 return None
 
             result = LongLinkMetadata(
+                image=f"{image.registry}/{image.repository}@{digest}",
                 sdk=labels.get("longlink.sdk"),
                 title=labels.get("longlink.name"),
                 digest=digest,
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
-            result.image = f"{image.registry}/{image.repository}@{digest}"
-
-            environments = labels.get("longlink.environments")
 
             # Decode environment requirements when present.
+            environments = labels.get("longlink.environments")
             if environments is not None:
-                # Parse the encoded environment label.
+                # Parse and require a list from the encoded environment label.
                 try:
                     parsed_environments = json.loads(environments)
-
-                    # Require the environment label to be a list.
                     if not isinstance(parsed_environments, list):
                         return None
 
                     result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
-
-            # Validate deployment values against required image metadata when they are available.
-            if envs is not None and any(
-                item.required and (item.name.startswith("LONGLINK_") or not envs.get(item.name, "").strip())
-                for item in result.environments
-            ):
-                return None
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -156,9 +154,9 @@ async def _fetch_manifest(
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"{registry_url}/v2/{repository}/manifests/{reference}"
-    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
 
     # Stop when the registry does not return a manifest.
+    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
     if not manifest_response.is_success:
         return None
 
@@ -178,9 +176,8 @@ async def _fetch_manifest(
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
     if isinstance(manifests, list) and manifests:
-        manifest_entries = [item for item in manifests if isinstance(item, dict)]
-
         # Require at least one manifest object.
+        manifest_entries = [item for item in manifests if isinstance(item, dict)]
         if not manifest_entries:
             return None
 
@@ -203,12 +200,11 @@ async def _fetch_manifest(
         if not IMAGE_DIGEST_PATTERN.fullmatch(manifest_digest):
             return None
 
+        # Stop when the platform manifest cannot be fetched.
         manifest_response = await client.get(
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
             headers={"Accept": media_type},
         )
-
-        # Stop when the platform manifest cannot be fetched.
         if not manifest_response.is_success:
             return None
 

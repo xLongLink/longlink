@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
-import type { Props } from '@/xml/types';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import {
     resolveXmlBoolean,

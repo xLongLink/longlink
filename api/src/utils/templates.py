@@ -14,6 +14,7 @@ def readyml_list(template_path: str | Path | Traversable, **context: object) -> 
 
     # Parse each rendered YAML document separately.
     for document in yaml.safe_load_all(rendered):
+
         # Ignore empty YAML documents from separators.
         if document is None:
             continue

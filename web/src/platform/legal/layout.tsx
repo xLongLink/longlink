@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router';
-import type { ArticlePage } from '@/platform/catalog';
-import SideLayout from '@/layout/SideLayout';
 import { Article } from '@/components/Article';
 import { Sidebar } from '@/components/Sidebar';
+import SideLayout from '@/layout/SideLayout';
+import type { ArticlePage } from '@/platform/catalog';
 import { LEGAL_GROUPS } from '@/platform/legal/catalog';
 
 /** Extends the side layout with legal navigation and article content. */

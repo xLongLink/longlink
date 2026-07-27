@@ -1,62 +1,36 @@
 import secrets
 from uuid import UUID
 from fastapi import HTTPException
-from sqlalchemy import select
-from src.version import platform_version_key
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from packaging.version import Version
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
-from src.database.models.users import User
+from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch(include_deleted: bool = False) -> list[ComputeRegistry]:
+async def fetch() -> list[ComputeRegistry]:
     """Return registered compute backends."""
 
-    # Read registries within one scoped session.
+    # Return every registered compute target.
     async with session_scope() as session:
-        statement = select(ComputeRegistry).options(
-            joinedload(ComputeRegistry.created_by),
-            joinedload(ComputeRegistry.updated_by),
-            joinedload(ComputeRegistry.deleted_by),
-        )
-        if not include_deleted:
-            statement = statement.where(ComputeRegistry.deleted_at.is_(None))
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(select(ComputeRegistry)))
 
 
-async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
+async def get(registry_id: UUID) -> ComputeRegistry | None:
     """Return one compute backend by id."""
 
-    # Build the lookup within one scoped session.
+    # Load the requested compute registration.
     async with session_scope() as session:
-        conditions = [ComputeRegistry.id == registry_id]
-
-        # Deleted registries are hidden unless requested.
-        if not include_deleted:
-            conditions.append(ComputeRegistry.deleted_at.is_(None))
-
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(*conditions)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return await session.get(ComputeRegistry, registry_id)
 
 
-async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[ComputeRegistry, Operation]:
+async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
@@ -66,202 +40,117 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
             slug=slug,
             kubeconfig=kubeconfig,
             proxy_secret=secrets.token_urlsafe(32),
-            created_id=user.id,
-            updated_id=user.id,
         )
         session.add(registry)
 
         # Translate unique registry names and slugs to one stable API conflict.
         try:
-            operation = await operations.enqueue_in_session(session, registry.id, ReconciliationScope.platform)
+            operation = await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(ComputeRegistry.id == registry.id)
-        )
-        persisted = (await session.execute(statement)).scalar_one()
-        return persisted, operation
+        return registry, operation
 
 
-async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operation] | None:
-    """Tombstone an unused compute target and queue cluster cleanup."""
+async def delete(registry_id: UUID) -> bool:
+    """Remove an unused compute registration without modifying external resources."""
 
-    # Lock the target before checking assignments and queueing cleanup.
+    # Lock the target before checking assignments and deleting it.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id).with_for_update())
-        ).scalar_one_or_none()
-        if registry is None or registry.deleted_at is not None:
-            return None
+        registry = await session.get(ComputeRegistry, registry_id, with_for_update=True)
+        if registry is None:
+            return False
 
-        # Tombstoned Organizations still need this target until provider cleanup finishes.
-        organization_id = (
-            await session.execute(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
-        ).scalar_one_or_none()
+        # Organizations must retain a valid registered compute assignment.
+        organization_id = await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
-        now = utcnow()
-        registry.status = ComputeStatus.deleting
-        registry.version = None
-        registry.deleted_at = now
-        registry.deleted_id = user.id
-        registry.updated_at = now
-        registry.updated_id = user.id
-
-        # Complete compute deletion uses Application scope so orphaned resources are removed before the Platform Namespace.
-        operation = await operations.enqueue_in_session(
-            session,
-            registry.id,
-            ReconciliationScope.application,
-            locked_compute=registry,
-        )
+        # Operations retain historical state and naturally complete if their compute target no longer exists.
+        await session.delete(registry)
         await session.commit()
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(ComputeRegistry.id == registry.id)
-        )
-        persisted = (await session.execute(statement)).scalar_one()
-        return persisted, operation
+        return True
 
 
 async def record_success(
     compute_id: UUID,
     platform_version: str,
     gateway_url: str | None,
-    gateway_ca_certificate: str | None,
-    gateway_tls_certificate: str | None,
-    gateway_tls_private_key: str | None,
-    operation_id: UUID | None = None,
-    attempt_count: int | None = None,
+    expected_status: Status,
+    satisfy_pending: bool = False,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
 
-    # Update release observation and TLS material in one Platform transaction.
+    # Lock the compute while updating its observed release.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
-        if registry is None:
+        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
+        if registry is None or registry.status != expected_status:
             return False
-        if operation_id is not None and attempt_count is not None:
-            now = utcnow()
-            lease = await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-            if lease.scalar_one_or_none() is None:
-                return False
-        if registry.version is not None and platform_version_key(registry.version) > platform_version_key(platform_version):
+        if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
+
         registry.gateway_url = gateway_url
-        registry.gateway_ca_certificate = gateway_ca_certificate
-        registry.gateway_previous_ca_certificate = None
-        registry.gateway_tls_certificate = gateway_tls_certificate
-        registry.gateway_tls_private_key = gateway_tls_private_key
         registry.version = platform_version
-        registry.status = ComputeStatus.deleting if registry.deleted_at is not None else ComputeStatus.ready
+        registry.status = Status.running
+
+        # Inline reconciliation can atomically retire fallback work that it fully satisfied.
+        if satisfy_pending:
+            await session.execute(
+                update(Operation)
+                .where(
+                    Operation.kind == OperationKind.compute_reconcile,
+                    Operation.target_id == compute_id,
+                    Operation.platform_version == platform_version,
+                    Operation.lease_expires_at.is_(None),
+                    Operation.finished_at.is_(None),
+                )
+                .values(finished_at=utcnow())
+            )
         await session.commit()
         return True
 
 
-async def record_failure(
-    compute_id: UUID,
-    operation_id: UUID | None = None,
-    attempt_count: int | None = None,
-    platform_version: str | None = None,
-) -> None:
-    """Mark a compute target failed when the caller still owns its reconciliation attempt."""
+async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
+    """Persist a compute's immutable gateway TLS identity once."""
 
-    # Lock the compute before checking optional operation ownership and updating its state.
+    # Lock the compute so concurrent first reconciliations cannot publish different identities.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None:
-            return
-        if operation_id is not None and attempt_count is not None and platform_version is not None:
-            now = utcnow()
-            lease = await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-            if lease.scalar_one_or_none() is None:
-                return
-        registry.status = ComputeStatus.failed
-        await session.commit()
-
-
-async def stage_gateway_tls(
-    compute_id: UUID,
-    ca_certificate: str,
-    certificate: str,
-    private_key: str,
-    operation_id: UUID,
-    attempt_count: int,
-    platform_version: str,
-) -> bool:
-    """Persist new gateway trust while retaining the previously served CA during rollout."""
-
-    # Proxy clients trust both CA versions until reconciliation verifies the new gateway rollout.
-    async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
-        now = utcnow()
-        lease = (
-            await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-        ).scalar_one_or_none()
-        if registry is None or lease is None:
             return False
-        if registry.gateway_ca_certificate != ca_certificate:
-            registry.gateway_previous_ca_certificate = registry.gateway_ca_certificate
+
+        # Accept an idempotent retry but reject any attempt to replace persisted TLS.
+        current = (
+            registry.gateway_ca_certificate,
+            registry.gateway_tls_certificate,
+            registry.gateway_tls_private_key,
+        )
+        desired = (ca_certificate, certificate, private_key)
+        if current == desired:
+            return True
+        if any(value is not None for value in current):
+            raise RuntimeError("Compute registry gateway TLS identity is immutable")
         registry.gateway_ca_certificate = ca_certificate
         registry.gateway_tls_certificate = certificate
         registry.gateway_tls_private_key = private_key
         await session.commit()
         return True
+
+
+async def set_status(compute_id: UUID, expected_status: Status, status: Status) -> bool:
+    """Transition one active compute target from the expected lifecycle state."""
+
+    # Guard reconciliation writes from stale attempts after deletion or another transition.
+    async with session_scope() as session:
+        registry = await session.scalar(
+            update(ComputeRegistry)
+            .where(
+                ComputeRegistry.id == compute_id,
+                ComputeRegistry.status == expected_status,
+            )
+            .values(status=status)
+            .returning(ComputeRegistry)
+        )
+        await session.commit()
+        return registry is not None

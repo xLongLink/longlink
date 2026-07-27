@@ -1,19 +1,18 @@
-import { z } from 'zod';
-import { useLocation } from 'react-router';
+import { Button } from '@astryxdesign/core/Button';
+import { Divider } from '@astryxdesign/core/Divider';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
-import { Divider } from '@astryxdesign/core/Divider';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router';
+import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
-import { sanitizeRedirectPath } from '@/lib/redirects';
+import { useToast } from '@/hooks/use-toast';
+import { fetchApiVoid } from '@/lib/api';
 
 type RegisterValues = {
     email: string;
@@ -27,7 +26,6 @@ export default function Register() {
     const location = useLocation();
     const showToast = useToast();
     const search = new URLSearchParams(location.search);
-    const nextPath = sanitizeRedirectPath(search.get('next'));
     const initialEmail = search.get('email') ?? '';
     const welcomeTitle = (
         <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
@@ -43,13 +41,14 @@ export default function Register() {
         resolver: zodResolver(schema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInQuery = new URLSearchParams({ next: nextPath, ...(email ? { email } : {}) });
+    const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
+    const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
     const registration = useMutation({
         mutationFn: async (payload: RegisterValues) => {
             await fetchApiVoid('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...payload, next: nextPath }),
+                body: JSON.stringify(payload),
             });
         },
     });
@@ -105,7 +104,7 @@ export default function Register() {
                     label={
                         <>
                             {t('auth.haveAccount')}{' '}
-                            <Link href={`/organizations?${signInQuery.toString()}`} type="inherit" weight="medium">
+                            <Link href={signInHref} type="inherit" weight="medium">
                                 {t('actions.login')}
                             </Link>
                         </>

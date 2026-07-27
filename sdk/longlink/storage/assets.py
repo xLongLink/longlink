@@ -21,14 +21,10 @@ def logo_path() -> str:
     return LOGO_PATH
 
 
-def organization_asset(
-    path: str,
-    content: bytes,
-    *,
-    default_content_type: str = "application/octet-stream",
-) -> OrganizationAsset:
+def organization_asset(path: str, content: bytes, *, default_content_type: str = "application/octet-stream") -> OrganizationAsset:
     """Return normalized organization asset data."""
 
+    # Normalize the path before deriving the asset content type.
     asset_path = normalize_asset_path(path)
     return OrganizationAsset(
         path=asset_path,
@@ -46,10 +42,9 @@ def asset_content_type(path: str, *, default_content_type: str = "application/oc
 def normalize_asset_path(path: str) -> str:
     """Return a safe asset path relative to the shared storage prefix."""
 
+    # Parse and validate a path relative to the shared storage prefix.
     asset_path = path.strip()
     parsed_path = PurePosixPath(asset_path)
-
-    # Asset paths stay relative to the shared prefix, never a filesystem root or parent.
     if not asset_path or parsed_path.is_absolute() or not parsed_path.parts or ".." in parsed_path.parts:
         raise ValueError("Organization asset paths must be relative paths inside the shared storage prefix")
 

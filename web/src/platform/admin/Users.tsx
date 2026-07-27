@@ -1,17 +1,17 @@
-import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiUserListItem } from '@/lib/types';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useUsers } from '@/data/admin';
 import { useToast } from '@/hooks/use-toast';
+import type { ApiUserSummary } from '@/lib/types';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin users page. */
@@ -20,7 +20,7 @@ export default function AdminUsers() {
     const toast = useToast();
     const { items: users, error, isLoading } = useUsers();
     const { pageItems, pagination } = useAdminPagination(users);
-    const columns: TableColumn<ApiUserListItem>[] = [
+    const columns: TableColumn<ApiUserSummary>[] = [
         {
             key: 'user',
             header: t('columns.user'),

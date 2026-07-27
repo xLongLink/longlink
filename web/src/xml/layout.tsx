@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import TopLayout from '@/layout/TopLayout';
-import { Wordmark } from '@/components/Wordmark';
-import { UserProfile } from '@/components/Profile';
+import { Link } from '@astryxdesign/core/Link';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { PageContainer } from '@/components/PageContainer';
+import { UserProfile } from '@/components/Profile';
+import { Wordmark } from '@/components/Wordmark';
+import TopLayout from '@/layout/TopLayout';
 
 type XmlLayoutTab = {
     href: string;
@@ -17,13 +17,11 @@ type XmlLayoutTab = {
 
 type XmlLayoutProps = {
     tabs?: Record<string, string | XmlLayoutTab>;
-    brandOnly?: boolean;
-    brandHref?: string;
     children: ReactNode;
 };
 
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({ tabs, brandOnly = false, brandHref = '/organizations', children }: XmlLayoutProps) {
+export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
@@ -69,15 +67,11 @@ export default function XmlLayout({ tabs, brandOnly = false, brandHref = '/organ
                     >
                         <Wordmark />
                     </Link>
-                ) : brandOnly ? (
-                    <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
-                        <Wordmark />
-                    </Link>
                 ) : (
                     <Breadcrumb />
                 )
             }
-            tabs={brandOnly ? [] : resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
+            tabs={resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
             topNavClassName="px-7"
         >
             <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>

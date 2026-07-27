@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
-import type { Props } from '@/xml/types';
+import { ContextProvider, useXmlContext } from '@/xml/core/context';
 import { renderNode } from '@/xml/core/node';
 import { BaseUrlContext, useUrl } from '@/xml/core/url';
-import { ContextProvider, useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { resolveXmlString, resolveXmlValue } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */

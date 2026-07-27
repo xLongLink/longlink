@@ -1,65 +1,14 @@
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
-from src.database.services import operations, applications, organizations
-from src.models.operations import OperationStatus
+from src.database.services import operations, applications
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
-
-
-async def test_list_organization_apps_returns_app_membership_role(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return the application-specific role instead of the organization role."""
-
-    # Arrange
-    owner = users[0]
-    user = users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=user.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-            )
-        )
-        session.add(
-            UserApplication(
-                user_id=user.id,
-                organization_id=organization.id,
-                application_id=app.id,
-                role=ApplicationRoles.write,
-            )
-        )
-        await session.commit()
-
-    client = clients[1]
-
-    # Act
-    response = await client.get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [item["application"]["id"] for item in payload] == [str(app.id)]
-    assert payload[0]["role"] == ApplicationRoles.write
-    assert "role" not in payload[0]["application"]
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -70,24 +19,16 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    acme = await create_organization(infrastructure, user)
-    globex = await create_organization(infrastructure, user, name="globex", slug="globex")
-    await mark_organization_running(acme)
-    await mark_organization_running(globex)
-    dashboard, _ = await applications.create(
-        acme.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
-    console, _ = await applications.create(
-        globex.id,
-        "console",
+    await create_ready_infrastructure()
+    acme = await create_organization(user)
+    globex = await create_organization(user, name="globex", slug="globex")
+    dashboard = await create_application(acme, user)
+    console = await create_application(
+        globex,
+        user,
+        name="console",
         slug="console",
         image="ghcr.io/longlink/console:latest",
-        user=user,
     )
     client = clients[0]
 
@@ -118,45 +59,48 @@ async def test_list_apps_without_organization_requires_admin(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_list_organization_apps_returns_403_for_non_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject application listing when the user does not belong to the organization."""
-
-    # Arrange
-    owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
-    client = clients[1]
-
-    # Act
-    response = await client.get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Access required"}
-
-
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
     """Persist Application desired state and return its compute Operation."""
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    organization = await create_organization(infrastructure, user)
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(user)
     await mark_organization_running(organization)
+    staged: dict[str, object] = {}
+
+    async def inspect_image(image: str) -> LongLinkMetadata:
+        """Return immutable metadata with one required user environment value."""
+
+        assert image == "ghcr.io/longlink/dashboard:latest"
+        return LongLinkMetadata(
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
+            sdk="1.2.3",
+            version="2.0.0",
+            environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
+        )
+
+    class FakeCompute:
+        """Capture Application environment Secret staging."""
+
+        def __init__(self, kubeconfig: str) -> None:
+            """Capture the assigned compute target."""
+
+            assert kubeconfig == infrastructure.compute.kubeconfig
+            self.applications = self
+
+        async def stage_envs(self, application_id: UUID, namespace: str, envs: dict[str, str]) -> None:
+            """Record user values sent to the Kubernetes Secret boundary."""
+
+            staged.update({"application_id": application_id, "namespace": namespace, "envs": envs})
+
+    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.images.metadata", inspect_image)
     client = clients[0]
 
     # Act
@@ -180,18 +124,27 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     operation = payload["operation"]
     assert application["status"] == "creating"
     assert application["description"] == "Dashboard app"
-    assert application["image"] == "ghcr.io/longlink/dashboard:latest"
-    assert operation["compute_id"] == str(infrastructure.compute.id)
+    assert application["image"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert application["digest"] == "sha256:test"
+    assert application["sdk"] == "1.2.3"
+    assert application["version"] == "2.0.0"
+    assert "compute_id" not in operation
+    assert operation["kind"] == OperationKind.application_create
     assert operation["platform_version"] == env.VERSION
     assert operation["status"] == OperationStatus.scheduled
 
     persisted = await applications.get(UUID(application["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
-    assert persisted.envs == {"API_KEY": "secret-value", "PORT": "8080"}
+    assert not hasattr(persisted, "envs")
+    assert staged == {
+        "application_id": persisted.id,
+        "namespace": organization.slug,
+        "envs": {"API_KEY": "secret-value", "PORT": "8080"},
+    }
     queued = await operations.fetch()
-    assert len(queued) == 1
-    assert str(queued[0].id) == operation["id"]
+    assert len(queued) == 2
+    assert any(str(item.id) == operation["id"] for item in queued)
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -203,8 +156,8 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -239,16 +192,9 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(user)
+    app = await create_application(organization, user)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
 
@@ -261,11 +207,12 @@ async def test_get_app_logs_returns_pod_logs(
             self.applications = self
             captured["kubeconfig"] = kubeconfig
 
-        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
                 "application_id": application_id,
+                "namespace": namespace,
                 "lines": lines,
             }
             return ["line 1", "line 2"]
@@ -281,7 +228,8 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.json() == ["line 1", "line 2"]
     assert captured["kubeconfig"] == registry.kubeconfig
     assert captured["logs"] == {
-        "application_id": str(app.id),
+        "application_id": app.id,
+        "namespace": organization.slug,
         "lines": 200,
     }
 
@@ -294,16 +242,9 @@ async def test_app_logs_require_maintainer_access(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
@@ -327,16 +268,9 @@ async def test_app_logs_return_unavailable_when_backend_fails(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    app = await create_application(organization, owner)
 
     class FailingCompute:
         """Fail the log request through the Kubernetes adapter boundary."""
@@ -347,10 +281,11 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             assert kubeconfig == infrastructure.compute.kubeconfig
             self.applications = self
 
-        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
             """Raise the backend error expected by the test."""
 
-            assert application_id == str(app.id)
+            assert application_id == app.id
+            assert namespace == organization.slug
             assert lines == 200
             raise RuntimeError("logs unavailable")
 
@@ -373,16 +308,9 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
@@ -395,9 +323,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
     created_role = await applications.membership_role(app.id, member.id)
     remove_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
     removed_role = await applications.membership_role(app.id, member.id)
-    missing_response = await client.patch(
-        f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"}
-    )
+    missing_response = await client.patch(f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"})
 
     # Assert
     assert list_response.status_code == 200
@@ -418,16 +344,9 @@ async def test_application_member_update_rejects_regular_member(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
@@ -451,27 +370,24 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    await create_ready_infrastructure()
+    organization = await create_organization(user)
+    app = await create_application(organization, user)
     client = clients[0]
 
     # Act
     response = await client.delete(f"/api/applications/{app.id}")
+    retry_response = await client.delete(f"/api/applications/{app.id}")
 
     # Assert
     assert response.status_code == 202
     payload = response.json()
+    assert retry_response.status_code == 202
+    assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
     assert payload["application"]["id"] == str(app.id)
     assert payload["application"]["status"] == "deleting"
-    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload["operation"]
+    assert payload["operation"]["kind"] == OperationKind.application_delete
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert await applications.get(app.id) is None
@@ -479,5 +395,9 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     assert deleted is not None
     assert deleted.deleted_id == user.id
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    assert str(recorded_operations[0].id) == payload["operation"]["id"]
+    assert {item.kind for item in recorded_operations} == {
+        OperationKind.application_create,
+        OperationKind.application_delete,
+        OperationKind.organization_create,
+    }
+    assert any(str(item.id) == payload["operation"]["id"] for item in recorded_operations)

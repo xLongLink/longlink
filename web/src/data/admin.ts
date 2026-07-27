@@ -1,34 +1,17 @@
-import type {
-    ApiApplicationResponse,
-    ApiInfrastructureOptions,
-    ApiOperation,
-    ApiOrganizationSummary,
-    ApiUserListItem,
-} from '@/lib/types';
-import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiApplicationResponseSchema,
-    apiInfrastructureOptionsSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
-    apiUserListItemSchema,
+    apiUserSummarySchema,
     parseApiCollection,
-    parseApiResponse,
 } from '@/lib/api-schemas';
-
-/** Fetches assignable infrastructure identities without connection secrets. */
-export function useInfrastructureOptions(enabled = true) {
-    return useApiQuery<ApiInfrastructureOptions>(enabled ? '/api/infrastructure/options' : null, {
-        enabled,
-        refetchInterval: enabled ? 5000 : false,
-        parse: (value) => parseApiResponse(apiInfrastructureOptionsSchema, value),
-    });
-}
+import type { ApiApplicationResponse, ApiOperation, ApiOrganizationSummary, ApiUserSummary } from '@/lib/types';
 
 /** Fetches the application list for admin views. */
 export function useApplications() {
     return useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+        refetchInterval: 5000,
         parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
     });
 }
@@ -50,7 +33,7 @@ export function useOrganizations() {
 
 /** Fetches the full user list for admin views. */
 export function useUsers() {
-    return useCollectionQuery<ApiUserListItem>('/api/users', {
-        parse: (value) => parseApiCollection(apiUserListItemSchema, value),
+    return useCollectionQuery<ApiUserSummary>('/api/users', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
     });
 }

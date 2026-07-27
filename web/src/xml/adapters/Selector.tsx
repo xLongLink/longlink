@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { Selector as AstryxSelector, type SelectorOptionType } from '@astryxdesign/core/Selector';
-import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
-import { evaluate } from '@/xml/expressions';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import {
     requireXmlString,

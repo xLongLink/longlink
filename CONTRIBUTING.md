@@ -10,6 +10,14 @@ The SDK owns shared-schema models, migrations, and synchronization helpers along
 
 ## Development
 
+Install [Vite+](https://viteplus.dev) before running the web commands:
+
+```bash
+curl -fsSL https://vite.plus | bash
+. "$HOME/.vite-plus/env"
+vp env setup
+```
+
 ```bash
 make install        # Install all the dependencies
 make api:install    # Install API dependencies
@@ -69,13 +77,3 @@ After `make api` and `make web` are running, SDK image changes can be refreshed 
 ```bash
 make seed           # Rebuild/push localhost:15000/longlink-app:dev and reapply the seeded app
 ```
-
-## Release Checklist
-
-Container image updates are reviewed manually. LongLink does not run an automated dependency-update bot.
-
-1. Review upstream releases and vulnerability advisories for infrastructure images in `api/src/kubernetes/templates/`.
-2. Update every changed image tag and digest together.
-3. Run the API test suite, including the real Kubernetes reconciliation test.
-4. Build both Web frontend bundles and verify the generated assets.
-5. Deploy the Platform release. Periodic location reconciliation applies the reviewed template revisions to connected clusters.

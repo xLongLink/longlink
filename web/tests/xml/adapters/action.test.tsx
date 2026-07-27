@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
-import type { ExecutionContext } from '@/xml/types';
+import { describe, expect, it } from 'vitest';
 import { executeAction } from '@/xml/adapters/Action';
+import type { ExecutionContext } from '@/xml/types';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
@@ -29,7 +29,7 @@ describe('Action', () => {
             requestUrl = String(input);
             requestInit = init;
 
-            return new Response('', { status: 204 });
+            return new Response(null, { status: 204 });
         }) as unknown as typeof fetch;
 
         await executeAction(
@@ -180,7 +180,7 @@ describe('Action', () => {
         const fetchImpl = (async () => {
             fetchCalls += 1;
 
-            return new Response('', { status: 204 });
+            return new Response(null, { status: 204 });
         }) as unknown as typeof fetch;
 
         await executeAction(
@@ -237,7 +237,7 @@ describe('Action', () => {
             const fetchImpl = (async () => {
                 fetchCalls += 1;
 
-                return new Response('', { status: 204 });
+                return new Response(null, { status: 204 });
             }) as unknown as typeof fetch;
 
             await executeAction(testCase.props, ctx, '', fetchImpl, {

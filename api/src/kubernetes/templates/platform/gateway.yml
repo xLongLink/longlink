@@ -1,0 +1,150 @@
+# Template for per-compute Envoy gateway resources other than its early LoadBalancer Service.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: longlink-gateway-auth
+    namespace: longlink-system
+stringData:
+    gateway-secret: $gateway_secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: longlink-gateway-tls
+    namespace: longlink-system
+type: kubernetes.io/tls
+stringData:
+    tls.crt: $tls_certificate
+    tls.key: $tls_private_key
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: longlink-gateway
+    namespace: longlink-system
+data:
+    envoy.yaml: $envoy_config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: longlink-gateway
+    namespace: longlink-system
+    labels:
+        app: longlink-gateway
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: longlink-gateway
+    template:
+        metadata:
+            annotations:
+                longlink.io/runtime-revision: '$runtime_revision'
+            labels:
+                app: longlink-gateway
+        spec:
+            automountServiceAccountToken: false
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: 101
+                runAsGroup: 101
+                fsGroup: 101
+                seccompProfile:
+                    type: RuntimeDefault
+            initContainers:
+                - name: render-config
+                  image: busybox:1.36.1@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+                  command:
+                      - sh
+                      - -c
+                      - >-
+                          sed 's|__LONG_LINK_GATEWAY_SECRET__|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
+                          /etc/envoy-template/envoy.yaml > /etc/envoy/envoy.yaml
+                  env:
+                      - name: LONG_LINK_GATEWAY_SECRET
+                        valueFrom:
+                            secretKeyRef:
+                                name: longlink-gateway-auth
+                                key: gateway-secret
+                  volumeMounts:
+                      - name: template
+                        mountPath: /etc/envoy-template
+                      - name: config
+                        mountPath: /etc/envoy
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - ALL
+                      readOnlyRootFilesystem: true
+            containers:
+                - name: longlink-gateway
+                  image: envoyproxy/envoy:v1.38.1@sha256:4e3c734cbe9892a3513c97cf3974ff73cfef5d784f5cceed9ea758a2b80e0c31
+                  args:
+                      - -c
+                      - /etc/envoy/envoy.yaml
+                  ports:
+                      - name: gateway
+                        containerPort: 8443
+                  startupProbe:
+                      httpGet:
+                          path: /ready
+                          port: gateway
+                          scheme: HTTPS
+                      periodSeconds: 2
+                      failureThreshold: 60
+                  readinessProbe:
+                      httpGet: &health-check
+                          path: /ready
+                          port: gateway
+                          scheme: HTTPS
+                      periodSeconds: 5
+                  livenessProbe:
+                      httpGet: *health-check
+                  volumeMounts:
+                      - name: config
+                        mountPath: /etc/envoy
+                        readOnly: true
+                      - name: tls
+                        mountPath: /etc/envoy-tls
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 128Mi
+                      limits:
+                          cpu: 500m
+                          memory: 256Mi
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - ALL
+                      readOnlyRootFilesystem: true
+            volumes:
+                - name: template
+                  configMap:
+                      name: longlink-gateway
+                - name: config
+                  emptyDir: {}
+                - name: tls
+                  secret:
+                      secretName: longlink-gateway-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-gateway-ingress
+    namespace: longlink-system
+    labels:
+        app: longlink-gateway
+spec:
+    podSelector:
+        matchLabels:
+            app: longlink-gateway
+    policyTypes:
+        - Ingress
+    ingress:
+        - ports:
+              - port: 8443

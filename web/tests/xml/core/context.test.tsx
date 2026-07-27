@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
-import type { ASTNode } from '@/xml/types';
+import { describe, expect, it } from 'vitest';
 import { createContext, setupContext } from '@/xml/core/context';
+import type { ASTNode } from '@/xml/types';
 import { withGlobalValue } from '../../helpers/globals';
 
 describe('core/context', () => {

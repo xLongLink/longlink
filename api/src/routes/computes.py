@@ -1,35 +1,35 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
+from src.auth import authadmin
 from src.utils import names
 from src.logger import logger
 from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryMutationResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
-from src.database.models.users import User
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/api/computes", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate, user: User = Depends(authadmin)):
+async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial reconciliation."""
 
-    registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig, user)
+    registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig)
     return {"compute": registry, "operation": operation}
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(_user: User = Depends(authsupport)):
+async def list_compute_registries():
     """Return all registered compute backends."""
 
     return await compute.fetch()
 
 
 @router.get("/api/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)):
+async def get_compute_registry(registry_id: UUID):
     """Return one compute backend registration."""
 
+    # Resolve the requested active compute registry.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
@@ -37,24 +37,23 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
     return registry
 
 
-@router.delete("/api/computes/{registry_id}", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)):
-    """Queue cleanup of one unused compute target."""
+@router.delete("/api/computes/{registry_id}", status_code=204)
+async def delete_compute_registry(registry_id: UUID):
+    """Remove one unused compute registration without changing its cluster."""
 
-    result = await compute.delete(registry_id, user)
-    if result is None:
+    # Remove only a registered compute that is not assigned to an Organization.
+    if not await compute.delete(registry_id):
         raise HTTPException(status_code=404, detail="Compute registry not found")
-    registry, operation = result
-    return {"compute": registry, "operation": operation}
 
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[str])
-async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsupport)):
-    """Query a compute backend directly for live support diagnostics rather than persisted desired state.
+async def list_compute_namespaces(registry_id: UUID):
+    """Query a compute backend directly for live diagnostics rather than persisted desired state.
 
     Results may include unmanaged or not-yet-reconciled namespaces.
     """
 
+    # Resolve the requested active compute registry before connecting to its cluster.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
@@ -72,12 +71,13 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
 
 
 @router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
-async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)):
+async def list_namespace_pods(registry_id: UUID, namespace: str):
     """Query live pods within a namespace currently visible on the compute backend.
 
     Pod phase and node placement may differ from persisted desired state during reconciliation.
     """
 
+    # Resolve the requested active compute registry before connecting to its cluster.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")

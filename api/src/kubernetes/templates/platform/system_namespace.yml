@@ -1,0 +1,5 @@
+# Template for the LongLink system Namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: longlink-system

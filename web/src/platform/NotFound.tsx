@@ -1,10 +1,10 @@
-import { Search } from 'lucide-react';
-import { useLocation } from 'react-router';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Search } from 'lucide-react';
+import { useLocation } from 'react-router';
 import PlatformLayout from '@/platform/layout';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */

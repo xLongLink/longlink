@@ -191,13 +191,7 @@ class Storage(ABC):
             raise RuntimeError(f"S3 object deletion failed for {details}")
 
     @abstractmethod
-    async def credentials(
-        self,
-        name: str,
-        bucket: str,
-        read_prefixes: tuple[str, ...],
-        write_prefix: str,
-    ) -> StorageRuntimeCredentials:
+    async def credentials(self, name: str, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str) -> StorageRuntimeCredentials:
         """Converge and return runtime credentials for one Application's storage prefixes.
 
         Implementations must converge after partial prior attempts so retries do not accumulate active credentials.
@@ -210,9 +204,4 @@ class Storage(ABC):
 
         The operation must be safe to retry during cleanup.
         """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def discard(self, access_key_id: str) -> None:
-        """Delete one exact unpersisted runtime access key without affecting a replacement generation."""
         raise NotImplementedError

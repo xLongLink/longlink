@@ -1,5 +1,5 @@
-import { Component, type ReactNode } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Component, type ReactNode } from 'react';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;

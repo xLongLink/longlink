@@ -5,6 +5,7 @@ from longlink.storage import assets
 def test_organization_asset_normalizes_path_and_content_type() -> None:
     """Build normalized organization asset metadata."""
 
+    # Build metadata from an unnormalized organization asset path.
     asset = assets.organization_asset(" brand/logo.svg ", b"<svg />")
 
     assert asset == assets.OrganizationAsset("brand/logo.svg", b"<svg />", "image/svg+xml")
@@ -20,5 +21,6 @@ def test_asset_content_type_uses_default_for_unknown_extensions() -> None:
 def test_normalize_asset_path_rejects_unsafe_paths(path: str) -> None:
     """Reject asset paths outside the shared storage prefix."""
 
+    # Validate each unsafe path at the organization asset boundary.
     with pytest.raises(ValueError, match="relative paths"):
         assets.normalize_asset_path(path)

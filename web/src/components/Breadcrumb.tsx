@@ -1,6 +1,6 @@
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import startCase from 'lodash/startCase';
 import { useLocation } from 'react-router';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Wordmark } from '@/components/Wordmark';
 
 type BreadcrumbTrailItem = {

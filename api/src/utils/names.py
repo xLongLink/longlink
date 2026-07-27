@@ -1,5 +1,4 @@
 import re
-from uuid import UUID
 from fastapi import HTTPException
 from slugify import slugify as text_slugify
 
@@ -42,22 +41,3 @@ def knames(value: str) -> str:
         raise ValueError("Value is reserved")
 
     return value
-
-
-def organization_bucket(organization_id: UUID) -> str:
-    """Return the storage bucket name derived from an Organization ID."""
-
-    # Organization buckets use the same UUID-hex nomenclature as Organization databases.
-    return organization_id.hex
-
-
-def shared_storage_prefix() -> str:
-    """Return the Organization-owned shared storage prefix."""
-
-    return "shared/"
-
-
-def application_storage_prefix(application_id: UUID) -> str:
-    """Return one Application's private storage prefix."""
-
-    return f"applications/{application_id.hex}/"

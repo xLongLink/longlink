@@ -1,17 +1,16 @@
-import { z } from 'zod';
-import { useId, useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useId, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { useCreateOrganization } from '@/hooks/use-organization';
+import { useToast } from '@/hooks/use-toast';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
@@ -28,7 +27,6 @@ const defaultCreateOrganizationValues = {
 export default function CreateOrganization() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -37,11 +35,6 @@ export default function CreateOrganization() {
         mode: 'onChange',
         resolver: zodResolver(createOrganizationSchema),
     });
-
-    // Hide organization creation from support users.
-    if (role === 'support') {
-        return null;
-    }
 
     /** Clears the organization creation form state. */
     function resetDialogState() {

@@ -1,13 +1,14 @@
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
-import TopLayout from '@/layout/TopLayout';
+import { Breadcrumb } from '@/components/Breadcrumb';
+import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import { UserProfile } from '@/components/Profile';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import TopLayout from '@/layout/TopLayout';
+import { normalizePathname } from '@/platform/paths';
 
 type PlatformLayoutTab = {
     href: string;
@@ -57,16 +58,6 @@ export default function PlatformLayout({
     });
     const activeTabPathname = getActiveTabPathname(tabEntries, normalizedCurrentPathname);
     const { user } = useUserProfile();
-
-    /** Normalizes a pathname for deterministic active tab matching. */
-    function normalizePathname(pathname: string) {
-        // Preserve the root path as-is.
-        if (pathname === '/') {
-            return '/';
-        }
-
-        return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-    }
 
     /** Returns whether a tab pathname is active for the current path. */
     function isTabPathActive(tabPathname: string, pathname: string): boolean {

@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Literal, overload
-from src.models.roles import Ranks, RoleName, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks
+from src.models.roles import Ranks, RoleName, ApplicationRoles, OrganizationRoles
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -15,10 +15,6 @@ def rank(value: RoleName | None) -> int:
         return 0
 
     role_type = type(value)
-
-    # Platform roles resolve through their own rank scale.
-    if role_type is PlatformRoles:
-        return PlatformRoleRanks[value.name].value
 
     # Organization and application roles share the same rank scale.
     if role_type in {OrganizationRoles, ApplicationRoles}:

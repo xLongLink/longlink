@@ -25,7 +25,7 @@ sdk\:install:
 
 # Install web JavaScript dependencies.
 web\:install:
-	bun i --cwd web
+	cd web && vp install --frozen-lockfile
 
 
 # Format API, SDK, and web/docs code.
@@ -44,7 +44,7 @@ sdk\:format: sdk\:install
 
 # Format web code and repository docs.
 web\:format: web\:install
-	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
+	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
 
 
 # Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
@@ -87,12 +87,13 @@ sdk\:coverage: sdk\:install sdk\:build
 	cd sdk && uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
 
 
-# Run web tests, typecheck, and bundle builds.
+# Run web static checks, tests, typechecks, and bundle builds.
 web\:tests: web\:install
-	bun run --cwd web test
-	bun run --cwd web typecheck
-	bun run --cwd web build:api:bundle --logLevel warn
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp check
+	cd web && vp run test
+	cd web && vp run typecheck
+	cd web && vp run build:api:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Run API and SDK ty checks.
@@ -111,19 +112,19 @@ sdk\:ty:
 
 # Typecheck and build both web bundle modes.
 build: web\:install
-	bun run --cwd web typecheck
-	bun run --cwd web build:api:bundle --logLevel warn
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp run typecheck
+	cd web && vp run build:api:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Build the API web bundle.
 api\:build: web\:install
-	bun run --cwd web build:api:bundle --logLevel warn
+	cd web && vp run build:api:bundle --logLevel warn
 
 
 # Build the embedded SDK web bundle.
 sdk\:build: web\:install
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Remove generated build and test artifacts for every workspace.
@@ -212,6 +213,7 @@ down:
 api:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked python setup.py
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
@@ -225,13 +227,13 @@ seed: up
 	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" --bootstrap >/dev/null
 	cd sdk/dev && uv run longlink build --builder "$(DEV_DOCKER_BUILDER)" --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked python setup.py
 	cd api && DEVELOPMENT=true uv run --locked python seed.py
 
 
 # Run the Vite web app.
-web: 
-	bun i --cwd web
-	bun run --cwd web dev --host 127.0.0.1 --port 5173
+web: web\:install
+	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
 # Build the SDK web bundle, then recreate and run the generated SDK development app.

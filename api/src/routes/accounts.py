@@ -1,8 +1,8 @@
 from fastapi import Depends, Request, Response, APIRouter
-from src.auth import AUTH_COOKIE, SessionAccountsService, get_auth_session, current_optional_user_token
+from src.auth import SessionAccountsService, get_auth_session, current_optional_user_token
 from src.utils import token
 from src.environments import env
-from src.models.users import UserListItem
+from src.models.users import UserSummary
 from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -10,7 +10,7 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.post("/api/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
+@router.post("/api/auth/accounts/deactivate", response_model=list[UserSummary], include_in_schema=False)
 async def deactivate_account(
     request: Request,
     response: Response,
@@ -36,7 +36,7 @@ async def deactivate_account(
 
     # Match the session-cookie scope so browsers reliably remove the credential.
     response.delete_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         path="/",
         secure=not env.DEVELOPMENT,
         httponly=True,
@@ -45,7 +45,7 @@ async def deactivate_account(
     return accounts
 
 
-@router.get("/api/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
+@router.get("/api/auth/accounts", response_model=list[UserSummary], include_in_schema=False)
 async def list_accounts(request: Request):
     """Return accounts previously authenticated in this browser session."""
 
@@ -79,7 +79,7 @@ async def logout(
     # Return a response that removes the browser credential at its original scope.
     response = Response(status_code=204)
     response.delete_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         path="/",
         secure=not env.DEVELOPMENT,
         httponly=True,

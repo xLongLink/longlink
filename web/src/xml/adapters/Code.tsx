@@ -1,8 +1,8 @@
 import { Code as AstryxCode } from '@astryxdesign/core/Code';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlValue } from './props';
 
 /** Renders inline Astryx code from a value, translation, or nested XML. */

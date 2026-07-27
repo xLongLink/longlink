@@ -1,6 +1,6 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.models.users import UserProfile, UserListItem
+from src.models.users import UserProfile, UserSummary
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
@@ -14,9 +14,8 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    await create_ready_infrastructure()
     organization = await create_organization(
-        infrastructure,
         user,
         avatar="https://example.com/organizations/acme.png",
     )
@@ -52,9 +51,9 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    active = await create_organization(infrastructure, user, name="active", slug="active")
-    deleted = await create_organization(infrastructure, user, name="deleted", slug="deleted")
+    await create_ready_infrastructure()
+    active = await create_organization(user, name="active", slug="active")
+    deleted = await create_organization(user, name="deleted", slug="deleted")
     deleted_result = await organization_service.soft_delete(deleted.id, user)
     assert deleted_result is not None
     client = clients[0]
@@ -81,35 +80,29 @@ async def test_list_users_returns_admin_user_summaries(
     # Assert
     assert response.status_code == 200
 
-    expected_payload = [UserListItem.model_validate(user).model_dump(mode="json") for user in users]
+    expected_payload = [UserSummary.model_validate(user).model_dump(mode="json") for user in users]
     assert response.json() == expected_payload
 
 
-async def test_platform_roles_separate_support_reads_from_admin_mutations(
+async def test_platform_user_cannot_access_admin_routes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
-    """Allow support reads while denying support mutations and ordinary-user support access."""
+    """Reject Platform users from administrator reads and mutations."""
 
-    support = users[2]
-    support_client = clients[2]
-    ordinary_client = clients[1]
+    client = clients[1]
 
-    # Exercise representative support and administrator route dependencies.
-    support_read_response = await support_client.get("/api/users")
-    ordinary_read_response = await ordinary_client.get("/api/users")
-    support_mutation_response = await support_client.post(
+    # Exercise representative administrator read and mutation dependencies.
+    read_response = await client.get("/api/users")
+    mutation_response = await client.post(
         "/api/computes",
-        json={"name": "Support compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+        json={"name": "Denied compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
 
-    # Verify support can read but neither support nor ordinary users receive excess privileges.
-    assert support_read_response.status_code == 200
-    assert str(support.id) in {item["id"] for item in support_read_response.json()}
-    assert ordinary_read_response.status_code == 403
-    assert ordinary_read_response.json() == {"detail": "Permission required"}
-    assert support_mutation_response.status_code == 403
-    assert support_mutation_response.json() == {"detail": "Permission required"}
+    # Verify Platform users receive no administrator privileges.
+    assert read_response.status_code == 403
+    assert read_response.json() == {"detail": "Permission required"}
+    assert mutation_response.status_code == 403
+    assert mutation_response.json() == {"detail": "Permission required"}
 
 
 async def test_patch_me_updates_authenticated_user_profile(

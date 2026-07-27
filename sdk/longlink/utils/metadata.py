@@ -8,9 +8,8 @@ type MetadataPayload = dict[str, object]
 def metadata_section(data: MetadataPayload, name: str) -> MetadataPayload:
     """Return a string-keyed metadata section from parsed TOML data."""
 
+    # Read the requested section while ignoring malformed TOML shapes.
     value = data.get(name)
-
-    # Ignore malformed or unexpected TOML section shapes.
     if not isinstance(value, dict):
         return {}
 
@@ -52,15 +51,16 @@ class Metadata(BaseModel):
 def load_metadata(pyproject_path: Path | None = None, **overrides: object) -> Metadata:
     """Load metadata from pyproject location with optional explicit override values."""
 
+    # Resolve a file path once and parse TOML from that location without changing cwd.
     resolved_pyproject = (pyproject_path or Path("pyproject.toml")).resolve()
     metadata_data: MetadataPayload = {}
-
-    # Resolve a file path once and parse TOML from that location without changing cwd.
     if resolved_pyproject.exists():
+
         # Keep file IO local to this resolved path.
         with resolved_pyproject.open("rb") as file_handle:
             parsed_pyproject: MetadataPayload = tomllib.load(file_handle)
 
+        # Merge normalized project metadata over model defaults.
         defaults = {field: Metadata.model_fields[field].default for field in Metadata.model_fields}
         metadata_data.update(Metadata.metadata_from_pyproject(parsed_pyproject, defaults))
 

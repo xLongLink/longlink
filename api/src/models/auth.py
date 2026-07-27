@@ -1,76 +1,36 @@
-from typing import Annotated
-from pydantic import Field, EmailStr, BaseModel, StringConstraints
-
-TrimmedName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=127)]
-TrimmedToken = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4096)]
-LocalPath = Annotated[
-    str,
-    StringConstraints(min_length=1, max_length=2048, pattern=r"^/(?:$|[^/\\\x00-\x1f\x7f][^\\\x00-\x1f\x7f]*)$"),
-]
+from pydantic import Field, BaseModel
 
 
-class PasswordLogin(BaseModel):
+class EmailPayload(BaseModel):
+    """Validate one unchanged email value."""
+
+    # Identity
+    email: str = Field(min_length=1, max_length=254)
+
+
+class TokenPayload(BaseModel):
+    """Validate one unchanged authentication token."""
+
+    # Authentication
+    token: str = Field(min_length=1, max_length=4096)
+
+
+class PasswordLogin(EmailPayload):
     """Validate one local password login request."""
 
-    # Credentials
-    email: EmailStr = Field(max_length=254)
+    # Authentication
     password: str = Field(min_length=1, max_length=1024)
 
 
-class RegistrationRequest(BaseModel):
-    """Validate a stateless email registration request."""
-
-    # Identity
-    email: EmailStr = Field(max_length=254)
-
-    # Navigation
-    next: LocalPath = "/organizations"
-
-
-class RegistrationTokenConfirm(BaseModel):
-    """Validate one emailed registration token."""
-
-    # Authentication
-    token: TrimmedToken
-
-
-class RegistrationVerified(BaseModel):
-    """Return the email authenticated by a registration token."""
-
-    # Identity
-    email: EmailStr
-
-    # Navigation
-    next: LocalPath
-
-
-class RegistrationComplete(BaseModel):
+class RegistrationComplete(EmailPayload):
     """Validate profile and password setup after email authentication."""
 
     # Profile
-    name: TrimmedName
-    email: EmailStr = Field(max_length=254)
-    surname: TrimmedName
+    name: str = Field(min_length=1, max_length=127)
+    surname: str = Field(min_length=1, max_length=127)
 
     # Authentication
     password: str = Field(min_length=1, max_length=1024)
-
-
-class PasswordResetRequest(BaseModel):
-    """Validate a non-enumerating password reset request."""
-
-    # Identity
-    email: EmailStr = Field(max_length=254)
-
-    # Navigation
-    next: LocalPath = "/organizations"
-
-
-class PasswordResetTokenConfirm(BaseModel):
-    """Validate one emailed password reset token."""
-
-    # Authentication
-    token: TrimmedToken
 
 
 class PasswordResetComplete(BaseModel):

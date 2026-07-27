@@ -28,18 +28,20 @@ def test_alembic_migrations_have_single_linear_head() -> None:
 
 @pytest.mark.integration
 def test_migrations_execute_against_postgresql_and_match_current_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Execute the migration history on PostgreSQL and compare its schema to SQLModel metadata."""
+    """Execute migrations through an escaped PostgreSQL URL and compare the resulting schema."""
 
     # Skip only when the Docker daemon cannot be reached.
     require_docker_daemon()
 
-    # Start the supported database backend without hiding pull or startup failures.
+    # Start the supported database backend with a password that requires URL escaping.
+    password = "sec@ret"
+    encoded_password = "sec%40ret"
     container = DockerRuntimeContainer(
         "postgres:16-alpine",
         ports=[POSTGRES_PORT],
         environment={
             "POSTGRES_USER": "longlink",
-            "POSTGRES_PASSWORD": "secret",
+            "POSTGRES_PASSWORD": password,
             "POSTGRES_DB": "longlink",
         },
     )
@@ -47,17 +49,18 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
     engine: Engine | None = None
     try:
-        # Wait for PostgreSQL connection readiness without hiding migration or schema failures.
-        wait_for_postgres(container, "longlink", "secret", "longlink", POSTGRES_PORT)
 
-        # Run the real Alembic environment against the isolated PostgreSQL database.
-        database_url = f"postgresql+asyncpg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
+        # Wait for PostgreSQL connection readiness without hiding migration or schema failures.
+        wait_for_postgres(container, "longlink", password, "longlink", POSTGRES_PORT)
+
+        # Run the real Alembic environment to verify ConfigParser and SQLAlchemy preserve the encoded password.
+        database_url = f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
         monkeypatch.setattr(env, "DATABASE_URL", database_url)
         config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
         command.upgrade(config, "head")
 
         # Compare every migrated platform table and column with the current model metadata.
-        inspection_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+        inspection_url = f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
         engine = create_engine(inspection_url)
         model_columns = {table.name: {column.name for column in table.columns} for table in SQLModel.metadata.sorted_tables}
         with engine.connect() as connection:
@@ -78,6 +81,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
         assert remaining_tables.isdisjoint(model_columns)
     finally:
+
         # Dispose database and container resources even when migration assertions fail.
         try:
             if engine is not None:

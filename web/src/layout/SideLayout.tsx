@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import { AppShell } from '@astryxdesign/core/AppShell';
 import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
-import { AppShell } from '@astryxdesign/core/AppShell';
+import type { ReactNode } from 'react';
 
 /** Renders the shared application shell with side navigation. */
 export default function SideLayout({ children, sideNav }: { children: ReactNode; sideNav: ReactNode }) {

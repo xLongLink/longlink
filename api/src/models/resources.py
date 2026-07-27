@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from src.models.types import Icon
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import Status
 
 
 class OrganizationApplicationSummary(BaseModel):
@@ -19,4 +19,4 @@ class OrganizationApplicationSummary(BaseModel):
     description: str | None = None
 
     # State
-    status: ApplicationStatus
+    status: Status

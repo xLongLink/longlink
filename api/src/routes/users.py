@@ -1,7 +1,8 @@
 from fastapi import Depends, APIRouter
-from src.auth import authuser, authsupport, current_authenticated_user
-from src.models.users import UserUpdate, UserProfile, UserListItem, UserOrganizationMembership
+from src.auth import authuser, authadmin, get_auth_session, current_authenticated_user
+from src.models.users import UserUpdate, UserProfile, UserSummary, UserOrganizationMembership
 from src.database.services import users
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 router = APIRouter()
@@ -22,17 +23,22 @@ async def get_my_organizations(user: User = Depends(authuser)):
     return [membership for membership in user.organization_memberships if membership.organization.deleted_at is None]
 
 
-@router.get("/api/users", response_model=list[UserListItem])
-async def list_users(_: User = Depends(authsupport)):
-    """Return all user summaries for support and administrator views."""
+@router.get("/api/users", response_model=list[UserSummary])
+async def list_users(_: User = Depends(authadmin)):
+    """Return all user summaries for administrator views."""
 
     return await users.fetch()
 
 
 @router.patch("/api/me", response_model=UserProfile)
-async def patch_me(payload: UserUpdate, user: User = Depends(current_authenticated_user)):
+async def patch_me(
+    payload: UserUpdate, user: User = Depends(current_authenticated_user), session: AsyncSession = Depends(get_auth_session)
+):
     """Update the authenticated user's details."""
 
-    params = payload.model_dump(exclude_unset=True)
-    updated_user = await users.update(user_id=user.id, **params)
-    return updated_user
+    # Apply only non-null profile fields supplied by the caller.
+    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
+        setattr(user, field, value)
+
+    await session.commit()
+    return user

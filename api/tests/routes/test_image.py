@@ -17,6 +17,7 @@ async def test_inspect_image_returns_longlink_metadata(
 
         assert image.value == IMAGE_REFERENCE
         return LongLinkMetadata(
+            image="ghcr.io/longlink/dashboard@sha256:manifest",
             title="dashboard",
             description="Demo app",
             version="20250623_120000",

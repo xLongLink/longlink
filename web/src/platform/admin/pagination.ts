@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { paginateData, useTablePagination } from '@astryxdesign/core/Table';
+import { useState } from 'react';
 
 const PAGE_SIZE = 25;
 

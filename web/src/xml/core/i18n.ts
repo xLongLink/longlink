@@ -1,5 +1,5 @@
-import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
 import { evaluate } from '../expressions';
+import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
 
 const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
 

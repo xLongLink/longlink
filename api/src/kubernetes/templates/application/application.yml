@@ -1,0 +1,57 @@
+# Template for one desired LongLink Application workload.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: $application_id
+    namespace: $namespace
+spec:
+    selector:
+        matchLabels:
+            longlink.io/application-id: $application_id
+    template:
+        metadata:
+            labels:
+                longlink.io/application-id: $application_id
+        spec:
+            automountServiceAccountToken: false
+            securityContext:
+                seccompProfile:
+                    type: RuntimeDefault
+            containers:
+                - name: application
+                  image: $image
+                  readinessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8000
+                      periodSeconds: 5
+                      failureThreshold: 3
+                  envFrom:
+                      - secretRef:
+                            name: $application_id-environment
+                      - secretRef:
+                            name: $application_id-runtime
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - ALL
+                      readOnlyRootFilesystem: true
+                  volumeMounts:
+                      - name: tmp
+                        mountPath: /tmp
+            volumes:
+                - name: tmp
+                  emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: app-$application_id
+    namespace: $namespace
+spec:
+    selector:
+        longlink.io/application-id: $application_id
+    ports:
+        - port: 8000

@@ -25,12 +25,6 @@ class DatabaseSSLMode(StrEnum):
 DATABASE_SSL_MODES = frozenset(mode.value for mode in DatabaseSSLMode)
 
 
-class StorageKind(StrEnum):
-    """Supported storage backend kinds."""
-
-    exoscale = "exoscale"
-
-
 class Theme(StrEnum):
     """Supported user theme preferences."""
 

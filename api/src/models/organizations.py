@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary, UserIdentity
-from src.models.statuses import OrganizationStatus
+from src.models.statuses import Status
 from src.models.resources import OrganizationApplicationSummary
 from src.models.operations import OperationResponse
 
@@ -77,7 +77,7 @@ class OrganizationSummary(BaseModel):
     storage_id: UUID
 
     # State
-    status: OrganizationStatus
+    status: Status
 
     # Audit
     created_at: datetime
@@ -89,7 +89,7 @@ class OrganizationSummary(BaseModel):
 
 
 class OrganizationMutationResponse(BaseModel):
-    """Pair an accepted Organization desired-state change with its compute reconciliation operation.
+    """Pair an accepted Organization desired-state change with its infrastructure Operation.
 
     The operation must complete before the desired state is confirmed in managed infrastructure.
     """

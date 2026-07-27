@@ -4,28 +4,15 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.types import Icon, Image
-from src.models.users import UserSummary, UserIdentity
-from src.models.statuses import ApplicationStatus
+from src.models.users import UserIdentity
+from src.models.statuses import Status
 from src.models.operations import OperationResponse
-from src.models.organizations import OrganizationSummary
-
-APPLICATION_ENVIRONMENT_COUNT_MAX = 100
-APPLICATION_ENVIRONMENT_BYTES_MAX = 512 * 1024
-APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH = 253
-APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH = 32768
-APPLICATION_ENVIRONMENT_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-class ApplicationCreate(BaseModel):
-    """Validate application creation payloads."""
+class ApplicationEnvironment(BaseModel):
+    """Validate user-owned Application environment values."""
 
-    # Metadata
-    name: str = Field(min_length=1, max_length=100)
-    icon: Icon | None = None
-    image: Image
-    description: str | None = Field(default=None, max_length=255)
-
-    # Relationships
+    # Configuration
     envs: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("envs")
@@ -34,17 +21,17 @@ class ApplicationCreate(BaseModel):
         """Validate application environment names, ownership, and bounded value sizes."""
 
         # Limit the number of environment values accepted per application.
-        if len(envs) > APPLICATION_ENVIRONMENT_COUNT_MAX:
-            raise ValueError(f"Application environment variables must be at most {APPLICATION_ENVIRONMENT_COUNT_MAX}")
+        if len(envs) > 100:
+            raise ValueError("Application environment contains too many variables")
 
         # Validate each environment name and value independently.
         for name, value in envs.items():
             # Bound environment variable names to the supported label size.
-            if len(name) > APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH:
+            if len(name) > 253:
                 raise ValueError(f"Environment variable '{name}' is too long")
 
             # Environment names must be shell-compatible identifiers.
-            if not APPLICATION_ENVIRONMENT_NAME_PATTERN.fullmatch(name):
+            if not re.fullmatch(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
                 raise ValueError(f"Environment variable '{name}' is invalid")
 
             # Reserve Platform-managed runtime variables for reconciliation.
@@ -52,15 +39,39 @@ class ApplicationCreate(BaseModel):
                 raise ValueError(f"Environment variable '{name}' is reserved for the LongLink Platform")
 
             # Bound environment values to avoid oversized runtime secrets.
-            if len(value) > APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH:
+            if len(value) > 32768:
                 raise ValueError(f"Environment variable '{name}' value is too long")
 
-        # Leave room for base64 expansion, Kubernetes metadata, and Platform-managed runtime values.
+        # Leave room for base64 expansion and Kubernetes Secret metadata.
         environment_bytes = sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items())
-        if environment_bytes > APPLICATION_ENVIRONMENT_BYTES_MAX:
-            raise ValueError(f"Application environment must be at most {APPLICATION_ENVIRONMENT_BYTES_MAX} bytes")
+        if environment_bytes > 512 * 1024:
+            raise ValueError("Application environment is too large")
 
         return envs
+
+
+class ApplicationCreate(ApplicationEnvironment):
+    """Validate application creation payloads."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=100)
+    icon: Icon | None = None
+    image: Image
+    description: str | None = Field(default=None, max_length=255)
+
+
+class ApplicationOrganizationResponse(BaseModel):
+    """Represent the compact Organization associated with an Application."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+    avatar: str = ""
 
 
 class ApplicationResponse(BaseModel):
@@ -72,8 +83,7 @@ class ApplicationResponse(BaseModel):
     id: UUID
 
     # Relationships
-    organization: OrganizationSummary
-    organization_id: UUID
+    organization: ApplicationOrganizationResponse
 
     # Metadata
     sdk: str | None = None
@@ -86,19 +96,14 @@ class ApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    status: ApplicationStatus
+    status: Status
 
     # Audit
     created_at: datetime
-    updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
 
 
 class ApplicationMutationResponse(BaseModel):
-    """Pair an accepted LongLink Application desired-state change with its compute reconciliation operation.
+    """Pair an accepted LongLink Application change with its lifecycle Operation.
 
     The operation must complete before the desired state is confirmed in the runtime.
     """
@@ -106,16 +111,6 @@ class ApplicationMutationResponse(BaseModel):
     # Result
     application: ApplicationResponse
     operation: OperationResponse
-
-
-class ApplicationAccessResponse(BaseModel):
-    """Represent one LongLink Application and the current user's access role."""
-
-    # Relationships
-    application: ApplicationResponse
-
-    # Access
-    role: ApplicationRoles | None = None
 
 
 class ApplicationMemberUpdate(BaseModel):

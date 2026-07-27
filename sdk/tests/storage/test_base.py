@@ -18,6 +18,7 @@ def test_local_storage_uses_environment_filesystem(
 ) -> None:
     """Use the expected local filesystem for test and development runtimes."""
 
+    # Capture the filesystem request without opening local storage.
     captured: dict[str, object] = {}
 
     def fake_filesystem(protocol: str, **kwargs: object) -> object:
@@ -29,8 +30,10 @@ def test_local_storage_uses_environment_filesystem(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem)
 
+    # Create storage for the selected local environment.
     storage_base.create_fs(Envs(ENV=environment), "", "")
 
+    # Verify the environment selects the expected filesystem protocol.
     assert captured == {"protocol": expected_protocol, "kwargs": {}}
 
 
@@ -47,6 +50,7 @@ def test_local_storage_uses_environment_filesystem(
 def test_production_storage_requires_safe_bucket_scope(bucket: str, prefix: str, message: str) -> None:
     """Reject production storage that is not safely scoped within a bucket."""
 
+    # Reject incomplete or unsafe production storage scopes before construction.
     with pytest.raises(ValueError, match=message):
         storage_base.create_fs(
             Envs(
@@ -63,6 +67,7 @@ def test_production_storage_requires_safe_bucket_scope(bucket: str, prefix: str,
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 
+    # Provide a minimal backing filesystem and capture its S3 configuration.
     captured: dict[str, object] = {}
 
     class FakeFileSystem:
@@ -87,6 +92,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
 
+    # Build production storage for a scoped Application prefix.
     filesystem = storage_base.create_fs(
         Envs(
             ENV="production",
@@ -99,6 +105,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
         "applications/dashboard/",
     )
 
+    # Verify both path isolation and S3 connection settings.
     assert isinstance(filesystem, storage_base.DirFileSystem)
     assert filesystem.path == "acme/applications/dashboard"
     assert filesystem.fs is fake_filesystem

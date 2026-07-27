@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { RenderXML } from '@/xml/renderers.tsx';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
 
 /** Renders XML AST to static markup. */
 export function renderXmlToMarkup(

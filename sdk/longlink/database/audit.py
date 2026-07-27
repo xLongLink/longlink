@@ -17,6 +17,7 @@ _current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", defaul
 def audit_user_scope(user_id: UUID | None) -> Generator[None]:
     """Bind an audit user ID for the current execution scope."""
 
+    # Capture the context token so the previous audit user can be restored.
     token = _current_user_id.set(user_id)
 
     # Keep the scoped user bound until the caller exits.
@@ -41,6 +42,7 @@ def apply_audit_fields(session: SyncSession, flush_context: Any, instances: Any)
     Works for AsyncSession because AsyncSession uses an internal sync Session.
     """
 
+    # Capture one timestamp and actor for every row changed in this flush.
     now = utcnow()
     user_id = _current_user_id.get()
 
@@ -110,17 +112,13 @@ def install_audit_middleware(app: FastAPI) -> None:
     Middleware keeps the user context active for the whole request lifecycle.
     """
 
-    async def audit_context_middleware(
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
+    async def audit_context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Bind the request user ID for the duration of the request."""
 
         user_id: UUID | None = None
 
+        # Read and decode the trusted audit-user header when present.
         raw_user_id = request.headers.get("x-user-id")
-
-        # Decode trusted user headers when present.
         if raw_user_id is not None:
 
             # Parse valid UUID headers into audit user IDs.
@@ -136,4 +134,5 @@ def install_audit_middleware(app: FastAPI) -> None:
             response = await call_next(request)
             return response
 
+    # Register the audit context middleware for every HTTP request.
     app.middleware("http")(audit_context_middleware)

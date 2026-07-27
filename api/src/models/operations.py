@@ -13,15 +13,19 @@ class OperationStatus(StrEnum):
     scheduled = "scheduled"
 
 
-class ReconciliationScope(StrEnum):
-    """Select Platform-only work or Application work with its Platform dependencies."""
+class OperationKind(StrEnum):
+    """Supported registered operation handlers."""
 
-    platform = "platform"
-    application = "application"
+    compute_reconcile = "compute.reconcile"
+    application_create = "application.create"
+    application_delete = "application.delete"
+    organization_create = "organization.create"
+    organization_delete = "organization.delete"
+    organization_reconcile = "organization.reconcile"
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one compute target's desired state."""
+    """Expose asynchronous reconciliation for one Platform resource target."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -29,16 +33,14 @@ class OperationResponse(BaseModel):
     id: UUID
 
     # Reference
-    compute_id: UUID
+    kind: OperationKind
+    target_id: UUID
 
     # State
-    scope: ReconciliationScope
     status: OperationStatus
-    attempt_count: int
     platform_version: str
 
     # Timestamps
     created_at: datetime
-    started_at: datetime | None = None
-    stopped_at: datetime | None = None
-    scheduled_at: datetime
+    finished_at: datetime | None = None
+    available_at: datetime

@@ -1,14 +1,14 @@
+import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useLayoutEffect, useState, type ReactNode } from 'react';
-import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, type MetaFunction } from 'react-router';
 import '@/index.css';
-import { noIndexMeta } from '@/lib/seo';
-import { I18nProvider } from '@/lib/i18n';
-import { AstryxProvider } from '@/providers';
-import { createQueryClient } from '@/lib/react-query';
 import { ThemeBootstrap } from '@/components/ThemeBootstrap';
 import { UserProvider, useUserProfile } from '@/hooks/use-user';
+import { I18nProvider } from '@/lib/i18n';
+import { createQueryClient } from '@/lib/react-query';
+import { noIndexMeta } from '@/lib/seo';
+import { AstryxProvider } from '@/providers';
 
 export const meta: MetaFunction = () => noIndexMeta();
 

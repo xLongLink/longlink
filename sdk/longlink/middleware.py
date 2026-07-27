@@ -50,6 +50,7 @@ class FrontendMiddleware:
         self.minimum_size = 1000
         self.compresslevel = 6
 
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Compress eligible responses and adjust their cache headers."""
 
@@ -58,6 +59,7 @@ class FrontendMiddleware:
             await self.app(scope, receive, send)
             return
 
+        # Derive response policy inputs from the request headers and path.
         request_headers = Headers(scope=scope)
         path = scope["path"]
         compression_candidate = "range" not in request_headers and not path.lower().endswith(INCOMPRESSIBLE_SUFFIXES)

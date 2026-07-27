@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
-import type { ExecutionContext } from '@/xml/types';
+import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
+import type { ExecutionContext } from '@/xml/types';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {

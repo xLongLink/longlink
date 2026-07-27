@@ -1,7 +1,7 @@
 import { Card as AstryxCard } from '@astryxdesign/core/Card';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from './props';
 
 /** Renders an Astryx card container. */

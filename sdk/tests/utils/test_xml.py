@@ -121,6 +121,7 @@ UNSUPPORTED_MARKUP_FRAGMENTS = [
 def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     """Disable DTD loading, network access, and entity resolution during validation."""
 
+    # Wrap the real parser factory to capture its security options.
     captured_kwargs: list[dict[str, object]] = []
     original_parser = xml_utils.etree.XMLParser
 
@@ -132,8 +133,10 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
 
     monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
 
+    # Validate a document through the instrumented parser.
     Element.from_content("<longlink />", schema=SCHEMA).validate()
 
+    # Require every parser-hardening option at the XML boundary.
     assert captured_kwargs[0]["load_dtd"] is False
     assert captured_kwargs[0]["no_network"] is True
     assert captured_kwargs[0]["resolve_entities"] is False
@@ -143,8 +146,10 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
 def test_element_validation_rejects_unsupported_markup(_name: str, content: str) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
+    # Build an in-memory document containing unsupported browser markup.
     element = Element.from_content(content, schema=SCHEMA)
 
+    # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
         element.validate()
 
@@ -153,8 +158,8 @@ def test_element_validation_rejects_unsupported_markup(_name: str, content: str)
 def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, content: str) -> None:
     """Validate representative XML fragments for each adapter schema."""
 
+    # Build and validate the fragment against its adapter schema.
     element = Element.from_content(content, schema=schema)
-
     element.validate()
 
 
@@ -162,7 +167,9 @@ def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, conten
 def test_adapter_schema_rejects_invalid_fragments(_name: str, schema: Path, content: str) -> None:
     """Reject representative invalid XML fragments through adapter schemas."""
 
+    # Build the invalid fragment against its adapter schema.
     element = Element.from_content(content, schema=schema)
 
+    # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):
         element.validate()

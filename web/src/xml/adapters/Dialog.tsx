@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Stack } from '@astryxdesign/core/Stack';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { toXmlBoolean, useBindableValue } from './binding';
 import {
     requireXmlString,

@@ -1,5 +1,4 @@
 import type { ComponentType } from 'react';
-import type { Props } from '../types';
 import {
     Action,
     Avatar,
@@ -37,6 +36,7 @@ import {
     TextArea,
     TextInput,
 } from '../adapters';
+import type { Props } from '../types';
 
 /** Explicit XML v2 tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {

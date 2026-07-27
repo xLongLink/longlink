@@ -5,10 +5,10 @@ from factories import create_organization, mark_organization_running, create_rea
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus, OrganizationStatus
+from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -18,12 +18,12 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     # Act
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert organization.name == "acme"
@@ -31,12 +31,13 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.compute_id == infrastructure.compute.id
     assert organization.database_id == infrastructure.database.id
     assert organization.storage_id == infrastructure.storage.id
-    assert organization.status == OrganizationStatus.creating
+    assert organization.status == Status.creating
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
+    assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
     assert len(open_operations) == 1
-    assert open_operations[0].compute_id == infrastructure.compute.id
+    assert open_operations[0].kind == OperationKind.organization_create
+    assert open_operations[0].target_id == organization.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
 
@@ -60,8 +61,8 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -88,9 +89,9 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    active_organization = await create_organization(infrastructure, owner)
-    deleted_organization = await create_organization(infrastructure, owner, name="deleted", slug="deleted")
+    await create_ready_infrastructure()
+    active_organization = await create_organization(owner)
+    deleted_organization = await create_organization(owner, name="deleted", slug="deleted")
     await organizations.soft_delete(deleted_organization.id, owner)
 
     # Act
@@ -105,8 +106,8 @@ async def test_membership_role_requires_active_membership(users: tuple[User, Use
 
     # Arrange
     owner, non_member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     # Act
     owner_role = await organizations.membership_role(organization.id, owner.id)
@@ -124,8 +125,8 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -153,17 +154,21 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     )
     role = await organizations.membership_role(organization.id, member.id)
     reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert updated is True
     assert missing is False
     assert role == OrganizationRoles.maintain
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
+    assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].compute_id == infrastructure.compute.id
+    assert {item.kind for item in open_operations} == {
+        OperationKind.organization_create,
+        OperationKind.organization_reconcile,
+    }
+    projection = next(item for item in open_operations if item.kind == OperationKind.organization_reconcile)
+    assert projection.target_id == organization.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
 
@@ -173,8 +178,8 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -192,8 +197,8 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     # Arrange
     owner, member, deleted_member = users
     deleted_at = utcnow()
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -228,25 +233,25 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     assert memberships[deleted_member.email].deleted_at is not None
 
 
-async def test_create_rejects_organization_on_non_ready_compute(users: tuple[User, User, User]) -> None:
-    """Require a fully reconciled compute target before creating an Organization."""
+async def test_create_requires_available_ready_compute(users: tuple[User, User, User]) -> None:
+    """Require an available reconciled compute target before creating an Organization."""
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    await compute.record_failure(infrastructure.compute.id)
+    infrastructure = await create_ready_infrastructure()
+    await compute.set_status(infrastructure.compute.id, Status.running, Status.failed)
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await create_organization(infrastructure, owner)
+        await create_organization(owner)
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Compute registry is not ready"
+    assert exc.value.status_code == 503
+    assert exc.value.detail == "No compute registry available"
     assert await organizations.fetch() == []
     reloaded_compute = await compute.get(infrastructure.compute.id)
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.failed
+    assert reloaded_compute.status == Status.failed
     assert reloaded_compute.version == env.VERSION
     assert await operations.fetch() == []
 
@@ -256,11 +261,11 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    await create_ready_infrastructure()
 
     # Act
     with pytest.raises(ValueError, match="Value must be at most 63 characters"):
-        await create_organization(infrastructure, owner, name="a" * 64, slug="a" * 64)
+        await create_organization(owner, name="a" * 64, slug="a" * 64)
 
     # Assert
     assert await organizations.fetch() == []
@@ -272,15 +277,16 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner)
     await mark_organization_running(organization)
     application, _ = await applications.create(
         organization.id,
         "Dashboard",
         "dashboard",
-        "ghcr.io/longlink/dashboard:latest",
+        "ghcr.io/longlink/dashboard@sha256:test",
         owner,
+        digest="sha256:test",
     )
     await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
@@ -312,7 +318,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     second_delete = await organizations.soft_delete(organization.id, owner)
     missing_delete = await organizations.soft_delete(uuid4(), owner)
     reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert result is not None
@@ -328,7 +334,8 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
-    assert second_delete is None
+    assert second_delete is not None
+    assert second_delete[1].id == operation.id
     assert missing_delete is None
     assert await organizations.membership_role(organization.id, owner.id) is None
     assert await organizations.membership_role(organization.id, member.id) is None
@@ -336,10 +343,15 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert await applications.membership_role(application.id, member.id) is None
     assert await organizations.invitations(organization.id) == []
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
+    assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].id == operation.id
-    assert open_operations[0].compute_id == infrastructure.compute.id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
+    assert {item.kind for item in open_operations} == {
+        OperationKind.application_create,
+        OperationKind.organization_create,
+        OperationKind.organization_delete,
+    }
+    deletion = next(item for item in open_operations if item.id == operation.id)
+    assert deletion.kind == OperationKind.organization_delete
+    assert deletion.target_id == organization.id
+    assert deletion.platform_version == env.VERSION
+    assert deletion.status == OperationStatus.scheduled

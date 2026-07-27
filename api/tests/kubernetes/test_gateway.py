@@ -1,8 +1,8 @@
 import yaml
 import pytest
+import ipaddress
 from uuid import UUID
-from src.kubernetes.gateway import Gateway, GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredGatewayRoute
+from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, render_envoy_config, generate_gateway_tls, render_gateway_manifests
 
 pytestmark = pytest.mark.no_db
 
@@ -10,26 +10,29 @@ pytestmark = pytest.mark.no_db
 def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_order() -> None:
     """Render Envoy routes from desired Applications without cluster discovery."""
 
-    # Arrange
+    # Define unsorted routes for two Applications.
     routes = (
-        DesiredGatewayRoute(
+        GatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000002"),
             namespace="beta",
         ),
-        DesiredGatewayRoute(
+        GatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000001"),
             namespace="acme",
         ),
     )
 
-    # Act
-    config = yaml.safe_load(Gateway().config(routes))
+    # Render and parse the Envoy gateway configuration.
+    config = yaml.safe_load(render_envoy_config(routes))
 
-    # Assert
-    routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][0]["routes"]
+    # Verify authenticated routes and clusters have deterministic ordering.
+    routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][
+        0
+    ]["routes"]
     clusters = config["static_resources"]["clusters"]
     assert routes[0]["match"] == {"path": "/ready"}
-    assert routes[-1]["direct_response"]["status"] == 404
+    assert routes[0]["direct_response"] == {"status": 200}
+    assert len(routes) == 3
     assert routes[1]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
     assert routes[2]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
     assert routes[1]["match"]["headers"][0]["name"] == "x-longlink-gateway-secret"
@@ -41,22 +44,27 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
 
 
 def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None:
-    """Render gateway resources with exact Secrets and rollout annotations."""
+    """Render gateway resources with exact Secrets and a Pod rollout annotation."""
 
-    # Arrange
+    # Define gateway TLS and authentication inputs.
     tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
 
-    # Act
-    manifests = Gateway().manifests("compute-id", "proxy-secret", tls, "envoy-config", "v1.2.3")
+    # Render the gateway supporting resources.
+    manifests = render_gateway_manifests("proxy-secret", tls, "envoy-config")
 
-    # Assert
+    # Verify gateway metadata, exact Secrets, and rollout configuration.
     assert manifests.auth_secret["kind"] == "Secret"
+    assert "labels" not in manifests.auth_secret["metadata"]
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
-    assert manifests.tls_secret["stringData"] == {"ca.crt": "ca", "tls.crt": "certificate", "tls.key": "private-key"}
+    assert "labels" not in manifests.tls_secret["metadata"]
+    assert manifests.tls_secret["stringData"] == {"tls.crt": "certificate", "tls.key": "private-key"}
+    assert "labels" not in manifests.config_map["metadata"]
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
-    assert manifests.deployment["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
-    assert manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
-    assert manifests.service["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
+    assert manifests.deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
+    assert manifests.deployment["spec"]["replicas"] == 1
+    assert "annotations" not in manifests.deployment["metadata"]
+    runtime_revision = manifests.deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
+    assert runtime_revision
     container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
     assert container["startupProbe"] == {
         "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},
@@ -65,46 +73,13 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     }
 
 
-def test_gateway_tls_reuses_valid_material_for_same_endpoint() -> None:
-    """Reuse persisted gateway TLS material while it still matches the compute and endpoint."""
+def test_gateway_tls_generates_compute_identity() -> None:
+    """Generate gateway TLS material for a newly provisioned compute."""
 
-    # Arrange
-    gateway = Gateway()
-    material = gateway.tls("compute-id", "gateway.example")
+    # Generate the immutable TLS identity for one compute endpoint.
+    material = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), ipaddress.ip_address("192.0.2.1"))
 
-    # Act
-    reused = gateway.tls("compute-id", "gateway.example", material)
-
-    # Assert
-    assert reused == material
-
-
-def test_gateway_tls_rotates_when_endpoint_changes() -> None:
-    """Generate new gateway TLS material when the endpoint SAN no longer matches."""
-
-    # Arrange
-    gateway = Gateway()
-    material = gateway.tls("compute-id", "gateway.example")
-
-
-    # Act
-    rotated = gateway.tls("compute-id", "other.example", material)
-
-
-    # Assert
-    assert rotated != material
-    assert gateway.tls("compute-id", "other.example", rotated) == rotated
-
-
-def test_gateway_tls_rotates_malformed_material() -> None:
-    """Generate new gateway TLS material when persisted PEM data is malformed."""
-
-    # Arrange
-    material = GatewayTLSMaterial(ca_certificate="bad-ca", certificate="bad-cert", private_key="bad-key")
-
-    # Act
-    rotated = Gateway().tls("compute-id", "gateway.example", material)
-
-    # Assert
-    assert rotated != material
-    assert "BEGIN CERTIFICATE" in rotated.ca_certificate
+    # Verify all generated values use PEM encoding.
+    assert "BEGIN CERTIFICATE" in material.ca_certificate
+    assert "BEGIN CERTIFICATE" in material.certificate
+    assert "BEGIN PRIVATE KEY" in material.private_key

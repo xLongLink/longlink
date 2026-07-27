@@ -1,27 +1,27 @@
-import { z } from 'zod';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocation, useNavigate } from 'react-router';
+import { Grid } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useLocation, useNavigate } from 'react-router';
+import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
+import { PasswordInput } from '@/components/PasswordInput';
 import { Wordmark } from '@/components/Wordmark';
+import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
+import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
-import { PasswordInput } from '@/components/PasswordInput';
-import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
 
 type RegistrationCompleteValues = {
     name: string;
@@ -50,10 +50,12 @@ export default function VerifyEmail() {
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const welcomeTitle = (
-        <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-            <span>{t('auth.welcomeTo')}</span>
+        <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
+            <Text color="inherit" type="inherit">
+                {t('auth.welcomeTo')}
+            </Text>
             <Wordmark size="heading" />
-        </span>
+        </HStack>
     );
     const schema = z.object({
         name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),
@@ -116,7 +118,7 @@ export default function VerifyEmail() {
             await clearSessionQueries(queryClient, [profileKey]);
             queryClient.setQueryData(profileKey, user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-            navigate(sanitizeRedirectPath(verification.data?.next), { replace: true });
+            navigate('/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
@@ -154,11 +156,9 @@ export default function VerifyEmail() {
     }, [token, verifyRegistration]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoveryNextPath = sanitizeRedirectPath(recoverySetup?.next);
-    const recoveryQuery = new URLSearchParams({
-        next: recoveryNextPath,
-        ...(recoverySetup?.email ? { email: recoverySetup.email } : {}),
-    }).toString();
+    const recoveryQuery = recoverySetup?.email ? new URLSearchParams({ email: recoverySetup.email }).toString() : '';
+    const recoveryRegisterHref = recoveryQuery ? `/auth/register?${recoveryQuery}` : '/auth/register';
+    const recoverySignInHref = recoveryQuery ? `/organizations?${recoveryQuery}` : '/organizations';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -180,7 +180,7 @@ export default function VerifyEmail() {
                             variant="primary"
                         />
                     )}
-                    <Button href={`/auth/register?${recoveryQuery}`} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
                 </Stack>
             </AuthPage>
         );
@@ -204,13 +204,9 @@ export default function VerifyEmail() {
             >
                 <Stack gap={3}>
                     {accountExists ? (
-                        <Button
-                            href={`/organizations?${recoveryQuery}`}
-                            label={t('auth.backToSignIn')}
-                            variant="primary"
-                        />
+                        <Button href={recoverySignInHref} label={t('auth.backToSignIn')} variant="primary" />
                     ) : null}
-                    <Button href={`/auth/register?${recoveryQuery}`} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
                 </Stack>
             </AuthPage>
         );

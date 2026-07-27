@@ -1,36 +1,21 @@
 from src.utils import names
-from collections.abc import Callable, Awaitable
 from kr8s.asyncio.objects import Pod, Namespace
-from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import Reconciler, DesiredCompute, ReconcileResult
+from src.kubernetes.gateway import Gateway
 from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.applications import Applications
+from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
-    """Expose desired-state reconciliation and read-only cluster diagnostics."""
+    """Expose Kubernetes lifecycle abstractions and read-only cluster diagnostics."""
 
     def __init__(self, kubeconfig: str) -> None:
         """Initialize components that share one lazy cluster connection."""
 
         self._resources = KubernetesResources(kubeconfig)
-        self._reconciler = Reconciler(self._resources)
+        self.gateway = Gateway(self._resources)
         self.applications = Applications(self._resources)
-
-    async def reconcile(
-        self,
-        desired: DesiredCompute,
-        proxy_secret: str,
-        existing_tls: GatewayTLSMaterial | None = None,
-        fence: Callable[[], Awaitable[None]] | None = None,
-        stage_tls: Callable[[GatewayTLSMaterial], Awaitable[None]] | None = None,
-    ) -> ReconcileResult:
-        """Forward an authoritative compute snapshot to the cluster reconciler and return gateway connection material.
-
-        Optional fencing and TLS staging preserve operation ownership and trust ordering.
-        """
-
-        return await self._reconciler.reconcile(desired, proxy_secret, existing_tls, fence, stage_tls)
+        self.organizations = Organizations(self._resources)
 
     async def namespaces(self) -> list[str]:
         """List non-core namespaces for cluster diagnostics without mutating them."""

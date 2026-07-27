@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router';
-import type { ArticlePage } from '@/platform/catalog';
-import SideLayout from '@/layout/SideLayout';
 import { Article } from '@/components/Article';
 import { Sidebar } from '@/components/Sidebar';
+import SideLayout from '@/layout/SideLayout';
+import type { ArticlePage } from '@/platform/catalog';
 import { DOC_GROUPS } from '@/platform/docs/catalog';
 
 /** Extends the side layout with documentation navigation and article content. */

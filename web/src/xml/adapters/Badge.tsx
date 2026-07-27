@@ -1,6 +1,6 @@
 import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
-import type { Props } from '@/xml/types';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlLabel } from './props';
 
 /** Renders an Astryx badge with a serializable label. */

@@ -1,0 +1,22 @@
+# Template for one owned organization Namespace and gateway ingress policy.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: $namespace
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-gateway-ingress
+    namespace: $namespace
+spec:
+    podSelector: {}
+    ingress:
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: longlink-system
+                podSelector:
+                    matchLabels:
+                        app: longlink-gateway

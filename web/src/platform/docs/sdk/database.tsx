@@ -1,13 +1,13 @@
-import type { LucideIcon } from 'lucide-react';
 import { Code } from '@astryxdesign/core/Code';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
-import { CodeTabs } from '@/components/CodeTabs';
+import { Text } from '@astryxdesign/core/Text';
+import type { LucideIcon } from 'lucide-react';
+import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { CodeBlock } from '@/components/CodeBlock';
+import { CodeTabs } from '@/components/CodeTabs';
 
 const environments: { backend: React.ReactNode; icon: LucideIcon; name: string }[] = [
     {

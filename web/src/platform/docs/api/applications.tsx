@@ -1,11 +1,11 @@
-import type { LucideIcon } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { ArrowUp, CheckCircle, Columns, Copy, EyeOff, Wrench } from 'lucide-react';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import type { LucideIcon } from 'lucide-react';
+import { ArrowUp, CheckCircle, Columns, Copy, EyeOff, Wrench } from 'lucide-react';
 
 const applicationRoles: { access: string; icon: LucideIcon; name: string }[] = [
     {
@@ -20,7 +20,7 @@ const applicationRoles: { access: string; icon: LucideIcon; name: string }[] = [
     },
     {
         name: 'maintain',
-        access: 'Write access plus logs, member roles, application deletion, and DELETE runtime methods.',
+        access: 'Write access plus environment updates, logs, member roles, application deletion, and DELETE runtime methods.',
         icon: Wrench,
     },
     {
@@ -60,8 +60,11 @@ function ApplicationRuntimeResourcesDiagram() {
 }
 
 export const metadata = {
-    toc: [{ id: 'roles', label: 'Roles' }],
-    lastUpdated: '2026-07-20',
+    toc: [
+        { id: 'environment-updates', label: 'Environment Updates' },
+        { id: 'roles', label: 'Roles' },
+    ],
+    lastUpdated: '2026-07-27',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/applications.tsx',
 };
 
@@ -79,7 +82,17 @@ export const content = (
             In production, each application receives database and storage access scoped to organization resources. The
             runtime can read and write its own application schema and its application prefix in the Organization bucket.
             It can read the shared schema and the bucket's shared prefix without writing to either. The LongLink
-            Platform injects direct application IAM credentials and other environment values as runtime secrets.
+            Platform keeps direct application IAM credentials separate from user-owned environment values in Kubernetes
+            Secrets, so environment updates roll the Application without replacing its runtime identity.
+        </Text>
+        <Heading id="environment-updates" level={2}>
+            Environment Updates
+        </Heading>
+        <Text as="p">
+            PUT /api/applications/{'{application_id}'}/environment accepts an envs object containing the complete
+            desired user environment. Omitted values are removed. The Application must be running, and the caller must
+            have maintain access. LONGLINK_ names are reserved for the Platform. A successful request returns no
+            environment values and starts a rolling Deployment update without changing database or storage credentials.
         </Text>
         <ApplicationRuntimeResourcesDiagram />
         <Heading id="roles" level={2}>

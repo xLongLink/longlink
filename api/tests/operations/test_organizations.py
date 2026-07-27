@@ -1,26 +1,25 @@
-from src import projections
+import pytest
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
+from src.operations import organizations as organization_operations
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
 
-async def test_sync_organization_users_projects_active_and_deleted_memberships(
-    users: tuple[User, User, User],
-    monkeypatch,
-) -> None:
-    """Send organization memberships to the shared users projection endpoint."""
+async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Seed Organization memberships through the shared users schema boundary."""
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
     deleted_at = base_time + timedelta(minutes=2)
     calls: list[tuple[str, list[dict[str, object]]]] = []
 
+    # Persist one deleted membership whose deactivation follows its last regular update.
     Session = await get_session()
     async with Session() as session:
         member_row = await session.get(User, member.id)
@@ -38,14 +37,14 @@ async def test_sync_organization_users_projects_active_and_deleted_memberships(
         await session.commit()
 
     async def sync_url(shared_schema_url: str, rows: list[dict[str, object]]) -> None:
-        """Capture the shared projection payload."""
+        """Capture the shared users payload."""
 
         calls.append((shared_schema_url, rows))
 
-    monkeypatch.setattr("src.projections.shared_users.sync_url", sync_url)
+    monkeypatch.setattr(organization_operations.shared_users, "sync_url", sync_url)
 
     # Act
-    await projections.sync_organization_users(organization)
+    await organization_operations.sync_users(organization)
 
     # Assert
     assert calls[0][0] == organization.shared_schema_url

@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import Cookie, Depends, Request, HTTPException
 from datetime import timedelta
 from sqlmodel import col
-from src.utils import roles, token
+from src.utils import token
 from sqlalchemy import select
 from src.database import session as database
 from collections.abc import AsyncIterator
@@ -12,11 +12,6 @@ from longlink.utils.time import utcnow
 from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User, AccessToken
-
-AUTH_COOKIE = "longlink_auth"
-REGISTRATION_COOKIE = "longlink_registration"
-PASSWORD_RESET_COOKIE = "longlink_password_reset"
-PASSWORD_RESET_COOKIE_LIFETIME_SECONDS = 900
 
 
 class SessionAccountsService:
@@ -30,6 +25,7 @@ class SessionAccountsService:
     def list(self) -> list[UUID]:
         """Return valid saved local user identifiers."""
 
+        # Validate the signed session value before parsing saved account identifiers.
         raw_accounts = self.request.session.get("account_ids", [])
         if not isinstance(raw_accounts, list):
             return []
@@ -48,9 +44,8 @@ class SessionAccountsService:
     def remember(self, user_id: UUID) -> None:
         """Save one account as the most recently authenticated account."""
 
-        accounts = self.list()
-
         # Keep a bounded account list so the signed session cookie remains small.
+        accounts = self.list()
         if user_id in accounts:
             accounts.remove(user_id)
         accounts.append(user_id)
@@ -59,9 +54,8 @@ class SessionAccountsService:
     def remove(self, user_id: UUID) -> None:
         """Remove one account from the signed saved-account list."""
 
-        accounts = self.list()
-
         # Persist the remaining account identifiers in their current order.
+        accounts = self.list()
         if user_id in accounts:
             accounts.remove(user_id)
         self.request.session["account_ids"] = [str(account) for account in accounts]
@@ -78,7 +72,7 @@ async def get_auth_session() -> AsyncIterator[AsyncSession]:
 
 
 async def current_optional_user_token(
-    credential: str | None = Cookie(default=None, alias=AUTH_COOKIE),
+    credential: str | None = Cookie(default=None, alias="longlink_auth"),
     session: AsyncSession = Depends(get_auth_session),
 ) -> tuple[User | None, str | None]:
     """Return the active user and credential for one valid optional browser session."""
@@ -104,9 +98,7 @@ async def current_optional_user_token(
     return user, credential
 
 
-async def current_authenticated_user(
-    authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
-) -> User:
+async def current_authenticated_user(authentication: tuple[User | None, str | None] = Depends(current_optional_user_token)) -> User:
     """Require and return one active authenticated LongLink user."""
 
     # Convert missing, expired, and revoked sessions into one stable authentication error.
@@ -119,9 +111,8 @@ async def current_authenticated_user(
 async def authuser(authenticated: User = Depends(current_authenticated_user)) -> User:
     """Load the authenticated user with current LongLink resource access."""
 
-    user = await users.get(authenticated.id, include_access=True)
-
     # Reject stale or soft-deleted accounts after token authentication.
+    user = await users.get(authenticated.id, include_access=True)
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
@@ -131,15 +122,6 @@ async def authadmin(user: User = Depends(current_authenticated_user)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
-    if not roles.atleast(user.role, PlatformRoles.administrator):
-        raise HTTPException(status_code=403, detail="Permission required")
-    return user
-
-
-async def authsupport(user: User = Depends(current_authenticated_user)) -> User:
-    """Authenticate a support or administrator account."""
-
-    # Only support-capable accounts can continue past this check.
-    if not roles.atleast(user.role, PlatformRoles.support):
+    if user.role != PlatformRoles.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user

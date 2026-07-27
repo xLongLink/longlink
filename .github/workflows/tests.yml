@@ -1,206 +1,210 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-  workflow_dispatch:
-  workflow_call:
+    push:
+        branches:
+            - main
+    pull_request:
+    workflow_dispatch:
+    workflow_call:
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  # The API is packaged into a container, so test it on the supported Python runtime.
-  api-tests:
-    runs-on: ubuntu-latest
+    # The API is packaged into a container, so test it on the supported Python runtime.
+    api-tests:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12.13"
+            - name: Setup Python
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: '3.12.13'
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          enable-cache: true
-          version: "0.11.30"
+            - name: Setup uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  enable-cache: true
+                  version: '0.11.30'
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.3.14"
+            - name: Setup Vite+
+              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      cwd: .
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
-      - name: Install dependencies
-        working-directory: api
-        run: uv sync --locked --extra dev
+            - name: Install dependencies
+              working-directory: api
+              run: uv sync --locked --extra dev
 
-      - name: Install web dependencies
-        working-directory: web
-        run: bun install --frozen-lockfile
+            - name: Build API web bundle
+              working-directory: web
+              run: vp run build:api:bundle --logLevel warn
 
-      - name: Build API web bundle
-        working-directory: web
-        run: bun run build:api:bundle --logLevel warn
+            - name: Run tests
+              working-directory: api
+              run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
 
-      - name: Run tests
-        working-directory: api
-        run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+            - name: Run ty
+              working-directory: api
+              run: uv run --locked --extra dev ty check
 
-      - name: Run ty
-        working-directory: api
-        run: uv run --locked --extra dev ty check
+    # The SDK requires Python 3.12 or newer.
+    sdk-tests:
+        runs-on: ubuntu-latest
 
-  # The SDK requires Python 3.12 or newer.
-  sdk-tests:
-    runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Setup Python
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: '3.12.13'
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12.13"
+            - name: Setup uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  enable-cache: true
+                  version: '0.11.30'
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          enable-cache: true
-          version: "0.11.30"
+            - name: Setup Vite+
+              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      cwd: .
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.3.14"
+            - name: Install dependencies
+              working-directory: sdk
+              run: uv sync --locked --group dev
 
-      - name: Install dependencies
-        working-directory: sdk
-        run: uv sync --locked --group dev
+            - name: Build SDK web bundle
+              working-directory: web
+              run: vp run build:sdk:bundle --logLevel warn
 
-      - name: Install web dependencies
-        working-directory: web
-        run: bun install --frozen-lockfile
+            - name: Run tests
+              working-directory: sdk
+              run: uv run --locked pytest -m "not integration" tests
 
-      - name: Build SDK web bundle
-        working-directory: web
-        run: bun run build:sdk:bundle --logLevel warn
+            - name: Run ty
+              working-directory: sdk
+              run: uv run --locked --group dev ty check
 
-      - name: Run tests
-        working-directory: sdk
-        run: uv run --locked pytest -m "not integration" tests
+            - name: Build SDK distribution
+              working-directory: sdk
+              run: uv build
 
-      - name: Run ty
-        working-directory: sdk
-        run: uv run --locked --group dev ty check
+    # Keep Docker-backed infrastructure coverage outside the fast Python jobs.
+    integration-tests:
+        runs-on: ubuntu-latest
 
-      - name: Build SDK distribution
-        working-directory: sdk
-        run: uv build
+        strategy:
+            fail-fast: false
+            matrix:
+                workspace: [api, sdk]
 
-  # Keep Docker-backed infrastructure coverage outside the fast Python jobs.
-  integration-tests:
-    runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    strategy:
-      fail-fast: false
-      matrix:
-        workspace: [api, sdk]
+            - name: Setup Python
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: '3.12.13'
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Setup uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  enable-cache: true
+                  version: '0.11.30'
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12.13"
+            - name: Install dependencies
+              working-directory: ${{ matrix.workspace }}
+              run: uv sync --locked --all-extras --all-groups
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          enable-cache: true
-          version: "0.11.30"
+            - name: Run integration tests
+              working-directory: ${{ matrix.workspace }}
+              run: ENVIRONMENT=testing uv run --locked pytest -m integration tests
 
-      - name: Install dependencies
-        working-directory: ${{ matrix.workspace }}
-        run: uv sync --locked --all-extras --all-groups
+    # Verify that a generated Application installs and runs in an isolated environment.
+    sdk-scaffold-tests:
+        runs-on: ubuntu-latest
 
-      - name: Run integration tests
-        working-directory: ${{ matrix.workspace }}
-        run: ENVIRONMENT=testing uv run --locked pytest -m integration tests
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-  # Verify that a generated Application installs and runs in an isolated environment.
-  sdk-scaffold-tests:
-    runs-on: ubuntu-latest
+            - name: Setup Python
+              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: '3.12.13'
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Setup uv
+              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+              with:
+                  enable-cache: true
+                  version: '0.11.30'
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12.13"
+            - name: Setup Vite+
+              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      cwd: .
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          enable-cache: true
-          version: "0.11.30"
+            - name: Install SDK dependencies
+              working-directory: sdk
+              run: uv sync --locked --group dev
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.3.14"
+            - name: Build SDK web bundle
+              working-directory: web
+              run: vp run build:sdk:bundle --logLevel warn
 
-      - name: Install SDK dependencies
-        working-directory: sdk
-        run: uv sync --locked --group dev
+            - name: Run generated scaffold tests
+              working-directory: sdk
+              run: sh tests/scaffold-smoke.sh
 
-      - name: Install web dependencies
-        working-directory: web
-        run: bun install --frozen-lockfile
+    # The web package uses Vite+ and Bun, so run its checks separately.
+    web-tests:
+        runs-on: ubuntu-latest
 
-      - name: Build SDK web bundle
-        working-directory: web
-        run: bun run build:sdk:bundle --logLevel warn
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run generated scaffold tests
-        working-directory: sdk
-        run: sh tests/scaffold-smoke.sh
+            - name: Setup Vite+
+              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+              with:
+                  cache: true
+                  node-version-file: package.json
+                  run-install: |
+                      cwd: .
+                      args: ['--frozen-lockfile']
+                  working-directory: web
 
-  # The web package uses Bun, so run its test suite separately.
-  web-tests:
-    runs-on: ubuntu-latest
+            - name: Run tests
+              working-directory: web
+              run: vp run test
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Run static checks
+              working-directory: web
+              run: vp check
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.3.14"
-
-      - name: Install dependencies
-        working-directory: web
-        run: bun install --frozen-lockfile
-
-      - name: Run tests
-        working-directory: web
-        run: bun run test
-
-      - name: Run lint
-        working-directory: web
-        run: bun run lint
-
-      - name: Run typecheck
-        working-directory: web
-        run: bun run typecheck
+            - name: Run typecheck
+              working-directory: web
+              run: vp run typecheck

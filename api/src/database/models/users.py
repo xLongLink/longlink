@@ -29,12 +29,7 @@ class User(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
-    updated_at: datetime = Field(
-        default_factory=utcnow,
-        nullable=False,
-        sa_type=UTCDateTime,
-        sa_column_kwargs={"onupdate": utcnow},
-    )
+    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # State

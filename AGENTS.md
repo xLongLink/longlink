@@ -91,6 +91,8 @@ longlink/
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
+- If a constant is used only once, then hardcode the value instead.
+
 
 ## JavaScript / TypeScript Guidelines
 
@@ -120,7 +122,7 @@ longlink/
 
 <!-- ASTRYX:START -->
 
-CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
+CLI: run every command from `web/` as `vp exec astryx <cmd>` (shown below as `astryx ...`).
 
 SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
 import "@astryxdesign/core/reset.css";

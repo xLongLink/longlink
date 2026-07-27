@@ -97,8 +97,8 @@ celerybeat.pid
 .env.*
 !.env.sample
 !**/.env.sample
-!.env.seed
-!**/.env.seed
+!.env.seed.sample
+!**/.env.seed.sample
 .venv
 .direnv/
 env/
@@ -129,7 +129,9 @@ dmypy.json
 # IDE
 /.vscode/
 !/.vscode/
+!/.vscode/extensions.json
 !/.vscode/launch.json
+!/.vscode/settings.json
 .idea/
 *.swp
 *.swo
@@ -162,6 +164,7 @@ script.bat
 *.p12
 *.pfx
 *kubeconfig*.yaml
+*kubeconfig*.yml
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/

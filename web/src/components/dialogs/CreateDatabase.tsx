@@ -1,23 +1,22 @@
-import { z } from 'zod';
-import { useId, useState } from 'react';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Selector } from '@astryxdesign/core/Selector';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { Grid } from '@astryxdesign/core/Grid';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { fetchApiJson } from '@/lib/api';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useId, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
+import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
-import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { databasesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -43,7 +42,6 @@ type Values = z.infer<typeof schema>;
 export default function CreateDatabase() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -67,17 +65,9 @@ export default function CreateDatabase() {
         onSuccess: async () => {
             setOpen(false);
             resetDialogState();
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: databasesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
         },
     });
-
-    // Only administrators can register infrastructure.
-    if (role !== 'administrator') {
-        return null;
-    }
 
     /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {

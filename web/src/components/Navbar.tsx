@@ -1,13 +1,13 @@
-import { ExternalLink } from 'lucide-react';
+import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { Center } from '@astryxdesign/core/Center';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Wordmark } from '@/components/Wordmark';
+import { ExternalLink } from 'lucide-react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
+import { Wordmark } from '@/components/Wordmark';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 /** Renders the public landing page navigation. */
@@ -44,21 +44,23 @@ export function Navbar() {
                                     <Stack direction="horizontal" gap={4} vAlign="center">
                                         <Link
                                             href="/docs"
-                                            className="group"
+                                            className="group hover:no-underline"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className="group-hover:text-accent">Documentation</span>
+                                            <span className="transition-colors group-hover:text-accent">
+                                                Documentation
+                                            </span>
                                         </Link>
                                         <Link
                                             href="/pricing"
-                                            className="group"
+                                            className="group hover:no-underline"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className="group-hover:text-accent">Pricing</span>
+                                            <span className="transition-colors group-hover:text-accent">Pricing</span>
                                         </Link>
                                         <Link
                                             as="a"

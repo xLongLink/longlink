@@ -1,6 +1,4 @@
-import pytest
 from uuid import uuid4
-from src.models.types import Theme, Accent
 from src.database.services import users as user_service
 from src.database.models.users import User
 
@@ -26,57 +24,3 @@ async def test_missing_user_get_returns_none() -> None:
     result = await user_service.get(uuid4())
 
     assert result is None
-
-
-async def test_update_applies_profile_settings_and_preserves_password(users: tuple[User, User, User]) -> None:
-    """Update mutable profile fields without changing the password hash."""
-
-    user = users[1]
-
-    # Patch all supported profile fields by local user identifier.
-    updated = await user_service.update(
-        user_id=user.id,
-        name="Updated User",
-        avatar="https://example.com/updated.png",
-        theme=Theme.light,
-        accent=Accent.blue,
-        radius=1.5,
-    )
-
-    assert updated.id == user.id
-    assert updated.name == "Updated User"
-    assert updated.avatar == "https://example.com/updated.png"
-    assert updated.theme == Theme.light
-    assert updated.accent == Accent.blue
-    assert updated.radius == 1.5
-    assert updated.hashed_password == user.hashed_password
-
-
-async def test_update_preserves_omitted_profile_fields(users: tuple[User, User, User]) -> None:
-    """Leave profile settings unchanged when a later patch omits them."""
-
-    user = users[1]
-    await user_service.update(
-        user_id=user.id,
-        avatar="https://example.com/settings.png",
-        theme=Theme.light,
-        accent=Accent.blue,
-        radius=1.5,
-    )
-
-    # Change one field without resetting prior profile values.
-    updated = await user_service.update(user_id=user.id, name="Settings User")
-
-    assert updated.name == "Settings User"
-    assert updated.avatar == "https://example.com/settings.png"
-    assert updated.theme == Theme.light
-    assert updated.accent == Accent.blue
-    assert updated.radius == 1.5
-
-
-async def test_update_rejects_missing_local_user() -> None:
-    """Reject profile updates for a local UUID that does not exist."""
-
-    # Preserve explicit failure semantics for stale authenticated identifiers.
-    with pytest.raises(ValueError, match="User not found"):
-        await user_service.update(user_id=uuid4(), name="Missing User")

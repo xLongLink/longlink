@@ -1,10 +1,10 @@
-import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useApiQuery } from '@/hooks/use-api';
 
 /** Parses the application log response. */

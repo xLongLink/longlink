@@ -15,8 +15,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.no_db]
 POSTGRES_PORT = 5432
 
 
-async def test_claim_next_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Coalesce concurrent enqueue calls and lease their work to exactly one PostgreSQL worker."""
+async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Coalesce duplicate work and globally lease one Operation across PostgreSQL workers."""
 
     # Skip only when the Docker daemon cannot be reached.
     require_docker_daemon()
@@ -44,39 +44,48 @@ async def test_claim_next_leases_one_operation_to_one_concurrent_worker(monkeypa
         monkeypatch.setattr(database_session, "_engine", engine)
         monkeypatch.setattr(database_session, "Session", session_factory)
 
-        # Create one compute target without invoking the registry service's queue side effect.
+        # Create independent compute targets without invoking registry service queue side effects.
         async with session_factory() as session:
-            compute = ComputeRegistry(
-                name="Local",
-                slug="local",
+            first_compute = ComputeRegistry(
+                name="First",
+                slug="first",
                 kubeconfig="apiVersion: v1\nclusters: []\n",
-                proxy_secret="proxy-secret",
+                proxy_secret="first-secret",
             )
-            session.add(compute)
+            second_compute = ComputeRegistry(
+                name="Second",
+                slug="second",
+                kubeconfig="apiVersion: v1\nclusters: []\n",
+                proxy_secret="second-secret",
+            )
+            session.add_all([first_compute, second_compute])
             await session.commit()
 
-        # Race independent enqueue transactions against the partial unique index.
-        enqueue_tasks = [asyncio.create_task(operations.enqueue(compute.id)) for _ in range(2)]
-        enqueued = await asyncio.gather(*enqueue_tasks)
+        # Race duplicate enqueue transactions, then add unrelated work on another compute.
+        enqueue_tasks = [asyncio.create_task(operations.enqueue(first_compute.id)) for _ in range(2)]
+        duplicates = await asyncio.gather(*enqueue_tasks)
+        waiting = await operations.enqueue(second_compute.id)
 
         # Run two workers concurrently so each claim uses an independent session and PostgreSQL row lock.
         workers = [asyncio.create_task(operations.claim_next()) for _ in range(2)]
         claims = await asyncio.gather(*workers)
         claimed = [claim for claim in claims if claim is not None]
 
-        # Reload the queue independently and verify one open row and one persisted lease.
+        # Reload the queue independently and verify one global lease while unrelated work waits.
         async with session_factory() as session:
             persisted = (await session.execute(select(Operation))).scalars().all()
 
-        assert enqueued[0].id == enqueued[1].id
+        assert duplicates[0].id == duplicates[1].id
         assert len(claimed) == 1
-        assert claimed[0].id == enqueued[0].id
+        assert claimed[0].id == duplicates[0].id
         assert claimed[0].lease_expires_at is not None
-        assert len(persisted) == 1
-        assert persisted[0].platform_version == env.VERSION
-        assert persisted[0].attempt_count == 1
-        assert persisted[0].started_at is not None
-        assert persisted[0].lease_expires_at == claimed[0].lease_expires_at
+        assert len(persisted) == 2
+        persisted_by_id = {operation.id: operation for operation in persisted}
+        active = persisted_by_id[claimed[0].id]
+        queued = persisted_by_id[waiting.id]
+        assert active.platform_version == env.VERSION
+        assert active.lease_expires_at == claimed[0].lease_expires_at
+        assert queued.lease_expires_at is None
     finally:
         # Dispose database connections before removing the PostgreSQL container.
         try:

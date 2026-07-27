@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
-import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
+import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 
-const applicationStatusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
+export const statusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
@@ -15,7 +15,6 @@ const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', '
 
 export const apiRegistrationVerifiedSchema = z.object({
     email: z.email(),
-    next: z.string(),
 });
 
 export const apiUserIdentitySchema = z.object({
@@ -29,11 +28,9 @@ export const apiUserSummarySchema = apiUserIdentitySchema.extend({
     role: platformRoleSchema,
 });
 
-export const apiUserListItemSchema = apiUserSummarySchema;
-
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
-export const apiUserOrganizationSchema = z.object({
+export const apiOrganizationReferenceSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
@@ -41,11 +38,11 @@ export const apiUserOrganizationSchema = z.object({
 });
 
 export const apiUserOrganizationMembershipSchema = z.object({
-    organization: apiUserOrganizationSchema,
+    organization: apiOrganizationReferenceSchema,
     role: roleSchema,
 });
 
-export const apiUserProfileSchema = apiUserListItemSchema.extend({
+export const apiUserProfileSchema = apiUserSummarySchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
@@ -71,7 +68,7 @@ export const apiOrganizationSummarySchema = z.object({
     compute_id: z.string(),
     database_id: z.string(),
     storage_id: z.string(),
-    status: z.enum(['creating', 'running', 'failed', 'deleting']),
+    status: statusSchema,
     created_at: z.string(),
     updated_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -86,7 +83,7 @@ export const apiOrganizationApplicationSummarySchema = z.object({
     slug: z.string(),
     icon: iconNameSchema,
     description: z.string().nullable(),
-    status: applicationStatusSchema,
+    status: statusSchema,
 });
 
 export const apiOrganizationApplicationSchema = z.object({
@@ -121,23 +118,17 @@ export const apiIconsSchema = z.array(z.enum(ICON_NAMES));
 
 export const apiApplicationResponseSchema = z.object({
     id: z.string(),
-    organization_id: z.string(),
-    organization: apiOrganizationSummarySchema,
+    organization: apiOrganizationReferenceSchema,
     name: z.string(),
     slug: z.string(),
     image: z.string(),
     version: z.string().nullable(),
     sdk: z.string().nullable(),
     digest: z.string().nullable(),
-    status: applicationStatusSchema,
+    status: statusSchema,
     description: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
-    updated_at: z.string(),
-    created_by: apiUserSummarySchema,
-    updated_by: apiUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiApplicationMemberSchema = z.object({
@@ -154,55 +145,39 @@ export const apiDatabaseRegistrySchema = z.object({
     port: z.number(),
     sslmode: databaseSslModeSchema,
     username: z.string(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
-    kind: z.literal('exoscale'),
     name: z.string(),
     slug: z.string(),
     endpoint_url: z.string(),
-    runtime_endpoint_url: z.string(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
-    gateway_url: z.string().nullable(),
-    status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
+    status: statusSchema,
     version: z.string().nullable(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiOperationSchema = z.object({
     id: z.string(),
-    compute_id: z.string(),
-    scope: z.enum(['platform', 'application']),
+    kind: z.enum([
+        'compute.reconcile',
+        'application.create',
+        'application.delete',
+        'organization.create',
+        'organization.delete',
+        'organization.reconcile',
+    ]),
+    target_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
-    attempt_count: z.number().int().nonnegative(),
     created_at: z.string(),
-    started_at: z.string().nullable(),
-    stopped_at: z.string().nullable(),
-    scheduled_at: z.string(),
+    finished_at: z.string().nullable(),
+    available_at: z.string(),
 });
 
 export const apiComputeMutationResponseSchema = z.object({
@@ -224,18 +199,6 @@ export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),
     node: z.string().nullable(),
-});
-
-export const apiRegistryOptionSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-});
-
-export const apiInfrastructureOptionsSchema = z.object({
-    computes: z.array(apiRegistryOptionSchema),
-    databases: z.array(apiRegistryOptionSchema),
-    storages: z.array(apiRegistryOptionSchema),
 });
 
 export const apiOrganizationDatabaseResourceSchema = z.object({

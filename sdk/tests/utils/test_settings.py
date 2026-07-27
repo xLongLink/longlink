@@ -4,6 +4,7 @@ from longlink.utils.settings import Envs
 def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch) -> None:
     """Read SDK runtime settings from `LONGLINK_` process variables."""
 
+    # Populate every supported prefixed runtime setting and one unprefixed conflict.
     monkeypatch.setenv("ENV", "testing")
     monkeypatch.setenv("LONGLINK_ENV", "production")
     monkeypatch.setenv("LONGLINK_DATABASE_HOST", "db")
@@ -21,8 +22,10 @@ def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch) -> None:
     monkeypatch.setenv("LONGLINK_STORAGE_SHARED_PREFIX", "shared/")
     monkeypatch.setenv("LONGLINK_STORAGE_USERNAME", "storage-user")
 
+    # Load settings from the process environment.
     settings = Envs()
 
+    # Verify prefixed values and typed conversions are preserved.
     assert settings.ENV == "production"
     assert settings.DATABASE_HOST == "db"
     assert settings.DATABASE_NAME == "longlink"

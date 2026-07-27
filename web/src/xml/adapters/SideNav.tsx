@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
+import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
-import { evaluate } from '@/xml/expressions';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import { requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
 

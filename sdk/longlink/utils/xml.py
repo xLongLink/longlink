@@ -47,6 +47,7 @@ class Element:
         self.schema_path: Path | None = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
         self._content: str | None = None
 
+
     @classmethod
     def from_content(cls, content: str, schema: str | Path | None = None) -> "Element":
         """Create an element instance from in-memory XML content."""
@@ -56,6 +57,7 @@ class Element:
         instance.schema_path = Path(schema) if schema is not None else None
         instance._content = content
         return instance
+
 
     @property
     def content(self) -> str:
@@ -69,6 +71,7 @@ class Element:
                 self._content = handler.read()
         return self._content
 
+
     def validate(self) -> None:
         """Validate the XML document against the configured XSD schema."""
 
@@ -76,6 +79,7 @@ class Element:
         if UNSUPPORTED_XML_MARKUP_PATTERN.search(self.content):
             raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
 
+        # Load the bundled schema with external entities and network access disabled.
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
         schema_doc = etree.parse(str(self._schema_file_path()), parser)
         schema = etree.XMLSchema(schema_doc)
@@ -103,6 +107,7 @@ class Element:
         for paragraph in xml_doc.iter("P"):
             if paragraph.get("value") is not None:
                 raise ValueError(f"XML is invalid: Line {paragraph.sourceline}: P does not support the value attribute")
+
 
     def _schema_file_path(self) -> Path:
         """Resolve the XSD file path for validation."""

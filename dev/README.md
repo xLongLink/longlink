@@ -1,7 +1,8 @@
 <div align="center">
 
-# Development tools
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
+Development tools
 </div>
 
 <br />
@@ -44,6 +45,12 @@ k3d kubeconfig get compute > api/kubeconfig.yaml
 
 ## Local seed setup
 
+Create the ignored seed configuration from the tracked sample:
+
+```bash
+cp api/.env.seed.sample api/.env.seed
+```
+
 Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env.seed`:
 
 ```bash
@@ -51,6 +58,27 @@ EXOSCALE_API_KEY=EXO...
 EXOSCALE_API_SECRET=replace-with-the-api-secret
 EXOSCALE_STORAGE_ENDPOINT_URL=https://sos-ch-gva-2.exo.io
 ```
+
+To test Organization and Application database provisioning against a remote PostgreSQL server instead of the local
+service, set its administrator URL in the same ignored file:
+
+```bash
+APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=require
+```
+
+The configured role must be able to connect to the `postgres` maintenance database and create databases and roles.
+The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not point
+the seed at a PostgreSQL server containing production LongLink data. `make down` does not remove databases or roles
+from a configured remote server.
+
+To reconcile compute resources against a remote Kubernetes cluster, set the path to its ignored kubeconfig:
+
+```bash
+KUBECONFIG=../kubeconfig.yml
+```
+
+The default `localhost:15000/longlink-app:dev` image is only reachable from local k3d. Set `LOCAL_APPLICATION_IMAGE` to
+an image the remote cluster can pull before seeding a remote compute target.
 
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
@@ -62,9 +90,23 @@ make seed
 ```
 
 The pushed image is `localhost:15000/longlink-app:dev` by default.
-LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove all
-resources tracked by local Platform state before that state is deleted. PostgreSQL remains local because it matches the
-production PostgreSQL contract without provisioning a remote database.
+LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove those
+resources before local Platform state is deleted. PostgreSQL remains local by default because it matches the production
+PostgreSQL contract without provisioning a remote database.
 
 `make down` stops on cleanup or infrastructure errors and preserves `api/dev.db` and `api/kubeconfig.yaml` for recovery.
 Retry the command after resolving the reported error.
+
+<br/>
+<br/>
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+
+</div>
+
+---

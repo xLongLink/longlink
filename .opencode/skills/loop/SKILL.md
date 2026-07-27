@@ -15,7 +15,6 @@ description: Code improvements loop
 
 ## Focus
 
-
 1. Security: authentication, authorization, tenant isolation, secret handling, unsafe redirects, SSRF, XSS, injection, path traversal, header handling, CORS, CSRF, dependency risk, and sensitive logging. Perform a Static Analysis, Make a Vulnerability research, Find Edge Cases, Bugs, Primitives, Patterns
 2. Permissions: organization access, application membership, role checks, user-controlled identifiers, resource ownership, and cross-tenant data access.
 3. Validation: request schemas, Pydantic constraints, XML parsing, environment variables, file uploads, URLs, enum handling, database constraints, and clear error responses.

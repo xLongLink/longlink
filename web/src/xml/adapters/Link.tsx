@@ -1,9 +1,9 @@
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl, useAnchorUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */

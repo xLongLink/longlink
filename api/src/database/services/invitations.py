@@ -7,7 +7,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -22,37 +22,42 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
 
     # Use one session for validation and invitation creation.
     async with session_scope() as session:
-        organization_statement = select(Organization.id).where(
-            Organization.id == organization_id,
-            Organization.deleted_at.is_(None),
-        )
-
         # Require an active target organization.
-        if (await session.execute(organization_statement)).scalar_one_or_none() is None:
+        organization_id_exists = (
+            await session.scalars(
+                select(Organization.id).where(
+                    Organization.id == organization_id,
+                    Organization.deleted_at.is_(None),
+                )
+            )
+        ).one_or_none()
+        if organization_id_exists is None:
             raise HTTPException(status_code=404, detail="Organization not found")
 
-        member_statement = (
-            select(User.id)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                func.lower(User.email) == normalized_email,
-            )
-        )
-
         # Reject emails that already belong to the organization.
-        if (await session.execute(member_statement)).scalar_one_or_none() is not None:
+        member_id = (
+            await session.scalars(
+                select(User.id).join(UserOrganization, UserOrganization.user_id == User.id).where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                    func.lower(User.email) == normalized_email,
+                )
+            )
+        ).one_or_none()
+        if member_id is not None:
             raise HTTPException(status_code=409, detail="User is already a member")
 
-        invitation_statement = select(OrganizationInvitation.id).where(
-            OrganizationInvitation.organization_id == organization_id,
-            OrganizationInvitation.deleted_at.is_(None),
-            func.lower(OrganizationInvitation.email) == normalized_email,
-        )
-
         # Keep one pending invitation per email address.
-        if (await session.execute(invitation_statement)).scalar_one_or_none() is not None:
+        invitation_id = (
+            await session.scalars(
+                select(OrganizationInvitation.id).where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                    func.lower(OrganizationInvitation.email) == normalized_email,
+                )
+            )
+        ).one_or_none()
+        if invitation_id is not None:
             raise HTTPException(status_code=409, detail="Invitation already exists")
 
         invitation = OrganizationInvitation(
@@ -68,32 +73,32 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         try:
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Invitation already exists") from exc
 
         return invitation
 
 
-async def accept_in_session(session: AsyncSession, user: User) -> int:
+async def accept_in_session(session: AsyncSession, user: User) -> None:
     """Accept pending invitations for one user's verified email in the caller's transaction."""
 
     normalized_email = user.email.strip().lower()
 
     # Lock matching invitations and retain their exact Organization boundaries.
-    statement = (
-        select(OrganizationInvitation, Organization.compute_id)
-        .join(Organization, Organization.id == OrganizationInvitation.organization_id)
-        .where(
-            OrganizationInvitation.deleted_at.is_(None),
-            Organization.deleted_at.is_(None),
-            func.lower(OrganizationInvitation.email) == normalized_email,
+    rows = (
+        await session.execute(
+            select(OrganizationInvitation, Organization.compute_id)
+            .join(Organization, Organization.id == OrganizationInvitation.organization_id)
+            .where(
+                OrganizationInvitation.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+                func.lower(OrganizationInvitation.email) == normalized_email,
+            )
+            .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
+            .with_for_update()
         )
-        .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
-        .with_for_update()
-    )
-    rows = (await session.execute(statement)).all()
+    ).all()
     if not rows:
-        return 0
+        return
 
     # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
     organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
@@ -103,13 +108,13 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
         organization_computes[invitation.organization_id] = compute_id
 
     now = utcnow()
-    changed_compute_ids: set[UUID] = set()
+    changed_organization_ids: set[UUID] = set()
 
     # Create or restore access within each invitation's Organization without changing active roles.
     for organization_id, pending in organization_invitations.items():
         invitation = min(pending, key=lambda item: roles.rank(item.role))
         membership = (
-            await session.execute(
+            await session.scalars(
                 select(UserOrganization)
                 .where(
                     UserOrganization.user_id == user.id,
@@ -117,7 +122,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
                 )
                 .with_for_update()
             )
-        ).scalar_one_or_none()
+        ).one_or_none()
         if membership is None:
             session.add(
                 UserOrganization(
@@ -128,14 +133,14 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
                     updated_id=user.id,
                 )
             )
-            changed_compute_ids.add(organization_computes[organization_id])
+            changed_organization_ids.add(organization_id)
         elif membership.deleted_at is not None:
             membership.role = invitation.role
             membership.updated_at = now
             membership.updated_id = user.id
             membership.deleted_at = None
             membership.deleted_id = None
-            changed_compute_ids.add(organization_computes[organization_id])
+            changed_organization_ids.add(organization_id)
 
         # Consume every matching invitation, including safe duplicate rows.
         for item in pending:
@@ -145,18 +150,10 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
             item.deleted_id = user.id
 
     # Publish new Organization access to managed runtimes after the transaction commits.
-    for compute_id in sorted(changed_compute_ids, key=str):
-        await operations.enqueue_in_session(session, compute_id, ReconciliationScope.application)
-
-    return len(rows)
-
-
-async def accept(user: User) -> int:
-    """Accept and commit pending Organization invitations for one user."""
-
-    # Keep membership creation and invitation consumption in one transaction.
-    async with session_scope() as session:
-        accepted = await accept_in_session(session, user)
-        if accepted:
-            await session.commit()
-        return accepted
+    for organization_id in sorted(changed_organization_ids, key=str):
+        await operations.enqueue_in_session(
+            session,
+            organization_computes[organization_id],
+            kind=OperationKind.organization_reconcile,
+            target_id=organization_id,
+        )

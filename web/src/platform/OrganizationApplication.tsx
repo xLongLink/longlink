@@ -1,14 +1,14 @@
 import { useParams } from 'react-router';
-import { Auth } from '@/components/Auth';
-import NotFound from '@/platform/NotFound';
-import { hasMinimumRole } from '@/lib/roles';
 import View from '@/application/runtime/View';
+import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
+import { hasMinimumRole } from '@/lib/roles';
+import NotFound from '@/platform/NotFound';
 
 /** Protects and renders one proxy-backed organization application. */
 export default function OrganizationApplication() {
     return (
-        <Auth requiredRole="user">
+        <Auth>
             <OrganizationApplicationView />
         </Auth>
     );
@@ -30,7 +30,7 @@ function OrganizationApplicationView() {
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
-        return <View applicationStatus="loading" pages="" />;
+        return <View isApplicationLoading pages="" />;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.

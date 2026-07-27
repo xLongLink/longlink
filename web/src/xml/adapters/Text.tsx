@@ -1,8 +1,8 @@
 import { Text as AstryxText, type TextProps } from '@astryxdesign/core/Text';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
 /** Renders semantic Astryx text from a value, translation, or nested XML. */

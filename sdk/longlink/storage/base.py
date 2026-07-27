@@ -32,6 +32,7 @@ def create_fs(env: Envs, bucket: str, prefix: str) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     else:
+
         # Require all production storage credentials before constructing the backend.
         if (
             env.STORAGE_ENDPOINT_URL is None

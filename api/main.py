@@ -2,27 +2,28 @@ import asyncio
 import contextlib
 from fastapi import FastAPI
 from pathlib import Path
-from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, databases
+from src.utils import jobs
+from src.routes import auth, icons, image, proxy, users, health, accounts, branding, computes, storages, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src.operations import computes as operation_computes
-from src.utils.jobs import run_operation_scheduler
+from src.operations import computes as _operation_computes
+from src.operations import applications as _operation_applications
+from src.operations import organizations as _operation_organizations
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
-from src.database.services import operations
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Validate release compatibility, then run this API replica's Operation scheduler."""
+    """Run this API replica's registered Operation scheduler."""
 
-    await operations.reject_platform_downgrade()
-    await operations.enqueue_platform_reconciliation()
-    worker = asyncio.create_task(run_operation_scheduler(operation_computes.reconcile))
+    # Validate every Operation handler before starting this replica's scheduler.
+    jobs.validate_handlers()
+    worker = asyncio.create_task(jobs.run_operation_scheduler())
 
     # Always stop the Operation scheduler when the application lifespan exits.
     try:
@@ -54,6 +55,7 @@ install_frontend_middleware(app)
 app.include_router(auth.router)
 app.include_router(accounts.router)
 app.include_router(applications.router)
+app.include_router(proxy.router)
 app.include_router(branding.router)
 app.include_router(computes.router)
 app.include_router(databases.router)

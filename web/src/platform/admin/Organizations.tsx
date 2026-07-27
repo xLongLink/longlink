@@ -1,25 +1,24 @@
-import { Copy } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiOrganizationSummary } from '@/lib/types';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy } from 'lucide-react';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useOrganizations } from '@/data/admin';
-import { useUserProfile } from '@/hooks/use-user';
+import { useToast } from '@/hooks/use-toast';
+import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';
+import type { ApiOrganizationSummary } from '@/lib/types';
 import { formatDateTime, useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
 function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganizationSummary>[] {
@@ -97,9 +96,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
 export default function AdminOrganizations() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
     const deleteOrganization = useMutation({
         mutationFn: async (organizationId: string) => {
             await fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' });
@@ -121,39 +118,36 @@ export default function AdminOrganizations() {
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns = createOrganizationColumns(t);
-    const organizationColumns: TableColumn<ApiOrganizationSummary>[] = canManage
-        ? [
-              ...columns,
-              {
-                  key: 'actions',
-                  header: t('columns.action'),
-                  width: pixel(96),
-                  align: 'end',
-                  renderCell: (organization) => (
-                      <MoreMenu
-                          label={t('common.openActionsFor', { name: organization.name })}
-                          size="sm"
-                          items={[
-                              {
-                                  label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
-                                  icon: <Copy size={16} />,
-                                  onClick: async () => {
-                                      try {
-                                          await navigator.clipboard.writeText(organization.name);
-                                          toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
-                                      } catch {
-                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                      }
-                                  },
-                              },
-                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },
-                          ]}
-                      />
-                  ),
-              },
-          ]
-        : columns;
+    const columns: TableColumn<ApiOrganizationSummary>[] = [
+        ...createOrganizationColumns(t),
+        {
+            key: 'actions',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (organization) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: organization.name })}
+                    size="sm"
+                    items={[
+                        {
+                            label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
+                            icon: <Copy size={16} />,
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(organization.name);
+                                    toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
+                            },
+                        },
+                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },
+                    ]}
+                />
+            ),
+        },
+    ];
 
     return (
         <VStack gap={6} width="100%">
@@ -165,7 +159,7 @@ export default function AdminOrganizations() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={organizationColumns}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

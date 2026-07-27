@@ -1,6 +1,5 @@
 from .storage import Storage, Exoscale
 from .postgres import Postgres
-from .storage.base import StorageRuntimeCredentials
 from src.database.models.storages import StorageRegistry
 
 

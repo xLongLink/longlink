@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import {
     requireXmlString,

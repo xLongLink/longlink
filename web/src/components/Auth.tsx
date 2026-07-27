@@ -1,16 +1,19 @@
-import type { ReactElement } from 'react';
-import { useLocation } from 'react-router';
 import { Center } from '@astryxdesign/core/Center';
-import NotFound from '@/platform/NotFound';
-import PlatformLayout from '@/platform/layout';
-import { useUserProfile } from '@/hooks/use-user';
+import type { ReactElement } from 'react';
 import { SignInCard } from '@/components/SignInCard';
-import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
+import { useUserProfile } from '@/hooks/use-user';
+import PlatformLayout from '@/platform/layout';
+import NotFound from '@/platform/NotFound';
 
-/** Protects routes and optionally requires a platform role. */
-export function Auth({ children, requiredRole }: { children: ReactElement; requiredRole?: PlatformRole }) {
-    const { user, role, isLoading } = useUserProfile();
-    const location = useLocation();
+/** Protects routes and optionally restricts access to Platform administrators. */
+export function Auth({
+    children,
+    requiresAdministrator = false,
+}: {
+    children: ReactElement;
+    requiresAdministrator?: boolean;
+}) {
+    const { user, isLoading } = useUserProfile();
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
@@ -22,18 +25,15 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
         return (
             <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <Center height="100%" width="100%">
-                    <SignInCard redirectTo={`${location.pathname}${location.search}${location.hash}`} />
+                    <SignInCard />
                 </Center>
             </PlatformLayout>
         );
     }
 
-    // Check role requirements only when a route declares one.
-    if (requiredRole) {
-        // Hide routes from users without the required role.
-        if (!hasMinimumRole(role, requiredRole)) {
-            return <NotFound />;
-        }
+    // Hide administrator routes from regular Platform users.
+    if (requiresAdministrator && user.role !== 'administrator') {
+        return <NotFound />;
     }
 
     return children;

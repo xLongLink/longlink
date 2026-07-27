@@ -1,11 +1,10 @@
-import { pageReferenceDocs } from './docs/sdk/references';
-import { documentationPages, homePage, legalPages, pageElementPage, pricingPage, type PublicPage } from './public';
+import { documentationPublicPages } from './docs/pages';
+import { homePage, legalPages, pricingPage, type PublicPage } from './public';
 
 export const publicPages: PublicPage[] = [
     homePage,
     pricingPage,
-    ...Object.values(documentationPages),
-    ...pageReferenceDocs.map(pageElementPage),
+    ...documentationPublicPages,
     ...Object.values(legalPages),
 ];
 

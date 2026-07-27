@@ -1,16 +1,16 @@
-import { Outlet } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
+import { Outlet } from 'react-router';
 import { Auth } from '@/components/Auth';
-import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
+import PlatformLayout from '@/platform/layout';
 
 /** Renders the admin shell with tabbed navigation. */
 export default function Admin() {
     const t = useTranslator();
 
     return (
-        <Auth requiredRole="support">
+        <Auth requiresAdministrator>
             <PlatformLayout
                 tabs={{
                     [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },

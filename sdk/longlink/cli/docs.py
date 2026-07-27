@@ -1,10 +1,10 @@
 import click
-from lxml import etree
-from typing import Any, TypedDict
+import xmlschema
+from typing import TypedDict
 from pathlib import Path
+from functools import cache
 from longlink.constants import ROOT
-
-XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}
+from xmlschema.validators import XsdGroup, XsdAttribute, XsdComplexType
 
 
 class ComponentProp(TypedDict):
@@ -17,20 +17,21 @@ class ComponentProp(TypedDict):
     required: bool
 
 
-class ComponentTypeInfo(TypedDict):
-    """Describe XML component type metadata collected from XSD."""
+class ComponentDetails(TypedDict):
+    """Describe rendered XML component documentation data."""
 
+    name: str
     props: list[ComponentProp]
+    description: str
     any_attribute: bool
     children_supported: bool
 
 
-class ComponentDetails(ComponentTypeInfo):
-    """Describe rendered XML component documentation data."""
+@cache
+def load_schema(schema_path: Path) -> xmlschema.XMLSchema10:
+    """Load and cache one bundled component schema with includes resolved."""
 
-    name: str
-    description: str
-    children_description: str
+    return xmlschema.XMLSchema(schema_path)
 
 
 def resolve_component_schema(component: str) -> Path:
@@ -41,19 +42,16 @@ def resolve_component_schema(component: str) -> Path:
 
     # Prefer direct schema filename matches.
     for schema_path in adapters.glob("*.xsd"):
+
         # Compare filenames without case sensitivity.
         if schema_path.stem.casefold() == normalized:
             return schema_path
 
     # Fall back to component element declarations.
     for schema_path in adapters.glob("*.xsd"):
-        schema = etree.parse(str(schema_path))
-
-        # Scan each declared element in the schema.
-        for element in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
-            # Match component names without case sensitivity.
-            if element.get("name", "").casefold() == normalized:
-                return schema_path
+        schema = load_schema(schema_path)
+        if any(name.casefold() == normalized for name in schema.elements):
+            return schema_path
 
     raise click.ClickException(f"Unknown component: {component}")
 
@@ -61,135 +59,55 @@ def resolve_component_schema(component: str) -> Path:
 def summarize_component_schema(schema_path: Path, component: str) -> ComponentDetails:
     """Extract props, children support, and descriptions from a component schema."""
 
-    schema = etree.parse(str(schema_path))
+    schema = load_schema(schema_path)
     normalized = component.casefold()
-    element = None
 
-    # Locate the requested root element.
-    for candidate in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
-        # Compare element names without case sensitivity.
-        if candidate.get("name", "").casefold() == normalized:
-            element = candidate
-            break
-
-    # Use the first element when the requested name is absent.
+    # Resolve the requested element, falling back to the schema's first root element.
+    element = next((candidate for name, candidate in schema.elements.items() if name.casefold() == normalized), None)
     if element is None:
-        element = schema.find("xsd:element", namespaces=XSD_NAMESPACE)
-
-    # Require at least one root element in the schema.
+        element = next(iter(schema.elements.values()), None)
     if element is None:
         raise click.ClickException(f"Schema does not define a root element: {schema_path.name}")
 
-    complex_type_name = element.get("type")
+    # Components must resolve to a complex type.
+    complex_type = element.type
+    if not isinstance(complex_type, XsdComplexType):
+        raise click.ClickException(f"Schema does not define a complex component type: {schema_path.name}")
 
-    # Components must reference a complex type.
-    if not complex_type_name:
-        raise click.ClickException(f"Schema is missing a type reference: {schema_path.name}")
-
-    # Resolve the referenced complex type.
-    complex_type = schema.find(f"xsd:complexType[@name='{complex_type_name}']", namespaces=XSD_NAMESPACE)
-    if complex_type is None:
-        raise click.ClickException(f"Schema does not define type {complex_type_name}")
-
-    def collect_type_info(type_node: Any, seen: set[str] | None = None) -> ComponentTypeInfo:
-        """Collect inherited attributes and child support from a complex type."""
-
-        seen = seen or set()
-        type_name = type_node.get("name")
-
-        # Stop inherited type cycles.
-        if type_name and type_name in seen:
-            return {"props": [], "children_supported": False, "any_attribute": False}
-
-        # Track named types during inheritance traversal.
-        if type_name:
-            seen.add(type_name)
-
-        props: list[ComponentProp] = []
-        any_attribute = type_node.find("xsd:anyAttribute", namespaces=XSD_NAMESPACE) is not None
-        children_supported = type_node.find(".//xsd:any", namespaces=XSD_NAMESPACE) is not None
-
-        extension = type_node.find("xsd:complexContent/xsd:extension", namespaces=XSD_NAMESPACE)
-
-        # Include metadata inherited from base types.
-        if extension is not None:
-            base_name = extension.get("base")
-
-            # Resolve a named base type when present.
-            if base_name:
-                base_type = schema.find(f"xsd:complexType[@name='{base_name}']", namespaces=XSD_NAMESPACE)
-
-                # Merge inherited metadata when available.
-                if base_type is not None:
-                    base_info = collect_type_info(base_type, seen)
-                    props.extend(base_info["props"])
-                    children_supported = children_supported or bool(base_info["children_supported"])
-                    any_attribute = any_attribute or bool(base_info["any_attribute"])
-
-        # Collect attributes declared on this type.
-        for attribute in type_node.findall(".//xsd:attribute", namespaces=XSD_NAMESPACE):
-            restriction = attribute.find("xsd:simpleType/xsd:restriction", namespaces=XSD_NAMESPACE)
-            values: list[str] = []
-
-            # Capture explicit enumeration values.
-            if restriction is not None:
-                values = [
-                    value
-                    for entry in restriction.findall("xsd:enumeration", namespaces=XSD_NAMESPACE)
-                    if isinstance((value := entry.get("value")), str)
-                ]
-
-            name = attribute.get("name", "")
-            type_name = attribute.get("type", "xsd:string").replace("xsd:", "")
-
-            props.append(
-                {
-                    "name": name,
-                    "required": attribute.get("use") == "required",
-                    "default": attribute.get("default"),
-                    "values": values,
-                    "type": type_name,
-                }
-            )
-
-        return {
-            "props": props,
-            "children_supported": children_supported,
-            "any_attribute": any_attribute,
-        }
-
-    description = ""
-    annotation = element.find("xsd:annotation/xsd:documentation", namespaces=XSD_NAMESPACE)
-
-    # Use element documentation as the summary.
-    if annotation is not None and annotation.text:
-        description = annotation.text.strip()
-
-    type_info = collect_type_info(complex_type)
-    props = type_info["props"]
+    # xmlschema exposes inherited attributes with referenced simple types already resolved.
+    props: list[ComponentProp] = []
+    for name, attribute in complex_type.attributes.items():
+        if name is None or not isinstance(attribute, XsdAttribute):
+            continue
+        props.append(
+            {
+                "name": name,
+                "type": attribute.type.local_name or "string",
+                "values": [str(value) for value in attribute.type.enumeration or []],
+                "default": str(attribute.default) if attribute.default is not None else None,
+                "required": attribute.use == "required",
+            }
+        )
 
     # Document State's dynamic field support.
     if normalized == "state":
         props.append({"name": "any", "required": False, "default": None, "values": [], "type": "any"})
-    child_support = bool(type_info["children_supported"])
-    children_description = ""
-    child_annotation = complex_type.find("xsd:annotation/xsd:documentation", namespaces=XSD_NAMESPACE)
 
-    # Use type documentation for child details.
-    if child_annotation is not None and child_annotation.text:
-        children_description = child_annotation.text.strip()
+    # Any declared or wildcard element content requires paired component tags.
+    content = complex_type.content
+    child_support = isinstance(content, XsdGroup) and next(content.iter_elements(), None) is not None
 
     # Provide a generic fallback summary.
+    description = str(element.annotation).strip() if element.annotation is not None else ""
     if not description:
-        description = f"Renders the {element.get('name', schema_path.stem)} component."
+        description = f"Renders the {element.local_name or schema_path.stem} component."
 
     return {
-        "name": element.get("name", schema_path.stem),
+        "name": element.local_name or schema_path.stem,
         "description": description,
         "props": props,
         "children_supported": child_support,
-        "children_description": children_description,
-        "any_attribute": bool(type_info["any_attribute"]),
+        "any_attribute": None in complex_type.attributes,
     }
 
 
@@ -212,10 +130,11 @@ def render_component_docs(component: str) -> str:
         lines.append("Attributes: additional arbitrary fields are allowed")
 
     lines.append("Props:")
-    props = details["props"]
 
     # List known props when present.
+    props = details["props"]
     if props:
+
         # Render each prop with its metadata.
         for prop in props:
             prop_bits = ["required" if prop["required"] else "optional"]
@@ -246,17 +165,14 @@ def docs_command(component: str | None) -> None:
         click.echo(render_component_docs(component))
         return
 
+    # Prepare the adapter directory and collected documentation output.
     adapters = ROOT / ".static" / "xsd" / "adapters"
     docs = []
 
     # Render every declared component, including data-oriented child tags in grouped schemas.
     for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold()):
-        schema = etree.parse(str(schema_path))
-
-        # Add each global element rather than assuming one component per file.
-        for element in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
-            name = element.get("name")
-            if name:
-                docs.append(render_component_docs(name))
+        schema = load_schema(schema_path)
+        for name in schema.elements:
+            docs.append(render_component_docs(name))
 
     click.echo("\n\n".join(docs))

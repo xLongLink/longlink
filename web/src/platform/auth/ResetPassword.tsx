@@ -1,18 +1,17 @@
-import { z } from 'zod';
-import { useLocation } from 'react-router';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Stack } from '@astryxdesign/core/Stack';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { Controller, useForm } from 'react-hook-form';
+import { useLocation } from 'react-router';
+import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
-import { ApiError, fetchApiVoid } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PasswordInput } from '@/components/PasswordInput';
+import { useToast } from '@/hooks/use-toast';
+import { ApiError, fetchApiVoid } from '@/lib/api';
 
 type ResetPasswordValues = {
     password: string;
@@ -25,14 +24,11 @@ export default function ResetPassword() {
     const t = useTranslator();
     const showToast = useToast();
     const location = useLocation();
-    const search = new URLSearchParams(location.search);
     const [fragmentToken] = useState(
         () => new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? ''
     );
     const [token] = useState(() => fragmentToken || sessionStorage.getItem(PASSWORD_RESET_TOKEN_KEY) || '');
     const verificationStarted = useRef(false);
-    const nextPath = sanitizeRedirectPath(search.get('next'));
-    const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
         password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
@@ -64,20 +60,16 @@ export default function ResetPassword() {
         },
     });
     const resetPassword = useMutation({
-        mutationFn: async (payload: ResetPasswordValues) => {
-            await fetchApiVoid('/api/auth/reset-password', {
+        mutationFn: (payload: ResetPasswordValues) =>
+            fetchApiVoid('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: payload.password }),
-            });
-        },
+            }),
     });
-    const tokenError =
-        verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN'
-            ? verification.error
-            : resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN'
-              ? resetPassword.error
-              : null;
+    const hasTokenError =
+        (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
+        (resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN');
     const verifyToken = verification.mutate;
 
     /** Saves the new password while keeping invalid-token failures inline. */
@@ -117,16 +109,12 @@ export default function ResetPassword() {
     }, [token, verifyToken]);
 
     // Invalid and expired credentials require a replacement email.
-    if (tokenError) {
+    if (hasTokenError) {
         return (
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.invalidResetLink')}>
                 <Stack gap={4}>
                     <Banner status="error" title={t('auth.invalidResetLink')} />
-                    <Button
-                        href={`/auth/forgot-password?${nextQuery}`}
-                        label={t('auth.requestAnotherReset')}
-                        variant="primary"
-                    />
+                    <Button href="/auth/forgot-password" label={t('auth.requestAnotherReset')} variant="primary" />
                 </Stack>
             </AuthPage>
         );
@@ -155,7 +143,7 @@ export default function ResetPassword() {
             {resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title={t('auth.passwordReset')} />
-                    <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
+                    <Button href="/organizations" label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>

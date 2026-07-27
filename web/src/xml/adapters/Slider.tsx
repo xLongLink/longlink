@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
-import type { Props } from '@/xml/types';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import {
     resolveXmlBoolean,

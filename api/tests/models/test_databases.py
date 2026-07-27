@@ -1,6 +1,5 @@
 import pytest
 from uuid import uuid4
-from datetime import UTC, datetime
 from pydantic import ValidationError
 from src.models.types import DatabaseSSLMode
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
@@ -48,7 +47,6 @@ def test_database_registry_response_filters_password() -> None:
     """Exclude administrator passwords from database registry responses."""
 
     # Response serialization exposes diagnostics while omitting backend credentials.
-    user_id = uuid4()
     payload = DatabaseRegistryResponse.model_validate(
         {
             "id": uuid4(),
@@ -59,10 +57,6 @@ def test_database_registry_response_filters_password() -> None:
             "sslmode": "disable",
             "username": "admin",
             "password": "secret",
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
-            "created_by": {"id": user_id, "name": "Admin", "email": "admin@example.com", "role": "administrator"},
-            "updated_by": {"id": user_id, "name": "Admin", "email": "admin@example.com", "role": "administrator"},
         }
     )
 

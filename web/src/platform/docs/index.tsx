@@ -1,12 +1,12 @@
-import type { LucideIcon } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import type { LucideIcon } from 'lucide-react';
+import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
 
 const industryLevels = [
     {

@@ -1,7 +1,6 @@
 import os
 from typing import Self
 from pydantic import Field, model_validator
-from src.version import PLATFORM_VERSION_PATTERN
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -14,7 +13,7 @@ class Env(BaseSettings):
     """
 
     # Runtime mode
-    VERSION: str = Field(default="v0.0.0", pattern=PLATFORM_VERSION_PATTERN)
+    VERSION: str = Field(default="v0.0.0", pattern=r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
     DEVELOPMENT: bool = DEVELOPMENT
 
     # Authentication
@@ -30,7 +29,6 @@ class Env(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_START_TLS: bool = True
     SMTP_USE_TLS: bool = False
-    SMTP_FROM: str | None = None
 
     # Control plane database URL
     DATABASE_URL: str
@@ -48,6 +46,12 @@ class Env(BaseSettings):
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
+
+        # Authenticated SMTP requires a complete credential pair and a delivery host.
+        if (self.SMTP_USERNAME is None) != (self.SMTP_PASSWORD is None):
+            raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
+        if self.SMTP_USERNAME is not None and self.SMTP_HOST is None:
+            raise ValueError("SMTP_HOST is required when SMTP authentication is configured")
 
         return self
 

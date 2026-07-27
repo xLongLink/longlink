@@ -1,79 +1,102 @@
 <div align="center">
 
-# LongLink Platform API
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
-
+The Platform manages authentication, permissions, organizations, infrastructure resources, deployments, routing, and operational state while Applications run independently as Python services built with the LongLink SDK.
 </div>
 
-## Introduction
-
-The API folder contains the LongLink Platform API. It manages authentication, permissions, organizations, applications, infrastructure connections, operations, and application routing.
-
-```
-┌───────────────────────────────────┐
-│        LONGLINK PLATFORM          │
-├───────────────────────────────────┤
-│ • Authentication                  │
-│ • Permissions                     │
-│ • Roles                           │
-│ • Routing                         │
-│ • Logging                         │
-└───────────────────────────────────┘
-                  ▼
-┌───────────────────────────────────┐
-│           ORGANIZATIONS           │
-├───────────────────────────────────┤
-│ • Users                           │
-│ • Shared data                     │
-└───────────────────────────────────┘
-                  ▼
-┌───────────────────────────────────┐
-│          APPLICATIONS             │
-├───────────────────────────────────┤
-│ • Logic                           │
-│ • Storage                         │
-└───────────────────────────────────┘
-```
 
 <br />
 
+## Resources
+
+Managed resources are connected to the platform:
+
+- Compute: `KaaS` (Kubernetes as a Service) using `kubeconfig.yaml`.
+- Database: `DBaaS` (Database as a Service) using `admin credentials`.
+- Storage: `STaaS` (Storage as a Service) using `provider API key`.
+
+Compute and Database works independently of the provider, the storage need a adapter layer since the IAM is unique for each datacenter
+
+<br />
+
+## Organizations
+
+Each organization is created with:
+
+- A `namespace` in the compute.
+- A `table` in the database, with a `shared` schema.
+- A `bucket` in the storage, with a `shared` folder.
+
+Resouce limits are manages at the `namespace`, `table` and `bucket` level.
+
+<br />
+
+## Applications
+
+Each application is deployed using the organization resources:
+
+- A `pod` in the organization namespace
+- A `schema` in the organization database
+- A `folder` in the organization bucket
+
+Each application has:
+
+- Read permission from the `shared` schema
+- Read and write permission from the application schema
+- Read permission from the `shared` folder
+- Read and write permission from the application folder
+
+<br />
+
+## Operations
+
+Work that is too long for an API request is queued as a durable, typed Operation:
+
+- `compute.reconcile` reconciles only cluster-bootstrap and gateway resources, including routes for running Applications. It never deploys, deletes, or repairs Organization or Application resources.
+- `organization.create` and `organization.delete` own one Organization's provider resources and Kubernetes Namespace lifecycle.
+- `application.create` and `application.delete` own one Application's provider resources and Kubernetes workload lifecycle.
+- `organization.reconcile` synchronizes shared Organization schema, users, and storage during releases and membership changes.
+- Each API replica claims and executes one Operation at a time. Expiring worker locks and bounded retries recover work across Platform redeployments.
+- Lifecycle retries reuse persisted state and skip deployment after an Application or Organization reaches `running`.
+
+<br />
+
+## Release 
+
+- Release is trigged with `vX.Y.Z` and a container is created
+- Alembic migrations run, then `setup.py` schedules release migration Operations:
+  - One `compute.reconcile` for every compute.
+  - One `organization.reconcile` for every active Organization.
+- Each API replica starts (`main.py`).
+  - `FastAPI` manage user request.
+  - `lifespan` claims and executes Operations.
+
+<br />
+
+
 ## Development
 
-Configure `api/.env.seed` with `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, and `EXOSCALE_STORAGE_ENDPOINT_URL`. The endpoint
-selects the development SOS zone explicitly so storage provisioning follows the same SOS and IAM path as production.
+<br />
+
+```
+make seed
+make api
+```
+
 
 Run from `api/`:
 
 ```bash
 uv sync --extra dev
 uv run alembic upgrade head
+uv run python setup.py
 uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.
 
 <br />
-
-## Roles
-
-- Platform roles: apply across the LongLink Platform.
-- Organization roles: scope permissions within an organization.
-- Application roles: scope permissions within a single application.
-
-<br />
-
-## Organizations
-
-Organizations are tenant boundaries for users, shared data, applications, and managed runtime resources. Organization creation owns database creation, executes SDK-owned shared-schema migrations with control-plane credentials, synchronizes shared users, and provisions shared storage.
-
-<br />
-
-## Applications
-
-Applications are LongLink SDK services deployed into an organization. Application creation owns application schema creation, runtime role provisioning, application storage setup, and deployment rollout.
-
 <br />
 
 ---

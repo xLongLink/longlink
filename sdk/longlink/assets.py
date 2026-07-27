@@ -18,6 +18,7 @@ def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.Organi
 
     # Production reads the organization asset from shared storage.
     else:
+
         # Fail early when production has no complete Organization shared-storage scope.
         if not env.STORAGE_BUCKET or not env.STORAGE_SHARED_PREFIX:
             raise ValueError(

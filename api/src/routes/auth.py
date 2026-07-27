@@ -1,16 +1,12 @@
 import jwt
-import time
+from pwdlib import PasswordHash
 from fastapi import Cookie, Depends, Request, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
-from src.auth import (AUTH_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE, PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
-                      SessionAccountsService, get_auth_session)
-from src.utils import mail, token, passwords
-from threading import Lock
+from src.auth import SessionAccountsService, get_auth_session
+from src.utils import mail, token
 from sqlalchemy import func
-from urllib.parse import urlencode
 from sqlalchemy.exc import IntegrityError
-from src.models.auth import (PasswordLogin, RegistrationRequest, PasswordResetRequest, RegistrationComplete, RegistrationVerified,
-                             PasswordResetComplete, RegistrationTokenConfirm, PasswordResetTokenConfirm)
+from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile
@@ -19,73 +15,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 router = APIRouter()
-PASSWORD_RESET_THROTTLE_WINDOW_SECONDS = 900.0
-PASSWORD_RESET_IP_LIMIT = 10
-PASSWORD_RESET_EMAIL_LIMIT = 3
-PASSWORD_RESET_THROTTLE_MAX_KEYS = 10_000
-password_reset_attempts: dict[tuple[str, str], tuple[float, int]] = {}
-password_reset_attempts_lock = Lock()
-
-
-def allow_password_reset_request(client_ip: str, email: str) -> bool:
-    """Apply fixed-window in-process limits to one client IP and normalized email."""
-
-    now = time.monotonic()
-    keys = ((("ip", client_ip), PASSWORD_RESET_IP_LIMIT), (("email", email), PASSWORD_RESET_EMAIL_LIMIT))
-
-    # Check both dimensions before recording an accepted attempt.
-    with password_reset_attempts_lock:
-        current: dict[tuple[str, str], tuple[float, int]] = {}
-        for key, limit in keys:
-            started_at, count = password_reset_attempts.get(key, (now, 0))
-            if now - started_at >= PASSWORD_RESET_THROTTLE_WINDOW_SECONDS:
-                started_at, count = now, 0
-            if count >= limit:
-                return False
-            current[key] = (started_at, count)
-
-        # Bound process memory while retaining active windows whenever practical.
-        if len(password_reset_attempts) >= PASSWORD_RESET_THROTTLE_MAX_KEYS:
-            expired = [
-                key
-                for key, (started_at, _) in password_reset_attempts.items()
-                if now - started_at >= PASSWORD_RESET_THROTTLE_WINDOW_SECONDS
-            ]
-            for key in expired:
-                password_reset_attempts.pop(key, None)
-            while len(password_reset_attempts) >= PASSWORD_RESET_THROTTLE_MAX_KEYS:
-                password_reset_attempts.pop(next(iter(password_reset_attempts)))
-
-        # Count accepted requests against both the source and destination limits.
-        for key, (started_at, count) in current.items():
-            password_reset_attempts[key] = (started_at, count + 1)
-    return True
 
 
 @router.post("/api/auth/password/login", status_code=204, tags=["auth"])
-async def password_login(
-    payload: PasswordLogin,
-    request: Request,
-    response: Response,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def password_login(payload: PasswordLogin, request: Request, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one revocable browser session."""
 
-    normalized_email = str(payload.email).strip().lower()
+    email = str(payload.email)
 
     # Load the case-insensitive account identity before verifying its credential.
-    statement = select(User).where(func.lower(col(User.email)) == normalized_email)
+    statement = select(User).where(func.lower(col(User.email)) == func.lower(email))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
-        passwords.hash(payload.password)
+        PasswordHash.recommended().hash(payload.password)
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
-    # Verify the supplied password and upgrade a successful legacy hash in the same transaction.
-    verified, updated_hash = passwords.verify(payload.password, user.hashed_password)
+    # Verify the supplied password before issuing a session.
+    verified = PasswordHash.recommended().verify(payload.password, user.hashed_password)
     if not verified or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
-    if updated_hash is not None:
-        user.hashed_password = updated_hash
 
     # Issue the session and accept email-bound Organization access atomically.
     credential = token.create_access_token(session, user)
@@ -95,7 +43,7 @@ async def password_login(
     # Publish authentication only after all persistent login effects commit.
     response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         credential,
         max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
         path="/",
@@ -108,46 +56,33 @@ async def password_login(
 
 @router.post("/api/auth/forgot-password", status_code=202, response_model=None, tags=["auth"])
 async def request_password_reset(
-    payload: PasswordResetRequest,
-    request: Request,
+    payload: EmailPayload,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_auth_session),
 ):
     """Queue password reset delivery without disclosing account existence."""
 
-    normalized_email = str(payload.email).strip().lower()
-    client_ip = request.client.host if request.client is not None else "unknown"
-
-    # Throttled requests receive the same accepted response without a database lookup or email.
-    if not allow_password_reset_request(client_ip, normalized_email):
-        return
+    email = str(payload.email)
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    statement = select(User).where(func.lower(col(User.email)) == normalized_email, col(User.deleted_at).is_(None))
+    statement = select(User).where(func.lower(col(User.email)) == func.lower(email), col(User.deleted_at).is_(None))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         return
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
-    query = urlencode({"next": payload.next})
-    fragment = urlencode({"token": token.create_password_reset_token(user)})
-    url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
-    email = user.email
+    credential = token.create_password_reset_token(user)
+    recipient = user.email
     await session.rollback()
     background_tasks.add_task(
-        mail.send_authentication_email,
-        email,
-        "Reset your LongLink password",
-        f"Reset your password:\n\n{url}\n",
+        mail.send_password_reset_email,
+        recipient,
+        credential,
     )
 
 
 @router.post("/api/auth/reset-password/verify", status_code=204, tags=["auth"])
-async def verify_password_reset_token(
-    payload: PasswordResetTokenConfirm,
-    response: Response,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
@@ -157,9 +92,9 @@ async def verify_password_reset_token(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
-        PASSWORD_RESET_COOKIE,
+        "longlink_password_reset",
         payload.token,
-        max_age=PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
+        max_age=900,
         path="/api/auth/reset-password",
         secure=not env.DEVELOPMENT,
         httponly=True,
@@ -170,7 +105,7 @@ async def verify_password_reset_token(
 @router.get("/api/auth/reset-password/setup", status_code=204, tags=["auth"])
 async def get_password_reset_setup(
     response: Response,
-    password_reset_token: str | None = Cookie(default=None, alias=PASSWORD_RESET_COOKIE),
+    password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
     session: AsyncSession = Depends(get_auth_session),
 ):
     """Restore password reset state from browser-only proof."""
@@ -187,7 +122,7 @@ async def get_password_reset_setup(
 async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
-    password_reset_token: str | None = Cookie(default=None, alias=PASSWORD_RESET_COOKIE),
+    password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
     session: AsyncSession = Depends(get_auth_session),
 ):
     """Replace a password using browser-only reset proof."""
@@ -199,14 +134,14 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential and revoke every existing browser session atomically.
-    user.hashed_password = passwords.hash(payload.password)
+    user.hashed_password = PasswordHash.recommended().hash(payload.password)
     await token.revoke_user_access_tokens(session, user.id)
     await session.commit()
 
     # Remove reset proof only after the password and session revocation both commit.
     response.headers["Cache-Control"] = "no-store"
     response.delete_cookie(
-        PASSWORD_RESET_COOKIE,
+        "longlink_password_reset",
         path="/api/auth/reset-password",
         secure=not env.DEVELOPMENT,
         httponly=True,
@@ -215,17 +150,13 @@ async def reset_password(
 
 
 @router.post("/api/auth/register", status_code=202, tags=["auth"])
-async def request_registration(
-    payload: RegistrationRequest,
-    background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_auth_session)):
     """Send a stateless registration link when the email has no account."""
 
-    normalized_email = str(payload.email).lower()
+    email = str(payload.email)
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
-    statement = select(User.id).where(func.lower(col(User.email)) == normalized_email)
+    statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         return
 
@@ -233,22 +164,22 @@ async def request_registration(
     await session.rollback()
 
     # Email proof contains no password or pending user identifier.
-    credential = token.create_registration_token(normalized_email, payload.next)
-    background_tasks.add_task(mail.send_signup_verification_email, normalized_email, credential)
+    credential = token.create_registration_token(email)
+    background_tasks.add_task(mail.send_signup_verification_email, email, credential)
 
 
-@router.post("/api/auth/verify", response_model=RegistrationVerified, tags=["auth"])
-async def verify_registration_token(payload: RegistrationTokenConfirm, response: Response):
+@router.post("/api/auth/verify", response_model=EmailPayload, tags=["auth"])
+async def verify_registration_token(payload: TokenPayload, response: Response):
     """Validate an emailed registration token without creating an account."""
 
     # Convert invalid and expired tokens into one stable authentication error.
     try:
-        email, next_path = token.registration_claims(payload.token)
+        email = token.registration_claims(payload.token)
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
-        REGISTRATION_COOKIE,
+        "longlink_registration",
         payload.token,
         max_age=token.REGISTRATION_TOKEN_LIFETIME_SECONDS,
         path="/api/auth/register",
@@ -256,23 +187,20 @@ async def verify_registration_token(payload: RegistrationTokenConfirm, response:
         httponly=True,
         samesite="lax",
     )
-    return {"email": email, "next": next_path}
+    return {"email": email}
 
 
-@router.get("/api/auth/register/setup", response_model=RegistrationVerified, tags=["auth"])
-async def get_registration_setup(
-    response: Response,
-    registration_token: str | None = Cookie(default=None, alias=REGISTRATION_COOKIE),
-):
+@router.get("/api/auth/register/setup", response_model=EmailPayload, tags=["auth"])
+async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.
     try:
-        email, next_path = token.registration_claims(registration_token or "")
+        email = token.registration_claims(registration_token or "")
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
-    return {"email": email, "next": next_path}
+    return {"email": email}
 
 
 @router.post("/api/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
@@ -280,32 +208,32 @@ async def complete_registration(
     payload: RegistrationComplete,
     request: Request,
     response: Response,
-    registration_token: str | None = Cookie(default=None, alias=REGISTRATION_COOKIE),
+    registration_token: str | None = Cookie(default=None, alias="longlink_registration"),
     session: AsyncSession = Depends(get_auth_session),
 ):
     """Create and authenticate an account after stateless email verification."""
 
     # Bind account creation to the signed email rather than any client-supplied identity.
     try:
-        email, _ = token.registration_claims(registration_token or "")
+        email = token.registration_claims(registration_token or "")
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
 
     # Prevent another browser tab's setup cookie from changing the displayed account identity.
-    if str(payload.email).lower() != email:
+    if str(payload.email) != email:
         raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
 
     # Reject token replay and concurrent account creation before expensive password hashing.
-    statement = select(User.id).where(func.lower(col(User.email)) == email)
+    statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
 
     # Build the authenticated account and its first revocable session in one transaction.
-    is_initial_admin = env.INITIAL_ADMIN_EMAIL is not None and email == env.INITIAL_ADMIN_EMAIL.lower()
+    is_initial_admin = env.INITIAL_ADMIN_EMAIL is not None and email.casefold() == env.INITIAL_ADMIN_EMAIL.casefold()
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
-        hashed_password=passwords.hash(payload.password),
+        hashed_password=PasswordHash.recommended().hash(payload.password),
         role=PlatformRoles.administrator if is_initial_admin else PlatformRoles.user,
     )
     session.add(user)
@@ -323,7 +251,7 @@ async def complete_registration(
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         credential,
         max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
         path="/",
@@ -332,7 +260,7 @@ async def complete_registration(
         samesite="lax",
     )
     response.delete_cookie(
-        REGISTRATION_COOKIE,
+        "longlink_registration",
         path="/api/auth/register",
         secure=not env.DEVELOPMENT,
         httponly=True,

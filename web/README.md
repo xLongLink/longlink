@@ -1,12 +1,30 @@
-# LongLink Web
+<div align="center">
+
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
 Frontend runtime, docs, and platform UI for LongLink.
+
+</div>
+
+<br/>
 
 ## Development
 
 ```bash
-bun install
-bun run dev
+vp install
+vp run dev
 ```
 
-Run these commands from `web/`. Set `VITE_API_URL` when connecting to a deployed API. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for build modes, testing, formatting, and XML runtime details.
+<br/>
+<br/>
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+
+</div>
+
+---

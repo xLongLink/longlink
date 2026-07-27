@@ -1,21 +1,17 @@
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database.services import compute
-from src.models.operations import OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 
 
 async def test_compute_registry_endpoints_return_backend(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Return an independently registered compute backend."""
 
     # Arrange
     client = clients[0]
-    user1, _, _ = users
-    infrastructure = await create_ready_infrastructure(user1)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.compute
 
     # Act
@@ -29,17 +25,18 @@ async def test_compute_registry_endpoints_return_backend(
     payload = get_response.json()
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
-    assert payload["gateway_url"] == "https://gateway.example"
-    assert payload["status"] == "ready"
+    assert payload["status"] == "running"
     assert payload["version"] is not None
+    assert "gateway_url" not in payload
     assert "kubeconfig" not in payload
     assert "proxy_secret" not in payload
+    assert "created_at" not in payload
 
 
 async def test_compute_registry_create_duplicate_and_delete(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one compute registry, reject a duplicate, and tombstone the unused registry."""
+    """Create one compute registry, reject a duplicate, and remove the unused registration."""
 
     # Arrange
     client = clients[0]
@@ -56,23 +53,22 @@ async def test_compute_registry_create_duplicate_and_delete(
     created = create_response.json()
     registry_id = created["compute"]["id"]
     delete_response = await client.delete(f"/api/computes/{registry_id}")
+    retry_response = await client.delete(f"/api/computes/{registry_id}")
     get_response = await client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
     assert created["compute"]["name"] == "Ephemeral Compute"
     assert created["operation"]["status"] == OperationStatus.scheduled
-    assert created["operation"]["scope"] == ReconciliationScope.platform
+    assert created["operation"]["kind"] == OperationKind.compute_reconcile
+    assert "gateway_url" not in created["compute"]
     assert "kubeconfig" not in created["compute"]
     assert "proxy_secret" not in created["compute"]
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
-    assert delete_response.status_code == 202
-    assert delete_response.json()["operation"]["scope"] == ReconciliationScope.application
+    assert delete_response.status_code == 204
+    assert retry_response.status_code == 404
     assert get_response.status_code == 404
-    deleted = await compute.get(UUID(registry_id), include_deleted=True)
-    assert deleted is not None
-    assert deleted.deleted_at is not None
 
 
 async def test_compute_registry_delete_rejects_assigned_registry(
@@ -83,8 +79,8 @@ async def test_compute_registry_delete_rejects_assigned_registry(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
-    await create_organization(infrastructure, owner)
+    infrastructure = await create_ready_infrastructure()
+    await create_organization(owner)
     client = clients[0]
 
     # Act
@@ -95,69 +91,39 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     assert response.json() == {"detail": "Compute registry is used by organizations"}
 
 
-async def test_compute_registry_routes_enforce_support_and_admin_roles(
+async def test_compute_registry_routes_require_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Allow support compute reads and diagnostics while keeping writes admin-only."""
+    """Reject Platform users from compute registry administration."""
 
     # Arrange
-    owner = users[0]
-    support = users[2]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.compute
-
-    class FakeKubernetes:
-        """Return deterministic compute diagnostics."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Validate the selected compute registry."""
-
-            assert kubeconfig == registry.kubeconfig
-
-        async def namespaces(self) -> list[str]:
-            """Return visible namespaces."""
-
-            return ["acme"]
-
-    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeKubernetes)
-    support_client = clients[2]
-    ordinary_client = clients[1]
+    client = clients[1]
 
     # Act
-    support_read_response = await support_client.get("/api/computes")
-    support_get_response = await support_client.get(f"/api/computes/{registry.id}")
-    support_diagnostics_response = await support_client.get(f"/api/computes/{registry.id}/namespaces")
-    support_write_response = await support_client.post(
+    read_response = await client.get("/api/computes")
+    get_response = await client.get(f"/api/computes/{registry.id}")
+    diagnostics_response = await client.get(f"/api/computes/{registry.id}/namespaces")
+    write_response = await client.post(
         "/api/computes",
-        json={"name": "Support Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+        json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
-    ordinary_read_response = await ordinary_client.get("/api/computes")
 
     # Assert
-    assert support_read_response.status_code == 200
-    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
-    assert support_get_response.status_code == 200
-    assert support_get_response.json()["id"] == str(registry.id)
-    assert support_diagnostics_response.status_code == 200
-    assert support_diagnostics_response.json() == ["acme"]
-    assert support_write_response.status_code == 403
-    assert support_write_response.json() == {"detail": "Permission required"}
-    assert ordinary_read_response.status_code == 403
-    assert ordinary_read_response.json() == {"detail": "Permission required"}
+    for response in (read_response, get_response, diagnostics_response, write_response):
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Permission required"}
 
 
 async def test_compute_diagnostics_return_namespaces_and_pods(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Return simple live namespace and pod diagnostics from the compute adapter."""
 
     # Arrange
-    owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     class Pod:
         """Minimal pod object returned by the fake Kubernetes client."""
@@ -203,14 +169,12 @@ async def test_compute_diagnostics_return_namespaces_and_pods(
 
 async def test_compute_diagnostics_return_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Return a stable error when live namespace inspection fails."""
 
     # Arrange
-    owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     class FailingKubernetes:
         """Raise a provider error for namespace inspection."""

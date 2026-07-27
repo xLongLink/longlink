@@ -46,6 +46,7 @@ async def request_get_endpoint(request_id: int):
 async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate):
     """Update one purchase request workflow status."""
 
+    # Update the request and reject ids that are not present.
     request = await requests.update_request_status(request_id, payload.status)
     if request is None:
         raise HTTPException(status_code=404, detail="Purchase request not found")
@@ -57,7 +58,10 @@ async def request_status_patch_endpoint(request_id: int, payload: PurchaseReques
 async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
+    # Validate the request before accessing its attachment storage.
     await _require_request(request_id)
+
+    # List the request directory and treat missing storage as an empty collection.
     attachments_directory = _attachments_directory(request_id)
 
     try:
@@ -65,6 +69,7 @@ async def request_attachments_get_endpoint(request_id: int):
     except FileNotFoundError:
         return []
 
+    # Convert each stored file entry into attachment response metadata.
     return [
         _attachment_from_entry(request_id, entry)
         for entry in entries
@@ -76,16 +81,21 @@ async def request_attachments_get_endpoint(request_id: int):
 async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)):
     """Upload one file attachment for a purchase request."""
 
+    # Validate the request before accepting attachment content.
     await _require_request(request_id)
+
+    # Normalize the supplied name and derive its unique storage path.
     file_name = _safe_file_name(file.filename)
     file_id = f"{uuid4().hex}-{file_name}"
     storage_path = _attachment_path(request_id, file_id)
     uploaded_size = 0
 
+    # Create the attachment directory and close the upload after storage completes.
     try:
         fs.makedirs(_attachments_directory(request_id), exist_ok=True)
 
         with cast(BinaryIO, fs.open(storage_path, "wb")) as stored_file:
+
             # Stream the upload into fsspec so local, test, and S3 storage all work.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)
@@ -105,14 +115,19 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile = 
 async def request_attachment_download_endpoint(request_id: int, file_id: str) -> Response:
     """Download one purchase request attachment."""
 
+    # Validate the request before accessing its attachment storage.
     await _require_request(request_id)
+
+    # Resolve the attachment path and reject files that are not present.
     storage_path = _attachment_path(request_id, file_id)
     if not fs.exists(storage_path):
         raise HTTPException(status_code=404, detail="Attachment not found")
 
+    # Read the stored attachment for the response body.
     with fs.open(storage_path, "rb") as stored_file:
         content = stored_file.read()
 
+    # Encode the original name for a standards-compliant download header.
     download_name = urllib.parse.quote(_display_file_name(file_id), safe="")
 
     return Response(
@@ -126,7 +141,10 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
 async def request_attachment_delete_endpoint(request_id: int, file_id: str) -> Response:
     """Delete one purchase request attachment."""
 
+    # Validate the request before modifying its attachment storage.
     await _require_request(request_id)
+
+    # Resolve the attachment path and remove the file when it is present.
     storage_path = _attachment_path(request_id, file_id)
     if fs.exists(storage_path):
         fs.rm(storage_path)
@@ -137,6 +155,7 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str) -> R
 async def _require_request(request_id: int) -> PurchaseRequest:
     """Return one purchase request or raise a 404 response."""
 
+    # Retrieve the request and translate a missing record into an API error.
     request = await requests.get_request(request_id)
     if request is None:
         raise HTTPException(status_code=404, detail="Purchase request not found")
@@ -153,6 +172,7 @@ def _attachments_directory(request_id: int) -> str:
 def _attachment_path(request_id: int, file_id: str) -> str:
     """Return the validated storage path for one attachment id."""
 
+    # Normalize the id to its final path component and reject unsafe values.
     file_name = PurePosixPath(file_id).name
     if file_name != file_id or file_name in {"", ".", ".."}:
         raise HTTPException(status_code=404, detail="Attachment not found")
@@ -163,6 +183,7 @@ def _attachment_path(request_id: int, file_id: str) -> str:
 def _safe_file_name(file_name: str | None) -> str:
     """Return a storage-safe file name without path separators."""
 
+    # Normalize the supplied name to a safe basename and character set.
     source_name = PurePosixPath(file_name or "attachment.bin").name.strip()
     normalized_name = "".join(
         character if character.isalnum() or character in ".-_" else "-"
@@ -175,6 +196,7 @@ def _safe_file_name(file_name: str | None) -> str:
 def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> dict[str, object]:
     """Return API metadata for one fsspec attachment listing entry."""
 
+    # Extract the stored attachment id from the external listing path.
     storage_path = str(entry.get("name", ""))
     file_id = PurePosixPath(storage_path).name
 
@@ -194,4 +216,5 @@ def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> dict[st
 def _display_file_name(file_id: str) -> str:
     """Return the original display name stored inside an attachment id."""
 
+    # Remove the generated storage prefix while preserving names without one.
     return file_id.split("-", 1)[1] if "-" in file_id else file_id

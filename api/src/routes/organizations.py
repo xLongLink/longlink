@@ -1,20 +1,24 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authsupport, current_authenticated_user
+from src.auth import authuser, authadmin, current_authenticated_user
 from src.utils import mail, names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import compute, storage, database, invitations, organizations
-from src.models.applications import ApplicationAccessResponse
-from src.models.organizations import (OrganizationCreate, OrganizationUpdate, OrganizationDetails, OrganizationSummary,
-                                      OrganizationMemberUpdate, OrganizationInvitationCreate, OrganizationMutationResponse)
+from src.database.services import storage, database, invitations, organizations
+from src.models.organizations import (
+    OrganizationCreate,
+    OrganizationUpdate,
+    OrganizationDetails,
+    OrganizationSummary,
+    OrganizationMemberUpdate,
+    OrganizationInvitationCreate,
+    OrganizationMutationResponse,
+)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
-from src.models.infrastructure import InfrastructureOptionsResponse
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
@@ -23,23 +27,9 @@ from src.database.models.organizations import Organization
 router = APIRouter()
 
 
-@router.get("/api/infrastructure/options", response_model=InfrastructureOptionsResponse)
-async def list_infrastructure_options(_user: User = Depends(current_authenticated_user)):
-    """Return assignable registry identities without exposing connection metadata."""
-
-    computes = [registry for registry in await compute.fetch() if registry.status == ComputeStatus.ready]
-    databases = await database.fetch()
-    storages = await storage.fetch()
-    return {
-        "computes": computes,
-        "databases": databases,
-        "storages": storages,
-    }
-
-
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authsupport)):
-    """Return all organizations for support and administrator views."""
+async def list_organizations(_user: User = Depends(authadmin)):
+    """Return all organizations for administrator views."""
 
     return await organizations.fetch()
 
@@ -53,6 +43,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
+    # Resolve the active Organization before assembling its related response data.
     organization = await organizations.get(organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -93,32 +84,11 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
     if not roles.atleast(membership.role, OrganizationRoles.admin):
         raise HTTPException(status_code=403, detail="Permission required")
 
+    # Persist mutable metadata only while the Organization remains active.
     organization = await organizations.update(organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
-
-
-@router.get(
-    "/api/organizations/{organization_id}/applications",
-    response_model=list[ApplicationAccessResponse],
-)
-async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)):
-    """Return the applications for one organization."""
-
-    # Load organization access before listing applications.
-    membership = roles.access(user, organization_id, "organization")
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    active_applications = await organizations.applications(membership.organization_id)
-    application_roles = {
-        application_membership.application_id: application_membership.role
-        for application_membership in user.application_memberships
-        if application_membership.organization_id == membership.organization_id
-    }
-
-    return [{"application": application, "role": application_roles.get(application.id)} for application in active_applications]
 
 
 @router.get(
@@ -178,11 +148,7 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
-async def create_organization_invitation(
-    organization_id: UUID,
-    payload: OrganizationInvitationCreate,
-    user: User = Depends(authuser),
-):
+async def create_organization_invitation(organization_id: UUID, payload: OrganizationInvitationCreate, user: User = Depends(authuser)):
     """Create one invitation for an organization member."""
 
     # Load organization access before creating invitations.
@@ -226,12 +192,12 @@ async def update_organization_member(
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    target_role = await organizations.membership_role(membership.organization_id, member_id)
-
     # Allow only owners to change existing owners.
+    target_role = await organizations.membership_role(membership.organization_id, member_id)
     if target_role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
+    # Persist the requested role only for an active Organization member.
     updated = await organizations.update_member_role(membership.organization_id, member_id, payload.role, user)
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
@@ -239,10 +205,19 @@ async def update_organization_member(
 
 @router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
-    """Mark one Organization absent and queue compute reconciliation."""
+    """Mark one Organization absent and queue lifecycle cleanup."""
 
-    # Require organization ownership unless the caller is a platform administrator.
-    if user.role != PlatformRoles.administrator:
+    # The initiating owner or a Platform administrator may retry cleanup after memberships are removed.
+    tombstone = await organizations.get(organization_id, include_deleted=True)
+    if tombstone is not None and tombstone.deleted_at is not None:
+        retry = True
+        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+            raise HTTPException(status_code=403, detail="Access required")
+    else:
+        retry = False
+
+    # Require active Organization ownership for the first deletion request.
+    if not retry and user.role != PlatformRoles.administrator:
         membership = roles.access(user, organization_id, "organization")
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
@@ -251,6 +226,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
+    # Tombstone the Organization and queue its lifecycle cleanup atomically.
     result = await organizations.soft_delete(organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -259,11 +235,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     return {"organization": deleted, "operation": operation}
 
 
-async def _database_usage_rows(
-    organization: Organization,
-    registry: DatabaseRegistry,
-    apps: list[Application],
-) -> list[dict[str, object]]:
+async def _database_usage_rows(organization: Organization, registry: DatabaseRegistry, apps: list[Application]) -> list[dict[str, object]]:
     """Join live schema usage with active LongLink Applications in one Organization database.
 
     Shared and orphaned schemas remain unassociated so backend drift stays visible.
@@ -284,10 +256,9 @@ async def _database_usage_rows(
 
     rows: list[dict[str, object]] = []
 
+    # Include the shared schema when it exists in the backend.
     usage_by_name = {item["name"]: item for item in schemas}
     shared = usage_by_name.get(SHARED_SCHEMA)
-
-    # Include the shared schema when it exists in the backend.
     if shared is not None:
         rows.append(
             {
@@ -336,17 +307,13 @@ async def _database_usage_rows(
     return rows
 
 
-async def _storage_usage_rows(
-    organization: Organization,
-    registry: StorageRegistry,
-    apps: list[Application],
-) -> list[dict[str, object]]:
+async def _storage_usage_rows(organization: Organization, registry: StorageRegistry, apps: list[Application]) -> list[dict[str, object]]:
     """Join one Organization bucket's prefix usage with its active Applications.
 
     Logical prefix rows remain visible with zero usage even before their first object is written.
     """
 
-    bucket = names.organization_bucket(organization.id)
+    bucket = organization.id.hex
 
     # Return no logical resources until the Organization bucket exists.
     try:
@@ -365,12 +332,12 @@ async def _storage_usage_rows(
 
     # Fetch shared and Application usage by exact non-overlapping prefixes.
     resources = [
-        (OrganizationStorageResourceKind.shared_prefix, "shared", names.shared_storage_prefix(), None),
+        (OrganizationStorageResourceKind.shared_prefix, "shared", "shared/", None),
         *[
             (
                 OrganizationStorageResourceKind.application_prefix,
                 app.name,
-                names.application_storage_prefix(app.id),
+                f"applications/{app.id.hex}/",
                 app,
             )
             for app in sorted(apps, key=lambda item: item.name)
@@ -405,21 +372,14 @@ async def _storage_usage_rows(
 
 @router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
-    """Create Organization desired state and queue compute reconciliation."""
+    """Create Organization desired state and queue infrastructure creation."""
 
     # Derive the Organization's runtime namespace from its display name.
     slug = names.slugify(payload.name)
 
     # Create through the service so API and direct callers share namespace validation.
     try:
-        organization, operation = await organizations.create(
-            payload.name,
-            slug,
-            None,
-            None,
-            None,
-            user,
-        )
+        organization, operation = await organizations.create(payload.name, slug, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 

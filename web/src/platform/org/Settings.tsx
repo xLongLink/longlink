@@ -1,19 +1,24 @@
-import { z } from 'zod';
-import { useState } from 'react';
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { Boxes, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'react-router';
+import { z } from 'zod';
+import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
+import { useUpdateOrganization } from '@/hooks/use-organization';
+import { useToast } from '@/hooks/use-toast';
+import { useUserProfile } from '@/hooks/use-user';
+import { hasMinimumRole, type Role } from '@/lib/roles';
 import type {
     ApiInvitation,
     ApiOrganizationApplication,
@@ -22,16 +27,11 @@ import type {
     ApiOrganizationStorageResource,
     ApiOrganizationSummary,
 } from '@/lib/types';
-import { S3 } from '@/svg/S3';
-import { useToast } from '@/hooks/use-toast';
-import { PostgreSQL } from '@/svg/PostgreSQL';
-import { useUserProfile } from '@/hooks/use-user';
-import { hasMinimumRole, type Role } from '@/lib/roles';
 import { formatBytes, formatNumber } from '@/lib/utils';
-import { useUpdateOrganization } from '@/hooks/use-organization';
-import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
-import People from './People';
+import { PostgreSQL } from '@/svg/PostgreSQL';
+import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';
+import People from './People';
 
 type SettingsProps = {
     organization: string;

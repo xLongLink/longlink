@@ -1,22 +1,33 @@
-import { Wrench } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiApplicationResponse } from '@/lib/types';
-import { formatDateTime } from '@/lib/utils';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Wrench } from 'lucide-react';
+import type { ComponentProps } from 'react';
 import { useApplications } from '@/data/admin';
+import { createStatusLabels } from '@/lib/status';
+import type { ApiApplicationResponse, Status } from '@/lib/types';
+import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
+
+const statusVariants = {
+    creating: 'info',
+    running: 'neutral',
+    failed: 'error',
+    deleting: 'neutral',
+} satisfies Record<Status, ComponentProps<typeof Badge>['variant']>;
 
 /** Builds localized admin application table columns. */
 function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[] {
+    const statusLabels = createStatusLabels(t);
+
     return [
         {
             key: 'name',
@@ -51,7 +62,7 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
             key: 'status',
             header: t('columns.status'),
             width: pixel(128),
-            renderCell: (app) => <Badge label={app.status} />,
+            renderCell: (app) => <Badge label={statusLabels[app.status]} variant={statusVariants[app.status]} />,
         },
         {
             key: 'image',
