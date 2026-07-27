@@ -44,7 +44,7 @@ exoscale = { git = "https://github.com/xLongLink/python-exoscale", rev = "7a1ed1
 [project.optional-dependencies]
 dev = [
     'ty>=0.0.63',
-    'ruff>=0.15.20',
+    'ruff>=0.16.0',
     'pytest>=9.0.3',
     'pytest-asyncio>=1.4.0',
     'pytest-cov>=7.1.0',
