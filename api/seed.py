@@ -9,6 +9,7 @@ from pydantic import Field, field_validator
 from sqlmodel import col
 from src.utils import jobs, names, images
 from sqlalchemy import text, select, inspect
+from sqlalchemy.exc import ArgumentError
 from src.operations import computes as _operation_computes
 from src.operations import applications as _operation_applications
 from src.operations import organizations as _operation_organizations
@@ -30,12 +31,12 @@ from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
-from src.models.infrastructure import exoscale_zone
+from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 from src.database.models.association import UserOrganization
 
 
 class SeedSettings(BaseSettings):
-    """Define credentials required only while seeding local development."""
+    """Define credentials required only while seeding development."""
 
     # Local administrator
     LOCAL_ADMIN_NAME: str = Field(default="Example LongLink", min_length=1)
@@ -52,6 +53,9 @@ class SeedSettings(BaseSettings):
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
     LOCAL_DATABASE_PORT: int = Field(default=15432, ge=1, le=65535)
     LOCAL_DOCKER_NETWORK: str = Field(default="longlink-dev", min_length=1)
+
+    # Application database registry
+    APPLICATION_DATABASE_URL: str | None = None
 
     # Exoscale storage
     EXOSCALE_API_KEY: str = Field(min_length=1)
@@ -191,6 +195,50 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if missing_envs:
         raise ValueError(f"Local Application environment is missing required image variables: {', '.join(missing_envs)}")
 
+    # Resolve either the configured remote Application database registry or the local PostgreSQL service.
+    if settings.APPLICATION_DATABASE_URL is None:
+        database = DatabaseConfiguration(
+            host=local_database_host(settings),
+            port=settings.LOCAL_DATABASE_PORT,
+            username="admin",
+            password="admin",
+            sslmode=DatabaseSSLMode.disable,
+        )
+    else:
+        try:
+            database_url = make_url(settings.APPLICATION_DATABASE_URL)
+            database_port = database_url.port or 5432
+        except (ArgumentError, ValueError):
+            raise ValueError("Application database URL is invalid") from None
+        if database_url.get_backend_name() != "postgresql":
+            raise ValueError("Application database URL must use PostgreSQL")
+        if set(database_url.query) - {"sslmode"}:
+            raise ValueError("Application database URL only supports the sslmode query option")
+        sslmode = database_url.query.get("sslmode", DatabaseSSLMode.require.value)
+        if not isinstance(sslmode, str):
+            raise ValueError("Application database URL must define one sslmode value")
+        try:
+            database = DatabaseConfiguration(
+                host=database_url.host or "",
+                port=database_port,
+                username=database_url.username or "",
+                password=database_url.password or "",
+                sslmode=DatabaseSSLMode(sslmode),
+            )
+        except ValueError:
+            raise ValueError("Application database URL has invalid connection settings") from None
+
+    # Reject registry changes before mutating existing local Platform state.
+    database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
+    if database_registry is not None and (
+        database_registry.host != database.host
+        or database_registry.port != database.port
+        or database_registry.username != database.username
+        or database_registry.password != database.password
+        or database_registry.sslmode != database.sslmode
+    ):
+        raise ValueError("Development database registry uses different settings; run make down before changing them")
+
     # Create or restore the local Platform administrator.
     admin, administrator_changed = await seed_local_administrator(settings)
 
@@ -207,17 +255,16 @@ async def seed_local_development(settings: SeedSettings) -> None:
         operation = await operations.enqueue(compute_registry.id)
         await reconcile_until_complete(operation.id)
 
-    # Register the local database and storage backends independently.
-    database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
+    # Register the development database and storage backends independently.
     if database_registry is None:
         database_registry = await database_service.create(
-            "local database",
+            "development database",
             "local-database",
-            local_database_host(settings),
-            settings.LOCAL_DATABASE_PORT,
-            "admin",
-            "admin",
-            DatabaseSSLMode.disable,
+            database.host,
+            database.port,
+            database.username,
+            database.password,
+            database.sslmode,
         )
     storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
     if storage_registry is None:
