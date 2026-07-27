@@ -2,6 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -49,10 +50,12 @@ export default function VerifyEmail() {
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const welcomeTitle = (
-        <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-            <span>{t('auth.welcomeTo')}</span>
+        <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
+            <Text color="inherit" type="inherit">
+                {t('auth.welcomeTo')}
+            </Text>
             <Wordmark size="heading" />
-        </span>
+        </HStack>
     );
     const schema = z.object({
         name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),

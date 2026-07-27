@@ -60,20 +60,16 @@ export default function ResetPassword() {
         },
     });
     const resetPassword = useMutation({
-        mutationFn: async (payload: ResetPasswordValues) => {
-            await fetchApiVoid('/api/auth/reset-password', {
+        mutationFn: (payload: ResetPasswordValues) =>
+            fetchApiVoid('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: payload.password }),
-            });
-        },
+            }),
     });
-    const tokenError =
-        verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN'
-            ? verification.error
-            : resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN'
-              ? resetPassword.error
-              : null;
+    const hasTokenError =
+        (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
+        (resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN');
     const verifyToken = verification.mutate;
 
     /** Saves the new password while keeping invalid-token failures inline. */
@@ -113,7 +109,7 @@ export default function ResetPassword() {
     }, [token, verifyToken]);
 
     // Invalid and expired credentials require a replacement email.
-    if (tokenError) {
+    if (hasTokenError) {
         return (
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.invalidResetLink')}>
                 <Stack gap={4}>
