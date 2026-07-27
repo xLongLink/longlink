@@ -587,9 +587,6 @@
     "common.overview": {
         "defaultMessage": "Overview"
     },
-    "common.runtime": {
-        "defaultMessage": "Runtime"
-    },
     "common.used": {
         "defaultMessage": "Used"
     },
@@ -691,9 +688,6 @@
     },
     "labels.radius": {
         "defaultMessage": "Radius"
-    },
-    "labels.runtimeEndpointUrl": {
-        "defaultMessage": "Runtime endpoint URL"
     },
     "labels.secretAccessKey": {
         "defaultMessage": "Secret access key"
@@ -895,9 +889,6 @@
     },
     "dialogs.chooseIcon": {
         "defaultMessage": "Choose an icon"
-    },
-    "dialogs.chooseStorageKind": {
-        "defaultMessage": "Choose a storage kind"
     },
     "dialogs.connectComputeDescription": {
         "defaultMessage": "Register a compute backend for orchestration."

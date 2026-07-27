@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from contextlib import suppress
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import contains_eager
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
 from src.models.types import Image
@@ -30,14 +30,7 @@ async def fetch() -> list[Application]:
         statement = (
             select(Application)
             .join(Application.organization)
-            .options(
-                contains_eager(Application.organization).joinedload(Organization.created_by),
-                contains_eager(Application.organization).joinedload(Organization.updated_by),
-                contains_eager(Application.organization).joinedload(Organization.deleted_by),
-                joinedload(Application.created_by),
-                joinedload(Application.updated_by),
-                joinedload(Application.deleted_by),
-            )
+            .options(contains_eager(Application.organization))
             .where(Application.deleted_at.is_(None))
             .order_by(Organization.name, Application.name)
         )
@@ -253,13 +246,13 @@ async def create(
         )
         application.created_id = user.id
         application.updated_id = user.id
+        application.organization = organization
         session.add(application)
 
         # Let the Organization-scoped database constraint arbitrate slug uniqueness.
         try:
             await session.flush()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Application slug already exists") from exc
 
         # Grant the creator administration and queue the delayed deployment lifecycle.
@@ -282,22 +275,7 @@ async def create(
             delay_seconds=30,
         )
         await session.commit()
-
-        # Reload the Application relationships required by the mutation response.
-        statement = (
-            select(Application)
-            .options(
-                joinedload(Application.organization).joinedload(Organization.created_by),
-                joinedload(Application.organization).joinedload(Organization.updated_by),
-                joinedload(Application.organization).joinedload(Organization.deleted_by),
-                joinedload(Application.created_by),
-                joinedload(Application.updated_by),
-                joinedload(Application.deleted_by),
-            )
-            .where(Application.id == application.id)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one(), operation
+        return application, operation
 
 
 def storage_credentials(application: Application) -> StorageRuntimeCredentials | None:
@@ -485,20 +463,7 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             target_id=application.id,
         )
 
+        # Retain the already locked Organization for detached response serialization.
+        application.organization = organization
         await session.commit()
-
-        # Reload the Application relationships required by the mutation response.
-        statement = (
-            select(Application)
-            .options(
-                joinedload(Application.organization).joinedload(Organization.created_by),
-                joinedload(Application.organization).joinedload(Organization.updated_by),
-                joinedload(Application.organization).joinedload(Organization.deleted_by),
-                joinedload(Application.created_by),
-                joinedload(Application.updated_by),
-                joinedload(Application.deleted_by),
-            )
-            .where(Application.id == application_id)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one(), operation
+        return application, operation

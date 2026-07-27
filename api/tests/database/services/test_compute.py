@@ -25,26 +25,3 @@ async def test_get_and_fetch_return_compute_registry() -> None:
     assert reloaded is not None
     assert reloaded.id == registry.id
     assert missing is None
-
-
-async def test_stage_gateway_tls_retains_previous_ca() -> None:
-    """Store the previous gateway CA while staging replacement TLS material."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    staged = await compute.stage_gateway_tls(
-        infrastructure.compute.id,
-        "new-ca",
-        "new-certificate",
-        "new-private-key",
-    )
-    reloaded = await compute.get(infrastructure.compute.id)
-
-    # Assert
-    assert staged is True
-    assert reloaded is not None
-    assert reloaded.gateway_previous_ca_certificate == "test-ca"
-    assert reloaded.gateway_ca_certificate == "new-ca"
-    assert reloaded.gateway_tls_certificate == "new-certificate"

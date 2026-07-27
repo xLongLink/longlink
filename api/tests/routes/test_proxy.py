@@ -27,12 +27,6 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     registry = remote_infrastructure.compute
-    Session = await get_session()
-    async with Session() as session:
-        persisted = await session.get(ComputeRegistry, registry.id)
-        assert persisted is not None
-        persisted.gateway_previous_ca_certificate = "previous-ca"
-        await session.commit()
     captured: dict[str, object] = {}
     tls = object()
 
@@ -122,7 +116,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert captured["cadata"] == f"{registry.gateway_ca_certificate}\nprevious-ca"
+    assert captured["cadata"] == registry.gateway_ca_certificate
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)

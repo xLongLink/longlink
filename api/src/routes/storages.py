@@ -16,9 +16,7 @@ async def create_storage_registry(payload: StorageRegistryCreate, _user: User = 
     return await storage.create(
         payload.name,
         names.slugify(payload.name),
-        payload.kind,
         payload.endpoint_url,
-        payload.runtime_endpoint_url,
         payload.access_key_id,
         payload.secret_access_key,
     )

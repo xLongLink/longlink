@@ -9,12 +9,12 @@ from pydantic import Field, field_validator
 from sqlmodel import col
 from src.utils import jobs, names
 from sqlalchemy import text, select, inspect
-from src.operations import computes as operation_computes
+from src.operations import computes as _operation_computes
 from src.operations import applications as _operation_applications
-from src.operations import organizations as operation_organizations
+from src.operations import organizations as _operation_organizations
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Image, StorageKind, DatabaseSSLMode
+from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
@@ -94,31 +94,31 @@ async def seed_local_administrator(settings: SeedSettings) -> tuple[User, bool]:
     """Create or repair the local administrator and report shared user changes."""
 
     # Create the local account or repair its development credentials and role.
+    hasher = PasswordHash.recommended()
     async with session_scope() as session:
         result = await session.execute(select(User).where(col(User.email) == settings.LOCAL_ADMIN_EMAIL))
         user = result.scalar_one_or_none()
         if user is None:
             user = User(
-                name=settings.LOCAL_ADMIN_NAME,
                 email=settings.LOCAL_ADMIN_EMAIL,
-                hashed_password=PasswordHash.recommended().hash(settings.LOCAL_ADMIN_PASSWORD),
-                role=PlatformRoles.administrator,
+                hashed_password=hasher.hash(settings.LOCAL_ADMIN_PASSWORD),
             )
             session.add(user)
             user_changed = True
         else:
-            verified = PasswordHash.recommended().verify(settings.LOCAL_ADMIN_PASSWORD, user.hashed_password)
+            verified = hasher.verify(settings.LOCAL_ADMIN_PASSWORD, user.hashed_password)
             user_changed = (
                 not verified
                 or user.name != settings.LOCAL_ADMIN_NAME
                 or user.role != PlatformRoles.administrator
                 or user.deleted_at is not None
             )
-            user.name = settings.LOCAL_ADMIN_NAME
             if not verified:
-                user.hashed_password = PasswordHash.recommended().hash(settings.LOCAL_ADMIN_PASSWORD)
-            user.role = PlatformRoles.administrator
-            user.deleted_at = None
+                user.hashed_password = hasher.hash(settings.LOCAL_ADMIN_PASSWORD)
+
+        user.name = settings.LOCAL_ADMIN_NAME
+        user.role = PlatformRoles.administrator
+        user.deleted_at = None
 
         await session.commit()
         return user, user_changed
@@ -130,7 +130,6 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
     # Local reseeding repairs only Platform membership metadata.
     async with session_scope() as session:
         membership = await session.get(UserOrganization, {"organization_id": organization_id, "user_id": user_id})
-        now = utcnow()
         if membership is None:
             session.add(
                 UserOrganization(
@@ -147,7 +146,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
             membership.role = OrganizationRoles.owner
             membership.deleted_at = None
             membership.deleted_id = None
-            membership.updated_at = now
+            membership.updated_at = utcnow()
             membership.updated_id = user_id
         await session.commit()
         return True
@@ -175,11 +174,20 @@ async def reconcile_until_complete(operation_id: UUID) -> None:
 async def seed_local_development(settings: SeedSettings) -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
+    # Validate Application configuration before mutating local Platform state.
+    payload = ApplicationCreate(
+        name=settings.LOCAL_APP_NAME,
+        image=Image(settings.LOCAL_APPLICATION_IMAGE),
+        description="Local SDK development application",
+        envs={"REQUIRED": "local-development"},
+    )
+    application_slug = names.slugify(payload.name)
+
+    # Create or restore the local Platform administrator.
     admin, administrator_changed = await seed_local_administrator(settings)
 
-    # Reconcile the local compute target before assigning Organizations to it.
+    # Ensure the local compute target is ready before assigning resources to it.
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
-    compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
     if compute_registry is None:
         compute_registry, operation = await compute_service.create(
             "local compute",
@@ -187,7 +195,9 @@ async def seed_local_development(settings: SeedSettings) -> None:
             settings.KUBECONFIG.read_text(encoding="utf-8"),
         )
         await reconcile_until_complete(operation.id)
-        compute_ready = True
+    elif compute_registry.status != ComputeStatus.ready:
+        operation = await operations.enqueue(compute_registry.id)
+        await reconcile_until_complete(operation.id)
 
     # Register the local database and storage backends independently.
     database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
@@ -206,9 +216,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         storage_registry = await storage_service.create(
             "local storage",
             "local-storage",
-            StorageKind.exoscale,
             settings.EXOSCALE_STORAGE_ENDPOINT_URL,
-            None,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,
         )
@@ -219,14 +227,9 @@ async def seed_local_development(settings: SeedSettings) -> None:
     ):
         raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
 
+    # Create the local Organization or restore its administrator ownership.
     organization = next((item for item in await organization_service.fetch() if item.slug == settings.LOCAL_ORG), None)
     if organization is None:
-
-        # Repair an existing compute before a new Organization requires its ready state.
-        if not compute_ready:
-            operation = await operations.enqueue(compute_registry.id)
-            await reconcile_until_complete(operation.id)
-            compute_ready = True
         organization, operation = await organization_service.create(
             settings.LOCAL_ORG,
             settings.LOCAL_ORG,
@@ -247,26 +250,15 @@ async def seed_local_development(settings: SeedSettings) -> None:
             )
             await reconcile_until_complete(operation.id)
 
-    # The sample application follows the same desired-state service used by the API route.
-    payload = ApplicationCreate(
-        name=settings.LOCAL_APP_NAME,
-        image=Image(settings.LOCAL_APPLICATION_IMAGE),
-        description="Local SDK development application",
-        envs={"REQUIRED": "local-development"},
-    )
+    # Create or resume the sample Application through the API desired-state service.
     application = next(
-        (item for item in await organization_service.applications(organization.id) if item.slug == settings.LOCAL_APP_NAME), None
+        (item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None
     )
     if application is None:
-
-        # Repair an existing compute before Application creation checks its ready state.
-        if not compute_ready:
-            operation = await operations.enqueue(compute_registry.id)
-            await reconcile_until_complete(operation.id)
         application, operation = await application_service.create(
             organization.id,
             payload.name,
-            names.slugify(payload.name),
+            application_slug,
             payload.image,
             admin,
             description=payload.description,
@@ -279,16 +271,15 @@ async def seed_local_development(settings: SeedSettings) -> None:
             target_id=application.id,
         )
     else:
-        operation = None
+        return
 
     # Stage local user values in Kubernetes before releasing Application lifecycle work.
-    if operation is not None:
-        cluster = Kubernetes(compute_registry.kubeconfig)
-        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
-        operation = await operations.schedule_now(operation.id)
-        if operation is None:
-            raise RuntimeError("Local Application create Operation is no longer open")
-        await reconcile_until_complete(operation.id)
+    cluster = Kubernetes(compute_registry.kubeconfig)
+    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    operation = await operations.schedule_now(operation.id)
+    if operation is None:
+        raise RuntimeError("Local Application create Operation is no longer open")
+    await reconcile_until_complete(operation.id)
 
 
 async def cleanup_local_development() -> None:
@@ -298,9 +289,7 @@ async def cleanup_local_development() -> None:
     database_url = make_url(env.DATABASE_URL)
     database_name = database_url.database
     if database_url.get_backend_name() == "sqlite" and database_name is not None and database_name not in {"", ":memory:"}:
-        database_path = Path(database_name)
-        if not database_path.is_absolute():
-            database_path = Path.cwd() / database_path
+        database_path = Path(database_name).resolve()
         if not database_path.is_file():
             print("No local Platform state requires cleanup.")
             return
@@ -323,10 +312,8 @@ async def cleanup_local_development() -> None:
                 FROM organizations
                 JOIN storage_registries ON storage_registries.id = organizations.storage_id
                 LEFT JOIN applications ON applications.organization_id = organizations.id
-                WHERE storage_registries.kind = :kind
                 """
-            ),
-            {"kind": StorageKind.exoscale.value},
+            )
         )
         resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
         for endpoint_url, access_key_id, secret_access_key, organization_id, application_id in result:
@@ -368,10 +355,11 @@ def main() -> None:
     arguments = parser.parse_args()
     if arguments.cleanup:
         asyncio.run(cleanup_local_development())
-    else:
-        settings = SeedSettings(**{})
-        asyncio.run(seed_local_development(settings))
-        print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
+        return
+
+    settings = SeedSettings(**{})
+    asyncio.run(seed_local_development(settings))
+    print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

@@ -10,9 +10,6 @@ from longlink.database.types import UTCDateTime
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.computes import ComputeRegistry
-    from src.database.models.storages import StorageRegistry
-    from src.database.models.databases import DatabaseRegistry
     from src.database.models.applications import Application
 
 
@@ -33,11 +30,8 @@ class Organization(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Infrastructure
-    compute: "ComputeRegistry" = Relationship()
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)
-    database: "DatabaseRegistry" = Relationship()
     database_id: UUID = Field(foreign_key="database_registries.id", index=True)
-    storage: "StorageRegistry" = Relationship()
     storage_id: UUID = Field(foreign_key="storage_registries.id", index=True)
 
     # Database

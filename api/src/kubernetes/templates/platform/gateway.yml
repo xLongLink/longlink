@@ -7,11 +7,6 @@ metadata:
     namespace: longlink-system
     annotations:
         longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
-    labels:
-        app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 stringData:
     gateway-secret: $gateway_secret
 ---
@@ -22,11 +17,6 @@ metadata:
     namespace: longlink-system
     annotations:
         longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
-    labels:
-        app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 type: kubernetes.io/tls
 stringData:
     tls.crt: $tls_certificate
@@ -39,11 +29,6 @@ metadata:
     namespace: longlink-system
     annotations:
         longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
-    labels:
-        app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 data:
     envoy.yaml: $envoy_config
 ---
@@ -54,11 +39,8 @@ metadata:
     namespace: longlink-system
     annotations:
         longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
     labels:
         app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 spec:
     replicas: 2
     selector:
@@ -68,11 +50,8 @@ spec:
         metadata:
             annotations:
                 longlink.io/runtime-revision: '$runtime_revision'
-                longlink.io/template-revision: '$template_revision'
             labels:
                 app: longlink-gateway
-                app.kubernetes.io/managed-by: longlink-platform
-                longlink.io/resource-scope: platform
         spec:
             automountServiceAccountToken: false
             securityContext:
@@ -168,11 +147,8 @@ metadata:
     namespace: longlink-system
     annotations:
         longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
     labels:
         app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 spec:
     podSelector:
         matchLabels:

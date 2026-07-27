@@ -34,11 +34,6 @@ function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[
                     <VStack gap={1}>
                         <Text weight="semibold">{storage.name}</Text>
                         <Text type="supporting">{storage.endpoint_url}</Text>
-                        {storage.runtime_endpoint_url !== storage.endpoint_url ? (
-                            <Text type="supporting">
-                                {t('common.runtime')}: {storage.runtime_endpoint_url}
-                            </Text>
-                        ) : null}
                     </VStack>
                 </HStack>
             ),

@@ -4,10 +4,9 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.types import Icon, Image
-from src.models.users import UserSummary, UserIdentity
+from src.models.users import UserIdentity
 from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationResponse
-from src.models.organizations import OrganizationSummary
 
 
 class ApplicationEnvironment(BaseModel):
@@ -62,6 +61,20 @@ class ApplicationCreate(ApplicationEnvironment):
     description: str | None = Field(default=None, max_length=255)
 
 
+class ApplicationOrganizationResponse(BaseModel):
+    """Represent the compact Organization associated with an Application."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+    avatar: str = ""
+
+
 class ApplicationResponse(BaseModel):
     """Represent one application in API responses."""
 
@@ -71,8 +84,7 @@ class ApplicationResponse(BaseModel):
     id: UUID
 
     # Relationships
-    organization: OrganizationSummary
-    organization_id: UUID
+    organization: ApplicationOrganizationResponse
 
     # Metadata
     sdk: str | None = None
@@ -89,11 +101,6 @@ class ApplicationResponse(BaseModel):
 
     # Audit
     created_at: datetime
-    updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
 
 
 class ApplicationMutationResponse(BaseModel):
@@ -105,16 +112,6 @@ class ApplicationMutationResponse(BaseModel):
     # Result
     application: ApplicationResponse
     operation: OperationResponse
-
-
-class ApplicationAccessResponse(BaseModel):
-    """Represent one LongLink Application and the current user's access role."""
-
-    # Relationships
-    application: ApplicationResponse
-
-    # Access
-    role: ApplicationRoles | None = None
 
 
 class ApplicationMemberUpdate(BaseModel):

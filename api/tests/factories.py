@@ -1,10 +1,10 @@
 import secrets
-from uuid import UUID, uuid4
+from uuid import uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
 from src.environments import env
-from src.models.types import StorageKind, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -39,6 +39,8 @@ async def create_ready_infrastructure(
             kubeconfig="apiVersion: v1\nclusters: []\n",
             gateway_url="https://gateway.example",
             gateway_ca_certificate="test-ca",
+            gateway_tls_certificate="test-certificate",
+            gateway_tls_private_key="test-private-key",
             proxy_secret=secrets.token_urlsafe(32),
             status=ComputeStatus.ready,
             version=env.VERSION,
@@ -53,11 +55,9 @@ async def create_ready_infrastructure(
             sslmode=DatabaseSSLMode.disable,
         )
         storage = StorageRegistry(
-            kind=StorageKind.exoscale,
             name=f"{name} storage {suffix}",
             slug=f"{slug}-{suffix}-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
-            runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
         )
@@ -72,7 +72,6 @@ async def create_organization(
     name: str = "acme",
     slug: str = "acme",
     avatar: str | None = None,
-    organization_id: UUID | None = None,
 ) -> Organization:
     """Create one Organization through the service using a complete infrastructure assignment."""
 
@@ -87,7 +86,6 @@ async def create_organization(
         infrastructure.storage.id,
         owner,
         avatar=avatar,
-        organization_id=organization_id,
     )
     return organization
 

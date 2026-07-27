@@ -19,7 +19,6 @@ import { storagesQueryKey } from '@/lib/query-keys';
 const schema = z.object({
     name: z.string().trim().min(1),
     endpoint_url: z.string().trim().url(),
-    runtime_endpoint_url: z.union([z.literal(''), z.string().trim().url()]),
     access_key_id: z.string().min(1),
     secret_access_key: z.string().min(1),
 });
@@ -38,7 +37,6 @@ export default function CreateStorage() {
         defaultValues: {
             name: '',
             endpoint_url: '',
-            runtime_endpoint_url: '',
             access_key_id: '',
             secret_access_key: '',
         },
@@ -52,11 +50,7 @@ export default function CreateStorage() {
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ...payload,
-                        kind: 'exoscale',
-                        runtime_endpoint_url: payload.runtime_endpoint_url || null,
-                    }),
+                    body: JSON.stringify(payload),
                 },
                 (value) => parseApiResponse(apiStorageRegistrySchema, value)
             ),
@@ -151,21 +145,6 @@ export default function CreateStorage() {
                                                 htmlName={field.name}
                                                 isRequired
                                                 placeholder="https://sos-ch-dk-2.exo.io"
-                                                onBlur={field.onBlur}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        control={form.control}
-                                        name="runtime_endpoint_url"
-                                        render={({ field }) => (
-                                            <TextInput
-                                                ref={field.ref}
-                                                label={t('labels.runtimeEndpointUrl')}
-                                                value={field.value}
-                                                htmlName={field.name}
-                                                isOptional
                                                 onBlur={field.onBlur}
                                                 onChange={field.onChange}
                                             />

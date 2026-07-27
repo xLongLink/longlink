@@ -125,12 +125,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    organization_id = UUID("11111111-1111-1111-1111-111111111111")
-    organization = await create_organization(
-        infrastructure,
-        owner,
-        organization_id=organization_id,
-    )
+    organization = await create_organization(infrastructure, owner)
     await create_application(organization, owner)
 
     # Act
@@ -561,38 +556,6 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["database_id"] == str(infrastructure.database.id)
     assert payload["storage_id"] == str(infrastructure.storage.id)
     assert payload["deleted_by"] is None
-
-
-async def test_organization_access_rejects_soft_deleted_membership(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject organization access when only a soft-deleted membership remains."""
-
-    # Arrange
-    owner, user = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
-    await create_application(organization, owner)
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=user.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-                deleted_at=utcnow(),
-            )
-        )
-        await session.commit()
-
-    # Act
-    response = await clients[1].get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Access required"}
 
 
 async def test_get_organization_returns_404_for_non_member(

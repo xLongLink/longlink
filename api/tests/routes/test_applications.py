@@ -10,51 +10,6 @@ from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
 
-async def test_list_organization_apps_returns_app_membership_role(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return the application-specific role instead of the organization role."""
-
-    # Arrange
-    owner = users[0]
-    user = users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
-    app = await create_application(organization, owner)
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=user.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-            )
-        )
-        session.add(
-            UserApplication(
-                user_id=user.id,
-                organization_id=organization.id,
-                application_id=app.id,
-                role=ApplicationRoles.write,
-            )
-        )
-        await session.commit()
-
-    client = clients[1]
-
-    # Act
-    response = await client.get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [item["application"]["id"] for item in payload] == [str(app.id)]
-    assert payload[0]["role"] == ApplicationRoles.write
-    assert "role" not in payload[0]["application"]
-
-
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -101,27 +56,6 @@ async def test_list_apps_without_organization_requires_admin(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-
-
-async def test_list_organization_apps_returns_403_for_non_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject application listing when the user does not belong to the organization."""
-
-    # Arrange
-    owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
-    await create_application(organization, owner)
-    client = clients[1]
-
-    # Act
-    response = await client.get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Access required"}
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(

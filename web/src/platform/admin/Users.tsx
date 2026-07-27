@@ -11,7 +11,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useUsers } from '@/data/admin';
 import { useToast } from '@/hooks/use-toast';
-import type { ApiUserListItem } from '@/lib/types';
+import type { ApiUserSummary } from '@/lib/types';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin users page. */
@@ -20,7 +20,7 @@ export default function AdminUsers() {
     const toast = useToast();
     const { items: users, error, isLoading } = useUsers();
     const { pageItems, pagination } = useAdminPagination(users);
-    const columns: TableColumn<ApiUserListItem>[] = [
+    const columns: TableColumn<ApiUserSummary>[] = [
         {
             key: 'user',
             header: t('columns.user'),

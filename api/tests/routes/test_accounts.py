@@ -1,7 +1,7 @@
 from uuid import uuid4
 from httpx2 import AsyncClient
 from conftest import session_cookie, authenticated_cookies
-from src.models.users import UserListItem
+from src.models.users import UserSummary
 from src.database.models.users import User
 
 
@@ -18,8 +18,8 @@ async def test_list_accounts_returns_saved_local_accounts(client: AsyncClient, u
     # Assert
     assert response.status_code == 200
     assert response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
+        UserSummary.model_validate(user_one).model_dump(mode="json"),
+        UserSummary.model_validate(user_two).model_dump(mode="json"),
     ]
 
 
@@ -35,7 +35,7 @@ async def test_list_accounts_skips_stale_saved_users(client: AsyncClient, users:
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [UserListItem.model_validate(saved).model_dump(mode="json")]
+    assert response.json() == [UserSummary.model_validate(saved).model_dump(mode="json")]
 
 
 async def test_deactivate_account_clears_only_the_auth_cookie(client: AsyncClient, users: tuple[User, User, User]) -> None:
@@ -51,16 +51,16 @@ async def test_deactivate_account_clears_only_the_auth_cookie(client: AsyncClien
     # Assert
     assert response.status_code == 200
     assert response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
+        UserSummary.model_validate(user_one).model_dump(mode="json"),
+        UserSummary.model_validate(user_two).model_dump(mode="json"),
     ]
     assert client.cookies.get("longlink_auth") is None
     accounts_response = await client.get("/api/auth/accounts")
     profile_response = await client.get("/api/me")
     assert accounts_response.status_code == 200
     assert accounts_response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
+        UserSummary.model_validate(user_one).model_dump(mode="json"),
+        UserSummary.model_validate(user_two).model_dump(mode="json"),
     ]
     assert profile_response.status_code == 401
 
@@ -81,5 +81,5 @@ async def test_logout_clears_the_active_account(client: AsyncClient, users: tupl
     accounts_response = await client.get("/api/auth/accounts")
     me_response = await client.get("/api/me")
     assert accounts_response.status_code == 200
-    assert accounts_response.json() == [UserListItem.model_validate(user_two).model_dump(mode="json")]
+    assert accounts_response.json() == [UserSummary.model_validate(user_two).model_dump(mode="json")]
     assert me_response.status_code == 401

@@ -1,38 +1,43 @@
 import hmac
 import json
+import time
 import yaml
+import asyncio
 import hashlib
 import ipaddress
 from io import StringIO
-from typing import TYPE_CHECKING, Any
+from uuid import UUID
+from typing import Any
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from importlib.resources import files
+from kr8s.asyncio.objects import Service, Namespace, Deployment
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
-from cryptography.exceptions import UnsupportedAlgorithm
-from src.kubernetes.resources import KubernetesDocument
+from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-if TYPE_CHECKING:
-    from src.kubernetes.reconcile import DesiredGatewayRoute
-
 PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
-TEMPLATE_REVISION = "2026-07-24.1"
-GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
+RESOURCE_TIMEOUT_SECONDS = 300
+POLL_INTERVAL_SECONDS = 2
 
 EnvoyDocument = dict[str, Any]
 
 
 @dataclass(frozen=True, slots=True)
-class GatewayTLSMaterial:
-    """Carry the per-compute CA certificate, server certificate, and sensitive private key used by the public gateway.
+class GatewayRoute:
+    """Describe one Application Service route without carrying workload configuration."""
 
-    Reconciliation persists and stages this identity before deployment when rotation changes its trust chain.
-    """
+    id: UUID
+    namespace: str
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayTLSMaterial:
+    """Carry the immutable per-compute CA certificate, server certificate, and private key."""
 
     ca_certificate: str
     certificate: str
@@ -48,19 +53,23 @@ class GatewayManifests:
     config_map: KubernetesDocument
     deployment: KubernetesDocument
     network_policy: KubernetesDocument
-    runtime_revision: str
 
 
 class Gateway:
-    """Render the compute gateway boundary for public TLS termination and authenticated application routing.
+    """Manage the compute gateway boundary for public TLS termination and authenticated Application routing.
 
     Routing inputs come from desired state rather than cluster discovery.
     """
 
+    def __init__(self, resources: KubernetesResources) -> None:
+        """Initialize gateway lifecycle access through shared cluster resources."""
+
+        self._resources = resources
+
     def system_namespace(self) -> KubernetesDocument:
         """Render the LongLink system Namespace."""
 
-        # Render the static Platform ownership boundary.
+        # Render the dedicated Namespace for LongLink Platform resources.
         return templates.readyml_list(PLATFORM_TEMPLATES.joinpath("system_namespace.yml"))[0]
 
     def service(self) -> KubernetesDocument:
@@ -72,7 +81,7 @@ class Gateway:
         # Render the stable endpoint independently from gateway Pod revisions.
         return templates.readyml_list(PLATFORM_TEMPLATES.joinpath("gateway_service.yml"))[0]
 
-    def config(self, desired_routes: "tuple[DesiredGatewayRoute, ...]") -> str:
+    def config(self, desired_routes: tuple[GatewayRoute, ...]) -> str:
         """Render deterministic authenticated Envoy routes from the authoritative route snapshot.
 
         Omitted applications receive no route even if stale Services still exist.
@@ -149,15 +158,8 @@ class Gateway:
         yaml.safe_dump(config, stream=stream, sort_keys=False)
         return stream.getvalue()
 
-    def tls(self, compute_id: str, endpoint: str, existing: GatewayTLSMaterial | None = None) -> GatewayTLSMaterial:
-        """Reuse persisted TLS only after validating its compute identity, key, chain, lifetime, and endpoint SAN.
-
-        Otherwise generate a per-compute CA and server certificate for the caller to stage before deployment.
-        """
-
-        # Existing material is reusable only when its chain, key, compute identity, lifetime, and SAN all remain valid.
-        if existing is not None and self._valid_tls(compute_id, endpoint, existing):
-            return existing
+    def tls(self, compute_id: str, endpoint: str) -> GatewayTLSMaterial:
+        """Generate the immutable TLS identity for a newly provisioned compute gateway."""
 
         # A new endpoint identity uses a private self-signed CA and a CA-issued server certificate.
         now = datetime.now(UTC)
@@ -205,7 +207,7 @@ class Gateway:
             .public_key(server_key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now - timedelta(minutes=5))
-            .not_valid_after(now + timedelta(days=365))
+            .not_valid_after(now + timedelta(days=3650))
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
             .add_extension(x509.SubjectAlternativeName([subject_name]), critical=False)
             .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
@@ -245,14 +247,13 @@ class Gateway:
     ) -> GatewayManifests:
         """Render exact gateway Secrets and applied resources under one revision derived from behavior and secret inputs.
 
-        Exact Secret replacement removes omitted keys, while revision annotations roll Pods when trust, auth, or config changes.
+        Exact Secret replacement removes omitted keys, while the content revision rolls Pods when trust, auth, or config changes.
         """
 
         # Hash rendered behavior and secret material so every relevant change rolls the gateway pods.
         source = PLATFORM_TEMPLATES.joinpath("gateway.yml").read_text(encoding="utf-8")
         revision_input = json.dumps(
             {
-                "ca_certificate": tls.ca_certificate,
                 "certificate": tls.certificate,
                 "envoy_config": envoy_config,
                 "private_key": tls.private_key,
@@ -271,85 +272,83 @@ class Gateway:
             envoy_config=json.dumps(envoy_config),
             gateway_secret=json.dumps(proxy_secret),
             runtime_revision=runtime_revision,
-            template_revision=TEMPLATE_REVISION,
             tls_certificate=json.dumps(tls.certificate),
             tls_private_key=json.dumps(tls.private_key),
         )
 
-        # Template order is an internal contract because Secrets require exact replacement.
-        expected_kinds = ("Secret", "Secret", "ConfigMap", "Deployment", "NetworkPolicy")
-        if tuple(manifest.get("kind") for manifest in manifests) != expected_kinds:
-            raise ValueError("Gateway template resources are incomplete or out of order")
         return GatewayManifests(
             auth_secret=manifests[0],
             tls_secret=manifests[1],
             config_map=manifests[2],
             deployment=manifests[3],
             network_policy=manifests[4],
-            runtime_revision=runtime_revision,
         )
 
-    def _valid_tls(self, compute_id: str, endpoint: str, material: GatewayTLSMaterial) -> bool:
-        """Return whether persisted PEM material is valid for this compute target and endpoint."""
+    async def endpoint(self) -> str | None:
+        """Apply gateway endpoint resources and return the allocated hostname or IP when available."""
 
-        # PEM parsing is an untrusted persistence boundary, so malformed material requests rotation.
-        try:
-            ca_certificate = x509.load_pem_x509_certificate(material.ca_certificate.encode("ascii"))
-            server_certificate = x509.load_pem_x509_certificate(material.certificate.encode("ascii"))
-            private_key = serialization.load_pem_private_key(material.private_key.encode("ascii"), password=None)
-            ca_constraints = ca_certificate.extensions.get_extension_for_class(x509.BasicConstraints).value
-            server_constraints = server_certificate.extensions.get_extension_for_class(x509.BasicConstraints).value
-            ca_key_identifier = ca_certificate.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value
-            ca_authority = ca_certificate.extensions.get_extension_for_class(x509.AuthorityKeyIdentifier).value
-            server_authority = server_certificate.extensions.get_extension_for_class(x509.AuthorityKeyIdentifier).value
-            usages = server_certificate.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value
-            subject_names = server_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
-            ca_certificate.verify_directly_issued_by(ca_certificate)
-            server_certificate.verify_directly_issued_by(ca_certificate)
-        except (TypeError, ValueError, UnsupportedAlgorithm, x509.ExtensionNotFound, UnicodeEncodeError):
-            return False
+        # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
+        await self._resources.apply(self.system_namespace())
+        service = await self._resources.apply(self.service())
+        if not isinstance(service, Service):
+            raise TypeError("Gateway Service apply returned an unexpected resource kind")
 
-        # Certificates near expiry rotate while there is still time to persist and deploy replacements.
-        now = datetime.now(UTC)
-        minimum_expiry = now + timedelta(days=30)
-        if (
-            ca_certificate.not_valid_before_utc > now
-            or ca_certificate.not_valid_after_utc <= minimum_expiry
-            or server_certificate.not_valid_before_utc > now
-            or server_certificate.not_valid_after_utc <= minimum_expiry
-        ):
-            return False
+        # Parse the provider-owned Service status without blocking while allocation is pending.
+        body: Any = service.to_dict()
+        status = body.get("status", {}) if isinstance(body, dict) else {}
+        load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
+        ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
+        if isinstance(ingress, list):
+            for entry in ingress:
+                if not isinstance(entry, dict):
+                    continue
+                for field in ("hostname", "ip"):
+                    value = entry.get(field)
+                    if isinstance(value, str) and value.strip():
+                        return value.strip().rstrip(".")
+        return None
 
-        # Persisted material must be the expected per-compute chain and a server-auth certificate.
-        expected_ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
-        expected_server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")])
-        if (
-            ca_certificate.subject != expected_ca_name
-            or ca_certificate.issuer != expected_ca_name
-            or server_certificate.subject != expected_server_name
-            or not ca_constraints.ca
-            or server_constraints.ca
-            or ca_authority.key_identifier != ca_key_identifier.digest
-            or server_authority.key_identifier != ca_key_identifier.digest
-            or ExtendedKeyUsageOID.SERVER_AUTH not in usages
-        ):
-            return False
+    async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
+        """Apply the desired gateway runtime and return whether its Deployment rollout is ready."""
 
-        # The private key must match the server certificate public key.
-        private_public_key = private_key.public_key().public_bytes(
-            serialization.Encoding.DER,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
+        # Render the complete runtime before changing any gateway dependency.
+        manifests = self.manifests(proxy_secret, tls, self.config(routes))
+
+        # Apply exact secrets and runtime resources before inspecting the returned Deployment generation.
+        await self._resources.replace_secret(manifests.auth_secret)
+        await self._resources.replace_secret(manifests.tls_secret)
+        await self._resources.apply(manifests.config_map)
+        deployment = await self._resources.apply(manifests.deployment)
+        if not isinstance(deployment, Deployment):
+            raise TypeError("Gateway Deployment apply returned an unexpected resource kind")
+        await self._resources.apply(manifests.network_policy)
+
+        # A ready old ReplicaSet is insufficient; the controller must observe this generation with every replica updated.
+        generation = deployment.metadata.get("generation")
+        replicas = deployment.spec.get("replicas", 1)
+        status = deployment.raw.get("status")
+        return (
+            isinstance(generation, int)
+            and isinstance(replicas, int)
+            and isinstance(status, dict)
+            and status.get("observedGeneration") == generation
+            and status.get("updatedReplicas", 0) == replicas
+            and status.get("readyReplicas", 0) == replicas
+            and status.get("availableReplicas", 0) == replicas
         )
-        certificate_public_key = server_certificate.public_key().public_bytes(
-            serialization.Encoding.DER,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-        if private_public_key != certificate_public_key:
-            return False
 
-        # Match the endpoint against the SAN type clients will use for HTTPS validation.
-        try:
-            address = ipaddress.ip_address(endpoint)
-        except ValueError:
-            return endpoint in subject_names.get_values_for_type(x509.DNSName)
-        return address in subject_names.get_values_for_type(x509.IPAddress)
+    async def delete(self) -> None:
+        """Delete the gateway system Namespace and wait for its resources to terminate."""
+
+        # A missing Namespace means gateway cleanup already completed.
+        namespace = await self._resources.read(Namespace, GATEWAY_NAMESPACE)
+        if namespace is None:
+            return
+        await self._resources.delete(Namespace, namespace.name)
+
+        # Namespace finalizers must complete before the compute registry can be removed.
+        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
+        while await self._resources.read(Namespace, namespace.name) is not None:
+            if time.monotonic() >= deadline:
+                raise TimeoutError(f"Kubernetes Namespace {namespace.name!r} did not terminate before deletion")
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)

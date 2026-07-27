@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from src.models.types import StorageKind, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 from src.models.infrastructure import StorageConfiguration, DatabaseConfiguration
 
 pytestmark = pytest.mark.no_db
@@ -32,31 +32,14 @@ def test_database_configuration_rejects_embedded_connection_parts(host: str) -> 
         DatabaseConfiguration(host=host, port=5432, username="admin", password="secret")
 
 
-def test_storage_configuration_accepts_same_exoscale_zone() -> None:
-    """Accept control and runtime storage endpoints in the same Exoscale zone."""
+def test_storage_configuration_accepts_exoscale_endpoint() -> None:
+    """Accept and normalize an Exoscale storage endpoint."""
 
     # Exoscale storage endpoints are normalized before persistence.
     payload = StorageConfiguration(
-        kind=StorageKind.exoscale,
         endpoint_url="https://sos-ch-gva-2.exo.io/",
-        runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
         access_key_id="access-key",
         secret_access_key="secret-key",
     )
 
     assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"
-    assert payload.runtime_endpoint_url == "https://sos-ch-gva-2.exo.io"
-
-
-def test_storage_configuration_rejects_cross_zone_exoscale_endpoints() -> None:
-    """Reject Exoscale runtime endpoints from a different zone."""
-
-    # Control and runtime storage endpoints must describe the same zone.
-    with pytest.raises(ValidationError):
-        StorageConfiguration(
-            kind=StorageKind.exoscale,
-            endpoint_url="https://sos-ch-gva-2.exo.io",
-            runtime_endpoint_url="https://sos-de-fra-1.exo.io",
-            access_key_id="access-key",
-            secret_access_key="secret-key",
-        )

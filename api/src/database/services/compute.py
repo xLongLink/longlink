@@ -58,7 +58,6 @@ async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry
             operation = await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
         return registry, operation
@@ -103,9 +102,6 @@ async def record_success(
     compute_id: UUID,
     platform_version: str,
     gateway_url: str | None,
-    gateway_ca_certificate: str | None,
-    gateway_tls_certificate: str | None,
-    gateway_tls_private_key: str | None,
     satisfy_pending: bool = False,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
@@ -127,10 +123,6 @@ async def record_success(
             return True
 
         registry.gateway_url = gateway_url
-        registry.gateway_ca_certificate = gateway_ca_certificate
-        registry.gateway_previous_ca_certificate = None
-        registry.gateway_tls_certificate = gateway_tls_certificate
-        registry.gateway_tls_private_key = gateway_tls_private_key
         registry.version = platform_version
         registry.status = ComputeStatus.ready
 
@@ -151,6 +143,35 @@ async def record_success(
         return True
 
 
+async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
+    """Persist a compute's immutable gateway TLS identity once."""
+
+    # Lock the compute so concurrent first reconciliations cannot publish different identities.
+    async with session_scope() as session:
+        registry = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
+        ).scalar_one_or_none()
+        if registry is None:
+            return False
+
+        # Accept an idempotent retry but reject any attempt to replace persisted TLS.
+        current = (
+            registry.gateway_ca_certificate,
+            registry.gateway_tls_certificate,
+            registry.gateway_tls_private_key,
+        )
+        desired = (ca_certificate, certificate, private_key)
+        if current == desired:
+            return True
+        if any(value is not None for value in current):
+            raise RuntimeError("Compute registry gateway TLS identity is immutable")
+        registry.gateway_ca_certificate = ca_certificate
+        registry.gateway_tls_certificate = certificate
+        registry.gateway_tls_private_key = private_key
+        await session.commit()
+        return True
+
+
 async def record_failure(compute_id: UUID) -> None:
     """Mark a compute target failed."""
 
@@ -159,29 +180,7 @@ async def record_failure(compute_id: UUID) -> None:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
         ).scalar_one_or_none()
-        if registry is None:
+        if registry is None or registry.status == ComputeStatus.deleting:
             return
-        if registry.status != ComputeStatus.deleting:
-            registry.status = ComputeStatus.failed
+        registry.status = ComputeStatus.failed
         await session.commit()
-
-
-async def stage_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
-    """Persist new gateway trust while retaining the previously served CA during rollout."""
-
-    # Lock the compute while staging replacement trust.
-    async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
-        if registry is None:
-            return False
-
-        # Proxy clients trust both CA versions until reconciliation verifies the new gateway rollout.
-        if registry.gateway_ca_certificate != ca_certificate:
-            registry.gateway_previous_ca_certificate = registry.gateway_ca_certificate
-        registry.gateway_ca_certificate = ca_certificate
-        registry.gateway_tls_certificate = certificate
-        registry.gateway_tls_private_key = private_key
-        await session.commit()
-        return True

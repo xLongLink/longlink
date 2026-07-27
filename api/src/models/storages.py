@@ -1,7 +1,6 @@
 from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.types import StorageKind
 from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import StorageConfiguration
 
@@ -46,10 +45,8 @@ class StorageRegistryResponse(BaseModel):
     id: UUID
 
     # Metadata
-    kind: StorageKind
     name: str
     slug: str
 
     # Connection
     endpoint_url: str
-    runtime_endpoint_url: str

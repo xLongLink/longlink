@@ -91,10 +91,6 @@ class UserSummary(UserIdentity):
     role: PlatformRoles
 
 
-class UserListItem(UserSummary):
-    """Represent one user in admin list responses."""
-
-
 class UserProfile(UserSummary):
     """Represent the authenticated user payload returned by the API."""
 

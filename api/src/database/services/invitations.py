@@ -68,13 +68,12 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         try:
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Invitation already exists") from exc
 
         return invitation
 
 
-async def accept_in_session(session: AsyncSession, user: User) -> int:
+async def accept_in_session(session: AsyncSession, user: User) -> None:
     """Accept pending invitations for one user's verified email in the caller's transaction."""
 
     normalized_email = user.email.strip().lower()
@@ -93,7 +92,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
     )
     rows = (await session.execute(statement)).all()
     if not rows:
-        return 0
+        return
 
     # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
     organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
@@ -152,16 +151,3 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
             kind=OperationKind.organization_reconcile,
             target_id=organization_id,
         )
-
-    return len(rows)
-
-
-async def accept(user: User) -> int:
-    """Accept and commit pending Organization invitations for one user."""
-
-    # Keep membership creation and invitation consumption in one transaction.
-    async with session_scope() as session:
-        accepted = await accept_in_session(session, user)
-        if accepted:
-            await session.commit()
-        return accepted

@@ -128,9 +128,9 @@ export const content = (
                     label={
                         <Text>
                             Infrastructure registry data: compute, database, storage, Kubernetes, PostgreSQL, and
-                            S3-compatible storage configuration, including endpoints, runtime endpoints, credentials,
-                            kubeconfigs, proxy secrets, access keys, bucket names, database names, schema names, table
-                            metadata, object metadata, usage information, and related audit records.
+                            S3-compatible storage configuration, including endpoints, credentials, kubeconfigs, proxy
+                            secrets, access keys, bucket names, database names, schema names, table metadata, object
+                            metadata, usage information, and related audit records.
                         </Text>
                     }
                 />

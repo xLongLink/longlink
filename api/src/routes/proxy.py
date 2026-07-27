@@ -98,10 +98,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     try:
 
         # Trust only the per-compute CA generated and persisted by reconciliation.
-        trusted_cas = registry.gateway_ca_certificate
-        if registry.gateway_previous_ca_certificate is not None:
-            trusted_cas = f"{trusted_cas}\n{registry.gateway_previous_ca_certificate}"
-        tls = ssl.create_default_context(cadata=trusted_cas)
+        tls = ssl.create_default_context(cadata=registry.gateway_ca_certificate)
         client = httpx2.AsyncClient(follow_redirects=False, timeout=300.0, verify=tls)
         upstream_request = client.build_request(request.method, upstream_url, content=request_content(), headers=request_headers)
         upstream_response = await client.send(upstream_request, stream=True)

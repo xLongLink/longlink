@@ -2,7 +2,6 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from src.models.types import StorageKind
 from src.database.session import session_scope
 from src.database.models.storages import StorageRegistry
 from src.database.models.organizations import Organization
@@ -27,25 +26,15 @@ async def get(registry_id: UUID) -> StorageRegistry | None:
         return result.scalar_one_or_none()
 
 
-async def create(
-    name: str,
-    slug: str,
-    kind: StorageKind,
-    endpoint_url: str,
-    runtime_endpoint_url: str | None,
-    access_key_id: str,
-    secret_access_key: str,
-) -> StorageRegistry:
+async def create(name: str, slug: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:
     """Register one Exoscale SOS backend."""
 
     # Persist the complete provider connection so each registry has an independent provisioning identity.
     async with session_scope() as session:
         registry = StorageRegistry(
-            kind=kind,
             name=name,
             slug=slug,
             endpoint_url=endpoint_url,
-            runtime_endpoint_url=runtime_endpoint_url or endpoint_url,
             access_key_id=access_key_id,
             secret_access_key=secret_access_key,
         )
@@ -55,7 +44,6 @@ async def create(
         try:
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Storage registry already exists") from exc
 
         return registry

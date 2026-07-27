@@ -36,7 +36,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # A retry after deployment reached running state skips workload deployment.
     if application.status == ApplicationStatus.creating:
-
         # Kubernetes is the only durable source for user-owned environment values.
         try:
             staged_envs = await cluster.applications.read_envs(application.id, organization.slug)
@@ -119,10 +118,10 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
                 "LONGLINK_DATABASE_USERNAME": connection["username"],
                 "LONGLINK_STORAGE_BUCKET": bucket,
-                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
+                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
                 "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
                 "LONGLINK_STORAGE_PREFIX": prefix,
-                "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.runtime_endpoint_url),
+                "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.endpoint_url),
                 "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             },
@@ -134,23 +133,21 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 return jobs.retry("Application workload is still starting")
             await applications.set_status(application.id, ApplicationStatus.failed)
             return jobs.fail("Application workload did not become ready")
-    elif application.status != ApplicationStatus.running:
-        return jobs.complete()
 
-    # Commit readiness with an independent full-budget gateway recovery entry before inline publication.
-    queued = await applications.mark_running(application.id, organization.compute_id)
-    if queued is None:
+        # Commit readiness with an independent full-budget gateway recovery entry before inline publication.
+        if await applications.mark_running(application.id, organization.compute_id) is None:
+            return jobs.complete()
+    elif application.status != ApplicationStatus.running:
         return jobs.complete()
 
     # Complete lifecycle work only after the route is published; queued compute work recovers crash windows.
     result = await computes.reconcile_gateway(registry, cluster)
+    if not result.ready:
+        return jobs.retry("Gateway is still converging")
     if not await compute.record_success(
         registry.id,
         claimed.platform_version,
         result.gateway_url,
-        result.gateway_ca_certificate,
-        result.gateway_tls_certificate,
-        result.gateway_tls_private_key,
         satisfy_pending=True,
     ):
         return jobs.retry("Application gateway state was not recorded")
@@ -185,6 +182,8 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
 
     # Remove the gateway route and await rollout before terminating the backend Service and Pods.
     result = await computes.reconcile_gateway(registry, cluster)
+    if not result.ready:
+        return jobs.retry("Gateway is still converging")
     await cluster.applications.delete(application.id, organization.slug)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
@@ -203,9 +202,6 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         registry.id,
         claimed.platform_version,
         result.gateway_url,
-        result.gateway_ca_certificate,
-        result.gateway_tls_certificate,
-        result.gateway_tls_private_key,
     ):
         return jobs.retry("Application gateway state was not recorded")
     await applications.purge(application.id)

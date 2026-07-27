@@ -9,7 +9,6 @@ from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import compute, storage, database, invitations, organizations
-from src.models.applications import ApplicationAccessResponse
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -107,28 +106,6 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
-
-
-@router.get(
-    "/api/organizations/{organization_id}/applications",
-    response_model=list[ApplicationAccessResponse],
-)
-async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)):
-    """Return the applications for one organization."""
-
-    # Load organization access before listing applications.
-    membership = roles.access(user, organization_id, "organization")
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    active_applications = await organizations.applications(membership.organization_id)
-    application_roles = {
-        application_membership.application_id: application_membership.role
-        for application_membership in user.application_memberships
-        if application_membership.organization_id == membership.organization_id
-    }
-
-    return [{"application": application, "role": application_roles.get(application.id)} for application in active_applications]
 
 
 @router.get(

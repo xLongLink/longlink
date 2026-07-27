@@ -4,16 +4,16 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
-    apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
     apiUserProfileSchema,
+    apiUserSummarySchema,
     parseApiCollection,
     parseApiResponse,
 } from '@/lib/api-schemas';
 import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
-import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
+import type { ApiUserOrganizationMembership, ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
 export type User = ApiUserProfile;
 
@@ -26,7 +26,7 @@ type StoredThemePreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
 type AccountsState = {
-    items: ApiUserListItem[];
+    items: ApiUserSummary[];
 };
 
 type UserProfileState = {
@@ -136,8 +136,8 @@ export function useUserOrganizations(): UserOrganizationsState {
 
 /** Reads accounts previously authenticated in this browser session. */
 export function useSavedAccounts(): AccountsState {
-    const accountsQuery = useCollectionQuery<ApiUserListItem>('/api/auth/accounts', {
-        parse: (value) => parseApiCollection(apiUserListItemSchema, value),
+    const accountsQuery = useCollectionQuery<ApiUserSummary>('/api/auth/accounts', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
         refetchOnMount: 'always',
         retry: false,
     });
@@ -166,7 +166,7 @@ export function useUserSessionActions() {
             {
                 method: 'POST',
             },
-            (value) => parseApiCollection(apiUserListItemSchema, value)
+            (value) => parseApiCollection(apiUserSummarySchema, value)
         );
 
         const profileKey = userProfileQueryKey();

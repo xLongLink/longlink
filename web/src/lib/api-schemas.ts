@@ -28,11 +28,9 @@ export const apiUserSummarySchema = apiUserIdentitySchema.extend({
     role: platformRoleSchema,
 });
 
-export const apiUserListItemSchema = apiUserSummarySchema;
-
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
-export const apiUserOrganizationSchema = z.object({
+export const apiOrganizationReferenceSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
@@ -40,11 +38,11 @@ export const apiUserOrganizationSchema = z.object({
 });
 
 export const apiUserOrganizationMembershipSchema = z.object({
-    organization: apiUserOrganizationSchema,
+    organization: apiOrganizationReferenceSchema,
     role: roleSchema,
 });
 
-export const apiUserProfileSchema = apiUserListItemSchema.extend({
+export const apiUserProfileSchema = apiUserSummarySchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
@@ -120,8 +118,7 @@ export const apiIconsSchema = z.array(z.enum(ICON_NAMES));
 
 export const apiApplicationResponseSchema = z.object({
     id: z.string(),
-    organization_id: z.string(),
-    organization: apiOrganizationSummarySchema,
+    organization: apiOrganizationReferenceSchema,
     name: z.string(),
     slug: z.string(),
     image: z.string(),
@@ -132,11 +129,6 @@ export const apiApplicationResponseSchema = z.object({
     description: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
-    updated_at: z.string(),
-    created_by: apiUserSummarySchema,
-    updated_by: apiUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiApplicationMemberSchema = z.object({
@@ -157,11 +149,9 @@ export const apiDatabaseRegistrySchema = z.object({
 
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
-    kind: z.literal('exoscale'),
     name: z.string(),
     slug: z.string(),
     endpoint_url: z.string(),
-    runtime_endpoint_url: z.string(),
 });
 
 export const apiComputeRegistrySchema = z.object({

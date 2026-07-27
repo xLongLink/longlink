@@ -1,6 +1,5 @@
 import pytest
 from src import adapters
-from src.models.types import StorageKind
 from src.database.models.storages import StorageRegistry
 
 pytestmark = pytest.mark.no_db
@@ -13,9 +12,7 @@ def test_storage_factory_builds_exoscale_adapter() -> None:
     registry = StorageRegistry(
         name="exoscale",
         slug="exoscale",
-        kind=StorageKind.exoscale,
         endpoint_url="https://sos-ch-gva-2.exo.io",
-        runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
         access_key_id="access-key",
         secret_access_key="secret-key",
     )

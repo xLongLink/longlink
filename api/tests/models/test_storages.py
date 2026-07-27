@@ -1,7 +1,6 @@
 import pytest
 from uuid import uuid4
 from pydantic import ValidationError
-from src.models.types import StorageKind
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 
 pytestmark = pytest.mark.no_db
@@ -13,43 +12,29 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
     # Validate and normalize storage endpoint URLs at the model boundary.
     payload = StorageRegistryCreate.model_validate(
         {
-            "kind": "exoscale",
             "name": "Primary Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io/",
-            "runtime_endpoint_url": None,
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         }
     )
 
-    assert payload.kind == StorageKind.exoscale
     assert payload.name == "Primary Storage"
     assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"
-    assert payload.runtime_endpoint_url is None
 
 
 @pytest.mark.parametrize(
     "payload",
     [
         {
-            "kind": "exoscale",
             "name": "",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         },
         {
-            "kind": "exoscale",
             "name": "Primary Storage",
             "endpoint_url": "http://sos-ch-gva-2.exo.io",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-        },
-        {
-            "kind": "exoscale",
-            "name": "Primary Storage",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "runtime_endpoint_url": "https://sos-de-fra-1.exo.io",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         },
@@ -70,11 +55,9 @@ def test_storage_registry_response_filters_provider_credentials() -> None:
     payload = StorageRegistryResponse.model_validate(
         {
             "id": uuid4(),
-            "kind": "exoscale",
             "name": "Primary Storage",
             "slug": "primary-storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         }

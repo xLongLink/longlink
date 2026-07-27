@@ -4,13 +4,12 @@ from src.utils import jobs
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
-from src.models.types import StorageKind, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import compute, operations
 from src.models.operations import OperationStatus
-from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredCompute, ReconcileResult
+from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -39,11 +38,9 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
             username="longlink",
         )
         storage_registry = StorageRegistry(
-            kind=StorageKind.exoscale,
             name="Local storage",
             slug="local-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
-            runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
         )
@@ -87,29 +84,39 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     async with session_scope() as session:
         session.add_all([organization, running, creating])
         await session.commit()
-    snapshots: list[DesiredCompute] = []
+    snapshots: list[tuple[GatewayRoute, ...]] = []
+
+    class FakeGateway:
+        """Capture gateway resource operations."""
+
+        async def endpoint(self) -> str:
+            """Return one allocated public endpoint."""
+
+            return "gateway.example"
+
+        def tls(self, compute_id: str, endpoint: str) -> GatewayTLSMaterial:
+            """Return stable generated TLS material."""
+
+            assert compute_id == str(compute_registry.id)
+            assert endpoint == "gateway.example"
+            return GatewayTLSMaterial("ca", "certificate", "private-key")
+
+        async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
+            """Capture the desired routes and report a ready rollout."""
+
+            snapshots.append(routes)
+            assert proxy_secret == "proxy-secret"
+            assert tls == GatewayTLSMaterial("ca", "certificate", "private-key")
+            return True
 
     class FakeKubernetes:
-        """Capture gateway-only desired state."""
+        """Expose the fake gateway abstraction."""
 
         def __init__(self, kubeconfig: str) -> None:
             """Validate the selected compute registry."""
 
             assert kubeconfig == compute_registry.kubeconfig
-
-        async def reconcile(
-            self,
-            desired: DesiredCompute,
-            proxy_secret: str,
-            existing_tls: GatewayTLSMaterial | None = None,
-            stage_tls=None,
-        ) -> ReconcileResult:
-            """Return stable gateway material for the desired routes."""
-
-            snapshots.append(desired)
-            assert proxy_secret == "proxy-secret"
-            assert existing_tls is None
-            return ReconcileResult("https://gateway.example", "ca", "certificate", "private-key")
+            self.gateway = FakeGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     operation = await operations.enqueue(compute_registry.id)
@@ -122,14 +129,15 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     # Assert
     assert completed.status == OperationStatus.completed
     assert len(snapshots) == 1
-    assert [(route.id, route.namespace) for route in snapshots[0].routes] == [(running.id, "acme")]
-    assert not hasattr(snapshots[0], "applications")
-    assert not hasattr(snapshots[0], "organizations")
+    assert [(route.id, route.namespace) for route in snapshots[0]] == [(running.id, "acme")]
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == ComputeStatus.ready
     assert refreshed.version == env.VERSION
     assert refreshed.gateway_url == "https://gateway.example"
+    assert refreshed.gateway_ca_certificate == "ca"
+    assert refreshed.gateway_tls_certificate == "certificate"
+    assert refreshed.gateway_tls_private_key == "private-key"
 
 
 async def test_execute_compute_reconcile_operation_retries_transient_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -138,20 +146,22 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
     # Arrange
     compute_registry, _, _ = await create_compute_infrastructure()
 
+    class FailingGateway:
+        """Raise a transient endpoint provider error."""
+
+        async def endpoint(self) -> str:
+            """Fail endpoint allocation after entering the Kubernetes boundary."""
+
+            raise RuntimeError("gateway unavailable")
+
     class FailingKubernetes:
-        """Raise a transient gateway provider error."""
+        """Expose the failing gateway abstraction."""
 
         def __init__(self, kubeconfig: str) -> None:
             """Validate the selected compute registry."""
 
             assert kubeconfig == compute_registry.kubeconfig
-
-        async def reconcile(self, desired: DesiredCompute, *args: object, **kwargs: object) -> ReconcileResult:
-            """Fail after confirming tenant state is unavailable to the reconciler."""
-
-            assert desired.routes == ()
-            assert not hasattr(desired, "applications")
-            raise RuntimeError("gateway unavailable")
+            self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
     operation = await operations.enqueue(compute_registry.id)

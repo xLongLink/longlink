@@ -3,10 +3,10 @@ import {
     apiApplicationResponseSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
-    apiUserListItemSchema,
+    apiUserSummarySchema,
     parseApiCollection,
 } from '@/lib/api-schemas';
-import type { ApiApplicationResponse, ApiOperation, ApiOrganizationSummary, ApiUserListItem } from '@/lib/types';
+import type { ApiApplicationResponse, ApiOperation, ApiOrganizationSummary, ApiUserSummary } from '@/lib/types';
 
 /** Fetches the application list for admin views. */
 export function useApplications() {
@@ -32,7 +32,7 @@ export function useOrganizations() {
 
 /** Fetches the full user list for admin views. */
 export function useUsers() {
-    return useCollectionQuery<ApiUserListItem>('/api/users', {
-        parse: (value) => parseApiCollection(apiUserListItemSchema, value),
+    return useCollectionQuery<ApiUserSummary>('/api/users', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
     });
 }

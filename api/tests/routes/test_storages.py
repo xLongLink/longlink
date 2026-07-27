@@ -25,7 +25,6 @@ async def test_storage_registry_endpoints_return_backend(
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
     assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
-    assert payload["runtime_endpoint_url"] == "https://sos-ch-gva-2.exo.io"
     assert "access_key_id" not in payload
     assert "created_at" not in payload
 
@@ -38,10 +37,8 @@ async def test_storage_registry_create_duplicate_and_delete(
     # Arrange
     client = clients[0]
     payload = {
-        "kind": "exoscale",
         "name": "Ephemeral Storage",
         "endpoint_url": "https://sos-ch-gva-2.exo.io",
-        "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
         "access_key_id": "key",
         "secret_access_key": "secret",
     }
@@ -104,10 +101,8 @@ async def test_storage_registry_routes_enforce_support_and_admin_roles(
     support_write_response = await support_client.post(
         "/api/storages",
         json={
-            "kind": "exoscale",
             "name": "Support Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "key",
             "secret_access_key": "secret",
         },

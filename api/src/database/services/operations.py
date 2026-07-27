@@ -114,7 +114,6 @@ async def enqueue_in_session(
         scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
     )
     session.add(operation)
-    await session.flush()
     return operation
 
 
@@ -205,22 +204,6 @@ async def claim_next() -> Operation | None:
                 )
             ).scalar_one_or_none()
             if operation is None:
-                return None
-
-            # Recheck after candidate contention in case an external writer activated different work.
-            active_operation = (
-                await session.execute(
-                    select(Operation.id)
-                    .where(
-                        Operation.id != operation.id,
-                        Operation.stopped_at.is_(None),
-                        Operation.started_at.is_not(None),
-                        Operation.lease_expires_at > now,
-                    )
-                    .limit(1)
-                )
-            ).scalar_one_or_none()
-            if active_operation is not None:
                 return None
 
             # A worker that crashed on its final attempt leaves terminal failure for the next claimant to record.

@@ -6,8 +6,6 @@ metadata:
     namespace: longlink-system
     labels:
         app: longlink-gateway
-        app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/resource-scope: platform
 spec:
     type: LoadBalancer
     selector:

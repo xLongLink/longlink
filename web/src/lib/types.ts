@@ -15,13 +15,13 @@ import type {
     apiOrganizationStorageResourceSchema,
     apiOrganizationSummarySchema,
     apiStorageRegistrySchema,
-    apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
     apiUserProfileSchema,
+    apiUserSummarySchema,
 } from '@/lib/api-schemas';
 
 export type ApiInvitation = z.infer<typeof apiInvitationSchema>;
-export type ApiUserListItem = z.infer<typeof apiUserListItemSchema>;
+export type ApiUserSummary = z.infer<typeof apiUserSummarySchema>;
 export type ApiUserOrganizationMembership = z.infer<typeof apiUserOrganizationMembershipSchema>;
 export type ApiUserProfile = z.infer<typeof apiUserProfileSchema>;
 export type ApiOrganizationApplication = z.infer<typeof apiOrganizationApplicationSchema>;

@@ -55,7 +55,6 @@ async def create(
         try:
             await session.commit()
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Database registry already exists") from exc
 
         return registry

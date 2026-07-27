@@ -1,8 +1,8 @@
 import re
 import urllib.parse
 from uuid import UUID
-from pydantic import Field, BaseModel, ConfigDict, ValidationInfo, field_validator
-from src.models.types import StorageKind, DatabaseSSLMode
+from pydantic import Field, BaseModel, ConfigDict, field_validator
+from src.models.types import DatabaseSSLMode
 
 
 def exoscale_zone(endpoint_url: str) -> str:
@@ -76,25 +76,19 @@ class DatabaseConfiguration(BaseModel):
 class StorageConfiguration(BaseModel):
     """Object-storage connection configuration for one registry."""
 
-    # Kind
-    kind: StorageKind
-
     # Connection
     endpoint_url: str = Field(min_length=1, max_length=255)
-    runtime_endpoint_url: str | None = Field(default=None, max_length=255)
 
     # Credentials
     access_key_id: str = Field(min_length=1, max_length=255)
     secret_access_key: str = Field(min_length=1, max_length=255)
 
-    @field_validator("endpoint_url", "runtime_endpoint_url")
+    @field_validator("endpoint_url")
     @classmethod
-    def validate_endpoint_url(cls, endpoint_url: str | None) -> str | None:
+    def validate_endpoint_url(cls, endpoint_url: str) -> str:
         """Validate one Exoscale SOS endpoint."""
 
-        # Optional runtime endpoints fall back to the control endpoint.
-        if endpoint_url is None:
-            return None
+        # Normalize and validate the provider endpoint before persistence.
         value = endpoint_url.strip().rstrip("/")
         parsed = urllib.parse.urlsplit(value)
         if (
@@ -118,19 +112,6 @@ class StorageConfiguration(BaseModel):
         # Storage registries currently support only zone-specific Exoscale SOS endpoints.
         exoscale_zone(value)
         return value
-
-    @field_validator("runtime_endpoint_url")
-    @classmethod
-    def validate_runtime_zone(cls, runtime_endpoint_url: str | None, info: ValidationInfo) -> str | None:
-        """Keep Exoscale control and runtime endpoints in the same zone."""
-
-        # Optional runtime endpoints inherit the already validated control endpoint.
-        endpoint_url = info.data.get("endpoint_url")
-        if runtime_endpoint_url is not None and isinstance(endpoint_url, str):
-            if exoscale_zone(runtime_endpoint_url) != exoscale_zone(endpoint_url):
-                raise ValueError("Exoscale control and runtime storage endpoints must use the same zone")
-
-        return runtime_endpoint_url
 
 
 class RegistryOption(BaseModel):

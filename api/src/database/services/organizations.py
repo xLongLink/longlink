@@ -74,7 +74,6 @@ async def purge(organization_id: UUID) -> None:
         ).scalar_one_or_none()
         if application is not None:
             raise RuntimeError("Organization applications must be purged first")
-        await session.execute(delete(UserApplication).where(UserApplication.organization_id == organization_id))
         await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
         await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
         await session.execute(delete(Organization).where(Organization.id == organization_id))
@@ -92,19 +91,7 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
-        statement = (
-            select(Application)
-            .options(
-                joinedload(Application.organization).joinedload(Organization.created_by),
-                joinedload(Application.organization).joinedload(Organization.updated_by),
-                joinedload(Application.organization).joinedload(Organization.deleted_by),
-                joinedload(Application.created_by),
-                joinedload(Application.updated_by),
-                joinedload(Application.deleted_by),
-            )
-            .where(*conditions)
-            .order_by(Application.created_at.asc())
-        )
+        statement = select(Application).where(*conditions).order_by(Application.created_at.asc())
         result = await session.execute(statement)
         return result.scalars().all()
 
@@ -250,12 +237,11 @@ async def create(
     storage_id: UUID | None,
     user: User,
     avatar: str | None = None,
-    organization_id: UUID | None = None,
 ) -> tuple[Organization, Operation]:
     """Create an Organization with immutable infrastructure assignments and queue reconciliation."""
 
     # Validate the user-derived runtime namespace before creating the row.
-    organization_id = organization_id or uuid4()
+    organization_id = uuid4()
     names.knames(slug)
 
     # Create the organization and owner membership together.
@@ -351,7 +337,6 @@ async def create(
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
         except IntegrityError as exc:
-            await session.rollback()
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
         # Reload audit relationships required by the mutation response.

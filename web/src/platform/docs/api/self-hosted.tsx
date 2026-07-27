@@ -22,7 +22,8 @@ export const content = (
             registry of each kind to every Organization. The Kubernetes service must implement{' '}
             <Code>type: LoadBalancer</Code>; LongLink derives the public TLS gateway address and reconciles Organization
             and Application resources asynchronously. The cluster CNI must enforce Kubernetes NetworkPolicy because
-            Application-to-Application isolation depends on it.
+            Application-to-Application isolation depends on it. Each registered compute cluster must be dedicated to
+            LongLink.
         </Text>
         <Text as="p">
             The LongLink Platform container is published at{' '}

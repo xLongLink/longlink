@@ -1,6 +1,6 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.models.users import UserProfile, UserListItem
+from src.models.users import UserProfile, UserSummary
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
@@ -81,7 +81,7 @@ async def test_list_users_returns_admin_user_summaries(
     # Assert
     assert response.status_code == 200
 
-    expected_payload = [UserListItem.model_validate(user).model_dump(mode="json") for user in users]
+    expected_payload = [UserSummary.model_validate(user).model_dump(mode="json") for user in users]
     assert response.json() == expected_payload
 
 

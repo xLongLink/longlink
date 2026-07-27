@@ -148,6 +148,8 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
 
     # Remove every Organization route before terminating any child Application Service.
     gateway_result = await computes.reconcile_gateway(compute_registry, cluster)
+    if not gateway_result.ready:
+        return jobs.retry("Gateway is still converging")
     db = adapters.Postgres(
         database_registry.host,
         database_registry.port,
@@ -178,9 +180,6 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         compute_registry.id,
         claimed.platform_version,
         gateway_result.gateway_url,
-        gateway_result.gateway_ca_certificate,
-        gateway_result.gateway_tls_certificate,
-        gateway_result.gateway_tls_private_key,
     ):
         return jobs.retry("Organization gateway state was not recorded")
     await organizations.purge(organization.id)
