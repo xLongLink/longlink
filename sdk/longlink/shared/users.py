@@ -47,12 +47,12 @@ async def sync(conn: AsyncConnection, users: list[UserRow]) -> None:
         return
 
     # Build one PostgreSQL upsert for the SDK-owned shared users table.
-    insert_statement = postgres_insert(shared_users_table)
-    excluded = insert_statement.excluded
+    statement = postgres_insert(shared_users_table)
+    excluded = statement.excluded
 
     # Preserve creation time while updating the current profile, role, and activation state.
     await conn.execute(
-        insert_statement.on_conflict_do_update(
+        statement.on_conflict_do_update(
             index_elements=[shared_users_table.c.id],
             set_={
                 "name": excluded.name,

@@ -1,9 +1,11 @@
 from src import adapters
 from uuid import UUID, uuid4
 from fastapi import HTTPException
+from sqlmodel import col
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
+from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from src.models.roles import OrganizationRoles
@@ -21,6 +23,37 @@ from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+
+
+@dataclass(frozen=True, slots=True)
+class Infrastructure:
+    """Hold one Organization and its assigned infrastructure registries."""
+
+    organization: Organization
+    compute: ComputeRegistry | None
+    database: DatabaseRegistry | None
+    storage: StorageRegistry | None
+
+
+async def infrastructure(organization_id: UUID, include_deleted: bool = False) -> Infrastructure | None:
+    """Return one Organization and a consistent snapshot of its infrastructure assignments."""
+
+    # Resolve every immutable assignment in one database session.
+    async with session_scope() as session:
+        statement = (
+            select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+            .outerjoin(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+            .outerjoin(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
+            .outerjoin(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
+            .where(col(Organization.id) == organization_id)
+        )
+        if not include_deleted:
+            statement = statement.where(col(Organization.deleted_at).is_(None))
+        row = (await session.execute(statement)).tuples().one_or_none()
+        if row is None:
+            return None
+        organization, compute, database, storage = row
+        return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
 async def fetch() -> list[Organization]:

@@ -9,10 +9,9 @@ from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from dataclasses import dataclass
 from collections.abc import Iterator
-from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
-from src.kubernetes.applications import DesiredApplication
 
 pytestmark = [pytest.mark.no_db, pytest.mark.integration]
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -43,50 +42,20 @@ class GatewayState:
     tls: GatewayTLSMaterial
 
 
-async def reconcile_ready(
+async def apply_gateway(
     compute: Kubernetes,
     compute_id: UUID,
     routes: tuple[GatewayRoute, ...],
     proxy_secret: str,
     tls_material: GatewayTLSMaterial | None = None,
 ) -> GatewayState:
-    """Retry gateway abstraction calls until the desired Deployment is ready."""
+    """Apply gateway resources and retain their public endpoint and TLS identity."""
 
-    # Reapply the same gateway resources while Kubernetes allocates the endpoint and advances the rollout.
-    deadline = time.monotonic() + 300
-    tls = tls_material
-    while True:
-        gateway_ip = await compute.gateway.ip()
-        if gateway_ip is not None:
-            if tls is None:
-                tls = generate_gateway_tls(compute_id, gateway_ip)
-            if await compute.gateway.apply(routes, proxy_secret, tls):
-                return GatewayState(gateway_ip, tls)
-        if time.monotonic() >= deadline:
-            # Include workload status and logs in integration failures because rollout errors are otherwise opaque.
-            pods = await compute.pods("longlink-system")
-            pod_statuses = [{"name": pod.name, "status": pod.raw.get("status", {})} for pod in pods]
-            pod_logs: dict[str, list[str]] = {}
-            for pod in pods:
-                pod_logs[pod.name] = [line async for line in pod.logs(container="longlink-gateway", tail_lines=50)]
-                container_statuses = pod.raw.get("status", {}).get("containerStatuses", [])
-                if any(status.get("restartCount", 0) > 0 for status in container_statuses):
-                    pod_logs[f"{pod.name}-previous"] = [
-                        line async for line in pod.logs(container="longlink-gateway", previous=True, tail_lines=50)
-                    ]
-            pytest.fail(f"gateway rollout timed out: statuses={pod_statuses}, logs={pod_logs}")
-        await asyncio.sleep(2)
-
-
-async def delete_application(compute: Kubernetes, application_id: UUID, namespace: str) -> None:
-    """Retry Application deletion until every workload resource and active Pod is absent."""
-
-    # Mirror operation retries without blocking inside the Kubernetes abstraction.
-    deadline = time.monotonic() + 180
-    while not await compute.applications.delete(application_id, namespace):
-        if time.monotonic() >= deadline:
-            pytest.fail(f"Application {application_id!s} did not terminate before cleanup")
-        await asyncio.sleep(1)
+    # Kubernetes lifecycle methods wait only on the resources they mutate.
+    gateway_ip = await compute.gateway.ip()
+    tls = tls_material or generate_gateway_tls(compute_id, gateway_ip)
+    await compute.gateway.apply(routes, proxy_secret, tls)
+    return GatewayState(gateway_ip, tls)
 
 
 async def delete_gateway_resources(compute: Kubernetes) -> None:
@@ -94,17 +63,6 @@ async def delete_gateway_resources(compute: Kubernetes) -> None:
 
     # Keep destructive namespace cleanup outside the production gateway abstraction.
     await compute._resources.delete(Namespace, "longlink-system")
-
-
-async def wait_application_ready(compute: Kubernetes, application_id: UUID, namespace: str) -> None:
-    """Retry Application readiness checks until its Deployment is serving."""
-
-    # Mirror operation retries without blocking inside the Kubernetes abstraction.
-    deadline = time.monotonic() + 180
-    while not await compute.applications.ready(application_id, namespace):
-        if time.monotonic() >= deadline:
-            pytest.fail(f"Application {application_id!s} did not become ready")
-        await asyncio.sleep(2)
 
 
 class K3SRuntimeContainer(DockerRuntimeContainer):
@@ -176,9 +134,7 @@ def kubernetes_compute() -> Iterator[tuple[Kubernetes, int]]:
 async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
     """Deploy active and stale tenant resources plus their initial gateway routes."""
 
-    # Build the two Applications and their shared runtime configuration.
-    active_application = DesiredApplication(id=scenario.application_id, namespace="acme", image=ECHO_SERVER_IMAGE)
-    stale_application = DesiredApplication(id=scenario.stale_application_id, namespace="acme", image=ECHO_SERVER_IMAGE)
+    # Build the shared runtime configuration.
     runtime_envs = {
         "LONGLINK_ENV": "production",
         "LONGLINK_DATABASE_HOST": "database.internal",
@@ -208,24 +164,22 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         "acme",
         {
             **runtime_envs,
-            "LONGLINK_DATABASE_SCHEMA": active_application.id.hex,
-            "LONGLINK_STORAGE_PREFIX": f"applications/{active_application.id.hex}/",
+            "LONGLINK_DATABASE_SCHEMA": scenario.application_id.hex,
+            "LONGLINK_STORAGE_PREFIX": f"applications/{scenario.application_id.hex}/",
         },
     )
-    await scenario.compute.applications.apply(active_application)
     await scenario.compute.applications.stage_envs(scenario.stale_application_id, "acme", {"PORT": "8000"})
     await scenario.compute.applications.stage_runtime_envs(
         scenario.stale_application_id,
         "acme",
         {
             **runtime_envs,
-            "LONGLINK_DATABASE_SCHEMA": stale_application.id.hex,
-            "LONGLINK_STORAGE_PREFIX": f"applications/{stale_application.id.hex}/",
+            "LONGLINK_DATABASE_SCHEMA": scenario.stale_application_id.hex,
+            "LONGLINK_STORAGE_PREFIX": f"applications/{scenario.stale_application_id.hex}/",
         },
     )
-    await scenario.compute.applications.apply(stale_application)
-    await wait_application_ready(scenario.compute, scenario.application_id, "acme")
-    await wait_application_ready(scenario.compute, scenario.stale_application_id, "acme")
+    await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
+    await scenario.compute.applications.apply(scenario.stale_application_id, "acme", ECHO_SERVER_IMAGE)
 
     # Replace only user-owned values and wait for the resource-version rollout.
     await scenario.compute.applications.replace_envs(
@@ -233,14 +187,14 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         "acme",
         {"LONG_LINK_REQUIRED": "updated", "PORT": "8000"},
     )
-    await wait_application_ready(scenario.compute, scenario.application_id, "acme")
+    await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 
     # Reconcile both gateway routes and retain the generated TLS identity for later phases.
     routes = (
         GatewayRoute(id=scenario.application_id, namespace="acme"),
         GatewayRoute(id=scenario.stale_application_id, namespace="acme"),
     )
-    result = await reconcile_ready(scenario.compute, scenario.compute_id, routes, scenario.proxy_secret)
+    result = await apply_gateway(scenario.compute, scenario.compute_id, routes, scenario.proxy_secret)
     assert result.ip == ipaddress.ip_address(K3S_HOST)
     return result
 
@@ -264,16 +218,9 @@ async def drift_scenario(scenario: KubernetesScenario) -> None:
 
     # Replace the retained Application runtime Secret without resynchronizing its lifecycle.
     await scenario.compute._resources.replace_secret(
-        {
-            "apiVersion": "v1",
-            "kind": "Secret",
-            "metadata": {
-                "name": f"{scenario.application_id}-runtime",
-                "namespace": "acme",
-            },
-            "type": "Opaque",
-            "stringData": {"STALE": "value"},
-        }
+        f"{scenario.application_id}-runtime",
+        "acme",
+        {"STALE": "value"},
     )
 
 
@@ -285,14 +232,14 @@ async def prune_scenario(
 
     # Reconcile the current route graph without repairing the retained Application.
     routes = (GatewayRoute(id=scenario.application_id, namespace="acme"),)
-    result = await reconcile_ready(
+    result = await apply_gateway(
         scenario.compute,
         scenario.compute_id,
         routes,
         scenario.proxy_secret,
         first.tls,
     )
-    await delete_application(scenario.compute, scenario.stale_application_id, "acme")
+    await scenario.compute.applications.delete(scenario.stale_application_id, "acme")
     await scenario.compute.organizations.delete("retired")
 
     # Reconciliation must retain the compute's established TLS identity.
@@ -409,14 +356,8 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
 async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewayState) -> None:
     """Verify the retained Application through the CA-validated gateway and Pod logs."""
 
-    # Wait for the retained Application workload before exercising the public gateway.
-    deadline = time.monotonic() + 180
-    while not await scenario.compute.applications.ready(scenario.application_id, "acme"):
-        if time.monotonic() >= deadline:
-            pod = await scenario.compute.applications.pod(scenario.application_id, "acme")
-            pod_status = pod.raw.get("status", {}) if pod is not None else None
-            pytest.fail(f"k3s application did not become ready before timeout: {pod_status}")
-        await asyncio.sleep(2)
+    # Ensure the retained Application workload is serving before exercising the public gateway.
+    await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 
     # Call the gateway with its generated CA until the LoadBalancer path is available.
     tls = ssl.create_default_context(cadata=result.tls.ca_certificate)
@@ -439,14 +380,14 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
     """Delete tenant and gateway resources and verify their terminal states."""
 
     # Remove all routes before deleting the tenant and dedicated compute resources.
-    await reconcile_ready(
+    await apply_gateway(
         scenario.compute,
         scenario.compute_id,
         (),
         scenario.proxy_secret,
         tls,
     )
-    await delete_application(scenario.compute, scenario.application_id, "acme")
+    await scenario.compute.applications.delete(scenario.application_id, "acme")
     await scenario.compute.organizations.delete("acme")
     await delete_gateway_resources(scenario.compute)
 
@@ -495,6 +436,33 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
         await asyncio.sleep(1)
 
 
+async def test_kubernetes_exact_secret_replacement_preserves_noops_and_removes_omitted_keys(
+    kubernetes_compute: tuple[Kubernetes, int],
+) -> None:
+    """Exercise exact Secret replacement against the Kubernetes API."""
+
+    # Create an isolated Namespace and initial exact Secret.
+    compute, _ = kubernetes_compute
+    namespace = "secret-contract"
+
+    try:
+        async with asyncio.timeout(120):
+            await compute.organizations.apply(namespace)
+            first = await compute._resources.create_secret("contract", namespace, {"KEEP": "one", "REMOVE": "two"})
+
+            # An unchanged replacement must avoid a write and preserve the resource version.
+            unchanged = await compute._resources.replace_secret("contract", namespace, {"KEEP": "one", "REMOVE": "two"})
+            assert unchanged.metadata.resourceVersion == first.metadata.resourceVersion
+
+            # A changed replacement must write once and remove omitted keys.
+            changed = await compute._resources.replace_secret("contract", namespace, {"KEEP": "updated"})
+            assert changed.metadata.resourceVersion != first.metadata.resourceVersion
+            assert set(changed.data) == {"KEEP"}
+            assert base64.b64decode(changed.data["KEEP"]).decode("utf-8") == "updated"
+    finally:
+        await compute._resources.delete(Namespace, namespace)
+
+
 async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup(
     kubernetes_compute: tuple[Kubernetes, int],
 ) -> None:
@@ -514,14 +482,15 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
     cleanup_completed = False
 
     try:
-        # Execute deploy, drift repair, pruning, serving, and cleanup as explicit phases.
-        first = await deploy_scenario(scenario)
-        await drift_scenario(scenario)
-        second = await prune_scenario(scenario, first)
-        await assert_pruned_scenario(scenario)
-        await assert_gateway_serves(scenario, second)
-        await cleanup_scenario(scenario, second.tls)
-        cleanup_completed = True
+        async with asyncio.timeout(600):
+            # Execute deploy, drift repair, pruning, serving, and cleanup as explicit phases.
+            first = await deploy_scenario(scenario)
+            await drift_scenario(scenario)
+            second = await prune_scenario(scenario, first)
+            await assert_pruned_scenario(scenario)
+            await assert_gateway_serves(scenario, second)
+            await cleanup_scenario(scenario, second.tls)
+            cleanup_completed = True
     finally:
         # Keep the shared Docker daemon clean when a phase assertion interrupts reconciliation.
         if not cleanup_completed:

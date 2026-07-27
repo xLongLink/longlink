@@ -43,29 +43,25 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     ]
 
 
-def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None:
-    """Render gateway resources with exact Secrets and a Pod rollout annotation."""
+def test_gateway_manifests_include_config_and_pod_rollout_revision() -> None:
+    """Render gateway resources with config and a Pod rollout annotation."""
 
     # Define gateway TLS and authentication inputs.
     tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
 
     # Render the gateway supporting resources.
-    manifests = render_gateway_manifests("proxy-secret", tls, "envoy-config")
+    config_map, deployment, network_policy = render_gateway_manifests("proxy-secret", tls, "envoy-config")
 
-    # Verify gateway metadata, exact Secrets, and rollout configuration.
-    assert manifests.auth_secret["kind"] == "Secret"
-    assert "labels" not in manifests.auth_secret["metadata"]
-    assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
-    assert "labels" not in manifests.tls_secret["metadata"]
-    assert manifests.tls_secret["stringData"] == {"tls.crt": "certificate", "tls.key": "private-key"}
-    assert "labels" not in manifests.config_map["metadata"]
-    assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
-    assert manifests.deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
-    assert manifests.deployment["spec"]["replicas"] == 1
-    assert "annotations" not in manifests.deployment["metadata"]
-    runtime_revision = manifests.deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
+    # Verify gateway metadata and rollout configuration.
+    assert "labels" not in config_map["metadata"]
+    assert config_map["data"] == {"envoy.yaml": "envoy-config"}
+    assert deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
+    assert deployment["spec"]["replicas"] == 1
+    assert "annotations" not in deployment["metadata"]
+    assert network_policy["kind"] == "NetworkPolicy"
+    runtime_revision = deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
     assert runtime_revision
-    container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
+    container = deployment["spec"]["template"]["spec"]["containers"][0]
     assert container["startupProbe"] == {
         "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},
         "periodSeconds": 2,

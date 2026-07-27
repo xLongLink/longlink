@@ -21,31 +21,27 @@ jobs:
         needs: tests
         runs-on: ubuntu-latest
 
+        env:
+            IMAGE: ghcr.io/xlonglink/longlink:nightly
+            PACKAGE_NAME: longlink
+
         permissions:
             contents: read
             packages: write
 
         steps:
-            - name: Checkout code
+            - name: Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  fetch-depth: 0
-                  fetch-tags: true
 
-            - name: Resolve Platform version
+            - name: Resolve nightly Platform version
               id: platform
               run: |
                   set -euo pipefail
 
-                  version="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
-                  if [[ ! "$version" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-                      printf 'Invalid Platform version: %s\n' "$version" >&2
-                      exit 1
-                  fi
-
+                  version="v$(date -u +'%Y.%-m.%-d')"
                   printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
-            - name: Set up Docker Buildx
+            - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
             - name: Log in to GHCR
@@ -62,16 +58,16 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  image="$(docker buildx imagetools inspect ghcr.io/xlonglink/longlink:nightly --format '{{json .Image}}' 2>/dev/null || true)"
+                  image="$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Image}}' 2>/dev/null || true)"
                   revision="$(jq -r '.config.Labels["org.opencontainers.image.revision"] // empty' <<< "$image")"
                   version="$(jq -r '[.config.Env[]? | select(startswith("VERSION=")) | ltrimstr("VERSION=")][0] // empty' <<< "$image")"
                   publish=true
                   if [ "$revision" = "$GITHUB_SHA" ] && [ "$version" = "$PLATFORM_VERSION" ]; then
-                    publish=false
-                    echo "The nightly image already contains commit $GITHUB_SHA with Platform version $PLATFORM_VERSION."
+                      publish=false
+                      printf 'The nightly image already contains commit %s with Platform version %s.\n' "$GITHUB_SHA" "$PLATFORM_VERSION"
                   fi
 
-                  echo "publish=$publish" >> "$GITHUB_OUTPUT"
+                  printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
 
             - name: Build and push nightly API image
               if: steps.nightly.outputs.publish == 'true'
@@ -84,5 +80,13 @@ jobs:
                       VERSION=${{ steps.platform.outputs.version }}
                   labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
-                      org.opencontainers.image.version=nightly
-                  tags: ghcr.io/xlonglink/longlink:nightly
+                      org.opencontainers.image.version=${{ steps.platform.outputs.version }}
+                  tags: ${{ env.IMAGE }}
+
+            - name: Remove old nightly API image versions
+              uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
+              with:
+                  package-name: ${{ env.PACKAGE_NAME }}
+                  package-type: container
+                  min-versions-to-keep: 3
+                  delete-only-untagged-versions: true
