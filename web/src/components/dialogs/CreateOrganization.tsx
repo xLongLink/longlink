@@ -11,7 +11,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useCreateOrganization } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
@@ -28,7 +27,6 @@ const defaultCreateOrganizationValues = {
 export default function CreateOrganization() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -37,11 +35,6 @@ export default function CreateOrganization() {
         mode: 'onChange',
         resolver: zodResolver(createOrganizationSchema),
     });
-
-    // Hide organization creation from support users.
-    if (role === 'support') {
-        return null;
-    }
 
     /** Clears the organization creation form state. */
     function resetDialogState() {

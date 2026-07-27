@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import Cookie, Depends, Request, HTTPException
 from datetime import timedelta
 from sqlmodel import col
-from src.utils import roles, token
+from src.utils import token
 from sqlalchemy import select
 from src.database import session as database
 from collections.abc import AsyncIterator
@@ -122,15 +122,6 @@ async def authadmin(user: User = Depends(current_authenticated_user)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
-    if not roles.atleast(user.role, PlatformRoles.administrator):
-        raise HTTPException(status_code=403, detail="Permission required")
-    return user
-
-
-async def authsupport(user: User = Depends(current_authenticated_user)) -> User:
-    """Authenticate a support or administrator account."""
-
-    # Only support-capable accounts can continue past this check.
-    if not roles.atleast(user.role, PlatformRoles.support):
+    if user.role != PlatformRoles.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user

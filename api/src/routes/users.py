@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter
-from src.auth import authuser, authsupport, get_auth_session, current_authenticated_user
+from src.auth import authuser, authadmin, get_auth_session, current_authenticated_user
 from src.models.users import UserUpdate, UserProfile, UserSummary, UserOrganizationMembership
 from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,14 +24,16 @@ async def get_my_organizations(user: User = Depends(authuser)):
 
 
 @router.get("/api/users", response_model=list[UserSummary])
-async def list_users(_: User = Depends(authsupport)):
-    """Return all user summaries for support and administrator views."""
+async def list_users(_: User = Depends(authadmin)):
+    """Return all user summaries for administrator views."""
 
     return await users.fetch()
 
 
 @router.patch("/api/me", response_model=UserProfile)
-async def patch_me(payload: UserUpdate, user: User = Depends(current_authenticated_user), session: AsyncSession = Depends(get_auth_session)):
+async def patch_me(
+    payload: UserUpdate, user: User = Depends(current_authenticated_user), session: AsyncSession = Depends(get_auth_session)
+):
     """Update the authenticated user's details."""
 
     # Apply only non-null profile fields supplied by the caller.

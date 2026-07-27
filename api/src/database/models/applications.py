@@ -42,13 +42,6 @@ class Application(SQLModel, table=True):
     version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
 
-    # Database
-    database_password: str = Field(max_length=255)
-
-    # Storage
-    storage_access_key_id: str | None = Field(default=None, max_length=255)
-    storage_secret_access_key: str | None = Field(default=None, max_length=255)
-
     # State
     status: ApplicationStatus = Field(
         default=ApplicationStatus.creating,

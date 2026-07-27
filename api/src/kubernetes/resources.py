@@ -55,6 +55,28 @@ class KubernetesResources:
         ) as response:
             return type(resource)(response.json(), api=api)
 
+    async def merge_patch(
+        self,
+        resource_class: type[KubernetesResource],
+        name: str,
+        body: KubernetesDocument,
+        namespace: str | None = None,
+    ) -> KubernetesResource:
+        """Merge a partial document into one existing Kubernetes resource."""
+
+        # Patch only the named resource fields without changing server-side apply ownership.
+        api = await self.api()
+        resource_namespace = namespace if resource_class.namespaced else None
+        async with api.call_api(
+            "PATCH",
+            version=resource_class.version,
+            url=f"{resource_class.endpoint}/{name}",
+            namespace=resource_namespace,
+            headers={"Content-Type": "application/merge-patch+json"},
+            content=json.dumps(body),
+        ) as response:
+            return resource_class(response.json(), api=api)
+
     async def replace_secret(self, body: KubernetesDocument) -> Secret:
         """Create or replace one exact Secret while avoiding unchanged writes."""
 

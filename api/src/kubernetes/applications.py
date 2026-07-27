@@ -1,19 +1,28 @@
 import json
-import time
 import base64
-import asyncio
 import binascii
 from uuid import UUID
 from src.utils import templates
 from dataclasses import field, dataclass
 from collections.abc import Mapping
 from importlib.resources import files
-from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment
+from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Deployment
 from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 
 APPLICATION_ID_LABEL = "longlink.io/application-id"
-RESOURCE_TIMEOUT_SECONDS = 300
-POLL_INTERVAL_SECONDS = 2
+ENVIRONMENT_SECRET_VERSION_ANNOTATION = "longlink.io/environment-secret-resource-version"
+
+
+def environment_secret_name(application_id: UUID) -> str:
+    """Return one Application's user-owned environment Secret name."""
+
+    return f"{application_id}-environment"
+
+
+def runtime_secret_name(application_id: UUID) -> str:
+    """Return one Application's Platform-owned runtime Secret name."""
+
+    return f"{application_id}-runtime"
 
 
 def pod_is_active(pod: Pod) -> bool:
@@ -35,9 +44,10 @@ class DesiredApplication:
 
 @dataclass(frozen=True, slots=True)
 class ApplicationManifests:
-    """Hold one Application's exact Secret and workload resources."""
+    """Hold one Application's exact Secrets and workload resources."""
 
-    secret: KubernetesDocument = field(repr=False)
+    environment_secret: KubernetesDocument = field(repr=False)
+    runtime_secret: KubernetesDocument = field(repr=False)
     service: KubernetesDocument
     deployment: KubernetesDocument
 
@@ -51,44 +61,80 @@ class Applications:
         self._resources = resources
 
     def environment_secret(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> KubernetesDocument:
-        """Build one Application's exact environment Secret."""
+        """Build one Application's exact user-owned environment Secret."""
 
         # Keep Secret data deterministic for comparison and replacement.
         return {
             "apiVersion": "v1",
             "kind": "Secret",
             "metadata": {
-                "name": str(application_id),
+                "name": environment_secret_name(application_id),
                 "namespace": namespace,
             },
             "type": "Opaque",
             "stringData": dict(sorted(envs.items())),
         }
 
-    def manifests(self, application: DesiredApplication, *, envs: Mapping[str, str]) -> ApplicationManifests:
-        """Render one Application's Secret, Service, and Deployment from immutable lifecycle input."""
+    def runtime_secret(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> KubernetesDocument:
+        """Build one Application's exact Platform-owned runtime Secret."""
 
-        # Render the exact Secret and workload resources from the same Application identity.
-        secret = self.environment_secret(application.id, application.namespace, envs)
+        # Keep Platform runtime data deterministic and separate from user-owned values.
+        return {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": runtime_secret_name(application_id),
+                "namespace": namespace,
+            },
+            "type": "Opaque",
+            "stringData": dict(sorted(envs.items())),
+        }
+
+    def manifests(
+        self,
+        application: DesiredApplication,
+        *,
+        envs: Mapping[str, str],
+        runtime_envs: Mapping[str, str],
+    ) -> ApplicationManifests:
+        """Render one Application's Secrets, Service, and Deployment from lifecycle input."""
+
+        # Render the exact Secrets and workload resources from the same Application identity.
+        environment_secret = self.environment_secret(application.id, application.namespace, envs)
+        runtime_secret = self.runtime_secret(application.id, application.namespace, runtime_envs)
         manifests = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application.id),
             image=json.dumps(application.image),
             namespace=application.namespace,
         )
-        return ApplicationManifests(secret=secret, service=manifests[1], deployment=manifests[0])
+        return ApplicationManifests(
+            environment_secret=environment_secret,
+            runtime_secret=runtime_secret,
+            service=manifests[1],
+            deployment=manifests[0],
+        )
 
     async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Stage user-owned environment values in the canonical Application Secret."""
+        """Stage user-owned values before the Application workload exists."""
 
         await self._resources.replace_secret(self.environment_secret(application_id, namespace, envs))
 
     async def read_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
-        """Read user-owned values from one canonical Application Secret."""
+        """Read user-owned values from one Application environment Secret."""
 
-        # Read the canonical Secret from the Organization Namespace.
-        canonical_id = str(application_id)
-        secret = await self._resources.read(Secret, canonical_id, namespace)
+        return await self._read_secret_envs(environment_secret_name(application_id), namespace, "environment")
+
+    async def read_runtime_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
+        """Read Platform-owned values from one Application runtime Secret."""
+
+        return await self._read_secret_envs(runtime_secret_name(application_id), namespace, "runtime")
+
+    async def _read_secret_envs(self, name: str, namespace: str, kind: str) -> dict[str, str] | None:
+        """Decode strict UTF-8 environment values from one Kubernetes Secret."""
+
+        # Read the exact Secret from the Organization Namespace.
+        secret = await self._resources.read(Secret, name, namespace)
         if secret is None:
             return None
 
@@ -98,22 +144,49 @@ class Applications:
         if data is None:
             data = {}
         if not isinstance(data, dict) or not all(isinstance(name, str) and isinstance(value, str) for name, value in data.items()):
-            raise TypeError("Kubernetes Application Secret data must contain string values")
+            raise TypeError(f"Kubernetes Application {kind} Secret data must contain string values")
         envs: dict[str, str] = {}
         for name, value in data.items():
-            if name.startswith("LONGLINK_"):
-                continue
             try:
                 envs[name] = base64.b64decode(value, validate=True).decode("utf-8")
             except (binascii.Error, UnicodeDecodeError) as exc:
-                raise ValueError(f"Kubernetes Application Secret value {name!r} is invalid") from exc
+                raise ValueError(f"Kubernetes Application {kind} Secret value {name!r} is invalid") from exc
         return envs
+
+    async def replace_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
+        """Replace user-owned values and roll the Application without reading runtime credentials."""
+
+        # Replace only the user-owned Secret and use its stable revision as the rollout trigger.
+        secret = await self._resources.replace_secret(self.environment_secret(application_id, namespace, envs))
+        metadata = secret.raw.get("metadata")
+        resource_version = metadata.get("resourceVersion") if isinstance(metadata, dict) else None
+        if not isinstance(resource_version, str):
+            raise TypeError("Kubernetes Application environment Secret is missing its resource version")
+
+        # Merge only the user Secret annotation so runtime configuration and workload fields remain untouched.
+        await self._resources.merge_patch(
+            Deployment,
+            str(application_id),
+            {
+                "spec": {
+                    "template": {
+                        "metadata": {
+                            "annotations": {
+                                ENVIRONMENT_SECRET_VERSION_ANNOTATION: resource_version,
+                            }
+                        }
+                    }
+                }
+            },
+            namespace,
+        )
 
     async def apply(
         self,
         application: DesiredApplication,
         *,
         envs: Mapping[str, str],
+        runtime_envs: Mapping[str, str],
     ) -> None:
         """Deploy one Application exactly for its explicit creation lifecycle."""
 
@@ -121,78 +194,67 @@ class Applications:
         manifests = self.manifests(
             application,
             envs=envs,
+            runtime_envs=runtime_envs,
         )
 
         # Establish exact configuration and stable Service discovery before creating Application Pods.
-        secret = await self._resources.replace_secret(manifests.secret)
+        environment_secret = await self._resources.replace_secret(manifests.environment_secret)
+        runtime_secret = await self._resources.replace_secret(manifests.runtime_secret)
         manifests.deployment["spec"]["template"]["metadata"]["annotations"] = {
-            "longlink.io/secret-resource-version": secret.raw["metadata"]["resourceVersion"]
+            ENVIRONMENT_SECRET_VERSION_ANNOTATION: environment_secret.raw["metadata"]["resourceVersion"],
+            "longlink.io/runtime-secret-resource-version": runtime_secret.raw["metadata"]["resourceVersion"],
         }
         await self._resources.apply(manifests.service)
         await self._resources.apply(manifests.deployment)
 
-    async def delete(self, application_id: UUID, namespace: str) -> None:
-        """Delete one exact Application workload and wait until its Pods terminate."""
+    async def delete(self, application_id: UUID, namespace: str) -> bool:
+        """Request Application resource deletion and return whether its Pods have terminated."""
 
         # A missing Organization Namespace means all namespaced resources are gone.
         if await self._resources.read(Namespace, namespace) is None:
-            return
-        canonical_id = str(application_id)
-        await self._resources.delete(
-            Deployment,
-            canonical_id,
-            namespace,
-        )
-        await self._resources.delete(
-            Service,
-            f"app-{canonical_id}",
-            namespace,
-        )
-        await self._resources.delete(
-            Secret,
-            canonical_id,
-            namespace,
-        )
+            return True
 
-        # Provider cleanup must not race a terminating Pod that still holds runtime credentials.
-        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
-        while True:
-            deployment = await self._resources.read(Deployment, canonical_id, namespace)
-            service = await self._resources.read(Service, f"app-{canonical_id}", namespace)
-            secret = await self._resources.read(Secret, canonical_id, namespace)
-            pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: canonical_id})
-            if deployment is None and service is None and secret is None and not any(pod_is_active(pod) for pod in pods):
-                return
-            if time.monotonic() >= deadline:
-                raise TimeoutError(f"Application {canonical_id!r} did not terminate before lifecycle cleanup")
-            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+        # Read every canonical resource before issuing each deletion once.
+        canonical_id = str(application_id)
+        resources: tuple[tuple[type[APIObject], APIObject | None], ...] = (
+            (Deployment, await self._resources.read(Deployment, canonical_id, namespace)),
+            (Service, await self._resources.read(Service, f"app-{canonical_id}", namespace)),
+            (Secret, await self._resources.read(Secret, environment_secret_name(application_id), namespace)),
+            (Secret, await self._resources.read(Secret, runtime_secret_name(application_id), namespace)),
+        )
+        for resource_class, resource in resources:
+            if resource is None:
+                continue
+            metadata = resource.raw.get("metadata")
+            if not isinstance(metadata, dict):
+                raise TypeError(f"Kubernetes {resource.kind} response must include metadata")
+            if metadata.get("deletionTimestamp") is None:
+                await self._resources.delete(resource_class, resource.name, namespace)
+
+        # Provider cleanup must not race a remaining resource or Pod that can still use runtime credentials.
+        pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: canonical_id})
+        return not any(resource is not None for _, resource in resources) and not any(pod_is_active(pod) for pod in pods)
 
     async def ready(self, application_id: str, namespace: str) -> bool:
         """Return whether one canonical Application Deployment rollout is ready."""
 
         # A missing Deployment is a normal pending lifecycle state.
         deployment = await self._resources.read(Deployment, application_id, namespace)
-        if deployment is None or deployment.metadata is None or deployment.status is None:
+        if deployment is None:
             return False
-        observed_generation = deployment.status.get("observedGeneration")
-        generation = deployment.metadata.get("generation")
+        metadata = deployment.raw.get("metadata")
+        status = deployment.raw.get("status")
+        if not isinstance(metadata, dict) or not isinstance(status, dict):
+            return False
+        observed_generation = status.get("observedGeneration")
+        generation = metadata.get("generation")
         return (
             isinstance(generation, int)
             and isinstance(observed_generation, int)
             and observed_generation >= generation
-            and deployment.status.get("updatedReplicas") == 1
-            and deployment.status.get("readyReplicas") == 1
+            and status.get("updatedReplicas") == 1
+            and status.get("readyReplicas") == 1
         )
-
-    async def wait_ready(self, application_id: str, namespace: str) -> None:
-        """Wait boundedly for one explicitly deployed Application to become ready."""
-
-        # Poll the canonical Deployment until its observed rollout is ready or the lifecycle deadline expires.
-        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
-        while not await self.ready(application_id, namespace):
-            if time.monotonic() >= deadline:
-                raise TimeoutError(f"Application {application_id!r} did not become ready")
-            await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
     async def pod(self, application_id: str, namespace: str) -> Pod | None:
         """Return one current Pod for a managed Application in its expected Namespace."""

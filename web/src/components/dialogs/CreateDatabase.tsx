@@ -14,7 +14,6 @@ import { useId, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
@@ -43,7 +42,6 @@ type Values = z.infer<typeof schema>;
 export default function CreateDatabase() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -70,11 +68,6 @@ export default function CreateDatabase() {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
         },
     });
-
-    // Only administrators can register infrastructure.
-    if (role !== 'administrator') {
-        return null;
-    }
 
     /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {

@@ -13,7 +13,6 @@ import CreateStorage from '@/components/dialogs/CreateStorage';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useStorages } from '@/data/storage';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
@@ -45,9 +44,7 @@ function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[
 export default function AdminStorage() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
     const deleteStorage = useMutation({
         mutationFn: async (storageId: string) => {
             await fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' });
@@ -69,39 +66,36 @@ export default function AdminStorage() {
         fallbackDescription: t('admin.deleteStorageFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns = createStorageColumns(t);
-    const storageColumns: TableColumn<ApiStorageRegistry>[] = canManage
-        ? [
-              ...columns,
-              {
-                  key: 'actions',
-                  header: t('columns.action'),
-                  width: pixel(96),
-                  align: 'end',
-                  renderCell: (storage) => (
-                      <MoreMenu
-                          label={t('common.openActionsFor', { name: storage.name })}
-                          size="sm"
-                          items={[
-                              {
-                                  label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
-                                  icon: <Copy size={16} />,
-                                  onClick: async () => {
-                                      try {
-                                          await navigator.clipboard.writeText(storage.slug);
-                                          toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
-                                      } catch {
-                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                      }
-                                  },
-                              },
-                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) },
-                          ]}
-                      />
-                  ),
-              },
-          ]
-        : columns;
+    const columns: TableColumn<ApiStorageRegistry>[] = [
+        ...createStorageColumns(t),
+        {
+            key: 'actions',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (storage) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: storage.name })}
+                    size="sm"
+                    items={[
+                        {
+                            label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
+                            icon: <Copy size={16} />,
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(storage.slug);
+                                    toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
+                            },
+                        },
+                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) },
+                    ]}
+                />
+            ),
+        },
+    ];
 
     return (
         <VStack gap={6} width="100%">
@@ -116,7 +110,7 @@ export default function AdminStorage() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={storageColumns}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

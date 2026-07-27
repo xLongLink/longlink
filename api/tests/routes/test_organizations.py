@@ -6,7 +6,6 @@ from src.utils import mail as mail_module
 from urllib.parse import urlencode
 from src.environments import env
 from src.models.roles import OrganizationRoles
-from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
@@ -56,12 +55,10 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
 
 async def test_infrastructure_options_return_assignable_sanitized_registries(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Return ready compute targets and registry identities without connection secrets."""
 
     # Arrange
-    owner = users[0]
     ready = await create_ready_infrastructure(slug="ready", name="Ready")
     failed = await create_ready_infrastructure(slug="failed", name="Failed")
     await compute.record_failure(failed.compute.id)

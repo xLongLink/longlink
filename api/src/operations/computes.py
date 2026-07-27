@@ -1,4 +1,3 @@
-import ipaddress
 from src.utils import jobs
 from dataclasses import dataclass
 from src.utils.jobs import operation
@@ -25,17 +24,16 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
 
     # Compute deletion owns the complete gateway Namespace after every Organization has been removed.
     if registry.status == ComputeStatus.deleting:
-        await cluster.gateway.delete()
-        return ReconcileResult(True, None)
+        return ReconcileResult(await cluster.gateway.delete(), None)
 
-    # Public endpoint allocation precedes endpoint-bound TLS generation and runtime deployment.
-    endpoint = await cluster.gateway.endpoint()
-    if endpoint is None:
+    # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
+    gateway_ip = await cluster.gateway.ip()
+    if gateway_ip is None:
         return ReconcileResult(False, None)
 
     # Persisted gateway TLS must be either complete or absent for initial provisioning.
     if registry.gateway_ca_certificate is None and registry.gateway_tls_certificate is None and registry.gateway_tls_private_key is None:
-        tls = cluster.gateway.tls(str(registry.id), endpoint)
+        tls = cluster.gateway.tls(str(registry.id), gateway_ip)
         initialized = await compute.initialize_gateway_tls(
             registry.id,
             tls.ca_certificate,
@@ -62,12 +60,8 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
     ready = await cluster.gateway.apply(routes, registry.proxy_secret, tls)
 
-    # Format an IPv6 endpoint for URL authority syntax while leaving hostnames and IPv4 unchanged.
-    try:
-        parsed_endpoint = ipaddress.ip_address(endpoint)
-    except ValueError:
-        parsed_endpoint = None
-    gateway_host = f"[{endpoint}]" if parsed_endpoint is not None and parsed_endpoint.version == 6 else endpoint
+    # Format the typed gateway IP for URL authority syntax.
+    gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)
     return ReconcileResult(ready, f"https://{gateway_host}")
 
 

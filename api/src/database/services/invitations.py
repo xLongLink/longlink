@@ -22,37 +22,42 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
 
     # Use one session for validation and invitation creation.
     async with session_scope() as session:
-        organization_statement = select(Organization.id).where(
-            Organization.id == organization_id,
-            Organization.deleted_at.is_(None),
-        )
-
         # Require an active target organization.
-        if (await session.execute(organization_statement)).scalar_one_or_none() is None:
+        organization_id_exists = (
+            await session.scalars(
+                select(Organization.id).where(
+                    Organization.id == organization_id,
+                    Organization.deleted_at.is_(None),
+                )
+            )
+        ).one_or_none()
+        if organization_id_exists is None:
             raise HTTPException(status_code=404, detail="Organization not found")
 
-        member_statement = (
-            select(User.id)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                func.lower(User.email) == normalized_email,
-            )
-        )
-
         # Reject emails that already belong to the organization.
-        if (await session.execute(member_statement)).scalar_one_or_none() is not None:
+        member_id = (
+            await session.scalars(
+                select(User.id).join(UserOrganization, UserOrganization.user_id == User.id).where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                    func.lower(User.email) == normalized_email,
+                )
+            )
+        ).one_or_none()
+        if member_id is not None:
             raise HTTPException(status_code=409, detail="User is already a member")
 
-        invitation_statement = select(OrganizationInvitation.id).where(
-            OrganizationInvitation.organization_id == organization_id,
-            OrganizationInvitation.deleted_at.is_(None),
-            func.lower(OrganizationInvitation.email) == normalized_email,
-        )
-
         # Keep one pending invitation per email address.
-        if (await session.execute(invitation_statement)).scalar_one_or_none() is not None:
+        invitation_id = (
+            await session.scalars(
+                select(OrganizationInvitation.id).where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                    func.lower(OrganizationInvitation.email) == normalized_email,
+                )
+            )
+        ).one_or_none()
+        if invitation_id is not None:
             raise HTTPException(status_code=409, detail="Invitation already exists")
 
         invitation = OrganizationInvitation(
@@ -79,18 +84,19 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
     normalized_email = user.email.strip().lower()
 
     # Lock matching invitations and retain their exact Organization boundaries.
-    statement = (
-        select(OrganizationInvitation, Organization.compute_id)
-        .join(Organization, Organization.id == OrganizationInvitation.organization_id)
-        .where(
-            OrganizationInvitation.deleted_at.is_(None),
-            Organization.deleted_at.is_(None),
-            func.lower(OrganizationInvitation.email) == normalized_email,
+    rows = (
+        await session.execute(
+            select(OrganizationInvitation, Organization.compute_id)
+            .join(Organization, Organization.id == OrganizationInvitation.organization_id)
+            .where(
+                OrganizationInvitation.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+                func.lower(OrganizationInvitation.email) == normalized_email,
+            )
+            .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
+            .with_for_update()
         )
-        .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
-        .with_for_update()
-    )
-    rows = (await session.execute(statement)).all()
+    ).all()
     if not rows:
         return
 
@@ -108,7 +114,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
     for organization_id, pending in organization_invitations.items():
         invitation = min(pending, key=lambda item: roles.rank(item.role))
         membership = (
-            await session.execute(
+            await session.scalars(
                 select(UserOrganization)
                 .where(
                     UserOrganization.user_id == user.id,
@@ -116,7 +122,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
                 )
                 .with_for_update()
             )
-        ).scalar_one_or_none()
+        ).one_or_none()
         if membership is None:
             session.add(
                 UserOrganization(

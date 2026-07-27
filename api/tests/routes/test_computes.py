@@ -97,68 +97,38 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     assert response.json() == {"detail": "Compute registry is used by organizations"}
 
 
-async def test_compute_registry_routes_enforce_support_and_admin_roles(
+async def test_compute_registry_routes_require_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Allow support compute reads and diagnostics while keeping writes admin-only."""
+    """Reject Platform users from compute registry administration."""
 
     # Arrange
-    owner = users[0]
-    support = users[2]
     infrastructure = await create_ready_infrastructure()
     registry = infrastructure.compute
-
-    class FakeKubernetes:
-        """Return deterministic compute diagnostics."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Validate the selected compute registry."""
-
-            assert kubeconfig == registry.kubeconfig
-
-        async def namespaces(self) -> list[str]:
-            """Return visible namespaces."""
-
-            return ["acme"]
-
-    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeKubernetes)
-    support_client = clients[2]
-    ordinary_client = clients[1]
+    client = clients[1]
 
     # Act
-    support_read_response = await support_client.get("/api/computes")
-    support_get_response = await support_client.get(f"/api/computes/{registry.id}")
-    support_diagnostics_response = await support_client.get(f"/api/computes/{registry.id}/namespaces")
-    support_write_response = await support_client.post(
+    read_response = await client.get("/api/computes")
+    get_response = await client.get(f"/api/computes/{registry.id}")
+    diagnostics_response = await client.get(f"/api/computes/{registry.id}/namespaces")
+    write_response = await client.post(
         "/api/computes",
-        json={"name": "Support Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+        json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
-    ordinary_read_response = await ordinary_client.get("/api/computes")
 
     # Assert
-    assert support_read_response.status_code == 200
-    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
-    assert support_get_response.status_code == 200
-    assert support_get_response.json()["id"] == str(registry.id)
-    assert support_diagnostics_response.status_code == 200
-    assert support_diagnostics_response.json() == ["acme"]
-    assert support_write_response.status_code == 403
-    assert support_write_response.json() == {"detail": "Permission required"}
-    assert ordinary_read_response.status_code == 403
-    assert ordinary_read_response.json() == {"detail": "Permission required"}
+    for response in (read_response, get_response, diagnostics_response, write_response):
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Permission required"}
 
 
 async def test_compute_diagnostics_return_namespaces_and_pods(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Return simple live namespace and pod diagnostics from the compute adapter."""
 
     # Arrange
-    owner = users[0]
     infrastructure = await create_ready_infrastructure()
 
     class Pod:
@@ -205,13 +175,11 @@ async def test_compute_diagnostics_return_namespaces_and_pods(
 
 async def test_compute_diagnostics_return_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Return a stable error when live namespace inspection fails."""
 
     # Arrange
-    owner = users[0]
     infrastructure = await create_ready_infrastructure()
 
     class FailingKubernetes:

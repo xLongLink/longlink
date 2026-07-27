@@ -1,7 +1,7 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authsupport, current_authenticated_user
+from src.auth import authuser, authadmin, current_authenticated_user
 from src.utils import mail, names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
@@ -45,8 +45,8 @@ async def list_infrastructure_options(_user: User = Depends(current_authenticate
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authsupport)):
-    """Return all organizations for support and administrator views."""
+async def list_organizations(_user: User = Depends(authadmin)):
+    """Return all organizations for administrator views."""
 
     return await organizations.fetch()
 
@@ -289,7 +289,6 @@ async def _database_usage_rows(organization: Organization, registry: DatabaseReg
 
     # List active application schemas before orphaned schemas.
     for app in sorted(apps, key=lambda item: item.name):
-
         # Skip applications whose schema is not present.
         schema = app.id.hex
         usage = usage_by_name.get(schema)
@@ -308,7 +307,6 @@ async def _database_usage_rows(organization: Organization, registry: DatabaseReg
 
     # Include unmanaged schemas that still exist in the database.
     for usage in sorted(schemas, key=lambda item: item["name"]):
-
         # Skip schemas already represented by managed resources.
         if usage["name"] in app_by_schema or usage["name"] == SHARED_SCHEMA:
             continue

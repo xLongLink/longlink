@@ -20,8 +20,7 @@ async def fetch() -> list[Operation]:
     # Read operations through a managed database session.
     async with session_scope() as session:
         statement = select(Operation).order_by(Operation.created_at.desc())
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(statement))
 
 
 async def enqueue_in_session(
@@ -54,27 +53,21 @@ async def enqueue_in_session(
 
     # Otherwise serialize queue changes through the aggregate across Platform replicas.
     if compute is None:
-        compute = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if compute is None:
             raise ValueError("Operation compute registry not found")
 
     # Select the newest release observed for this target and its compute aggregate.
     versions = (
-        (
-            await session.execute(
-                select(Operation.platform_version)
-                .where(
-                    Operation.kind == kind,
-                    Operation.target_id == target,
-                )
-                .distinct()
+        await session.scalars(
+            select(Operation.platform_version)
+            .where(
+                Operation.kind == kind,
+                Operation.target_id == target,
             )
+            .distinct()
         )
-        .scalars()
-        .all()
-    )
+    ).all()
     platform_version = max(
         [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])],
         key=Version,
@@ -82,21 +75,17 @@ async def enqueue_in_session(
 
     # Reuse queued work and lock every matching open row before deciding whether a follow-up is required.
     existing = (
-        (
-            await session.execute(
-                select(Operation)
-                .where(
-                    Operation.kind == kind,
-                    Operation.target_id == target,
-                    Operation.stopped_at.is_(None),
-                )
-                .order_by(Operation.created_at)
-                .with_for_update()
+        await session.scalars(
+            select(Operation)
+            .where(
+                Operation.kind == kind,
+                Operation.target_id == target,
+                Operation.stopped_at.is_(None),
             )
+            .order_by(Operation.created_at)
+            .with_for_update()
         )
-        .scalars()
-        .all()
-    )
+    ).all()
     current_version = Version(platform_version)
     queued = next(
         (item for item in existing if item.started_at is None and Version(item.platform_version) == current_version),
@@ -137,7 +126,7 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
 
     # Preserve terminal and lease state while advancing only the due timestamp.
     async with session_scope() as session:
-        statement = (
+        operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -146,7 +135,6 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
             .values(scheduled_at=utcnow())
             .returning(Operation)
         )
-        operation = (await session.execute(statement)).scalar_one_or_none()
         if operation is None:
             return None
 
@@ -167,42 +155,38 @@ async def claim_next() -> Operation | None:
             if connection.dialect.name == "postgresql":
                 await session.execute(text("SELECT pg_advisory_xact_lock(1280263244)"))
             else:
-                queue_lock = (
-                    await session.execute(select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update())
-                ).scalar_one_or_none()
+                queue_lock = await session.scalar(
+                    select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update()
+                )
                 if queue_lock is None:
                     return None
 
             # Refuse a new claim while another Operation retains an active lease.
-            active = (
-                await session.execute(
-                    select(Operation.id)
-                    .where(
-                        Operation.stopped_at.is_(None),
-                        Operation.started_at.is_not(None),
-                        Operation.lease_expires_at > now,
-                    )
-                    .limit(1)
+            active = await session.scalar(
+                select(Operation.id)
+                .where(
+                    Operation.stopped_at.is_(None),
+                    Operation.started_at.is_not(None),
+                    Operation.lease_expires_at > now,
                 )
-            ).scalar_one_or_none()
+                .limit(1)
+            )
             if active is not None:
                 return None
 
             # Concurrent claimers contend for the same deterministic oldest due row.
-            operation = (
-                await session.execute(
-                    select(Operation)
-                    .where(
-                        Operation.stopped_at.is_(None),
-                        Operation.platform_version == env.VERSION,
-                        Operation.scheduled_at <= now,
-                        or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
-                    )
-                    .order_by(Operation.created_at.asc(), Operation.id.asc())
-                    .limit(1)
-                    .with_for_update()
+            operation = await session.scalar(
+                select(Operation)
+                .where(
+                    Operation.stopped_at.is_(None),
+                    Operation.platform_version == env.VERSION,
+                    Operation.scheduled_at <= now,
+                    or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
                 )
-            ).scalar_one_or_none()
+                .order_by(Operation.created_at.asc(), Operation.id.asc())
+                .limit(1)
+                .with_for_update()
+            )
             if operation is None:
                 return None
 
@@ -229,7 +213,7 @@ async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
     # Complete only the currently locked attempt.
     async with session_scope() as session:
         now = utcnow()
-        statement = (
+        operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -241,7 +225,6 @@ async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
             .values(stopped_at=now, lease_expires_at=None)
             .returning(Operation)
         )
-        operation = (await session.execute(statement)).scalar_one_or_none()
         if operation is None:
             return None
 
@@ -255,7 +238,7 @@ async def defer(operation_id: UUID, attempt_count: int, delay_seconds: float) ->
     # Schedule the next attempt only while this worker still holds the lock.
     async with session_scope() as session:
         now = utcnow()
-        statement = (
+        operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -271,10 +254,8 @@ async def defer(operation_id: UUID, attempt_count: int, delay_seconds: float) ->
             )
             .returning(Operation)
         )
-        result = await session.execute(statement)
 
         # A missing row means the worker no longer holds this attempt's lock.
-        operation = result.scalar_one_or_none()
         if operation is None:
             return None
 
@@ -288,7 +269,7 @@ async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
     # Persist terminal failure only for the current locked attempt.
     async with session_scope() as session:
         now = utcnow()
-        statement = (
+        operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -304,10 +285,8 @@ async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
             )
             .returning(Operation)
         )
-        result = await session.execute(statement)
 
         # A missing row means the worker no longer holds this attempt's lock.
-        operation = result.scalar_one_or_none()
         if operation is None:
             return None
 

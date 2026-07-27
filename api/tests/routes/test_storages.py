@@ -81,38 +81,27 @@ async def test_storage_registry_delete_rejects_assigned_registry(
     assert response.json() == {"detail": "Storage registry is used by organizations"}
 
 
-async def test_storage_registry_routes_enforce_support_and_admin_roles(
+async def test_storage_registry_routes_require_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
-    """Allow support storage reads while keeping storage writes admin-only."""
+    """Reject Platform users from storage registry administration."""
 
     # Arrange
-    owner = users[0]
-    support = users[2]
-    infrastructure = await create_ready_infrastructure()
-    registry = infrastructure.storage
-
-    support_client = clients[2]
-    ordinary_client = clients[1]
+    client = clients[1]
 
     # Act
-    support_read_response = await support_client.get("/api/storages")
-    support_write_response = await support_client.post(
+    read_response = await client.get("/api/storages")
+    write_response = await client.post(
         "/api/storages",
         json={
-            "name": "Support Storage",
+            "name": "Denied Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "key",
             "secret_access_key": "secret",
         },
     )
-    ordinary_read_response = await ordinary_client.get("/api/storages")
 
     # Assert
-    assert support_read_response.status_code == 200
-    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
-    assert support_write_response.status_code == 403
-    assert support_write_response.json() == {"detail": "Permission required"}
-    assert ordinary_read_response.status_code == 403
-    assert ordinary_read_response.json() == {"detail": "Permission required"}
+    for response in (read_response, write_response):
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Permission required"}

@@ -16,7 +16,7 @@ export default function OrganizationRoute() {
     const routeId = useMatches().at(-1)?.id ?? '';
 
     return (
-        <Auth requiredRole="user">
+        <Auth>
             <Organization settingsSection={sections[routeId]} />
         </Auth>
     );

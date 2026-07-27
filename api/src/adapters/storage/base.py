@@ -205,8 +205,3 @@ class Storage(ABC):
         The operation must be safe to retry during cleanup.
         """
         raise NotImplementedError
-
-    @abstractmethod
-    async def discard(self, access_key_id: str) -> None:
-        """Delete one exact unpersisted runtime access key without affecting a replacement generation."""
-        raise NotImplementedError

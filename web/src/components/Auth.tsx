@@ -2,13 +2,18 @@ import { Center } from '@astryxdesign/core/Center';
 import type { ReactElement } from 'react';
 import { SignInCard } from '@/components/SignInCard';
 import { useUserProfile } from '@/hooks/use-user';
-import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
 import PlatformLayout from '@/platform/layout';
 import NotFound from '@/platform/NotFound';
 
-/** Protects routes and optionally requires a platform role. */
-export function Auth({ children, requiredRole }: { children: ReactElement; requiredRole?: PlatformRole }) {
-    const { user, role, isLoading } = useUserProfile();
+/** Protects routes and optionally restricts access to Platform administrators. */
+export function Auth({
+    children,
+    requiresAdministrator = false,
+}: {
+    children: ReactElement;
+    requiresAdministrator?: boolean;
+}) {
+    const { user, isLoading } = useUserProfile();
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
@@ -26,12 +31,9 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
         );
     }
 
-    // Check role requirements only when a route declares one.
-    if (requiredRole) {
-        // Hide routes from users without the required role.
-        if (!hasMinimumRole(role, requiredRole)) {
-            return <NotFound />;
-        }
+    // Hide administrator routes from regular Platform users.
+    if (requiresAdministrator && user.role !== 'administrator') {
+        return <NotFound />;
     }
 
     return children;

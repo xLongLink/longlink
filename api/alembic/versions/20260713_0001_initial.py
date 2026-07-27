@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("role", sa.Enum("user", "support", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
+        sa.Column("role", sa.Enum("user", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
         sa.Column("theme", sa.Enum("system", "light", "dark", name="theme"), nullable=False),
         sa.Column(
             "accent",
@@ -179,9 +179,6 @@ def upgrade() -> None:
         sa.Column("digest", sa.String(length=255), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
-        sa.Column("database_password", sa.String(length=255), nullable=False),
-        sa.Column("storage_access_key_id", sa.String(length=255), nullable=True),
-        sa.Column("storage_secret_access_key", sa.String(length=255), nullable=True),
         sa.Column(
             "status",
             sa.Enum("creating", "running", "failed", "deleting", name="application_status_enum", native_enum=False),

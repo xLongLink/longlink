@@ -1,5 +1,6 @@
 import yaml
 import pytest
+import ipaddress
 from uuid import UUID
 from src.kubernetes.gateway import Gateway, GatewayRoute, GatewayTLSMaterial
 from src.kubernetes.resources import KubernetesResources
@@ -81,7 +82,7 @@ def test_gateway_tls_generates_compute_identity() -> None:
     """Generate gateway TLS material for a newly provisioned compute."""
 
     # Generate the immutable TLS identity for one compute endpoint.
-    material = Gateway(KubernetesResources("unused")).tls("compute-id", "gateway.example")
+    material = Gateway(KubernetesResources("unused")).tls("compute-id", ipaddress.ip_address("192.0.2.1"))
 
     # Verify all generated values use PEM encoding.
     assert "BEGIN CERTIFICATE" in material.ca_certificate

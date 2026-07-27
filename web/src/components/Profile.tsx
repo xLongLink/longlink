@@ -98,7 +98,7 @@ export function UserProfile() {
                             target="_blank"
                         />
                     </List>
-                    {user.role !== 'user' ? (
+                    {user.role === 'administrator' ? (
                         <>
                             <Divider />
                             <List

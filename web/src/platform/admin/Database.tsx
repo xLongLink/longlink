@@ -13,7 +13,6 @@ import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDatabases } from '@/data/database';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
@@ -57,9 +56,7 @@ function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry
 export default function AdminDatabase() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
     const deleteDatabase = useMutation({
         mutationFn: async (databaseId: string) => {
             await fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' });
@@ -81,39 +78,36 @@ export default function AdminDatabase() {
         fallbackDescription: t('admin.deleteDatabaseFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns = createDatabaseColumns(t);
-    const databaseColumns: TableColumn<ApiDatabaseRegistry>[] = canManage
-        ? [
-              ...columns,
-              {
-                  key: 'actions',
-                  header: t('columns.action'),
-                  width: pixel(96),
-                  align: 'end',
-                  renderCell: (database) => (
-                      <MoreMenu
-                          label={t('common.openActionsFor', { name: database.name })}
-                          size="sm"
-                          items={[
-                              {
-                                  label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
-                                  icon: <Copy size={16} />,
-                                  onClick: async () => {
-                                      try {
-                                          await navigator.clipboard.writeText(database.slug);
-                                          toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
-                                      } catch {
-                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                      }
-                                  },
-                              },
-                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },
-                          ]}
-                      />
-                  ),
-              },
-          ]
-        : columns;
+    const columns: TableColumn<ApiDatabaseRegistry>[] = [
+        ...createDatabaseColumns(t),
+        {
+            key: 'actions',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (database) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: database.name })}
+                    size="sm"
+                    items={[
+                        {
+                            label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
+                            icon: <Copy size={16} />,
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(database.slug);
+                                    toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
+                            },
+                        },
+                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },
+                    ]}
+                />
+            ),
+        },
+    ];
 
     return (
         <VStack gap={6} width="100%">
@@ -128,7 +122,7 @@ export default function AdminDatabase() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={databaseColumns}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

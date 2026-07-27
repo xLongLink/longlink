@@ -37,8 +37,7 @@ async def fetch() -> list[Organization]:
             )
             .where(Organization.deleted_at.is_(None))
         )
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(statement))
 
 
 async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None:
@@ -62,17 +61,13 @@ async def purge(organization_id: UUID) -> None:
 
     # The organization tombstone remains until every child application has been purged.
     async with session_scope() as session:
-        organization = (
-            await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
-        ).scalar_one_or_none()
+        organization = await session.get(Organization, organization_id, with_for_update=True)
         if organization is None:
             return
         if organization.deleted_at is None:
             raise RuntimeError("Active organizations cannot be purged")
-        application = (
-            await session.execute(select(Application.id).where(Application.organization_id == organization_id).limit(1))
-        ).scalar_one_or_none()
-        if application is not None:
+        application_id = await session.scalar(select(Application.id).where(Application.organization_id == organization_id).limit(1))
+        if application_id is not None:
             raise RuntimeError("Organization applications must be purged first")
         await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
         await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
@@ -85,15 +80,14 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
 
     # Query organization applications in one session.
     async with session_scope() as session:
-        conditions = [Application.organization_id == organization_id]
+        statement = select(Application).where(Application.organization_id == organization_id)
 
         # Include deleted rows only when requested.
         if not include_deleted:
-            conditions.append(Application.deleted_at.is_(None))
+            statement = statement.where(Application.deleted_at.is_(None))
 
-        statement = select(Application).where(*conditions).order_by(Application.created_at.asc())
-        result = await session.execute(statement)
-        return result.scalars().all()
+        statement = statement.order_by(Application.created_at.asc())
+        return list(await session.scalars(statement))
 
 
 async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
@@ -109,8 +103,7 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
             )
             .order_by(OrganizationInvitation.created_at.desc())
         )
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(statement))
 
 
 async def get(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
@@ -118,12 +111,6 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
 
     # Load organization details through one managed session.
     async with session_scope() as session:
-        conditions = [Organization.id == organization_id]
-
-        # Exclude deleted organizations unless requested.
-        if not include_deleted:
-            conditions.append(Organization.deleted_at.is_(None))
-
         statement = (
             select(Organization)
             .options(
@@ -131,10 +118,14 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
                 joinedload(Organization.updated_by),
                 joinedload(Organization.deleted_by),
             )
-            .where(*conditions)
+            .where(Organization.id == organization_id)
         )
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+
+        # Exclude deleted organizations unless requested.
+        if not include_deleted:
+            statement = statement.where(Organization.deleted_at.is_(None))
+
+        return (await session.scalars(statement)).one_or_none()
 
 
 async def members(organization_id: UUID, include_deleted: bool = False) -> list[UserOrganization]:
@@ -142,15 +133,15 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> list[
 
     # Query memberships with their users so detached callers can shape API payloads.
     async with session_scope() as session:
-        conditions = [UserOrganization.organization_id == organization_id]
+        statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
+            UserOrganization.organization_id == organization_id
+        )
 
         # Include deleted memberships only when requested by control-plane orchestration.
         if not include_deleted:
-            conditions.append(UserOrganization.deleted_at.is_(None))
+            statement = statement.where(UserOrganization.deleted_at.is_(None))
 
-        statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(*conditions)
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(statement))
 
 
 async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
@@ -163,8 +154,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
             UserOrganization.user_id == user_id,
             UserOrganization.deleted_at.is_(None),
         )
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return (await session.scalars(statement)).one_or_none()
 
 
 async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
@@ -182,10 +172,9 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
                 User.deleted_at.is_(None),
             )
         )
-        result = await session.execute(statement)
 
         # Require an active organization membership.
-        membership = result.scalar_one_or_none()
+        membership = (await session.scalars(statement)).one_or_none()
         if membership is None:
             return False
 
@@ -202,8 +191,8 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
                 )
                 .with_for_update()
             )
-            owner_result = await session.execute(owner_statement)
-            if len(owner_result.scalars().all()) <= 1:
+            owner_ids = (await session.scalars(owner_statement)).all()
+            if len(owner_ids) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
         # Persist the role change and queue reconciliation on the Organization's compute.
@@ -213,9 +202,7 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         organization = await session.get(Organization, organization_id)
         if organization is None:
             return False
-        compute = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == organization.compute_id).with_for_update())
-        ).scalar_one_or_none()
+        compute = await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
         if compute is None:
             raise RuntimeError("Organization compute registry not found")
         await operations.enqueue_in_session(
@@ -259,7 +246,7 @@ async def create(
             )
         else:
             compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
-        compute = (await session.execute(compute_statement.with_for_update())).scalar_one_or_none()
+        compute = (await session.scalars(compute_statement.with_for_update())).one_or_none()
         if compute is None or compute.status == ComputeStatus.deleting:
             detail = "No compute registry available" if compute_id is None else "Compute registry not found"
             raise HTTPException(status_code=503 if compute_id is None else 404, detail=detail)
@@ -272,7 +259,7 @@ async def create(
             database_statement = database_statement.order_by(DatabaseRegistry.id).limit(1)
         else:
             database_statement = database_statement.where(DatabaseRegistry.id == database_id)
-        database_registry = (await session.execute(database_statement.with_for_update())).scalar_one_or_none()
+        database_registry = (await session.scalars(database_statement.with_for_update())).one_or_none()
         if database_registry is None:
             detail = "No database registry available" if database_id is None else "Database registry not found"
             raise HTTPException(status_code=503 if database_id is None else 404, detail=detail)
@@ -283,7 +270,7 @@ async def create(
             storage_statement = storage_statement.order_by(StorageRegistry.id).limit(1)
         else:
             storage_statement = storage_statement.where(StorageRegistry.id == storage_id)
-        storage_registry = (await session.execute(storage_statement.with_for_update())).scalar_one_or_none()
+        storage_registry = (await session.scalars(storage_statement.with_for_update())).one_or_none()
         if storage_registry is None:
             detail = "No storage registry available" if storage_id is None else "Storage registry not found"
             raise HTTPException(status_code=503 if storage_id is None else 404, detail=detail)
@@ -340,17 +327,18 @@ async def create(
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
         # Reload audit relationships required by the mutation response.
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.created_by),
-                joinedload(Organization.updated_by),
-                joinedload(Organization.deleted_by),
+        organization = (
+            await session.scalars(
+                select(Organization)
+                .options(
+                    joinedload(Organization.created_by),
+                    joinedload(Organization.updated_by),
+                    joinedload(Organization.deleted_by),
+                )
+                .where(Organization.id == organization.id)
             )
-            .where(Organization.id == organization.id)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one(), operation
+        ).one()
+        return organization, operation
 
 
 async def update(organization_id: UUID, avatar: str, user: User) -> Organization | None:
@@ -359,10 +347,10 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
     # Lock and update the active Organization row.
     async with session_scope() as session:
         organization = (
-            await session.execute(
+            await session.scalars(
                 select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)).with_for_update()
             )
-        ).scalar_one_or_none()
+        ).one_or_none()
         if organization is None:
             return None
         organization.avatar = avatar
@@ -380,7 +368,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
             )
             .where(Organization.id == organization.id)
         )
-        return (await session.execute(statement)).scalar_one()
+        return (await session.scalars(statement)).one()
 
 
 async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, Operation] | None:
@@ -395,12 +383,10 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
             return None
 
         # Lock the aggregate resources and stop if any disappear during acquisition.
-        compute = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current.compute_id).with_for_update())
-        ).scalar_one_or_none()
+        compute = await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
         organization = (
-            await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
-        ).scalar_one_or_none()
+            await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
+        ).one_or_none()
         if compute is None or organization is None:
             return None
 
@@ -465,14 +451,15 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
         await session.commit()
 
         # Reload audit relationships required by the mutation response.
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.created_by),
-                joinedload(Organization.updated_by),
-                joinedload(Organization.deleted_by),
+        organization = (
+            await session.scalars(
+                select(Organization)
+                .options(
+                    joinedload(Organization.created_by),
+                    joinedload(Organization.updated_by),
+                    joinedload(Organization.deleted_by),
+                )
+                .where(Organization.id == organization.id)
             )
-            .where(Organization.id == organization.id)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one(), operation
+        ).one()
+        return organization, operation

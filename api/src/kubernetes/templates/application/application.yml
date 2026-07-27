@@ -29,7 +29,9 @@ spec:
                       failureThreshold: 3
                   envFrom:
                       - secretRef:
-                            name: $application_id
+                            name: $application_id-environment
+                      - secretRef:
+                            name: $application_id-runtime
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:

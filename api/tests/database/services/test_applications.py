@@ -8,7 +8,6 @@ from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
-from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
@@ -307,38 +306,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert updated.digest == "sha256:abc123"
     assert updated.icon == "activity"
     assert deleted_runtime is None
-
-
-async def test_provision_storage_credentials_persists_generated_credentials() -> None:
-    """Persist generated storage credentials for reuse by later attempts."""
-
-    # Arrange
-    _, _, application = await create_application_context("storage-credentials")
-    generated = StorageRuntimeCredentials(access_key_id="runtime-key", secret_access_key="runtime-secret")
-
-    async def provision() -> StorageRuntimeCredentials:
-        """Return deterministic provider credentials."""
-
-        return generated
-
-    async def discard(credentials: StorageRuntimeCredentials) -> None:
-        """Fail because successfully persisted credentials must not be discarded."""
-
-        raise AssertionError(f"unexpected credentials: {credentials}")
-
-    # Act
-    result = await applications.provision_storage_credentials(
-        application.id,
-        provision,
-        discard,
-    )
-    reloaded = await applications.get(application.id)
-
-    # Assert
-    assert result is not None
-    assert result[1] == generated
-    assert reloaded is not None
-    assert applications.storage_credentials(reloaded) == generated
 
 
 async def test_soft_delete_marks_application_and_memberships_deleted() -> None:

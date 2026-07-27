@@ -103,31 +103,31 @@ def password_hash() -> str:
 
 @pytest_asyncio.fixture
 async def users(password_hash: str) -> tuple[User, User, User]:
-    """Create three persisted users for tests."""
+    """Create one Platform administrator and two regular Platform users."""
 
     # Persist independent users with the shared session-scoped credential.
     Session = await session.get_session()
     async with Session() as db_session:
-        user1 = User(
-            name="user1",
-            email="user1@example.com",
+        platform_administrator = User(
+            name="Platform Administrator",
+            email="platform-administrator@example.com",
             hashed_password=password_hash,
             role=PlatformRoles.administrator,
         )
-        user2 = User(name="user2", email="user2@example.com", hashed_password=password_hash)
-        user3 = User(name="user3", email="user3@example.com", hashed_password=password_hash, role=PlatformRoles.support)
+        regular_user = User(name="Regular User", email="regular-user@example.com", hashed_password=password_hash)
+        other_user = User(name="Other User", email="other-user@example.com", hashed_password=password_hash)
 
         # Persist one matching database token for every authenticated fixture client.
-        db_session.add_all([user1, user2, user3])
+        db_session.add_all([platform_administrator, regular_user, other_user])
         db_session.add_all(
             [
-                AccessToken(token=token.access_token_digest(str(user1.id)), user_id=user1.id),
-                AccessToken(token=token.access_token_digest(str(user2.id)), user_id=user2.id),
-                AccessToken(token=token.access_token_digest(str(user3.id)), user_id=user3.id),
+                AccessToken(token=token.access_token_digest(str(platform_administrator.id)), user_id=platform_administrator.id),
+                AccessToken(token=token.access_token_digest(str(regular_user.id)), user_id=regular_user.id),
+                AccessToken(token=token.access_token_digest(str(other_user.id)), user_id=other_user.id),
             ]
         )
         await db_session.commit()
-        return user1, user2, user3
+        return platform_administrator, regular_user, other_user
 
 
 @pytest_asyncio.fixture
@@ -140,28 +140,28 @@ async def client() -> AsyncIterator[AsyncClient]:
 
 @pytest_asyncio.fixture
 async def clients(users: tuple[User, User, User]) -> AsyncIterator[tuple[AsyncClient, AsyncClient, AsyncClient]]:
-    """Build authenticated test clients for all seeded users."""
+    """Build authenticated clients for the Platform administrator and regular users."""
 
     # Pair each database token with its auth cookie and signed account list.
-    user1, user2, user3 = users
+    platform_administrator, regular_user, other_user = users
     async with (
         AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://testserver",
-            cookies=authenticated_cookies(user1.id),
+            cookies=authenticated_cookies(platform_administrator.id),
             follow_redirects=True,
-        ) as client1,
+        ) as administrator_client,
         AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://testserver",
-            cookies=authenticated_cookies(user2.id),
+            cookies=authenticated_cookies(regular_user.id),
             follow_redirects=True,
-        ) as client2,
+        ) as regular_user_client,
         AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://testserver",
-            cookies=authenticated_cookies(user3.id),
+            cookies=authenticated_cookies(other_user.id),
             follow_redirects=True,
-        ) as client3,
+        ) as other_user_client,
     ):
-        yield client1, client2, client3
+        yield administrator_client, regular_user_client, other_user_client

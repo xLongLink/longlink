@@ -13,8 +13,7 @@ async def fetch() -> list[DatabaseRegistry]:
 
     # Open a session for the registry list query.
     async with session_scope() as session:
-        result = await session.execute(select(DatabaseRegistry))
-        return result.scalars().all()
+        return list(await session.scalars(select(DatabaseRegistry)))
 
 
 async def get(registry_id: UUID) -> DatabaseRegistry | None:
@@ -22,9 +21,7 @@ async def get(registry_id: UUID) -> DatabaseRegistry | None:
 
     # Open a session for the registry lookup.
     async with session_scope() as session:
-        statement = select(DatabaseRegistry).where(DatabaseRegistry.id == registry_id)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return await session.get(DatabaseRegistry, registry_id)
 
 
 async def create(
@@ -65,16 +62,12 @@ async def delete(registry_id: UUID) -> bool:
 
     # Lock the registry while checking immutable Organization assignments.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.id == registry_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(DatabaseRegistry, registry_id, with_for_update=True)
         if registry is None:
             return False
 
         # Keep registries assigned to active or cleanup-pending Organizations available.
-        organization_id = (
-            await session.execute(select(Organization.id).where(Organization.database_id == registry_id).limit(1))
-        ).scalar_one_or_none()
+        organization_id = await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1))
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Database registry is used by organizations")
 

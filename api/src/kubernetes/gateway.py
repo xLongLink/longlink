@@ -1,8 +1,6 @@
 import hmac
 import json
-import time
 import yaml
-import asyncio
 import hashlib
 import ipaddress
 from io import StringIO
@@ -21,8 +19,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
 GATEWAY_NAMESPACE = "longlink-system"
-RESOURCE_TIMEOUT_SECONDS = 300
-POLL_INTERVAL_SECONDS = 2
 
 EnvoyDocument = dict[str, Any]
 
@@ -158,7 +154,7 @@ class Gateway:
         yaml.safe_dump(config, stream=stream, sort_keys=False)
         return stream.getvalue()
 
-    def tls(self, compute_id: str, endpoint: str) -> GatewayTLSMaterial:
+    def tls(self, compute_id: str, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
         """Generate the immutable TLS identity for a newly provisioned compute gateway."""
 
         # A new endpoint identity uses a private self-signed CA and a CA-issued server certificate.
@@ -195,11 +191,8 @@ class Gateway:
             .sign(ca_key, hashes.SHA256())
         )
 
-        # The load-balancer address determines whether the server certificate needs an IP or DNS SAN.
-        try:
-            subject_name: x509.GeneralName = x509.IPAddress(ipaddress.ip_address(endpoint))
-        except ValueError:
-            subject_name = x509.DNSName(endpoint)
+        # MVP KaaS providers expose an IP address, which HTTPS clients require as an IP SAN.
+        san = x509.IPAddress(address)
         server_certificate = (
             x509.CertificateBuilder()
             .subject_name(server_name)
@@ -209,7 +202,7 @@ class Gateway:
             .not_valid_before(now - timedelta(minutes=5))
             .not_valid_after(now + timedelta(days=3650))
             .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-            .add_extension(x509.SubjectAlternativeName([subject_name]), critical=False)
+            .add_extension(x509.SubjectAlternativeName([san]), critical=False)
             .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
             .add_extension(x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()), critical=False)
             .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
@@ -284,8 +277,8 @@ class Gateway:
             network_policy=manifests[4],
         )
 
-    async def endpoint(self) -> str | None:
-        """Apply gateway endpoint resources and return the allocated hostname or IP when available."""
+    async def ip(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+        """Apply gateway endpoint resources and return the allocated IP when available."""
 
         # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
         await self._resources.apply(self.system_namespace())
@@ -298,14 +291,16 @@ class Gateway:
         status = body.get("status", {}) if isinstance(body, dict) else {}
         load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
         ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
-        if isinstance(ingress, list):
-            for entry in ingress:
-                if not isinstance(entry, dict):
-                    continue
-                for field in ("hostname", "ip"):
-                    value = entry.get(field)
-                    if isinstance(value, str) and value.strip():
-                        return value.strip().rstrip(".")
+        if not isinstance(ingress, list):
+            raise TypeError("Gateway LoadBalancer ingress must be a list")
+        for entry in ingress:
+            if not isinstance(entry, dict):
+                raise TypeError("Gateway LoadBalancer ingress entries must be mappings")
+            value = entry.get("ip")
+            if isinstance(value, str) and value.strip():
+                return ipaddress.ip_address(value.strip())
+        if ingress:
+            raise ValueError("Gateway LoadBalancer must publish an IP address")
         return None
 
     async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
@@ -337,18 +332,18 @@ class Gateway:
             and status.get("availableReplicas", 0) == replicas
         )
 
-    async def delete(self) -> None:
-        """Delete the gateway system Namespace and wait for its resources to terminate."""
+    async def delete(self) -> bool:
+        """Request gateway Namespace deletion and return whether cleanup is complete."""
 
         # A missing Namespace means gateway cleanup already completed.
         namespace = await self._resources.read(Namespace, GATEWAY_NAMESPACE)
         if namespace is None:
-            return
-        await self._resources.delete(Namespace, namespace.name)
+            return True
 
-        # Namespace finalizers must complete before the compute registry can be removed.
-        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
-        while await self._resources.read(Namespace, namespace.name) is not None:
-            if time.monotonic() >= deadline:
-                raise TimeoutError(f"Kubernetes Namespace {namespace.name!r} did not terminate before deletion")
-            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+        # Issue deletion once while later operation attempts observe provider finalizer progress.
+        metadata = namespace.raw.get("metadata")
+        if not isinstance(metadata, dict):
+            raise TypeError("Gateway Namespace response must include metadata")
+        if metadata.get("deletionTimestamp") is None:
+            await self._resources.delete(Namespace, namespace.name)
+        return False

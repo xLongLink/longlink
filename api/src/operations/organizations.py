@@ -160,10 +160,11 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     object_storage = adapters.storage(storage_registry)
     application_rows = await organizations.applications(organization.id, include_deleted=True)
     for application in application_rows:
-        await cluster.applications.delete(
+        if not await cluster.applications.delete(
             application.id,
             organization.slug,
-        )
+        ):
+            return jobs.retry("Organization Application resources are still terminating")
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
         await object_storage.delete_prefix(
@@ -173,7 +174,8 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         await applications.purge(application.id)
 
     # Delete the known Organization Namespace only after all child workloads terminate.
-    await cluster.organizations.delete(organization.slug)
+    if not await cluster.organizations.delete(organization.slug):
+        return jobs.retry("Organization Namespace is still terminating")
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(

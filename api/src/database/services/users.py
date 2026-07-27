@@ -12,8 +12,7 @@ async def fetch() -> list[User]:
 
     # Read users through a managed database session.
     async with session_scope() as session:
-        result = await session.execute(select(User))
-        return result.scalars().all()
+        return list(await session.scalars(select(User)))
 
 
 async def get(user_id: UUID, include_access: bool = False) -> User | None:
@@ -33,5 +32,4 @@ async def get(user_id: UUID, include_access: bool = False) -> User | None:
                 selectinload(User.application_memberships).selectinload(UserApplication.organization),
             )
 
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return (await session.scalars(statement)).one_or_none()

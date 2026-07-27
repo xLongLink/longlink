@@ -12,8 +12,7 @@ async def fetch() -> list[StorageRegistry]:
 
     # Open a session for the registry list query.
     async with session_scope() as session:
-        result = await session.execute(select(StorageRegistry))
-        return result.scalars().all()
+        return list(await session.scalars(select(StorageRegistry)))
 
 
 async def get(registry_id: UUID) -> StorageRegistry | None:
@@ -21,9 +20,7 @@ async def get(registry_id: UUID) -> StorageRegistry | None:
 
     # Open a session for the registry lookup.
     async with session_scope() as session:
-        statement = select(StorageRegistry).where(StorageRegistry.id == registry_id)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return await session.get(StorageRegistry, registry_id)
 
 
 async def create(name: str, slug: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:
@@ -54,16 +51,12 @@ async def delete(registry_id: UUID) -> bool:
 
     # Lock the registry while checking immutable Organization assignments.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(StorageRegistry).where(StorageRegistry.id == registry_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(StorageRegistry, registry_id, with_for_update=True)
         if registry is None:
             return False
 
         # Keep registries assigned to active or cleanup-pending Organizations available.
-        organization_id = (
-            await session.execute(select(Organization.id).where(Organization.storage_id == registry_id).limit(1))
-        ).scalar_one_or_none()
+        organization_id = await session.scalar(select(Organization.id).where(Organization.storage_id == registry_id).limit(1))
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Storage registry is used by organizations")
 

@@ -1,6 +1,6 @@
 import pytest
 from src.utils import roles
-from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
+from src.models.roles import ApplicationRoles, OrganizationRoles
 
 pytestmark = pytest.mark.no_db
 
@@ -8,9 +8,6 @@ pytestmark = pytest.mark.no_db
 @pytest.mark.parametrize(
     ("role_value", "expected_rank"),
     [
-        (PlatformRoles.user, 1),
-        (PlatformRoles.support, 2),
-        (PlatformRoles.administrator, 3),
         (OrganizationRoles.read, 1),
         (OrganizationRoles.write, 2),
         (OrganizationRoles.maintain, 3),
@@ -34,7 +31,6 @@ def test_role_atleast_allows_roles_inside_scope() -> None:
 
     assert roles.atleast(OrganizationRoles.admin, OrganizationRoles.maintain) is True
     assert roles.atleast(ApplicationRoles.admin, ApplicationRoles.maintain) is True
-    assert roles.atleast(PlatformRoles.administrator, PlatformRoles.support) is True
 
 
 @pytest.mark.parametrize(
@@ -44,7 +40,6 @@ def test_role_atleast_allows_roles_inside_scope() -> None:
         (ApplicationRoles.read, ApplicationRoles.maintain),
         (OrganizationRoles.write, OrganizationRoles.maintain),
         (OrganizationRoles.owner, ApplicationRoles.admin),
-        (PlatformRoles.administrator, OrganizationRoles.read),
     ],
 )
 def test_role_atleast_rejects_insufficient_roles(role_value, required_role) -> None:

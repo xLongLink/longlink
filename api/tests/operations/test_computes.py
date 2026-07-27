@@ -1,4 +1,5 @@
 import pytest
+import ipaddress
 from uuid import uuid4
 from src.utils import jobs
 from src.operations import computes as compute_operations
@@ -70,7 +71,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:resolved",
         digest="sha256:resolved",
-        database_password="password",
         status=ApplicationStatus.running,
     )
     creating = Application(
@@ -78,7 +78,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         name="Pending",
         slug="pending",
         image="ghcr.io/longlink/pending:latest",
-        database_password="password",
         status=ApplicationStatus.creating,
     )
     async with session_scope() as session:
@@ -89,16 +88,16 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     class FakeGateway:
         """Capture gateway resource operations."""
 
-        async def endpoint(self) -> str:
+        async def ip(self) -> ipaddress.IPv4Address:
             """Return one allocated public endpoint."""
 
-            return "gateway.example"
+            return ipaddress.IPv4Address("192.0.2.1")
 
-        def tls(self, compute_id: str, endpoint: str) -> GatewayTLSMaterial:
+        def tls(self, compute_id: str, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
             """Return stable generated TLS material."""
 
             assert compute_id == str(compute_registry.id)
-            assert endpoint == "gateway.example"
+            assert address == ipaddress.IPv4Address("192.0.2.1")
             return GatewayTLSMaterial("ca", "certificate", "private-key")
 
         async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
@@ -134,7 +133,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     assert refreshed is not None
     assert refreshed.status == ComputeStatus.ready
     assert refreshed.version == env.VERSION
-    assert refreshed.gateway_url == "https://gateway.example"
+    assert refreshed.gateway_url == "https://192.0.2.1"
     assert refreshed.gateway_ca_certificate == "ca"
     assert refreshed.gateway_tls_certificate == "certificate"
     assert refreshed.gateway_tls_private_key == "private-key"
@@ -149,7 +148,7 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
     class FailingGateway:
         """Raise a transient endpoint provider error."""
 
-        async def endpoint(self) -> str:
+        async def ip(self) -> ipaddress.IPv4Address:
             """Fail endpoint allocation after entering the Kubernetes boundary."""
 
             raise RuntimeError("gateway unavailable")

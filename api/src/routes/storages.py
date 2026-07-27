@@ -1,16 +1,15 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
+from src.auth import authadmin
 from src.utils import names
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
-from src.database.models.users import User
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/api/storages", response_model=StorageRegistryResponse, status_code=201)
-async def create_storage_registry(payload: StorageRegistryCreate, _user: User = Depends(authadmin)):
+async def create_storage_registry(payload: StorageRegistryCreate):
     """Register one Exoscale SOS backend."""
 
     return await storage.create(
@@ -23,14 +22,14 @@ async def create_storage_registry(payload: StorageRegistryCreate, _user: User = 
 
 
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(_user: User = Depends(authsupport)):
+async def list_storage_registries():
     """Return all registered storage backends."""
 
     return await storage.fetch()
 
 
 @router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
-async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupport)):
+async def get_storage_registry(registry_id: UUID):
     """Return one storage backend registration."""
 
     # Resolve the requested storage registry.
@@ -42,7 +41,7 @@ async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupp
 
 
 @router.delete("/api/storages/{registry_id}", status_code=204)
-async def delete_storage_registry(registry_id: UUID, _user: User = Depends(authadmin)):
+async def delete_storage_registry(registry_id: UUID):
     """Delete one unused Exoscale SOS backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.

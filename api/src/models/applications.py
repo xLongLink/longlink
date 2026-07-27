@@ -43,7 +43,7 @@ class ApplicationEnvironment(BaseModel):
             if len(value) > 32768:
                 raise ValueError(f"Environment variable '{name}' value is too long")
 
-        # Leave room for base64 expansion, Kubernetes metadata, and Platform-managed runtime values.
+        # Leave room for base64 expansion and Kubernetes Secret metadata.
         environment_bytes = sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items())
         if environment_bytes > 512 * 1024:
             raise ValueError("Application environment is too large")

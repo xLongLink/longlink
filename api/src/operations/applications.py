@@ -1,3 +1,4 @@
+import secrets
 from src import adapters
 from src.utils import jobs, images
 from src.operations import computes
@@ -84,21 +85,33 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 return jobs.complete()
             application = updated
 
-        # Provision stable database and storage identities before constructing the runtime Secret.
-        connection = await db.schema(organization.id, application.id, application.database_password)
+        # Resolve the cluster-owned credentials before converging provider identities.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
         await object_storage.create_prefix(bucket, prefix)
-        credentials = applications.storage_credentials(application)
-        if credentials is None:
-            provisioned = await applications.provision_storage_credentials(
-                application.id,
-                lambda: object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix),
-                lambda generated: object_storage.discard(generated["access_key_id"]),
-            )
-            if provisioned is None:
-                return jobs.complete()
-            application, credentials = provisioned
+        try:
+            persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
+        except (TypeError, ValueError):
+            await applications.set_status(application.id, ApplicationStatus.failed)
+            return jobs.fail("Application runtime Secret is invalid")
+
+        # Reuse complete cluster-owned credentials or rotate providers when no runtime Secret exists yet.
+        if persisted_runtime_envs is None:
+            database_password = secrets.token_urlsafe(24)
+            connection = await db.schema(organization.id, application.id, database_password)
+            credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
+        else:
+            database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
+            storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
+            storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
+            if not database_password or not storage_access_key_id or not storage_secret_access_key:
+                await applications.set_status(application.id, ApplicationStatus.failed)
+                return jobs.fail("Application runtime Secret is invalid")
+            connection = await db.schema(organization.id, application.id, database_password)
+            credentials = {
+                "access_key_id": storage_access_key_id,
+                "secret_access_key": storage_secret_access_key,
+            }
 
         # Deployment is an explicit lifecycle action and is never called by compute reconciliation or releases.
         await cluster.applications.apply(
@@ -107,8 +120,8 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 namespace=organization.slug,
                 image=application.image,
             ),
-            envs={
-                **user_envs,
+            envs=user_envs,
+            runtime_envs={
                 "LONGLINK_ENV": "production",
                 "LONGLINK_DATABASE_HOST": connection["host"],
                 "LONGLINK_DATABASE_NAME": connection["database_name"],
@@ -126,9 +139,9 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             },
         )
-        try:
-            await cluster.applications.wait_ready(str(application.id), organization.slug)
-        except TimeoutError:
+
+        # Defer operation work while Kubernetes advances the Application rollout.
+        if not await cluster.applications.ready(str(application.id), organization.slug):
             if claimed.attempt_count < jobs.OPERATION_ATTEMPT_LIMIT:
                 return jobs.retry("Application workload is still starting")
             await applications.set_status(application.id, ApplicationStatus.failed)
@@ -184,7 +197,8 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     result = await computes.reconcile_gateway(registry, cluster)
     if not result.ready:
         return jobs.retry("Gateway is still converging")
-    await cluster.applications.delete(application.id, organization.slug)
+    if not await cluster.applications.delete(application.id, organization.slug):
+        return jobs.retry("Application resources are still terminating")
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = adapters.Postgres(

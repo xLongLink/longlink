@@ -60,7 +60,7 @@ class Exoscale(Storage):
                 if role_id is None:
                     raise RuntimeError("Exoscale IAM role creation did not return a role id")
 
-                # Validate both generated values before returning credentials for persistence.
+                # Validate both generated values before returning runtime credentials.
                 key = await api.create_api_key(name=credential_name, role_id=role_id)
                 credentials: StorageRuntimeCredentials = {
                     "access_key_id": self._string(key, "key"),
@@ -68,7 +68,7 @@ class Exoscale(Storage):
                 }
         except Exception:
 
-            # Name-scoped compensation is safe because credential generation holds the Application row lock.
+            # Name-scoped compensation removes an incomplete deterministic credential generation.
             with suppress(Exception):
                 await self.revoke(name)
             raise
@@ -135,20 +135,6 @@ class Exoscale(Storage):
                         raise
                 else:
                     await self._wait_operation(api, operation, require_reference=False)
-
-    async def discard(self, access_key_id: str) -> None:
-        """Delete one exact Exoscale API key generated but not persisted by reconciliation."""
-
-        # Exact-key cleanup cannot revoke a replacement created by a newer reconciliation attempt.
-        api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
-        async with api:
-            try:
-                operation = await api.delete_api_key(id=access_key_id)
-            except ExoscaleAPIClientException as exc:
-                if exc.response is None or exc.response.status_code != 404:
-                    raise
-            else:
-                await self._wait_operation(api, operation, require_reference=False)
 
     async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""
@@ -231,7 +217,7 @@ class Exoscale(Storage):
     def _string(self, data: Mapping[str, object], field: str) -> str:
         """Return one required string field from an Exoscale response."""
 
-        # Validate external response data before using it in follow-up requests or persistence.
+        # Validate external response data before using it in follow-up requests or runtime configuration.
         value = data.get(field)
         if isinstance(value, str) and value:
             return value

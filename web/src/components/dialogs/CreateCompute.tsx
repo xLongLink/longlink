@@ -12,7 +12,6 @@ import { useId, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
@@ -28,7 +27,6 @@ type Values = z.infer<typeof schema>;
 export default function CreateCompute() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -50,20 +48,10 @@ export default function CreateCompute() {
             ),
         onSuccess: async () => {
             setOpen(false);
-            resetDialogState();
+            form.reset();
             await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
         },
     });
-
-    // Only administrators can register infrastructure.
-    if (role !== 'administrator') {
-        return null;
-    }
-
-    /** Clears connection secrets when the dialog closes. */
-    function resetDialogState() {
-        form.reset();
-    }
 
     /** Updates dialog state while protecting an in-flight registration. */
     function handleOpenChange(nextOpen: boolean) {
@@ -72,7 +60,7 @@ export default function CreateCompute() {
         }
         setOpen(nextOpen);
         if (!nextOpen) {
-            resetDialogState();
+            form.reset();
         }
     }
 

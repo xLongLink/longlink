@@ -20,8 +20,7 @@ async def fetch() -> list[ComputeRegistry]:
     # Hide compute targets while asynchronous deletion is in progress.
     async with session_scope() as session:
         statement = select(ComputeRegistry).where(ComputeRegistry.status != ComputeStatus.deleting)
-        result = await session.execute(statement)
-        return result.scalars().all()
+        return list(await session.scalars(statement))
 
 
 async def get(registry_id: UUID, include_deleting: bool = False) -> ComputeRegistry | None:
@@ -29,15 +28,13 @@ async def get(registry_id: UUID, include_deleting: bool = False) -> ComputeRegis
 
     # Build the lookup within one scoped session.
     async with session_scope() as session:
-        conditions = [ComputeRegistry.id == registry_id]
+        statement = select(ComputeRegistry).where(ComputeRegistry.id == registry_id)
 
         # Deleting registries remain available only to their reconciliation operation.
         if not include_deleting:
-            conditions.append(ComputeRegistry.status != ComputeStatus.deleting)
+            statement = statement.where(ComputeRegistry.status != ComputeStatus.deleting)
 
-        statement = select(ComputeRegistry).where(*conditions)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return (await session.scalars(statement)).one_or_none()
 
 
 async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
@@ -68,16 +65,12 @@ async def delete(registry_id: UUID) -> tuple[ComputeRegistry, Operation] | None:
 
     # Lock the target before checking assignments and queueing cleanup.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(ComputeRegistry, registry_id, with_for_update=True)
         if registry is None:
             return None
 
         # Organizations retain their assigned compute until provider cleanup finishes.
-        organization_id = (
-            await session.execute(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
-        ).scalar_one_or_none()
+        organization_id = await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
@@ -108,9 +101,7 @@ async def record_success(
 
     # Lock the compute while updating its observed release.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None:
             return False
         if registry.version is not None and Version(registry.version) > Version(platform_version):
@@ -148,9 +139,7 @@ async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certific
 
     # Lock the compute so concurrent first reconciliations cannot publish different identities.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None:
             return False
 
@@ -177,9 +166,7 @@ async def record_failure(compute_id: UUID) -> None:
 
     # Lock the compute while updating its observed state.
     async with session_scope() as session:
-        registry = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None or registry.status == ComputeStatus.deleting:
             return
         registry.status = ComputeStatus.failed

@@ -10,7 +10,7 @@ export default function Admin() {
     const t = useTranslator();
 
     return (
-        <Auth requiredRole="support">
+        <Auth requiresAdministrator>
             <PlatformLayout
                 tabs={{
                     [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },

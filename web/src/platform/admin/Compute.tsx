@@ -14,7 +14,6 @@ import CreateCompute from '@/components/dialogs/CreateCompute';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useComputes } from '@/data/compute';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
@@ -54,9 +53,7 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
 export default function AdminCompute() {
     const t = useTranslator();
     const toast = useToast();
-    const { role } = useUserProfile();
     const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
     const deleteCompute = useMutation({
         mutationFn: async (computeId: string) =>
             fetchApiJson(`/api/computes/${computeId}`, { method: 'DELETE' }, (value) =>
@@ -82,39 +79,36 @@ export default function AdminCompute() {
         fallbackDescription: t('admin.deleteComputeFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns = createComputeColumns(t);
-    const computeColumns: TableColumn<ApiComputeRegistry>[] = canManage
-        ? [
-              ...columns,
-              {
-                  key: 'actions',
-                  header: t('columns.action'),
-                  width: pixel(96),
-                  align: 'end',
-                  renderCell: (compute) => (
-                      <MoreMenu
-                          label={t('common.openActionsFor', { name: compute.name })}
-                          size="sm"
-                          items={[
-                              {
-                                  label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
-                                  icon: <Copy size={16} />,
-                                  onClick: async () => {
-                                      try {
-                                          await navigator.clipboard.writeText(compute.slug);
-                                          toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
-                                      } catch {
-                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                      }
-                                  },
-                              },
-                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },
-                          ]}
-                      />
-                  ),
-              },
-          ]
-        : columns;
+    const columns: TableColumn<ApiComputeRegistry>[] = [
+        ...createComputeColumns(t),
+        {
+            key: 'actions',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (compute) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: compute.name })}
+                    size="sm"
+                    items={[
+                        {
+                            label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
+                            icon: <Copy size={16} />,
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(compute.slug);
+                                    toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
+                            },
+                        },
+                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },
+                    ]}
+                />
+            ),
+        },
+    ];
 
     return (
         <VStack gap={6} width="100%">
@@ -129,7 +123,7 @@ export default function AdminCompute() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={computeColumns}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

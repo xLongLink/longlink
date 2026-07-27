@@ -1,18 +1,17 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
+from src.auth import authadmin
 from src.utils import names
 from src.logger import logger
 from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryMutationResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
-from src.database.models.users import User
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/api/computes", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate, _user: User = Depends(authadmin)):
+async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial reconciliation."""
 
     registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig)
@@ -20,14 +19,14 @@ async def create_compute_registry(payload: ComputeRegistryCreate, _user: User = 
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(_user: User = Depends(authsupport)):
+async def list_compute_registries():
     """Return all registered compute backends."""
 
     return await compute.fetch()
 
 
 @router.get("/api/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)):
+async def get_compute_registry(registry_id: UUID):
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
@@ -39,7 +38,7 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 
 
 @router.delete("/api/computes/{registry_id}", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def delete_compute_registry(registry_id: UUID, _user: User = Depends(authadmin)):
+async def delete_compute_registry(registry_id: UUID):
     """Queue cleanup of one unused compute target."""
 
     # Delete only a registered compute that is not assigned to an Organization.
@@ -51,8 +50,8 @@ async def delete_compute_registry(registry_id: UUID, _user: User = Depends(autha
 
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[str])
-async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsupport)):
-    """Query a compute backend directly for live support diagnostics rather than persisted desired state.
+async def list_compute_namespaces(registry_id: UUID):
+    """Query a compute backend directly for live diagnostics rather than persisted desired state.
 
     Results may include unmanaged or not-yet-reconciled namespaces.
     """
@@ -75,7 +74,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
 
 
 @router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
-async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)):
+async def list_namespace_pods(registry_id: UUID, namespace: str):
     """Query live pods within a namespace currently visible on the compute backend.
 
     Pod phase and node placement may differ from persisted desired state during reconciliation.

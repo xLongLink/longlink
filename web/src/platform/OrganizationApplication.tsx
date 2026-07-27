@@ -8,7 +8,7 @@ import NotFound from '@/platform/NotFound';
 /** Protects and renders one proxy-backed organization application. */
 export default function OrganizationApplication() {
     return (
-        <Auth requiredRole="user">
+        <Auth>
             <OrganizationApplicationView />
         </Auth>
     );

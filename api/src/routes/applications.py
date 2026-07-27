@@ -4,11 +4,13 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
+from src.models.statuses import ApplicationStatus
 from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
 from src.models.applications import (
     ApplicationCreate,
     ApplicationResponse,
+    ApplicationEnvironment,
     ApplicationMemberUpdate,
     ApplicationMemberResponse,
     ApplicationMutationResponse,
@@ -62,7 +64,13 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
     try:
         cluster = Kubernetes(registry.kubeconfig)
-        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+        status = await applications.replace_environment(
+            application.id,
+            ApplicationStatus.creating,
+            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
+        )
+        if status != ApplicationStatus.creating:
+            raise RuntimeError("Application is no longer creating")
         scheduled = await operations.schedule_now(operation.id)
         if scheduled is None:
             raise RuntimeError("Application create Operation is no longer open")
@@ -119,6 +127,58 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
     return logs
+
+
+@router.put("/api/applications/{application_id}/environment", status_code=204)
+async def update_application_environment(application_id: UUID, payload: ApplicationEnvironment, user: User = Depends(authuser)):
+    """Replace user-owned environment values and roll one running Application."""
+
+    # Load Application access before changing its runtime configuration.
+    membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+
+    # Direct Application and inherited Organization access both require maintenance authority.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+        organization = membership.organization
+        organization_membership = roles.access(user, membership.organization_id, "organization")
+        organization_role = organization_membership.role if organization_membership is not None else None
+        if not roles.atleast(membership.role, ApplicationRoles.maintain):
+            if not roles.atleast(organization_role, OrganizationRoles.maintain):
+                raise HTTPException(status_code=403, detail="Permission required")
+    else:
+        organization = membership.organization
+        application = next(item for item in organization.applications if item.id == application_id)
+        if not roles.atleast(membership.role, OrganizationRoles.maintain):
+            raise HTTPException(status_code=403, detail="Permission required")
+
+    # Environment rollouts are valid only after the initial Application lifecycle completes.
+    if application.status != ApplicationStatus.running:
+        raise HTTPException(status_code=409, detail="Application is not running")
+
+    # Resolve the Application's assigned cluster without reading its Platform runtime Secret.
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
+
+    # Replace only user-owned values and map cluster errors to a stable API response.
+    try:
+        cluster = Kubernetes(registry.kubeconfig)
+        status = await applications.replace_environment(
+            application.id,
+            ApplicationStatus.running,
+            lambda: cluster.applications.replace_envs(application.id, organization.slug, payload.envs),
+        )
+    except Exception as exc:
+        logger.exception("Failed to update environment for application '%s': %r", application.id, exc)
+        raise HTTPException(status_code=503, detail="Application environment could not be updated") from exc
+
+    # Reject state that changed after authorization without mutating Kubernetes.
+    if status is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if status != ApplicationStatus.running:
+        raise HTTPException(status_code=409, detail="Application is not running")
 
 
 @router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])

@@ -160,7 +160,7 @@ class Postgres:
         Grant writes only to the application schema and reads to shared tables, then return non-administrator connection material.
         """
 
-        # Derive the app-scoped role while keeping the persisted password stable across retries.
+        # Derive the app-scoped role while the cluster-owned password remains stable across retries.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
 
         # Create the app schema and bind the runtime role inside the organization database.

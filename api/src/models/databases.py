@@ -35,7 +35,7 @@ class OrganizationDatabaseResourceResponse(BaseModel):
 class DatabaseRegistryResponse(BaseModel):
     """Describe one database backend while filtering its administrator password.
 
-    Non-secret connection metadata remains available for support and diagnostics.
+    Non-secret connection metadata remains available for administrator diagnostics.
     """
 
     model_config = ConfigDict(from_attributes=True)

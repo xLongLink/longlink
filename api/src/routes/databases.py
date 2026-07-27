@@ -1,18 +1,17 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
+from src.auth import authadmin
 from src.utils import names
 from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.database.services import database
-from src.database.models.users import User
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse, status_code=201)
-async def create_database_registry(payload: DatabaseRegistryCreate, _user: User = Depends(authadmin)):
+async def create_database_registry(payload: DatabaseRegistryCreate):
     """Register one database backend."""
 
     return await database.create(
@@ -27,14 +26,14 @@ async def create_database_registry(payload: DatabaseRegistryCreate, _user: User 
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
-async def list_database_registries(_user: User = Depends(authsupport)):
+async def list_database_registries():
     """Return all registered database backends."""
 
     return await database.fetch()
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: UUID, _user: User = Depends(authsupport)):
+async def get_database_registry(registry_id: UUID):
     """Return one database backend registration."""
 
     # Resolve the requested database registry.
@@ -46,7 +45,7 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
 
 
 @router.delete("/api/databases/{registry_id}", status_code=204)
-async def delete_database_registry(registry_id: UUID, _user: User = Depends(authadmin)):
+async def delete_database_registry(registry_id: UUID):
     """Delete one unused database backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.
@@ -55,7 +54,7 @@ async def delete_database_registry(registry_id: UUID, _user: User = Depends(auth
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=int)
-async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)):
+async def get_database_usage(registry_id: UUID):
     """Query point-in-time storage usage from the live database backend, not persisted desired state.
 
     The result is diagnostic and depends on backend availability.
