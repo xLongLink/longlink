@@ -141,10 +141,10 @@
         "defaultMessage": "Application deletion"
     },
     "admin.deleteComputeDescription": {
-        "defaultMessage": "Delete compute {slug}?"
+        "defaultMessage": "Remove compute {slug} from the LongLink Platform? Its Kubernetes resources will remain unchanged."
     },
     "admin.deleteComputeFallback": {
-        "defaultMessage": "Delete this compute registry?"
+        "defaultMessage": "Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged."
     },
     "admin.deleteComputeTitle": {
         "defaultMessage": "Delete compute"

@@ -23,7 +23,18 @@ SUPPORTED_REGISTRIES = {
 }
 
 
-async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
+def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
+    """Return sorted image-required environment names missing from submitted values."""
+
+    # Platform-reserved requirements cannot be supplied by users and remain unsatisfied.
+    return sorted(
+        item.name
+        for item in metadata.environments
+        if item.required and (item.name.startswith("LONGLINK_") or not envs.get(item.name, "").strip())
+    )
+
+
+async def metadata(image: Image) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     # Resolve the supported registry before opening a network client.
@@ -35,10 +46,8 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
 
     # Fetch registry data with TLS matching the registry URL.
     async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
-
         # LongLink labels are stored in the image config blob, reached through the image manifest.
         try:
-
             # Stop when the manifest cannot be resolved.
             manifest_result = await _fetch_manifest(
                 client,
@@ -83,9 +92,7 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             raw_labels = image_config.get("Labels")
             if raw_labels is None:
                 labels: dict[str, str] = {}
-            elif isinstance(raw_labels, dict) and all(
-                isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()
-            ):
+            elif isinstance(raw_labels, dict) and all(isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()):
                 labels = cast(dict[str, str], raw_labels)
             else:
                 return None
@@ -102,7 +109,6 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             # Decode environment requirements when present.
             environments = labels.get("longlink.environments")
             if environments is not None:
-
                 # Parse and require a list from the encoded environment label.
                 try:
                     parsed_environments = json.loads(environments)
@@ -112,13 +118,6 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                     result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
-
-            # Validate deployment values against required image metadata when they are available.
-            if envs is not None and any(
-                item.required and (item.name.startswith("LONGLINK_") or not envs.get(item.name, "").strip())
-                for item in result.environments
-            ):
-                return None
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -177,7 +176,6 @@ async def _fetch_manifest(
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
     if isinstance(manifests, list) and manifests:
-
         # Require at least one manifest object.
         manifest_entries = [item for item in manifests if isinstance(item, dict)]
         if not manifest_entries:

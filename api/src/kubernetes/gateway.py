@@ -11,14 +11,13 @@ from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from importlib.resources import files
-from kr8s.asyncio.objects import Service, Namespace, Deployment
+from kr8s.asyncio.objects import Service, Deployment
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
-GATEWAY_NAMESPACE = "longlink-system"
 
 EnvoyDocument = dict[str, Any]
 
@@ -331,19 +330,3 @@ class Gateway:
             and status.get("readyReplicas", 0) == replicas
             and status.get("availableReplicas", 0) == replicas
         )
-
-    async def delete(self) -> bool:
-        """Request gateway Namespace deletion and return whether cleanup is complete."""
-
-        # A missing Namespace means gateway cleanup already completed.
-        namespace = await self._resources.read(Namespace, GATEWAY_NAMESPACE)
-        if namespace is None:
-            return True
-
-        # Issue deletion once while later operation attempts observe provider finalizer progress.
-        metadata = namespace.raw.get("metadata")
-        if not isinstance(metadata, dict):
-            raise TypeError("Gateway Namespace response must include metadata")
-        if metadata.get("deletionTimestamp") is None:
-            await self._resources.delete(Namespace, namespace.name)
-        return False

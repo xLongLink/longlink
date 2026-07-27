@@ -3,7 +3,7 @@ import base64
 import binascii
 from uuid import UUID
 from src.utils import templates
-from dataclasses import field, dataclass
+from dataclasses import dataclass
 from collections.abc import Mapping
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Deployment
@@ -44,10 +44,8 @@ class DesiredApplication:
 
 @dataclass(frozen=True, slots=True)
 class ApplicationManifests:
-    """Hold one Application's exact Secrets and workload resources."""
+    """Hold one Application's workload resources."""
 
-    environment_secret: KubernetesDocument = field(repr=False)
-    runtime_secret: KubernetesDocument = field(repr=False)
     service: KubernetesDocument
     deployment: KubernetesDocument
 
@@ -90,18 +88,10 @@ class Applications:
             "stringData": dict(sorted(envs.items())),
         }
 
-    def manifests(
-        self,
-        application: DesiredApplication,
-        *,
-        envs: Mapping[str, str],
-        runtime_envs: Mapping[str, str],
-    ) -> ApplicationManifests:
-        """Render one Application's Secrets, Service, and Deployment from lifecycle input."""
+    def manifests(self, application: DesiredApplication) -> ApplicationManifests:
+        """Render one Application's Service and Deployment from lifecycle input."""
 
-        # Render the exact Secrets and workload resources from the same Application identity.
-        environment_secret = self.environment_secret(application.id, application.namespace, envs)
-        runtime_secret = self.runtime_secret(application.id, application.namespace, runtime_envs)
+        # Render workload resources that reference the separately owned Secrets by stable name.
         manifests = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application.id),
@@ -109,8 +99,6 @@ class Applications:
             namespace=application.namespace,
         )
         return ApplicationManifests(
-            environment_secret=environment_secret,
-            runtime_secret=runtime_secret,
             service=manifests[1],
             deployment=manifests[0],
         )
@@ -118,12 +106,12 @@ class Applications:
     async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
         """Stage user-owned values before the Application workload exists."""
 
-        await self._resources.replace_secret(self.environment_secret(application_id, namespace, envs))
+        await self._resources.create_secret(self.environment_secret(application_id, namespace, envs))
 
-    async def read_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
-        """Read user-owned values from one Application environment Secret."""
+    async def stage_runtime_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
+        """Commit Platform-owned runtime values before creating the Application workload."""
 
-        return await self._read_secret_envs(environment_secret_name(application_id), namespace, "environment")
+        await self._resources.create_secret(self.runtime_secret(application_id, namespace, envs))
 
     async def read_runtime_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
         """Read Platform-owned values from one Application runtime Secret."""
@@ -181,31 +169,20 @@ class Applications:
             namespace,
         )
 
-    async def apply(
-        self,
-        application: DesiredApplication,
-        *,
-        envs: Mapping[str, str],
-        runtime_envs: Mapping[str, str],
-    ) -> None:
-        """Deploy one Application exactly for its explicit creation lifecycle."""
+    async def apply(self, application: DesiredApplication) -> None:
+        """Deploy one Application against its already staged Secrets."""
 
-        # Render all lifecycle resources before the first cluster mutation.
-        manifests = self.manifests(
-            application,
-            envs=envs,
-            runtime_envs=runtime_envs,
-        )
+        # Render workload resources before the first cluster mutation.
+        manifests = self.manifests(application)
 
-        # Establish exact configuration and stable Service discovery before creating Application Pods.
-        environment_secret = await self._resources.replace_secret(manifests.environment_secret)
-        runtime_secret = await self._resources.replace_secret(manifests.runtime_secret)
-        manifests.deployment["spec"]["template"]["metadata"]["annotations"] = {
-            ENVIRONMENT_SECRET_VERSION_ANNOTATION: environment_secret.raw["metadata"]["resourceVersion"],
-            "longlink.io/runtime-secret-resource-version": runtime_secret.raw["metadata"]["resourceVersion"],
-        }
+        # Establish stable Service discovery before creating Application Pods.
         await self._resources.apply(manifests.service)
         await self._resources.apply(manifests.deployment)
+
+    async def deployed(self, application_id: UUID, namespace: str) -> bool:
+        """Return whether the canonical Application Deployment exists."""
+
+        return await self._resources.read(Deployment, str(application_id), namespace) is not None
 
     async def delete(self, application_id: UUID, namespace: str) -> bool:
         """Request Application resource deletion and return whether its Pods have terminated."""

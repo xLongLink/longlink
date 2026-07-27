@@ -60,7 +60,8 @@ async def test_create_requires_running_organization_and_queues_application_lifec
             organization.id,
             "Dashboard",
             slug="dashboard",
-            image="ghcr.io/longlink/dashboard:latest",
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
             user=user,
         )
     await mark_organization_running(organization)
@@ -68,7 +69,10 @@ async def test_create_requires_running_organization_and_queues_application_lifec
         organization.id,
         "Dashboard",
         slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
+        image="ghcr.io/longlink/dashboard@sha256:test",
+        digest="sha256:test",
+        sdk="1.2.3",
+        version="2.0.0",
         user=user,
     )
     reloaded_compute = await compute.get(infrastructure.compute.id)
@@ -79,6 +83,10 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     assert exc.value.detail == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
+    assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
+    assert application.digest == "sha256:test"
+    assert application.sdk == "1.2.3"
+    assert application.version == "2.0.0"
     assert operation.id != open_before[0].id
     assert operation.kind == OperationKind.application_create
     assert open_before[0].kind == OperationKind.organization_create
@@ -107,7 +115,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
             organization.id,
             "Duplicate dashboard",
             slug="dashboard",
-            image="ghcr.io/longlink/dashboard:latest",
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
             user=user,
         )
 
@@ -125,7 +134,8 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         organization.id,
         "Reports",
         slug="reports",
-        image="ghcr.io/longlink/reports:latest",
+        image="ghcr.io/longlink/reports@sha256:test",
+        digest="sha256:test",
         user=user,
     )
     await applications.soft_delete(deleted_application.id, user)
@@ -268,43 +278,23 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
     assert restored_role == ApplicationRoles.maintain
 
 
-async def test_set_status_and_update_runtime_modify_active_applications() -> None:
-    """Update application status and runtime metadata for active applications."""
+async def test_set_status_modifies_active_applications() -> None:
+    """Update application status only for active Applications in the expected state."""
 
     # Arrange
     user, _, application = await create_application_context("runtime")
 
     # Act
     await applications.set_status(uuid4(), Status.creating, Status.running)
-    updated = await applications.update_runtime(
-        application.id,
-        "ghcr.io/longlink/dashboard:2.0.0",
-        version="2.0.0",
-        sdk="1.2.3",
-        description="Updated dashboard",
-        digest="sha256:abc123",
-        icon="activity",
-    )
     await applications.set_status(application.id, Status.creating, Status.running)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
-    deleted_runtime = await applications.update_runtime(
-        application.id,
-        "ghcr.io/longlink/dashboard:3.0.0",
-    )
+    deleted_status = await applications.set_status(application.id, Status.running, Status.failed)
 
     # Assert
     assert running is not None
     assert running.status == Status.running
-    assert updated is not None
-    assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
-    assert updated.status == Status.creating
-    assert updated.version == "2.0.0"
-    assert updated.sdk == "1.2.3"
-    assert updated.description == "Updated dashboard"
-    assert updated.digest == "sha256:abc123"
-    assert updated.icon == "activity"
-    assert deleted_runtime is None
+    assert deleted_status is False
 
 
 async def test_soft_delete_marks_application_and_memberships_deleted() -> None:

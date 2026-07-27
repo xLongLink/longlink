@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
-from src.utils import names, roles
+from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
 from src.models.statuses import Status
@@ -51,11 +51,27 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
+    # Resolve immutable image metadata before creating durable Application state.
+    metadata = await images.metadata(payload.image)
+    if metadata is None or metadata.digest is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+
+    # Enforce image-declared requirements while the submitted values remain at the API boundary.
+    missing_envs = images.missing_envs(metadata, payload.envs)
+    if missing_envs:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
+        )
+
     application, operation = await applications.create(
         organization.id,
         payload.name,
         application_slug,
-        image=payload.image,
+        image=metadata.image,
+        digest=metadata.digest,
+        sdk=metadata.sdk,
+        version=metadata.version,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
         user=user,

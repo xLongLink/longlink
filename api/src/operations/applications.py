@@ -1,15 +1,13 @@
 import secrets
 from src import adapters
-from src.utils import jobs, images
+from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from src.environments import env
-from src.models.types import Image
 from src.models.statuses import Status
 from src.database.services import compute, storage, database, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
-from src.models.applications import ApplicationEnvironment
 from src.models.infrastructure import exoscale_zone
 from src.kubernetes.applications import DesiredApplication
 from src.database.models.operations import Operation
@@ -50,93 +48,61 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     try:
         # A waiting cycle after deployment reached running state skips workload deployment.
         if application.status == Status.creating:
-            # Kubernetes is the only durable source for user-owned environment values.
-            try:
-                staged_envs = await cluster.applications.read_envs(application.id, organization.slug)
-                user_envs = None if staged_envs is None else ApplicationEnvironment(envs=staged_envs).envs
-            except (TypeError, ValueError):
-                await applications.set_status(application.id, Status.creating, Status.failed)
-                return jobs.fail("Application environment Secret is invalid")
-            if user_envs is None:
-                return jobs.wait("Application environment Secret is not staged")
-
-            # Resolve the Application's immutable provider assignments.
-            database_registry = await database.get(organization.database_id)
-            if database_registry is None:
-                await applications.set_status(application.id, Status.creating, Status.failed)
-                return jobs.fail("Database registry not found")
-            storage_registry = await storage.get(organization.storage_id)
-            if storage_registry is None:
-                await applications.set_status(application.id, Status.creating, Status.failed)
-                return jobs.fail("Storage registry not found")
-            db = adapters.Postgres(
-                database_registry.host,
-                database_registry.port,
-                database_registry.username,
-                database_registry.password,
-                database_registry.sslmode,
-            )
-            object_storage = adapters.storage(storage_registry)
-
-            # Resolve and persist the immutable image before creating provider credentials.
+            # Every Application entering provisioning must already have immutable image metadata.
             if application.digest is None:
-                metadata = await images.metadata(Image(application.image), user_envs)
-                if metadata is None:
-                    await applications.set_status(application.id, Status.creating, Status.failed)
-                    return jobs.fail("Application image metadata is unavailable")
-                updated = await applications.update_runtime(
-                    application.id,
-                    image=metadata.image,
-                    sdk=metadata.sdk,
-                    digest=metadata.digest,
-                    version=metadata.version,
-                    description=application.description,
-                    icon=application.icon,
-                )
-                if updated is None:
-                    current = await applications.get(application.id, include_deleted=True)
-                    if current is None or current.deleted_at is not None:
-                        return jobs.complete()
-                    return jobs.wait("Application lifecycle state changed before runtime metadata was recorded")
-                application = updated
-
-            # Resolve the cluster-owned credentials before converging provider identities.
-            bucket = organization.id.hex
-            prefix = f"applications/{application.id.hex}/"
-            await object_storage.create_prefix(bucket, prefix)
-            try:
-                persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
-            except (TypeError, ValueError):
                 await applications.set_status(application.id, Status.creating, Status.failed)
-                return jobs.fail("Application runtime Secret is invalid")
+                return jobs.fail("Application image metadata is unavailable")
 
-            # Reuse complete cluster-owned credentials or rotate providers when no runtime Secret exists yet.
-            if persisted_runtime_envs is None:
-                database_password = secrets.token_urlsafe(24)
-                connection = await db.schema(organization.id, application.id, database_password)
-                credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
-            else:
-                database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
-                storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
-                storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
-                if not database_password or not storage_access_key_id or not storage_secret_access_key:
+            # An existing Deployment is the durable checkpoint after credentials and workload staging.
+            if not await cluster.applications.deployed(application.id, organization.slug):
+                # Resolve the Application's immutable provider assignments.
+                database_registry = await database.get(organization.database_id)
+                if database_registry is None:
+                    await applications.set_status(application.id, Status.creating, Status.failed)
+                    return jobs.fail("Database registry not found")
+                storage_registry = await storage.get(organization.storage_id)
+                if storage_registry is None:
+                    await applications.set_status(application.id, Status.creating, Status.failed)
+                    return jobs.fail("Storage registry not found")
+                db = adapters.Postgres(
+                    database_registry.host,
+                    database_registry.port,
+                    database_registry.username,
+                    database_registry.password,
+                    database_registry.sslmode,
+                )
+                object_storage = adapters.storage(storage_registry)
+
+                # Resolve the cluster-owned credentials before converging provider identities.
+                bucket = organization.id.hex
+                prefix = f"applications/{application.id.hex}/"
+                await object_storage.create_prefix(bucket, prefix)
+                try:
+                    persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
+                except (TypeError, ValueError):
                     await applications.set_status(application.id, Status.creating, Status.failed)
                     return jobs.fail("Application runtime Secret is invalid")
-                connection = await db.schema(organization.id, application.id, database_password)
-                credentials = {
-                    "access_key_id": storage_access_key_id,
-                    "secret_access_key": storage_secret_access_key,
-                }
 
-            # Deployment is an explicit lifecycle action and is never called by compute reconciliation or releases.
-            await cluster.applications.apply(
-                DesiredApplication(
-                    id=application.id,
-                    namespace=organization.slug,
-                    image=application.image,
-                ),
-                envs=user_envs,
-                runtime_envs={
+                # Generate credentials only until the runtime Secret commits their durable values.
+                if persisted_runtime_envs is None:
+                    database_password = secrets.token_urlsafe(24)
+                    connection = await db.schema(organization.id, application.id, database_password)
+                    credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
+                else:
+                    database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
+                    storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
+                    storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
+                    if not database_password or not storage_access_key_id or not storage_secret_access_key:
+                        await applications.set_status(application.id, Status.creating, Status.failed)
+                        return jobs.fail("Application runtime Secret is invalid")
+                    connection = await db.schema(organization.id, application.id, database_password)
+                    credentials = {
+                        "access_key_id": storage_access_key_id,
+                        "secret_access_key": storage_secret_access_key,
+                    }
+
+                # Build the complete immutable runtime contract from provider and Application identities.
+                runtime_envs = {
                     "LONGLINK_ENV": "production",
                     "LONGLINK_DATABASE_HOST": connection["host"],
                     "LONGLINK_DATABASE_NAME": connection["database_name"],
@@ -152,8 +118,25 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                     "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.endpoint_url),
                     "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
                     "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
-                },
-            )
+                }
+
+                # Existing runtime values are immutable during creation and must match the expected contract exactly.
+                if persisted_runtime_envs is not None and persisted_runtime_envs != runtime_envs:
+                    await applications.set_status(application.id, Status.creating, Status.failed)
+                    return jobs.fail("Application runtime Secret is invalid")
+
+                # Commit newly generated credentials before creating a workload that can consume them.
+                if persisted_runtime_envs is None:
+                    await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
+
+                # Deployment is an explicit lifecycle action and only references the two staged Secrets.
+                await cluster.applications.apply(
+                    DesiredApplication(
+                        id=application.id,
+                        namespace=organization.slug,
+                        image=application.image,
+                    )
+                )
 
             # Wait within this execution while Kubernetes advances the Application rollout.
             if not await cluster.applications.ready(str(application.id), organization.slug):

@@ -194,6 +194,9 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
+    digest: str,
+    sdk: str | None = None,
+    version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
 ) -> tuple[Application, Operation]:
@@ -201,6 +204,8 @@ async def create(
 
     # Validate direct service callers while preserving already-validated API values.
     image = Image(image)
+    if "@" not in image or image.tag_or_digest != digest:
+        raise ValueError("Application image must be pinned to its resolved digest")
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
@@ -227,6 +232,9 @@ async def create(
             status=Status.creating,
             description=description,
             image=image.value,
+            sdk=sdk,
+            digest=digest,
+            version=version,
             icon=icon,
         )
         application.created_id = user.id
@@ -332,45 +340,6 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | No
         )
         await session.commit()
         return operation
-
-
-async def update_runtime(
-    application_id: UUID,
-    image: str,
-    version: str | None = None,
-    sdk: str | None = None,
-    description: str | None = None,
-    digest: str | None = None,
-    icon: str | None = None,
-) -> Application | None:
-    """Persist runtime metadata resolved by lifecycle deployment without reviving a deleted Application."""
-
-    # Update runtime metadata in one session.
-    async with session_scope() as session:
-        # Lock only an active creating Application so metadata cannot race deletion or another lifecycle transition.
-        application = (
-            await session.scalars(
-                select(Application)
-                .where(
-                    Application.id == application_id,
-                    Application.deleted_at.is_(None),
-                    Application.status == Status.creating,
-                )
-                .with_for_update()
-            )
-        ).one_or_none()
-        if application is None:
-            return None
-
-        # Keep the database metadata aligned with the workload that will be applied.
-        application.sdk = sdk
-        application.digest = digest
-        application.description = description
-        application.version = version
-        application.image = image
-        application.icon = icon
-        await session.commit()
-        return application
 
 
 async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:

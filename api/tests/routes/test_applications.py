@@ -3,6 +3,7 @@ from httpx2 import AsyncClient
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
 from src.database.services import operations, applications
 from src.models.operations import OperationKind, OperationStatus
@@ -72,6 +73,18 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     await mark_organization_running(organization)
     staged: dict[str, object] = {}
 
+    async def inspect_image(image: str) -> LongLinkMetadata:
+        """Return immutable metadata with one required user environment value."""
+
+        assert image == "ghcr.io/longlink/dashboard:latest"
+        return LongLinkMetadata(
+            image="ghcr.io/longlink/dashboard@sha256:test",
+            digest="sha256:test",
+            sdk="1.2.3",
+            version="2.0.0",
+            environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
+        )
+
     class FakeCompute:
         """Capture Application environment Secret staging."""
 
@@ -87,6 +100,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             staged.update({"application_id": application_id, "namespace": namespace, "envs": envs})
 
     monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.images.metadata", inspect_image)
     client = clients[0]
 
     # Act
@@ -110,7 +124,10 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     operation = payload["operation"]
     assert application["status"] == "creating"
     assert application["description"] == "Dashboard app"
-    assert application["image"] == "ghcr.io/longlink/dashboard:latest"
+    assert application["image"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert application["digest"] == "sha256:test"
+    assert application["sdk"] == "1.2.3"
+    assert application["version"] == "2.0.0"
     assert "compute_id" not in operation
     assert operation["kind"] == OperationKind.application_create
     assert operation["platform_version"] == env.VERSION

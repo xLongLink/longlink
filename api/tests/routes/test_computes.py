@@ -1,7 +1,5 @@
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database.services import compute
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 
@@ -38,7 +36,7 @@ async def test_compute_registry_endpoints_return_backend(
 async def test_compute_registry_create_duplicate_and_delete(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one compute registry, reject a duplicate, and mark the unused registry for deletion."""
+    """Create one compute registry, reject a duplicate, and remove the unused registration."""
 
     # Arrange
     client = clients[0]
@@ -68,14 +66,9 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert "proxy_secret" not in created["compute"]
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
-    assert delete_response.status_code == 202
-    assert delete_response.json()["operation"]["kind"] == OperationKind.compute_reconcile
-    assert retry_response.status_code == 202
-    assert retry_response.json()["operation"]["id"] == delete_response.json()["operation"]["id"]
+    assert delete_response.status_code == 204
+    assert retry_response.status_code == 404
     assert get_response.status_code == 404
-    deleting = await compute.get(UUID(registry_id), include_deleting=True)
-    assert deleting is not None
-    assert deleting.status == "deleting"
 
 
 async def test_compute_registry_delete_rejects_assigned_registry(

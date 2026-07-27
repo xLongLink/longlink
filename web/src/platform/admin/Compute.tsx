@@ -14,8 +14,7 @@ import CreateCompute from '@/components/dialogs/CreateCompute';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useComputes } from '@/data/compute';
 import { useToast } from '@/hooks/use-toast';
-import { apiQueryKey, fetchApiJson } from '@/lib/api';
-import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
+import { fetchApiVoid } from '@/lib/api';
 import { computesQueryKey } from '@/lib/query-keys';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiComputeRegistry } from '@/lib/types';
@@ -55,15 +54,9 @@ export default function AdminCompute() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
-        mutationFn: async (computeId: string) =>
-            fetchApiJson(`/api/computes/${computeId}`, { method: 'DELETE' }, (value) =>
-                parseApiResponse(apiComputeMutationResponseSchema, value)
-            ),
+        mutationFn: async (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: computesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/operations') }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
             toast({ body: t('admin.computeDeleted') });
         },
     });

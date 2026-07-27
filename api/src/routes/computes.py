@@ -37,16 +37,13 @@ async def get_compute_registry(registry_id: UUID):
     return registry
 
 
-@router.delete("/api/computes/{registry_id}", response_model=ComputeRegistryMutationResponse, status_code=202)
+@router.delete("/api/computes/{registry_id}", status_code=204)
 async def delete_compute_registry(registry_id: UUID):
-    """Queue cleanup of one unused compute target."""
+    """Remove one unused compute registration without changing its cluster."""
 
-    # Delete only a registered compute that is not assigned to an Organization.
-    result = await compute.delete(registry_id)
-    if result is None:
+    # Remove only a registered compute that is not assigned to an Organization.
+    if not await compute.delete(registry_id):
         raise HTTPException(status_code=404, detail="Compute registry not found")
-    registry, operation = result
-    return {"compute": registry, "operation": operation}
 
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[str])

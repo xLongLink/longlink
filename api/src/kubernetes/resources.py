@@ -102,10 +102,7 @@ class KubernetesResources:
         # Compare the exact LongLink-owned data and metadata while ignoring server fields.
         desired_data = dict(body.get("data", {}))
         desired_data.update(
-            {
-                key: base64.b64encode(value.encode("utf-8")).decode("ascii")
-                for key, value in body.get("stringData", {}).items()
-            }
+            {key: base64.b64encode(value.encode("utf-8")).decode("ascii") for key, value in body.get("stringData", {}).items()}
         )
         desired_metadata = body["metadata"]
         existing_metadata = existing.raw["metadata"]
@@ -127,6 +124,25 @@ class KubernetesResources:
             url=f"{Secret.endpoint}/{resource.name}",
             namespace=resource.namespace,
             content=json.dumps(replacement),
+        ) as response:
+            return Secret(response.json(), api=api)
+
+    async def create_secret(self, body: KubernetesDocument) -> Secret:
+        """Create one Secret without reading or replacing an existing value."""
+
+        # Resolve and constrain the supplied resource before issuing the create request.
+        api = await self.api()
+        resource = object_from_spec(body, api=api)
+        if not isinstance(resource, Secret):
+            raise ValueError("Secret creation requires a v1 Secret resource")
+
+        # Existing Secret state belongs to the lifecycle that created it and must not be overwritten.
+        async with api.call_api(
+            "POST",
+            version=Secret.version,
+            url=Secret.endpoint,
+            namespace=resource.namespace,
+            content=json.dumps(body),
         ) as response:
             return Secret(response.json(), api=api)
 

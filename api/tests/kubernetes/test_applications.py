@@ -6,8 +6,8 @@ from src.kubernetes.applications import Applications, DesiredApplication
 pytestmark = pytest.mark.no_db
 
 
-def test_application_manifests_include_labels_and_secret_envs() -> None:
-    """Render one application's workload resources without a cluster connection."""
+def test_application_manifests_reference_separately_owned_secrets() -> None:
+    """Render one Application's Secret inputs and reference-only workload resources."""
 
     # Define one desired Application with explicit user and runtime environment values.
     organization_id = UUID("10000000-0000-4000-8000-000000000001")
@@ -18,14 +18,19 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
     )
     renderer = Applications(KubernetesResources("unused"))
 
-    # Render the Application resources without contacting a cluster.
-    manifests = renderer.manifests(
-        application,
-        envs={
+    # Render each Secret at its ownership boundary and the workload independently.
+    environment_secret = renderer.environment_secret(
+        application.id,
+        application.namespace,
+        {
             "PORT": "8000",
             "API_KEY": "secret",
         },
-        runtime_envs={
+    )
+    runtime_secret = renderer.runtime_secret(
+        application.id,
+        application.namespace,
+        {
             "LONGLINK_ENV": "production",
             "LONGLINK_DATABASE_HOST": "database.internal",
             "LONGLINK_DATABASE_NAME": "organization-database",
@@ -43,17 +48,18 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
             "LONGLINK_STORAGE_USERNAME": "storage-user",
         },
     )
+    manifests = renderer.manifests(application)
 
     # Verify user and Platform configuration remain in disjoint exact Secrets.
-    assert manifests.environment_secret["kind"] == "Secret"
-    assert manifests.environment_secret["metadata"]["name"] == f"{application.id}-environment"
-    assert manifests.environment_secret["stringData"] == {
+    assert environment_secret["kind"] == "Secret"
+    assert environment_secret["metadata"]["name"] == f"{application.id}-environment"
+    assert environment_secret["stringData"] == {
         "API_KEY": "secret",
         "PORT": "8000",
     }
-    assert manifests.runtime_secret["kind"] == "Secret"
-    assert manifests.runtime_secret["metadata"]["name"] == f"{application.id}-runtime"
-    assert manifests.runtime_secret["stringData"] == {
+    assert runtime_secret["kind"] == "Secret"
+    assert runtime_secret["metadata"]["name"] == f"{application.id}-runtime"
+    assert runtime_secret["stringData"] == {
         "LONGLINK_DATABASE_HOST": "database.internal",
         "LONGLINK_DATABASE_NAME": "organization-database",
         "LONGLINK_DATABASE_PASSWORD": "database-secret",
@@ -70,10 +76,10 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
         "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
         "LONGLINK_STORAGE_USERNAME": "storage-user",
     }
-    assert "labels" not in manifests.environment_secret["metadata"]
-    assert "annotations" not in manifests.environment_secret["metadata"]
-    assert "labels" not in manifests.runtime_secret["metadata"]
-    assert "annotations" not in manifests.runtime_secret["metadata"]
+    assert "labels" not in environment_secret["metadata"]
+    assert "annotations" not in environment_secret["metadata"]
+    assert "labels" not in runtime_secret["metadata"]
+    assert "annotations" not in runtime_secret["metadata"]
     assert manifests.deployment["kind"] == "Deployment"
     assert manifests.service["kind"] == "Service"
     assert "labels" not in manifests.deployment["metadata"]

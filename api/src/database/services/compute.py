@@ -17,24 +17,17 @@ from src.database.models.organizations import Organization
 async def fetch() -> list[ComputeRegistry]:
     """Return registered compute backends."""
 
-    # Hide compute targets while asynchronous deletion is in progress.
+    # Return every registered compute target.
     async with session_scope() as session:
-        statement = select(ComputeRegistry).where(ComputeRegistry.status != Status.deleting)
-        return list(await session.scalars(statement))
+        return list(await session.scalars(select(ComputeRegistry)))
 
 
-async def get(registry_id: UUID, include_deleting: bool = False) -> ComputeRegistry | None:
+async def get(registry_id: UUID) -> ComputeRegistry | None:
     """Return one compute backend by id."""
 
-    # Build the lookup within one scoped session.
+    # Load the requested compute registration.
     async with session_scope() as session:
-        statement = select(ComputeRegistry).where(ComputeRegistry.id == registry_id)
-
-        # Deleting registries remain available only to their reconciliation operation.
-        if not include_deleting:
-            statement = statement.where(ComputeRegistry.status != Status.deleting)
-
-        return (await session.scalars(statement)).one_or_none()
+        return await session.get(ComputeRegistry, registry_id)
 
 
 async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
@@ -60,33 +53,24 @@ async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry
         return registry, operation
 
 
-async def delete(registry_id: UUID) -> tuple[ComputeRegistry, Operation] | None:
-    """Mark an unused compute target for cluster cleanup."""
+async def delete(registry_id: UUID) -> bool:
+    """Remove an unused compute registration without modifying external resources."""
 
-    # Lock the target before checking assignments and queueing cleanup.
+    # Lock the target before checking assignments and deleting it.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, registry_id, with_for_update=True)
         if registry is None:
-            return None
+            return False
 
-        # Organizations retain their assigned compute until provider cleanup finishes.
+        # Organizations must retain a valid registered compute assignment.
         organization_id = await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
-        # The first request marks lifecycle state before queueing cleanup.
-        if registry.status != Status.deleting:
-            registry.status = Status.deleting
-            registry.version = None
-
-        # Compute deletion owns only gateway and cluster-bootstrap resources after Organizations are gone.
-        operation = await operations.enqueue_in_session(
-            session,
-            registry.id,
-            locked_compute=registry,
-        )
+        # Operations retain historical state and naturally complete if their compute target no longer exists.
+        await session.delete(registry)
         await session.commit()
-        return registry, operation
+        return True
 
 
 async def record_success(
@@ -105,12 +89,6 @@ async def record_success(
             return False
         if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
-
-        # Successful cleanup removes the internal registry after its external resources are gone.
-        if registry.status == Status.deleting:
-            await session.delete(registry)
-            await session.commit()
-            return True
 
         registry.gateway_url = gateway_url
         registry.version = platform_version
@@ -170,7 +148,6 @@ async def set_status(compute_id: UUID, expected_status: Status, status: Status) 
             .where(
                 ComputeRegistry.id == compute_id,
                 ComputeRegistry.status == expected_status,
-                ComputeRegistry.status != Status.deleting,
             )
             .values(status=status)
             .returning(ComputeRegistry)

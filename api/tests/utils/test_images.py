@@ -1,7 +1,7 @@
 import pytest
 from src.utils import images
 from src.models.types import Image
-from src.models.metadata import LongLinkMetadata
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 pytestmark = pytest.mark.no_db
 
@@ -57,9 +57,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     captured: dict[str, object] = {}
     monkeypatch.setattr(images.env, "DEVELOPMENT", development)
 
-    async def fake_fetch_manifest(
-        _client: object, registry_url: str, repository: str, reference: str
-    ) -> tuple[dict[str, object], str]:
+    async def fake_fetch_manifest(_client: object, registry_url: str, repository: str, reference: str) -> tuple[dict[str, object], str]:
         """Capture the manifest request and return a minimal OCI manifest."""
 
         captured["manifest"] = {
@@ -84,6 +82,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
                         "longlink.sdk": "0.1.0",
                         "longlink.version": version,
                         "longlink.description": "Demo app",
+                        "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
                     }
                 }
             }
@@ -123,8 +122,12 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
         version=version,
         description="Demo app",
         digest=manifest_digest,
+        environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
     ).model_dump(mode="json")
     assert image_metadata.image == expected_image
+    assert images.missing_envs(image_metadata, {}) == ["API_KEY"]
+    assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]
+    assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
         "manifest": {
             "registry_url": registry_url,

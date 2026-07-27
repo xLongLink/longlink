@@ -4,7 +4,7 @@ from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
 from src.environments import env
-from src.models.types import DatabaseSSLMode
+from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -91,6 +91,7 @@ async def create_application(
     name: str = "dashboard",
     slug: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
+    digest: str = "sha256:test",
     description: str | None = None,
     icon: str | None = None,
 ) -> Application:
@@ -101,11 +102,15 @@ async def create_application(
 
     # Application creation requires the parent Organization to be running.
     await mark_organization_running(organization)
+    parsed_image = Image(image)
+    resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@{digest}"
+    resolved_digest = parsed_image.tag_or_digest if "@" in image else digest
     application, _ = await applications.create(
         organization.id,
         name,
         slug=slug,
-        image=image,
+        image=resolved_image,
+        digest=resolved_digest,
         description=description,
         icon=icon,
         user=owner,

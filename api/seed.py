@@ -7,7 +7,7 @@ from pwdlib import PasswordHash
 from pathlib import Path
 from pydantic import Field, field_validator
 from sqlmodel import col
-from src.utils import jobs, names
+from src.utils import jobs, names, images
 from sqlalchemy import text, select, inspect
 from src.operations import computes as _operation_computes
 from src.operations import applications as _operation_applications
@@ -183,6 +183,14 @@ async def seed_local_development(settings: SeedSettings) -> None:
     )
     application_slug = names.slugify(payload.name)
 
+    # Resolve and validate immutable image metadata before mutating local Platform state.
+    metadata = await images.metadata(payload.image)
+    if metadata is None or metadata.digest is None:
+        raise ValueError("Local Application image metadata not found")
+    missing_envs = images.missing_envs(metadata, payload.envs)
+    if missing_envs:
+        raise ValueError(f"Local Application environment is missing required image variables: {', '.join(missing_envs)}")
+
     # Create or restore the local Platform administrator.
     admin, administrator_changed = await seed_local_administrator(settings)
 
@@ -246,13 +254,17 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Create or resume the sample Application through the API desired-state service.
     application = next((item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None)
-    if application is None:
+    created = application is None
+    if created:
         application, operation = await application_service.create(
             organization.id,
             payload.name,
             application_slug,
-            payload.image,
+            metadata.image,
             admin,
+            digest=metadata.digest,
+            sdk=metadata.sdk,
+            version=metadata.version,
             description=payload.description,
             icon=payload.icon.value if payload.icon is not None else None,
         )
@@ -265,9 +277,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
     else:
         return
 
-    # Stage local user values in Kubernetes before releasing Application lifecycle work.
+    # Stage local user values once before releasing new Application lifecycle work.
     cluster = Kubernetes(compute_registry.kubeconfig)
-    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    if created:
+        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
     operation = await operations.schedule_now(operation.id)
     if operation is None:
         raise RuntimeError("Local Application create Operation is no longer open")

@@ -32,14 +32,11 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
     operation.finished_at = finished_at
     operation.lease_expires_at = None
 
-    # Compute reconciliation failures affect active targets but never overwrite deletion state.
+    # Compute reconciliation failures affect only targets that remain registered.
     if operation.kind == OperationKind.compute_reconcile:
         await session.execute(
             update(ComputeRegistry)
-            .where(
-                ComputeRegistry.id == operation.target_id,
-                ComputeRegistry.status != Status.deleting,
-            )
+            .where(ComputeRegistry.id == operation.target_id)
             .values(status=Status.failed)
         )
         return

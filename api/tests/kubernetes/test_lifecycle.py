@@ -89,6 +89,13 @@ async def delete_application(compute: Kubernetes, application_id: UUID, namespac
         await asyncio.sleep(1)
 
 
+async def delete_gateway_resources(compute: Kubernetes) -> None:
+    """Delete gateway resources created only for the real-cluster lifecycle test."""
+
+    # Keep destructive namespace cleanup outside the production gateway abstraction.
+    await compute._resources.delete(Namespace, "longlink-system")
+
+
 async def wait_application_ready(compute: Kubernetes, application_id: UUID, namespace: str) -> None:
     """Retry Application readiness checks until its Deployment is serving."""
 
@@ -196,36 +203,27 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         "acme",
         {"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
     )
-    assert await scenario.compute.applications.read_envs(scenario.application_id, "acme") == {
-        "LONG_LINK_REQUIRED": "value",
-        "PORT": "8000",
-    }
-    await scenario.compute.applications.apply(
-        active_application,
-        envs={
-            "LONG_LINK_REQUIRED": "value",
-            "PORT": "8000",
-        },
-        runtime_envs={
+    await scenario.compute.applications.stage_runtime_envs(
+        scenario.application_id,
+        "acme",
+        {
             **runtime_envs,
             "LONGLINK_DATABASE_SCHEMA": active_application.id.hex,
             "LONGLINK_STORAGE_PREFIX": f"applications/{active_application.id.hex}/",
         },
     )
-    assert await scenario.compute.applications.read_envs(scenario.application_id, "acme") == {
-        "LONG_LINK_REQUIRED": "value",
-        "PORT": "8000",
-    }
+    await scenario.compute.applications.apply(active_application)
     await scenario.compute.applications.stage_envs(scenario.stale_application_id, "acme", {"PORT": "8000"})
-    await scenario.compute.applications.apply(
-        stale_application,
-        envs={"PORT": "8000"},
-        runtime_envs={
+    await scenario.compute.applications.stage_runtime_envs(
+        scenario.stale_application_id,
+        "acme",
+        {
             **runtime_envs,
             "LONGLINK_DATABASE_SCHEMA": stale_application.id.hex,
             "LONGLINK_STORAGE_PREFIX": f"applications/{stale_application.id.hex}/",
         },
     )
+    await scenario.compute.applications.apply(stale_application)
     await wait_application_ready(scenario.compute, scenario.application_id, "acme")
     await wait_application_ready(scenario.compute, scenario.stale_application_id, "acme")
 
@@ -236,10 +234,6 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         {"LONG_LINK_REQUIRED": "updated", "PORT": "8000"},
     )
     await wait_application_ready(scenario.compute, scenario.application_id, "acme")
-    assert await scenario.compute.applications.read_envs(scenario.application_id, "acme") == {
-        "LONG_LINK_REQUIRED": "updated",
-        "PORT": "8000",
-    }
 
     # Reconcile both gateway routes and retain the generated TLS identity for later phases.
     routes = (
@@ -404,17 +398,10 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         annotations = resource.raw["metadata"].get("annotations", {})
         assert set(annotations).isdisjoint({"longlink.io/platform-version", "longlink.io/runtime-revision"})
     application_annotations = application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
-    assert set(application_annotations) == {
-        "longlink.io/environment-secret-resource-version",
-        "longlink.io/runtime-secret-resource-version",
-    }
+    assert set(application_annotations) == {"longlink.io/environment-secret-resource-version"}
     assert (
         application_annotations["longlink.io/environment-secret-resource-version"]
         == application_environment_secret.raw["metadata"]["resourceVersion"]
-    )
-    assert (
-        application_annotations["longlink.io/runtime-secret-resource-version"]
-        != application_runtime_secret.raw["metadata"]["resourceVersion"]
     )
 
 
@@ -460,7 +447,7 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
     )
     await delete_application(scenario.compute, scenario.application_id, "acme")
     await scenario.compute.organizations.delete("acme")
-    await scenario.compute.gateway.delete()
+    await delete_gateway_resources(scenario.compute)
 
     # Wait until all exact resources are absent or their Namespaces are terminating.
     deadline = time.monotonic() + 30
@@ -537,4 +524,4 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
     finally:
         # Keep the shared Docker daemon clean when a phase assertion interrupts reconciliation.
         if not cleanup_completed:
-            await compute.gateway.delete()
+            await delete_gateway_resources(compute)

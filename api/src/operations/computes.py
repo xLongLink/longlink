@@ -22,10 +22,6 @@ class ReconcileResult:
 async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pending_route: GatewayRoute | None = None) -> ReconcileResult:
     """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
 
-    # Compute deletion owns the complete gateway Namespace after every Organization has been removed.
-    if registry.status == Status.deleting:
-        return ReconcileResult(await cluster.gateway.delete(), None)
-
     # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
     gateway_ip = await cluster.gateway.ip()
     if gateway_ip is None:
@@ -72,7 +68,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.target_id, include_deleting=True)
+    registry = await compute.get(claimed.target_id)
     if registry is None:
         return jobs.complete()
     if claimed.platform_version != env.VERSION:
