@@ -33,7 +33,6 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
 
     engine: AsyncEngine | None = None
     try:
-
         # Build the real PostgreSQL schema and bind the production session service to it for this test only.
         wait_for_postgres(container, "longlink", "secret", "longlink", POSTGRES_PORT)
         database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink"
@@ -85,13 +84,9 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
         active = persisted_by_id[claimed[0].id]
         queued = persisted_by_id[waiting.id]
         assert active.platform_version == env.VERSION
-        assert active.attempt_count == 1
-        assert active.started_at is not None
         assert active.lease_expires_at == claimed[0].lease_expires_at
-        assert queued.attempt_count == 0
-        assert queued.started_at is None
+        assert queued.lease_expires_at is None
     finally:
-
         # Dispose database connections before removing the PostgreSQL container.
         try:
             if engine is not None:

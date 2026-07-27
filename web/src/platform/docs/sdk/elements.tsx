@@ -5,18 +5,11 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { FileCode2 } from 'lucide-react';
 import { CodeBlock } from '@/components/CodeBlock';
-import { pageElementPage } from '@/platform/public';
+import { pageElementPage } from '@/platform/docs/pages';
 import { pageReferenceDocs, type ElementDoc } from './references';
 
 const lastUpdated = '2026-07-21';
 const editUrl = 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts';
-
-export const pageElementHrefByName = pageReferenceDocs
-    .map(pageElementPage)
-    .reduce<Record<string, string>>((paths, page) => {
-        paths[page.title] = page.path;
-        return paths;
-    }, {});
 
 /** Renders one XML element documentation article. */
 function ElementReference({ element }: { element: ElementDoc }) {
@@ -98,3 +91,8 @@ export const pageElementDocPages = pageReferenceDocs.map((element) => ({
     content: <ElementReference element={element} />,
     metadata: elementMetadata(element),
 }));
+
+export const pageElementHrefByName = pageElementDocPages.reduce<Record<string, string>>((paths, page) => {
+    paths[page.title] = page.path;
+    return paths;
+}, {});

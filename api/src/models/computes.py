@@ -1,6 +1,6 @@
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.statuses import ComputeStatus
+from src.models.statuses import Status
 from src.models.operations import OperationResponse
 
 
@@ -15,10 +15,7 @@ class ComputeRegistryCreate(BaseModel):
 
 
 class ComputeRegistryResponse(BaseModel):
-    """Describe one compute backend without exposing its kubeconfig or gateway secrets.
-
-    The gateway URL is non-secret connection state observed during reconciliation.
-    """
+    """Describe one compute backend without exposing its connection state or secrets."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,10 +25,9 @@ class ComputeRegistryResponse(BaseModel):
     # Metadata
     name: str
     slug: str
-    gateway_url: str | None
 
     # State
-    status: ComputeStatus
+    status: Status
     version: str | None
 
 

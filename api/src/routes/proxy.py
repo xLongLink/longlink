@@ -6,7 +6,7 @@ from src.auth import authuser
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, OrganizationRoles
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import Status
 from starlette.responses import StreamingResponse
 from src.database.services import compute
 from src.database.models.users import User
@@ -59,7 +59,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         )
 
     # Let the web runtime show a loading state while application creation is still pending.
-    if application.status != ApplicationStatus.running:
+    if application.status != Status.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
@@ -96,7 +96,6 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     # The private cluster gateway accepts only API-authenticated requests with the registry secret.
     client = None
     try:
-
         # Trust only the per-compute CA generated and persisted by reconciliation.
         tls = ssl.create_default_context(cadata=registry.gateway_ca_certificate)
         client = httpx2.AsyncClient(follow_redirects=False, timeout=300.0, verify=tls)

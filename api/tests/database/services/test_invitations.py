@@ -17,8 +17,8 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(slug="primary", name="Primary")
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure(slug="primary", name="Primary")
+    organization = await create_organization(owner)
 
     # Act
     invitation = await invitations.create(
@@ -58,8 +58,8 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(slug="primary", name="Primary")
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure(slug="primary", name="Primary")
+    organization = await create_organization(owner)
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -75,8 +75,8 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(slug="primary", name="Primary")
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure(slug="primary", name="Primary")
+    organization = await create_organization(owner)
     await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Act
@@ -93,8 +93,8 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(slug="primary", name="Primary")
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure(slug="primary", name="Primary")
+    organization = await create_organization(owner)
     invitation = await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     Session = await get_session()

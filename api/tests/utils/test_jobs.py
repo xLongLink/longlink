@@ -14,7 +14,7 @@ class StopScheduler(RuntimeError):
     """Raised by test sleep calls to exit the infinite scheduler loop."""
 
 
-def leased_operation(attempt_count: int = 1) -> Operation:
+def leased_operation() -> Operation:
     """Build one claimed compute reconciliation Operation."""
 
     return Operation(
@@ -22,8 +22,6 @@ def leased_operation(attempt_count: int = 1) -> Operation:
         kind=OperationKind.compute_reconcile,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         platform_version="v1.2.3",
-        attempt_count=attempt_count,
-        started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
 
@@ -34,7 +32,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     # Arrange
     operation = leased_operation()
     completed = leased_operation()
-    completed.stopped_at = datetime.fromisoformat("2026-07-01T09:01:00+00:00")
+    completed.finished_at = datetime.fromisoformat("2026-07-01T09:01:00+00:00")
     claims = [operation, None]
     executed: list[Operation] = []
 
@@ -74,47 +72,45 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     assert executed == [operation]
 
 
-async def test_execute_retries_location_work_with_exponential_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Log a handler-requested retry and persist bounded exponential backoff."""
+async def test_execute_waits_for_convergence_within_one_lease(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Poll waiting work within one lease before persisting completion."""
 
     # Arrange
-    operation = leased_operation(attempt_count=3)
-    transitions: list[tuple[UUID, int, float]] = []
-    warnings: list[str] = []
+    operation = leased_operation()
+    completed = leased_operation()
+    completed.finished_at = utcnow()
+    outcomes = [operation_worker.wait("workloads are starting"), operation_worker.complete()]
+    transitions: list[UUID] = []
+    sleeps: list[float] = []
 
-    async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Request another attempt for the claimed compute target."""
+    async def waiting_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Wait once before reporting convergence."""
 
         assert claimed is operation
-        return operation_worker.retry("workloads are starting")
+        return outcomes.pop(0)
 
-    async def fake_defer(operation_id: UUID, attempt_count: int, delay: float) -> Operation:
-        """Record the retry transition and return scheduled work."""
+    async def fake_complete(operation_id: UUID) -> Operation:
+        """Record the terminal completion transition."""
 
-        transitions.append((operation_id, attempt_count, delay))
-        return Operation(
-            id=operation_id,
-            kind=operation.kind,
-            target_id=operation.target_id,
-            platform_version=operation.platform_version,
-            attempt_count=operation.attempt_count,
-        )
+        transitions.append(operation_id)
+        return completed
 
-    def log_warning(message: str, *args: object) -> None:
-        """Capture the formatted retry warning."""
+    async def fake_sleep(seconds: float) -> None:
+        """Record one in-lease polling interval."""
 
-        warnings.append(message % args)
+        sleeps.append(seconds)
 
-    monkeypatch.setattr(operation_worker.operations, "defer", fake_defer)
-    monkeypatch.setattr(operation_worker.logger, "warning", log_warning)
+    monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
+    monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
 
     # Act
-    result = await operation_worker.execute(operation, retry_handler)
+    result = await operation_worker.execute(operation, waiting_handler)
 
     # Assert
-    assert result.status == OperationStatus.scheduled
-    assert transitions == [(operation.id, operation.attempt_count, 20)]
-    assert warnings == [f"Operation {operation.id} will retry: workloads are starting"]
+    assert result.status == OperationStatus.completed
+    assert transitions == [operation.id]
+    assert sleeps == [5]
+    assert outcomes == []
 
 
 async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -124,16 +120,15 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     operation = leased_operation()
 
     async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Complete one claimed compute attempt."""
+        """Complete one claimed compute Operation."""
 
         assert claimed is operation
         return operation_worker.complete()
 
-    async def fake_complete(operation_id: UUID, attempt_count: int) -> None:
+    async def fake_complete(operation_id: UUID) -> None:
         """Report that the worker no longer owns the operation lease."""
 
         assert operation_id == operation.id
-        assert attempt_count == operation.attempt_count
         return None
 
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
@@ -143,32 +138,31 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
         await operation_worker.execute(operation, complete_handler)
 
 
-async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fail rather than defer when the sixth operation attempt requests another retry."""
+async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
     # Arrange
-    operation = leased_operation(attempt_count=operation_worker.OPERATION_ATTEMPT_LIMIT)
-    transitions: list[tuple[UUID, int]] = []
+    operation = leased_operation()
+    transitions: list[UUID] = []
     errors: list[str] = []
 
-    async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Request a retry after consuming the complete attempt budget."""
+    async def failing_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Return one explicit terminal failure."""
 
         assert claimed is operation
-        return operation_worker.retry("workloads are still starting")
+        return operation_worker.fail("workload deployment failed")
 
-    async def fake_fail(operation_id: UUID, attempt_count: int) -> Operation:
-        """Record terminal failure after the attempt budget is exhausted."""
+    async def fake_fail(operation_id: UUID) -> Operation:
+        """Record the terminal failure transition."""
 
-        transitions.append((operation_id, attempt_count))
+        transitions.append(operation_id)
         return Operation(
             id=operation_id,
             kind=operation.kind,
             target_id=operation.target_id,
             failed=True,
             platform_version=operation.platform_version,
-            attempt_count=attempt_count,
-            stopped_at=utcnow(),
+            finished_at=utcnow(),
         )
 
     def log_error(message: str, *args: object) -> None:
@@ -180,10 +174,9 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(operation_worker.logger, "error", log_error)
 
     # Act
-    result = await operation_worker.execute(operation, retry_handler)
+    result = await operation_worker.execute(operation, failing_handler)
 
     # Assert
     assert result.status == OperationStatus.failed
-    assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
-    assert transitions == [(operation.id, 6)]
-    assert errors == [f"Operation {operation.id} failed after 6 attempts: workloads are still starting"]
+    assert transitions == [operation.id]
+    assert errors == [f"Operation {operation.id} failed: workload deployment failed"]

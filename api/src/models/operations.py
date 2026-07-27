@@ -38,11 +38,9 @@ class OperationResponse(BaseModel):
 
     # State
     status: OperationStatus
-    attempt_count: int
     platform_version: str
 
     # Timestamps
     created_at: datetime
-    started_at: datetime | None = None
-    stopped_at: datetime | None = None
-    scheduled_at: datetime
+    finished_at: datetime | None = None
+    available_at: datetime

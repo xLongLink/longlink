@@ -6,7 +6,7 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
 from src.models.types import DatabaseSSLMode
-from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute, operations
 from src.models.operations import OperationStatus
@@ -63,7 +63,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         database_id=database_registry.id,
         storage_id=storage_registry.id,
         shared_schema_url="postgresql://shared/acme",
-        status=OrganizationStatus.running,
+        status=Status.running,
     )
     running = Application(
         organization_id=organization.id,
@@ -71,14 +71,14 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:resolved",
         digest="sha256:resolved",
-        status=ApplicationStatus.running,
+        status=Status.running,
     )
     creating = Application(
         organization_id=organization.id,
         name="Pending",
         slug="pending",
         image="ghcr.io/longlink/pending:latest",
-        status=ApplicationStatus.creating,
+        status=Status.creating,
     )
     async with session_scope() as session:
         session.add_all([organization, running, creating])
@@ -131,7 +131,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     assert [(route.id, route.namespace) for route in snapshots[0]] == [(running.id, "acme")]
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
-    assert refreshed.status == ComputeStatus.ready
+    assert refreshed.status == Status.running
     assert refreshed.version == env.VERSION
     assert refreshed.gateway_url == "https://192.0.2.1"
     assert refreshed.gateway_ca_certificate == "ca"
@@ -139,8 +139,8 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     assert refreshed.gateway_tls_private_key == "private-key"
 
 
-async def test_execute_compute_reconcile_operation_retries_transient_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Record a compute failure and schedule retryable gateway work."""
+async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make a compute and its single Operation terminal after a provider error."""
 
     # Arrange
     compute_registry, _, _ = await create_compute_infrastructure()
@@ -168,10 +168,10 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
     assert claimed is not None
 
     # Act
-    deferred = await execute(claimed, compute_operations.reconcile)
+    failed = await execute(claimed, compute_operations.reconcile)
 
     # Assert
-    assert deferred.status == OperationStatus.scheduled
+    assert failed.status == OperationStatus.failed
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
-    assert refreshed.status == ComputeStatus.failed
+    assert refreshed.status == Status.failed

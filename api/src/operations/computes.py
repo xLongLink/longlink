@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from src.utils.jobs import operation
 from src.environments import env
 from packaging.version import Version
-from src.models.statuses import ComputeStatus
+from src.models.statuses import Status
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial
@@ -19,11 +19,11 @@ class ReconcileResult:
     gateway_url: str | None
 
 
-async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> ReconcileResult:
+async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pending_route: GatewayRoute | None = None) -> ReconcileResult:
     """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
 
     # Compute deletion owns the complete gateway Namespace after every Organization has been removed.
-    if registry.status == ComputeStatus.deleting:
+    if registry.status == Status.deleting:
         return ReconcileResult(await cluster.gateway.delete(), None)
 
     # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
@@ -58,6 +58,8 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     # Routes contain only running Applications and stable Organization Namespace identities.
     route_rows = await applications.gateway_routes(registry.id)
     routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
+    if pending_route is not None and all(route.id != pending_route.id for route in routes):
+        routes = (*routes, pending_route)
     ready = await cluster.gateway.apply(routes, registry.proxy_secret, tls)
 
     # Format the typed gateway IP for URL authority syntax.
@@ -72,28 +74,35 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     # Load the compute root without loading provider or tenant lifecycle relationships.
     registry = await compute.get(claimed.target_id, include_deleting=True)
     if registry is None:
-        return jobs.fail("Compute registry not found")
+        return jobs.complete()
     if claimed.platform_version != env.VERSION:
-        return jobs.retry("Operation targets a different Platform release")
+        return jobs.fail("Operation targets a different Platform release")
     if registry.version is not None and Version(registry.version) > Version(claimed.platform_version):
-        return jobs.retry("Compute target was already reconciled by a newer Platform release")
+        return jobs.complete()
+
+    # A fresh reconciliation execution makes a previously failed target visibly active again.
+    if registry.status == Status.failed:
+        if not await compute.set_status(registry.id, Status.failed, Status.creating):
+            return jobs.wait("Compute lifecycle state changed before reconciliation")
+        registry.status = Status.creating
     cluster = Kubernetes(registry.kubeconfig)
 
     try:
         # Compute reconciliation is structurally unable to deploy or delete tenant resources.
         result = await reconcile_gateway(registry, cluster)
         if not result.ready:
-            return jobs.retry("Gateway is still converging")
+            return jobs.wait("Gateway is still converging")
 
         # Publish connection material only after the desired gateway Deployment is serving.
         if not await compute.record_success(
             registry.id,
             claimed.platform_version,
             result.gateway_url,
+            registry.status,
         ):
-            return jobs.retry("Compute gateway state was not recorded")
+            return jobs.wait("Compute gateway state was not recorded")
         return jobs.complete()
     except Exception:
-        # Record failed compute state while the worker logs detailed diagnostics.
-        await compute.record_failure(registry.id)
+        # Unexpected reconciliation errors make both the compute and its one Operation terminal.
+        await compute.set_status(registry.id, registry.status, Status.failed)
         raise

@@ -70,7 +70,7 @@ async def test_storage_registry_delete_rejects_assigned_registry(
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    await create_organization(infrastructure, owner)
+    await create_organization(owner)
     client = clients[0]
 
     # Act

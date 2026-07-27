@@ -1,7 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -50,21 +49,16 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
                         <Text type="supporting">{t('columns.created')}</Text> {formatDateTime(operation.created_at)}
                     </Text>
                     <Text>
-                        <Text type="supporting">{t('admin.operationStatus.scheduled')}</Text>{' '}
-                        {formatDateTime(operation.scheduled_at)}
-                    </Text>
-                    <Text>
-                        <Text type="supporting">{t('columns.started')}</Text>{' '}
-                        {operation.started_at ? formatDateTime(operation.started_at) : '—'}
+                        <Text type="supporting">{t('columns.available')}</Text> {formatDateTime(operation.available_at)}
                     </Text>
                 </VStack>
             ),
         },
         {
-            key: 'stopped_at',
-            header: t('columns.stopped'),
+            key: 'finished_at',
+            header: t('columns.finished'),
             width: pixel(208),
-            renderCell: (operation) => (operation.stopped_at ? formatDateTime(operation.stopped_at) : '—'),
+            renderCell: (operation) => (operation.finished_at ? formatDateTime(operation.finished_at) : '—'),
         },
         {
             key: 'metadata',
@@ -79,10 +73,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
                         <Text type="supporting">{t('columns.target')}</Text>{' '}
                         <Text type="code">{operation.target_id}</Text>
                     </Text>
-                    <HStack gap={3}>
-                        <Text type="supporting">Platform {operation.platform_version}</Text>
-                        <Text type="supporting">Attempts {operation.attempt_count}</Text>
-                    </HStack>
+                    <Text type="supporting">Platform {operation.platform_version}</Text>
                 </VStack>
             ),
         },

@@ -2,9 +2,9 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, String
+from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
-from src.models.statuses import OrganizationStatus
+from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -38,9 +38,12 @@ class Organization(SQLModel, table=True):
     shared_schema_url: str = Field(max_length=2048)
 
     # State
-    status: OrganizationStatus = Field(
-        default=OrganizationStatus.creating,
-        sa_column=Column(String(20), nullable=False),
+    status: Status = Field(
+        default=Status.creating,
+        sa_column=Column(
+            Enum(Status, name="status_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            nullable=False,
+        ),
     )
 
     # Audit

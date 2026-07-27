@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.statuses import ComputeStatus, ApplicationStatus
+from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
@@ -18,9 +18,8 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    infrastructure = await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
+    await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
     organization = await create_organization(
-        infrastructure,
         user,
         name=f"{prefix}-org",
         slug=f"{prefix}-org",
@@ -52,8 +51,8 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     # Arrange
     user = await create_user("app")
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, user)
-    open_before = [item for item in await operations.fetch() if item.stopped_at is None]
+    organization = await create_organization(user)
+    open_before = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -73,7 +72,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
         user=user,
     )
     reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_after = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_after = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert exc.value.status_code == 409
@@ -84,7 +83,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     assert operation.kind == OperationKind.application_create
     assert open_before[0].kind == OperationKind.organization_create
     assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
+    assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
     assert len(open_before) == 1
     assert {item.id for item in open_after} == {open_before[0].id, operation.id}
@@ -169,8 +168,8 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
@@ -207,8 +206,8 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
@@ -276,9 +275,7 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.set_status(application.id, ApplicationStatus.running)
-    await applications.set_status(uuid4(), ApplicationStatus.running)
-    running = await applications.get(application.id)
+    await applications.set_status(uuid4(), Status.creating, Status.running)
     updated = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
@@ -288,6 +285,8 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
         digest="sha256:abc123",
         icon="activity",
     )
+    await applications.set_status(application.id, Status.creating, Status.running)
+    running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
     deleted_runtime = await applications.update_runtime(
         application.id,
@@ -296,10 +295,10 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
 
     # Assert
     assert running is not None
-    assert running.status == ApplicationStatus.running
+    assert running.status == Status.running
     assert updated is not None
     assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
-    assert updated.status == ApplicationStatus.creating
+    assert updated.status == Status.creating
     assert updated.version == "2.0.0"
     assert updated.sdk == "1.2.3"
     assert updated.description == "Updated dashboard"
@@ -322,7 +321,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     second_delete = await applications.soft_delete(application.id, user)
     missing_delete = await applications.soft_delete(uuid4(), user)
     compute_after = await compute.get(organization.compute_id)
-    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
+    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert result is not None
@@ -336,7 +335,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert second_delete[1].id == operation.id
     assert missing_delete is None
     assert compute_after is not None
-    assert compute_after.status == ComputeStatus.ready
+    assert compute_after.status == Status.running
     assert compute_after.version == env.VERSION
     assert {item.kind for item in open_operations} == {
         OperationKind.application_create,

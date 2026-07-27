@@ -32,7 +32,6 @@ class Operation(SQLModel, table=True):
 
     # State
     failed: bool = Field(default=False, nullable=False)
-    attempt_count: int = Field(default=0, nullable=False, ge=0)
     platform_version: str = Field(max_length=128)
 
     # Lock
@@ -40,20 +39,19 @@ class Operation(SQLModel, table=True):
 
     # Timestamps
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
-    started_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    stopped_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    scheduled_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    finished_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    available_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
 
     @property
     def status(self) -> OperationStatus:
         """Derive lifecycle state from terminal state and the current lease expiry."""
 
-        # Stopped operations are terminal.
-        if self.stopped_at is not None:
+        # Finished operations are terminal.
+        if self.finished_at is not None:
             return OperationStatus.failed if self.failed else OperationStatus.completed
 
         # An unexpired lease identifies the currently active attempt.
-        if self.started_at is not None and self.lease_expires_at is not None and self.lease_expires_at > utcnow():
+        if self.lease_expires_at is not None and self.lease_expires_at > utcnow():
             return OperationStatus.active
 
         return OperationStatus.scheduled

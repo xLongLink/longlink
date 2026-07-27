@@ -5,7 +5,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from packaging.version import Version
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
@@ -19,7 +19,7 @@ async def fetch() -> list[ComputeRegistry]:
 
     # Hide compute targets while asynchronous deletion is in progress.
     async with session_scope() as session:
-        statement = select(ComputeRegistry).where(ComputeRegistry.status != ComputeStatus.deleting)
+        statement = select(ComputeRegistry).where(ComputeRegistry.status != Status.deleting)
         return list(await session.scalars(statement))
 
 
@@ -32,7 +32,7 @@ async def get(registry_id: UUID, include_deleting: bool = False) -> ComputeRegis
 
         # Deleting registries remain available only to their reconciliation operation.
         if not include_deleting:
-            statement = statement.where(ComputeRegistry.status != ComputeStatus.deleting)
+            statement = statement.where(ComputeRegistry.status != Status.deleting)
 
         return (await session.scalars(statement)).one_or_none()
 
@@ -74,10 +74,9 @@ async def delete(registry_id: UUID) -> tuple[ComputeRegistry, Operation] | None:
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
-        # The first request marks lifecycle state and receives a fresh cleanup attempt budget.
-        fresh = registry.status != ComputeStatus.deleting
-        if fresh:
-            registry.status = ComputeStatus.deleting
+        # The first request marks lifecycle state before queueing cleanup.
+        if registry.status != Status.deleting:
+            registry.status = Status.deleting
             registry.version = None
 
         # Compute deletion owns only gateway and cluster-bootstrap resources after Organizations are gone.
@@ -85,7 +84,6 @@ async def delete(registry_id: UUID) -> tuple[ComputeRegistry, Operation] | None:
             session,
             registry.id,
             locked_compute=registry,
-            fresh=fresh,
         )
         await session.commit()
         return registry, operation
@@ -95,6 +93,7 @@ async def record_success(
     compute_id: UUID,
     platform_version: str,
     gateway_url: str | None,
+    expected_status: Status,
     satisfy_pending: bool = False,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
@@ -102,20 +101,20 @@ async def record_success(
     # Lock the compute while updating its observed release.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if registry is None:
+        if registry is None or registry.status != expected_status:
             return False
         if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
 
         # Successful cleanup removes the internal registry after its external resources are gone.
-        if registry.status == ComputeStatus.deleting:
+        if registry.status == Status.deleting:
             await session.delete(registry)
             await session.commit()
             return True
 
         registry.gateway_url = gateway_url
         registry.version = platform_version
-        registry.status = ComputeStatus.ready
+        registry.status = Status.running
 
         # Inline reconciliation can atomically retire fallback work that it fully satisfied.
         if satisfy_pending:
@@ -125,10 +124,10 @@ async def record_success(
                     Operation.kind == OperationKind.compute_reconcile,
                     Operation.target_id == compute_id,
                     Operation.platform_version == platform_version,
-                    Operation.started_at.is_(None),
-                    Operation.stopped_at.is_(None),
+                    Operation.lease_expires_at.is_(None),
+                    Operation.finished_at.is_(None),
                 )
-                .values(stopped_at=utcnow())
+                .values(finished_at=utcnow())
             )
         await session.commit()
         return True
@@ -161,13 +160,20 @@ async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certific
         return True
 
 
-async def record_failure(compute_id: UUID) -> None:
-    """Mark a compute target failed."""
+async def set_status(compute_id: UUID, expected_status: Status, status: Status) -> bool:
+    """Transition one active compute target from the expected lifecycle state."""
 
-    # Lock the compute while updating its observed state.
+    # Guard reconciliation writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if registry is None or registry.status == ComputeStatus.deleting:
-            return
-        registry.status = ComputeStatus.failed
+        registry = await session.scalar(
+            update(ComputeRegistry)
+            .where(
+                ComputeRegistry.id == compute_id,
+                ComputeRegistry.status == expected_status,
+                ComputeRegistry.status != Status.deleting,
+            )
+            .values(status=status)
+            .returning(ComputeRegistry)
+        )
         await session.commit()
+        return registry is not None

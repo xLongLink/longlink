@@ -17,12 +17,15 @@ import { useToast } from '@/hooks/use-toast';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
+import { createStatusLabels } from '@/lib/status';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Returns localized admin compute table columns. */
 function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[] {
+    const statusLabels = createStatusLabels(t);
+
     return [
         {
             key: 'compute',
@@ -31,12 +34,9 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
             renderCell: (compute) => (
                 <HStack gap={3} align="center">
                     <Wrench className="text-accent" size={20} />
-                    <VStack gap={1}>
-                        <Link href={`/admin/compute/${encodeURIComponent(compute.slug)}`} weight="semibold">
-                            {compute.name}
-                        </Link>
-                        <Text type="supporting">{compute.gateway_url ?? '—'}</Text>
-                    </VStack>
+                    <Link href={`/admin/compute/${encodeURIComponent(compute.slug)}`} weight="semibold">
+                        {compute.name}
+                    </Link>
                 </HStack>
             ),
         },
@@ -44,7 +44,7 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
             key: 'status',
             header: t('columns.status'),
             width: pixel(128),
-            renderCell: (compute) => compute.status,
+            renderCell: (compute) => statusLabels[compute.status],
         },
     ];
 }

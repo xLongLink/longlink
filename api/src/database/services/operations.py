@@ -1,17 +1,18 @@
 from uuid import UUID
-from datetime import timedelta
-from sqlalchemy import or_, text, select, update
+from datetime import datetime, timedelta
+from sqlalchemy import text, select, update
 from src.logger import logger
 from src.environments import env
 from packaging.version import Version
 from longlink.utils.time import utcnow
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
-
-OPERATION_ATTEMPT_LIMIT = 6
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
 async def fetch() -> list[Operation]:
@@ -23,6 +24,56 @@ async def fetch() -> list[Operation]:
         return list(await session.scalars(statement))
 
 
+async def fail_in_session(session: AsyncSession, operation: Operation, finished_at: datetime) -> None:
+    """Atomically fail one Operation and its active creation or reconciliation target."""
+
+    # Make the leased Operation terminal before applying its resource lifecycle consequence.
+    operation.failed = True
+    operation.finished_at = finished_at
+    operation.lease_expires_at = None
+
+    # Compute reconciliation failures affect active targets but never overwrite deletion state.
+    if operation.kind == OperationKind.compute_reconcile:
+        await session.execute(
+            update(ComputeRegistry)
+            .where(
+                ComputeRegistry.id == operation.target_id,
+                ComputeRegistry.status != Status.deleting,
+            )
+            .values(status=Status.failed)
+        )
+        return
+
+    # Application creation failures affect only active, non-tombstoned Applications.
+    if operation.kind == OperationKind.application_create:
+        await session.execute(
+            update(Application)
+            .where(
+                Application.id == operation.target_id,
+                Application.deleted_at.is_(None),
+                Application.status != Status.deleting,
+            )
+            .values(status=Status.failed)
+        )
+        return
+
+    # Organization creation and reconciliation share one guarded terminal transition.
+    if operation.kind in {OperationKind.organization_create, OperationKind.organization_reconcile}:
+        await session.execute(
+            update(Organization)
+            .where(
+                Organization.id == operation.target_id,
+                Organization.deleted_at.is_(None),
+                Organization.status != Status.deleting,
+            )
+            .values(status=Status.failed)
+        )
+        return
+
+    # Deletion Operations intentionally retain their target's deleting state.
+    return
+
+
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
@@ -30,7 +81,6 @@ async def enqueue_in_session(
     *,
     kind: OperationKind = OperationKind.compute_reconcile,
     target_id: UUID | None = None,
-    fresh: bool = False,
     delay_seconds: float = 0,
 ) -> Operation:
     """Append one typed Platform operation inside the caller's state transaction.
@@ -73,14 +123,15 @@ async def enqueue_in_session(
         key=Version,
     )
 
-    # Reuse queued work and lock every matching open row before deciding whether a follow-up is required.
+    # Reuse queued work without locking an active Operation behind its compute aggregate.
     existing = (
         await session.scalars(
             select(Operation)
             .where(
                 Operation.kind == kind,
                 Operation.target_id == target,
-                Operation.stopped_at.is_(None),
+                Operation.finished_at.is_(None),
+                Operation.lease_expires_at.is_(None),
             )
             .order_by(Operation.created_at)
             .with_for_update()
@@ -88,10 +139,10 @@ async def enqueue_in_session(
     ).all()
     current_version = Version(platform_version)
     queued = next(
-        (item for item in existing if item.started_at is None and Version(item.platform_version) == current_version),
+        (item for item in existing if Version(item.platform_version) == current_version),
         None,
     )
-    if queued is not None and (not fresh or queued.attempt_count == 0):
+    if queued is not None:
         return queued
 
     # Active work is immutable and receives a separate follow-up without losing its worker lock.
@@ -100,7 +151,7 @@ async def enqueue_in_session(
         kind=kind,
         target_id=target,
         platform_version=platform_version,
-        scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
+        available_at=now + timedelta(seconds=max(0, delay_seconds)),
     )
     session.add(operation)
     return operation
@@ -124,15 +175,15 @@ async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compu
 async def schedule_now(operation_id: UUID) -> Operation | None:
     """Make one open delayed Operation immediately eligible for claiming."""
 
-    # Preserve terminal and lease state while advancing only the due timestamp.
+    # Preserve terminal and lease state while advancing only the availability timestamp.
     async with session_scope() as session:
         operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
-                Operation.stopped_at.is_(None),
+                Operation.finished_at.is_(None),
             )
-            .values(scheduled_at=utcnow())
+            .values(available_at=utcnow())
             .returning(Operation)
         )
         if operation is None:
@@ -155,18 +206,13 @@ async def claim_next() -> Operation | None:
             if connection.dialect.name == "postgresql":
                 await session.execute(text("SELECT pg_advisory_xact_lock(1280263244)"))
             else:
-                queue_lock = await session.scalar(
-                    select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update()
-                )
-                if queue_lock is None:
-                    return None
+                await session.scalar(select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update())
 
             # Refuse a new claim while another Operation retains an active lease.
             active = await session.scalar(
                 select(Operation.id)
                 .where(
-                    Operation.stopped_at.is_(None),
-                    Operation.started_at.is_not(None),
+                    Operation.finished_at.is_(None),
                     Operation.lease_expires_at > now,
                 )
                 .limit(1)
@@ -174,14 +220,32 @@ async def claim_next() -> Operation | None:
             if active is not None:
                 return None
 
-            # Concurrent claimers contend for the same deterministic oldest due row.
+            # A lost worker makes its one claimed Operation terminal instead of releasing it for another execution.
+            expired = await session.scalar(
+                select(Operation)
+                .where(
+                    Operation.finished_at.is_(None),
+                    Operation.lease_expires_at.is_not(None),
+                    Operation.lease_expires_at <= now,
+                )
+                .order_by(Operation.created_at.asc(), Operation.id.asc())
+                .limit(1)
+                .with_for_update()
+            )
+            if expired is not None:
+                logger.error("Operation %s failed after its worker lease expired", expired.id)
+                await fail_in_session(session, expired, now)
+                await session.commit()
+                continue
+
+            # Concurrent claimers contend for the same deterministic oldest unclaimed row.
             operation = await session.scalar(
                 select(Operation)
                 .where(
-                    Operation.stopped_at.is_(None),
+                    Operation.finished_at.is_(None),
                     Operation.platform_version == env.VERSION,
-                    Operation.scheduled_at <= now,
-                    or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
+                    Operation.available_at <= now,
+                    Operation.lease_expires_at.is_(None),
                 )
                 .order_by(Operation.created_at.asc(), Operation.id.asc())
                 .limit(1)
@@ -190,39 +254,26 @@ async def claim_next() -> Operation | None:
             if operation is None:
                 return None
 
-            # A worker that crashed on its final attempt leaves terminal failure for the next claimant to record.
-            if operation.attempt_count >= OPERATION_ATTEMPT_LIMIT:
-                logger.error("Operation %s failed after reaching the attempt limit", operation.id)
-                operation.failed = True
-                operation.stopped_at = now
-                operation.lease_expires_at = None
-                await session.commit()
-                continue
-
             # Keep the crash-recovery lock beyond the bounded handler execution.
-            operation.started_at = now
-            operation.attempt_count += 1
             operation.lease_expires_at = now + timedelta(minutes=30)
             await session.commit()
             return operation
 
 
-async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
-    """Complete one operation while the caller owns its current attempt."""
+async def complete(operation_id: UUID) -> Operation | None:
+    """Complete one operation while the caller owns its unexpired lease."""
 
-    # Complete only the currently locked attempt.
+    # Complete only the currently leased operation.
     async with session_scope() as session:
         now = utcnow()
         operation = await session.scalar(
             update(Operation)
             .where(
                 Operation.id == operation_id,
-                Operation.attempt_count == attempt_count,
                 Operation.lease_expires_at > now,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
+                Operation.finished_at.is_(None),
             )
-            .values(stopped_at=now, lease_expires_at=None)
+            .values(finished_at=now, lease_expires_at=None)
             .returning(Operation)
         )
         if operation is None:
@@ -232,63 +283,27 @@ async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
         return operation
 
 
-async def defer(operation_id: UUID, attempt_count: int, delay_seconds: float) -> Operation | None:
-    """Unlock one operation and schedule a transient retry."""
+async def fail(operation_id: UUID) -> Operation | None:
+    """Fail and unlock one operation while the caller owns its unexpired lease."""
 
-    # Schedule the next attempt only while this worker still holds the lock.
+    # Lock only the currently leased Operation before failing it and its lifecycle target atomically.
     async with session_scope() as session:
         now = utcnow()
         operation = await session.scalar(
-            update(Operation)
+            select(Operation)
             .where(
                 Operation.id == operation_id,
-                Operation.attempt_count == attempt_count,
                 Operation.lease_expires_at > now,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
+                Operation.finished_at.is_(None),
             )
-            .values(
-                started_at=None,
-                scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
-                lease_expires_at=None,
-            )
-            .returning(Operation)
+            .with_for_update()
         )
 
-        # A missing row means the worker no longer holds this attempt's lock.
+        # A missing row means the worker no longer holds this Operation's lease.
         if operation is None:
             return None
 
-        await session.commit()
-        return operation
-
-
-async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
-    """Fail and unlock one operation while the caller holds its current attempt."""
-
-    # Persist terminal failure only for the current locked attempt.
-    async with session_scope() as session:
-        now = utcnow()
-        operation = await session.scalar(
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.attempt_count == attempt_count,
-                Operation.lease_expires_at > now,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
-            )
-            .values(
-                failed=True,
-                stopped_at=now,
-                lease_expires_at=None,
-            )
-            .returning(Operation)
-        )
-
-        # A missing row means the worker no longer holds this attempt's lock.
-        if operation is None:
-            return None
-
+        # Persist one transaction containing both terminal states.
+        await fail_in_session(session, operation, now)
         await session.commit()
         return operation

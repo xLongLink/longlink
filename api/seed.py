@@ -18,7 +18,7 @@ from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus, ApplicationStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
@@ -164,7 +164,7 @@ async def reconcile_until_complete(operation_id: UUID) -> None:
         result = await jobs.execute(operation, jobs.handlers[operation.kind])
         if result.id != operation_id:
             continue
-        if result.stopped_at is not None:
+        if result.finished_at is not None:
             if result.failed:
                 raise RuntimeError(f"Operation {result.id} failed; see the Platform logs")
             return
@@ -195,7 +195,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             settings.KUBECONFIG.read_text(encoding="utf-8"),
         )
         await reconcile_until_complete(operation.id)
-    elif compute_registry.status != ComputeStatus.ready:
+    elif compute_registry.status != Status.running:
         operation = await operations.enqueue(compute_registry.id)
         await reconcile_until_complete(operation.id)
 
@@ -231,13 +231,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     organization = next((item for item in await organization_service.fetch() if item.slug == settings.LOCAL_ORG), None)
     if organization is None:
         organization, operation = await organization_service.create(
-            settings.LOCAL_ORG,
-            settings.LOCAL_ORG,
-            compute_registry.id,
-            database_registry.id,
-            storage_registry.id,
-            admin,
-            avatar=settings.LOCAL_ORG_AVATAR,
+            settings.LOCAL_ORG, settings.LOCAL_ORG, admin, avatar=settings.LOCAL_ORG_AVATAR
         )
         await reconcile_until_complete(operation.id)
     else:
@@ -251,9 +245,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             await reconcile_until_complete(operation.id)
 
     # Create or resume the sample Application through the API desired-state service.
-    application = next(
-        (item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None
-    )
+    application = next((item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None)
     if application is None:
         application, operation = await application_service.create(
             organization.id,
@@ -264,7 +256,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             description=payload.description,
             icon=payload.icon.value if payload.icon is not None else None,
         )
-    elif application.status == ApplicationStatus.creating:
+    elif application.status in {Status.creating, Status.failed}:
         operation = await operations.enqueue(
             compute_registry.id,
             kind=OperationKind.application_create,

@@ -30,7 +30,7 @@ function OrganizationApplicationView() {
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
-        return <View applicationStatus="loading" pages="" />;
+        return <View isApplicationLoading pages="" />;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.

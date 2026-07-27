@@ -5,7 +5,7 @@ from sqlalchemy import update
 from dataclasses import dataclass
 from src.environments import env
 from src.models.types import DatabaseSSLMode
-from src.models.statuses import ComputeStatus, OrganizationStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -42,7 +42,7 @@ async def create_ready_infrastructure(
             gateway_tls_certificate="test-certificate",
             gateway_tls_private_key="test-private-key",
             proxy_secret=secrets.token_urlsafe(32),
-            status=ComputeStatus.ready,
+            status=Status.running,
             version=env.VERSION,
         )
         database = DatabaseRegistry(
@@ -66,27 +66,13 @@ async def create_ready_infrastructure(
         return Infrastructure(compute=compute, database=database, storage=storage)
 
 
-async def create_organization(
-    infrastructure: Infrastructure,
-    owner: User,
-    name: str = "acme",
-    slug: str = "acme",
-    avatar: str | None = None,
-) -> Organization:
-    """Create one Organization through the service using a complete infrastructure assignment."""
+async def create_organization(owner: User, name: str = "acme", slug: str = "acme", avatar: str | None = None) -> Organization:
+    """Create one Organization through automatic infrastructure assignment."""
 
     # Import lazily so tests can share this factory without introducing service import cycles.
     from src.database.services import organizations
 
-    organization, _ = await organizations.create(
-        name,
-        slug,
-        infrastructure.compute.id,
-        infrastructure.database.id,
-        infrastructure.storage.id,
-        owner,
-        avatar=avatar,
-    )
+    organization, _ = await organizations.create(name, slug, owner, avatar=avatar)
     return organization
 
 
@@ -95,7 +81,7 @@ async def mark_organization_running(organization: Organization) -> None:
 
     # Organization Application creation is valid only after runtime reconciliation succeeds.
     async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=OrganizationStatus.running))
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         await session.commit()
 
 

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
@@ -40,20 +40,24 @@ async def fetch() -> list[Organization]:
         return list(await session.scalars(statement))
 
 
-async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None:
-    """Persist organization runtime state observed by reconciliation."""
+async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> bool:
+    """Transition one active Organization from the expected lifecycle state."""
 
-    # Runtime status is observed independently from immutable Organization configuration.
+    # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        await session.execute(
+        organization = await session.scalar(
             sql_update(Organization)
             .where(
                 Organization.id == organization_id,
-                Organization.status != status,
+                Organization.deleted_at.is_(None),
+                Organization.status == expected_status,
+                Organization.status != Status.deleting,
             )
             .values(status=status)
+            .returning(Organization)
         )
         await session.commit()
+        return organization is not None
 
 
 async def purge(organization_id: UUID) -> None:
@@ -133,8 +137,8 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> list[
 
     # Query memberships with their users so detached callers can shape API payloads.
     async with session_scope() as session:
-        statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
-            UserOrganization.organization_id == organization_id
+        statement = (
+            select(UserOrganization).options(joinedload(UserOrganization.user)).where(UserOrganization.organization_id == organization_id)
         )
 
         # Include deleted memberships only when requested by control-plane orchestration.
@@ -180,7 +184,6 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
-
             # Reject demotion when this is the only owner.
             owner_statement = (
                 select(UserOrganization.user_id)
@@ -216,16 +219,8 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         return True
 
 
-async def create(
-    name: str,
-    slug: str,
-    compute_id: UUID | None,
-    database_id: UUID | None,
-    storage_id: UUID | None,
-    user: User,
-    avatar: str | None = None,
-) -> tuple[Organization, Operation]:
-    """Create an Organization with immutable infrastructure assignments and queue reconciliation."""
+async def create(name: str, slug: str, user: User, avatar: str | None = None) -> tuple[Organization, Operation]:
+    """Create an Organization with automatically assigned infrastructure and queue reconciliation."""
 
     # Validate the user-derived runtime namespace before creating the row.
     organization_id = uuid4()
@@ -233,47 +228,25 @@ async def create(
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
+        # Lock the first ready compute reconciliation root.
+        compute_statement = (
+            select(ComputeRegistry).where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1).with_for_update()
+        )
+        compute = (await session.scalars(compute_statement)).one_or_none()
+        if compute is None:
+            raise HTTPException(status_code=503, detail="No compute registry available")
 
-        # Lock an explicitly selected compute or assign the first available reconciliation root.
-        compute_statement = select(ComputeRegistry)
-        if compute_id is None:
-            compute_statement = (
-                compute_statement.where(
-                    ComputeRegistry.status == ComputeStatus.ready,
-                )
-                .order_by(ComputeRegistry.id)
-                .limit(1)
-            )
-        else:
-            compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
-        compute = (await session.scalars(compute_statement.with_for_update())).one_or_none()
-        if compute is None or compute.status == ComputeStatus.deleting:
-            detail = "No compute registry available" if compute_id is None else "Compute registry not found"
-            raise HTTPException(status_code=503 if compute_id is None else 404, detail=detail)
-        if compute.status != ComputeStatus.ready:
-            raise HTTPException(status_code=409, detail="Compute registry is not ready")
-
-        # Lock an explicitly selected database or assign the first available registry.
-        database_statement = select(DatabaseRegistry)
-        if database_id is None:
-            database_statement = database_statement.order_by(DatabaseRegistry.id).limit(1)
-        else:
-            database_statement = database_statement.where(DatabaseRegistry.id == database_id)
-        database_registry = (await session.scalars(database_statement.with_for_update())).one_or_none()
+        # Lock the first available database registry.
+        database_statement = select(DatabaseRegistry).order_by(DatabaseRegistry.id).limit(1).with_for_update()
+        database_registry = (await session.scalars(database_statement)).one_or_none()
         if database_registry is None:
-            detail = "No database registry available" if database_id is None else "Database registry not found"
-            raise HTTPException(status_code=503 if database_id is None else 404, detail=detail)
+            raise HTTPException(status_code=503, detail="No database registry available")
 
-        # Lock an explicitly selected storage backend or assign the first available registry.
-        storage_statement = select(StorageRegistry)
-        if storage_id is None:
-            storage_statement = storage_statement.order_by(StorageRegistry.id).limit(1)
-        else:
-            storage_statement = storage_statement.where(StorageRegistry.id == storage_id)
-        storage_registry = (await session.scalars(storage_statement.with_for_update())).one_or_none()
+        # Lock the first available storage registry.
+        storage_statement = select(StorageRegistry).order_by(StorageRegistry.id).limit(1).with_for_update()
+        storage_registry = (await session.scalars(storage_statement)).one_or_none()
         if storage_registry is None:
-            detail = "No storage registry available" if storage_id is None else "Storage registry not found"
-            raise HTTPException(status_code=503 if storage_id is None else 404, detail=detail)
+            raise HTTPException(status_code=503, detail="No storage registry available")
 
         # Derive the immutable Organization connection from its assigned database registry.
         db = adapters.Postgres(
@@ -376,7 +349,6 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
         if current is None:
@@ -393,7 +365,7 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
         # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
         if organization.deleted_at is None:
             now = utcnow()
-            organization.status = OrganizationStatus.deleting
+            organization.status = Status.deleting
             organization.deleted_at = now
             organization.deleted_id = user.id
             organization.updated_at = now
@@ -412,7 +384,7 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
                     Application.organization_id == organization_id,
                     Application.deleted_at.is_(None),
                 )
-                .values(status=ApplicationStatus.deleting, **tombstone)
+                .values(status=Status.deleting, **tombstone)
             )
             await session.execute(
                 sql_update(UserApplication)

@@ -371,7 +371,7 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     assert base64.b64decode(gateway_auth_secret.data["gateway-secret"]).decode("utf-8") == scenario.proxy_secret
     assert gateway_tls_secret is not None
     assert gateway_deployment is not None
-    assert gateway_deployment.spec.replicas == 2
+    assert gateway_deployment.spec.replicas == 1
     assert gateway_service is not None
     assert gateway_service.spec.type == "LoadBalancer"
     assert gateway_service.spec.ports[0].port == 443
@@ -408,10 +408,14 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         "longlink.io/environment-secret-resource-version",
         "longlink.io/runtime-secret-resource-version",
     }
-    assert application_annotations["longlink.io/environment-secret-resource-version"] == application_environment_secret.raw["metadata"][
-        "resourceVersion"
-    ]
-    assert application_annotations["longlink.io/runtime-secret-resource-version"] != application_runtime_secret.raw["metadata"]["resourceVersion"]
+    assert (
+        application_annotations["longlink.io/environment-secret-resource-version"]
+        == application_environment_secret.raw["metadata"]["resourceVersion"]
+    )
+    assert (
+        application_annotations["longlink.io/runtime-secret-resource-version"]
+        != application_runtime_secret.raw["metadata"]["resourceVersion"]
+    )
 
 
 async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewayState) -> None:

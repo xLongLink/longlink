@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Text, Column
-from src.models.statuses import ComputeStatus
+from src.models.statuses import Status
 
 
 class ComputeRegistry(SQLModel, table=True):
@@ -22,9 +22,12 @@ class ComputeRegistry(SQLModel, table=True):
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
 
     # Reconciliation
-    status: ComputeStatus = Field(
-        default=ComputeStatus.provisioning,
-        sa_column=Column(Enum(ComputeStatus, name="compute_status_enum", native_enum=False), nullable=False),
+    status: Status = Field(
+        default=Status.creating,
+        sa_column=Column(
+            Enum(Status, name="status_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            nullable=False,
+        ),
     )
     version: str | None = Field(default=None, max_length=128)
 

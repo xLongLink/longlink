@@ -3,7 +3,7 @@ import { ICON_NAMES } from '@/lib/icons';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 
-const applicationStatusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
+export const statusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
@@ -68,7 +68,7 @@ export const apiOrganizationSummarySchema = z.object({
     compute_id: z.string(),
     database_id: z.string(),
     storage_id: z.string(),
-    status: z.enum(['creating', 'running', 'failed', 'deleting']),
+    status: statusSchema,
     created_at: z.string(),
     updated_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -83,7 +83,7 @@ export const apiOrganizationApplicationSummarySchema = z.object({
     slug: z.string(),
     icon: iconNameSchema,
     description: z.string().nullable(),
-    status: applicationStatusSchema,
+    status: statusSchema,
 });
 
 export const apiOrganizationApplicationSchema = z.object({
@@ -125,7 +125,7 @@ export const apiApplicationResponseSchema = z.object({
     version: z.string().nullable(),
     sdk: z.string().nullable(),
     digest: z.string().nullable(),
-    status: applicationStatusSchema,
+    status: statusSchema,
     description: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
@@ -158,8 +158,7 @@ export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
-    gateway_url: z.string().nullable(),
-    status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
+    status: statusSchema,
     version: z.string().nullable(),
 });
 
@@ -176,11 +175,9 @@ export const apiOperationSchema = z.object({
     target_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
-    attempt_count: z.number().int().nonnegative(),
     created_at: z.string(),
-    started_at: z.string().nullable(),
-    stopped_at: z.string().nullable(),
-    scheduled_at: z.string(),
+    finished_at: z.string().nullable(),
+    available_at: z.string(),
 });
 
 export const apiComputeMutationResponseSchema = z.object({

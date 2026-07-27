@@ -18,8 +18,10 @@ import type {
     apiUserOrganizationMembershipSchema,
     apiUserProfileSchema,
     apiUserSummarySchema,
+    statusSchema,
 } from '@/lib/api-schemas';
 
+export type Status = z.infer<typeof statusSchema>;
 export type ApiInvitation = z.infer<typeof apiInvitationSchema>;
 export type ApiUserSummary = z.infer<typeof apiUserSummarySchema>;
 export type ApiUserOrganizationMembership = z.infer<typeof apiUserOrganizationMembershipSchema>;

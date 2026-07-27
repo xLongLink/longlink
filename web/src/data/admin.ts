@@ -11,6 +11,7 @@ import type { ApiApplicationResponse, ApiOperation, ApiOrganizationSummary, ApiU
 /** Fetches the application list for admin views. */
 export function useApplications() {
     return useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+        refetchInterval: 5000,
         parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
     });
 }

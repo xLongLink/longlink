@@ -9,38 +9,24 @@ import {
     HardDrive,
     Package,
     Rocket,
-    ServerCog,
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/platform/catalog';
-import {
-    content as docsApiApplicationsContent,
-    metadata as docsApiApplicationsMetadata,
-} from '@/platform/docs/api/applications';
-import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/platform/docs/api/index';
-import {
-    content as docsApiOrganizationsContent,
-    metadata as docsApiOrganizationsMetadata,
-} from '@/platform/docs/api/organizations';
-import {
-    content as docsApiSelfHostedContent,
-    metadata as docsApiSelfHostedMetadata,
-} from '@/platform/docs/api/self-hosted';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/platform/docs/index';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/platform/docs/sdk/building';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/platform/docs/sdk/database';
+import * as apiApplications from '@/platform/docs/api/applications';
+import * as apiOverview from '@/platform/docs/api/index';
+import * as apiOrganizations from '@/platform/docs/api/organizations';
+import * as overview from '@/platform/docs/index';
+import { documentationPages } from '@/platform/docs/pages';
+import * as building from '@/platform/docs/sdk/building';
+import * as database from '@/platform/docs/sdk/database';
 import { pageElementDocPages } from '@/platform/docs/sdk/elements';
-import {
-    content as docsSdkEnvironmentsContent,
-    metadata as docsSdkEnvironmentsMetadata,
-} from '@/platform/docs/sdk/environments';
-import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/platform/docs/sdk/index';
-import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/platform/docs/sdk/pages';
-import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/platform/docs/sdk/routes';
-import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/platform/docs/sdk/storage';
-import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/platform/docs/sdk/testing';
-import { documentationPages } from '@/platform/public';
+import * as environments from '@/platform/docs/sdk/environments';
+import * as applicationsOverview from '@/platform/docs/sdk/index';
+import * as pages from '@/platform/docs/sdk/pages';
+import * as routes from '@/platform/docs/sdk/routes';
+import * as storage from '@/platform/docs/sdk/storage';
+import * as testing from '@/platform/docs/sdk/testing';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
 
@@ -153,85 +139,67 @@ const DOC_SECTIONS: DocSection[] = [
         {
             ...documentationPages.introduction,
             icon: <BookOpen aria-hidden="true" size={16} />,
-            content: docsIndexContent,
-            metadata: docsIndexMetadata,
+            ...overview,
         },
     ]),
     docSection('Platform', [
         {
             ...documentationPages.platform,
             icon: <ShieldCheck aria-hidden="true" size={16} />,
-            content: docsApiIndexContent,
-            metadata: docsApiIndexMetadata,
+            ...apiOverview,
         },
         {
             ...documentationPages.organizations,
             icon: <Building2 aria-hidden="true" size={16} />,
-            content: docsApiOrganizationsContent,
-            metadata: docsApiOrganizationsMetadata,
+            ...apiOrganizations,
         },
         {
             ...documentationPages.applications,
             icon: <AppWindow aria-hidden="true" size={16} />,
-            content: docsApiApplicationsContent,
-            metadata: docsApiApplicationsMetadata,
-        },
-        {
-            ...documentationPages.selfHosted,
-            icon: <ServerCog aria-hidden="true" size={16} />,
-            content: docsApiSelfHostedContent,
-            metadata: docsApiSelfHostedMetadata,
+            ...apiApplications,
         },
     ]),
     docSection('Applications', [
         {
             ...documentationPages.sdk,
             icon: <Package aria-hidden="true" size={16} />,
-            content: docsSdkIndexContent,
-            metadata: docsSdkIndexMetadata,
+            ...applicationsOverview,
         },
         {
             ...documentationPages.environments,
             icon: <Globe aria-hidden="true" size={16} />,
-            content: docsSdkEnvironmentsContent,
-            metadata: docsSdkEnvironmentsMetadata,
+            ...environments,
         },
         {
             ...documentationPages.routes,
             icon: <Waypoints aria-hidden="true" size={16} />,
-            content: docsSdkRoutesContent,
-            metadata: docsSdkRoutesMetadata,
+            ...routes,
         },
         {
             ...documentationPages.storage,
             icon: <HardDrive aria-hidden="true" size={16} />,
-            content: docsSdkStorageContent,
-            metadata: docsSdkStorageMetadata,
+            ...storage,
         },
         {
             ...documentationPages.database,
             icon: <Database aria-hidden="true" size={16} />,
-            content: docsSdkDatabaseContent,
-            metadata: docsSdkDatabaseMetadata,
+            ...database,
         },
         {
             ...documentationPages.pages,
             icon: <FileCode2 aria-hidden="true" size={16} />,
-            content: docsSdkPagesContent,
-            metadata: docsSdkPagesMetadata,
+            ...pages,
             routes: pageElementDocPages,
         },
         {
             ...documentationPages.testing,
             icon: <FlaskConical aria-hidden="true" size={16} />,
-            content: docsSdkTestingContent,
-            metadata: docsSdkTestingMetadata,
+            ...testing,
         },
         {
             ...documentationPages.building,
             icon: <Rocket aria-hidden="true" size={16} />,
-            content: docsSdkBuildingContent,
-            metadata: docsSdkBuildingMetadata,
+            ...building,
         },
     ]),
 ];

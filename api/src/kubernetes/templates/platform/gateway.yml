@@ -42,7 +42,7 @@ metadata:
     labels:
         app: longlink-gateway
 spec:
-    replicas: 2
+    replicas: 1
     selector:
         matchLabels:
             app: longlink-gateway

@@ -14,6 +14,7 @@
         "build:sdk:bundle": "react-router build --mode sdk",
         "dev": "react-router dev --mode api",
         "dev:sdk": "react-router dev --mode sdk",
+        "routes": "react-router routes",
         "test": "vp test tests/xml"
     },
     "dependencies": {

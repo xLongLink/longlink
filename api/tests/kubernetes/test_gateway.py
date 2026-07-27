@@ -67,6 +67,7 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     assert "labels" not in manifests.config_map["metadata"]
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
     assert manifests.deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
+    assert manifests.deployment["spec"]["replicas"] == 1
     runtime_revision = manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"]
     assert runtime_revision
     assert manifests.deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"] == runtime_revision

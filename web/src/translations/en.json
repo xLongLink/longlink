@@ -222,7 +222,7 @@
         "defaultMessage": "Review Exoscale SOS integrations and object storage configuration."
     },
     "admin.operationsDescription": {
-        "defaultMessage": "Track long-running platform tasks, their start time, and when they stopped."
+        "defaultMessage": "Track long-running Platform tasks, when they become available, and when they finish."
     },
     "admin.tabs.applications": {
         "defaultMessage": "Applications"
@@ -251,8 +251,20 @@
     "admin.usersTitle": {
         "defaultMessage": "Users"
     },
-    "appView.applicationIsStatus": {
-        "defaultMessage": "Application is {status}"
+    "appView.applicationDeleting": {
+        "defaultMessage": "Application is being deleted"
+    },
+    "appView.applicationDeletingDescription": {
+        "defaultMessage": "This application is unavailable while LongLink removes it."
+    },
+    "appView.applicationDeploymentFailed": {
+        "defaultMessage": "Application deployment failed"
+    },
+    "appView.applicationDeploymentFailedDescription": {
+        "defaultMessage": "LongLink could not deploy this application. Contact an administrator before trying again."
+    },
+    "appView.applicationIsDeploying": {
+        "defaultMessage": "Application is being deployed"
     },
     "appView.applicationLogs": {
         "defaultMessage": "Application logs"
@@ -473,6 +485,9 @@
     "columns.appRole": {
         "defaultMessage": "App role"
     },
+    "columns.available": {
+        "defaultMessage": "Available"
+    },
     "columns.created": {
         "defaultMessage": "Created"
     },
@@ -542,14 +557,11 @@
     "columns.status": {
         "defaultMessage": "Status"
     },
-    "columns.started": {
-        "defaultMessage": "Started"
-    },
     "columns.step": {
         "defaultMessage": "Step"
     },
-    "columns.stopped": {
-        "defaultMessage": "Stopped"
+    "columns.finished": {
+        "defaultMessage": "Finished"
     },
     "columns.timestamp": {
         "defaultMessage": "Timestamp"
@@ -664,9 +676,6 @@
     },
     "labels.image": {
         "defaultMessage": "Image"
-    },
-    "labels.gatewayUrl": {
-        "defaultMessage": "Gateway URL"
     },
     "labels.kubeconfig": {
         "defaultMessage": "Kubeconfig"
@@ -1000,6 +1009,18 @@
     },
     "settings.usernameSaved": {
         "defaultMessage": "Username saved"
+    },
+    "status.creating": {
+        "defaultMessage": "Creating"
+    },
+    "status.deleting": {
+        "defaultMessage": "Deleting"
+    },
+    "status.failed": {
+        "defaultMessage": "Failed"
+    },
+    "status.running": {
+        "defaultMessage": "Running"
     },
     "organizationSettings.allApplications": {
         "defaultMessage": "All applications"

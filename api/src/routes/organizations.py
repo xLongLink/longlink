@@ -5,10 +5,9 @@ from src.auth import authuser, authadmin, current_authenticated_user
 from src.utils import mail, names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import compute, storage, database, invitations, organizations
+from src.database.services import storage, database, invitations, organizations
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -20,28 +19,12 @@ from src.models.organizations import (
 )
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
-from src.models.infrastructure import InfrastructureOptionsResponse
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 router = APIRouter()
-
-
-@router.get("/api/infrastructure/options", response_model=InfrastructureOptionsResponse)
-async def list_infrastructure_options(_user: User = Depends(current_authenticated_user)):
-    """Return assignable registry identities without exposing connection metadata."""
-
-    # Return only ready computes alongside the available database and storage registries.
-    computes = [registry for registry in await compute.fetch() if registry.status == ComputeStatus.ready]
-    databases = await database.fetch()
-    storages = await storage.fetch()
-    return {
-        "computes": computes,
-        "databases": databases,
-        "storages": storages,
-    }
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -396,14 +379,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Create through the service so API and direct callers share namespace validation.
     try:
-        organization, operation = await organizations.create(
-            payload.name,
-            slug,
-            None,
-            None,
-            None,
-            user,
-        )
+        organization, operation = await organizations.create(payload.name, slug, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 

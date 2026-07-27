@@ -2,10 +2,9 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column, UniqueConstraint
+from sqlalchemy import Enum, Column, UniqueConstraint
 from longlink.utils.time import utcnow
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -43,9 +42,12 @@ class Application(SQLModel, table=True):
     description: str | None = Field(default=None, max_length=255)
 
     # State
-    status: ApplicationStatus = Field(
-        default=ApplicationStatus.creating,
-        sa_column=Column(SAEnum(ApplicationStatus, name="application_status_enum", native_enum=False), nullable=False),
+    status: Status = Field(
+        default=Status.creating,
+        sa_column=Column(
+            Enum(Status, name="status_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            nullable=False,
+        ),
     )
 
     # Audit

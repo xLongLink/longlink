@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
-from src.database.services import compute, operations, invitations, applications, organizations
+from src.database.services import operations, invitations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -53,31 +53,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert [(membership.user.id, membership.role) for membership in members] == [(owner.id, OrganizationRoles.owner)]
 
 
-async def test_infrastructure_options_return_assignable_sanitized_registries(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return ready compute targets and registry identities without connection secrets."""
-
-    # Arrange
-    ready = await create_ready_infrastructure(slug="ready", name="Ready")
-    failed = await create_ready_infrastructure(slug="failed", name="Failed")
-    await compute.record_failure(failed.compute.id)
-    client = clients[0]
-
-    # Act
-    response = await client.get("/api/infrastructure/options")
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [item["id"] for item in payload["computes"]] == [str(ready.compute.id)]
-    assert {item["id"] for item in payload["databases"]} == {str(ready.database.id), str(failed.database.id)}
-    assert {item["id"] for item in payload["storages"]} == {str(ready.storage.id), str(failed.storage.id)}
-    assert set(payload["computes"][0]) == {"id", "name", "slug"}
-    assert set(payload["databases"][0]) == {"id", "name", "slug"}
-    assert set(payload["storages"][0]) == {"id", "name", "slug"}
-
-
 async def test_get_organization_returns_member_payload(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -86,9 +61,8 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
+    await create_ready_infrastructure()
     organization = await create_organization(
-        infrastructure,
         owner,
         avatar="https://example.com/organizations/acme.png",
     )
@@ -121,8 +95,8 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     # Arrange
     owner = users[0]
     client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     await create_application(organization, owner)
 
     # Act
@@ -163,10 +137,9 @@ async def test_delete_organization_requires_owner_or_platform_admin(
 
     # Arrange
     platform_admin, org_admin = users[0], users[1]
-    owned_infrastructure = await create_ready_infrastructure()
-    owned_organization = await create_organization(owned_infrastructure, platform_admin)
-    admin_infrastructure = await create_ready_infrastructure()
-    admin_owned_organization = await create_organization(admin_infrastructure, org_admin, name="globex", slug="globex")
+    await create_ready_infrastructure()
+    owned_organization = await create_organization(platform_admin)
+    admin_owned_organization = await create_organization(org_admin, name="globex", slug="globex")
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
@@ -191,9 +164,9 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
 
     # Create isolated organizations owned by different users.
     target_owner, other_owner, _ = users
-    infrastructure = await create_ready_infrastructure()
-    target_organization = await create_organization(infrastructure, target_owner)
-    await create_organization(infrastructure, other_owner, name="globex", slug="globex")
+    await create_ready_infrastructure()
+    target_organization = await create_organization(target_owner)
+    await create_organization(other_owner, name="globex", slug="globex")
     target_application = await create_application(target_organization, target_owner)
     operation_ids = [operation.id for operation in await operations.fetch()]
     client = clients[1]
@@ -228,7 +201,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     registry = infrastructure.database
     dashboard = await create_application(
         organization,
@@ -308,7 +281,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     await create_application(organization, owner)
 
     class FakePostgres:
@@ -350,7 +323,7 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     registry = infrastructure.storage
     dashboard = await create_application(
         organization,
@@ -425,7 +398,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     registry = infrastructure.storage
     await create_application(organization, owner)
 
@@ -461,8 +434,8 @@ async def test_organization_resource_endpoints_require_elevated_role(
 
     # Arrange
     owner, regular_member, _ = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -496,8 +469,8 @@ async def test_get_organization_returns_invitations(
 
     # Arrange
     owner, invitee, regular_member = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     invitation = await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     Session = await get_session()
@@ -537,7 +510,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     client = clients[0]
 
     # Act
@@ -563,8 +536,8 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     client = clients[1]
 
     # Act
@@ -603,8 +576,8 @@ async def test_create_organization_invitation_returns_204(
     monkeypatch.setattr(mail_module, "send_mail", capture_mail)
     owner = users[0]
     invitee = users[invitee_index]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     if caller_role is not None:
         Session = await get_session()
         async with Session() as session:
@@ -646,8 +619,8 @@ async def test_create_organization_invitation_rejects_role_above_caller(
 
     # Arrange
     owner, maintainer, invitee = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
@@ -674,8 +647,8 @@ async def test_update_organization_member_changes_role(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -717,8 +690,8 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
 
     # Arrange
     owner, admin, member = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=admin.id, organization_id=organization.id, role=OrganizationRoles.admin))
@@ -743,8 +716,8 @@ async def test_update_organization_member_rejects_demoting_last_owner(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     client = clients[0]
 
     # Act
@@ -764,8 +737,8 @@ async def test_update_organization_member_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, target_member = users[0], users[1], users[2]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -806,8 +779,8 @@ async def test_create_organization_invitation_returns_409_for_duplicate_email(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
     client = clients[0]
 
@@ -830,8 +803,8 @@ async def test_create_organization_invitation_returns_404_for_non_member(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     client = clients[1]
 
     # Act
@@ -853,8 +826,8 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, invitee = users[0], users[1], users[2]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:

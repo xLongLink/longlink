@@ -8,55 +8,18 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 
 React Router Framework Mode builds two browser applications from the shared package. `src/platform/` contains the Platform routes and prerendered public pages, while `src/application/` contains the SPA embedded in LongLink Applications. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
 
-## Pages
+## Routes
+
+`src/platform/routes.ts` is the Platform route source of truth. Documentation metadata and prerendered paths live in `src/platform/docs/pages.ts`, while `src/platform/docs/catalog.tsx` adds content and navigation. Generate the React Router route tree instead of maintaining a duplicate list:
 
 ```bash
-/
-├── pages
-│   └── docs
-│       ├── api
-│       │   └── self-hosted
-│       ├── sdk
-│       │   ├── building
-│       │   ├── database
-│       │   ├── environments
-│       │   ├── pages
-│       │   │   ├── components
-│       │   │   └── layout
-│       │   ├── routes
-│       │   ├── storage
-│       │   └── testing
-├── impressum
-├── pricing
-├── terms
-├── privacy
-├── organizations
-├── settings
-├── admin
-│   ├── users
-│   ├── applications
-│   ├── organizations
-│   ├── database
-│   ├── storage
-│   ├── compute
-│   │   ├── :compute
-│   │   └── :compute/namespace/:namespace
-│   └── operations
-├── orgs/:organization
-├── orgs/:organization/database
-├── orgs/:organization/storage
-├── orgs/:organization/settings
-│   ├── applications
-│   │   └── :settingsApplication
-│   ├── people
-│   ├── database
-│   └── storage
-└── orgs/:organization/apps/:application/*
+vp run routes
 ```
 
 ```bash
 vp run dev         # Starts the Platform development server
 vp run dev:sdk     # Starts the embedded Application development server
+vp run routes      # Prints the generated Platform route tree
 vp run build:api   # Builds the Platform web bundle
 vp run build:sdk   # Builds the embedded Application web bundle
 vp check           # Checks formatting, linting, and Vite+ types

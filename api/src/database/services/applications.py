@@ -7,7 +7,7 @@ from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
@@ -46,7 +46,7 @@ async def gateway_routes(compute_id: UUID) -> list[tuple[UUID, str]]:
                 Organization.compute_id == compute_id,
                 Organization.deleted_at.is_(None),
                 Application.deleted_at.is_(None),
-                Application.status == ApplicationStatus.running,
+                Application.status == Status.running,
             )
             .order_by(Organization.slug, Application.id)
         )
@@ -100,7 +100,6 @@ async def members(application_id: UUID, organization_id: UUID) -> list[tuple[Use
 
     # Query organization members and app roles together.
     async with session_scope() as session:
-
         # Start from organization memberships so users without app access are visible.
         statement = (
             select(User, UserOrganization, UserApplication)
@@ -129,11 +128,12 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
 
     # Update membership rows in one transaction.
     async with session_scope() as session:
-
         # Require an active organization membership first.
         membership_id = (
             await session.scalars(
-                select(UserOrganization.user_id).join(User, User.id == UserOrganization.user_id).where(
+                select(UserOrganization.user_id)
+                .join(User, User.id == UserOrganization.user_id)
+                .where(
                     UserOrganization.organization_id == organization_id,
                     UserOrganization.user_id == member_id,
                     UserOrganization.deleted_at.is_(None),
@@ -157,7 +157,6 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
 
         # Remove application access when no role is provided.
         if role is None:
-
             # Soft-delete an existing active application membership.
             if application_membership is not None and application_membership.deleted_at is None:
                 application_membership.deleted_at = now
@@ -205,7 +204,6 @@ async def create(
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
-
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
         if current is None:
@@ -216,9 +214,9 @@ async def create(
         ).one_or_none()
         if compute is None or organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        if compute.status != ComputeStatus.ready:
+        if compute.status != Status.running:
             raise HTTPException(status_code=409, detail="Compute registry is not ready")
-        if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
+        if organization.deleted_at is not None or organization.status != Status.running:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
         # Build the Application row before checking its Organization-scoped uniqueness.
@@ -226,7 +224,7 @@ async def create(
             organization_id=organization_id,
             name=name,
             slug=slug,
-            status=ApplicationStatus.creating,
+            status=Status.creating,
             description=description,
             image=image.value,
             icon=icon,
@@ -265,27 +263,31 @@ async def create(
         return application, operation
 
 
-async def set_status(application_id: UUID, status: ApplicationStatus) -> None:
-    """Update one application status when the row exists."""
+async def set_status(application_id: UUID, expected_status: Status, status: Status) -> bool:
+    """Transition one active Application from the expected lifecycle state."""
 
-    # Update the status inside one session.
+    # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        await session.execute(
+        application = await session.scalar(
             update(Application)
             .where(
                 Application.id == application_id,
-                Application.status != status,
+                Application.deleted_at.is_(None),
+                Application.status == expected_status,
+                Application.status != Status.deleting,
             )
             .values(status=status)
+            .returning(Application)
         )
         await session.commit()
+        return application is not None
 
 
 async def replace_environment(
     application_id: UUID,
-    expected_status: ApplicationStatus,
+    expected_status: Status,
     replace: Callable[[], Awaitable[None]],
-) -> ApplicationStatus | None:
+) -> Status | None:
     """Replace cluster environment state while preventing concurrent Application deletion."""
 
     # Lock the active Application across the external replacement so tombstoning cannot race Secret creation.
@@ -319,13 +321,14 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | No
         if compute is None or application is None or application.deleted_at is not None:
             return None
 
-        # A fresh compute entry preserves a complete gateway retry budget after deployment succeeds.
-        application.status = ApplicationStatus.running
+        # Publish running only from active creation state and retain a fallback gateway reconciliation.
+        if application.status != Status.creating:
+            return None
+        application.status = Status.running
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
             locked_compute=compute,
-            fresh=True,
         )
         await session.commit()
         return operation
@@ -344,10 +347,19 @@ async def update_runtime(
 
     # Update runtime metadata in one session.
     async with session_scope() as session:
-
-        # Ignore missing or deleted applications.
-        application = await session.get(Application, application_id)
-        if application is None or application.deleted_at is not None:
+        # Lock only an active creating Application so metadata cannot race deletion or another lifecycle transition.
+        application = (
+            await session.scalars(
+                select(Application)
+                .where(
+                    Application.id == application_id,
+                    Application.deleted_at.is_(None),
+                    Application.status == Status.creating,
+                )
+                .with_for_update()
+            )
+        ).one_or_none()
+        if application is None:
             return None
 
         # Keep the database metadata aligned with the workload that will be applied.
@@ -355,7 +367,6 @@ async def update_runtime(
         application.digest = digest
         application.description = description
         application.version = version
-        application.status = ApplicationStatus.creating
         application.image = image
         application.icon = icon
         await session.commit()
@@ -367,7 +378,6 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:
-
         # Resolve parents before taking locks in aggregate order.
         current = await session.get(Application, application_id)
         if current is None:
@@ -381,16 +391,14 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
         organization = (
             await session.scalars(select(Organization).where(Organization.id == current.organization_id).with_for_update())
         ).one_or_none()
-        application = (
-            await session.scalars(select(Application).where(Application.id == application_id).with_for_update())
-        ).one_or_none()
+        application = (await session.scalars(select(Application).where(Application.id == application_id).with_for_update())).one_or_none()
         if compute is None or organization is None or application is None:
             return None
 
         # Record the tombstone once; repeated requests only ensure cleanup remains queued.
         if application.deleted_at is None:
             now = utcnow()
-            application.status = ApplicationStatus.deleting
+            application.status = Status.deleting
             application.deleted_at = now
             application.deleted_id = user.id
             application.updated_at = now

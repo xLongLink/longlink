@@ -3,7 +3,7 @@ from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from longlink.shared import users as shared_users
-from src.models.statuses import OrganizationStatus
+from src.models.statuses import Status
 from src.database.services import compute, storage, database, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.database.models.operations import Operation
@@ -51,79 +51,132 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
-    if organization.status == OrganizationStatus.running:
+    if organization.status == Status.running:
         return jobs.complete()
+
+    # A new create execution makes a previously failed Organization visibly active again.
+    if organization.status == Status.failed:
+        if not await organizations.set_runtime(organization.id, Status.failed, Status.creating):
+            current = await organizations.get(organization.id, include_deleted=True)
+            if current is None or current.deleted_at is not None or current.status == Status.running:
+                return jobs.complete()
+            return jobs.wait("Organization lifecycle state changed before creation")
+        organization.status = Status.creating
 
     # Resolve the immutable database and storage assignments selected at creation.
     database_registry = await database.get(organization.database_id)
     if database_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Database registry not found")
     storage_registry = await storage.get(organization.storage_id)
     if storage_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Storage registry not found")
     compute_registry = await compute.get(organization.compute_id)
     if compute_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Compute registry not found")
 
-    # Create the database, apply shared-schema migrations, and seed the initial users.
-    db = adapters.Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
-    )
-    await db.prepare_organization_database(organization.id, organization.shared_schema_url)
-    await sync_users(organization)
+    try:
+        # Create the database, apply shared-schema migrations, and seed the initial users.
+        db = adapters.Postgres(
+            database_registry.host,
+            database_registry.port,
+            database_registry.username,
+            database_registry.password,
+            database_registry.sslmode,
+        )
+        await db.prepare_organization_database(organization.id, organization.shared_schema_url)
+        await sync_users(organization)
 
-    # Initialize shared storage before Applications can be created for the Organization.
-    object_storage = adapters.storage(storage_registry)
-    bucket = organization.id.hex
-    await object_storage.create(bucket)
-    await object_storage.create_prefix(bucket, "shared/")
+        # Initialize shared storage before Applications can be created for the Organization.
+        object_storage = adapters.storage(storage_registry)
+        bucket = organization.id.hex
+        await object_storage.create(bucket)
+        await object_storage.create_prefix(bucket, "shared/")
 
-    # Install the Organization Namespace exactly once as part of its creation lifecycle.
-    cluster = Kubernetes(compute_registry.kubeconfig)
-    await cluster.organizations.apply(organization.slug)
+        # Install the Organization Namespace exactly once as part of its creation lifecycle.
+        cluster = Kubernetes(compute_registry.kubeconfig)
+        await cluster.organizations.apply(organization.slug)
+    except Exception:
+        # Unexpected provisioning errors make both the lifecycle target and its one Operation terminal.
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
+        raise
 
     # Publish readiness only after every initial Organization dependency and boundary exists.
-    await organizations.set_runtime(organization.id, OrganizationStatus.running)
+    if not await organizations.set_runtime(organization.id, organization.status, Status.running):
+        current = await organizations.get(organization.id, include_deleted=True)
+        if current is None or current.deleted_at is not None or current.status == Status.running:
+            return jobs.complete()
+        return jobs.wait("Organization lifecycle state changed before readiness was recorded")
     return jobs.complete()
 
 
 @operation("organization.reconcile")
 async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
-    """Reconcile one Organization's shared database and storage resources."""
+    """Reconcile one Organization's shared providers and Kubernetes boundary."""
 
     # Skip reconciliation for removed Organizations.
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
 
-    # Resolve the Organization's immutable database and storage assignments.
+    # A new reconciliation execution makes a previously failed Organization visibly active again.
+    if organization.status == Status.failed:
+        if not await organizations.set_runtime(organization.id, Status.failed, Status.creating):
+            current = await organizations.get(organization.id, include_deleted=True)
+            if current is None or current.deleted_at is not None or current.status == Status.running:
+                return jobs.complete()
+            return jobs.wait("Organization lifecycle state changed before reconciliation")
+        organization.status = Status.creating
+
+    # Resolve the Organization's immutable provider and compute assignments.
     database_registry = await database.get(organization.database_id)
     if database_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Database registry not found")
     storage_registry = await storage.get(organization.storage_id)
     if storage_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Storage registry not found")
+    compute_registry = await compute.get(organization.compute_id)
+    if compute_registry is None:
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
+        return jobs.fail("Compute registry not found")
 
-    # Apply idempotent SDK migrations before updating Platform-owned user rows.
-    db = adapters.Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
-    )
-    await db.prepare_organization_database(organization.id, organization.shared_schema_url)
-    await sync_users(organization)
+    try:
+        # Apply idempotent SDK migrations before updating Platform-owned user rows.
+        db = adapters.Postgres(
+            database_registry.host,
+            database_registry.port,
+            database_registry.username,
+            database_registry.password,
+            database_registry.sslmode,
+        )
+        await db.prepare_organization_database(organization.id, organization.shared_schema_url)
+        await sync_users(organization)
 
-    # Converge the Organization bucket and shared folder marker in the same reconciliation.
-    object_storage = adapters.storage(storage_registry)
-    bucket = organization.id.hex
-    await object_storage.create(bucket)
-    await object_storage.create_prefix(bucket, "shared/")
+        # Converge the Organization bucket and shared folder marker in the same reconciliation.
+        object_storage = adapters.storage(storage_registry)
+        bucket = organization.id.hex
+        await object_storage.create(bucket)
+        await object_storage.create_prefix(bucket, "shared/")
+
+        # Reapply the Organization Namespace and NetworkPolicy before restoring runtime readiness.
+        cluster = Kubernetes(compute_registry.kubeconfig)
+        await cluster.organizations.apply(organization.slug)
+    except Exception:
+        # Unexpected reconciliation errors make both the lifecycle target and its one Operation terminal.
+        await organizations.set_runtime(organization.id, organization.status, Status.failed)
+        raise
+
+    # Restore running after successful reconciliation of a failed Organization.
+    if organization.status == Status.creating:
+        if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
+            current = await organizations.get(organization.id, include_deleted=True)
+            if current is None or current.deleted_at is not None or current.status == Status.running:
+                return jobs.complete()
+            return jobs.wait("Organization lifecycle state changed before readiness was restored")
     return jobs.complete()
 
 
@@ -131,7 +184,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
 async def delete(claimed: Operation) -> jobs.OperationOutcome:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
-    # An absent tombstone means a previous attempt completed cleanup.
+    # An absent tombstone means a previous execution completed cleanup.
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None:
         return jobs.complete()
@@ -149,7 +202,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     # Remove every Organization route before terminating any child Application Service.
     gateway_result = await computes.reconcile_gateway(compute_registry, cluster)
     if not gateway_result.ready:
-        return jobs.retry("Gateway is still converging")
+        return jobs.wait("Gateway is still converging")
     db = adapters.Postgres(
         database_registry.host,
         database_registry.port,
@@ -164,7 +217,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
             application.id,
             organization.slug,
         ):
-            return jobs.retry("Organization Application resources are still terminating")
+            return jobs.wait("Organization Application resources are still terminating")
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
         await object_storage.delete_prefix(
@@ -175,14 +228,15 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
 
     # Delete the known Organization Namespace only after all child workloads terminate.
     if not await cluster.organizations.delete(organization.slug):
-        return jobs.retry("Organization Namespace is still terminating")
+        return jobs.wait("Organization Namespace is still terminating")
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(
         compute_registry.id,
         claimed.platform_version,
         gateway_result.gateway_url,
+        compute_registry.status,
     ):
-        return jobs.retry("Organization gateway state was not recorded")
+        return jobs.wait("Organization gateway state was not recorded")
     await organizations.purge(organization.id)
     return jobs.complete()

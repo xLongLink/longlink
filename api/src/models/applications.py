@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.types import Icon, Image
 from src.models.users import UserIdentity
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import Status
 from src.models.operations import OperationResponse
 
 
@@ -26,7 +26,6 @@ class ApplicationEnvironment(BaseModel):
 
         # Validate each environment name and value independently.
         for name, value in envs.items():
-
             # Bound environment variable names to the supported label size.
             if len(name) > 253:
                 raise ValueError(f"Environment variable '{name}' is too long")
@@ -97,7 +96,7 @@ class ApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    status: ApplicationStatus
+    status: Status
 
     # Audit
     created_at: datetime

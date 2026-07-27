@@ -1,7 +1,6 @@
 import re
 import urllib.parse
-from uuid import UUID
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from pydantic import Field, BaseModel, field_validator
 from src.models.types import DatabaseSSLMode
 
 
@@ -112,25 +111,3 @@ class StorageConfiguration(BaseModel):
         # Storage registries currently support only zone-specific Exoscale SOS endpoints.
         exoscale_zone(value)
         return value
-
-
-class RegistryOption(BaseModel):
-    """Expose one assignable infrastructure registry without connection metadata."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-
-
-class InfrastructureOptionsResponse(BaseModel):
-    """Expose infrastructure choices available during Organization creation."""
-
-    # Registries
-    computes: list[RegistryOption]
-    databases: list[RegistryOption]
-    storages: list[RegistryOption]

@@ -27,9 +27,9 @@ async def test_compute_registry_endpoints_return_backend(
     payload = get_response.json()
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
-    assert payload["gateway_url"] == "https://gateway.example"
-    assert payload["status"] == "ready"
+    assert payload["status"] == "running"
     assert payload["version"] is not None
+    assert "gateway_url" not in payload
     assert "kubeconfig" not in payload
     assert "proxy_secret" not in payload
     assert "created_at" not in payload
@@ -63,6 +63,7 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert created["compute"]["name"] == "Ephemeral Compute"
     assert created["operation"]["status"] == OperationStatus.scheduled
     assert created["operation"]["kind"] == OperationKind.compute_reconcile
+    assert "gateway_url" not in created["compute"]
     assert "kubeconfig" not in created["compute"]
     assert "proxy_secret" not in created["compute"]
     assert duplicate_response.status_code == 409
@@ -86,7 +87,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    await create_organization(infrastructure, owner)
+    await create_organization(owner)
     client = clients[0]
 
     # Act

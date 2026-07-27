@@ -4,7 +4,7 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import Status
 from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
 from src.models.applications import (
@@ -58,7 +58,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         image=payload.image,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
-        user=user
+        user=user,
     )
 
     # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
@@ -66,10 +66,10 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         cluster = Kubernetes(registry.kubeconfig)
         status = await applications.replace_environment(
             application.id,
-            ApplicationStatus.creating,
+            Status.creating,
             lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
         )
-        if status != ApplicationStatus.creating:
+        if status != Status.creating:
             raise RuntimeError("Application is no longer creating")
         scheduled = await operations.schedule_now(operation.id)
         if scheduled is None:
@@ -154,7 +154,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
             raise HTTPException(status_code=403, detail="Permission required")
 
     # Environment rollouts are valid only after the initial Application lifecycle completes.
-    if application.status != ApplicationStatus.running:
+    if application.status != Status.running:
         raise HTTPException(status_code=409, detail="Application is not running")
 
     # Resolve the Application's assigned cluster without reading its Platform runtime Secret.
@@ -167,7 +167,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         cluster = Kubernetes(registry.kubeconfig)
         status = await applications.replace_environment(
             application.id,
-            ApplicationStatus.running,
+            Status.running,
             lambda: cluster.applications.replace_envs(application.id, organization.slug, payload.envs),
         )
     except Exception as exc:
@@ -177,7 +177,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
     # Reject state that changed after authorization without mutating Kubernetes.
     if status is None:
         raise HTTPException(status_code=404, detail="Application not found")
-    if status != ApplicationStatus.running:
+    if status != Status.running:
         raise HTTPException(status_code=409, detail="Application is not running")
 
 
@@ -232,7 +232,6 @@ async def update_application_member(
         if roles.rank(organization_membership_role) >= roles.rank(OrganizationRoles.maintain):
             caller_role_rank = max(caller_role_rank, roles.rank(organization_membership_role))
     else:
-
         # Organization memberships grant inherited application management authority.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
@@ -281,7 +280,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
             if not roles.atleast(organization_role, OrganizationRoles.maintain):
                 raise HTTPException(status_code=403, detail="Permission required")
     elif membership is not None:
-
         # Organization memberships must satisfy the organization role requirement.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")

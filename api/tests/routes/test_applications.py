@@ -18,9 +18,9 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure()
-    acme = await create_organization(infrastructure, user)
-    globex = await create_organization(infrastructure, user, name="globex", slug="globex")
+    await create_ready_infrastructure()
+    acme = await create_organization(user)
+    globex = await create_organization(user, name="globex", slug="globex")
     dashboard = await create_application(acme, user)
     console = await create_application(
         globex,
@@ -68,7 +68,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Arrange
     user = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, user)
+    organization = await create_organization(user)
     await mark_organization_running(organization)
     staged: dict[str, object] = {}
 
@@ -139,8 +139,8 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -176,7 +176,7 @@ async def test_get_app_logs_returns_pod_logs(
     # Arrange
     user = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, user)
+    organization = await create_organization(user)
     app = await create_application(organization, user)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
@@ -225,8 +225,8 @@ async def test_app_logs_require_maintainer_access(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
@@ -252,7 +252,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    organization = await create_organization(owner)
     app = await create_application(organization, owner)
 
     class FailingCompute:
@@ -291,8 +291,8 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
@@ -327,8 +327,8 @@ async def test_application_member_update_rejects_regular_member(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, owner)
+    await create_ready_infrastructure()
+    organization = await create_organization(owner)
     app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
@@ -353,8 +353,8 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(infrastructure, user)
+    await create_ready_infrastructure()
+    organization = await create_organization(user)
     app = await create_application(organization, user)
     client = clients[0]
 
