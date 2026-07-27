@@ -164,6 +164,7 @@ script.bat
 *.p12
 *.pfx
 *kubeconfig*.yaml
+*kubeconfig*.yml
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/

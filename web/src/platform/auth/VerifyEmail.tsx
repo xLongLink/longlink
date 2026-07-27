@@ -201,11 +201,7 @@ export default function VerifyEmail() {
             >
                 <Stack gap={3}>
                     {accountExists ? (
-                        <Button
-                            href={recoverySignInHref}
-                            label={t('auth.backToSignIn')}
-                            variant="primary"
-                        />
+                        <Button href={recoverySignInHref} label={t('auth.backToSignIn')} variant="primary" />
                     ) : null}
                     <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
                 </Stack>

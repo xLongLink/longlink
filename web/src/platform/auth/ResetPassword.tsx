@@ -118,11 +118,7 @@ export default function ResetPassword() {
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.invalidResetLink')}>
                 <Stack gap={4}>
                     <Banner status="error" title={t('auth.invalidResetLink')} />
-                    <Button
-                        href="/auth/forgot-password"
-                        label={t('auth.requestAnotherReset')}
-                        variant="primary"
-                    />
+                    <Button href="/auth/forgot-password" label={t('auth.requestAnotherReset')} variant="primary" />
                 </Stack>
             </AuthPage>
         );

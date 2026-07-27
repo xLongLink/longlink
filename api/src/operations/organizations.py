@@ -143,7 +143,6 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     if compute_registry is None:
         await organizations.set_runtime(organization.id, organization.status, Status.failed)
         return jobs.fail("Compute registry not found")
-
     try:
         # Apply idempotent SDK migrations before updating Platform-owned user rows.
         db = adapters.Postgres(
@@ -162,7 +161,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
         await object_storage.create(bucket)
         await object_storage.create_prefix(bucket, "shared/")
 
-        # Reapply the Organization Namespace and NetworkPolicy before restoring runtime readiness.
+        # Apply release changes to the Organization Namespace and NetworkPolicy.
         cluster = Kubernetes(compute_registry.kubeconfig)
         await cluster.organizations.apply(organization.slug)
     except Exception:

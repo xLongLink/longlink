@@ -6,7 +6,7 @@ from packaging.version import Version
 from src.models.statuses import Status
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial
+from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -29,7 +29,7 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
 
     # Persisted gateway TLS must be either complete or absent for initial provisioning.
     if registry.gateway_ca_certificate is None and registry.gateway_tls_certificate is None and registry.gateway_tls_private_key is None:
-        tls = cluster.gateway.tls(str(registry.id), gateway_ip)
+        tls = generate_gateway_tls(registry.id, gateway_ip)
         initialized = await compute.initialize_gateway_tls(
             registry.id,
             tls.ca_certificate,

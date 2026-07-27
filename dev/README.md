@@ -71,6 +71,15 @@ The URL's database path is not persisted; LongLink provisions a separate databas
 the seed at a PostgreSQL server containing production LongLink data. `make down` does not remove databases or roles
 from a configured remote server.
 
+To reconcile compute resources against a remote Kubernetes cluster, set the path to its ignored kubeconfig:
+
+```bash
+KUBECONFIG=../kubeconfig.yml
+```
+
+The default `localhost:15000/longlink-app:dev` image is only reachable from local k3d. Set `LOCAL_APPLICATION_IMAGE` to
+an image the remote cluster can pull before seeding a remote compute target.
+
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
 Start local services, build the generated SDK development application, push it to the local registry, run API migrations,

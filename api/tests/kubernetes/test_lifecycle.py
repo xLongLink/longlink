@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from collections.abc import Iterator
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial
+from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
 from src.kubernetes.applications import DesiredApplication
 
 pytestmark = [pytest.mark.no_db, pytest.mark.integration]
@@ -59,7 +59,7 @@ async def reconcile_ready(
         gateway_ip = await compute.gateway.ip()
         if gateway_ip is not None:
             if tls is None:
-                tls = compute.gateway.tls(str(compute_id), gateway_ip)
+                tls = generate_gateway_tls(compute_id, gateway_ip)
             if await compute.gateway.apply(routes, proxy_secret, tls):
                 return GatewayState(gateway_ip, tls)
         if time.monotonic() >= deadline:
@@ -101,7 +101,7 @@ async def wait_application_ready(compute: Kubernetes, application_id: UUID, name
 
     # Mirror operation retries without blocking inside the Kubernetes abstraction.
     deadline = time.monotonic() + 180
-    while not await compute.applications.ready(str(application_id), namespace):
+    while not await compute.applications.ready(application_id, namespace):
         if time.monotonic() >= deadline:
             pytest.fail(f"Application {application_id!s} did not become ready")
         await asyncio.sleep(2)
@@ -250,6 +250,7 @@ async def drift_scenario(scenario: KubernetesScenario) -> None:
 
     # Replace the gateway configuration with invalid desired data.
     await scenario.compute._resources.apply(
+        ConfigMap,
         {
             "apiVersion": "v1",
             "kind": "ConfigMap",
@@ -410,9 +411,9 @@ async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewaySta
 
     # Wait for the retained Application workload before exercising the public gateway.
     deadline = time.monotonic() + 180
-    while not await scenario.compute.applications.ready(str(scenario.application_id), "acme"):
+    while not await scenario.compute.applications.ready(scenario.application_id, "acme"):
         if time.monotonic() >= deadline:
-            pod = await scenario.compute.applications.pod(str(scenario.application_id), "acme")
+            pod = await scenario.compute.applications.pod(scenario.application_id, "acme")
             pod_status = pod.raw.get("status", {}) if pod is not None else None
             pytest.fail(f"k3s application did not become ready before timeout: {pod_status}")
         await asyncio.sleep(2)
@@ -430,7 +431,7 @@ async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewaySta
             await asyncio.sleep(2)
 
     # Confirm Application log access still resolves the active Pod.
-    logs = await scenario.compute.applications.logs(str(scenario.application_id), "acme", lines=50)
+    logs = await scenario.compute.applications.logs(scenario.application_id, "acme", lines=50)
     assert any("Listening on port 8000." in line for line in logs)
 
 

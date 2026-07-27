@@ -19,6 +19,7 @@ from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
+from src.models.computes import ComputeRegistryCreate
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute as compute_service
@@ -187,6 +188,12 @@ async def seed_local_development(settings: SeedSettings) -> None:
     )
     application_slug = names.slugify(payload.name)
 
+    # Validate the selected Kubernetes compute target before external lookups or Platform mutations.
+    compute = ComputeRegistryCreate(
+        name="development compute",
+        kubeconfig=settings.KUBECONFIG.read_text(encoding="utf-8"),
+    )
+
     # Resolve and validate immutable image metadata before mutating local Platform state.
     metadata = await images.metadata(payload.image)
     if metadata is None or metadata.digest is None:
@@ -239,16 +246,20 @@ async def seed_local_development(settings: SeedSettings) -> None:
     ):
         raise ValueError("Development database registry uses different settings; run make down before changing them")
 
+    # Reject compute changes because gateway identity and Organization assignments are bound to one cluster.
+    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    if compute_registry is not None and compute_registry.kubeconfig != compute.kubeconfig:
+        raise ValueError("Development compute registry uses a different kubeconfig; run make down before changing it")
+
     # Create or restore the local Platform administrator.
     admin, administrator_changed = await seed_local_administrator(settings)
 
-    # Ensure the local compute target is ready before assigning resources to it.
-    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    # Ensure the development compute target is ready before assigning resources to it.
     if compute_registry is None:
         compute_registry, operation = await compute_service.create(
-            "local compute",
+            compute.name,
             "local-compute",
-            settings.KUBECONFIG.read_text(encoding="utf-8"),
+            compute.kubeconfig,
         )
         await reconcile_until_complete(operation.id)
     elif compute_registry.status != Status.running:

@@ -2,8 +2,7 @@ import yaml
 import pytest
 import ipaddress
 from uuid import UUID
-from src.kubernetes.gateway import Gateway, GatewayRoute, GatewayTLSMaterial
-from src.kubernetes.resources import KubernetesResources
+from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, render_envoy_config, generate_gateway_tls, render_gateway_manifests
 
 pytestmark = pytest.mark.no_db
 
@@ -24,7 +23,7 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     )
 
     # Render and parse the Envoy gateway configuration.
-    config = yaml.safe_load(Gateway(KubernetesResources("unused")).config(routes))
+    config = yaml.safe_load(render_envoy_config(routes))
 
     # Verify authenticated routes and clusters have deterministic ordering.
     routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][
@@ -45,20 +44,15 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
 
 
 def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None:
-    """Render gateway resources with exact Secrets and rollout annotations."""
+    """Render gateway resources with exact Secrets and a Pod rollout annotation."""
 
     # Define gateway TLS and authentication inputs.
-    gateway = Gateway(KubernetesResources("unused"))
     tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
 
-    # Render the gateway Service and supporting resources.
-    service = gateway.service()
-    manifests = gateway.manifests("proxy-secret", tls, "envoy-config")
+    # Render the gateway supporting resources.
+    manifests = render_gateway_manifests("proxy-secret", tls, "envoy-config")
 
     # Verify gateway metadata, exact Secrets, and rollout configuration.
-    assert service["kind"] == "Service"
-    assert service["metadata"]["labels"] == {"app": "longlink-gateway"}
-    assert "annotations" not in service["metadata"]
     assert manifests.auth_secret["kind"] == "Secret"
     assert "labels" not in manifests.auth_secret["metadata"]
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
@@ -68,9 +62,9 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
     assert manifests.deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
     assert manifests.deployment["spec"]["replicas"] == 1
-    runtime_revision = manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"]
+    assert "annotations" not in manifests.deployment["metadata"]
+    runtime_revision = manifests.deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
     assert runtime_revision
-    assert manifests.deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"] == runtime_revision
     container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
     assert container["startupProbe"] == {
         "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},
@@ -83,7 +77,7 @@ def test_gateway_tls_generates_compute_identity() -> None:
     """Generate gateway TLS material for a newly provisioned compute."""
 
     # Generate the immutable TLS identity for one compute endpoint.
-    material = Gateway(KubernetesResources("unused")).tls("compute-id", ipaddress.ip_address("192.0.2.1"))
+    material = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), ipaddress.ip_address("192.0.2.1"))
 
     # Verify all generated values use PEM encoding.
     assert "BEGIN CERTIFICATE" in material.ca_certificate

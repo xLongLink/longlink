@@ -2,14 +2,30 @@ import json
 import kr8s
 import yaml
 import base64
-from typing import Any, TypeVar
+from typing import TypeVar
 from kr8s.asyncio import Api
-from kr8s.asyncio.objects import Secret, APIObject, object_from_spec
+from kr8s.asyncio.objects import Secret, APIObject, Deployment, object_from_spec
 
-KubernetesDocument = dict[str, Any]
+KubernetesDocument = dict[str, object]
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
 
-FIELD_MANAGER = "longlink-platform"
+
+def deployment_is_ready(deployment: Deployment) -> bool:
+    """Return whether every replica belongs to the observed Deployment generation."""
+
+    # Require the controller to observe this generation and make every desired replica available.
+    generation = deployment.metadata.get("generation")
+    replicas = deployment.spec.get("replicas", 1)
+    status = deployment.raw.get("status")
+    return (
+        isinstance(generation, int)
+        and isinstance(replicas, int)
+        and isinstance(status, dict)
+        and status.get("observedGeneration") == generation
+        and status.get("updatedReplicas", 0) == replicas
+        and status.get("readyReplicas", 0) == replicas
+        and status.get("availableReplicas", 0) == replicas
+    )
 
 
 class KubernetesResources:
@@ -35,12 +51,14 @@ class KubernetesResources:
 
         return self._api_client
 
-    async def apply(self, body: KubernetesDocument) -> APIObject:
+    async def apply(self, resource_class: type[KubernetesResource], body: KubernetesDocument) -> KubernetesResource:
         """Server-side apply one resource and return the stored object."""
 
-        # Construct the typed object to resolve its Kubernetes endpoint.
+        # Validate and construct the expected resource before resolving its Kubernetes endpoint.
         api = await self.api()
         resource = object_from_spec(body, api=api)
+        if not isinstance(resource, resource_class):
+            raise ValueError(f"Expected a {resource_class.kind} manifest, received {resource.kind}")
         namespace = resource.namespace if resource.namespaced else None
 
         # Force this dedicated cluster toward LongLink's desired resource state.
@@ -49,11 +67,11 @@ class KubernetesResources:
             version=resource.version,
             url=f"{resource.endpoint}/{resource.name}",
             namespace=namespace,
-            params={"fieldManager": FIELD_MANAGER, "force": "true"},
+            params={"fieldManager": "longlink-platform", "force": "true"},
             headers={"Content-Type": "application/apply-patch+yaml"},
             content=yaml.safe_dump(body),
         ) as response:
-            return type(resource)(response.json(), api=api)
+            return resource_class(response.json(), api=api)
 
     async def merge_patch(
         self,
@@ -86,31 +104,38 @@ class KubernetesResources:
         if not isinstance(resource, Secret):
             raise ValueError("Secret replacement requires a v1 Secret resource")
         existing = await self.read(Secret, resource.name, resource.namespace)
-        replacement = {**body, "metadata": dict(body["metadata"])}
+        metadata = body.get("metadata")
+        if not isinstance(metadata, dict):
+            raise ValueError("Secret replacement requires metadata")
+        replacement = {**body, "metadata": dict(metadata)}
 
         # Create a missing Secret without a preceding failed update.
         if existing is None:
-            async with api.call_api(
-                "POST",
-                version=Secret.version,
-                url=Secret.endpoint,
-                namespace=resource.namespace,
-                content=json.dumps(replacement),
-            ) as response:
-                return Secret(response.json(), api=api)
+            return await self.create_secret(replacement)
 
         # Compare the exact LongLink-owned data and metadata while ignoring server fields.
-        desired_data = dict(body.get("data", {}))
+        data = body.get("data", {})
+        string_data = body.get("stringData", {})
+        if not isinstance(data, dict) or not isinstance(string_data, dict):
+            raise ValueError("Secret data must be mappings")
+        if not all(isinstance(key, str) and isinstance(value, str) for key, value in data.items()) or not all(
+            isinstance(key, str) and isinstance(value, str) for key, value in string_data.items()
+        ):
+            raise ValueError("Secret data must contain string keys and values")
+        desired_data = {key: value for key, value in data.items() if isinstance(key, str) and isinstance(value, str)}
         desired_data.update(
-            {key: base64.b64encode(value.encode("utf-8")).decode("ascii") for key, value in body.get("stringData", {}).items()}
+            {
+                key: base64.b64encode(value.encode("utf-8")).decode("ascii")
+                for key, value in string_data.items()
+                if isinstance(key, str) and isinstance(value, str)
+            }
         )
-        desired_metadata = body["metadata"]
         existing_metadata = existing.raw["metadata"]
         if (
             existing.raw.get("data", {}) == desired_data
             and existing.raw.get("type", "Opaque") == body.get("type", "Opaque")
             and all(
-                existing_metadata.get(field, empty) == desired_metadata.get(field, empty)
+                existing_metadata.get(field, empty) == metadata.get(field, empty)
                 for field, empty in (("annotations", {}), ("finalizers", []), ("labels", {}))
             )
         ):

@@ -5,8 +5,6 @@ kind: Secret
 metadata:
     name: longlink-gateway-auth
     namespace: longlink-system
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
 stringData:
     gateway-secret: $gateway_secret
 ---
@@ -15,8 +13,6 @@ kind: Secret
 metadata:
     name: longlink-gateway-tls
     namespace: longlink-system
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
 type: kubernetes.io/tls
 stringData:
     tls.crt: $tls_certificate
@@ -27,8 +23,6 @@ kind: ConfigMap
 metadata:
     name: longlink-gateway
     namespace: longlink-system
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
 data:
     envoy.yaml: $envoy_config
 ---
@@ -37,8 +31,6 @@ kind: Deployment
 metadata:
     name: longlink-gateway
     namespace: longlink-system
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
     labels:
         app: longlink-gateway
 spec:
@@ -145,8 +137,6 @@ kind: NetworkPolicy
 metadata:
     name: longlink-gateway-ingress
     namespace: longlink-system
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
     labels:
         app: longlink-gateway
 spec:

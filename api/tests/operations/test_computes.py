@@ -1,6 +1,6 @@
 import pytest
 import ipaddress
-from uuid import uuid4
+from uuid import UUID, uuid4
 from src.utils import jobs
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
@@ -85,6 +85,13 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         await session.commit()
     snapshots: list[tuple[GatewayRoute, ...]] = []
 
+    def generate_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
+        """Return stable generated TLS material."""
+
+        assert compute_id == compute_registry.id
+        assert address == ipaddress.IPv4Address("192.0.2.1")
+        return GatewayTLSMaterial("ca", "certificate", "private-key")
+
     class FakeGateway:
         """Capture gateway resource operations."""
 
@@ -92,13 +99,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
             """Return one allocated public endpoint."""
 
             return ipaddress.IPv4Address("192.0.2.1")
-
-        def tls(self, compute_id: str, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
-            """Return stable generated TLS material."""
-
-            assert compute_id == str(compute_registry.id)
-            assert address == ipaddress.IPv4Address("192.0.2.1")
-            return GatewayTLSMaterial("ca", "certificate", "private-key")
 
         async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
             """Capture the desired routes and report a ready rollout."""
@@ -118,6 +118,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
             self.gateway = FakeGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
     operation = await operations.enqueue(compute_registry.id)
     claimed = await operations.claim_next()
     assert claimed is not None

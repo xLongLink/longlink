@@ -1,7 +1,7 @@
 from src.utils import templates
 from dataclasses import dataclass
 from importlib.resources import files
-from kr8s.asyncio.objects import Namespace
+from kr8s.asyncio.objects import Namespace, NetworkPolicy
 from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 
 
@@ -36,8 +36,8 @@ class Organizations:
 
         # Apply only the requested Organization and never inspect unrelated Namespaces.
         manifests = self.manifests(namespace)
-        await self._resources.apply(manifests.namespace)
-        await self._resources.apply(manifests.network_policy)
+        await self._resources.apply(Namespace, manifests.namespace)
+        await self._resources.apply(NetworkPolicy, manifests.network_policy)
 
     async def delete(self, namespace: str) -> bool:
         """Request Organization Namespace deletion and return whether cleanup is complete."""
