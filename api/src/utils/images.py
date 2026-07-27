@@ -1,5 +1,7 @@
+import re
 import json
 import httpx2
+import urllib.parse
 from typing import cast
 from src.logger import logger
 from collections.abc import Mapping
@@ -20,6 +22,16 @@ SUPPORTED_REGISTRIES = {
     "docker.io": "https://registry-1.docker.io",
     "registry-1.docker.io": "https://registry-1.docker.io",
     "registry.gitlab.com": "https://registry.gitlab.com",
+}
+REGISTRY_AUTH_HOSTS = {
+    "ghcr.io": frozenset({"ghcr.io"}),
+    "registry-1.docker.io": frozenset({"auth.docker.io"}),
+    "registry.gitlab.com": frozenset({"gitlab.com", "registry.gitlab.com"}),
+}
+REGISTRY_BLOB_HOSTS = {
+    "ghcr.io": frozenset({"pkg-containers.githubusercontent.com"}),
+    "registry-1.docker.io": frozenset({"production.cloudflare.docker.com"}),
+    "registry.gitlab.com": frozenset({"cdn.registry.gitlab-static.net", "storage.googleapis.com"}),
 }
 
 
@@ -72,7 +84,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             # Stop when the config blob cannot be fetched.
-            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
+            blob_response = await _registry_get(client, f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
             if not blob_response.is_success:
                 return None
 
@@ -156,7 +168,7 @@ async def _fetch_manifest(
     url = f"{registry_url}/v2/{repository}/manifests/{reference}"
 
     # Stop when the registry does not return a manifest.
-    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
+    manifest_response = await _registry_get(client, url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
     if not manifest_response.is_success:
         return None
 
@@ -201,7 +213,8 @@ async def _fetch_manifest(
             return None
 
         # Stop when the platform manifest cannot be fetched.
-        manifest_response = await client.get(
+        manifest_response = await _registry_get(
+            client,
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
             headers={"Accept": media_type},
         )
@@ -224,3 +237,63 @@ async def _fetch_manifest(
         return None
 
     return data, digest
+
+
+async def _registry_get(client: httpx2.AsyncClient, url: str, headers: dict[str, str] | None = None) -> httpx2.Response:
+    """Fetch a registry resource, resolving one standard bearer-token challenge."""
+
+    # Public OCI registries may require an anonymous bearer token before serving pull resources.
+    registry_host = urllib.parse.urlsplit(url).hostname
+    response = await client.get(url, headers=headers)
+    if not response.is_success and response.status_code == 401:
+
+        # Require a standard HTTPS bearer challenge from the selected registry's known token service.
+        challenge = response.headers.get("www-authenticate", "")
+        scheme, _, value = challenge.partition(" ")
+        parameters = {name.lower(): entry for name, entry in re.findall(r'([A-Za-z][A-Za-z0-9_-]*)="([^"]*)"', value)}
+        realm = parameters.get("realm")
+        realm_url = urllib.parse.urlsplit(realm or "")
+        if (
+            scheme.lower() != "bearer"
+            or realm_url.scheme != "https"
+            or realm_url.port not in {None, 443}
+            or realm_url.hostname not in REGISTRY_AUTH_HOSTS.get(registry_host or "", frozenset())
+        ):
+            return response
+
+        # Preserve realm query values while adding the registry-provided service and repository scope.
+        token_parameters = dict(urllib.parse.parse_qsl(realm_url.query, keep_blank_values=True))
+        token_parameters.update({name: parameters[name] for name in ("service", "scope") if name in parameters})
+        token_url = urllib.parse.urlunsplit(realm_url._replace(query=urllib.parse.urlencode(token_parameters)))
+        client.headers.pop("Authorization", None)
+        token_response = await client.get(token_url)
+        if not token_response.is_success:
+            return response
+        token_payload: object = token_response.json()
+        if not isinstance(token_payload, dict):
+            return response
+        token = token_payload.get("token") or token_payload.get("access_token")
+        if not isinstance(token, str) or not token:
+            return response
+
+        # Retain the token for the selected manifest and config blob requests in this metadata lookup.
+        client.headers["Authorization"] = f"Bearer {token}"
+        response = await client.get(url, headers=headers)
+
+    # Return registry resources served without redirecting to external blob storage.
+    if response.is_success:
+        return response
+
+    # Follow one known HTTPS blob redirect through HTTPX's request, which strips cross-origin credentials.
+    redirect = response.next_request
+    allowed_blob_hosts = REGISTRY_BLOB_HOSTS.get(registry_host or "", frozenset())
+    if (
+        response.is_redirect
+        and redirect is not None
+        and redirect.url.scheme == "https"
+        and redirect.url.port in {None, 443}
+        and redirect.url.host in allowed_blob_hosts
+    ):
+        return await client.send(redirect)
+
+    return response

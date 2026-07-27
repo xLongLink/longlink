@@ -5,10 +5,11 @@ from src import adapters
 from uuid import UUID
 from pwdlib import PasswordHash
 from pathlib import Path
+from datetime import timedelta
 from pydantic import Field, field_validator
 from sqlmodel import col
 from src.utils import jobs, names, images
-from sqlalchemy import text, select, inspect
+from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
 from src.operations import computes as _operation_computes
 from src.operations import applications as _operation_applications
@@ -20,6 +21,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
 from src.models.computes import ComputeRegistryCreate
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute as compute_service
@@ -33,7 +35,12 @@ from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
+from src.database.models.computes import ComputeRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
+
+SEED_OPERATION_DELAY_SECONDS = 315360000
 
 
 class SeedSettings(BaseSettings):
@@ -48,7 +55,7 @@ class SeedSettings(BaseSettings):
     LOCAL_ORG: str = Field(default="test", min_length=1)
     LOCAL_APP_NAME: str = Field(default="sample", min_length=1)
     LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
-    LOCAL_APPLICATION_IMAGE: str = Field(default="localhost:15000/longlink-app:dev", min_length=1)
+    LOCAL_APPLICATION_IMAGE: str = Field(default="ghcr.io/xlonglink/longlink-app:v0.0.2", min_length=1)
 
     # Local infrastructure
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
@@ -155,6 +162,91 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
             membership.updated_id = user_id
         await session.commit()
         return True
+
+
+async def reconcile_local_application(
+    application_id: UUID,
+    compute_id: UUID,
+    payload: ApplicationCreate,
+    metadata: LongLinkMetadata,
+    user_id: UUID,
+) -> tuple[Application, Operation | None] | None:
+    """Reconcile one existing seeded Application and queue deployment when needed."""
+
+    # Lock the compute aggregate before changing Application desired state or its Operation queue.
+    async with session_scope() as session:
+        connection = await session.connection()
+        if connection.dialect.name == "sqlite":
+            await session.execute(
+                update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(id=compute_id)
+            )
+        compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
+        application = await session.get(Application, application_id, with_for_update=True)
+        if compute is None or application is None or application.deleted_at is not None:
+            return None
+
+        # Compare mutable seed metadata before deciding whether lifecycle work is needed.
+        desired_icon = payload.icon.value if payload.icon is not None else None
+        changed = (
+            application.name != payload.name
+            or application.icon != desired_icon
+            or application.image != metadata.image
+            or application.sdk != metadata.sdk
+            or application.digest != metadata.digest
+            or application.version != metadata.version
+            or application.description != payload.description
+        )
+
+        # Running Applications with unchanged desired state need no lifecycle work.
+        if not changed and application.status not in {Status.creating, Status.failed}:
+            return application, None
+
+        # Lock unfinished work before changing desired state so a scheduler cannot deploy stale values concurrently.
+        now = utcnow()
+        pending_operations = list(
+            await session.scalars(
+                select(Operation)
+                .where(
+                    col(Operation.kind) == OperationKind.application_create,
+                    col(Operation.target_id) == application.id,
+                    col(Operation.finished_at).is_(None),
+                )
+                .with_for_update()
+            )
+        )
+        if any(operation.lease_expires_at is not None and operation.lease_expires_at > now for operation in pending_operations):
+            raise RuntimeError("Local Application deployment is already active; retry seeding after it completes")
+
+        # Hold every reusable unleased Operation until seed explicitly schedules it after Secret staging.
+        staged_at = now + timedelta(seconds=SEED_OPERATION_DELAY_SECONDS)
+        for operation in pending_operations:
+            if operation.lease_expires_at is None:
+                operation.available_at = staged_at
+
+        # Replace mutable seed metadata when the selected image or local presentation changed.
+        if changed:
+            application.name = payload.name
+            application.icon = desired_icon
+            application.image = metadata.image
+            application.sdk = metadata.sdk
+            application.digest = metadata.digest
+            application.version = metadata.version
+            application.description = payload.description
+            application.status = Status.creating
+            application.updated_at = now
+            application.updated_id = user_id
+
+        # Queue creation against the same locked compute aggregate as the desired-state update.
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            locked_compute=compute,
+            kind=OperationKind.application_create,
+            target_id=application.id,
+            delay_seconds=SEED_OPERATION_DELAY_SECONDS,
+        )
+        await session.commit()
+        return application, operation
 
 
 async def reconcile_until_complete(operation_id: UUID) -> None:
@@ -325,20 +417,32 @@ async def seed_local_development(settings: SeedSettings) -> None:
             version=metadata.version,
             description=payload.description,
             icon=payload.icon.value if payload.icon is not None else None,
-        )
-    elif application.status in {Status.creating, Status.failed}:
-        operation = await operations.enqueue(
-            compute_registry.id,
-            kind=OperationKind.application_create,
-            target_id=application.id,
+            delay_seconds=SEED_OPERATION_DELAY_SECONDS,
         )
     else:
-        return
+        reconciled = await reconcile_local_application(
+            application.id,
+            compute_registry.id,
+            payload,
+            metadata,
+            admin.id,
+        )
+        if reconciled is None:
+            raise RuntimeError("Local Application is no longer available")
+        application, operation = reconciled
+        if operation is None:
+            return
 
     # Stage local user values once before releasing new Application lifecycle work.
     cluster = Kubernetes(compute_registry.kubeconfig)
-    if created:
-        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+
+    # Remove staged resources when concurrent deletion won after the desired-state transaction committed.
+    current = await application_service.get(application.id, include_deleted=True)
+    if current is None or current.deleted_at is not None:
+        await cluster.applications.delete(application.id, organization.slug)
+        raise RuntimeError("Local Application was deleted while seed values were staged")
+
     operation = await operations.schedule_now(operation.id)
     if operation is None:
         raise RuntimeError("Local Application create Operation is no longer open")

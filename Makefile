@@ -1,8 +1,6 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
-LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
-LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
-DEV_DOCKER_BUILDER := longlink-dev
+LOCAL_APPLICATION_IMAGE ?= ghcr.io/xlonglink/longlink-app:v0.0.2
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
@@ -128,7 +126,7 @@ sdk\:build: web\:install
 
 
 # Remove generated build and test artifacts for every workspace.
-clean: api\:clean sdk\:clean sdk\:image\:clean web\:clean
+clean: api\:clean sdk\:clean web\:clean
 	rm -rf .coverage .coverage.* coverage.xml htmlcov .pytest_cache .ruff_cache
 
 
@@ -144,15 +142,6 @@ sdk\:clean:
 	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
 	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
-
-
-# Remove local Docker images produced by `make seed`.
-sdk\:image\:clean:
-	@if command -v docker >/dev/null 2>&1; then \
-		docker image rm "$(LOCAL_SDK_IMAGE)" >/dev/null 2>&1 || true; \
-		dangling_images="$$(docker image ls --quiet --filter "dangling=true" --filter "label=$(LOCAL_SDK_IMAGE_LABEL)" 2>/dev/null)"; \
-		if [ -n "$$dangling_images" ]; then docker image rm $$dangling_images >/dev/null 2>&1 || true; fi; \
-	fi
 
 
 # Remove generated web build artifacts.
@@ -197,12 +186,10 @@ up:
 down:
 	-cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
-	@if docker buildx inspect "$(DEV_DOCKER_BUILDER)" >/dev/null 2>&1; then docker buildx rm --force "$(DEV_DOCKER_BUILDER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
-	@$(MAKE) --no-print-directory sdk\:image\:clean
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
@@ -217,18 +204,13 @@ api:
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
-# Start local services, build and push the SDK app image, then run migrations and seed data.
+# Start local services, pull the seed Application image, then run migrations and seed data.
 seed: up
+	docker pull "$(LOCAL_APPLICATION_IMAGE)"
 	cd api && uv sync --locked --extra dev
-	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev
-	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
-	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_DOCKER_BUILDER)" --driver docker-container >/dev/null
-	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" --bootstrap >/dev/null
-	cd sdk/dev && uv run longlink build --builder "$(DEV_DOCKER_BUILDER)" --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python setup.py
-	cd api && DEVELOPMENT=true uv run --locked python seed.py
+	cd api && DEVELOPMENT=true LOCAL_APPLICATION_IMAGE="$(LOCAL_APPLICATION_IMAGE)" uv run --locked python seed.py
 
 
 # Run the Vite web app.

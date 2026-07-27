@@ -250,8 +250,8 @@ class LongLink(FastAPI):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"
             page = LonglinkXml(page_file)
-            page.validate()
-            page_name, page_icon = extract_longlink_metadata(page.content)
+            page_root = page.validate()
+            page_name, page_icon = extract_longlink_metadata(page_root)
             page_endpoint = bind_page(page_file)
 
             # Register page metadata and its normalized API route together.

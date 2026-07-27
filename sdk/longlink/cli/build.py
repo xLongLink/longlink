@@ -12,7 +12,7 @@ from pathlib import Path
 from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
-from longlink.utils.metadata import load_metadata
+from longlink.utils.metadata import Metadata
 
 BUILD_CONTEXT_IGNORE_PATTERNS = (
     ".cache",
@@ -124,7 +124,7 @@ def _validate_docker_image_path(image_path: str) -> None:
         raise ValueError(f"Invalid Docker image path '{image_path}'")
 
 
-def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None) -> dict[str, list[dict[str, object]]]:
     """Parse the configured environment class and return environment specs."""
 
     # Initialize an empty result and the conventional environment import path.
@@ -132,11 +132,14 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     environment_import = DEFAULT_ENVIRONMENT_IMPORT
 
     # Read an explicit environment class location from project configuration.
-    if (root / "pyproject.toml").is_file():
-        pyproject_data = read_pyproject(root)
+    project_data = pyproject_data
+    if project_data is None and (root / "pyproject.toml").is_file():
+        project_data = read_pyproject(root)
+
+    if project_data is not None:
 
         # Read the tool table while ignoring malformed values.
-        tool_data = pyproject_data.get("tool", {})
+        tool_data = project_data.get("tool", {})
         if not isinstance(tool_data, dict):
             tool_data = {}
 
@@ -330,11 +333,11 @@ def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str
     return "\n".join(rendered_labels)
 
 
-def resolve_docker_paths(root: Path) -> tuple[Path, str]:
+def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None = None) -> tuple[Path, str]:
     """Resolve Docker build context and in-container working directory."""
 
     # Validate the application root and initialize local dependency traversal.
-    read_pyproject(root)
+    root_pyproject_data = pyproject_data if pyproject_data is not None else read_pyproject(root)
     source_paths: list[Path] = [root]
     pending_paths: list[Path] = [root]
     seen_paths: set[Path] = set()
@@ -354,10 +357,10 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
         if not pyproject_path.is_file():
             continue
 
-        pyproject_data = read_pyproject(source_root)
+        source_pyproject_data = root_pyproject_data if source_root == root else read_pyproject(source_root)
 
         # Read the tool table while ignoring malformed values.
-        tool_data = pyproject_data.get("tool", {})
+        tool_data = source_pyproject_data.get("tool", {})
         if not isinstance(tool_data, dict):
             tool_data = {}
 
@@ -411,10 +414,11 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Resolve build paths and collect project metadata for the image.
     root = (base_path or Path.cwd()).resolve()
-    source_root, workdir = resolve_docker_paths(root)
+    pyproject_data = read_pyproject(root)
+    source_root, workdir = resolve_docker_paths(root, pyproject_data)
     repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
-    env_spec = read_env_spec(root)
-    project_metadata = load_metadata(root / "pyproject.toml")
+    env_spec = read_env_spec(root, pyproject_data)
+    project_metadata = Metadata.from_pyproject(pyproject_data)
     metadata: dict[str, object] = project_metadata.model_dump()
 
     # Use the installed package version when available, falling back for editable source trees.

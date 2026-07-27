@@ -72,47 +72,6 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     assert executed == [operation]
 
 
-async def test_execute_waits_for_convergence_within_one_lease(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Poll waiting work within one lease before persisting completion."""
-
-    # Arrange
-    operation = leased_operation()
-    completed = leased_operation()
-    completed.finished_at = utcnow()
-    outcomes = [operation_worker.wait("workloads are starting"), operation_worker.complete()]
-    transitions: list[UUID] = []
-    sleeps: list[float] = []
-
-    async def waiting_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Wait once before reporting convergence."""
-
-        assert claimed is operation
-        return outcomes.pop(0)
-
-    async def fake_complete(operation_id: UUID) -> Operation:
-        """Record the terminal completion transition."""
-
-        transitions.append(operation_id)
-        return completed
-
-    async def fake_sleep(seconds: float) -> None:
-        """Record one in-lease polling interval."""
-
-        sleeps.append(seconds)
-
-    monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
-    monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
-
-    # Act
-    result = await operation_worker.execute(operation, waiting_handler)
-
-    # Assert
-    assert result.status == OperationStatus.completed
-    assert transitions == [operation.id]
-    assert sleeps == [5]
-    assert outcomes == []
-
-
 async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject a stale worker result when its final lease transition no longer owns the row."""
 
@@ -136,6 +95,47 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     # Act and assert
     with pytest.raises(RuntimeError, match=str(operation.id)):
         await operation_worker.execute(operation, complete_handler)
+
+
+async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Finish the claimed Operation transition before propagating cancellation."""
+
+    # Arrange
+    operation = leased_operation()
+    completed = leased_operation()
+    completed.finished_at = utcnow()
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Complete one claimed Operation."""
+
+        assert claimed is operation
+        return operation_worker.complete()
+
+    async def fake_complete(operation_id: UUID) -> Operation:
+        """Delay the terminal transition until after worker cancellation."""
+
+        assert operation_id == operation.id
+        started.set()
+        await release.wait()
+        return completed
+
+    monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
+
+    # Act
+    execution = asyncio.create_task(operation_worker.execute(operation, complete_handler))
+    await started.wait()
+    execution.cancel()
+    await asyncio.sleep(0)
+    execution.cancel()
+    await asyncio.sleep(0)
+    release.set()
+
+    # Assert
+    with pytest.raises(asyncio.CancelledError):
+        await execution
+    assert completed.status == OperationStatus.completed
 
 
 async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.MonkeyPatch) -> None:

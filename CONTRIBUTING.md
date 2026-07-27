@@ -67,13 +67,13 @@ make sdk            # Build the SDK web bundle and run the generated SDK app
 ## Test the SDK in production
 
 ```bash
-make seed           # Start local services, build/push the SDK app image, migrate, and seed
+make seed           # Start local services, pull the seed Application image, migrate, and seed
 make api            # Start the LongLink Platform API
 make web            # Start the Vite platform frontend
 ```
 
-After `make api` and `make web` are running, SDK image changes can be refreshed without restarting them:
+After `make api` and `make web` are running, a different published Application image can be seeded without restarting them:
 
 ```bash
-make seed           # Rebuild/push localhost:15000/longlink-app:dev and reapply the seeded app
+make seed LOCAL_APPLICATION_IMAGE=ghcr.io/xlonglink/longlink-app:v0.0.2
 ```

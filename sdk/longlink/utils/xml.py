@@ -37,6 +37,16 @@ def known_xml_tags() -> frozenset[str]:
     return frozenset(tags)
 
 
+@cache
+def load_xml_schema(schema_path: Path) -> etree.XMLSchema:
+    """Compile and cache one trusted XSD schema by its resolved path."""
+
+    # Load bundled schemas with external entities and network access disabled.
+    parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+    schema_doc = etree.parse(str(schema_path), parser)
+    return etree.XMLSchema(schema_doc)
+
+
 class Element:
     """Load XML content from disk and validate it against an XSD schema."""
 
@@ -72,19 +82,18 @@ class Element:
         return self._content
 
 
-    def validate(self) -> None:
-        """Validate the XML document against the configured XSD schema."""
+    def validate(self) -> etree._Element:
+        """Validate and return the parsed XML document."""
 
         # Reject XML constructs that the web runtime parser does not support.
         if UNSUPPORTED_XML_MARKUP_PATTERN.search(self.content):
             raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
 
-        # Load the bundled schema with external entities and network access disabled.
+        # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
-        schema_doc = etree.parse(str(self._schema_file_path()), parser)
-        schema = etree.XMLSchema(schema_doc)
+        schema = load_xml_schema(self._schema_file_path().resolve())
 
-        # Parse user XML with external entities and network access disabled.
+        # Parse user XML once for validation and downstream metadata extraction.
         try:
             xml_doc = etree.XML(self.content.encode("utf-8"), parser)
         except etree.XMLSyntaxError as error:
@@ -107,6 +116,8 @@ class Element:
         for paragraph in xml_doc.iter("P"):
             if paragraph.get("value") is not None:
                 raise ValueError(f"XML is invalid: Line {paragraph.sourceline}: P does not support the value attribute")
+
+        return xml_doc
 
 
     def _schema_file_path(self) -> Path:

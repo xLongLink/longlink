@@ -1,10 +1,26 @@
 from uuid import UUID
 from typing import Literal, overload
+from dataclasses import dataclass
 from src.models.roles import Ranks, RoleName, ApplicationRoles, OrganizationRoles
 from src.database.models.users import User
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
-AccessMembership = UserOrganization | UserApplication
+
+@dataclass(frozen=True, slots=True)
+class ApplicationAccess:
+    """Represent loaded direct and inherited access to one active Application."""
+
+    application: Application
+    organization: Organization
+    application_role: ApplicationRoles | None
+    organization_role: OrganizationRoles | None
+
+    def allows(self, required_role: ApplicationRoles) -> bool:
+        """Return whether direct or Organization authority permits an Application operation."""
+
+        return atleast(self.application_role, required_role) or atleast(self.organization_role, OrganizationRoles.maintain)
 
 
 def rank(value: RoleName | None) -> int:
@@ -35,13 +51,6 @@ def atleast(value: RoleName | None, required_role: RoleName) -> bool:
 
 
 @overload
-def access(user: User, resource: UUID) -> AccessMembership | None:
-    """Return the membership that grants access across supported scopes."""
-
-    ...
-
-
-@overload
 def access(user: User, resource: UUID, scope: Literal["organization"]) -> UserOrganization | None:
     """Return the organization membership that grants access."""
 
@@ -49,15 +58,8 @@ def access(user: User, resource: UUID, scope: Literal["organization"]) -> UserOr
 
 
 @overload
-def access(user: User, resource: UUID, scope: Literal["application"]) -> AccessMembership | None:
-    """Return the application or organization membership that grants access."""
-
-    ...
-
-
-@overload
-def access(user: User, resource: UUID, scope: None) -> AccessMembership | None:
-    """Return the membership that grants access across supported scopes."""
+def access(user: User, resource: UUID, scope: Literal["application"]) -> ApplicationAccess | None:
+    """Return direct and inherited Application access."""
 
     ...
 
@@ -65,33 +67,51 @@ def access(user: User, resource: UUID, scope: None) -> AccessMembership | None:
 def access(
     user: User,
     resource: UUID,
-    scope: Literal["organization", "application"] | None = None,
-) -> UserOrganization | UserApplication | None:
-    """Return the loaded membership that grants access, or none when access is missing."""
+    scope: Literal["organization", "application"],
+) -> UserOrganization | ApplicationAccess | None:
+    """Return loaded Organization or Application access, or none when access is missing."""
 
     # Organization memberships grant access to organization resources.
-    if scope in {None, "organization"}:
+    if scope == "organization":
         for membership in user.organization_memberships:
             if membership.organization.deleted_at is None and membership.organization_id == resource:
                 return membership
+        return None
 
-    # Application memberships grant access to application resources.
-    if scope in {None, "application"}:
-        for membership in user.application_memberships:
-            if (
-                membership.organization.deleted_at is None
-                and membership.application.deleted_at is None
-                and membership.application_id == resource
-            ):
-                return membership
+    # Direct Application membership is supplemented by any active Organization role.
+    for membership in user.application_memberships:
+        if (
+            membership.organization.deleted_at is None
+            and membership.application.deleted_at is None
+            and membership.application_id == resource
+        ):
+            organization_role = next(
+                (
+                    item.role
+                    for item in user.organization_memberships
+                    if item.organization.deleted_at is None and item.organization_id == membership.organization_id
+                ),
+                None,
+            )
+            return ApplicationAccess(
+                application=membership.application,
+                organization=membership.organization,
+                application_role=membership.role,
+                organization_role=organization_role,
+            )
 
-        # Organization membership grants base access to the organization's applications.
-        for membership in user.organization_memberships:
-            if membership.organization.deleted_at is not None:
-                continue
+    # Organization membership grants base access to its active Applications.
+    for membership in user.organization_memberships:
+        if membership.organization.deleted_at is not None:
+            continue
 
-            for application in membership.organization.applications:
-                if application.deleted_at is None and application.id == resource:
-                    return membership
+        for application in membership.organization.applications:
+            if application.deleted_at is None and application.id == resource:
+                return ApplicationAccess(
+                    application=application,
+                    organization=membership.organization,
+                    application_role=None,
+                    organization_role=membership.role,
+                )
 
     return None

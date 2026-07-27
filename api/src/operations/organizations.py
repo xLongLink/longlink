@@ -3,6 +3,7 @@ from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from longlink.shared import users as shared_users
+from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -63,7 +64,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
             current = await organizations.get(organization.id, include_deleted=True)
             if current is None or current.deleted_at is not None or current.status == Status.running:
                 return jobs.complete()
-            return jobs.wait("Organization lifecycle state changed before convergence")
+            return jobs.fail("Organization lifecycle state changed before convergence")
         organization.status = Status.creating
 
     # Resolve the Organization's immutable provider and compute assignments.
@@ -104,7 +105,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
             current = await organizations.get(organization.id, include_deleted=True)
             if current is None or current.deleted_at is not None or current.status == Status.running:
                 return jobs.complete()
-            return jobs.wait("Organization lifecycle state changed before readiness was recorded")
+            return jobs.fail("Organization lifecycle state changed before readiness was recorded")
     return jobs.complete()
 
 
@@ -155,10 +156,10 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(
         compute_registry.id,
-        claimed.platform_version,
+        env.VERSION,
         gateway_url,
         compute_registry.status,
     ):
-        return jobs.wait("Organization gateway state was not recorded")
+        return jobs.fail("Organization gateway state was not recorded")
     await organizations.purge(organization.id)
     return jobs.complete()

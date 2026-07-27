@@ -73,15 +73,16 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     registry = await compute.get(claimed.target_id)
     if registry is None:
         return jobs.complete()
-    if claimed.platform_version != env.VERSION:
-        return jobs.fail("Operation targets a different Platform release")
-    if registry.version is not None and Version(registry.version) > Version(claimed.platform_version):
+    if registry.version is not None and Version(registry.version) > Version(env.VERSION):
         return jobs.complete()
 
     # A fresh reconciliation execution makes a previously failed target visibly active again.
     if registry.status == Status.failed:
         if not await compute.set_status(registry.id, Status.failed, Status.creating):
-            return jobs.wait("Compute lifecycle state changed before reconciliation")
+            current = await compute.get(registry.id)
+            if current is None or (current.version is not None and Version(current.version) > Version(env.VERSION)):
+                return jobs.complete()
+            return jobs.fail("Compute lifecycle state changed before reconciliation")
         registry.status = Status.creating
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -91,9 +92,14 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     # Publish connection material only after the desired gateway Deployment is serving.
     if not await compute.record_success(
         registry.id,
-        claimed.platform_version,
+        env.VERSION,
         gateway_url,
         registry.status,
     ):
-        return jobs.wait("Compute gateway state was not recorded")
+        current = await compute.get(registry.id)
+        if current is None or (current.version is not None and Version(current.version) > Version(env.VERSION)):
+            return jobs.complete()
+        if current.status == Status.running and current.version == env.VERSION and current.gateway_url == gateway_url:
+            return jobs.complete()
+        return jobs.fail("Compute gateway state was not recorded")
     return jobs.complete()

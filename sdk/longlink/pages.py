@@ -35,19 +35,8 @@ def _normalize_metadata_value(value: str | None) -> str | None:
     return None if not normalized_value else normalized_value
 
 
-def extract_longlink_metadata(xml_content: str) -> tuple[str | None, str | None]:
+def extract_longlink_metadata(root: etree._Element) -> tuple[str | None, str | None]:
     """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
-
-    # Parse only enough XML to inspect the root metadata.
-    try:
-
-        # Metadata parsing must not resolve external resources from local app XML.
-        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
-        root = etree.fromstring(xml_content.encode("utf-8"), parser=parser)
-
-    # Invalid XML has no usable LongLink metadata.
-    except (etree.XMLSyntaxError, ValueError):
-        return None, None
 
     # Only LongLink roots expose page metadata.
     if root.tag != "longlink":

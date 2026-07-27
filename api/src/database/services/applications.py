@@ -199,6 +199,7 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
+    delay_seconds: float = 30,
 ) -> tuple[Application, Operation]:
     """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
 
@@ -265,7 +266,7 @@ async def create(
             locked_compute=compute,
             kind=OperationKind.application_create,
             target_id=application.id,
-            delay_seconds=30,
+            delay_seconds=delay_seconds,
         )
         await session.commit()
         return application, operation
