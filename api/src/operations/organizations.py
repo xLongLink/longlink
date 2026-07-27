@@ -140,10 +140,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     object_storage = adapters.storage(storage_registry)
     application_rows = await organizations.applications(organization.id, include_deleted=True)
     for application in application_rows:
-        await cluster.applications.delete(
-            application.id,
-            organization.slug,
-        )
+        await cluster.applications.delete(application.id, organization.slug)
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
         await object_storage.delete_prefix(

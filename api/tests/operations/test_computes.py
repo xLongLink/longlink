@@ -101,7 +101,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
             return ipaddress.IPv4Address("192.0.2.1")
 
         async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> None:
-            """Capture the desired routes and report a ready rollout."""
+            """Capture the desired routes after the fake rollout."""
 
             snapshots.append(routes)
             assert proxy_secret == "proxy-secret"
