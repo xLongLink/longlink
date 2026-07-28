@@ -138,7 +138,7 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
 
 
 @router.delete("/requests/{request_id}/attachments/{file_id}", status_code=204)
-async def request_attachment_delete_endpoint(request_id: int, file_id: str) -> Response:
+async def request_attachment_delete_endpoint(request_id: int, file_id: str):
     """Delete one purchase request attachment."""
 
     # Validate the request before modifying its attachment storage.

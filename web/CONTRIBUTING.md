@@ -22,7 +22,7 @@ vp run dev:sdk     # Starts the embedded Application development server
 vp run routes      # Prints the generated Platform route tree
 vp run build:api   # Builds the Platform web bundle
 vp run build:sdk   # Builds the embedded Application web bundle
-vp check           # Checks formatting, linting, and Vite+ types
+vp run check       # Checks formatting, linting, and Vite+ types
 vp run typecheck   # Checks both React Router bundle modes
 vp fmt --write     # Formats the code
 ```
@@ -43,7 +43,7 @@ muted                   # Muted content color
 radius                  # none | small | medium | large
 ```
 
-Theme values are defined in `src/lib/theme.ts` and applied programmatically to the document root.
+Theme values are defined in `src/lib/theme.ts` and applied programmatically to the document root. `src/lib/default-theme.ts` is the source of truth for the static first-paint theme. Astryx writes its ignored outputs to `src/lib/generated/`; do not edit or commit those files. Development, type-check, route, and build scripts regenerate them automatically, or run `vp run theme:build` explicitly.
 
 ## Primitives
 

@@ -17,7 +17,7 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     # Exercise runtime metadata, frontend fallback, and development preflight routes.
     pages_response = client.get("/pages.json")
     frontend_response = client.get("/")
-    frontend_route_response = client.get("/settings")
+    frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
     cors_response = client.options(
         "/pages.json",
         headers={

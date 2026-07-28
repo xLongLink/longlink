@@ -3,7 +3,7 @@ from enum import StrEnum
 from fastapi import HTTPException
 from src.logger import logger
 from dataclasses import dataclass
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Awaitable, Coroutine
 from longlink.utils.time import utcnow
 from src.database.services import operations
 from src.models.operations import OperationKind
@@ -17,7 +17,6 @@ class OperationOutcomeState(StrEnum):
 
     complete = "complete"
     fail = "fail"
-    waiting = "waiting"
 
 
 @dataclass(frozen=True)
@@ -71,18 +70,36 @@ def complete() -> OperationOutcome:
     return OperationOutcome(OperationOutcomeState.complete)
 
 
-def wait(reason: str) -> OperationOutcome:
-    """Keep one claimed operation waiting for external convergence."""
-
-    # The dispatcher polls the same idempotent handler without releasing its lease.
-    return OperationOutcome(OperationOutcomeState.waiting, reason=reason)
-
-
 def fail(reason: str) -> OperationOutcome:
     """Return an outcome that fails the operation with a logged reason."""
 
     # The dispatcher owns logging and the terminal database transition.
     return OperationOutcome(OperationOutcomeState.fail, reason=reason)
+
+
+async def _finish_transition(transition: Coroutine[object, object, Operation | None]) -> Operation | None:
+    """Finish one terminal transition before propagating worker cancellation."""
+
+    # Run persistence independently so repeated cancellation cannot interrupt it.
+    task = asyncio.create_task(transition)
+    cancelled = False
+    while True:
+        try:
+            updated = await asyncio.shield(task)
+        except asyncio.CancelledError:
+            cancelled = True
+            continue
+        except Exception:
+            if cancelled:
+                logger.exception("Terminal Operation transition failed during cancellation")
+                raise asyncio.CancelledError from None
+            raise
+        break
+
+    # Preserve shutdown after the terminal database transition finishes.
+    if cancelled:
+        raise asyncio.CancelledError
+    return updated
 
 
 async def execute(operation: Operation, handler: JobHandler) -> Operation:
@@ -94,27 +111,21 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
 
     logger.info("Running %s operation %s", operation.kind, operation.id)
 
-    # Wait for normal external convergence within this one claimed execution.
-    waiting_reason: str | None = None
+    # Bound one complete handler execution under its worker lease.
     try:
         async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
-            while True:
-                outcome = await handler(operation)
-                if outcome.state != OperationOutcomeState.waiting:
-                    break
-                if outcome.reason != waiting_reason:
-                    waiting_reason = outcome.reason
-                    logger.info("Operation %s is waiting: %s", operation.id, waiting_reason)
-                await asyncio.sleep(5)
+            outcome = await handler(operation)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
-        await operations.fail(operation.id)
+        try:
+            await _finish_transition(operations.fail(operation.id))
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
         raise
     except TimeoutError:
-        detail = "Operation timed out"
-        if waiting_reason is not None:
-            detail = f"{detail} while waiting: {waiting_reason}"
-        outcome = fail(detail)
+        outcome = fail("Operation timed out")
     except HTTPException as exc:
         detail = str(exc.detail)
         outcome = fail(detail)
@@ -125,12 +136,15 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     # Persist exactly one transition that releases the claimed operation.
     match outcome.state:
         case OperationOutcomeState.complete:
-            updated = await operations.complete(operation.id)
+            transition = operations.complete(operation.id)
         case OperationOutcomeState.fail:
             logger.error("Operation %s failed: %s", operation.id, outcome.reason or "unknown reason")
-            updated = await operations.fail(operation.id)
+            transition = operations.fail(operation.id)
         case _:
             raise ValueError(f"Unsupported operation outcome '{outcome.state}'")
+
+    # Finish the terminal database transition even when shutdown cancels this worker.
+    updated = await _finish_transition(transition)
 
     # Never return a stale in-memory row when the worker could not finish its leased Operation.
     if updated is None:
@@ -155,8 +169,6 @@ async def run_operation_scheduler() -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-
-        logger.info("Executing %s operation %s", operation.kind, operation.id)
 
         # Execute and release one claimed operation before locking more work.
         try:

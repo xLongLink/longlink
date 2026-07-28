@@ -3,16 +3,15 @@ import { ContextProvider, useXmlContext } from '@/xml/core/context';
 import { renderNode } from '@/xml/core/node';
 import { BaseUrlContext, useUrl } from '@/xml/core/url';
 import type { Props } from '@/xml/types';
-import { resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlString } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ props, nodes }: Props) {
+export function For({ items, props, nodes }: Props & { items: unknown[] }) {
     const { ctx } = useXmlContext();
-    const each = resolveXmlValue(props, 'each', ctx);
     const as = resolveXmlString(props, 'as', ctx);
     const baseUrl = useUrl('');
 
-    return (Array.isArray(each) ? each : []).map((item, index) => {
+    return items.map((item, index) => {
         const childCtx: typeof ctx = {
             ...ctx,
             parent: ctx,

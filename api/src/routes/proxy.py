@@ -5,12 +5,11 @@ from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser
 from src.utils import roles
 from collections.abc import AsyncIterator
-from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, OrganizationRoles
+from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES
 from src.models.statuses import Status
 from starlette.responses import StreamingResponse
 from src.database.services import compute
 from src.database.models.users import User
-from src.database.models.association import UserApplication
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -31,39 +30,27 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     """
 
     # Load application access before proxying runtime traffic.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
+    access = roles.access(user, application_id, "application")
+    if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
     required_application_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
-    # Direct application memberships provide application role access.
-    if isinstance(membership, UserApplication):
-        application = membership.application
-        compute_id = membership.organization.compute_id
-        organization_membership = roles.access(user, membership.organization_id, "organization")
-        organization_role = organization_membership.role if organization_membership is not None else None
-        has_application_access = roles.atleast(membership.role, required_application_role)
-        has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain)
-    else:
-        application = next(item for item in membership.organization.applications if item.id == application_id)
-        compute_id = membership.organization.compute_id
-        has_application_access = False
-        has_organization_access = roles.atleast(membership.role, OrganizationRoles.maintain)
-
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
-    if not has_organization_access and not has_application_access:
+    if not access.allows(required_application_role):
         raise HTTPException(
             status_code=403,
             detail=f"Application {required_application_role.value} access required",
         )
+    application = access.application
+    organization = access.organization
 
     # Let the web runtime show a loading state while application creation is still pending.
     if application.status != Status.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    registry = await compute.get(compute_id)
+    registry = await compute.get(organization.compute_id)
     if registry is None or registry.gateway_url is None or registry.gateway_ca_certificate is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
@@ -109,8 +96,6 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         if client is not None:
             await client.aclose()
         raise
-    if client is None:
-        raise RuntimeError("Application proxy client was not initialized")
 
     response_headers = dict(PROXY_RESPONSE_SECURITY_HEADERS)
 

@@ -3,6 +3,7 @@ from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from longlink.shared import users as shared_users
+from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -21,12 +22,8 @@ async def sync_users(organization: Organization) -> None:
     # Convert Platform identities and membership state at the shared-schema boundary.
     for membership in memberships:
         user = membership.user
-        deleted_at = user.deleted_at
-        if membership.deleted_at is not None and (deleted_at is None or membership.deleted_at > deleted_at):
-            deleted_at = membership.deleted_at
-        updated_at = max(user.updated_at, membership.updated_at)
-        if deleted_at is not None and deleted_at > updated_at:
-            updated_at = deleted_at
+        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
+        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
         users.append(
             {
                 "id": user.id,
@@ -50,7 +47,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
     # Skip removed Organizations and already completed creation work.
-    infrastructure = await organizations.infrastructure(claimed.target_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return jobs.complete()
     organization = infrastructure.organization
@@ -63,7 +60,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
             current = await organizations.get(organization.id, include_deleted=True)
             if current is None or current.deleted_at is not None or current.status == Status.running:
                 return jobs.complete()
-            return jobs.wait("Organization lifecycle state changed before convergence")
+            return jobs.fail("Organization lifecycle state changed before convergence")
         organization.status = Status.creating
 
     # Resolve the Organization's immutable provider and compute assignments.
@@ -89,7 +86,11 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     await sync_users(organization)
 
     # Converge the Organization bucket and shared folder marker in the same reconciliation.
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     bucket = organization.id.hex
     await object_storage.create(bucket)
     await object_storage.create_prefix(bucket, "shared/")
@@ -104,7 +105,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
             current = await organizations.get(organization.id, include_deleted=True)
             if current is None or current.deleted_at is not None or current.status == Status.running:
                 return jobs.complete()
-            return jobs.wait("Organization lifecycle state changed before readiness was recorded")
+            return jobs.fail("Organization lifecycle state changed before readiness was recorded")
     return jobs.complete()
 
 
@@ -113,7 +114,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
-    infrastructure = await organizations.infrastructure(claimed.target_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None:
         return jobs.complete()
     organization = infrastructure.organization
@@ -137,7 +138,11 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     application_rows = await organizations.applications(organization.id, include_deleted=True)
     for application in application_rows:
         await cluster.applications.delete(application.id, organization.slug)
@@ -155,10 +160,10 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(
         compute_registry.id,
-        claimed.platform_version,
+        env.VERSION,
         gateway_url,
         compute_registry.status,
     ):
-        return jobs.wait("Organization gateway state was not recorded")
+        return jobs.fail("Organization gateway state was not recorded")
     await organizations.purge(organization.id)
     return jobs.complete()

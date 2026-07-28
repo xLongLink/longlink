@@ -15,7 +15,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserOrganizationMembership, ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
-export type User = ApiUserProfile;
+type User = ApiUserProfile;
 
 type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>;
 
@@ -129,7 +129,7 @@ export function useUserOrganizations(): UserOrganizationsState {
 
     return {
         memberships: query.items,
-        isLoading: profile.isLoading || (profile.user !== null && query.isLoading),
+        isLoading: profile.isLoading || query.isLoading,
         error: profile.error ?? query.error ?? null,
     };
 }

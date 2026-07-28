@@ -2,9 +2,12 @@ import contextlib
 from uuid import UUID
 from typing import TypedDict
 from sqlalchemy import String, text
+from sqlalchemy.exc import OperationalError
 from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
+
+MAINTENANCE_DATABASE = "postgres"
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
@@ -23,10 +26,9 @@ class DatabaseRuntimeConnection(TypedDict):
     database_name: str
 
 
-class DatabaseSchemaUsage(TypedDict):
-    """Describe storage usage for one database schema."""
+class DatabaseUsage(TypedDict):
+    """Describe physical usage for one database."""
 
-    name: str
     space_used: int
     table_count: int
 
@@ -54,7 +56,6 @@ class Postgres:
         self._username = username
         self._password = password
         self._sslmode = DatabaseSSLMode(sslmode)
-        self._maintenance_database = "postgres"
 
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
@@ -133,7 +134,7 @@ class Postgres:
         """
 
         # Create the organization database from the maintenance database when it is missing.
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
 
             # Create the database only when PostgreSQL does not already list it.
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
@@ -221,7 +222,7 @@ class Postgres:
         """Delete an application schema and its runtime role when present."""
 
         # Skip cleanup when the organization database was already removed.
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
 
             # Stop once PostgreSQL confirms the organization database is absent.
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
@@ -242,7 +243,7 @@ class Postgres:
                 await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
@@ -250,7 +251,7 @@ class Postgres:
         """Delete one organization database and tolerate missing databases."""
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
-        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
             database_name = self.quote(conn, organization.hex)
             await conn.execute(
                 text(
@@ -267,43 +268,47 @@ class Postgres:
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
-    async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
-        """Return usage details for application schemas in a database."""
+    async def database_usage(self, database_name: str) -> DatabaseUsage | None:
+        """Return physical size and user table count for one database when it exists."""
 
-        # Aggregate storage and table usage from PostgreSQL catalog tables.
-        async with self._connection(database_name) as conn:
-            result = await conn.execute(
-                text(
-                    """
-                    SELECT
-                        n.nspname AS name,
-                        COALESCE(SUM(CASE WHEN c.relkind IN ('r', 'p', 'm') THEN pg_total_relation_size(c.oid) ELSE 0 END), 0) AS space_used,
-                        COUNT(c.oid) FILTER (WHERE c.relkind IN ('r', 'p', 'm')) AS table_count
-                    FROM pg_namespace n
-                    LEFT JOIN pg_class c ON c.relnamespace = n.oid
-                    WHERE n.nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'public')
-                    AND n.nspname NOT LIKE 'pg_%'
-                    GROUP BY n.nspname
-                    ORDER BY n.nspname
-                    """
+        # Read both metrics from the exact Organization database and normalize an absent database to no usage.
+        try:
+            async with self._connection(database_name) as conn:
+                result = await conn.execute(
+                    text(
+                        """
+                        SELECT
+                            pg_database_size(current_database()) AS space_used,
+                            (
+                                SELECT COUNT(c.oid)
+                                FROM pg_namespace n
+                                JOIN pg_class c ON c.relnamespace = n.oid
+                                WHERE n.nspname != 'information_schema'
+                                AND n.nspname !~ '^pg_'
+                                AND c.relkind IN ('r', 'p')
+                            ) AS table_count
+                        """
+                    )
                 )
-            )
+        except OperationalError:
+            # Distinguish an unprovisioned database from connectivity and permission failures.
+            async with self._connection(MAINTENANCE_DATABASE) as conn:
+                database_exists = await conn.scalar(
+                    text("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = :database_name)"),
+                    {"database_name": database_name},
+                )
+            if not database_exists:
+                return None
+            raise
 
-            # Convert PostgreSQL numeric values into plain integers for API responses.
-            return [
-                {
-                    "name": row["name"],
-                    "space_used": int(row["space_used"]),
-                    "table_count": int(row["table_count"]),
-                }
-                for row in result.mappings().all()
-            ]
+        usage = result.mappings().one()
+        return {"space_used": int(usage["space_used"]), "table_count": int(usage["table_count"])}
 
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
-        async with self._connection(self._maintenance_database) as conn:
+        async with self._connection(MAINTENANCE_DATABASE) as conn:
             result = await conn.execute(
                 text(
                     """

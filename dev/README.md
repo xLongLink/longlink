@@ -77,19 +77,18 @@ To reconcile compute resources against a remote Kubernetes cluster, set the path
 KUBECONFIG=../kubeconfig.yml
 ```
 
-The default `localhost:15000/longlink-app:dev` image is only reachable from local k3d. Set `LOCAL_APPLICATION_IMAGE` to
-an image the remote cluster can pull before seeding a remote compute target.
+The default seed image is `ghcr.io/xlonglink/longlink-app:v0.0.2`. Set `LOCAL_APPLICATION_IMAGE` to another pullable
+image before seeding when testing a different Application release or a remote compute target.
 
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
-Start local services, build the generated SDK development application, push it to the local registry, run API migrations,
-and seed local data:
+Start local services, pull the configured Application image, run API migrations, and seed local data:
 
 ```bash
 make seed
 ```
 
-The pushed image is `localhost:15000/longlink-app:dev` by default.
+LongLink resolves the pulled tag through the registry and deploys its immutable digest.
 LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove those
 resources before local Platform state is deleted. PostgreSQL remains local by default because it matches the production
 PostgreSQL contract without provisioning a remote database.

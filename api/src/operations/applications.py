@@ -16,10 +16,6 @@ from src.database.models.operations import Operation
 async def create(claimed: Operation) -> jobs.OperationOutcome:
     """Provision and deploy one Application once, then publish its gateway route."""
 
-    # Reject work when the claimed replica no longer matches the Operation's Platform release.
-    if claimed.platform_version != env.VERSION:
-        return jobs.fail("Operation targets a different Platform release")
-
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     application = await applications.get(claimed.target_id, include_deleted=True)
     if application is None or application.deleted_at is not None:
@@ -31,9 +27,9 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             current = await applications.get(application.id, include_deleted=True)
             if current is None or current.deleted_at is not None or current.status == Status.running:
                 return jobs.complete()
-            return jobs.wait("Application lifecycle state changed before creation")
+            return jobs.fail("Application lifecycle state changed before creation")
         application.status = Status.creating
-    infrastructure = await organizations.infrastructure(application.organization_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return jobs.fail("Application Organization not found")
     organization = infrastructure.organization
@@ -62,7 +58,11 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             database_registry.password,
             database_registry.sslmode,
         )
-        object_storage = adapters.storage(storage_registry)
+        object_storage = adapters.Exoscale(
+            storage_registry.endpoint_url,
+            storage_registry.access_key_id,
+            storage_registry.secret_access_key,
+        )
 
         # Resolve the cluster-owned credentials before converging provider identities.
         bucket = organization.id.hex
@@ -76,7 +76,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         # Generate credentials only until the runtime Secret commits their durable values.
         if persisted_runtime_envs is None:
             database_password = secrets.token_urlsafe(24)
-            connection = await db.schema(organization.id, application.id, database_password)
             credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
         else:
             database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
@@ -84,11 +83,12 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
             if not database_password or not storage_access_key_id or not storage_secret_access_key:
                 return jobs.fail("Application runtime Secret is invalid")
-            connection = await db.schema(organization.id, application.id, database_password)
             credentials = {
                 "access_key_id": storage_access_key_id,
                 "secret_access_key": storage_secret_access_key,
             }
+
+        connection = await db.schema(organization.id, application.id, database_password)
 
         # Build the complete immutable runtime contract from provider and Application identities.
         runtime_envs = {
@@ -127,19 +127,19 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     gateway_url = await computes.reconcile_gateway(registry, cluster, pending_route)
     if not await compute.record_success(
         registry.id,
-        claimed.platform_version,
+        env.VERSION,
         gateway_url,
         registry.status,
         satisfy_pending=True,
     ):
-        return jobs.wait("Application gateway state was not recorded")
+        return jobs.fail("Application gateway state was not recorded")
 
     # Publish running only after both workload readiness and gateway publication succeed.
     if application.status == Status.creating and await applications.mark_running(application.id, organization.compute_id) is None:
         current = await applications.get(application.id, include_deleted=True)
         if current is None or current.deleted_at is not None or current.status == Status.running:
             return jobs.complete()
-        return jobs.wait("Application lifecycle state changed before readiness was recorded")
+        return jobs.fail("Application lifecycle state changed before readiness was recorded")
     return jobs.complete()
 
 
@@ -147,17 +147,13 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 async def delete(claimed: Operation) -> jobs.OperationOutcome:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
-    # Reject work when the claimed replica no longer matches the Operation's Platform release.
-    if claimed.platform_version != env.VERSION:
-        return jobs.fail("Operation targets a different Platform release")
-
     # An absent tombstone means a previous execution completed cleanup.
     application = await applications.get(claimed.target_id, include_deleted=True)
     if application is None:
         return jobs.complete()
     if application.deleted_at is None:
         return jobs.fail("Active Applications cannot be deleted by lifecycle cleanup")
-    infrastructure = await organizations.infrastructure(application.organization_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None:
         return jobs.fail("Application Organization not found")
     organization = infrastructure.organization
@@ -182,16 +178,20 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     if not await compute.record_success(
         registry.id,
-        claimed.platform_version,
+        env.VERSION,
         gateway_url,
         registry.status,
     ):
-        return jobs.wait("Application gateway state was not recorded")
+        return jobs.fail("Application gateway state was not recorded")
     await applications.purge(application.id)
     return jobs.complete()

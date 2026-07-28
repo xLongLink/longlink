@@ -11,20 +11,18 @@ type CodeTabItem = {
 };
 
 /** Renders connected tabs for switching between equivalent code snippets. */
-export function CodeTabs({ defaultValue, items }: { defaultValue: string; items: CodeTabItem[] }) {
+export function CodeTabs({ defaultValue, items }: { defaultValue: string; items: [CodeTabItem, ...CodeTabItem[]] }) {
     const [value, setValue] = useState(defaultValue);
     const selectedItem = items.find((item) => item.value === value) ?? items[0];
 
     return (
         <Stack gap={2} width="100%">
-            <TabList aria-label="Code examples" value={selectedItem?.value ?? defaultValue} onChange={setValue}>
+            <TabList aria-label="Code examples" value={selectedItem.value} onChange={setValue}>
                 {items.map((item) => (
                     <Tab key={item.value} label={item.label} value={item.value} />
                 ))}
             </TabList>
-            {selectedItem ? (
-                <CodeBlock language={selectedItem.language ?? 'bash'}>{selectedItem.code}</CodeBlock>
-            ) : null}
+            <CodeBlock language={selectedItem.language ?? 'bash'}>{selectedItem.code}</CodeBlock>
         </Stack>
     );
 }

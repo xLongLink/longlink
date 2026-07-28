@@ -4,90 +4,12 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import {
-    Activity,
-    ArrowRight,
-    Bot,
-    Braces,
-    Building2,
-    ChevronDown,
-    Database,
-    FileCode,
-    HardDrive,
-    KeyRound,
-    Logs,
-    PackageCheck,
-    Palette,
-    PanelTop,
-    Play,
-    Plug,
-    Rocket,
-    Route,
-    ShieldCheck,
-    Terminal,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useState } from 'react';
+import { ReactCompareSlider } from 'react-compare-slider';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { Wordmark } from '@/components/Wordmark';
 import { HeroGlobe } from '@/platform/HeroGlobe';
-import { CliWorkflowConnector } from '@/svg/CliWorkflowConnector';
-import { FastAPI } from '@/svg/FastAPI';
-import { Pydantic } from '@/svg/Pydantic';
-import { Python } from '@/svg/Python';
-import { WorkNetworkConnections } from '@/svg/WorkNetworkConnections';
-
-const homepageCards = [
-    {
-        title: 'Users, agents, and developers meet',
-        description: 'One operating layer for work.',
-        details: ['Users', 'Agents', 'Developers', 'Integrations', 'Data', 'APIs'],
-        layoutClassName: 'md:col-span-3',
-        variant: 'work',
-    },
-    {
-        title: 'Shared foundation',
-        description: 'Common platform work, handled once.',
-        details: [
-            'Authentication',
-            'Organizations',
-            'Permissions',
-            'Theming',
-            'Application shell',
-            'Databases',
-            'Storage',
-            'Routing',
-            'Deployment',
-            'Logs',
-            'Status',
-        ],
-        layoutClassName: 'md:col-span-3',
-        variant: 'foundation',
-    },
-    {
-        title: 'XML screens',
-        description: 'XML turns into usable screens.',
-        details: [],
-        layoutClassName: 'md:col-span-2',
-        variant: 'xml',
-    },
-    {
-        title: 'Powered by Python',
-        description: 'Use the Python ecosystem.',
-        details: ['FastAPI', 'Pydantic', 'SQLAlchemy', 'Alembic'],
-        layoutClassName: 'md:col-span-2',
-        variant: 'python',
-    },
-    {
-        title: 'CLI workflow',
-        description: 'Init, dev, migrate, build.',
-        details: ['init', 'dev', 'migrate', 'build'],
-        layoutClassName: 'md:col-span-2',
-        variant: 'cli',
-    },
-] as const;
 
 const paths = [
     {
@@ -115,294 +37,6 @@ const paths = [
 
 const integrationContextCount = 336_000_000;
 const humanRobotHandsImage = '/human_robot_hands_vector.svg';
-
-/** Renders the XML-to-UI showcase card visual. */
-function XmlShowcaseVisual() {
-    return (
-        <div aria-hidden="true" className="relative h-44 overflow-hidden">
-            <div className="absolute inset-0 rounded-md p-3 transition-[transform,opacity] duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0 motion-reduce:transition-none">
-                <div className="mb-2 flex gap-1.5">
-                    <span className="size-1.5 rounded-full bg-accent-bg" />
-                    <span className="size-1.5 rounded-full bg-muted" />
-                    <span className="size-1.5 rounded-full bg-border" />
-                </div>
-                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-secondary">
-                    <code>{`<longlink name="Access">
-  <TextInput label="Email" />
-  <Selector label="Role">
-    <SelectorOption value="reviewer" label="Reviewer" />
-  </Selector>
-  <Button label="Submit" />
-</longlink>`}</code>
-                </pre>
-            </div>
-
-            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-md p-3 opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none">
-                <div className="mb-3 text-sm font-medium text-primary">Access request</div>
-                <div className="space-y-2">
-                    <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-secondary">Email</div>
-                        <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
-                            alex@company.com
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-secondary">Role</div>
-                        <div className="flex items-center justify-between rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
-                            Reviewer
-                            <ChevronDown className="size-3 text-secondary" strokeWidth={1.8} />
-                        </div>
-                    </div>
-                    <div className="inline-flex rounded-md bg-accent-bg px-3 py-1.5 text-xs font-medium text-on-accent">
-                        Submit
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-const pythonOrbitLibraries = [
-    {
-        key: 'FastAPI',
-        icon: FastAPI,
-        className: 'left-[70%] top-[18%]',
-    },
-    {
-        key: 'Pydantic',
-        icon: Pydantic,
-        className: 'left-[22%] top-[66%]',
-    },
-    {
-        key: 'SQLAlchemy',
-        icon: Database,
-        className: 'left-[78%] top-[62%]',
-    },
-    {
-        key: 'Alembic',
-        icon: Wrench,
-        className: 'left-[25%] top-[22%]',
-    },
-] as const;
-
-const foundationVisualColumns = [
-    [
-        { key: 'authentication', icon: KeyRound },
-        { key: 'theming', icon: Palette },
-        { key: 'routing', icon: Route },
-    ],
-    [
-        { key: 'organizations', icon: Building2 },
-        { key: 'app-shell', icon: PanelTop },
-        { key: 'deployment', icon: Rocket },
-    ],
-    [
-        { key: 'permissions', icon: ShieldCheck },
-        { key: 'databases', icon: Database },
-        { key: 'logs', icon: Logs },
-    ],
-    [
-        { key: 'storage', icon: HardDrive },
-        { key: 'status', icon: Activity },
-    ],
-] as const;
-
-const cliWorkflowSteps = [
-    {
-        command: 'init',
-        icon: Terminal,
-        className: 'left-[20px] top-[12px]',
-    },
-    {
-        command: 'dev',
-        icon: Play,
-        className: 'left-[76px] top-[46px]',
-    },
-    {
-        command: 'migrate',
-        icon: Database,
-        className: 'left-[132px] top-[80px]',
-    },
-    {
-        command: 'build',
-        icon: PackageCheck,
-        className: 'left-[188px] top-[114px]',
-    },
-] as const;
-
-const cliWorkflowConnectors = [
-    {
-        key: 'init-dev',
-        className: 'left-[26px] top-[31px]',
-    },
-    {
-        key: 'dev-migrate',
-        className: 'left-[82px] top-[65px]',
-    },
-    {
-        key: 'migrate-build',
-        className: 'left-[138px] top-[99px]',
-    },
-] as const;
-
-const workNetworkNodes = [
-    {
-        label: 'Users',
-        icon: Users,
-        className: 'left-[4%] top-[5%]',
-    },
-    {
-        label: 'Agents',
-        icon: Bot,
-        className: 'left-[4%] top-1/2 -translate-y-1/2',
-    },
-    {
-        label: 'Developers',
-        icon: FileCode,
-        className: 'bottom-[5%] left-[4%]',
-    },
-    {
-        label: 'Integrations',
-        icon: Plug,
-        className: 'right-[4%] top-[5%]',
-    },
-    {
-        label: 'Data',
-        icon: Database,
-        className: 'right-[4%] top-1/2 -translate-y-1/2',
-    },
-    {
-        label: 'APIs',
-        icon: Braces,
-        className: 'bottom-[5%] right-[4%]',
-    },
-] as const;
-
-/** Renders the dedicated visual for the shared platform foundation card. */
-function FoundationCardVisual() {
-    return (
-        <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-bg/10 blur-2xl" />
-            <div className="relative z-10 grid h-full grid-cols-4 px-7 py-3">
-                {foundationVisualColumns.map((tiles, columnIndex) => (
-                    <div
-                        key={tiles.map(({ key }) => key).join('-')}
-                        className={`flex flex-col items-center justify-center gap-2 ${
-                            columnIndex % 2 === 0 ? '-translate-y-[18px]' : 'translate-y-[18px]'
-                        }`}
-                    >
-                        {tiles.map(({ key, icon: TileIcon }) => (
-                            <div
-                                key={key}
-                                className="homepage-visual-node relative flex size-9 items-center justify-center rounded-md border border-border bg-card/90 text-accent"
-                            >
-                                <TileIcon
-                                    className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
-                                    strokeWidth={1.8}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
-
-            {['left-[22%] top-[25%]', 'left-[47%] top-[30%]', 'right-[18%] top-[23%]', 'left-[54%] bottom-[22%]'].map(
-                (className) => (
-                    <div key={className} className={`absolute size-9 rounded-md bg-muted shadow-inner ${className}`} />
-                )
-            )}
-        </div>
-    );
-}
-
-/** Renders the dedicated visual for the LongLink CLI workflow card. */
-function CliCardVisual() {
-    return (
-        <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-0 h-40 w-[280px] -translate-x-1/2">
-                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-accent-bg/5 transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
-                {cliWorkflowConnectors.map(({ key, className }) => (
-                    <CliWorkflowConnector
-                        key={key}
-                        className={`absolute h-11 w-[58px] overflow-visible text-accent ${className}`}
-                    />
-                ))}
-
-                {cliWorkflowSteps.map(({ command, icon: StepIcon, className }) => (
-                    <div
-                        key={command}
-                        className={`homepage-visual-node absolute z-20 flex w-20 items-center gap-1.5 rounded-full border border-border bg-card/95 px-2.5 py-2 ${className}`}
-                    >
-                        <StepIcon
-                            className="size-3.5 shrink-0 text-accent transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
-                            strokeWidth={1.8}
-                        />
-                        <div className="min-w-0">
-                            <div className="font-mono text-[10px] leading-3 text-primary">{command}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-/** Renders the dedicated visual for the LongLink work network card. */
-function WorkNetworkVisual() {
-    return (
-        <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <WorkNetworkConnections className="absolute inset-0 h-full w-full text-accent" />
-
-            <div className="homepage-visual-node absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card/95 px-5 py-3">
-                <Wordmark className="[&>span:first-child]:text-accent [&>span:last-child]:text-primary" />
-            </div>
-
-            {workNetworkNodes.map(({ label, icon: NodeIcon, className }) => (
-                <div
-                    key={label}
-                    className={`homepage-visual-node absolute z-20 flex min-w-[84px] items-center gap-1.5 rounded-full border border-border bg-card/95 px-2.5 py-1.5 ${className}`}
-                >
-                    <NodeIcon
-                        className="size-3.5 shrink-0 text-accent transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
-                        strokeWidth={1.8}
-                    />
-                    <span className="text-[10px] font-medium leading-3 text-primary">{label}</span>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-/** Renders the dedicated visual for the Python ecosystem landing card. */
-function PythonCardVisual() {
-    return (
-        <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
-            <div className="absolute left-1/2 top-1/2 size-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
-            <div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 bg-border" />
-            <div className="absolute left-1/2 top-1/2 h-40 w-px -translate-y-1/2 bg-border" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 rotate-45 bg-border" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 -rotate-45 bg-border" />
-
-            <div className="homepage-visual-node absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/95 text-accent">
-                <Python className="size-6 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none" />
-            </div>
-
-            {pythonOrbitLibraries.map(({ key, icon: LibraryIcon, className }) => (
-                <div
-                    key={key}
-                    className={`homepage-visual-node absolute z-20 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/90 text-accent ${className}`}
-                >
-                    <LibraryIcon
-                        className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
-                        strokeWidth={1.8}
-                    />
-                </div>
-            ))}
-        </div>
-    );
-}
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
@@ -452,9 +86,14 @@ function IntegrationScale() {
     }, []);
 
     return (
-        <Section className="relative z-10 bg-transparent" variant="transparent" padding={6} paddingBlock={10}>
+        <Section
+            className="homepage-integration-section relative z-10 bg-transparent"
+            variant="transparent"
+            padding={6}
+            paddingBlock={10}
+        >
             <Stack
-                className="relative mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
+                className="relative z-10 mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
                 width="100%"
                 maxWidth={1000}
                 gap={6}
@@ -525,7 +164,7 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen overflow-hidden">
+        <div className="min-h-screen overflow-x-clip">
             <Navbar />
             <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="homepage-hero-horizon absolute inset-0 overflow-visible">
@@ -556,45 +195,41 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <section className="relative z-20 bg-body px-6 py-10">
-                <div aria-hidden="true" className="homepage-feature-transition" />
-                <div className="relative z-10 mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
-                    {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
-                        const isXmlCard = variant === 'xml';
-                        const isCliCard = variant === 'cli';
-                        const isWorkCard = variant === 'work';
-                        const isPythonCard = variant === 'python';
-                        const isFoundationCard = variant === 'foundation';
-
-                        return (
-                            <article
-                                key={title}
-                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card p-5 text-primary ${layoutClassName}`}
-                            >
-                                <div className="relative flex h-full flex-col justify-between gap-6">
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <h2 className="text-lg font-medium text-primary">{title}</h2>
-                                            <p className="max-w-md text-sm leading-6 text-secondary">{description}</p>
-                                            {details.length ? <p className="sr-only">{details.join(', ')}</p> : null}
-                                        </div>
-                                        {isXmlCard ? (
-                                            <XmlShowcaseVisual />
-                                        ) : isCliCard ? (
-                                            <CliCardVisual />
-                                        ) : isWorkCard ? (
-                                            <WorkNetworkVisual />
-                                        ) : isFoundationCard ? (
-                                            <FoundationCardVisual />
-                                        ) : isPythonCard ? (
-                                            <PythonCardVisual />
-                                        ) : null}
-                                    </div>
-                                </div>
-                            </article>
-                        );
-                    })}
-                </div>
+            <section aria-labelledby="before-after-heading" className="relative z-20">
+                <Heading id="before-after-heading" level={2} className="sr-only">
+                    Before and after LongLink
+                </Heading>
+                <Stack
+                    as="figure"
+                    className="homepage-before-after-scene relative isolate overflow-hidden"
+                    width="100%"
+                    minHeight="100svh"
+                    justify="center"
+                    hAlign="center"
+                >
+                    <Stack className="absolute inset-0">
+                        <ReactCompareSlider
+                            className="homepage-before-after-slider size-full"
+                            defaultPosition={50}
+                            itemOne={
+                                <Stack
+                                    aria-label="Fragmented city illustration"
+                                    role="img"
+                                    className="homepage-before-after-art homepage-before-after-art-before size-full"
+                                />
+                            }
+                            itemTwo={
+                                <Stack
+                                    aria-label="Unified city illustration"
+                                    role="img"
+                                    className="homepage-before-after-art homepage-before-after-art-after size-full"
+                                />
+                            }
+                            keyboardIncrement="2%"
+                            onlyHandleDraggable={false}
+                        />
+                    </Stack>
+                </Stack>
             </section>
             <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
                 <div className="mx-auto w-full max-w-[1000px]">

@@ -21,23 +21,19 @@ function parseLogLines(value: unknown): string[] {
 export default function Logs({
     applicationId,
     applicationName,
-    open,
     onOpenChange,
 }: {
     applicationId: string;
     applicationName: string;
-    open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
     const t = useTranslator();
-    const logsPath = open ? `/api/applications/${applicationId}/logs` : null;
-    const logsQuery = useApiQuery<string[]>(logsPath, { parse: parseLogLines });
-    const logLines = open ? (logsQuery.data ?? []) : [];
-    const logsLoading = open && logsQuery.isFetching;
-    const logsError = open && logsQuery.error ? logsQuery.error.message || t('appView.loadLogsFailed') : null;
+    const logsQuery = useApiQuery<string[]>(`/api/applications/${applicationId}/logs`, { parse: parseLogLines });
+    const logLines = logsQuery.data ?? [];
+    const logsError = logsQuery.error ? logsQuery.error.message || t('appView.loadLogsFailed') : null;
 
     return (
-        <Dialog isOpen={open} onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
+        <Dialog isOpen onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
             <Layout
                 header={
                     <DialogHeader
@@ -48,7 +44,7 @@ export default function Logs({
                 }
                 content={
                     <LayoutContent>
-                        {logsLoading ? (
+                        {logsQuery.isFetching ? (
                             <Stack align="center" padding={6}>
                                 <Spinner />
                             </Stack>

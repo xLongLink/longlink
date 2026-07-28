@@ -1,7 +1,6 @@
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.types import DatabaseSSLMode
-from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import DatabaseConfiguration
 
 
@@ -12,24 +11,15 @@ class DatabaseRegistryCreate(DatabaseConfiguration):
     name: str = Field(min_length=1, max_length=128)
 
 
-class OrganizationDatabaseResourceResponse(BaseModel):
-    """Represent a live database schema and usage within one Organization database.
-
-    A missing application association identifies shared or orphaned backend state, not additional desired state.
-    """
-
-    # Metadata
-    name: str
+class OrganizationDatabaseUsageResponse(BaseModel):
+    """Represent live usage for one Organization database."""
 
     # Database
     database_name: str
 
-    # Relationships
-    application: OrganizationApplicationSummary | None = None
-
     # Usage
-    space_used: int | None = None
-    table_count: int | None = None
+    space_used: int = Field(ge=0)
+    table_count: int = Field(ge=0)
 
 
 class DatabaseRegistryResponse(BaseModel):

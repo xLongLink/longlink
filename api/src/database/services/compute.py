@@ -143,14 +143,15 @@ async def set_status(compute_id: UUID, expected_status: Status, status: Status) 
 
     # Guard reconciliation writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        registry = await session.scalar(
+        result = await session.execute(
             update(ComputeRegistry)
             .where(
                 ComputeRegistry.id == compute_id,
                 ComputeRegistry.status == expected_status,
             )
             .values(status=status)
-            .returning(ComputeRegistry)
         )
+        if result.rowcount != 1:
+            return False
         await session.commit()
-        return registry is not None
+        return True

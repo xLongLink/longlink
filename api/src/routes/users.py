@@ -37,8 +37,10 @@ async def patch_me(
     """Update the authenticated user's details."""
 
     # Apply only non-null profile fields supplied by the caller.
-    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
+    updates = payload.model_dump(exclude_unset=True, exclude_none=True)
+    for field, value in updates.items():
         setattr(user, field, value)
 
-    await session.commit()
+    if updates:
+        await session.commit()
     return user

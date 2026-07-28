@@ -63,7 +63,7 @@ export async function executeAction(
         const form = resolveXmlExpression(props, 'form');
         const json = resolveXmlExpression(props, 'json');
         method = resolveXmlString(props, 'method', ctx, 'POST');
-        actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
+        actionUrl = resolveXmlString(props, 'action', ctx, '');
 
         // Resolve the compiled payload at click time so it sees the latest state.
         formValue = form ? form(ctx) : undefined;
@@ -73,7 +73,7 @@ export async function executeAction(
         return;
     }
 
-    const invalidateRuntime = ctx.invalidate ?? (async () => {});
+    const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
     const headers = new Headers();
 

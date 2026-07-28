@@ -38,8 +38,8 @@ class DatabaseConfiguration(BaseModel):
     # Connection
     host: str = Field(min_length=1, max_length=255)
     port: int = Field(ge=1, le=65535)
-    password: str = Field(min_length=1, max_length=255)
     sslmode: DatabaseSSLMode = DatabaseSSLMode.require
+    password: str = Field(min_length=1, max_length=255)
     username: str = Field(min_length=1, max_length=255)
 
     @field_validator("host")
@@ -89,24 +89,6 @@ class StorageConfiguration(BaseModel):
 
         # Normalize and validate the provider endpoint before persistence.
         value = endpoint_url.strip().rstrip("/")
-        parsed = urllib.parse.urlsplit(value)
-        if (
-            not value
-            or parsed.scheme not in {"http", "https"}
-            or not parsed.netloc
-            or parsed.username
-            or parsed.password
-            or parsed.query
-            or parsed.fragment
-            or any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value)
-        ):
-            raise ValueError("Storage endpoint URL is invalid")
-
-        # Accessing the port rejects malformed numeric values at the request boundary.
-        try:
-            parsed.port
-        except ValueError as exc:
-            raise ValueError("Storage endpoint URL port is invalid") from exc
 
         # Storage registries currently support only zone-specific Exoscale SOS endpoints.
         exoscale_zone(value)

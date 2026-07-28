@@ -16,7 +16,6 @@ from src.models.applications import (
     ApplicationMutationResponse,
 )
 from src.database.models.users import User
-from src.database.models.association import UserApplication
 
 router = APIRouter()
 
@@ -73,7 +72,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         sdk=metadata.sdk,
         version=metadata.version,
         description=payload.description,
-        icon=payload.icon.value if payload.icon is not None else None,
+        icon=payload.icon,
         user=user,
     )
 
@@ -104,32 +103,18 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     """Return recent pod logs for one managed application."""
 
     # Load application access before exposing logs.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
+    access = roles.access(user, application_id, "application")
+    if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Direct application memberships provide application role access.
-    if isinstance(membership, UserApplication):
-        application = membership.application
-        compute_id = membership.organization.compute_id
-        namespace = membership.organization.slug
-        organization_membership = roles.access(user, membership.organization_id, "organization")
-        organization_role = organization_membership.role if organization_membership is not None else None
-
-        if not roles.atleast(membership.role, ApplicationRoles.maintain):
-            if not roles.atleast(organization_role, OrganizationRoles.maintain):
-                raise HTTPException(status_code=403, detail="Permission required")
-    else:
-        application = next(item for item in membership.organization.applications if item.id == application_id)
-        compute_id = membership.organization.compute_id
-        namespace = membership.organization.slug
-
-        # Organization memberships must satisfy the organization role requirement.
-        if not roles.atleast(membership.role, OrganizationRoles.maintain):
-            raise HTTPException(status_code=403, detail="Permission required")
+    # Direct Application or inherited Organization maintenance authority is required.
+    if not access.allows(ApplicationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+    application = access.application
+    organization = access.organization
 
     # The Organization's compute registry is the Application's only cluster assignment.
-    registry = await compute.get(compute_id)
+    registry = await compute.get(organization.compute_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -137,7 +122,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.applications.logs(application.id, namespace)
+        logs = await compute_client.applications.logs(application.id, organization.slug)
     except Exception as exc:
         logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
@@ -150,24 +135,15 @@ async def update_application_environment(application_id: UUID, payload: Applicat
     """Replace user-owned environment values and roll one running Application."""
 
     # Load Application access before changing its runtime configuration.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
+    access = roles.access(user, application_id, "application")
+    if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
     # Direct Application and inherited Organization access both require maintenance authority.
-    if isinstance(membership, UserApplication):
-        application = membership.application
-        organization = membership.organization
-        organization_membership = roles.access(user, membership.organization_id, "organization")
-        organization_role = organization_membership.role if organization_membership is not None else None
-        if not roles.atleast(membership.role, ApplicationRoles.maintain):
-            if not roles.atleast(organization_role, OrganizationRoles.maintain):
-                raise HTTPException(status_code=403, detail="Permission required")
-    else:
-        organization = membership.organization
-        application = next(item for item in organization.applications if item.id == application_id)
-        if not roles.atleast(membership.role, OrganizationRoles.maintain):
-            raise HTTPException(status_code=403, detail="Permission required")
+    if not access.allows(ApplicationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+    application = access.application
+    organization = access.organization
 
     # Environment rollouts are valid only after the initial Application lifecycle completes.
     if application.status != Status.running:
@@ -184,7 +160,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         status = await applications.replace_environment(
             application.id,
             Status.running,
-            lambda: cluster.applications.replace_envs(application.id, organization.slug, payload.envs),
+            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs, require_deployment=True),
         )
     except Exception as exc:
         logger.exception("Failed to update environment for application '%s': %r", application.id, exc)
@@ -202,11 +178,11 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
     """Return organization members and their application-specific roles."""
 
     # Load application access before listing members.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
+    access = roles.access(user, application_id, "application")
+    if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    member_rows = await applications.members(application_id, membership.organization_id)
+    member_rows = await applications.members(application_id, access.organization.id)
     return [
         {
             "user": member,
@@ -227,32 +203,14 @@ async def update_application_member(
     """Update one member's application-specific role."""
 
     # Load application access before updating members.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
+    access = roles.access(user, application_id, "application")
+    if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Direct application memberships provide application role access.
-    if isinstance(membership, UserApplication):
-        application_role = membership.role
-        organization_membership = roles.access(user, membership.organization_id, "organization")
-        organization_membership_role = organization_membership.role if organization_membership is not None else None
-
-        # Only application or organization maintainers can manage members.
-        if not roles.atleast(application_role, ApplicationRoles.maintain):
-            if not roles.atleast(organization_membership_role, OrganizationRoles.maintain):
-                raise HTTPException(status_code=403, detail="Permission required")
-
-        caller_role_rank = roles.rank(application_role)
-
-        # Organization maintainers inherit organization-level rank.
-        if roles.rank(organization_membership_role) >= roles.rank(OrganizationRoles.maintain):
-            caller_role_rank = max(caller_role_rank, roles.rank(organization_membership_role))
-    else:
-        # Organization memberships grant inherited application management authority.
-        if not roles.atleast(membership.role, OrganizationRoles.maintain):
-            raise HTTPException(status_code=403, detail="Permission required")
-
-        caller_role_rank = roles.rank(membership.role)
+    # Only direct Application or inherited Organization maintainers can manage members.
+    if not access.allows(ApplicationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+    caller_role_rank = max(roles.rank(access.application_role), roles.rank(access.organization_role))
 
     # Managers cannot modify roles above their authority.
     member_application_role = await applications.membership_role(application_id, member_id)
@@ -263,7 +221,7 @@ async def update_application_member(
 
     updated = await applications.set_member_role(
         application_id,
-        membership.organization_id,
+        access.organization.id,
         member_id,
         payload.role,
         user,
@@ -281,24 +239,15 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     if tombstone is not None and tombstone.deleted_at is not None:
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
-        membership = None
+        access = None
     else:
-        membership = roles.access(user, application_id, "application")
-        if membership is None:
+        access = roles.access(user, application_id, "application")
+        if access is None:
             raise HTTPException(status_code=403, detail="Access required")
 
-    # Direct application memberships provide application role access.
-    if isinstance(membership, UserApplication):
-        organization_membership = roles.access(user, membership.organization_id, "organization")
-        organization_role = organization_membership.role if organization_membership is not None else None
-
-        if not roles.atleast(membership.role, ApplicationRoles.maintain):
-            if not roles.atleast(organization_role, OrganizationRoles.maintain):
-                raise HTTPException(status_code=403, detail="Permission required")
-    elif membership is not None:
-        # Organization memberships must satisfy the organization role requirement.
-        if not roles.atleast(membership.role, OrganizationRoles.maintain):
-            raise HTTPException(status_code=403, detail="Permission required")
+    # Active Applications require direct or inherited maintenance authority.
+    if access is not None and not access.allows(ApplicationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     result = await applications.soft_delete(application_id, user)
     if result is None:

@@ -25,8 +25,7 @@ function OrganizationApplicationView() {
         error,
     } = useOrganization(organization);
     const applicationAccess = applications.find((item) => item.application.slug === application);
-    const applicationRole = applicationAccess?.role ?? null;
-    const hasApplicationAccess = applicationRole !== null || hasMinimumRole(organizationRole, 'maintain');
+    const hasApplicationAccess = applicationAccess?.role != null || hasMinimumRole(organizationRole, 'maintain');
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {

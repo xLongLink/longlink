@@ -29,7 +29,7 @@ jobs:
               uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
               with:
                   enable-cache: true
-                  version: '0.11.30'
+                  version: '0.11.32'
 
             - name: Setup Vite+
               uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
@@ -74,7 +74,7 @@ jobs:
               uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
               with:
                   enable-cache: true
-                  version: '0.11.30'
+                  version: '0.11.32'
 
             - name: Setup Vite+
               uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
@@ -128,7 +128,7 @@ jobs:
               uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
               with:
                   enable-cache: true
-                  version: '0.11.30'
+                  version: '0.11.32'
 
             - name: Install dependencies
               working-directory: ${{ matrix.workspace }}
@@ -155,7 +155,7 @@ jobs:
               uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
               with:
                   enable-cache: true
-                  version: '0.11.30'
+                  version: '0.11.32'
 
             - name: Setup Vite+
               uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
@@ -203,7 +203,7 @@ jobs:
 
             - name: Run static checks
               working-directory: web
-              run: vp check
+              run: vp run check
 
             - name: Run type checks
               working-directory: web

@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime, timedelta
-from sqlalchemy import text, select, update
+from sqlalchemy import or_, and_, case, text, select, update
 from src.logger import logger
 from src.environments import env
 from packaging.version import Version
@@ -34,11 +34,16 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
 
     # Compute reconciliation failures affect only targets that remain registered.
     if operation.kind == OperationKind.compute_reconcile:
-        await session.execute(
-            update(ComputeRegistry)
-            .where(ComputeRegistry.id == operation.target_id)
-            .values(status=Status.failed)
-        )
+        compute = await session.get(ComputeRegistry, operation.target_id, with_for_update=True)
+        if compute is None:
+            return
+        if (
+            compute.status == Status.running
+            and compute.version is not None
+            and Version(compute.version) >= Version(operation.platform_version)
+        ):
+            return
+        compute.status = Status.failed
         return
 
     # Application creation failures affect only active, non-tombstoned Applications.
@@ -48,7 +53,7 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             .where(
                 Application.id == operation.target_id,
                 Application.deleted_at.is_(None),
-                Application.status != Status.deleting,
+                Application.status.in_({Status.creating, Status.failed}),
             )
             .values(status=Status.failed)
         )
@@ -61,15 +66,11 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             .where(
                 Organization.id == operation.target_id,
                 Organization.deleted_at.is_(None),
-                Organization.status != Status.deleting,
+                Organization.status.in_({Status.creating, Status.failed}),
             )
             .values(status=Status.failed)
         )
         return
-
-    # Deletion Operations intentionally retain their target's deleting state.
-    return
-
 
 async def enqueue_in_session(
     session: AsyncSession,
@@ -115,29 +116,24 @@ async def enqueue_in_session(
             .distinct()
         )
     ).all()
-    platform_version = max(
-        [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])],
-        key=Version,
+    latest_version = max(
+        Version(version) for version in [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])]
     )
+    platform_version = f"v{latest_version}"
 
     # Reuse queued work without locking an active Operation behind its compute aggregate.
-    existing = (
-        await session.scalars(
-            select(Operation)
-            .where(
-                Operation.kind == kind,
-                Operation.target_id == target,
-                Operation.finished_at.is_(None),
-                Operation.lease_expires_at.is_(None),
-            )
-            .order_by(Operation.created_at)
-            .with_for_update()
+    queued = await session.scalar(
+        select(Operation)
+        .where(
+            Operation.kind == kind,
+            Operation.target_id == target,
+            Operation.platform_version == platform_version,
+            Operation.finished_at.is_(None),
+            Operation.lease_expires_at.is_(None),
         )
-    ).all()
-    current_version = Version(platform_version)
-    queued = next(
-        (item for item in existing if Version(item.platform_version) == current_version),
-        None,
+        .order_by(Operation.created_at, Operation.id)
+        .limit(1)
+        .with_for_update()
     )
     if queued is not None:
         return queued
@@ -174,18 +170,18 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
 
     # Preserve terminal and lease state while advancing only the availability timestamp.
     async with session_scope() as session:
-        operation = await session.scalar(
+        result = await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation_id,
                 Operation.finished_at.is_(None),
             )
             .values(available_at=utcnow())
-            .returning(Operation)
         )
-        if operation is None:
+        if result.rowcount != 1:
             return None
 
+        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 
@@ -198,61 +194,65 @@ async def claim_next() -> Operation | None:
         async with session_scope() as session:
             now = utcnow()
 
-            # Use an immutable transaction mutex in PostgreSQL; local SQLite runs one scheduler process.
+            # Use a transaction mutex in PostgreSQL and a registry row lock on other database engines.
             connection = await session.connection()
             if connection.dialect.name == "postgresql":
                 await session.execute(text("SELECT pg_advisory_xact_lock(1280263244)"))
             else:
                 await session.scalar(select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update())
 
-            # Refuse a new claim while another Operation retains an active lease.
-            active = await session.scalar(
-                select(Operation.id)
-                .where(
-                    Operation.finished_at.is_(None),
-                    Operation.lease_expires_at > now,
-                )
-                .limit(1)
-            )
-            if active is not None:
-                return None
-
-            # A lost worker makes its one claimed Operation terminal instead of releasing it for another execution.
-            expired = await session.scalar(
-                select(Operation)
-                .where(
-                    Operation.finished_at.is_(None),
-                    Operation.lease_expires_at.is_not(None),
-                    Operation.lease_expires_at <= now,
-                )
-                .order_by(Operation.created_at.asc(), Operation.id.asc())
-                .limit(1)
-                .with_for_update()
-            )
-            if expired is not None:
-                logger.error("Operation %s failed after its worker lease expired", expired.id)
-                await fail_in_session(session, expired, now)
-                await session.commit()
-                continue
-
-            # Concurrent claimers contend for the same deterministic oldest unclaimed row.
+            # Classify the active lease, expired lease, or next due Operation in one locked query.
             operation = await session.scalar(
                 select(Operation)
                 .where(
                     Operation.finished_at.is_(None),
-                    Operation.platform_version == env.VERSION,
-                    Operation.available_at <= now,
-                    Operation.lease_expires_at.is_(None),
+                    or_(
+                        Operation.lease_expires_at.is_not(None),
+                        and_(
+                            Operation.lease_expires_at.is_(None),
+                            Operation.available_at <= now,
+                        ),
+                    ),
                 )
-                .order_by(Operation.created_at.asc(), Operation.id.asc())
+                .order_by(
+                    case(
+                        (Operation.lease_expires_at > now, 0),
+                        (Operation.lease_expires_at.is_not(None), 1),
+                        else_=2,
+                    ),
+                    Operation.created_at.asc(),
+                    Operation.id.asc(),
+                )
                 .limit(1)
                 .with_for_update()
             )
             if operation is None:
                 return None
+            if operation.lease_expires_at is not None and operation.lease_expires_at > now:
+                return None
+            if operation.lease_expires_at is not None:
+                logger.error("Operation %s failed after its worker lease expired", operation.id)
+                await fail_in_session(session, operation, now)
+                await session.commit()
+                continue
+            if Version(operation.platform_version) > Version(env.VERSION):
+                return None
 
-            # Keep the crash-recovery lock beyond the bounded handler execution.
-            operation.lease_expires_at = now + timedelta(minutes=30)
+            # Acquire the lease conditionally because SQLite ignores the row locks above.
+            result = await session.execute(
+                update(Operation)
+                .where(
+                    Operation.id == operation.id,
+                    Operation.finished_at.is_(None),
+                    Operation.lease_expires_at.is_(None),
+                    Operation.available_at <= now,
+                )
+                .values(lease_expires_at=now + timedelta(minutes=30))
+            )
+            if result.rowcount != 1:
+                await session.rollback()
+                continue
+            await session.refresh(operation)
             await session.commit()
             return operation
 
@@ -263,7 +263,7 @@ async def complete(operation_id: UUID) -> Operation | None:
     # Complete only the currently leased operation.
     async with session_scope() as session:
         now = utcnow()
-        operation = await session.scalar(
+        result = await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -271,11 +271,11 @@ async def complete(operation_id: UUID) -> Operation | None:
                 Operation.finished_at.is_(None),
             )
             .values(finished_at=now, lease_expires_at=None)
-            .returning(Operation)
         )
-        if operation is None:
+        if result.rowcount != 1:
             return None
 
+        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 

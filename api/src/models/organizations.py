@@ -69,12 +69,12 @@ class OrganizationSummary(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: str = ""
+    avatar: str
 
     # Infrastructure
     compute_id: UUID
-    database_id: UUID
     storage_id: UUID
+    database_id: UUID
 
     # State
     status: Status
@@ -84,8 +84,8 @@ class OrganizationSummary(BaseModel):
     updated_at: datetime
     created_by: UserSummary
     updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
+    deleted_at: datetime | None
+    deleted_by: UserSummary | None
 
 
 class OrganizationMutationResponse(BaseModel):
@@ -129,5 +129,5 @@ class OrganizationDetails(BaseModel):
 
     # Relationships
     members: list[OrganizationMemberAccessResponse]
-    invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
-    applications: list[OrganizationApplicationAccessResponse] = Field(default_factory=list)
+    invitations: list[OrganizationInvitationResponse]
+    applications: list[OrganizationApplicationAccessResponse]

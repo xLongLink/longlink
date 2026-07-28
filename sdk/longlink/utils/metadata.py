@@ -1,4 +1,5 @@
 import tomllib
+from typing import Self
 from pathlib import Path
 from pydantic import BaseModel
 
@@ -29,14 +30,15 @@ class Metadata(BaseModel):
     license_info: MetadataPayload | None = None
     terms_of_service: str | None = None
 
-    @staticmethod
-    def metadata_from_pyproject(pyproject_data: MetadataPayload, defaults: MetadataPayload) -> MetadataPayload:
-        """Extract metadata fields from parsed pyproject payload."""
+    @classmethod
+    def from_pyproject(cls, pyproject_data: MetadataPayload, **overrides: object) -> Self:
+        """Build metadata from an already parsed pyproject payload."""
 
-        # Read LongLink tool section first, then fall back to standard PEP 621 fields.
+        # Read LongLink tool metadata first, then fall back to PEP 621 fields and model defaults.
+        defaults = {field: cls.model_fields[field].default for field in cls.model_fields}
         tool_data = metadata_section(metadata_section(pyproject_data, "tool"), "longlink")
         project_data = metadata_section(pyproject_data, "project")
-        return {
+        metadata_data = {
             "name": tool_data.get("name") or project_data.get("name") or defaults["name"],
             "title": tool_data.get("title") or defaults["title"],
             "summary": tool_data.get("summary") or defaults["summary"],
@@ -46,6 +48,10 @@ class Metadata(BaseModel):
             "contact": tool_data.get("contact") or defaults["contact"],
             "license_info": tool_data.get("license_info") or defaults["license_info"],
         }
+
+        # Let explicit constructor values win over parsed project metadata.
+        metadata_data.update(overrides)
+        return cls.model_validate(metadata_data)
 
 
 def load_metadata(pyproject_path: Path | None = None, **overrides: object) -> Metadata:
@@ -58,12 +64,6 @@ def load_metadata(pyproject_path: Path | None = None, **overrides: object) -> Me
 
         # Keep file IO local to this resolved path.
         with resolved_pyproject.open("rb") as file_handle:
-            parsed_pyproject: MetadataPayload = tomllib.load(file_handle)
+            metadata_data = tomllib.load(file_handle)
 
-        # Merge normalized project metadata over model defaults.
-        defaults = {field: Metadata.model_fields[field].default for field in Metadata.model_fields}
-        metadata_data.update(Metadata.metadata_from_pyproject(parsed_pyproject, defaults))
-
-    # Let explicit constructor values win over file-derived values.
-    metadata_data.update(overrides)
-    return Metadata.model_validate(metadata_data)
+    return Metadata.from_pyproject(metadata_data, **overrides)

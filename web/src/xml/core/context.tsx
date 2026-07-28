@@ -4,7 +4,7 @@ import type { ASTNode, ExecutionContext } from '../types';
 import { query } from './query';
 import { state } from './state';
 
-export const Context = createReactContext<ExecutionContext | null>(null);
+const Context = createReactContext<ExecutionContext | null>(null);
 
 /** Creates a blank XML runtime context. */
 export function createContext(): ExecutionContext {
@@ -43,8 +43,6 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
-                validateSetupNode(node);
-
                 const params = node.params!;
                 const id = params.id.trim();
                 const entries = Object.entries(params).filter(([key]) => key !== 'id');
@@ -83,8 +81,6 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
             // Seed query data before rendering the component tree.
             if (node.name === 'Query') {
-                validateSetupNode(node);
-
                 const params = node.params!;
                 const id = params.id.trim();
                 const rawPath = params.path.trim();

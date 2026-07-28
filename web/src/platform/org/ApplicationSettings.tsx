@@ -127,7 +127,7 @@ export default function ApplicationSettings({
                 const canReadLogs = platformRole === 'administrator' || canManageApplication;
 
                 // Hide the action menu when no actions are available.
-                if (!canReadLogs && !canManageApplication) {
+                if (!canReadLogs) {
                     return '—';
                 }
 
@@ -291,7 +291,6 @@ export default function ApplicationSettings({
                 <Logs
                     applicationId={logsTarget.application.id}
                     applicationName={logsTarget.application.name}
-                    open={logsTarget !== null}
                     onOpenChange={(open) => {
                         // Clear the selected log target when closing.
                         if (!open) {

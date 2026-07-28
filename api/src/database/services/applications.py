@@ -63,7 +63,6 @@ async def purge(application_id: UUID) -> None:
             return
         if application.deleted_at is None:
             raise RuntimeError("Active applications cannot be purged")
-        await session.execute(delete(UserApplication).where(UserApplication.application_id == application_id))
         await session.execute(delete(Application).where(Application.id == application_id))
         await session.commit()
 
@@ -163,7 +162,7 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
                 application_membership.deleted_id = user.id
                 application_membership.updated_at = now
                 application_membership.updated_id = user.id
-            await session.commit()
+                await session.commit()
             return True
 
         # Create a membership when none exists.
@@ -199,6 +198,7 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
+    delay_seconds: float = 30,
 ) -> tuple[Application, Operation]:
     """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
 
@@ -229,9 +229,8 @@ async def create(
             organization_id=organization_id,
             name=name,
             slug=slug,
-            status=Status.creating,
             description=description,
-            image=image.value,
+            image=str(image),
             sdk=sdk,
             digest=digest,
             version=version,
@@ -265,7 +264,7 @@ async def create(
             locked_compute=compute,
             kind=OperationKind.application_create,
             target_id=application.id,
-            delay_seconds=30,
+            delay_seconds=delay_seconds,
         )
         await session.commit()
         return application, operation
@@ -276,26 +275,22 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        application = await session.scalar(
+        result = await session.execute(
             update(Application)
             .where(
                 Application.id == application_id,
                 Application.deleted_at.is_(None),
                 Application.status == expected_status,
-                Application.status != Status.deleting,
             )
             .values(status=status)
-            .returning(Application)
         )
+        if result.rowcount != 1:
+            return False
         await session.commit()
-        return application is not None
+        return True
 
 
-async def replace_environment(
-    application_id: UUID,
-    expected_status: Status,
-    replace: Callable[[], Awaitable[None]],
-) -> Status | None:
+async def replace_environment(application_id: UUID, expected_status: Status, replace: Callable[[], Awaitable[None]]) -> Status | None:
     """Replace cluster environment state while preventing concurrent Application deletion."""
 
     # Lock the active Application across the external replacement so tombstoning cannot race Secret creation.
@@ -374,17 +369,19 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             application.updated_id = user.id
 
             # Mark active Application memberships as deleted.
-            memberships = await session.scalars(
-                select(UserApplication).where(
+            await session.execute(
+                update(UserApplication)
+                .where(
                     UserApplication.application_id == application_id,
                     UserApplication.deleted_at.is_(None),
                 )
+                .values(
+                    deleted_at=now,
+                    deleted_id=user.id,
+                    updated_at=now,
+                    updated_id=user.id,
+                )
             )
-            for membership in memberships:
-                membership.deleted_at = now
-                membership.deleted_id = user.id
-                membership.updated_at = now
-                membership.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
         operation = await operations.enqueue_in_session(

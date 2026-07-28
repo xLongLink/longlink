@@ -31,10 +31,10 @@ def test_slugify_rejects_overlong_slug() -> None:
     assert exc.value.detail == "Invalid name"
 
 
-def test_knames_returns_valid_dns_label() -> None:
-    """Return valid Kubernetes DNS labels unchanged."""
+def test_knames_accepts_valid_dns_label() -> None:
+    """Accept valid Kubernetes DNS labels."""
 
-    assert names.knames("dashboard-api") == "dashboard-api"
+    names.knames("dashboard-api")
 
 
 @pytest.mark.parametrize("value", ["", "Dashboard", "dashboard_api", "dashboard-", "-dashboard"])

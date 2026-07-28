@@ -25,7 +25,7 @@ class ComputeRegistry(SQLModel, table=True):
     status: Status = Field(
         default=Status.creating,
         sa_column=Column(
-            Enum(Status, name="status_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            Enum(Status, name="compute_status_enum", native_enum=False, create_constraint=True, validate_strings=True),
             nullable=False,
         ),
     )

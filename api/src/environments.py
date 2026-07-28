@@ -17,18 +17,18 @@ class Env(BaseSettings):
     DEVELOPMENT: bool = DEVELOPMENT
 
     # Authentication
-    SESSION_KEY: str = Field(min_length=32)
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
-    AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
+    SESSION_KEY: str = Field(min_length=32)
     INITIAL_ADMIN_EMAIL: str | None = None
+    AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
 
     # Authentication email delivery
     SMTP_HOST: str | None = None
     SMTP_PORT: int = Field(default=587, ge=1, le=65535)
-    SMTP_USERNAME: str | None = None
-    SMTP_PASSWORD: str | None = None
-    SMTP_START_TLS: bool = True
     SMTP_USE_TLS: bool = False
+    SMTP_PASSWORD: str | None = None
+    SMTP_USERNAME: str | None = None
+    SMTP_START_TLS: bool = True
 
     # Control plane database URL
     DATABASE_URL: str

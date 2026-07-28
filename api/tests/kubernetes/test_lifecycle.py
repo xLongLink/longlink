@@ -182,10 +182,11 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
     await scenario.compute.applications.apply(scenario.stale_application_id, "acme", ECHO_SERVER_IMAGE)
 
     # Replace only user-owned values and wait for the resource-version rollout.
-    await scenario.compute.applications.replace_envs(
+    await scenario.compute.applications.stage_envs(
         scenario.application_id,
         "acme",
         {"LONG_LINK_REQUIRED": "updated", "PORT": "8000"},
+        require_deployment=True,
     )
     await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 

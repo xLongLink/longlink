@@ -1,5 +1,5 @@
-import setup as platform_setup
 import pytest
+from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
 from src.environments import env
@@ -62,7 +62,7 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
     compute = await create_compute("local")
     first_application_id = uuid4()
     organization_id = uuid4()
-    first = await operations.enqueue(compute.id)
+    await operations.enqueue(compute.id)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None
@@ -156,6 +156,24 @@ async def test_operations_service_claim_next_claims_oldest_available_operation()
     assert claimed.lease_expires_at is not None
 
 
+async def test_operations_service_claims_older_release_work(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Allow the current worker to finish pending work from an older Platform release."""
+
+    # Seed work under the previous Platform release.
+    monkeypatch.setattr(env, "VERSION", "v1.0.0")
+    compute = await create_compute("older-release")
+    operation = await operations.enqueue(compute.id)
+
+    # Claim the existing work after the Platform upgrades.
+    monkeypatch.setattr(env, "VERSION", "v1.1.0")
+    claimed = await operations.claim_next()
+
+    # Verify the current worker owns the pending older-release Operation.
+    assert claimed is not None
+    assert claimed.id == operation.id
+    assert claimed.platform_version == "v1.0.0"
+
+
 async def test_operations_service_claim_serializes_active_and_expires_lost_work() -> None:
     """Globally serialize active work and make expired claimed Operations terminal."""
 
@@ -199,6 +217,37 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert expired_row.lease_expires_at is None
     assert expired_compute_row is not None
     assert expired_compute_row.status == Status.failed
+
+
+async def test_operations_service_expiry_preserves_published_compute_success() -> None:
+    """Fail an expired Operation without regressing its already published compute target."""
+
+    # Claim reconciliation and publish its target before simulating worker loss.
+    compute = await create_compute("published")
+    operation = await operations.enqueue(compute.id)
+    claimed = await operations.claim_next()
+    assert claimed is not None
+    async with session_scope() as session:
+        operation_row = await session.get(Operation, operation.id)
+        compute_row = await session.get(ComputeRegistry, compute.id)
+        assert operation_row is not None
+        assert compute_row is not None
+        operation_row.lease_expires_at = utcnow() - timedelta(seconds=1)
+        compute_row.status = Status.running
+        await session.commit()
+
+    # Reap the expired lease.
+    replacement = await operations.claim_next()
+    async with session_scope() as session:
+        operation_row = await session.get(Operation, operation.id)
+        compute_row = await session.get(ComputeRegistry, compute.id)
+
+    # Verify only the abandoned Operation fails.
+    assert replacement is None
+    assert operation_row is not None
+    assert operation_row.status == OperationStatus.failed
+    assert compute_row is not None
+    assert compute_row.status == Status.running
 
 
 async def test_operations_service_transitions_reject_expired_leases_without_reclaiming() -> None:
@@ -299,8 +348,8 @@ async def test_operations_service_platform_upgrade_queues_after_locked_work(monk
 
     # Schedule a newer Platform version while the original work remains locked.
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    await platform_setup.schedule_migrations()
-    await platform_setup.schedule_migrations()
+    await platform_release.schedule_migrations()
+    await platform_release.schedule_migrations()
     upgraded = next(
         item
         for item in await operations.fetch()

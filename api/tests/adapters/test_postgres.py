@@ -1,7 +1,6 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names
 from containers import DockerRuntimeContainer, wait_for_postgres, require_docker_daemon
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -35,7 +34,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
     runtime_engine = None
     organization_id = UUID("33333333-3333-3333-3333-333333333333")
     application_id = UUID("44444444-4444-4444-4444-444444444444")
-    schema_name = application_id.hex
 
     try:
         adapter = Postgres(
@@ -117,14 +115,15 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
                 )
 
-        schema_usage = await adapter.schema_usage(database_name)
+        database_usage = await adapter.database_usage(database_name)
         server_usage = await adapter.usage()
 
         await runtime_engine.dispose()
         runtime_engine = None
         await adapter.delete_schema(organization_id, application_id)
-        schema_usage_after_delete = await adapter.schema_usage(database_name)
+        database_usage_after_schema_delete = await adapter.database_usage(database_name)
         await adapter.delete_database(organization_id)
+        database_usage_after_delete = await adapter.database_usage(database_name)
         server_usage_after_delete = await adapter.usage()
 
         assert database_url.database == organization_id.hex
@@ -135,9 +134,13 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
-        assert {item["name"] for item in schema_usage} >= {schema_name, "shared"}
+        assert database_usage is not None
+        assert database_usage["space_used"] > 0
+        assert database_usage["table_count"] >= 2
         assert server_usage["space_used"] > 0
-        assert schema_name not in {item["name"] for item in schema_usage_after_delete}
+        assert database_usage_after_schema_delete is not None
+        assert database_usage_after_schema_delete["table_count"] < database_usage["table_count"]
+        assert database_usage_after_delete is None
         assert server_usage_after_delete["space_used"] == 0
     finally:
         try:

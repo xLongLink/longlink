@@ -1,6 +1,5 @@
 import yaml
 from string import Template
-from typing import cast
 from pathlib import Path
 from importlib.resources.abc import Traversable
 
@@ -23,7 +22,7 @@ def readyml_list(template_path: str | Path | Traversable, **context: object) -> 
         if not isinstance(document, dict) or not all(isinstance(key, str) for key in document):
             raise ValueError("Rendered YAML templates must contain mapping documents")
 
-        docs.append(cast(dict[str, object], document))
+        docs.append(document)
 
     # Reject templates that only render empty documents.
     if not docs:

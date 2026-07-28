@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from sqlalchemy import DateTime
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy.types import TypeEngine, TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
 
 
@@ -10,7 +10,7 @@ class UTCDateTime(TypeDecorator[datetime]):
     impl = DateTime
     cache_ok = True
 
-    def load_dialect_impl(self, dialect: Dialect):
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[datetime]:
         """Return the dialect datetime type used for UTC timestamps."""
 
         return dialect.type_descriptor(DateTime(timezone=True))

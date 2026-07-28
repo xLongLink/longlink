@@ -42,5 +42,5 @@ class OperationResponse(BaseModel):
 
     # Timestamps
     created_at: datetime
-    finished_at: datetime | None = None
+    finished_at: datetime | None
     available_at: datetime

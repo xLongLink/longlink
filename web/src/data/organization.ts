@@ -1,33 +1,29 @@
-import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { useApiQuery } from '@/hooks/use-api';
 import {
-    apiOrganizationDatabaseResourceSchema,
-    apiOrganizationStorageResourceSchema,
-    parseApiCollection,
+    apiOrganizationDatabaseUsageSchema,
+    apiOrganizationStorageUsageSchema,
+    parseApiResponse,
 } from '@/lib/api-schemas';
-import type { ApiOrganizationDatabaseResource, ApiOrganizationStorageResource } from '@/lib/types';
+import type { ApiOrganizationDatabaseUsage, ApiOrganizationStorageUsage } from '@/lib/types';
 
-/** Fetches database resources for one organization. */
-export function useOrganizationDatabaseResources(organizationId: string) {
-    const enabled = organizationId.length > 0;
-
-    return useCollectionQuery<ApiOrganizationDatabaseResource>(
-        enabled ? `/api/organizations/${organizationId}/database` : null,
+/** Fetches database usage for one organization. */
+export function useOrganizationDatabaseUsage(organizationId: string) {
+    return useApiQuery<ApiOrganizationDatabaseUsage | null>(
+        organizationId ? `/api/organizations/${organizationId}/database` : null,
         {
-            enabled,
-            parse: (value) => parseApiCollection(apiOrganizationDatabaseResourceSchema, value),
+            parse: (value) => parseApiResponse(apiOrganizationDatabaseUsageSchema.nullable(), value),
+            retry: false,
         }
     );
 }
 
-/** Fetches storage resources for one organization. */
-export function useOrganizationStorageResources(organizationId: string) {
-    const enabled = organizationId.length > 0;
-
-    return useCollectionQuery<ApiOrganizationStorageResource>(
-        enabled ? `/api/organizations/${organizationId}/storage` : null,
+/** Fetches storage usage for one organization. */
+export function useOrganizationStorageUsage(organizationId: string) {
+    return useApiQuery<ApiOrganizationStorageUsage | null>(
+        organizationId ? `/api/organizations/${organizationId}/storage` : null,
         {
-            enabled,
-            parse: (value) => parseApiCollection(apiOrganizationStorageResourceSchema, value),
+            parse: (value) => parseApiResponse(apiOrganizationStorageUsageSchema.nullable(), value),
+            retry: false,
         }
     );
 }

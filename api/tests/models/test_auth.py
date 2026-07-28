@@ -1,30 +1,8 @@
 import pytest
 from pydantic import ValidationError
-from src.models.auth import EmailPayload, TokenPayload, RegistrationComplete
+from src.models.auth import RegistrationComplete
 
 pytestmark = pytest.mark.no_db
-
-
-def test_registration_models_accept_complete_account_flow() -> None:
-    """Accept email proof followed by profile and password setup."""
-
-    # Validate each browser payload at its API boundary.
-    request = EmailPayload.model_validate({"email": "Registered@EXAMPLE.com"})
-    confirmation = TokenPayload.model_validate({"token": " signed-token "})
-    completion = RegistrationComplete.model_validate(
-        {
-            "name": " Registered ",
-            "email": "Registered@EXAMPLE.com",
-            "surname": " User ",
-            "password": "x",
-        }
-    )
-
-    assert request.email == "Registered@EXAMPLE.com"
-    assert confirmation.token == " signed-token "
-    assert completion.name == " Registered "
-    assert completion.surname == " User "
-    assert completion.password == "x"
 
 
 @pytest.mark.parametrize(

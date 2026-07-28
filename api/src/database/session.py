@@ -2,7 +2,6 @@ import contextlib
 from src.utils import urls
 from collections.abc import AsyncGenerator
 from src.environments import env
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 _engine: AsyncEngine | None = None
@@ -17,18 +16,23 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if Session is not None:
         return Session
 
-    database_url = make_url(urls.database(env.DATABASE_URL))
+    connection = urls.database(env.DATABASE_URL)
 
-    engine_kwargs = {
+    engine_kwargs: dict[str, object] = {
+        "connect_args": connection.connect_args,
         "pool_pre_ping": True,
         "pool_recycle": 20,
     }
 
+    # Match PostgreSQL semantics and avoid InnoDB absent-key gap-lock deadlocks.
+    if connection.url.drivername == "mysql+aiomysql":
+        engine_kwargs["isolation_level"] = "READ COMMITTED"
+
     # Enable LIFO pooling for network database connections.
-    if not database_url.drivername.startswith("sqlite+"):
+    if not connection.url.drivername.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
-    _engine = create_async_engine(database_url, **engine_kwargs)
+    _engine = create_async_engine(connection.url, **engine_kwargs)
 
     # Verify connection once before exposing the session factory.
     async with _engine.connect() as connection:

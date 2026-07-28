@@ -16,7 +16,7 @@ environment = "src.envs:Env"
 dev = [
   "pytest",
   "pytest-asyncio",
-  "httpx2",
+  "httpx2>=2.9.1",
   "isort",
 ]
 

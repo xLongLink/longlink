@@ -1,7 +1,6 @@
 import contextlib
 from uuid import UUID
 from .base import Table
-from typing import Any
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
@@ -35,7 +34,7 @@ def audit_user_scope(user_id: UUID | None) -> Generator[None]:
 
 
 @event.listens_for(SyncSession, "before_flush")
-def apply_audit_fields(session: SyncSession, flush_context: Any, instances: Any) -> None:
+def apply_audit_fields(session: SyncSession, _flush_context: object, _instances: object) -> None:
     """
     Automatically apply audit fields before SQLModel flushes changes.
 

@@ -21,7 +21,7 @@ export function NumberInput({ props }: Props) {
     const [localValue, setLocalValue] = useState<number | null>(initialValue);
     const currentValue = binding.currentValue == null ? null : Number(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
-    const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false) === true;
+    const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false);
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'NumberInput');
     const common = {
         autoComplete: resolveXmlString(props, 'autoComplete', ctx) || undefined,

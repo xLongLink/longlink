@@ -19,6 +19,40 @@
     }
 }
 
+@layer astryx-theme {
+    /* Astryx compound parts are exposed through stable classes but are not accepted by the theme compiler. */
+    @scope ([data-astryx-theme^='longlink-']) to ([data-astryx-theme]) {
+        .astryx-breadcrumb-item {
+            margin-inline-start: var(--spacing-1);
+            gap: var(--spacing-2);
+            font-size: var(--font-size-base);
+            line-height: var(--text-body-leading);
+        }
+
+        .astryx-side-nav-item {
+            color: var(--color-text-secondary);
+        }
+
+        .astryx-side-nav-item[data-selected='selected'] {
+            background-color: var(--color-accent-muted);
+            color: var(--color-text-primary);
+        }
+
+        .astryx-side-nav-section {
+            margin-inline: calc(-1 * var(--spacing-2));
+        }
+
+        .astryx-table-scroll-wrapper {
+            border: var(--border-width) solid var(--color-border-emphasized);
+            border-radius: var(--radius-container);
+        }
+
+        .astryx-table-header {
+            background-color: var(--color-background-muted);
+        }
+    }
+}
+
 @keyframes path-navigation-cue {
     0% {
         opacity: 0;
@@ -57,10 +91,6 @@
     100% {
         transform: rotate(0deg);
     }
-}
-
-.homepage-feature-card {
-    box-shadow: var(--shadow-low);
 }
 
 .homepage-hero-horizon {
@@ -118,25 +148,50 @@
     stroke-width: 1.4;
 }
 
-.homepage-visual-node {
-    box-shadow: var(--shadow-med);
+.homepage-integration-section::after {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 0;
+    height: calc(var(--spacing-10) * 5);
+    background: linear-gradient(to bottom, transparent, var(--color-background-body));
+    content: '';
+    pointer-events: none;
 }
 
-.homepage-feature-transition {
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: clamp(4rem, 7vw, 6.5rem);
-    pointer-events: none;
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        color-mix(in oklch, var(--color-background-body) 58%, transparent) 56%,
-        var(--color-background-body) 96%
-    );
-    backdrop-filter: blur(10px);
-    mask-image: linear-gradient(to bottom, transparent, black 42%, black);
-    transform: translateY(-100%);
+.homepage-before-after-scene {
+    background: var(--color-background-body);
+}
+
+.homepage-before-after-art {
+    background: var(--color-text-secondary);
+    mask: var(--homepage-before-after-art) center / cover no-repeat;
+    mask-position: center var(--spacing-10);
+    -webkit-mask: var(--homepage-before-after-art) center / cover no-repeat;
+    -webkit-mask-position: center var(--spacing-10);
+}
+
+.homepage-before-after-art-before {
+    --homepage-before-after-art: url('/images/before-longlink.svg');
+}
+
+.homepage-before-after-art-after {
+    --homepage-before-after-art: url('/images/after-longlink.svg');
+}
+
+.homepage-before-after-slider [data-rcs='handle'] {
+    --rcs-handle-color: var(--color-accent) !important;
+}
+
+.homepage-before-after-slider [data-rcs='handle-root']:focus-visible .__rcs-handle-button {
+    outline: calc(var(--border-width) * 2) solid var(--color-accent);
+    outline-offset: var(--spacing-1);
+}
+
+@media (min-width: 40rem) {
+    .homepage-before-after-art {
+        mask-size: contain;
+        -webkit-mask-size: contain;
+    }
 }
 
 .homepage-painting-section {

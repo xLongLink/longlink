@@ -74,14 +74,12 @@ const emptyRouteParams: Record<string, string> = {};
 
 /** Resolves persisted icon slugs for runtime tabs. */
 function resolveRuntimeIcon(name: string | undefined): LucideIcon | undefined {
-    const iconName = name?.trim();
-
     // Ignore empty and unsupported icon names.
-    if (!iconName) {
+    if (!name) {
         return undefined;
     }
 
-    return getIconComponent(iconName);
+    return getIconComponent(name);
 }
 
 /**
@@ -92,7 +90,7 @@ function normalizePath(path: string): string {
 }
 
 /** Returns the route pattern exposed by a runtime page. */
-export function pageRoutePattern(page: RuntimePage): string {
+function pageRoutePattern(page: RuntimePage): string {
     return normalizePath(page.route);
 }
 
@@ -104,7 +102,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 }
 
 /** Finds the best runtime page for the current app-relative browser path. */
-export function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
+function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
     const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
         path: pageRoutePattern(page) || '/',
         page,
@@ -249,8 +247,8 @@ export default function View({
     let activeRoutePath = normalizedRoutePath;
     let activeRouteParams = emptyRouteParams;
 
-    // Use route params only when the matched page is active.
-    if (activeRouteMatch && activeRouteMatch.page === activePage) {
+    // Use route params from the matching page.
+    if (activeRouteMatch) {
         activeRoutePath = activeRouteMatch.path;
         activeRouteParams = activeRouteMatch.params;
     }
@@ -297,7 +295,7 @@ export default function View({
 
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
-            const label = page.name?.trim() || startCase(page.tab);
+            const label = page.name || startCase(page.tab);
             const icon = resolveRuntimeIcon(page.icon);
             const routePattern = pageRoutePattern(page);
             const dynamic = pageRouteIsDynamic(page);
@@ -340,10 +338,11 @@ export default function View({
     /* Load each XML page once for the active route instance. */
     useEffect(() => {
         // Skip page loading until an XML page can render.
-        if (!applicationCanLoad || !activePageTab || !activePageStateKey || activePagePath === undefined) {
+        if (!applicationCanLoad || !activePage) {
             return;
         }
 
+        const pagePath = activePage.path;
         const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
         const inFlightPageKeys = inFlightPageKeysRef.current;
@@ -374,7 +373,7 @@ export default function View({
             ...createPageState(
                 pageCacheKey,
                 activePageStateKey,
-                activePagePath,
+                pagePath,
                 activeRoutePath,
                 activeRouteParams,
                 navigationBaseUrl,
@@ -386,7 +385,7 @@ export default function View({
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
         try {
-            pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePagePath);
+            pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, pagePath);
         } catch (urlError: unknown) {
             const errorPageState = {
                 ...loadingPageState,
@@ -495,9 +494,9 @@ export default function View({
             inFlightPageKeys.delete(pageKey);
         };
     }, [
+        activePage,
         activePagePath,
         activePageStateKey,
-        activePageTab,
         activeRouteParams,
         activeRoutePath,
         applicationCanLoad,
@@ -602,7 +601,7 @@ export default function View({
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
                 actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
-                message={activePageState.error || t('appView.loadPageFailed')}
+                message={activePageState.error}
                 title={t('appView.unableToLoadPage')}
             />
         );

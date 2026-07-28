@@ -3,32 +3,30 @@ from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Theme, Accent
 
-ACCENT_COLORS: dict[Accent, str] = {
-    Accent.slate: "#64748b",
-    Accent.gray: "#6b7280",
-    Accent.zinc: "#71717a",
-    Accent.neutral: "#737373",
-    Accent.stone: "#78716c",
-    Accent.red: "#ef4444",
-    Accent.orange: "#f97316",
-    Accent.amber: "#f59e0b",
-    Accent.yellow: "#eab308",
-    Accent.lime: "#84cc16",
-    Accent.green: "#22c55e",
-    Accent.emerald: "#10b981",
-    Accent.teal: "#14b8a6",
-    Accent.cyan: "#06b6d4",
-    Accent.sky: "#0ea5e9",
-    Accent.blue: "#3b82f6",
-    Accent.indigo: "#6366f1",
-    Accent.violet: "#8b5cf6",
-    Accent.purple: "#a855f7",
-    Accent.fuchsia: "#d946ef",
-    Accent.pink: "#ec4899",
-    Accent.rose: "#f43f5e",
-}
-
-ACCENT_COLOR_VALUES: tuple[str, ...] = tuple(ACCENT_COLORS.values())
+ACCENT_COLOR_VALUES = (
+    "#64748b",
+    "#6b7280",
+    "#71717a",
+    "#737373",
+    "#78716c",
+    "#ef4444",
+    "#f97316",
+    "#f59e0b",
+    "#eab308",
+    "#84cc16",
+    "#22c55e",
+    "#10b981",
+    "#14b8a6",
+    "#06b6d4",
+    "#0ea5e9",
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#d946ef",
+    "#ec4899",
+    "#f43f5e",
+)
 
 
 class UserUpdate(BaseModel):
@@ -55,7 +53,7 @@ class UserIdentity(BaseModel):
     # Metadata
     name: str
     email: EmailStr
-    avatar: str = ""
+    avatar: str
 
 
 class UserOrganizationSummary(BaseModel):
@@ -69,7 +67,7 @@ class UserOrganizationSummary(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: str = ""
+    avatar: str
 
 
 class UserOrganizationMembership(BaseModel):

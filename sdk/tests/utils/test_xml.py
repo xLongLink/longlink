@@ -7,7 +7,6 @@ from longlink.utils.xml import Element
 
 ADAPTERS = ROOT / ".static" / "xsd" / "adapters"
 ROOT_SCHEMA = ROOT / ".static" / "xsd" / "schema.xsd"
-SCHEMA = ROOT / ".static" / "xsd" / "schema.xsd"
 
 
 def _adapter_schema(name: str) -> Path:
@@ -134,7 +133,7 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
 
     # Validate a document through the instrumented parser.
-    Element.from_content("<longlink />", schema=SCHEMA).validate()
+    Element.from_content("<longlink />", schema=ROOT_SCHEMA).validate()
 
     # Require every parser-hardening option at the XML boundary.
     assert captured_kwargs[0]["load_dtd"] is False
@@ -147,7 +146,7 @@ def test_element_validation_rejects_unsupported_markup(_name: str, content: str)
     """Reject XML markup unsupported by the browser runtime."""
 
     # Build an in-memory document containing unsupported browser markup.
-    element = Element.from_content(content, schema=SCHEMA)
+    element = Element.from_content(content, schema=ROOT_SCHEMA)
 
     # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):

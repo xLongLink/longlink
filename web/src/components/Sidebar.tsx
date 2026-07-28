@@ -6,7 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Wordmark } from '@/components/Wordmark';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/platform/catalog';
 
-export type SidebarProps = {
+type SidebarProps = {
     currentPath: string;
     groups: ArticleNavigationGroup[];
 };

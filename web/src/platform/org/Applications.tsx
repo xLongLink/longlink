@@ -22,7 +22,7 @@ export default function Applications({
     error: Error | null;
 }) {
     const t = useTranslator();
-    const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
+    const applicationsError = error ? t('errors.loadApplications') : null;
     const columns: TableColumn<ApiOrganizationApplication>[] = [
         {
             key: 'name',
@@ -50,7 +50,7 @@ export default function Applications({
 
     // Surface application lookup failures when no stale data is available.
     if (applicationsError && applications.length === 0) {
-        return <Banner status="error" title={applicationsError.message} />;
+        return <Banner status="error" title={applicationsError} />;
     }
 
     return (

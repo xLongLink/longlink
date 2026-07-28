@@ -15,7 +15,7 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
     for expected in (
         "COPY --from=builder /workspace /workspace",
         "python -m longlink.database.migrations && exec uvicorn main:app",
-        "uv sync --no-dev",
+        "uv sync --locked --no-dev",
         ".git",
         "--log-level info",
     ):

@@ -236,7 +236,7 @@ class Gateway:
             service = await self._resources.apply(Service, service_manifest)
 
             # Parse the provider-owned Service status while endpoint allocation is pending.
-            body = service.to_dict()
+            body = service.raw
             status = body.get("status", {}) if isinstance(body, dict) else {}
             load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
             ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []

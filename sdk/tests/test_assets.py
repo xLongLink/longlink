@@ -9,9 +9,10 @@ def test_logo_returns_development_fallback_asset(monkeypatch: pytest.MonkeyPatch
     """Return the bundled logo asset in development and testing runtimes."""
 
     # Arrange
-    logo_path = tmp_path / "logo.svg"
+    logo_path = tmp_path / ".static" / "assets" / "logo.svg"
+    logo_path.parent.mkdir(parents=True)
     logo_path.write_bytes(b"<svg />")
-    monkeypatch.setattr(assets, "LOCAL_LOGO_PATH", logo_path)
+    monkeypatch.setattr(assets, "ROOT", tmp_path)
     env = Envs(ENV="testing")
 
     # Act
