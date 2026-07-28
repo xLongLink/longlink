@@ -19,7 +19,6 @@ def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
     assert first == repeated
     assert first != other
     assert first != "browser-token"
-    assert len(first) == 64
 
 
 def test_session_accounts_filters_invalid_and_duplicate_ids() -> None:

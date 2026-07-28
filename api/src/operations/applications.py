@@ -76,7 +76,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         # Generate credentials only until the runtime Secret commits their durable values.
         if persisted_runtime_envs is None:
             database_password = secrets.token_urlsafe(24)
-            connection = await db.schema(organization.id, application.id, database_password)
             credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
         else:
             database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
@@ -84,11 +83,12 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
             if not database_password or not storage_access_key_id or not storage_secret_access_key:
                 return jobs.fail("Application runtime Secret is invalid")
-            connection = await db.schema(organization.id, application.id, database_password)
             credentials = {
                 "access_key_id": storage_access_key_id,
                 "secret_access_key": storage_secret_access_key,
             }
+
+        connection = await db.schema(organization.id, application.id, database_password)
 
         # Build the complete immutable runtime contract from provider and Application identities.
         runtime_envs = {

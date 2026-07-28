@@ -1,8 +1,7 @@
 import pytest
-import importlib
 from botocore.exceptions import ClientError
+from src.adapters.storage import exoscale
 
-exoscale = importlib.import_module("src.adapters.storage.exoscale")
 Exoscale = exoscale.Exoscale
 
 pytestmark = pytest.mark.no_db

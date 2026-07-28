@@ -6,6 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useState } from 'react';
+import { ReactCompareSlider } from 'react-compare-slider';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { HeroGlobe } from '@/platform/HeroGlobe';
@@ -85,9 +86,14 @@ function IntegrationScale() {
     }, []);
 
     return (
-        <Section className="relative z-10 bg-transparent" variant="transparent" padding={6} paddingBlock={10}>
+        <Section
+            className="homepage-integration-section relative z-10 bg-transparent"
+            variant="transparent"
+            padding={6}
+            paddingBlock={10}
+        >
             <Stack
-                className="relative mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
+                className="relative z-10 mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
                 width="100%"
                 maxWidth={1000}
                 gap={6}
@@ -195,60 +201,33 @@ export default function Home() {
                 </Heading>
                 <Stack
                     as="figure"
-                    className="homepage-before-after-scene sticky top-0 isolate overflow-hidden"
+                    className="homepage-before-after-scene relative isolate overflow-hidden"
                     width="100%"
                     minHeight="100svh"
                     justify="center"
                     hAlign="center"
                 >
-                    <Stack
-                        aria-label="A fragmented city of unfinished buildings, tangled infrastructure, and disconnected old solutions"
-                        role="img"
-                        className="homepage-before-after-art homepage-before-after-art-before absolute inset-0"
-                    />
-                    <Stack
-                        as="figcaption"
-                        className="absolute inset-x-0 top-0 z-10 mx-auto"
-                        width="100%"
-                        maxWidth={1280}
-                        gap={2}
-                        padding={6}
-                    >
-                        <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
-                            Before LongLink
-                        </Text>
-                        <Heading level={3} type="display-2" textWrap="balance">
-                            Old solutions
-                        </Heading>
-                    </Stack>
-                </Stack>
-                <Stack
-                    as="figure"
-                    className="homepage-before-after-scene relative z-10 isolate overflow-hidden"
-                    width="100%"
-                    minHeight="100svh"
-                    justify="center"
-                    hAlign="center"
-                >
-                    <Stack
-                        aria-label="A complete, coherent city representing the unified LongLink solution"
-                        role="img"
-                        className="homepage-before-after-art homepage-before-after-art-after absolute inset-0"
-                    />
-                    <Stack
-                        as="figcaption"
-                        className="absolute inset-x-0 top-0 z-10 mx-auto"
-                        width="100%"
-                        maxWidth={1280}
-                        gap={2}
-                        padding={6}
-                    >
-                        <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
-                            After
-                        </Text>
-                        <Heading level={3} type="display-2" textWrap="balance">
-                            The LongLink solution
-                        </Heading>
+                    <Stack className="absolute inset-0">
+                        <ReactCompareSlider
+                            className="homepage-before-after-slider size-full"
+                            defaultPosition={50}
+                            itemOne={
+                                <Stack
+                                    aria-label="Fragmented city illustration"
+                                    role="img"
+                                    className="homepage-before-after-art homepage-before-after-art-before size-full"
+                                />
+                            }
+                            itemTwo={
+                                <Stack
+                                    aria-label="Unified city illustration"
+                                    role="img"
+                                    className="homepage-before-after-art homepage-before-after-art-after size-full"
+                                />
+                            }
+                            keyboardIncrement="2%"
+                            onlyHandleDraggable={false}
+                        />
                     </Stack>
                 </Stack>
             </section>

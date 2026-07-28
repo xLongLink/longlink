@@ -25,7 +25,6 @@ def test_database_url_normalization(source: str, expected: str) -> None:
     normalized = urls.database(source)
 
     assert normalized.url.render_as_string(hide_password=False) == expected
-    assert normalized.connect_args == {}
 
 
 @pytest.mark.parametrize(

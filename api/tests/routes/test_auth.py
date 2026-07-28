@@ -98,7 +98,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert "/auth/verify-email#token=" in messages[0][3]
     assert "email=" not in messages[0][3]
     assert "code=" not in messages[0][3]
-    assert "token=" in messages[0][3]
     assert "Continue account setup" in messages[0][3]
     assert "Welcome to" in messages[0][3]
     assert "continue account setup" in messages[0][3]
@@ -197,7 +196,6 @@ async def test_forgot_and_reset_password(
     reset_url = next(line for line in messages[0][2].splitlines() if line.startswith("http"))
     parsed_reset_url = urlparse(reset_url)
     assert parse_qs(parsed_reset_url.query) == {}
-    assert "token" not in parse_qs(parsed_reset_url.query)
 
     # Exchange fragment proof for an HTTP-only cookie before replacing the credential.
     reset_token = parse_qs(parsed_reset_url.fragment)["token"][0]

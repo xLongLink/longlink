@@ -6,7 +6,7 @@ from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, noload
+from sqlalchemy.orm import noload, joinedload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -84,8 +84,10 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
             )
             .values(status=status)
         )
+        if result.rowcount != 1:
+            return False
         await session.commit()
-        return result.rowcount == 1
+        return True
 
 
 async def purge(organization_id: UUID) -> None:

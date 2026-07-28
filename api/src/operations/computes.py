@@ -73,14 +73,15 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     registry = await compute.get(claimed.target_id)
     if registry is None:
         return jobs.complete()
-    if registry.version is not None and Version(registry.version) > Version(env.VERSION):
+    platform_version = Version(env.VERSION)
+    if registry.version is not None and Version(registry.version) > platform_version:
         return jobs.complete()
 
     # A fresh reconciliation execution makes a previously failed target visibly active again.
     if registry.status == Status.failed:
         if not await compute.set_status(registry.id, Status.failed, Status.creating):
             current = await compute.get(registry.id)
-            if current is None or (current.version is not None and Version(current.version) > Version(env.VERSION)):
+            if current is None or (current.version is not None and Version(current.version) > platform_version):
                 return jobs.complete()
             return jobs.fail("Compute lifecycle state changed before reconciliation")
         registry.status = Status.creating
@@ -97,7 +98,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
         registry.status,
     ):
         current = await compute.get(registry.id)
-        if current is None or (current.version is not None and Version(current.version) > Version(env.VERSION)):
+        if current is None or (current.version is not None and Version(current.version) > platform_version):
             return jobs.complete()
         if current.status == Status.running and current.version == env.VERSION and current.gateway_url == gateway_url:
             return jobs.complete()

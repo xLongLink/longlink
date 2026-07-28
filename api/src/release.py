@@ -18,18 +18,14 @@ async def schedule_migrations() -> None:
 
     # Lock compute aggregates and load active Organization migration targets.
     async with session_scope() as session:
-        compute_rows = (await session.execute(select(ComputeRegistry).order_by(col(ComputeRegistry.id)).with_for_update())).scalars().all()
+        compute_rows = (await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)).with_for_update())).all()
         organization_rows = (
-            (
-                await session.execute(
-                    select(Organization)
-                    .where(col(Organization.deleted_at).is_(None))
-                    .order_by(col(Organization.compute_id), col(Organization.id))
-                )
+            await session.scalars(
+                select(Organization)
+                .where(col(Organization.deleted_at).is_(None))
+                .order_by(col(Organization.compute_id), col(Organization.id))
             )
-            .scalars()
-            .all()
-        )
+        ).all()
         existing_targets = set(
             (
                 await session.execute(

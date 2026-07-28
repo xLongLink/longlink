@@ -43,7 +43,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    active_applications = sorted(await organizations.applications(organization.id), key=lambda item: item.name)
+    active_applications = await organizations.applications(organization.id)
     application_roles = {
         membership.application_id: membership.role
         for membership in user.application_memberships

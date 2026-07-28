@@ -32,12 +32,14 @@ class SessionAccountsService:
 
         # Ignore malformed and duplicate identifiers from stale session cookies.
         accounts: list[UUID] = []
+        seen: set[UUID] = set()
         for raw_account in raw_accounts:
             try:
                 account = UUID(str(raw_account))
             except (TypeError, ValueError):
                 continue
-            if account not in accounts:
+            if account not in seen:
+                seen.add(account)
                 accounts.append(account)
         return accounts
 
@@ -45,19 +47,15 @@ class SessionAccountsService:
         """Save one account as the most recently authenticated account."""
 
         # Keep a bounded account list so the signed session cookie remains small.
-        accounts = self.list()
-        if user_id in accounts:
-            accounts.remove(user_id)
+        accounts = [account for account in self.list() if account != user_id][-9:]
         accounts.append(user_id)
-        self.request.session["account_ids"] = [str(account) for account in accounts[-10:]]
+        self.request.session["account_ids"] = [str(account) for account in accounts]
 
     def remove(self, user_id: UUID) -> None:
         """Remove one account from the signed saved-account list."""
 
         # Persist the remaining account identifiers in their current order.
-        accounts = self.list()
-        if user_id in accounts:
-            accounts.remove(user_id)
+        accounts = [account for account in self.list() if account != user_id]
         self.request.session["account_ids"] = [str(account) for account in accounts]
 
 

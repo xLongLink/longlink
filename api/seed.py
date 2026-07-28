@@ -2,6 +2,7 @@ import asyncio
 import argparse
 import subprocess
 from src import adapters
+from src import operations as _
 from uuid import UUID
 from pwdlib import PasswordHash
 from pathlib import Path
@@ -11,10 +12,9 @@ from sqlmodel import col
 from src.utils import jobs, names, images
 from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
-from src import operations as _operation_handlers
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Image, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
@@ -522,7 +522,7 @@ def main() -> None:
         asyncio.run(cleanup_local_development())
         return
 
-    settings = SeedSettings(**{})
+    settings = SeedSettings()
     asyncio.run(seed_local_development(settings))
     print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
 

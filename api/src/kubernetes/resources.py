@@ -85,8 +85,7 @@ class KubernetesResources:
 
         # Patch only the named resource fields without changing server-side apply ownership.
         api = await self.api()
-        resource_namespace = namespace if resource_class.namespaced else None
-        resource = resource_class(name, namespace=resource_namespace, api=api)
+        resource = resource_class(name, namespace=namespace if resource_class.namespaced else None, api=api)
         await resource.patch(body)
 
     async def replace_secret(self, name: str, namespace: str, values: Mapping[str, str], secret_type: str = "Opaque") -> Secret:
@@ -155,8 +154,7 @@ class KubernetesResources:
 
         # Construct the named typed resource against the configured API.
         api = await self.api()
-        resource_namespace = namespace if resource_class.namespaced else None
-        resource = resource_class(name, namespace=resource_namespace, api=api)
+        resource = resource_class(name, namespace=namespace if resource_class.namespaced else None, api=api)
 
         # Normalize only missing resources into the lifecycle's absent state.
         try:
@@ -174,11 +172,14 @@ class KubernetesResources:
         """List resources through an explicit kr8s resource class."""
 
         api = await self.api()
-        resource_namespace = namespace if resource_class.namespaced else None
 
         # Materialize and narrow the asynchronous resource stream for lifecycle callers.
         resources: list[KubernetesResource] = []
-        async for resource in resource_class.list(api=api, namespace=resource_namespace, label_selector=label_selector):
+        async for resource in resource_class.list(
+            api=api,
+            namespace=namespace if resource_class.namespaced else None,
+            label_selector=label_selector,
+        ):
             if not isinstance(resource, resource_class):
                 raise TypeError(f"Kubernetes returned an invalid {resource_class.kind} resource")
             resources.append(resource)
@@ -189,8 +190,7 @@ class KubernetesResources:
 
         # Construct the named typed resource against the configured API.
         api = await self.api()
-        resource_namespace = namespace if resource_class.namespaced else None
-        resource = resource_class(name, namespace=resource_namespace, api=api)
+        resource = resource_class(name, namespace=namespace if resource_class.namespaced else None, api=api)
 
         # Repeated lifecycle attempts may observe an already deleted resource.
         try:

@@ -3,8 +3,9 @@ from uuid import UUID
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager, suppress
 from collections.abc import Mapping
-from botocore.exceptions import ClientError
 from exoscale.api.v2 import AsyncClient
+from botocore.exceptions import ClientError
+from exoscale.api.generator import BaseAsyncClient
 from exoscale.api.exceptions import ExoscaleAPIClientException
 from src.models.infrastructure import exoscale_zone
 from exoscale.api.v2_response_types import Operation
@@ -203,9 +204,8 @@ class Exoscale:
         await self.revoke(name)
 
         # Keep role and key provisioning in one managed async client session.
-        api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
         try:
-            async with api:
+            async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as api:
 
                 # Bind the runtime policy to the organization authenticated by the provisioning key.
                 organization = await api.get_organization()
@@ -243,8 +243,7 @@ class Exoscale:
         credential_name = f"longlink-{name}"
 
         # Keep credential cleanup in one managed async client session.
-        api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
-        async with api:
+        async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as api:
 
             # Delete every matching API key before deleting roles they may reference.
             keys = await api.list_api_keys()
@@ -298,7 +297,7 @@ class Exoscale:
                 else:
                     await self._wait_operation(api, operation, require_reference=False)
 
-    async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
+    async def _wait_operation(self, api: BaseAsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""
 
         # Delegate operation polling and error handling to the async client.

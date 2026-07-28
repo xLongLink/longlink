@@ -151,5 +151,7 @@ async def set_status(compute_id: UUID, expected_status: Status, status: Status) 
             )
             .values(status=status)
         )
+        if result.rowcount != 1:
+            return False
         await session.commit()
-        return result.rowcount == 1
+        return True

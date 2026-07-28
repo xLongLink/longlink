@@ -148,6 +148,16 @@
     stroke-width: 1.4;
 }
 
+.homepage-integration-section::after {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 0;
+    height: calc(var(--spacing-10) * 5);
+    background: linear-gradient(to bottom, transparent, var(--color-background-body));
+    content: '';
+    pointer-events: none;
+}
+
 .homepage-before-after-scene {
     background: var(--color-background-body);
 }
@@ -155,7 +165,9 @@
 .homepage-before-after-art {
     background: var(--color-text-secondary);
     mask: var(--homepage-before-after-art) center / cover no-repeat;
+    mask-position: center var(--spacing-10);
     -webkit-mask: var(--homepage-before-after-art) center / cover no-repeat;
+    -webkit-mask-position: center var(--spacing-10);
 }
 
 .homepage-before-after-art-before {
@@ -164,6 +176,15 @@
 
 .homepage-before-after-art-after {
     --homepage-before-after-art: url('/images/after-longlink.svg');
+}
+
+.homepage-before-after-slider [data-rcs='handle'] {
+    --rcs-handle-color: var(--color-accent) !important;
+}
+
+.homepage-before-after-slider [data-rcs='handle-root']:focus-visible .__rcs-handle-button {
+    outline: calc(var(--border-width) * 2) solid var(--color-accent);
+    outline-offset: var(--spacing-1);
 }
 
 @media (min-width: 40rem) {

@@ -162,7 +162,7 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
                 application_membership.deleted_id = user.id
                 application_membership.updated_at = now
                 application_membership.updated_id = user.id
-            await session.commit()
+                await session.commit()
             return True
 
         # Create a membership when none exists.
@@ -284,8 +284,10 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
             )
             .values(status=status)
         )
+        if result.rowcount != 1:
+            return False
         await session.commit()
-        return result.rowcount == 1
+        return True
 
 
 async def replace_environment(application_id: UUID, expected_status: Status, replace: Callable[[], Awaitable[None]]) -> Status | None:
