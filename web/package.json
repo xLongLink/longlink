@@ -7,6 +7,7 @@
         "theme:build": "vp exec astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
         "build": "vp run theme:build && vp run build:prepared",
         "build:prepared": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
+        "check": "vp run theme:build && vp check",
         "typecheck": "vp run theme:build && react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b",
         "typecheck:api": "vp run theme:build && react-router typegen --mode api && tsc -b",
         "typecheck:sdk": "vp run theme:build && react-router typegen --mode sdk && tsc -b",

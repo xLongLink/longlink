@@ -22,7 +22,7 @@ vp run dev:sdk     # Starts the embedded Application development server
 vp run routes      # Prints the generated Platform route tree
 vp run build:api   # Builds the Platform web bundle
 vp run build:sdk   # Builds the embedded Application web bundle
-vp check           # Checks formatting, linting, and Vite+ types
+vp run check       # Checks formatting, linting, and Vite+ types
 vp run typecheck   # Checks both React Router bundle modes
 vp fmt --write     # Formats the code
 ```

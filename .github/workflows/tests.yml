@@ -203,7 +203,7 @@ jobs:
 
             - name: Run static checks
               working-directory: web
-              run: vp check
+              run: vp run check
 
             - name: Run type checks
               working-directory: web

@@ -1,4 +1,3 @@
-import sys
 import asyncio
 
 
@@ -6,6 +5,7 @@ async def schedule_migrations() -> None:
     """Schedule release migration operations after Alembic has upgraded the Platform database."""
 
     # Load every relationship target before the standalone process configures SQLModel mappers.
+    from sqlmodel import col
     from sqlalchemy import select
     from src.environments import env
     from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
@@ -18,11 +18,13 @@ async def schedule_migrations() -> None:
 
     # Lock compute aggregates and load active Organization migration targets.
     async with session_scope() as session:
-        compute_rows = (await session.execute(select(ComputeRegistry).order_by(ComputeRegistry.id).with_for_update())).scalars().all()
+        compute_rows = (await session.execute(select(ComputeRegistry).order_by(col(ComputeRegistry.id)).with_for_update())).scalars().all()
         organization_rows = (
             (
                 await session.execute(
-                    select(Organization).where(Organization.deleted_at.is_(None)).order_by(Organization.compute_id, Organization.id)
+                    select(Organization)
+                    .where(col(Organization.deleted_at).is_(None))
+                    .order_by(col(Organization.compute_id), col(Organization.id))
                 )
             )
             .scalars()
@@ -30,10 +32,10 @@ async def schedule_migrations() -> None:
         )
         existing = (
             await session.execute(
-                select(Operation.kind, Operation.target_id).where(
-                    Operation.kind.in_([OperationKind.compute_reconcile, OperationKind.organization_reconcile]),
-                    Operation.failed.is_(False),
-                    Operation.platform_version == env.VERSION,
+                select(col(Operation.kind), col(Operation.target_id)).where(
+                    col(Operation.kind).in_([OperationKind.compute_reconcile, OperationKind.organization_reconcile]),
+                    col(Operation.failed).is_(False),
+                    col(Operation.platform_version) == env.VERSION,
                 )
             )
         ).all()
@@ -74,11 +76,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-
-    # Setuptools executes this conventional filename with build arguments; direct execution schedules migrations.
-    if len(sys.argv) > 1:
-        from setuptools import setup
-
-        setup()
-    else:
-        main()
+    main()

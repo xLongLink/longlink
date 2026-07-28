@@ -65,7 +65,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
 ## Release 
 
 - Release is trigged with `vX.Y.Z` and a container is created
-- Alembic migrations run, then `setup.py` schedules release migration Operations:
+- Alembic migrations run, then `python -m src.release` schedules release migration Operations:
   - One `compute.reconcile` for every compute.
   - One `organization.reconcile` for every active Organization.
 - Each API replica starts (`main.py`).
@@ -90,7 +90,7 @@ Run from `api/`:
 ```bash
 uv sync --extra dev
 uv run alembic upgrade head
-uv run python setup.py
+uv run python -m src.release
 uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```

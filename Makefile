@@ -87,8 +87,7 @@ sdk\:coverage: sdk\:install sdk\:build
 
 # Run web static checks, tests, typechecks, and bundle builds.
 web\:tests: web\:install
-	cd web && vp run theme:build
-	cd web && vp check
+	cd web && vp run check
 	cd web && vp run test
 	cd web && vp run build:prepared
 
@@ -197,7 +196,7 @@ down:
 api:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked python setup.py
+	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
@@ -206,7 +205,7 @@ seed: up
 	docker pull "$(LOCAL_APPLICATION_IMAGE)"
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked python setup.py
+	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true LOCAL_APPLICATION_IMAGE="$(LOCAL_APPLICATION_IMAGE)" uv run --locked python seed.py
 
 

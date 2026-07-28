@@ -1,8 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-**/__pycache__/
 *.py[cod]
-**/*.py[cod]
 *$py.class
 
 # C extensions
@@ -53,7 +51,6 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
 db.sqlite3-journal
 
 # Flask stuff:
@@ -95,9 +92,7 @@ celerybeat.pid
 # Environments
 .env
 .env.*
-!.env.sample
 !**/.env.sample
-!.env.seed.sample
 !**/.env.seed.sample
 .venv
 .direnv/
@@ -127,14 +122,12 @@ dmypy.json
 .pyre/
 
 # IDE
-/.vscode/
-!/.vscode/
+/.vscode/*
 !/.vscode/extensions.json
 !/.vscode/launch.json
 !/.vscode/settings.json
 .idea/
-*.swp
-*.swo
+*.sw?
 *~
 
 # OS
@@ -178,24 +171,14 @@ script.bat
 /web/.react-router/
 /web/*.tsbuildinfo
 /web/src/lib/generated/
-/web/node_modules/.tmp/
 /web/node_modules/
 /web/*.local
 /web/.vscode/*
 !/web/.vscode/extensions.json
-/web/.idea/
 /web/*.suo
 /web/*.ntvs*
 /web/*.njsproj
 /web/*.sln
-/web/*.sw?
-
-
-
 .ruff_cache/
-kubeconfig.yaml
-
 state.yaml
-
-
-sdk/argo
+/sdk/argo/

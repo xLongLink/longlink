@@ -1,5 +1,5 @@
-import setup as platform_setup
 import pytest
+from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
 from src.environments import env
@@ -348,8 +348,8 @@ async def test_operations_service_platform_upgrade_queues_after_locked_work(monk
 
     # Schedule a newer Platform version while the original work remains locked.
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    await platform_setup.schedule_migrations()
-    await platform_setup.schedule_migrations()
+    await platform_release.schedule_migrations()
+    await platform_release.schedule_migrations()
     upgraded = next(
         item
         for item in await operations.fetch()
