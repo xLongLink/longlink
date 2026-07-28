@@ -283,7 +283,6 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
                 Application.id == application_id,
                 Application.deleted_at.is_(None),
                 Application.status == expected_status,
-                Application.status != Status.deleting,
             )
             .values(status=status)
         )

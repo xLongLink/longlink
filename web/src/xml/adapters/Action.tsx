@@ -73,7 +73,7 @@ export async function executeAction(
         return;
     }
 
-    const invalidateRuntime = ctx.invalidate ?? (async () => {});
+    const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
     const headers = new Headers();
 

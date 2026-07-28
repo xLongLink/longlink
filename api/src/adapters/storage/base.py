@@ -1,5 +1,4 @@
 import aioboto3
-import urllib.parse
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager
@@ -37,15 +36,10 @@ class Storage(ABC):
     def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str, region: str | None = None) -> None:
         """Initialize the S3-compatible storage client."""
 
-        # Derive TLS behavior from the endpoint URL so registry data has one source of truth.
-        parsed_url = urllib.parse.urlsplit(endpoint_url)
-        if parsed_url.scheme not in {"http", "https"}:
-            raise ValueError("Storage endpoint URL must use http or https")
-
         self._endpoint_url = endpoint_url
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
-        self._use_ssl = parsed_url.scheme == "https"
+        self._use_ssl = True
         self._region = region
         self._session = aioboto3.Session()
 

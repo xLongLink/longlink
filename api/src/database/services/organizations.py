@@ -84,7 +84,6 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
                 Organization.id == organization_id,
                 Organization.deleted_at.is_(None),
                 Organization.status == expected_status,
-                Organization.status != Status.deleting,
             )
             .values(status=status)
         )

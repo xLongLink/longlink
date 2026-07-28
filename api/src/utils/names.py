@@ -24,10 +24,6 @@ def slugify(value: str, max_length: int = 63) -> str:
 def knames(value: str) -> None:
     """Validate one Kubernetes DNS label value."""
 
-    # Kubernetes names must be non-empty.
-    if not value:
-        raise ValueError("Value must not be empty")
-
     # Kubernetes DNS labels are limited to 63 characters.
     if len(value) > 63:
         raise ValueError("Value must be at most 63 characters")
