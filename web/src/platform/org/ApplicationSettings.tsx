@@ -1,118 +1,54 @@
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Wrench } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
 import CreateApplication from '@/components/dialogs/CreateApplication';
 import Logs from '@/components/dialogs/Logs';
-import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
-import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
-import { APPLICATION_ROLE_NAMES, hasMinimumRole, type ApplicationRole, type PlatformRole } from '@/lib/roles';
-import type { ApiApplicationMember, ApiOrganizationApplication } from '@/lib/types';
+import type { ApiOrganizationApplication } from '@/lib/types';
 
 type ApplicationSettingsProps = {
-    organization: string;
     organizationId: string;
     applications: ApiOrganizationApplication[];
-    platformRole: PlatformRole;
     canManageApplications: boolean;
     isLoading: boolean;
     error: Error | null;
 };
 
-/** Renders organization application management and permissions. */
+/** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
-    organization,
     organizationId,
     applications,
-    platformRole,
     canManageApplications,
     isLoading,
     error,
 }: ApplicationSettingsProps) {
     const t = useTranslator();
     const toast = useToast();
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
-    const { settingsApplication = '' } = useParams();
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
+    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication['application'] | null>(null);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
-    const deleteTarget = applications.find((access) => access.application.id === deleteTargetId) ?? null;
-    const selectedAccess = applications.find((access) => access.application.slug === settingsApplication) ?? null;
-    const applicationMembersPath = selectedAccess ? `/api/applications/${selectedAccess.application.id}/members` : null;
-    const organizationDetailsPath = organizationId ? `/api/organizations/${organizationId}` : null;
-    const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, {
-        parse: (value) => parseApiCollection(apiApplicationMemberSchema, value),
-        retry: false,
-    });
-    const applicationMembers = applicationMembersQuery.data ?? [];
-    const canManageSelectedApplication = selectedAccess
-        ? hasMinimumRole(selectedAccess.role, 'maintain') || canManageApplications
-        : false;
-
-    const changeApplicationMemberRole = useMutation({
-        mutationFn: async ({
-            applicationId,
-            memberId,
-            role,
-        }: {
-            applicationId: string;
-            memberId: string;
-            role: ApplicationRole | null;
-        }) => {
-            await fetchApiVoid(`/api/applications/${applicationId}/members/${memberId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role }),
-            });
-        },
-        onSuccess: async (_data, variables) => {
-            await queryClient.invalidateQueries({
-                queryKey: apiQueryKey(`/api/applications/${variables.applicationId}/members`),
-            });
-
-            // Refresh organization details when the route context exists.
-            if (organizationDetailsPath !== null) {
-                await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationDetailsPath) });
-            }
-        },
-    });
-
+    const deleteTarget = applications.find((application) => application.application.id === deleteTargetId) ?? null;
     const appColumns: TableColumn<ApiOrganizationApplication>[] = [
         {
             key: 'name',
             header: t('columns.application'),
             width: proportional(1),
-            renderCell: (access) => (
+            renderCell: ({ application }) => (
                 <HStack gap={3} align="center">
                     <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
-                        <Link
-                            href={`/orgs/${organization}/settings/applications/${access.application.slug}`}
-                            weight="semibold"
-                        >
-                            {access.application.name}
-                        </Link>
-                        {access.application.description ? (
-                            <Text type="supporting">{access.application.description}</Text>
-                        ) : null}
+                        <Text weight="semibold">{application.name}</Text>
+                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
                     </VStack>
                 </HStack>
             ),
@@ -122,108 +58,20 @@ export default function ApplicationSettings({
             header: t('columns.action'),
             width: pixel(96),
             align: 'end',
-            renderCell: (access) => {
-                const canManageApplication = hasMinimumRole(access.role, 'maintain') || canManageApplications;
-                const canReadLogs = platformRole === 'administrator' || canManageApplication;
-
-                // Hide the action menu when no actions are available.
-                if (!canReadLogs) {
-                    return '—';
+            renderCell: ({ application }) => {
+                // Organization maintainers own every available Application action.
+                if (!canManageApplications) {
+                    return '-';
                 }
 
                 return (
                     <MoreMenu
-                        label={t('common.openActionsFor', { name: access.application.name })}
+                        label={t('common.openActionsFor', { name: application.name })}
                         size="sm"
                         items={[
-                            ...(canReadLogs
-                                ? [{ label: t('organizationSettings.logs'), onClick: () => setLogsTarget(access) }]
-                                : []),
-                            ...(canManageApplication
-                                ? [
-                                      {
-                                          label: t('actions.delete'),
-                                          onClick: () => {
-                                              setDeleteTargetId(access.application.id);
-                                          },
-                                      },
-                                  ]
-                                : []),
+                            { label: t('organizationSettings.logs'), onClick: () => setLogsTarget(application) },
+                            { label: t('actions.delete'), onClick: () => setDeleteTargetId(application.id) },
                         ]}
-                    />
-                );
-            },
-        },
-    ];
-    const applicationMemberColumns: TableColumn<ApiApplicationMember>[] = [
-        {
-            key: 'member',
-            header: t('columns.user'),
-            width: proportional(1),
-            renderCell: (member) => (
-                <HStack gap={3} align="center">
-                    <Avatar src={member.user.avatar} name={member.user.name} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{member.user.name}</Text>
-                        <Text type="supporting">{member.user.email}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'organization_role',
-            header: t('organizationSettings.organizationPermission'),
-            width: pixel(208),
-            renderCell: (member) => <Badge label={member.organization_role} />,
-        },
-        {
-            key: 'application_role',
-            header: t('organizationSettings.applicationPermission'),
-            width: pixel(208),
-            renderCell: (member) => {
-                const value = member.application_role ?? 'none';
-
-                return (
-                    <Selector
-                        label={t('organizationSettings.applicationPermission')}
-                        isLabelHidden
-                        width={176}
-                        value={value}
-                        options={[
-                            { value: 'none', label: t('organizationSettings.noAppAccess') },
-                            ...APPLICATION_ROLE_NAMES.map((role) => ({ value: role, label: role })),
-                        ]}
-                        isDisabled={!canManageSelectedApplication || changeApplicationMemberRole.isPending}
-                        onChange={async (nextValue) => {
-                            // Ignore changes without an active application.
-                            if (selectedAccess === null) {
-                                return;
-                            }
-
-                            const nextRole = nextValue === 'none' ? null : (nextValue as ApplicationRole);
-
-                            // Skip updates when the role is unchanged.
-                            if (nextRole === member.application_role) {
-                                return;
-                            }
-
-                            // Persist the selected application role.
-                            try {
-                                await changeApplicationMemberRole.mutateAsync({
-                                    applicationId: selectedAccess.application.id,
-                                    memberId: member.user.id,
-                                    role: nextRole,
-                                });
-                            } catch (mutationError) {
-                                toast({
-                                    body:
-                                        mutationError instanceof Error
-                                            ? mutationError.message
-                                            : t('organizationSettings.failedChangeApplicationPermission'),
-                                    type: 'error',
-                                });
-                            }
-                        }}
                     />
                 );
             },
@@ -235,45 +83,13 @@ export default function ApplicationSettings({
             <VStack gap={4}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
-                        {selectedAccess ? (
-                            <Link href={`/orgs/${organization}/settings/applications`}>
-                                {t('organizationSettings.back')}
-                            </Link>
-                        ) : null}
-                        <Heading level={2}>
-                            {selectedAccess
-                                ? t('organizationSettings.applicationPermissionsTitle', {
-                                      name: selectedAccess.application.name,
-                                  })
-                                : t('navigation.applications')}
-                        </Heading>
-                        {!selectedAccess ? (
-                            <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
-                        ) : !canManageSelectedApplication ? (
-                            <Text type="supporting">{t('organizationSettings.cannotChangePermissions')}</Text>
-                        ) : null}
+                        <Heading level={2}>{t('navigation.applications')}</Heading>
+                        <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
                     </VStack>
-                    {!selectedAccess ? (
-                        <CreateApplication organizationId={organizationId} canCreate={canManageApplications} />
-                    ) : null}
+                    <CreateApplication organizationId={organizationId} canCreate={canManageApplications} />
                 </HStack>
 
-                {selectedAccess ? (
-                    applicationMembersQuery.isLoading &&
-                    applicationMembers.length === 0 ? null : applicationMembersQuery.error &&
-                      applicationMembers.length === 0 ? (
-                        <Banner status="error" title={applicationMembersQuery.error.message} />
-                    ) : (
-                        <Table
-                            columns={applicationMemberColumns}
-                            data={applicationMembers}
-                            density="compact"
-                            emptyState={<EmptyState title={t('resources.noOrganizationMembers')} isCompact />}
-                            hasHover
-                            idKey={(member) => member.user.id}
-                        />
-                    )
-                ) : isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
                     <Banner status="error" title={t('organizationSettings.loadApplicationsFailed')} />
                 ) : (
                     <Table
@@ -289,8 +105,8 @@ export default function ApplicationSettings({
 
             {logsTarget ? (
                 <Logs
-                    applicationId={logsTarget.application.id}
-                    applicationName={logsTarget.application.name}
+                    applicationId={logsTarget.id}
+                    applicationName={logsTarget.name}
                     onOpenChange={(open) => {
                         // Clear the selected log target when closing.
                         if (!open) {
@@ -325,16 +141,8 @@ export default function ApplicationSettings({
                         return;
                     }
 
-                    const id = deleteTargetId;
-
-                    // Delete the application and clear local dialog state.
                     try {
-                        await deleteApplication.mutateAsync(id);
-
-                        // Leave the detail view if it was deleted.
-                        if (selectedAccess?.application.id === id) {
-                            navigate(`/orgs/${organization}/settings/applications`);
-                        }
+                        await deleteApplication.mutateAsync(deleteTargetId);
                         setDeleteTargetId(null);
                     } catch (mutationError) {
                         toast({

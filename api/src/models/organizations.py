@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Literal
 from datetime import datetime
 from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
-from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary, UserIdentity
 from src.models.statuses import Status
 from src.models.resources import OrganizationApplicationSummary
@@ -112,14 +112,10 @@ class OrganizationMemberAccessResponse(BaseModel):
 
 
 class OrganizationApplicationAccessResponse(BaseModel):
-    """Represent one compact LongLink Application and the current user's access role."""
+    """Represent one compact LongLink Application available to an Organization member."""
 
     # Relationships
     application: OrganizationApplicationSummary
-
-    # Access
-    role: ApplicationRoles | None = None
-
 
 class OrganizationDetails(BaseModel):
     """Represent an Organization with its members and Application access."""

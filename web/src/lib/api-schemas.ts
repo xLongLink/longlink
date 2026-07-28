@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
-import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
+import { PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 
 export const statusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
-const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
 const themeSchema = z.enum(THEME_VALUES);
@@ -88,7 +87,6 @@ const apiOrganizationApplicationSummarySchema = z.object({
 
 export const apiOrganizationApplicationSchema = z.object({
     application: apiOrganizationApplicationSummarySchema,
-    role: applicationRoleSchema.nullable(),
 });
 
 export const apiOrganizationDetailsSchema = z.object({
@@ -124,17 +122,10 @@ export const apiApplicationResponseSchema = z.object({
     image: z.string(),
     version: z.string().nullable(),
     sdk: z.string().nullable(),
-    digest: z.string().nullable(),
     status: statusSchema,
     description: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
-});
-
-export const apiApplicationMemberSchema = z.object({
-    user: apiUserIdentitySchema,
-    application_role: applicationRoleSchema.nullable(),
-    organization_role: roleSchema,
 });
 
 export const apiDatabaseRegistrySchema = z.object({

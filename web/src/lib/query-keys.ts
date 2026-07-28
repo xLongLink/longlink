@@ -1,10 +1,5 @@
 import { apiQueryKey } from '@/lib/api';
 
-/** Builds the saved accounts query key. */
-export function accountsQueryKey() {
-    return apiQueryKey('/api/auth/accounts');
-}
-
 /** Builds the current user profile query key. */
 export function userProfileQueryKey() {
     return apiQueryKey('/api/me');

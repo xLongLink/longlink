@@ -1,8 +1,8 @@
 import jwt
 from pwdlib import PasswordHash
-from fastapi import Cookie, Depends, Request, Response, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
-from src.auth import SessionAccountsService, get_auth_session
+from src.auth import get_auth_session, current_optional_user_token
 from src.utils import mail, token
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/api/auth/password/login", status_code=204, tags=["auth"])
-async def password_login(payload: PasswordLogin, request: Request, response: Response, session: AsyncSession = Depends(get_auth_session)):
+async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one revocable browser session."""
 
     email = str(payload.email)
@@ -51,7 +51,31 @@ async def password_login(payload: PasswordLogin, request: Request, response: Res
         httponly=True,
         samesite="lax",
     )
-    SessionAccountsService(request).remember(user.id)
+
+
+@router.post("/api/auth/logout", status_code=204, include_in_schema=False)
+async def logout(
+    response: Response,
+    authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
+    session: AsyncSession = Depends(get_auth_session),
+):
+    """Revoke the active token and remove its browser credential."""
+
+    _, credential = authentication
+
+    # Revoke the active database token when one is present.
+    if credential is not None:
+        await token.revoke_access_token(session, credential)
+        await session.commit()
+
+    # Match the authentication-cookie scope so browsers reliably remove the credential.
+    response.delete_cookie(
+        "longlink_auth",
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 @router.post("/api/auth/forgot-password", status_code=202, response_model=None, tags=["auth"])
@@ -206,7 +230,6 @@ async def get_registration_setup(response: Response, registration_token: str | N
 @router.post("/api/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
 async def complete_registration(
     payload: RegistrationComplete,
-    request: Request,
     response: Response,
     registration_token: str | None = Cookie(default=None, alias="longlink_registration"),
     session: AsyncSession = Depends(get_auth_session),
@@ -266,5 +289,4 @@ async def complete_registration(
         httponly=True,
         samesite="lax",
     )
-    SessionAccountsService(request).remember(user.id)
     return user

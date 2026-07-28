@@ -8,7 +8,7 @@ from src.models.roles import PlatformRoles
 from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 
 
 class User(SQLModel, table=True):
@@ -49,15 +49,6 @@ class User(SQLModel, table=True):
             "foreign_keys": "UserOrganization.user_id",
         },
     )
-    application_memberships: list["UserApplication"] = Relationship(
-        back_populates="user",
-        sa_relationship_kwargs={
-            "primaryjoin": "and_(User.id == UserApplication.user_id, UserApplication.deleted_at.is_(None))",
-            "foreign_keys": "UserApplication.user_id",
-        },
-    )
-
-
 class AccessToken(SQLModel, table=True):
     """Store one revocable browser access-token digest."""
 

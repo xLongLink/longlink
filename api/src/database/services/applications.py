@@ -1,10 +1,9 @@
 from uuid import UUID
 from fastapi import HTTPException
-from sqlalchemy import and_, delete, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
 from collections.abc import Callable, Awaitable
-from src.models.roles import ApplicationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -14,7 +13,6 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
-from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -81,119 +79,12 @@ async def get(application_id: UUID, include_deleted: bool = False) -> Applicatio
         return (await session.scalars(statement)).one_or_none()
 
 
-async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRoles | None:
-    """Return one application membership role for one user."""
-
-    # Query the active membership role.
-    async with session_scope() as session:
-        statement = select(UserApplication.role).where(
-            UserApplication.application_id == application_id,
-            UserApplication.user_id == user_id,
-            UserApplication.deleted_at.is_(None),
-        )
-        return (await session.scalars(statement)).one_or_none()
-
-
-async def members(application_id: UUID, organization_id: UUID) -> list[tuple[User, UserOrganization, UserApplication | None]]:
-    """Return organization member rows with optional application membership rows."""
-
-    # Query organization members and app roles together.
-    async with session_scope() as session:
-        # Start from organization memberships so users without app access are visible.
-        statement = (
-            select(User, UserOrganization, UserApplication)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .outerjoin(
-                UserApplication,
-                and_(
-                    UserApplication.organization_id == UserOrganization.organization_id,
-                    UserApplication.application_id == application_id,
-                    UserApplication.user_id == User.id,
-                    UserApplication.deleted_at.is_(None),
-                ),
-            )
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                User.deleted_at.is_(None),
-            )
-            .order_by(User.name, User.email)
-        )
-        return list((await session.execute(statement)).tuples())
-
-
-async def set_member_role(application_id: UUID, organization_id: UUID, member_id: UUID, role: ApplicationRoles | None, user: User) -> bool:
-    """Set or remove one organization member's application role."""
-
-    # Update membership rows in one transaction.
-    async with session_scope() as session:
-        # Require an active organization membership first.
-        membership_id = (
-            await session.scalars(
-                select(UserOrganization.user_id)
-                .join(User, User.id == UserOrganization.user_id)
-                .where(
-                    UserOrganization.organization_id == organization_id,
-                    UserOrganization.user_id == member_id,
-                    UserOrganization.deleted_at.is_(None),
-                    User.deleted_at.is_(None),
-                )
-            )
-        ).one_or_none()
-        if membership_id is None:
-            return False
-
-        # Load any current Application membership before applying the requested role.
-        application_membership = await session.get(
-            UserApplication,
-            {
-                "application_id": application_id,
-                "organization_id": organization_id,
-                "user_id": member_id,
-            },
-        )
-        now = utcnow()
-
-        # Remove application access when no role is provided.
-        if role is None:
-            # Soft-delete an existing active application membership.
-            if application_membership is not None and application_membership.deleted_at is None:
-                application_membership.deleted_at = now
-                application_membership.deleted_id = user.id
-                application_membership.updated_at = now
-                application_membership.updated_id = user.id
-                await session.commit()
-            return True
-
-        # Create a membership when none exists.
-        if application_membership is None:
-            application_membership = UserApplication(
-                application_id=application_id,
-                organization_id=organization_id,
-                user_id=member_id,
-                role=role,
-                created_id=user.id,
-                updated_id=user.id,
-            )
-            session.add(application_membership)
-        else:
-            application_membership.deleted_at = None
-            application_membership.deleted_id = None
-            application_membership.updated_at = now
-            application_membership.updated_id = user.id
-            application_membership.role = role
-
-        await session.commit()
-        return True
-
-
 async def create(
     organization_id: UUID,
     name: str,
     slug: str,
     image: Image | str,
     user: User,
-    digest: str,
     sdk: str | None = None,
     version: str | None = None,
     description: str | None = None,
@@ -204,10 +95,10 @@ async def create(
 
     # Validate direct service callers while preserving already-validated API values.
     image = Image(image)
-    if "@" not in image or image.tag_or_digest != digest:
+    if "@" not in image:
         raise ValueError("Application image must be pinned to its resolved digest")
 
-    # Create the application and owner membership transactionally.
+    # Create the application and lifecycle operation transactionally.
     async with session_scope() as session:
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
@@ -232,7 +123,6 @@ async def create(
             description=description,
             image=str(image),
             sdk=sdk,
-            digest=digest,
             version=version,
             icon=icon,
         )
@@ -247,17 +137,7 @@ async def create(
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Application slug already exists") from exc
 
-        # Grant the creator administration and queue the delayed deployment lifecycle.
-        session.add(
-            UserApplication(
-                application_id=application.id,
-                user_id=user.id,
-                organization_id=organization_id,
-                role=ApplicationRoles.admin,
-                created_id=user.id,
-                updated_id=user.id,
-            )
-        )
+        # Queue the delayed deployment lifecycle after the application identifier exists.
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
@@ -340,7 +220,7 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | No
 async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:
     """Tombstone a LongLink Application and atomically queue lifecycle cleanup."""
 
-    # Soft-delete the application and memberships together.
+    # Soft-delete the application and queue its cleanup together.
     async with session_scope() as session:
         # Resolve parents before taking locks in aggregate order.
         current = await session.get(Application, application_id)
@@ -367,21 +247,6 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             application.deleted_id = user.id
             application.updated_at = now
             application.updated_id = user.id
-
-            # Mark active Application memberships as deleted.
-            await session.execute(
-                update(UserApplication)
-                .where(
-                    UserApplication.application_id == application_id,
-                    UserApplication.deleted_at.is_(None),
-                )
-                .values(
-                    deleted_at=now,
-                    deleted_id=user.id,
-                    updated_at=now,
-                    updated_id=user.id,
-                )
-            )
 
         # Application tombstone and reconciliation request are one Platform transaction.
         operation = await operations.enqueue_in_session(

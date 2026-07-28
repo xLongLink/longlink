@@ -189,7 +189,6 @@ async def reconcile_local_application(
             or application.icon != payload.icon
             or application.image != metadata.image
             or application.sdk != metadata.sdk
-            or application.digest != metadata.digest
             or application.version != metadata.version
             or application.description != payload.description
         )
@@ -410,7 +409,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             application_slug,
             metadata.image,
             admin,
-            digest=metadata.digest,
             sdk=metadata.sdk,
             version=metadata.version,
             description=payload.description,

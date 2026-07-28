@@ -3,13 +3,11 @@ from uuid import uuid4
 from fastapi import HTTPException
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
-from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -61,7 +59,6 @@ async def test_create_requires_running_organization_and_queues_application_lifec
             "Dashboard",
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
-            digest="sha256:test",
             user=user,
         )
     await mark_organization_running(organization)
@@ -70,7 +67,6 @@ async def test_create_requires_running_organization_and_queues_application_lifec
         "Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:test",
-        digest="sha256:test",
         sdk="1.2.3",
         version="2.0.0",
         user=user,
@@ -84,7 +80,6 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application.digest == "sha256:test"
     assert application.sdk == "1.2.3"
     assert application.version == "2.0.0"
     assert operation.id != open_before[0].id
@@ -116,7 +111,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
             "Duplicate dashboard",
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
-            digest="sha256:test",
             user=user,
         )
 
@@ -135,7 +129,6 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         "Reports",
         slug="reports",
         image="ghcr.io/longlink/reports@sha256:test",
-        digest="sha256:test",
         user=user,
     )
     await applications.soft_delete(deleted_application.id, user)
@@ -171,113 +164,6 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     assert included_by_id.deleted_id == user.id
 
 
-async def test_list_members_includes_organization_members_with_optional_application_roles(
-    users: tuple[User, User, User],
-) -> None:
-    """List organization members with their current application roles."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    application = await create_application(organization, owner, name="Dashboard")
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-            )
-        )
-        await session.commit()
-
-    # Act
-    members = await applications.members(application.id, organization.id)
-    members_by_id = {
-        member.id: (organization_membership, application_membership) for member, organization_membership, application_membership in members
-    }
-
-    # Assert
-    owner_organization_membership, owner_application_membership = members_by_id[owner.id]
-    member_organization_membership, member_application_membership = members_by_id[member.id]
-    assert owner_organization_membership.role == OrganizationRoles.owner
-    assert owner_application_membership is not None
-    assert owner_application_membership.role == ApplicationRoles.admin
-    assert member_organization_membership.role == OrganizationRoles.read
-    assert member_application_membership is None
-
-
-async def test_set_member_role_creates_updates_removes_and_restores_memberships(
-    users: tuple[User, User, User],
-) -> None:
-    """Manage application roles for active organization members."""
-
-    # Arrange
-    owner, member, non_member = users
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    application = await create_application(organization, owner, name="Dashboard")
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-            )
-        )
-        await session.commit()
-
-    # Act
-    missing = await applications.set_member_role(
-        application.id,
-        organization.id,
-        non_member.id,
-        ApplicationRoles.read,
-        owner,
-    )
-    created = await applications.set_member_role(
-        application.id,
-        organization.id,
-        member.id,
-        ApplicationRoles.read,
-        owner,
-    )
-    created_role = await applications.membership_role(application.id, member.id)
-    updated = await applications.set_member_role(
-        application.id,
-        organization.id,
-        member.id,
-        ApplicationRoles.write,
-        owner,
-    )
-    updated_role = await applications.membership_role(application.id, member.id)
-    removed = await applications.set_member_role(application.id, organization.id, member.id, None, owner)
-    removed_role = await applications.membership_role(application.id, member.id)
-    restored = await applications.set_member_role(
-        application.id,
-        organization.id,
-        member.id,
-        ApplicationRoles.maintain,
-        owner,
-    )
-    restored_role = await applications.membership_role(application.id, member.id)
-
-    # Assert
-    assert missing is False
-    assert created is True
-    assert created_role == ApplicationRoles.read
-    assert updated is True
-    assert updated_role == ApplicationRoles.write
-    assert removed is True
-    assert removed_role is None
-    assert restored is True
-    assert restored_role == ApplicationRoles.maintain
-
-
 async def test_set_status_modifies_active_applications() -> None:
     """Update application status only for active Applications in the expected state."""
 
@@ -297,8 +183,8 @@ async def test_set_status_modifies_active_applications() -> None:
     assert deleted_status is False
 
 
-async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
-    """Soft-delete an application and its application memberships."""
+async def test_soft_delete_marks_application_deleted() -> None:
+    """Soft-delete an application and queue its cleanup operation."""
 
     # Arrange
     user, organization, application = await create_application_context("delete")
@@ -307,7 +193,6 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     result = await applications.soft_delete(application.id, user)
     active_application = await applications.get(application.id)
     deleted_application = await applications.get(application.id, include_deleted=True)
-    role = await applications.membership_role(application.id, user.id)
     second_delete = await applications.soft_delete(application.id, user)
     missing_delete = await applications.soft_delete(uuid4(), user)
     compute_after = await compute.get(organization.compute_id)
@@ -320,7 +205,6 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
-    assert role is None
     assert second_delete is not None
     assert second_delete[1].id == operation.id
     assert missing_delete is None

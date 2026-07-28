@@ -83,7 +83,6 @@ async def test_get_organization_returns_member_payload(
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
     assert payload["applications"][0]["application"]["id"] == str(application.id)
-    assert payload["applications"][0]["role"] == "admin"
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -156,11 +155,11 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     assert await organizations.get(admin_owned_organization.id) is None
 
 
-async def test_other_organization_user_cannot_manage_application_members_or_delete_application(
+async def test_other_organization_user_cannot_delete_application(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject member reads, member updates, and deletion across organization boundaries."""
+    """Reject Application deletion across Organization boundaries."""
 
     # Create isolated organizations owned by different users.
     target_owner, other_owner, _ = users
@@ -171,19 +170,10 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
     operation_ids = [operation.id for operation in await operations.fetch()]
     client = clients[1]
 
-    # Attempt every application-management route with only another organization's access.
-    members_response = await client.get(f"/api/applications/{target_application.id}/members")
-    update_response = await client.patch(
-        f"/api/applications/{target_application.id}/members/{target_owner.id}",
-        json={"role": "read"},
-    )
+    # Attempt Application deletion with only another organization's access.
     delete_response = await client.delete(f"/api/applications/{target_application.id}")
 
-    # Verify denied requests leave the target application and operation queue unchanged.
-    assert members_response.status_code == 403
-    assert members_response.json() == {"detail": "Access required"}
-    assert update_response.status_code == 403
-    assert update_response.json() == {"detail": "Access required"}
+    # Verify the denied request leaves the target application and operation queue unchanged.
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
     assert await applications.get(target_application.id) is not None

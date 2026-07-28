@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 import type {
-    apiApplicationMemberSchema,
     apiApplicationResponseSchema,
     apiComputePodSchema,
     apiComputeRegistrySchema,
@@ -27,7 +26,6 @@ export type ApiUserSummary = z.infer<typeof apiUserSummarySchema>;
 export type ApiUserOrganizationMembership = z.infer<typeof apiUserOrganizationMembershipSchema>;
 export type ApiUserProfile = z.infer<typeof apiUserProfileSchema>;
 export type ApiOrganizationApplication = z.infer<typeof apiOrganizationApplicationSchema>;
-export type ApiApplicationMember = z.infer<typeof apiApplicationMemberSchema>;
 export type ApiOrganizationMember = z.infer<typeof apiOrganizationMemberSchema>;
 export type ApiImageMetadata = z.infer<typeof apiImageMetadataSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;

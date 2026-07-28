@@ -44,11 +44,6 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         raise HTTPException(status_code=404, detail="Organization not found")
 
     active_applications = await organizations.applications(organization.id)
-    application_roles = {
-        membership.application_id: membership.role
-        for membership in user.application_memberships
-        if membership.organization_id == organization.id
-    }
     memberships = await organizations.members(organization.id)
 
     # Show invitations only to organization managers.
@@ -60,9 +55,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "organization": organization,
         "members": memberships,
         "invitations": active_invitations,
-        "applications": [
-            {"application": application, "role": application_roles.get(application.id)} for application in active_applications
-        ],
+        "applications": [{"application": application} for application in active_applications],
     }
 
 

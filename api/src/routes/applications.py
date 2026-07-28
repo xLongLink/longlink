@@ -3,18 +3,11 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
 from src.utils import names, roles, images
 from src.logger import logger
-from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
+from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import Status
 from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
-from src.models.applications import (
-    ApplicationCreate,
-    ApplicationResponse,
-    ApplicationEnvironment,
-    ApplicationMemberUpdate,
-    ApplicationMemberResponse,
-    ApplicationMutationResponse,
-)
+from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationEnvironment, ApplicationMutationResponse
 from src.database.models.users import User
 
 router = APIRouter()
@@ -68,7 +61,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         payload.name,
         application_slug,
         image=metadata.image,
-        digest=metadata.digest,
         sdk=metadata.sdk,
         version=metadata.version,
         description=payload.description,
@@ -107,8 +99,8 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Direct Application or inherited Organization maintenance authority is required.
-    if not access.allows(ApplicationRoles.maintain):
+    # Application logs require Organization maintenance authority.
+    if not access.allows(OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
@@ -139,8 +131,8 @@ async def update_application_environment(application_id: UUID, payload: Applicat
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Direct Application and inherited Organization access both require maintenance authority.
-    if not access.allows(ApplicationRoles.maintain):
+    # Runtime configuration requires Organization maintenance authority.
+    if not access.allows(OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
@@ -173,63 +165,6 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         raise HTTPException(status_code=409, detail="Application is not running")
 
 
-@router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
-async def list_application_members(application_id: UUID, user: User = Depends(authuser)):
-    """Return organization members and their application-specific roles."""
-
-    # Load application access before listing members.
-    access = roles.access(user, application_id, "application")
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    member_rows = await applications.members(application_id, access.organization.id)
-    return [
-        {
-            "user": member,
-            "application_role": application_membership.role if application_membership is not None else None,
-            "organization_role": organization_membership.role,
-        }
-        for member, organization_membership, application_membership in member_rows
-    ]
-
-
-@router.patch("/api/applications/{application_id}/members/{member_id}", status_code=204)
-async def update_application_member(
-    application_id: UUID,
-    member_id: UUID,
-    payload: ApplicationMemberUpdate,
-    user: User = Depends(authuser),
-):
-    """Update one member's application-specific role."""
-
-    # Load application access before updating members.
-    access = roles.access(user, application_id, "application")
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    # Only direct Application or inherited Organization maintainers can manage members.
-    if not access.allows(ApplicationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-    caller_role_rank = max(roles.rank(access.application_role), roles.rank(access.organization_role))
-
-    # Managers cannot modify roles above their authority.
-    member_application_role = await applications.membership_role(application_id, member_id)
-    if roles.rank(member_application_role) > caller_role_rank:
-        raise HTTPException(status_code=403, detail="Application role management permissions required")
-    if roles.rank(payload.role) > caller_role_rank:
-        raise HTTPException(status_code=403, detail="Application role management permissions required")
-
-    updated = await applications.set_member_role(
-        application_id,
-        access.organization.id,
-        member_id,
-        payload.role,
-        user,
-    )
-    if not updated:
-        raise HTTPException(status_code=404, detail="Organization member not found")
-
-
 @router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationMutationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
@@ -245,8 +180,8 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         if access is None:
             raise HTTPException(status_code=403, detail="Access required")
 
-    # Active Applications require direct or inherited maintenance authority.
-    if access is not None and not access.allows(ApplicationRoles.maintain):
+    # Active Applications require Organization maintenance authority.
+    if access is not None and not access.allows(OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
     result = await applications.soft_delete(application_id, user)

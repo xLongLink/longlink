@@ -3,14 +3,14 @@ from uuid import uuid4
 from fastapi import HTTPException
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
-from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 
 
 async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
@@ -286,7 +286,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         "dashboard",
         "ghcr.io/longlink/dashboard@sha256:test",
         owner,
-        digest="sha256:test",
     )
     await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
@@ -297,14 +296,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
                 user_id=member.id,
                 organization_id=organization.id,
                 role=OrganizationRoles.write,
-            )
-        )
-        session.add(
-            UserApplication(
-                application_id=application.id,
-                organization_id=organization.id,
-                user_id=member.id,
-                role=ApplicationRoles.read,
             )
         )
         await session.commit()
@@ -339,8 +330,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert missing_delete is None
     assert await organizations.membership_role(organization.id, owner.id) is None
     assert await organizations.membership_role(organization.id, member.id) is None
-    assert await applications.membership_role(application.id, owner.id) is None
-    assert await applications.membership_role(application.id, member.id) is None
     assert await organizations.invitations(organization.id) == []
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.running
