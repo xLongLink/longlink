@@ -21,7 +21,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
-    remote_infrastructure = await create_ready_infrastructure(slug="remote", name="Remote testing")
+    remote_infrastructure = await create_ready_infrastructure(name="Remote testing")
     organization = await create_organization(user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, Status.creating, Status.running)

@@ -27,8 +27,6 @@ export const apiUserSummarySchema = apiUserIdentitySchema.extend({
     role: platformRoleSchema,
 });
 
-const nullableUserSummarySchema = apiUserSummarySchema.nullable();
-
 const apiOrganizationReferenceSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -70,23 +68,16 @@ export const apiOrganizationSummarySchema = z.object({
     status: statusSchema,
     created_at: z.string(),
     updated_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
-const apiOrganizationApplicationSummarySchema = z.object({
+export const apiOrganizationApplicationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
     icon: iconNameSchema,
     description: z.string().nullable(),
     status: statusSchema,
-});
-
-export const apiOrganizationApplicationSchema = z.object({
-    application: apiOrganizationApplicationSummarySchema,
 });
 
 export const apiOrganizationDetailsSchema = z.object({
@@ -131,7 +122,6 @@ export const apiApplicationResponseSchema = z.object({
 export const apiDatabaseRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     host: z.string(),
     port: z.number(),
     sslmode: databaseSslModeSchema,
@@ -141,14 +131,12 @@ export const apiDatabaseRegistrySchema = z.object({
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     endpoint_url: z.string(),
 });
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     status: statusSchema,
     version: z.string().nullable(),
 });
@@ -169,12 +157,6 @@ export const apiOperationSchema = z.object({
     created_at: z.string(),
     finished_at: z.string().nullable(),
     available_at: z.string(),
-});
-
-export const apiComputePodSchema = z.object({
-    name: z.string(),
-    status: z.string(),
-    node: z.string().nullable(),
 });
 
 export const apiOrganizationDatabaseUsageSchema = z.object({

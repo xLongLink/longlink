@@ -316,8 +316,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert result.deleted_id == owner.id
     assert active_organization is None
     assert deleted_organization is not None
-    assert deleted_organization.deleted_by is not None
-    assert deleted_organization.deleted_by.id == owner.id
+    assert deleted_organization.deleted_id == owner.id
     assert await organizations.members(organization.id) == []
     assert await organizations.invitations(organization.id) == []
     assert await organizations.applications(organization.id) == []

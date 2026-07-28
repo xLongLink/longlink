@@ -82,7 +82,6 @@ def upgrade() -> None:
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("slug", sa.String(length=255), nullable=False),
         sa.Column("kubeconfig", sa.Text(), nullable=False),
         sa.Column(
             "status",
@@ -106,7 +105,6 @@ def upgrade() -> None:
         sa.Column("gateway_tls_private_key", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
-        sa.UniqueConstraint("slug"),
     )
 
     # Create database registries.
@@ -114,7 +112,6 @@ def upgrade() -> None:
         "database_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),
         sa.Column("password", sa.String(length=255), nullable=False),
@@ -126,7 +123,6 @@ def upgrade() -> None:
         sa.Column("username", sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
-        sa.UniqueConstraint("slug"),
     )
 
     # Create storage registries.
@@ -134,13 +130,11 @@ def upgrade() -> None:
         "storage_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("endpoint_url", sa.String(length=255), nullable=False),
         sa.Column("access_key_id", sa.String(length=255), nullable=False),
         sa.Column("secret_access_key", sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
-        sa.UniqueConstraint("slug"),
     )
 
     # Create organizations after their user and infrastructure dependencies.
@@ -153,7 +147,6 @@ def upgrade() -> None:
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("database_id", sa.Uuid(), nullable=False),
         sa.Column("storage_id", sa.Uuid(), nullable=False),
-        sa.Column("shared_schema_url", sa.String(length=2048), nullable=False),
         sa.Column(
             "status",
             sa.Enum(
@@ -237,7 +230,6 @@ def upgrade() -> None:
             ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("organization_id", "id", name="uq_applications_organization_id_id"),
         sa.UniqueConstraint("organization_id", "slug"),
     )
 

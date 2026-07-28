@@ -107,15 +107,6 @@
     "admin.copyEmail": {
         "defaultMessage": "Copy email"
     },
-    "admin.copyComputeSlug": {
-        "defaultMessage": "Compute slug"
-    },
-    "admin.copyDatabaseSlug": {
-        "defaultMessage": "Database slug"
-    },
-    "admin.copyStorageSlug": {
-        "defaultMessage": "Storage slug"
-    },
     "admin.databaseTitle": {
         "defaultMessage": "Database"
     },
@@ -141,7 +132,7 @@
         "defaultMessage": "Application deletion"
     },
     "admin.deleteComputeDescription": {
-        "defaultMessage": "Remove compute {slug} from the LongLink Platform? Its Kubernetes resources will remain unchanged."
+        "defaultMessage": "Remove compute {name} from the LongLink Platform? Its Kubernetes resources will remain unchanged."
     },
     "admin.deleteComputeFallback": {
         "defaultMessage": "Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged."
@@ -150,7 +141,7 @@
         "defaultMessage": "Delete compute"
     },
     "admin.deleteDatabaseDescription": {
-        "defaultMessage": "Delete database {slug}?"
+        "defaultMessage": "Delete database {name}?"
     },
     "admin.deleteDatabaseFallback": {
         "defaultMessage": "Delete this database?"
@@ -162,7 +153,7 @@
         "defaultMessage": "Delete organization {name}?"
     },
     "admin.deleteStorageDescription": {
-        "defaultMessage": "Delete storage {slug}?"
+        "defaultMessage": "Delete storage {name}?"
     },
     "admin.deleteStorageFallback": {
         "defaultMessage": "Delete this storage registry?"

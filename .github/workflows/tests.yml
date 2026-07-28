@@ -51,7 +51,7 @@ jobs:
 
             - name: Run tests
               working-directory: api
-              run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+              run: uv run --locked pytest -m "not integration" tests
 
             - name: Run type checks
               working-directory: api
@@ -136,7 +136,7 @@ jobs:
 
             - name: Run integration tests
               working-directory: ${{ matrix.workspace }}
-              run: ENVIRONMENT=testing uv run --locked pytest -m integration tests
+              run: uv run --locked pytest -m integration tests
 
     # Verify that a generated Application installs and runs in an isolated environment.
     sdk-scaffold-tests:

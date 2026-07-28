@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from containers import DockerRuntimeContainer, wait_for_postgres, require_docker_daemon
+from containers import start_postgres
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import users as shared_users
@@ -17,18 +17,7 @@ POSTGRES_PORT = 5432
 async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cleanup() -> None:
     """Exercise the PostgreSQL adapter against a real PostgreSQL container."""
 
-    # Skip only when the Docker daemon cannot be reached.
-    require_docker_daemon()
-    container = DockerRuntimeContainer(
-        "postgres:16-alpine",
-        ports=[POSTGRES_PORT],
-        environment={
-            "POSTGRES_USER": "longlink",
-            "POSTGRES_PASSWORD": "secret",
-            "POSTGRES_DB": "postgres",
-        },
-    )
-    container.start()
+    container = start_postgres("longlink", "secret", "postgres", POSTGRES_PORT)
 
     adapter: Postgres | None = None
     runtime_engine = None
@@ -43,7 +32,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             password="secret",
             sslmode="disable",
         )
-        wait_for_postgres(container, "longlink", "secret", "postgres", POSTGRES_PORT)
         active_user: shared_users.UserRow = {
             "id": UUID("11111111-1111-1111-1111-111111111111"),
             "name": "Owner User",
@@ -56,7 +44,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         }
         shared_schema_url = adapter.shared_schema_url(organization_id)
         database_name = organization_id.hex
-        await adapter.prepare_organization_database(organization_id, shared_schema_url)
+        await adapter.prepare_organization_database(organization_id)
         await shared_users.sync_url(shared_schema_url, [active_user])
 
         database_url = adapter.url(database_name)

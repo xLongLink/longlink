@@ -35,15 +35,15 @@ export default function ApplicationSettings({
     const t = useTranslator();
     const toast = useToast();
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication['application'] | null>(null);
+    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
-    const deleteTarget = applications.find((application) => application.application.id === deleteTargetId) ?? null;
+    const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const appColumns: TableColumn<ApiOrganizationApplication>[] = [
         {
             key: 'name',
             header: t('columns.application'),
             width: proportional(1),
-            renderCell: ({ application }) => (
+            renderCell: (application) => (
                 <HStack gap={3} align="center">
                     <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
@@ -58,7 +58,7 @@ export default function ApplicationSettings({
             header: t('columns.action'),
             width: pixel(96),
             align: 'end',
-            renderCell: ({ application }) => {
+            renderCell: (application) => {
                 // Organization maintainers own every available Application action.
                 if (!canManageApplications) {
                     return '-';
@@ -98,7 +98,7 @@ export default function ApplicationSettings({
                         density="compact"
                         emptyState={<EmptyState title={t('organizationSettings.noApplications')} isCompact />}
                         hasHover
-                        idKey={(access) => access.application.id}
+                        idKey="id"
                     />
                 )}
             </VStack>
@@ -128,7 +128,7 @@ export default function ApplicationSettings({
                 description={
                     deleteTarget
                         ? t('organizationSettings.deleteApplicationDescription', {
-                              name: deleteTarget.application.name,
+                              name: deleteTarget.name,
                           })
                         : t('organizationSettings.deleteApplicationFallback')
                 }

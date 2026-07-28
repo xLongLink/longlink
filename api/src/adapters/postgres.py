@@ -127,7 +127,7 @@ class Postgres:
         finally:
             await engine.dispose()
 
-    async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
+    async def prepare_organization_database(self, organization: UUID) -> None:
         """Converge one organization database, run SDK-owned shared-schema migrations, and restore shared-schema restrictions.
 
         Repeated calls resume the same topology after partial provisioning.
@@ -145,7 +145,7 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or application schemas rely on it.
-        await shared_migrations.migrate_database(shared_schema_url)
+        await shared_migrations.migrate_database(self.shared_schema_url(organization))
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:

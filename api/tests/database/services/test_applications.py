@@ -16,7 +16,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
+    await create_ready_infrastructure(name=f"{prefix} compute")
     organization = await create_organization(
         user,
         name=f"{prefix}-org",

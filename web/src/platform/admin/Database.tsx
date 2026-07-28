@@ -8,7 +8,6 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDatabases } from '@/data/database';
@@ -73,7 +72,7 @@ export default function AdminDatabase() {
         mutation: deleteDatabase,
         items: databases,
         getId: (database) => database.id,
-        description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
+        description: (database) => t('admin.deleteDatabaseDescription', { name: database.name }),
         errorMessage: t('admin.failedDeleteDatabase'),
         fallbackDescription: t('admin.deleteDatabaseFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
@@ -89,21 +88,7 @@ export default function AdminDatabase() {
                 <MoreMenu
                     label={t('common.openActionsFor', { name: database.name })}
                     size="sm"
-                    items={[
-                        {
-                            label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
-                            icon: <Copy size={16} />,
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(database.slug);
-                                    toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
-                                } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                }
-                            },
-                        },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },
-                    ]}
+                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) }]}
                 />
             ),
         },

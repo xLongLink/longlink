@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from sqlmodel import SQLModel
-from containers import DockerRuntimeContainer, wait_for_postgres, require_docker_daemon
+from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
 from src.environments import env
@@ -18,23 +18,11 @@ POSTGRES_PORT = 5432
 async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
     """Coalesce duplicate work and globally lease one Operation across PostgreSQL workers."""
 
-    # Skip only when the Docker daemon cannot be reached.
-    require_docker_daemon()
-    container = DockerRuntimeContainer(
-        "postgres:16-alpine",
-        ports=[POSTGRES_PORT],
-        environment={
-            "POSTGRES_USER": "longlink",
-            "POSTGRES_PASSWORD": "secret",
-            "POSTGRES_DB": "longlink",
-        },
-    )
-    container.start()
+    container = start_postgres("longlink", "secret", "longlink", POSTGRES_PORT)
 
     engine: AsyncEngine | None = None
     try:
         # Build the real PostgreSQL schema and bind the production session service to it for this test only.
-        wait_for_postgres(container, "longlink", "secret", "longlink", POSTGRES_PORT)
         database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink"
         engine = create_async_engine(database_url)
         async with engine.begin() as connection:
@@ -48,13 +36,11 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
         async with session_factory() as session:
             first_compute = ComputeRegistry(
                 name="First",
-                slug="first",
                 kubeconfig="apiVersion: v1\nclusters: []\n",
                 proxy_secret="first-secret",
             )
             second_compute = ComputeRegistry(
                 name="Second",
-                slug="second",
                 kubeconfig="apiVersion: v1\nclusters: []\n",
                 proxy_secret="second-secret",
             )

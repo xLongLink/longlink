@@ -21,8 +21,6 @@ export default [
         route('admin/database', './admin/Database.tsx'),
         route('admin/storage', './admin/Storage.tsx'),
         route('admin/compute', './admin/Compute.tsx'),
-        route('admin/compute/:compute', './admin/ComputeNamespaces.tsx'),
-        route('admin/compute/:compute/namespace/:namespace', './admin/ComputePods.tsx'),
         route('admin/operations', './admin/Operations.tsx'),
     ]),
     route('orgs/:organization', './routes/organization.tsx', { id: 'organization' }),

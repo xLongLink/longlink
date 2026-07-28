@@ -35,7 +35,6 @@ class DatabaseRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # Connection
     host: str

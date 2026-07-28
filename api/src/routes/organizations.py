@@ -54,7 +54,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "organization": organization,
         "members": memberships,
         "invitations": active_invitations,
-        "applications": [{"application": application} for application in active_applications],
+        "applications": active_applications,
     }
 
 

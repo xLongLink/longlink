@@ -176,6 +176,25 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
     pytest.fail("PostgreSQL container did not become ready")
 
 
+def start_postgres(username: str, password: str, database: str, port: int = 5432) -> DockerRuntimeContainer:
+    """Start a ready PostgreSQL container for one integration test."""
+
+    # Verify Docker availability before creating the test database container.
+    require_docker_daemon()
+    container = DockerRuntimeContainer(
+        "postgres:16-alpine",
+        ports=[port],
+        environment={
+            "POSTGRES_USER": username,
+            "POSTGRES_PASSWORD": password,
+            "POSTGRES_DB": database,
+        },
+    )
+    container.start()
+    wait_for_postgres(container, username, password, database, port)
+    return container
+
+
 def wait_for_container_log(container: DockerRuntimeContainer, text: str, timeout: float) -> None:
     """Wait until a container emits a log line containing text."""
 

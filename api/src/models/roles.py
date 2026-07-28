@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import StrEnum
 
 
 class PlatformRoles(StrEnum):
@@ -18,14 +18,6 @@ class OrganizationRoles(StrEnum):
     owner = "owner"
 
 
-class Ranks(IntEnum):
-    """Comparable privilege ranks for organization roles."""
-
-    read = 1
-    write = 2
-    maintain = 3
-    admin = 4
-    owner = 5
 APPLICATION_PROXY_METHOD_ROLES = {
     "DELETE": OrganizationRoles.maintain,
     "GET": OrganizationRoles.read,
@@ -34,6 +26,3 @@ APPLICATION_PROXY_METHOD_ROLES = {
     "PUT": OrganizationRoles.write,
 }
 APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_ROLES)
-
-
-RoleName = OrganizationRoles

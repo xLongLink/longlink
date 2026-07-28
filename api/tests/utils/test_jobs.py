@@ -36,11 +36,11 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     claims = [operation, None]
     executed: list[Operation] = []
 
-    async def handler(claimed: Operation) -> operation_worker.OperationOutcome:
+    async def handler(claimed: Operation) -> str | None:
         """Return the scheduler handler outcome if the real executor invokes it."""
 
         assert claimed is operation
-        return operation_worker.complete()
+        return None
 
     async def fake_claim_next() -> Operation | None:
         """Return one operation and then no work."""
@@ -78,11 +78,11 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     # Arrange
     operation = leased_operation()
 
-    async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+    async def complete_handler(claimed: Operation) -> str | None:
         """Complete one claimed compute Operation."""
 
         assert claimed is operation
-        return operation_worker.complete()
+        return None
 
     async def fake_complete(operation_id: UUID) -> None:
         """Report that the worker no longer owns the operation lease."""
@@ -107,11 +107,11 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+    async def complete_handler(claimed: Operation) -> str | None:
         """Complete one claimed Operation."""
 
         assert claimed is operation
-        return operation_worker.complete()
+        return None
 
     async def fake_complete(operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""
@@ -146,11 +146,11 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     transitions: list[UUID] = []
     errors: list[str] = []
 
-    async def failing_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+    async def failing_handler(claimed: Operation) -> str | None:
         """Return one explicit terminal failure."""
 
         assert claimed is operation
-        return operation_worker.fail("workload deployment failed")
+        return "workload deployment failed"
 
     async def fake_fail(operation_id: UUID) -> Operation:
         """Record the terminal failure transition."""

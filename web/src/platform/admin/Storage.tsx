@@ -8,7 +8,6 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useStorages } from '@/data/storage';
@@ -61,7 +60,7 @@ export default function AdminStorage() {
         mutation: deleteStorage,
         items: storages,
         getId: (storage) => storage.id,
-        description: (storage) => t('admin.deleteStorageDescription', { slug: storage.slug }),
+        description: (storage) => t('admin.deleteStorageDescription', { name: storage.name }),
         errorMessage: t('admin.failedDeleteStorage'),
         fallbackDescription: t('admin.deleteStorageFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
@@ -77,21 +76,7 @@ export default function AdminStorage() {
                 <MoreMenu
                     label={t('common.openActionsFor', { name: storage.name })}
                     size="sm"
-                    items={[
-                        {
-                            label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
-                            icon: <Copy size={16} />,
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(storage.slug);
-                                    toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
-                                } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                }
-                            },
-                        },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) },
-                    ]}
+                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) }]}
                 />
             ),
         },

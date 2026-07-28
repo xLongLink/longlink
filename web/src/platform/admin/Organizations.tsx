@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
-import { formatDateTime, useDeleteDialog } from '@/lib/utils';
+import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Returns localized admin organization table columns. */
@@ -35,59 +35,6 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
                     </Link>
                 </HStack>
             ),
-        },
-        {
-            key: 'created_by',
-            header: t('columns.createdBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.created_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.created_by.name}</Text>
-                            <Text type="supporting">{formatDateTime(organization.created_at)}</Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
-        },
-        {
-            key: 'updated_by',
-            header: t('columns.updatedBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.updated_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.updated_by.name}</Text>
-                            <Text type="supporting">{formatDateTime(organization.updated_at)}</Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
-        },
-        {
-            key: 'deleted_by',
-            header: t('columns.deletedBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.deleted_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.deleted_by.name}</Text>
-                            <Text type="supporting">
-                                {organization.deleted_at ? formatDateTime(organization.deleted_at) : '—'}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
         },
     ];
 }

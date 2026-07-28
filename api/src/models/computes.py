@@ -38,19 +38,7 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # State
     status: Status
     version: str | None
-
-
-class PodResponse(BaseModel):
-    """Represent a pod in a namespace."""
-
-    # Metadata
-    name: str
-    node: str | None
-
-    # State
-    status: str

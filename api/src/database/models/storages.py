@@ -13,7 +13,6 @@ class StorageRegistry(SQLModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
-    slug: str = Field(max_length=128, unique=True, sa_column_kwargs={"nullable": False})
 
     # Connection
     endpoint_url: str = Field(max_length=255)

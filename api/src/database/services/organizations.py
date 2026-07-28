@@ -1,4 +1,3 @@
-from src import adapters
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from src.utils import names
@@ -6,7 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import noload, joinedload
+from sqlalchemy.orm import joinedload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -17,7 +16,6 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -56,17 +54,9 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
 async def fetch() -> list[Organization]:
     """Return all organizations in the database."""
 
-    # Load active organizations with audit users.
+    # Load active organizations.
     async with session_scope() as session:
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.created_by),
-                joinedload(Organization.updated_by),
-                noload(Organization.deleted_by),
-            )
-            .where(Organization.deleted_at.is_(None))
-        )
+        statement = select(Organization).where(Organization.deleted_at.is_(None))
         return list(await session.scalars(statement))
 
 
@@ -145,15 +135,7 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
 
     # Load organization details through one managed session.
     async with session_scope() as session:
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.created_by),
-                joinedload(Organization.updated_by),
-                joinedload(Organization.deleted_by),
-            )
-            .where(Organization.id == organization_id)
-        )
+        statement = select(Organization).where(Organization.id == organization_id)
 
         # Exclude deleted organizations unless requested.
         if not include_deleted:
@@ -278,16 +260,6 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
         if storage_registry is None:
             raise HTTPException(status_code=503, detail="No storage registry available")
 
-        # Derive the immutable Organization connection from its assigned database registry.
-        db = adapters.Postgres(
-            database_registry.host,
-            database_registry.port,
-            database_registry.username,
-            database_registry.password,
-            database_registry.sslmode,
-        )
-        shared_schema_url = db.shared_schema_url(organization_id)
-
         # Build the Organization with its immutable infrastructure assignments.
         organization = Organization(
             id=organization_id,
@@ -297,7 +269,6 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
             compute_id=compute.id,
             database_id=database_registry.id,
             storage_id=storage_registry.id,
-            shared_schema_url=shared_schema_url,
         )
 
         # Attach the creator as the initial owner for every organization.
@@ -329,18 +300,6 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
-        # Reload audit relationships required by the mutation response.
-        organization = (
-            await session.scalars(
-                select(Organization)
-                .options(
-                    joinedload(Organization.created_by),
-                    joinedload(Organization.updated_by),
-                    joinedload(Organization.deleted_by),
-                )
-                .where(Organization.id == organization.id)
-            )
-        ).one()
         return organization
 
 
@@ -361,17 +320,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
         organization.updated_id = user.id
         await session.commit()
 
-        # Load audit relationships required by the organization response.
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.created_by),
-                joinedload(Organization.updated_by),
-                joinedload(Organization.deleted_by),
-            )
-            .where(Organization.id == organization.id)
-        )
-        return (await session.scalars(statement)).one()
+        return organization
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
@@ -443,17 +392,4 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
         )
 
         await session.commit()
-
-        # Reload audit relationships required by the mutation response.
-        organization = (
-            await session.scalars(
-                select(Organization)
-                .options(
-                    joinedload(Organization.created_by),
-                    joinedload(Organization.updated_by),
-                    joinedload(Organization.deleted_by),
-                )
-                .where(Organization.id == organization.id)
-            )
-        ).one()
         return organization

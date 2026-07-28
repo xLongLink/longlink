@@ -1,8 +1,6 @@
 import asyncio
-from enum import StrEnum
 from fastapi import HTTPException
 from src.logger import logger
-from dataclasses import dataclass
 from collections.abc import Callable, Awaitable, Coroutine
 from longlink.utils.time import utcnow
 from src.database.services import operations
@@ -12,22 +10,7 @@ from src.database.models.operations import Operation
 OPERATION_HANDLER_TIMEOUT_SECONDS = 20 * 60
 
 
-class OperationOutcomeState(StrEnum):
-    """Supported results from one operation handler execution."""
-
-    complete = "complete"
-    fail = "fail"
-
-
-@dataclass(frozen=True)
-class OperationOutcome:
-    """Represent the requested state transition during handler execution."""
-
-    state: OperationOutcomeState
-    reason: str | None = None
-
-
-JobHandler = Callable[[Operation], Awaitable[OperationOutcome]]
+JobHandler = Callable[[Operation], Awaitable[str | None]]
 
 handlers: dict[str, JobHandler] = {}
 
@@ -61,20 +44,6 @@ def validate_handlers() -> None:
         missing = sorted(expected - registered)
         unsupported = sorted(registered - expected)
         raise RuntimeError(f"Invalid operation handlers; missing={missing}, unsupported={unsupported}")
-
-
-def complete() -> OperationOutcome:
-    """Return an outcome that completes the operation."""
-
-    # The dispatcher owns the database transition for completed operations.
-    return OperationOutcome(OperationOutcomeState.complete)
-
-
-def fail(reason: str) -> OperationOutcome:
-    """Return an outcome that fails the operation with a logged reason."""
-
-    # The dispatcher owns logging and the terminal database transition.
-    return OperationOutcome(OperationOutcomeState.fail, reason=reason)
 
 
 async def _finish_transition(transition: Coroutine[object, object, Operation | None]) -> Operation | None:
@@ -114,7 +83,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     # Bound one complete handler execution under its worker lease.
     try:
         async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
-            outcome = await handler(operation)
+            reason = await handler(operation)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
@@ -125,23 +94,20 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
             logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
         raise
     except TimeoutError:
-        outcome = fail("Operation timed out")
+        reason = "Operation timed out"
     except HTTPException as exc:
         detail = str(exc.detail)
-        outcome = fail(detail)
+        reason = detail
     except Exception as exc:
         logger.exception("Operation %s failed: %r", operation.id, exc)
-        outcome = fail(str(exc) or type(exc).__name__)
+        reason = str(exc) or type(exc).__name__
 
     # Persist exactly one transition that releases the claimed operation.
-    match outcome.state:
-        case OperationOutcomeState.complete:
-            transition = operations.complete(operation.id)
-        case OperationOutcomeState.fail:
-            logger.error("Operation %s failed: %s", operation.id, outcome.reason or "unknown reason")
-            transition = operations.fail(operation.id)
-        case _:
-            raise ValueError(f"Unsupported operation outcome '{outcome.state}'")
+    if reason is None:
+        transition = operations.complete(operation.id)
+    else:
+        logger.error("Operation %s failed: %s", operation.id, reason)
+        transition = operations.fail(operation.id)
 
     # Finish the terminal database transition even when shutdown cancels this worker.
     updated = await _finish_transition(transition)

@@ -2,7 +2,6 @@ from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
-from src.utils import names
 from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.database.services import database
@@ -16,7 +15,6 @@ async def create_database_registry(payload: DatabaseRegistryCreate):
 
     return await database.create(
         payload.name,
-        names.slugify(payload.name),
         payload.host,
         payload.port,
         payload.username,

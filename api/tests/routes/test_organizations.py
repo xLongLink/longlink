@@ -43,7 +43,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert payload["storage_id"] == str(infrastructure.storage.id)
     persisted = await organizations.get(organization_id)
     assert persisted is not None
-    assert persisted.shared_schema_url is not None
     members = await organizations.members(organization_id)
     assert [(membership.user.id, membership.role) for membership in members] == [(owner.id, OrganizationRoles.owner)]
 
@@ -77,7 +76,7 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert payload["applications"][0]["application"]["id"] == str(application.id)
+    assert payload["applications"][0]["id"] == str(application.id)
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -444,7 +443,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["compute_id"] == str(infrastructure.compute.id)
     assert payload["database_id"] == str(infrastructure.database.id)
     assert payload["storage_id"] == str(infrastructure.storage.id)
-    assert payload["deleted_by"] is None
+    assert "deleted_by" not in payload
 
 
 async def test_get_organization_returns_404_for_non_member(

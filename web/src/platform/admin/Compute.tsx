@@ -3,13 +3,12 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy, Wrench } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useComputes } from '@/data/compute';
@@ -33,9 +32,7 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
             renderCell: (compute) => (
                 <HStack gap={3} align="center">
                     <Wrench className="text-accent" size={20} />
-                    <Link href={`/admin/compute/${encodeURIComponent(compute.slug)}`} weight="semibold">
-                        {compute.name}
-                    </Link>
+                    <Text weight="semibold">{compute.name}</Text>
                 </HStack>
             ),
         },
@@ -67,7 +64,7 @@ export default function AdminCompute() {
         mutation: deleteCompute,
         items: computes,
         getId: (compute) => compute.id,
-        description: (compute) => t('admin.deleteComputeDescription', { slug: compute.slug }),
+        description: (compute) => t('admin.deleteComputeDescription', { name: compute.name }),
         errorMessage: t('admin.failedDeleteCompute'),
         fallbackDescription: t('admin.deleteComputeFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
@@ -83,21 +80,7 @@ export default function AdminCompute() {
                 <MoreMenu
                     label={t('common.openActionsFor', { name: compute.name })}
                     size="sm"
-                    items={[
-                        {
-                            label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
-                            icon: <Copy size={16} />,
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(compute.slug);
-                                    toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
-                                } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                }
-                            },
-                        },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },
-                    ]}
+                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) }]}
                 />
             ),
         },

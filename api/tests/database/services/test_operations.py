@@ -12,14 +12,13 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 
-async def create_compute(slug: str) -> ComputeRegistry:
+async def create_compute(name: str) -> ComputeRegistry:
     """Create one isolated compute row without queueing reconciliation."""
 
     # Operation service tests need only a minimal compute target at the current Platform version.
     async with session_scope() as session:
         compute = ComputeRegistry(
-            name=slug.title(),
-            slug=slug,
+            name=name.title(),
             kubeconfig="apiVersion: v1\nclusters: []\n",
             proxy_secret="proxy-secret",
             version=env.VERSION,

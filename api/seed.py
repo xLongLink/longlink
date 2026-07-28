@@ -326,7 +326,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             raise ValueError("Application database URL has invalid connection settings") from None
 
     # Reject registry changes before mutating existing local Platform state.
-    database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
+    database_registry = next((item for item in await database_service.fetch() if item.name == "development database"), None)
     if database_registry is not None and (
         database_registry.host != database.host
         or database_registry.port != database.port
@@ -337,7 +337,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         raise ValueError("Development database registry uses different settings; run make down before changing them")
 
     # Reject compute changes because gateway identity and Organization assignments are bound to one cluster.
-    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    compute_registry = next((item for item in await compute_service.fetch() if item.name == "development compute"), None)
     if compute_registry is not None and compute_registry.kubeconfig != compute.kubeconfig:
         raise ValueError("Development compute registry uses a different kubeconfig; run make down before changing it")
 
@@ -347,9 +347,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Ensure the development compute target is ready before assigning resources to it.
     if compute_registry is None:
         compute_registry = await compute_service.create(
-            compute.name,
-            "local-compute",
-            compute.kubeconfig,
+            "development compute", compute.kubeconfig
         )
         operation = await operations.enqueue(compute_registry.id)
         await reconcile_until_complete(operation.id)
@@ -361,18 +359,16 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if database_registry is None:
         database_registry = await database_service.create(
             "development database",
-            "local-database",
             database.host,
             database.port,
             database.username,
             database.password,
             database.sslmode,
         )
-    storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
+    storage_registry = next((item for item in await storage_service.fetch() if item.name == "local storage"), None)
     if storage_registry is None:
         storage_registry = await storage_service.create(
             "local storage",
-            "local-storage",
             settings.EXOSCALE_STORAGE_ENDPOINT_URL,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,

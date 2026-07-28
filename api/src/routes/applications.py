@@ -98,7 +98,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise HTTPException(status_code=403, detail="Access required")
 
     # Application logs require Organization maintenance authority.
-    if not access.allows(OrganizationRoles.maintain):
+    if not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
@@ -130,7 +130,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         raise HTTPException(status_code=403, detail="Access required")
 
     # Runtime configuration requires Organization maintenance authority.
-    if not access.allows(OrganizationRoles.maintain):
+    if not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
@@ -179,7 +179,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
             raise HTTPException(status_code=403, detail="Access required")
 
     # Active Applications require Organization maintenance authority.
-    if access is not None and not access.allows(OrganizationRoles.maintain):
+    if access is not None and not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
     result = await applications.soft_delete(application_id, user)

@@ -31,7 +31,6 @@ class StorageRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # Connection
     endpoint_url: str

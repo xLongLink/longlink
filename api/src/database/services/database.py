@@ -24,14 +24,13 @@ async def get(registry_id: UUID) -> DatabaseRegistry | None:
         return await session.get(DatabaseRegistry, registry_id)
 
 
-async def create(name: str, slug: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> DatabaseRegistry:
+async def create(name: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> DatabaseRegistry:
     """Register one database backend."""
 
     # Persist administrator credentials only at the registry control-plane boundary.
     async with session_scope() as session:
         registry = DatabaseRegistry(
             name=name,
-            slug=slug,
             host=host,
             port=port,
             password=password,
@@ -40,7 +39,7 @@ async def create(name: str, slug: str, host: str, port: int, username: str, pass
         )
         session.add(registry)
 
-        # Translate unique registry names and slugs to one stable API conflict.
+        # Translate unique registry names to one stable API conflict.
         try:
             await session.commit()
         except IntegrityError as exc:

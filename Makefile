@@ -47,7 +47,7 @@ web\:format: web\:install
 
 # Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
 tests: api\:install sdk\:install web\:tests
-	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+	cd api && uv run --locked pytest -m "not integration" tests
 	cd sdk && uv run --locked pytest -m "not integration" tests
 
 
@@ -57,7 +57,7 @@ tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
 
 # Run API tests, including container-backed integration tests.
 api\:tests: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) tests
+	cd api && uv run --locked pytest $(API_PYTEST_MARK) tests
 
 
 # Build the embedded web bundle, then run SDK tests.
@@ -76,7 +76,7 @@ coverage: api\:coverage sdk\:coverage
 
 # Report API coverage without container-backed integration tests.
 api\:coverage: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
+	cd api && uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
 
 
 # Report SDK coverage without container-backed integration tests.

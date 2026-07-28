@@ -23,21 +23,20 @@ async def get(registry_id: UUID) -> StorageRegistry | None:
         return await session.get(StorageRegistry, registry_id)
 
 
-async def create(name: str, slug: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:
+async def create(name: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:
     """Register one Exoscale SOS backend."""
 
     # Persist the complete provider connection so each registry has an independent provisioning identity.
     async with session_scope() as session:
         registry = StorageRegistry(
             name=name,
-            slug=slug,
             endpoint_url=endpoint_url,
             access_key_id=access_key_id,
             secret_access_key=secret_access_key,
         )
         session.add(registry)
 
-        # Translate unique registry names and slugs to one stable API conflict.
+        # Translate unique registry names to one stable API conflict.
         try:
             await session.commit()
         except IntegrityError as exc:

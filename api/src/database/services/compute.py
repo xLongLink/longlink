@@ -30,20 +30,19 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
         return await session.get(ComputeRegistry, registry_id)
 
 
-async def create(name: str, slug: str, kubeconfig: str) -> ComputeRegistry:
+async def create(name: str, kubeconfig: str) -> ComputeRegistry:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
     async with session_scope() as session:
         registry = ComputeRegistry(
             name=name,
-            slug=slug,
             kubeconfig=kubeconfig,
             proxy_secret=secrets.token_urlsafe(32),
         )
         session.add(registry)
 
-        # Translate unique registry names and slugs to one stable API conflict.
+        # Translate unique registry names to one stable API conflict.
         try:
             await operations.enqueue_in_session(session, registry.id)
             await session.commit()

@@ -66,24 +66,24 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
 
 
 @operation("compute.reconcile")
-async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
+async def reconcile(claimed: Operation) -> str | None:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
     registry = await compute.get(claimed.target_id)
     if registry is None:
-        return jobs.complete()
+        return None
     platform_version = Version(env.VERSION)
     if registry.version is not None and Version(registry.version) > platform_version:
-        return jobs.complete()
+        return None
 
     # A fresh reconciliation execution makes a previously failed target visibly active again.
     if registry.status == Status.failed:
         if not await compute.set_status(registry.id, Status.failed, Status.creating):
             current = await compute.get(registry.id)
             if current is None or (current.version is not None and Version(current.version) > platform_version):
-                return jobs.complete()
-            return jobs.fail("Compute lifecycle state changed before reconciliation")
+                return None
+            return "Compute lifecycle state changed before reconciliation"
         registry.status = Status.creating
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -99,8 +99,8 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     ):
         current = await compute.get(registry.id)
         if current is None or (current.version is not None and Version(current.version) > platform_version):
-            return jobs.complete()
+            return None
         if current.status == Status.running and current.version == env.VERSION and current.gateway_url == gateway_url:
-            return jobs.complete()
-        return jobs.fail("Compute gateway state was not recorded")
-    return jobs.complete()
+            return None
+        return "Compute gateway state was not recorded"
+    return None
