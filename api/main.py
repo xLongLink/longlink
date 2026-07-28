@@ -6,9 +6,7 @@ from src.utils import jobs
 from src.routes import auth, icons, image, proxy, users, health, accounts, branding, computes, storages, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src.operations import computes as _operation_computes
-from src.operations import applications as _operation_applications
-from src.operations import organizations as _operation_organizations
+from src import operations as _operation_handlers
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse

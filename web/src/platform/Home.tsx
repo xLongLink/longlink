@@ -4,7 +4,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { MediaTheme } from '@astryxdesign/core/theme';
 import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useState } from 'react';
 import { Footer } from '@/components/Footer';
@@ -36,8 +35,6 @@ const paths = [
 ] as const;
 
 const integrationContextCount = 336_000_000;
-const beforeLongLinkImage = '/images/before-longlink.png';
-const afterLongLinkImage = '/images/after-longlink.png';
 const humanRobotHandsImage = '/human_robot_hands_vector.svg';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
@@ -192,75 +189,69 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <MediaTheme mode="dark">
-                <section aria-labelledby="before-after-heading" className="relative z-20">
-                    <Heading id="before-after-heading" level={2} className="sr-only">
-                        Before and after LongLink
-                    </Heading>
+            <section aria-labelledby="before-after-heading" className="relative z-20">
+                <Heading id="before-after-heading" level={2} className="sr-only">
+                    Before and after LongLink
+                </Heading>
+                <Stack
+                    as="figure"
+                    className="homepage-before-after-scene sticky top-0 isolate overflow-hidden"
+                    width="100%"
+                    minHeight="100svh"
+                    justify="center"
+                    hAlign="center"
+                >
                     <Stack
-                        as="figure"
-                        className="homepage-before-after-scene sticky top-0 isolate overflow-hidden"
-                        width="100%"
-                        minHeight="100svh"
-                        justify="center"
-                        hAlign="center"
-                    >
-                        <img
-                            alt="A fragmented city of unfinished buildings, tangled infrastructure, and disconnected old solutions"
-                            className="absolute inset-0 size-full object-cover sm:object-contain"
-                            decoding="async"
-                            loading="lazy"
-                            src={beforeLongLinkImage}
-                        />
-                        <Stack
-                            as="figcaption"
-                            className="absolute inset-x-0 top-0 z-10 mx-auto"
-                            width="100%"
-                            maxWidth={1280}
-                            gap={2}
-                            padding={6}
-                        >
-                            <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
-                                Before LongLink
-                            </Text>
-                            <Heading level={3} type="display-2" textWrap="balance">
-                                Old solutions
-                            </Heading>
-                        </Stack>
-                    </Stack>
+                        aria-label="A fragmented city of unfinished buildings, tangled infrastructure, and disconnected old solutions"
+                        role="img"
+                        className="homepage-before-after-art homepage-before-after-art-before absolute inset-0"
+                    />
                     <Stack
-                        as="figure"
-                        className="homepage-before-after-scene relative z-10 isolate overflow-hidden"
+                        as="figcaption"
+                        className="absolute inset-x-0 top-0 z-10 mx-auto"
                         width="100%"
-                        minHeight="100svh"
-                        justify="center"
-                        hAlign="center"
+                        maxWidth={1280}
+                        gap={2}
+                        padding={6}
                     >
-                        <img
-                            alt="A complete, coherent city representing the unified LongLink solution"
-                            className="absolute inset-0 size-full object-cover sm:object-contain"
-                            decoding="async"
-                            loading="lazy"
-                            src={afterLongLinkImage}
-                        />
-                        <Stack
-                            as="figcaption"
-                            className="absolute inset-x-0 top-0 z-10 mx-auto"
-                            width="100%"
-                            maxWidth={1280}
-                            gap={2}
-                            padding={6}
-                        >
-                            <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
-                                After
-                            </Text>
-                            <Heading level={3} type="display-2" textWrap="balance">
-                                The LongLink solution
-                            </Heading>
-                        </Stack>
+                        <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
+                            Before LongLink
+                        </Text>
+                        <Heading level={3} type="display-2" textWrap="balance">
+                            Old solutions
+                        </Heading>
                     </Stack>
-                </section>
-            </MediaTheme>
+                </Stack>
+                <Stack
+                    as="figure"
+                    className="homepage-before-after-scene relative z-10 isolate overflow-hidden"
+                    width="100%"
+                    minHeight="100svh"
+                    justify="center"
+                    hAlign="center"
+                >
+                    <Stack
+                        aria-label="A complete, coherent city representing the unified LongLink solution"
+                        role="img"
+                        className="homepage-before-after-art homepage-before-after-art-after absolute inset-0"
+                    />
+                    <Stack
+                        as="figcaption"
+                        className="absolute inset-x-0 top-0 z-10 mx-auto"
+                        width="100%"
+                        maxWidth={1280}
+                        gap={2}
+                        padding={6}
+                    >
+                        <Text className="text-xs uppercase tracking-widest" color="secondary" weight="medium">
+                            After
+                        </Text>
+                        <Heading level={3} type="display-2" textWrap="balance">
+                            The LongLink solution
+                        </Heading>
+                    </Stack>
+                </Stack>
+            </section>
             <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
                 <div className="mx-auto w-full max-w-[1000px]">
                     <div className="homepage-hands-hanging-frame">

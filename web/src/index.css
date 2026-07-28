@@ -149,7 +149,28 @@
 }
 
 .homepage-before-after-scene {
-    background: var(--color-on-light);
+    background: var(--color-background-body);
+}
+
+.homepage-before-after-art {
+    background: var(--color-text-secondary);
+    mask: var(--homepage-before-after-art) center / cover no-repeat;
+    -webkit-mask: var(--homepage-before-after-art) center / cover no-repeat;
+}
+
+.homepage-before-after-art-before {
+    --homepage-before-after-art: url('/images/before-longlink.svg');
+}
+
+.homepage-before-after-art-after {
+    --homepage-before-after-art: url('/images/after-longlink.svg');
+}
+
+@media (min-width: 40rem) {
+    .homepage-before-after-art {
+        mask-size: contain;
+        -webkit-mask-size: contain;
+    }
 }
 
 .homepage-painting-section {

@@ -11,9 +11,7 @@ from sqlmodel import col
 from src.utils import jobs, names, images
 from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
-from src.operations import computes as _operation_computes
-from src.operations import applications as _operation_applications
-from src.operations import organizations as _operation_organizations
+from src import operations as _operation_handlers
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, DatabaseSSLMode

@@ -22,12 +22,8 @@ async def sync_users(organization: Organization) -> None:
     # Convert Platform identities and membership state at the shared-schema boundary.
     for membership in memberships:
         user = membership.user
-        deleted_at = user.deleted_at
-        if membership.deleted_at is not None and (deleted_at is None or membership.deleted_at > deleted_at):
-            deleted_at = membership.deleted_at
-        updated_at = max(user.updated_at, membership.updated_at)
-        if deleted_at is not None and deleted_at > updated_at:
-            updated_at = deleted_at
+        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
+        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
         users.append(
             {
                 "id": user.id,
