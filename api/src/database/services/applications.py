@@ -277,7 +277,7 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        application = await session.scalar(
+        result = await session.execute(
             update(Application)
             .where(
                 Application.id == application_id,
@@ -286,17 +286,12 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
                 Application.status != Status.deleting,
             )
             .values(status=status)
-            .returning(Application)
         )
         await session.commit()
-        return application is not None
+        return result.rowcount == 1
 
 
-async def replace_environment(
-    application_id: UUID,
-    expected_status: Status,
-    replace: Callable[[], Awaitable[None]],
-) -> Status | None:
+async def replace_environment(application_id: UUID, expected_status: Status, replace: Callable[[], Awaitable[None]]) -> Status | None:
     """Replace cluster environment state while preventing concurrent Application deletion."""
 
     # Lock the active Application across the external replacement so tombstoning cannot race Secret creation.

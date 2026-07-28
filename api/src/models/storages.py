@@ -1,7 +1,5 @@
-from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import StorageConfiguration
 
 
@@ -12,28 +10,15 @@ class StorageRegistryCreate(StorageConfiguration):
     name: str = Field(min_length=1, max_length=128)
 
 
-class OrganizationStorageResourceKind(StrEnum):
-    """Supported organization storage resource kinds."""
+class OrganizationStorageUsageResponse(BaseModel):
+    """Represent live usage for one Organization bucket."""
 
-    shared_prefix = "shared_prefix"
-    application_prefix = "application_prefix"
-
-
-class OrganizationStorageResourceResponse(BaseModel):
-    """Represent one managed organization storage resource."""
-
-    # Metadata
-    kind: OrganizationStorageResourceKind
-    name: str
-    prefix: str
+    # Storage
     bucket_name: str
 
-    # Relationships
-    application: OrganizationApplicationSummary | None
-
     # Usage
-    space_used: int | None = None
-    object_count: int | None = None
+    space_used: int = Field(ge=0)
+    object_count: int = Field(ge=0)
 
 
 class StorageRegistryResponse(BaseModel):

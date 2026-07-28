@@ -21,8 +21,8 @@ def slugify(value: str, max_length: int = 63) -> str:
     return slug
 
 
-def knames(value: str) -> str:
-    """Validate one Kubernetes DNS label value and return it unchanged."""
+def knames(value: str) -> None:
+    """Validate one Kubernetes DNS label value."""
 
     # Kubernetes names must be non-empty.
     if not value:
@@ -39,5 +39,3 @@ def knames(value: str) -> str:
     # Runtime names must not collide with Kubernetes or LongLink system namespaces.
     if value in KUBERNETES_SYSTEM_NAMESPACES:
         raise ValueError("Value is reserved")
-
-    return value

@@ -92,7 +92,7 @@ function normalizePath(path: string): string {
 }
 
 /** Returns the route pattern exposed by a runtime page. */
-export function pageRoutePattern(page: RuntimePage): string {
+function pageRoutePattern(page: RuntimePage): string {
     return normalizePath(page.route);
 }
 
@@ -104,7 +104,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 }
 
 /** Finds the best runtime page for the current app-relative browser path. */
-export function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
+function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
     const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
         path: pageRoutePattern(page) || '/',
         page,
@@ -602,7 +602,7 @@ export default function View({
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
                 actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
-                message={activePageState.error || t('appView.loadPageFailed')}
+                message={activePageState.error}
                 title={t('appView.unableToLoadPage')}
             />
         );

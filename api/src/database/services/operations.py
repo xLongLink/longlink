@@ -174,18 +174,18 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
 
     # Preserve terminal and lease state while advancing only the availability timestamp.
     async with session_scope() as session:
-        operation = await session.scalar(
+        result = await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation_id,
                 Operation.finished_at.is_(None),
             )
             .values(available_at=utcnow())
-            .returning(Operation)
         )
-        if operation is None:
+        if result.rowcount != 1:
             return None
 
+        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 
@@ -198,7 +198,7 @@ async def claim_next() -> Operation | None:
         async with session_scope() as session:
             now = utcnow()
 
-            # Use a transaction mutex in PostgreSQL; SQLite relies on the conditional lease update below.
+            # Use a transaction mutex in PostgreSQL and a registry row lock on other database engines.
             connection = await session.connection()
             if connection.dialect.name == "postgresql":
                 await session.execute(text("SELECT pg_advisory_xact_lock(1280263244)"))
@@ -242,8 +242,8 @@ async def claim_next() -> Operation | None:
             if Version(operation.platform_version) > Version(env.VERSION):
                 return None
 
-            # Acquire the crash-recovery lease conditionally so SQLite workers cannot claim the same row.
-            operation = await session.scalar(
+            # Acquire the lease conditionally because SQLite ignores the row locks above.
+            result = await session.execute(
                 update(Operation)
                 .where(
                     Operation.id == operation.id,
@@ -252,11 +252,11 @@ async def claim_next() -> Operation | None:
                     Operation.available_at <= now,
                 )
                 .values(lease_expires_at=now + timedelta(minutes=30))
-                .returning(Operation)
             )
-            if operation is None:
+            if result.rowcount != 1:
                 await session.rollback()
                 continue
+            await session.refresh(operation)
             await session.commit()
             return operation
 
@@ -267,7 +267,7 @@ async def complete(operation_id: UUID) -> Operation | None:
     # Complete only the currently leased operation.
     async with session_scope() as session:
         now = utcnow()
-        operation = await session.scalar(
+        result = await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation_id,
@@ -275,11 +275,11 @@ async def complete(operation_id: UUID) -> Operation | None:
                 Operation.finished_at.is_(None),
             )
             .values(finished_at=now, lease_expires_at=None)
-            .returning(Operation)
         )
-        if operation is None:
+        if result.rowcount != 1:
             return None
 
+        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 

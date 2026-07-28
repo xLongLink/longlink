@@ -15,8 +15,8 @@ class Envs(BaseSettings):
     DATABASE_NAME: str | None = None
     DATABASE_PORT: int | None = None
     DATABASE_SCHEMA: str | None = None
-    DATABASE_PASSWORD: str | None = None
     DATABASE_SSLMODE: Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"] = "require"
+    DATABASE_PASSWORD: str | None = None
     DATABASE_USERNAME: str | None = None
 
     # Storage

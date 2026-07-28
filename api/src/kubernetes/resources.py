@@ -80,7 +80,7 @@ class KubernetesResources:
         name: str,
         body: KubernetesDocument,
         namespace: str | None = None,
-    ) -> KubernetesResource:
+    ) -> None:
         """Merge a partial document into one existing Kubernetes resource."""
 
         # Patch only the named resource fields without changing server-side apply ownership.
@@ -88,23 +88,14 @@ class KubernetesResources:
         resource_namespace = namespace if resource_class.namespaced else None
         resource = resource_class(name, namespace=resource_namespace, api=api)
         await resource.patch(body)
-        return resource
 
-    async def replace_secret(
-        self,
-        name: str,
-        namespace: str,
-        values: Mapping[str, str],
-        secret_type: str = "Opaque",
-    ) -> Secret:
+    async def replace_secret(self, name: str, namespace: str, values: Mapping[str, str], secret_type: str = "Opaque") -> Secret:
         """Create or replace one exact Secret while avoiding unchanged writes."""
 
-        # Resolve the exact Secret identity and normalized data before reading its current state.
+        # Resolve the exact Secret identity and normalized data before creating a missing value.
         api = await self.api()
         desired_data = {key: base64.b64encode(value.encode("utf-8")).decode("ascii") for key, value in values.items()}
         existing = await self.read(Secret, name, namespace)
-
-        # Create a missing Secret without a preceding failed update.
         if existing is None:
             return await self.create_secret(name, namespace, values, secret_type)
 
@@ -113,7 +104,10 @@ class KubernetesResources:
         if (
             existing.raw.get("data", {}) == desired_data
             and existing.raw.get("type", "Opaque") == secret_type
-            and all(existing_metadata.get(field, empty) == empty for field, empty in (("annotations", {}), ("finalizers", []), ("labels", {})))
+            and all(
+                existing_metadata.get(field, empty) == empty
+                for field, empty in (("annotations", {}), ("finalizers", []), ("labels", {}))
+            )
         ):
             return existing
 
@@ -138,13 +132,7 @@ class KubernetesResources:
         ) as response:
             return Secret(response.json(), api=api)
 
-    async def create_secret(
-        self,
-        name: str,
-        namespace: str,
-        values: Mapping[str, str],
-        secret_type: str = "Opaque",
-    ) -> Secret:
+    async def create_secret(self, name: str, namespace: str, values: Mapping[str, str], secret_type: str = "Opaque") -> Secret:
         """Create one Secret without reading or replacing an existing value."""
 
         # Construct the exact typed Secret at the resource boundary.

@@ -73,8 +73,8 @@ class OrganizationSummary(BaseModel):
 
     # Infrastructure
     compute_id: UUID
-    database_id: UUID
     storage_id: UUID
+    database_id: UUID
 
     # State
     status: Status

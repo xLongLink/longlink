@@ -96,8 +96,6 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         if client is not None:
             await client.aclose()
         raise
-    if client is None:
-        raise RuntimeError("Application proxy client was not initialized")
 
     response_headers = dict(PROXY_RESPONSE_SECURITY_HEADERS)
 

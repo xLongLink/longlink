@@ -7,8 +7,6 @@ from exoscale.api.exceptions import ExoscaleAPIClientException
 from src.models.infrastructure import exoscale_zone
 from exoscale.api.v2_response_types import Operation
 
-EXOSCALE_OPERATION_MAX_WAIT_SECONDS = 10
-
 JsonObject = dict[str, object]
 
 
@@ -33,7 +31,7 @@ class Exoscale(Storage):
         Cleanup-first provisioning makes retries converge without accumulating active keys or roles.
         """
 
-        credential_name = self._credential_name(name)
+        credential_name = f"longlink-{name}"
 
         # Remove an incomplete prior attempt so deterministic names make retries converge without leaked keys.
         await self.revoke(name)
@@ -78,7 +76,7 @@ class Exoscale(Storage):
     async def revoke(self, name: str) -> None:
         """Delete Exoscale API keys and IAM roles created for one Application."""
 
-        credential_name = self._credential_name(name)
+        credential_name = f"longlink-{name}"
 
         # Keep credential cleanup in one managed async client session.
         api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
@@ -141,7 +139,7 @@ class Exoscale(Storage):
 
         # Delegate operation polling and error handling to the async client.
         operation_id = self._string(operation, "id")
-        current = await api.wait(operation_id, max_wait_time=EXOSCALE_OPERATION_MAX_WAIT_SECONDS)
+        current = await api.wait(operation_id, max_wait_time=10)
         reference = current.get("reference")
         if isinstance(reference, dict):
             reference_id = reference.get("id")
@@ -208,11 +206,6 @@ class Exoscale(Storage):
                 }
             },
         }
-
-    def _credential_name(self, name: str) -> str:
-        """Return one deterministic Exoscale credential name."""
-
-        return f"longlink-{name}"
 
     def _string(self, data: Mapping[str, object], field: str) -> str:
         """Return one required string field from an Exoscale response."""

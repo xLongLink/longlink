@@ -5,21 +5,23 @@
     "type": "module",
     "scripts": {
         "theme:build": "vp exec astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
-        "typecheck": "vp run typecheck:api && vp run typecheck:sdk",
-        "typecheck:api": "react-router typegen --mode api && tsc -b",
-        "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
+        "build": "vp run theme:build && vp run build:prepared",
+        "build:prepared": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
+        "typecheck": "vp run theme:build && react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b",
+        "typecheck:api": "vp run theme:build && react-router typegen --mode api && tsc -b",
+        "typecheck:sdk": "vp run theme:build && react-router typegen --mode sdk && tsc -b",
         "build:api": "vp run typecheck:api && react-router build --mode api",
-        "build:api:bundle": "react-router build --mode api",
+        "build:api:bundle": "vp run theme:build && react-router build --mode api",
         "build:sdk": "vp run typecheck:sdk && react-router build --mode sdk",
-        "build:sdk:bundle": "react-router build --mode sdk",
-        "dev": "react-router dev --mode api",
-        "dev:sdk": "react-router dev --mode sdk",
-        "routes": "react-router routes",
+        "build:sdk:bundle": "vp run theme:build && react-router build --mode sdk",
+        "dev": "vp run theme:build && react-router dev --mode api",
+        "dev:sdk": "vp run theme:build && react-router dev --mode sdk",
+        "routes": "vp run theme:build && react-router routes",
         "test": "vp test tests/xml"
     },
     "dependencies": {
-        "@astryxdesign/core": "0.1.8",
-        "@astryxdesign/theme-neutral": "0.1.8",
+        "@astryxdesign/core": "0.1.9",
+        "@astryxdesign/theme-neutral": "0.1.9",
         "@fontsource-variable/inter": "^5.3.0",
         "@hookform/resolvers": "^5.5.7",
         "@stylexjs/stylex": "0.19.0",
@@ -28,7 +30,7 @@
         "acorn": "^8.17.0",
         "d3-geo": "^3.1.1",
         "fast-xml-parser": "^5.10.1",
-        "isbot": "^5.1.40",
+        "isbot": "^5.2.1",
         "lodash": "^4.18.1",
         "lucide-react": "^1.27.0",
         "react": "^19.2.8",
@@ -43,7 +45,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@astryxdesign/cli": "0.1.8",
+        "@astryxdesign/cli": "0.1.9",
         "@react-router/dev": "8.3.0",
         "@types/d3-geo": "^3.1.0",
         "@types/lodash": "^4.17.24",
@@ -57,9 +59,6 @@
     },
     "overrides": {
         "@babel/core": "7.29.7",
-        "brace-expansion": "5.0.8",
-        "flatted": "3.4.3",
-        "js-yaml": "4.3.0",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6"
     },
     "astryx": {

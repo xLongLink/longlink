@@ -93,9 +93,9 @@ export const ICON_NAMES = [
 
 export type IconName = (typeof ICON_NAMES)[number];
 
-export const ICON_NAME_SET = new Set<string>(ICON_NAMES);
+const ICON_NAME_SET = new Set<string>(ICON_NAMES);
 
-export const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
+const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
     activity: Activity,
     'arrow-right': ArrowRight,
     banknote: Banknote,

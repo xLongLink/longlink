@@ -19,6 +19,40 @@
     }
 }
 
+@layer astryx-theme {
+    /* Astryx compound parts are exposed through stable classes but are not accepted by the theme compiler. */
+    @scope ([data-astryx-theme^='longlink-']) to ([data-astryx-theme]) {
+        .astryx-breadcrumb-item {
+            margin-inline-start: var(--spacing-1);
+            gap: var(--spacing-2);
+            font-size: var(--font-size-base);
+            line-height: var(--text-body-leading);
+        }
+
+        .astryx-side-nav-item {
+            color: var(--color-text-secondary);
+        }
+
+        .astryx-side-nav-item[data-selected='selected'] {
+            background-color: var(--color-accent-muted);
+            color: var(--color-text-primary);
+        }
+
+        .astryx-side-nav-section {
+            margin-inline: calc(-1 * var(--spacing-2));
+        }
+
+        .astryx-table-scroll-wrapper {
+            border: var(--border-width) solid var(--color-border-emphasized);
+            border-radius: var(--radius-container);
+        }
+
+        .astryx-table-header {
+            background-color: var(--color-background-muted);
+        }
+    }
+}
+
 @keyframes path-navigation-cue {
     0% {
         opacity: 0;

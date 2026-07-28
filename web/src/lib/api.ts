@@ -35,7 +35,7 @@ export function apiQueryKey(path: string): [string, string] {
 }
 
 /** Resolves an API path against the configured API origin. */
-export function apiUrl(path: string): string {
+function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
     // Reject path separators that could bypass URL checks.
@@ -92,7 +92,7 @@ async function readApiError(response: Response): Promise<ApiErrorResponse> {
 }
 
 /** Builds request headers shared by API and SDK XML action requests. */
-export function createApiHeaders(initHeaders?: HeadersInit): Headers {
+function createApiHeaders(initHeaders?: HeadersInit): Headers {
     return new Headers(initHeaders);
 }
 

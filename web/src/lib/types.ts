@@ -9,10 +9,10 @@ import type {
     apiInvitationSchema,
     apiOperationSchema,
     apiOrganizationApplicationSchema,
-    apiOrganizationDatabaseResourceSchema,
+    apiOrganizationDatabaseUsageSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMemberSchema,
-    apiOrganizationStorageResourceSchema,
+    apiOrganizationStorageUsageSchema,
     apiOrganizationSummarySchema,
     apiStorageRegistrySchema,
     apiUserOrganizationMembershipSchema,
@@ -32,8 +32,8 @@ export type ApiOrganizationMember = z.infer<typeof apiOrganizationMemberSchema>;
 export type ApiImageMetadata = z.infer<typeof apiImageMetadataSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;
 export type ApiOrganizationDetails = z.infer<typeof apiOrganizationDetailsSchema>;
-export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
-export type ApiOrganizationStorageResource = z.infer<typeof apiOrganizationStorageResourceSchema>;
+export type ApiOrganizationDatabaseUsage = z.infer<typeof apiOrganizationDatabaseUsageSchema>;
+export type ApiOrganizationStorageUsage = z.infer<typeof apiOrganizationStorageUsageSchema>;
 export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;
 export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;
 export type ApiComputeRegistry = z.infer<typeof apiComputeRegistrySchema>;

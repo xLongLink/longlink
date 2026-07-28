@@ -851,9 +851,6 @@
     "resources.allocatablePercent": {
         "defaultMessage": "{percent}% Allocatable"
     },
-    "resources.noActiveApp": {
-        "defaultMessage": "No active app"
-    },
     "resources.noColumns": {
         "defaultMessage": "No columns"
     },
@@ -872,20 +869,8 @@
     "resources.podsTitle": {
         "defaultMessage": "Pods"
     },
-    "resources.shared": {
-        "defaultMessage": "shared"
-    },
-    "resources.sharedOrganizationUsers": {
-        "defaultMessage": "Shared organization users"
-    },
     "resources.tableCount": {
         "defaultMessage": "{count} tables"
-    },
-    "resources.unknownObjects": {
-        "defaultMessage": "Unknown objects"
-    },
-    "resources.unknownTables": {
-        "defaultMessage": "Unknown tables"
     },
     "resources.namespacesDescription": {
         "defaultMessage": "Namespaces managed by compute backend {name}."
@@ -1073,9 +1058,6 @@
     "organizationSettings.logs": {
         "defaultMessage": "Logs"
     },
-    "organizationSettings.noActiveApp": {
-        "defaultMessage": "No active app"
-    },
     "organizationSettings.noAppAccess": {
         "defaultMessage": "No app access"
     },
@@ -1099,9 +1081,6 @@
     },
     "organizationSettings.reviewStorage": {
         "defaultMessage": "Review storage usage for this organization."
-    },
-    "organizationSettings.sharedOrganizationUsers": {
-        "defaultMessage": "Shared organization users"
     },
     "toasts.copiedToClipboard": {
         "defaultMessage": "Copied to clipboard"

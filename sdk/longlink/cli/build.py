@@ -49,9 +49,10 @@ SAFE_GIT_DIRECTORY_NAMES = frozenset({"objects", "refs"})
 SAFE_GIT_FILE_NAMES = frozenset({"HEAD", "packed-refs", "shallow"})
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
-DEFAULT_ENVIRONMENT_IMPORT = "src.envs:Env"
 
-DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:0.9.30-python3.12-bookworm@sha256:85d4cb1afa769a7338e095b927bee941cf5ec92266c7424b3f6c0f2748567248 AS builder
+DOCKERFILE_TEMPLATE = """FROM python:3.12.13-bookworm@sha256:9bed8554e926c07c6f908841d5ee88c33e8df9236b191526bbce81a9062ab43a AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
 
 COPY . /workspace
 
@@ -59,7 +60,7 @@ WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
-RUN uv sync --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
+RUN uv sync --locked --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
 
 FROM python:3.12.13-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b
 
@@ -113,11 +114,11 @@ def _validate_docker_image_path(image_path: str) -> None:
 
     components = image_path.split("/")
 
-    # Require at least one repository component.
-    if not components:
-        raise ValueError("Docker image path is required")
-
-    repository_components = components[1:] if len(components) > 1 and ("." in components[0] or ":" in components[0] or components[0] == "localhost") else components
+    repository_components = (
+        components[1:]
+        if len(components) > 1 and ("." in components[0] or ":" in components[0] or components[0] == "localhost")
+        else components
+    )
 
     # Reject invalid repository components.
     if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository_components):
@@ -129,7 +130,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None
 
     # Initialize an empty result and the conventional environment import path.
     empty_spec: dict[str, list[dict[str, object]]] = {"environments": []}
-    environment_import = DEFAULT_ENVIRONMENT_IMPORT
+    environment_import = "src.envs:Env"
 
     # Read an explicit environment class location from project configuration.
     project_data = pyproject_data

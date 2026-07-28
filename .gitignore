@@ -177,6 +177,7 @@ script.bat
 /web/coverage/
 /web/.react-router/
 /web/*.tsbuildinfo
+/web/src/lib/generated/
 /web/node_modules/.tmp/
 /web/node_modules/
 /web/*.local

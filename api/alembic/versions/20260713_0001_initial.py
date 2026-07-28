@@ -91,7 +91,7 @@ def upgrade() -> None:
                 "running",
                 "failed",
                 "deleting",
-                name="status_enum",
+                name="compute_status_enum",
                 native_enum=False,
                 create_constraint=True,
                 validate_strings=True,
@@ -161,7 +161,7 @@ def upgrade() -> None:
                 "running",
                 "failed",
                 "deleting",
-                name="status_enum",
+                name="organization_status_enum",
                 native_enum=False,
                 create_constraint=True,
                 validate_strings=True,
@@ -208,7 +208,7 @@ def upgrade() -> None:
                 "running",
                 "failed",
                 "deleting",
-                name="status_enum",
+                name="application_status_enum",
                 native_enum=False,
                 create_constraint=True,
                 validate_strings=True,
@@ -340,6 +340,11 @@ def upgrade() -> None:
         sa.Column("available_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_index(
+        "ix_operations_queue",
+        "operations",
+        ["kind", "target_id", "platform_version", "finished_at", "lease_expires_at", "created_at", "id"],
+    )
 
     # Create application memberships after applications, organizations, and users.
     op.create_table(
@@ -390,17 +395,11 @@ def downgrade() -> None:
     op.drop_table("user_organizations")
     op.drop_table("organization_invitations")
     op.drop_table("applications")
-    op.drop_index("ix_organizations_storage_id", table_name="organizations")
-    op.drop_index("ix_organizations_database_id", table_name="organizations")
-    op.drop_index("ix_organizations_compute_id", table_name="organizations")
     op.drop_table("organizations")
     op.drop_table("storage_registries")
     op.drop_table("database_registries")
     op.drop_table("compute_registries")
-    op.drop_index("ix_access_tokens_user_id", table_name="access_tokens")
-    op.drop_index("ix_access_tokens_created_at", table_name="access_tokens")
     op.drop_table("access_tokens")
-    op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
 
     # Remove the native preference enum type so a fresh upgrade can recreate it.

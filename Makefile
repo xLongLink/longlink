@@ -87,11 +87,10 @@ sdk\:coverage: sdk\:install sdk\:build
 
 # Run web static checks, tests, typechecks, and bundle builds.
 web\:tests: web\:install
+	cd web && vp run theme:build
 	cd web && vp check
 	cd web && vp run test
-	cd web && vp run typecheck
-	cd web && vp run build:api:bundle --logLevel warn
-	cd web && vp run build:sdk:bundle --logLevel warn
+	cd web && vp run build:prepared
 
 
 # Run API and SDK ty checks.
@@ -110,9 +109,7 @@ sdk\:ty:
 
 # Typecheck and build both web bundle modes.
 build: web\:install
-	cd web && vp run typecheck
-	cd web && vp run build:api:bundle --logLevel warn
-	cd web && vp run build:sdk:bundle --logLevel warn
+	cd web && vp run build
 
 
 # Build the API web bundle.
@@ -146,7 +143,7 @@ sdk\:clean:
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
+	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
 
 
 # Start isolated local services and the cluster, then wait for the local registry.

@@ -1,7 +1,6 @@
 import pytest
 import ipaddress
 from uuid import UUID, uuid4
-from src.utils import jobs
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env

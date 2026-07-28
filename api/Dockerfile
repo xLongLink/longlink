@@ -21,7 +21,7 @@ LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
 WORKDIR /app
 ENV PATH="/app/.venv/bin:${PATH}"
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.30@sha256:93b61e21202b1dab861092748e46bbd6e0e41dd84f59b9174efd2353186e1b47 /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
 
 COPY sdk/ /sdk/
 COPY api/ /app/

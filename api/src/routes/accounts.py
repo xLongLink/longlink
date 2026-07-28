@@ -64,7 +64,7 @@ async def logout(
     request: Request,
     authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
     session: AsyncSession = Depends(get_auth_session),
-) -> Response:
+):
     """Revoke the active token and remove that account from the switcher."""
 
     user, credential = authentication

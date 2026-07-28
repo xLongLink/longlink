@@ -77,7 +77,7 @@ def run_migrations_online() -> None:
 
     # Async drivers need an async engine and a synchronous Alembic callback.
     parsed_url = make_url(database_url)
-    if parsed_url.drivername.endswith(("aiosqlite", "aiomysql", "asyncpg")):
+    if parsed_url.drivername.endswith(("aiosqlite", "asyncpg")):
         asyncio.run(run_async_migrations(database_url))
         return
 

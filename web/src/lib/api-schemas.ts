@@ -17,7 +17,7 @@ export const apiRegistrationVerifiedSchema = z.object({
     email: z.email(),
 });
 
-export const apiUserIdentitySchema = z.object({
+const apiUserIdentitySchema = z.object({
     id: z.string(),
     name: z.string(),
     email: z.string(),
@@ -30,7 +30,7 @@ export const apiUserSummarySchema = apiUserIdentitySchema.extend({
 
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
-export const apiOrganizationReferenceSchema = z.object({
+const apiOrganizationReferenceSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
@@ -77,7 +77,7 @@ export const apiOrganizationSummarySchema = z.object({
     deleted_by: nullableUserSummarySchema,
 });
 
-export const apiOrganizationApplicationSummarySchema = z.object({
+const apiOrganizationApplicationSummarySchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
@@ -98,7 +98,7 @@ export const apiOrganizationDetailsSchema = z.object({
     applications: z.array(apiOrganizationApplicationSchema),
 });
 
-export const apiEnvironmentMetadataSchema = z.object({
+const apiEnvironmentMetadataSchema = z.object({
     name: z.string(),
     type: z.string(),
     description: z.string().nullable(),
@@ -201,22 +201,16 @@ export const apiComputePodSchema = z.object({
     node: z.string().nullable(),
 });
 
-export const apiOrganizationDatabaseResourceSchema = z.object({
-    name: z.string(),
+export const apiOrganizationDatabaseUsageSchema = z.object({
     database_name: z.string(),
-    space_used: z.number().nullable(),
-    table_count: z.number().nullable(),
-    application: apiOrganizationApplicationSummarySchema.nullable(),
+    space_used: z.number().int().nonnegative(),
+    table_count: z.number().int().nonnegative(),
 });
 
-export const apiOrganizationStorageResourceSchema = z.object({
-    kind: z.enum(['shared_prefix', 'application_prefix']),
-    name: z.string(),
+export const apiOrganizationStorageUsageSchema = z.object({
     bucket_name: z.string(),
-    prefix: z.string(),
-    application: apiOrganizationApplicationSummarySchema.nullable(),
-    space_used: z.number().nullable(),
-    object_count: z.number().nullable(),
+    space_used: z.number().int().nonnegative(),
+    object_count: z.number().int().nonnegative(),
 });
 
 /** Validates an API response value with a Zod schema. */

@@ -4,8 +4,6 @@ from longlink.storage import assets as organization_assets
 from longlink.constants import ROOT
 from longlink.utils.settings import Envs
 
-LOCAL_LOGO_PATH = ROOT / ".static" / "assets" / "logo.svg"
-
 
 def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.OrganizationAsset:
     """Return the organization logo asset."""
@@ -14,7 +12,7 @@ def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.Organi
 
     # Local runtimes use the SDK-managed fallback while production reads Organization shared storage.
     if env.ENV in {"development", "testing"}:
-        content = LOCAL_LOGO_PATH.read_bytes()
+        content = (ROOT / ".static" / "assets" / "logo.svg").read_bytes()
 
     # Production reads the organization asset from shared storage.
     else:

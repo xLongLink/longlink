@@ -22,7 +22,7 @@ class StorageRuntimeCredentials(TypedDict):
 
 
 class StorageUsage(TypedDict):
-    """Describe aggregate storage usage for one bucket prefix."""
+    """Describe aggregate storage usage for one bucket."""
 
     space_used: int
     object_count: int
@@ -64,33 +64,34 @@ class Storage(ABC):
             ),
         )
 
-    async def buckets(self) -> list[str]:
-        """List bucket names available to the registry credentials."""
-
-        # Use one client for the bucket listing request.
-        async with self._client() as client:
-            response = await client.list_buckets()
-
-        return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
-
-    async def usage(self, bucket: str, prefix: str) -> StorageUsage:
-        """Return aggregate usage details for one bucket prefix."""
+    async def usage(self, bucket: str) -> StorageUsage | None:
+        """Return aggregate usage for one bucket, or none when the bucket is absent."""
 
         object_count = 0
         space_used = 0
 
         # Walk every listed page because S3-compatible APIs do not expose portable bucket totals.
-        async with self._client() as client:
-            paginator = client.get_paginator("list_objects_v2")
-            async for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-                contents = [item for item in page.get("Contents", []) if item.get("Key") != prefix or int(item.get("Size", 0)) != 0]
-                object_count += len(contents)
-                space_used += sum(int(item.get("Size", 0)) for item in contents)
+        try:
+            async with self._client() as client:
+                paginator = client.get_paginator("list_objects_v2")
+                async for page in paginator.paginate(Bucket=bucket):
+                    for item in page.get("Contents", []):
+                        size = int(item.get("Size", 0))
+                        if str(item.get("Key", "")).endswith("/") and size == 0:
+                            continue
+                        object_count += 1
+                        space_used += size
+        except ClientError as exc:
+            error = exc.response.get("Error", {})
+            status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+            if error.get("Code") in {"NoSuchBucket", "404"} or status == 404:
+                return None
+            raise
 
         return {"object_count": object_count, "space_used": space_used}
 
-    async def create(self, bucket: str) -> str:
-        """Create one S3-compatible bucket and return its name."""
+    async def create(self, bucket: str) -> None:
+        """Create one S3-compatible bucket."""
 
         # Use the provisioning client to create the bucket.
         async with self._client() as client:
@@ -100,8 +101,6 @@ class Storage(ABC):
                 error = exc.response.get("Error", {})
                 if error.get("Code") != "BucketAlreadyOwnedByYou":
                     raise
-
-        return bucket
 
     async def create_prefix(self, bucket: str, prefix: str) -> None:
         """Create one S3-compatible prefix marker without replacing an existing object."""

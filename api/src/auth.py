@@ -17,7 +17,7 @@ from src.database.models.users import User, AccessToken
 class SessionAccountsService:
     """Manage saved local accounts in one signed browser session."""
 
-    def __init__(self, request: Request):
+    def __init__(self, request: Request) -> None:
         """Store the request carrying the signed session state."""
 
         self.request = request

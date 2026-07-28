@@ -190,12 +190,12 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
     assert [operation.id for operation in await operations.fetch()] == operation_ids
 
 
-async def test_organization_database_endpoint_returns_schemas_and_shared_users(
+async def test_organization_database_endpoint_returns_database_usage(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return existing shared, application, and orphan schemas."""
+    """Return physical usage for one Organization database."""
 
     # Arrange
     owner = users[0]
@@ -203,20 +203,6 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
     registry = infrastructure.database
-    dashboard = await create_application(
-        organization,
-        owner,
-        description="Dashboard app",
-        icon="layout-dashboard",
-    )
-    reports = await create_application(
-        organization,
-        owner,
-        name="reports",
-        slug="reports",
-        image="ghcr.io/longlink/reports:latest",
-    )
-    dashboard_schema = dashboard.id.hex
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
@@ -228,27 +214,11 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
             self.password = password
             assert sslmode == registry.sslmode
 
-        async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
-            """Return fake schema usage rows for the organization database."""
+        async def database_usage(self, database_name: str) -> dict[str, int]:
+            """Return fake physical usage for the Organization database."""
 
             assert database_name == organization.id.hex
-            return [
-                {
-                    "name": "shared",
-                    "space_used": 1024,
-                    "table_count": 1,
-                },
-                {
-                    "name": dashboard_schema,
-                    "space_used": 2048,
-                    "table_count": 2,
-                },
-                {
-                    "name": "stale",
-                    "space_used": 512,
-                    "table_count": 1,
-                },
-            ]
+            return {"space_used": 3584, "table_count": 4}
 
     monkeypatch.setattr(
         "src.routes.organizations.adapters.Postgres",
@@ -260,17 +230,14 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
 
     # Assert
     assert response.status_code == 200
-    payload = response.json()
-    assert [item["name"] for item in payload] == ["shared", dashboard_schema, "stale"]
-    assert payload[1]["application"]["id"] == str(dashboard.id)
-    assert payload[1]["application"]["icon"] == "layout-dashboard"
-    assert payload[1]["application"]["description"] == "Dashboard app"
-    assert payload[1]["space_used"] == 2048
-    assert reports.id.hex not in [item["name"] for item in payload]
-    assert payload[2]["space_used"] == 512
+    assert response.json() == {
+        "database_name": organization.id.hex,
+        "space_used": 3584,
+        "table_count": 4,
+    }
 
 
-async def test_organization_database_endpoint_returns_unavailable_rows_when_backend_fails(
+async def test_organization_database_endpoint_returns_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
@@ -282,7 +249,6 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
-    await create_application(organization, owner)
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
@@ -294,7 +260,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
             self.password = password
             assert sslmode == infrastructure.database.sslmode
 
-        async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
+        async def database_usage(self, database_name: str) -> dict[str, int]:
             """Raise the backend error expected by the test."""
 
             raise RuntimeError("database offline")
@@ -312,12 +278,12 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     assert response.json() == {"detail": "Database resources unavailable"}
 
 
-async def test_organization_storage_endpoint_returns_organization_prefixes(
+async def test_organization_storage_endpoint_returns_bucket_usage(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return shared and Application prefix usage for one Organization bucket."""
+    """Return aggregate usage for one Organization bucket."""
 
     # Arrange
     owner = users[0]
@@ -325,38 +291,15 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
     registry = infrastructure.storage
-    dashboard = await create_application(
-        organization,
-        owner,
-        description="Dashboard app",
-        icon="layout-dashboard",
-    )
-    reports = await create_application(
-        organization,
-        owner,
-        name="reports",
-        slug="reports",
-        image="ghcr.io/longlink/reports:latest",
-    )
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
-        async def buckets(self) -> list[str]:
-            """Return fake bucket names from the storage backend."""
-
-            return [organization.id.hex, "other-organization"]
-
-        async def usage(self, bucket_name: str, prefix: str) -> dict[str, int]:
-            """Return fake usage counters for one Organization bucket prefix."""
+        async def usage(self, bucket_name: str) -> dict[str, int]:
+            """Return fake usage counters for one Organization bucket."""
 
             assert bucket_name == organization.id.hex
-            assert prefix in {
-                "shared/",
-                f"applications/{dashboard.id.hex}/",
-                f"applications/{reports.id.hex}/",
-            }
-            return {"space_used": len(prefix), "object_count": 2}
+            return {"space_used": 4096, "object_count": 6}
 
     def fake_storage(registry_argument) -> FakeStorage:
         """Return the fake adapter for the selected registry."""
@@ -371,23 +314,14 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
 
     # Assert
     assert response.status_code == 200
-    payload = response.json()
-    assert [(item["kind"], item["name"]) for item in payload] == [
-        ("shared_prefix", "shared"),
-        ("application_prefix", "dashboard"),
-        ("application_prefix", "reports"),
-    ]
-    assert payload[1]["application"]["id"] == str(dashboard.id)
-    assert payload[1]["application"]["icon"] == "layout-dashboard"
-    assert payload[1]["application"]["description"] == "Dashboard app"
-    assert payload[0]["bucket_name"] == organization.id.hex
-    assert payload[0]["prefix"] == "shared/"
-    assert payload[1]["prefix"] == f"applications/{dashboard.id.hex}/"
-    assert payload[0]["space_used"] == len("shared/")
-    assert payload[0]["object_count"] == 2
+    assert response.json() == {
+        "bucket_name": organization.id.hex,
+        "space_used": 4096,
+        "object_count": 6,
+    }
 
 
-async def test_organization_storage_endpoint_returns_unavailable_rows_when_backend_fails(
+async def test_organization_storage_endpoint_returns_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
@@ -400,12 +334,11 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
     registry = infrastructure.storage
-    await create_application(organization, owner)
 
     class FakeStorage:
         """Provide a failing storage adapter."""
 
-        async def buckets(self) -> list[str]:
+        async def usage(self, bucket_name: str) -> dict[str, int]:
             """Raise the backend error expected by the test."""
 
             raise RuntimeError("storage offline")

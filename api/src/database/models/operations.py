@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Enum, Column
+from sqlalchemy import Enum, Index, Column
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
@@ -12,6 +12,18 @@ class Operation(SQLModel, table=True):
     """Persist one durable Platform request and its expiring worker lock."""
 
     __tablename__: ClassVar[str] = "operations"
+    __table_args__ = (
+        Index(
+            "ix_operations_queue",
+            "kind",
+            "target_id",
+            "platform_version",
+            "finished_at",
+            "lease_expires_at",
+            "created_at",
+            "id",
+        ),
+    )
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

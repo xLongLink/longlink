@@ -24,15 +24,7 @@ async def get(registry_id: UUID) -> DatabaseRegistry | None:
         return await session.get(DatabaseRegistry, registry_id)
 
 
-async def create(
-    name: str,
-    slug: str,
-    host: str,
-    port: int,
-    username: str,
-    password: str,
-    sslmode: DatabaseSSLMode,
-) -> DatabaseRegistry:
+async def create(name: str, slug: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> DatabaseRegistry:
     """Register one database backend."""
 
     # Persist administrator credentials only at the registry control-plane boundary.

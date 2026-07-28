@@ -64,11 +64,7 @@ def access(user: User, resource: UUID, scope: Literal["application"]) -> Applica
     ...
 
 
-def access(
-    user: User,
-    resource: UUID,
-    scope: Literal["organization", "application"],
-) -> UserOrganization | ApplicationAccess | None:
+def access(user: User, resource: UUID, scope: Literal["organization", "application"]) -> UserOrganization | ApplicationAccess | None:
     """Return loaded Organization or Application access, or none when access is missing."""
 
     # Organization memberships grant access to organization resources.

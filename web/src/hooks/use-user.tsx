@@ -15,7 +15,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserOrganizationMembership, ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
-export type User = ApiUserProfile;
+type User = ApiUserProfile;
 
 type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>;
 

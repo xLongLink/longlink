@@ -43,7 +43,7 @@ muted                   # Muted content color
 radius                  # none | small | medium | large
 ```
 
-Theme values are defined in `src/lib/theme.ts` and applied programmatically to the document root.
+Theme values are defined in `src/lib/theme.ts` and applied programmatically to the document root. `src/lib/default-theme.ts` is the source of truth for the static first-paint theme. Astryx writes its ignored outputs to `src/lib/generated/`; do not edit or commit those files. Development, type-check, route, and build scripts regenerate them automatically, or run `vp run theme:build` explicitly.
 
 ## Primitives
 

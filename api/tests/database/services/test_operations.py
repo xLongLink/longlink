@@ -62,7 +62,7 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
     compute = await create_compute("local")
     first_application_id = uuid4()
     organization_id = uuid4()
-    first = await operations.enqueue(compute.id)
+    await operations.enqueue(compute.id)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None

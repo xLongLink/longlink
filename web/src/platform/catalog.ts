@@ -4,14 +4,14 @@ import type { ReactElement, ReactNode } from 'react';
 type ArticleIcon = ReactElement<LucideProps>;
 
 /** One link in an article table of contents. */
-export type ArticleTocItem = {
+type ArticleTocItem = {
     id: string;
     label: string;
     level?: number;
 };
 
 /** Metadata shared by article-like public pages. */
-export type ArticleMetadata = {
+type ArticleMetadata = {
     toc?: ArticleTocItem[];
     lastUpdated?: string;
     editUrl?: string;
@@ -24,7 +24,7 @@ export type ArticleBreadcrumb = {
 };
 
 /** Shared navigation identity for article-like pages. */
-export type ArticleItem = {
+type ArticleItem = {
     title: string;
     path: string;
     icon: ArticleIcon;
