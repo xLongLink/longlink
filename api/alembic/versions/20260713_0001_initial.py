@@ -198,7 +198,6 @@ def upgrade() -> None:
         sa.Column("icon", sa.String(length=50), nullable=True),
         sa.Column("image", sa.String(length=512), nullable=False),
         sa.Column("sdk", sa.String(length=128), nullable=True),
-        sa.Column("digest", sa.String(length=255), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column(
@@ -346,51 +345,10 @@ def upgrade() -> None:
         ["kind", "target_id", "platform_version", "finished_at", "lease_expires_at", "created_at", "id"],
     )
 
-    # Create application memberships after applications, organizations, and users.
-    op.create_table(
-        "user_applications",
-        sa.Column("application_id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
-        sa.Column("organization_id", sa.Uuid(), nullable=False),
-        sa.Column("role", sa.Enum("read", "write", "maintain", "admin", name="application_role_enum", native_enum=False), nullable=False),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["organization_id", "application_id"], ["applications.organization_id", "applications.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["organization_id"],
-            ["organizations.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
-        ),
-        sa.PrimaryKeyConstraint("application_id", "user_id", "organization_id"),
-    )
-
-
 def downgrade() -> None:
     """Drop the initial platform schema."""
 
     # Drop tables and indexes in reverse dependency order.
-    op.drop_table("user_applications")
     op.drop_table("operations")
     op.drop_table("user_organizations")
     op.drop_table("organization_invitations")

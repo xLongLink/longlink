@@ -6,14 +6,12 @@ import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
     apiUserOrganizationMembershipSchema,
     apiUserProfileSchema,
-    apiUserSummarySchema,
     parseApiCollection,
     parseApiResponse,
 } from '@/lib/api-schemas';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
-import { clearSessionQueries } from '@/lib/react-query';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
-import type { ApiUserOrganizationMembership, ApiUserProfile, ApiUserSummary } from '@/lib/types';
+import type { ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 
 type User = ApiUserProfile;
 
@@ -24,10 +22,6 @@ type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 type StoredThemePreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 
 type UserQueryResult = UseQueryResult<User | null, Error>;
-
-type AccountsState = {
-    items: ApiUserSummary[];
-};
 
 type UserProfileState = {
     user: User | null;
@@ -134,20 +128,7 @@ export function useUserOrganizations(): UserOrganizationsState {
     };
 }
 
-/** Reads accounts previously authenticated in this browser session. */
-export function useSavedAccounts(): AccountsState {
-    const accountsQuery = useCollectionQuery<ApiUserSummary>('/api/auth/accounts', {
-        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
-        refetchOnMount: 'always',
-        retry: false,
-    });
-
-    return {
-        items: accountsQuery.items,
-    };
-}
-
-/** Provides actions that end or deactivate the current user session. */
+/** Provides actions that end the current user session. */
 export function useUserSessionActions() {
     const queryClient = useQueryClient();
 
@@ -159,29 +140,8 @@ export function useUserSessionActions() {
         window.location.assign('/organizations');
     };
 
-    /** Clears the active user on the server so another account can be selected. */
-    const switchAccount = async () => {
-        const savedAccounts = await fetchApiJson(
-            '/api/auth/accounts/deactivate',
-            {
-                method: 'POST',
-            },
-            (value) => parseApiCollection(apiUserSummarySchema, value)
-        );
-
-        const profileKey = userProfileQueryKey();
-        const accountsKey = accountsQueryKey();
-
-        // Remove every query owned by the deactivated account before showing account selection.
-        await clearSessionQueries(queryClient, [profileKey, accountsKey]);
-        queryClient.setQueryData(accountsKey, savedAccounts);
-        queryClient.setQueryData(profileKey, null);
-        localStorage.removeItem(THEME_PREFERENCES_KEY);
-    };
-
     return {
         signOut,
-        switchAccount,
     };
 }
 

@@ -18,7 +18,7 @@ type OrganizationProps = {
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: OrganizationProps) {
     const t = useTranslator();
-    const { organization = '', settingsApplication = '' } = useParams();
+    const { organization = '' } = useParams();
     const {
         organization: organizationDetails,
         members,
@@ -31,16 +31,6 @@ export default function Organization({ settingsSection }: OrganizationProps) {
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
-        return <NotFound />;
-    }
-
-    // Reject unknown application settings routes after organization data resolves.
-    if (
-        !isLoading &&
-        error === null &&
-        settingsApplication.length > 0 &&
-        !applications.some((access) => access.application.slug === settingsApplication)
-    ) {
         return <NotFound />;
     }
 

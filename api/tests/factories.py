@@ -104,13 +104,11 @@ async def create_application(
     await mark_organization_running(organization)
     parsed_image = Image(image)
     resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@{digest}"
-    resolved_digest = parsed_image.tag_or_digest if "@" in image else digest
     application, _ = await applications.create(
         organization.id,
         name,
         slug=slug,
         image=resolved_image,
-        digest=resolved_digest,
         description=description,
         icon=icon,
         user=owner,

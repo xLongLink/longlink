@@ -41,9 +41,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # Converge providers and the workload while the Application remains in creation.
     if application.status == Status.creating:
-        if application.digest is None:
-            return jobs.fail("Application image metadata is unavailable")
-
         # Resolve the Application's immutable provider assignments.
         database_registry = infrastructure.database
         if database_registry is None:

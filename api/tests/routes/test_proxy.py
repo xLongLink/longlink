@@ -3,13 +3,13 @@ from types import SimpleNamespace
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import proxy as proxy_routes
-from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import applications
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 
 
 async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
@@ -227,19 +227,18 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     assert response.json() == {"detail": "Application gateway is not ready"}
 
 
-async def test_application_proxy_requires_application_role_for_regular_member(
+async def test_application_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject app proxy access for regular organization members without an app role."""
+    """Allow app proxy access inherited from Organization read membership."""
 
-    # Give a regular Organization member no direct Application role.
+    # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
     await create_ready_infrastructure()
     organization = await create_organization(owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
     Session = await get_session()
     async with Session() as session:
         session.add(
@@ -255,9 +254,9 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     # Request the Application through the member's Organization access.
     response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
-    # Verify Organization read access does not grant runtime access.
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Application read access required"}
+    # Verify access succeeds and reaches the loading-state response.
+    assert response.status_code == 503
+    assert response.text == ""
 
 
 async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
@@ -327,7 +326,7 @@ async def test_application_proxy_enforces_method_role(
 ) -> None:
     """Reject mutating proxy requests when the runtime role is read-only."""
 
-    # Restrict the caller to read access at both role boundaries.
+    # Restrict the caller to Organization read access.
     user = users[0]
     await create_ready_infrastructure()
     organization = await create_organization(user)
@@ -339,16 +338,6 @@ async def test_application_proxy_enforces_method_role(
         organization_membership = await session.get(UserOrganization, (user.id, organization.id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.read
-        application_membership = await session.get(
-            UserApplication,
-            {
-                "user_id": user.id,
-                "organization_id": organization.id,
-                "application_id": app.id,
-            },
-        )
-        assert application_membership is not None
-        application_membership.role = ApplicationRoles.read
         await session.commit()
 
     client = clients[0]
@@ -356,9 +345,9 @@ async def test_application_proxy_enforces_method_role(
     # Attempt a mutating Application proxy request.
     response = await client.post(f"/api/applications/{app.id}/proxy/api/tasks")
 
-    # Verify the HTTP method requires Application write access.
+    # Verify the HTTP method requires Organization write access.
     assert response.status_code == 403
-    assert response.json() == {"detail": "Application write access required"}
+    assert response.json() == {"detail": "Organization write access required"}
 
 
 async def test_application_proxy_shows_loading_when_app_is_not_ready(

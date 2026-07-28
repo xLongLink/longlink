@@ -2,7 +2,6 @@ import { useParams } from 'react-router';
 import View from '@/application/runtime/View';
 import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
-import { hasMinimumRole } from '@/lib/roles';
 import NotFound from '@/platform/NotFound';
 
 /** Protects and renders one proxy-backed organization application. */
@@ -17,15 +16,8 @@ export default function OrganizationApplication() {
 /** Resolves an organization application slug to its proxy-backed XML view. */
 function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
-    const {
-        organization: organizationDetails,
-        applications,
-        role: organizationRole,
-        isLoading,
-        error,
-    } = useOrganization(organization);
+    const { organization: organizationDetails, applications, isLoading, error } = useOrganization(organization);
     const applicationAccess = applications.find((item) => item.application.slug === application);
-    const hasApplicationAccess = applicationAccess?.role != null || hasMinimumRole(organizationRole, 'maintain');
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
@@ -33,7 +25,7 @@ function OrganizationApplicationView() {
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.
-    if (error?.status === 404 || !organizationDetails || !applicationAccess || !hasApplicationAccess) {
+    if (error?.status === 404 || !organizationDetails || !applicationAccess) {
         return <NotFound />;
     }
 

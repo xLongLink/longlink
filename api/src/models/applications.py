@@ -2,9 +2,7 @@ import re
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.types import Icon, Image
-from src.models.users import UserIdentity
 from src.models.statuses import Status
 from src.models.operations import OperationResponse
 
@@ -91,7 +89,6 @@ class ApplicationResponse(BaseModel):
     slug: str
     icon: Icon | None
     image: str
-    digest: str | None
     version: str | None
     description: str | None
 
@@ -111,21 +108,3 @@ class ApplicationMutationResponse(BaseModel):
     # Result
     application: ApplicationResponse
     operation: OperationResponse
-
-
-class ApplicationMemberUpdate(BaseModel):
-    """Validate application member role updates."""
-
-    # State
-    role: ApplicationRoles | None = None
-
-
-class ApplicationMemberResponse(BaseModel):
-    """Represent one organization member's application access."""
-
-    # Relationships
-    user: UserIdentity
-
-    # Access
-    application_role: ApplicationRoles | None = None
-    organization_role: OrganizationRoles

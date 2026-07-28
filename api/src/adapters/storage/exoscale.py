@@ -379,3 +379,4 @@ class Exoscale:
             return value
 
         raise RuntimeError(f"Exoscale response missing '{field}'")
+

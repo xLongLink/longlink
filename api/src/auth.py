@@ -1,5 +1,4 @@
-from uuid import UUID
-from fastapi import Cookie, Depends, Request, HTTPException
+from fastapi import Cookie, Depends, HTTPException
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import token
@@ -12,51 +11,6 @@ from longlink.utils.time import utcnow
 from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User, AccessToken
-
-
-class SessionAccountsService:
-    """Manage saved local accounts in one signed browser session."""
-
-    def __init__(self, request: Request) -> None:
-        """Store the request carrying the signed session state."""
-
-        self.request = request
-
-    def list(self) -> list[UUID]:
-        """Return valid saved local user identifiers."""
-
-        # Validate the signed session value before parsing saved account identifiers.
-        raw_accounts = self.request.session.get("account_ids", [])
-        if not isinstance(raw_accounts, list):
-            return []
-
-        # Ignore malformed and duplicate identifiers from stale session cookies.
-        accounts: list[UUID] = []
-        seen: set[UUID] = set()
-        for raw_account in raw_accounts:
-            try:
-                account = UUID(str(raw_account))
-            except (TypeError, ValueError):
-                continue
-            if account not in seen:
-                seen.add(account)
-                accounts.append(account)
-        return accounts
-
-    def remember(self, user_id: UUID) -> None:
-        """Save one account as the most recently authenticated account."""
-
-        # Keep a bounded account list so the signed session cookie remains small.
-        accounts = [account for account in self.list() if account != user_id][-9:]
-        accounts.append(user_id)
-        self.request.session["account_ids"] = [str(account) for account in accounts]
-
-    def remove(self, user_id: UUID) -> None:
-        """Remove one account from the signed saved-account list."""
-
-        # Persist the remaining account identifiers in their current order.
-        accounts = [account for account in self.list() if account != user_id]
-        self.request.session["account_ids"] = [str(account) for account in accounts]
 
 
 async def get_auth_session() -> AsyncIterator[AsyncSession]:

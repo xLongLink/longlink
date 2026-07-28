@@ -1,10 +1,8 @@
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -16,7 +14,6 @@ import { z } from 'zod';
 import { PasswordInput } from '@/components/PasswordInput';
 import { Wordmark } from '@/components/Wordmark';
 import { useToast } from '@/hooks/use-toast';
-import { useSavedAccounts } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 
@@ -25,12 +22,11 @@ type LoginValues = {
     password: string;
 };
 
-/** Renders the shared LongLink sign-in form and saved account selector. */
+/** Renders the shared LongLink sign-in form. */
 export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const accounts = useSavedAccounts();
     const showToast = useToast();
     const loginSchema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
@@ -52,12 +48,6 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
             }),
     });
 
-    /** Prefills a saved account while requiring normal password authentication. */
-    function handleAccountSelect(email: string) {
-        form.reset({ email, password: '' });
-        form.setFocus('password');
-    }
-
     /** Signs in with an email and password, then refreshes the current profile. */
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
@@ -72,7 +62,6 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         }
     }
 
-    const hasSavedAccounts = accounts.items.length > 0;
     const isPending = login.isPending;
 
     return (
@@ -86,31 +75,6 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 </Heading>
                 <Divider label={t('auth.signInDescription')} />
             </Stack>
-
-            {hasSavedAccounts ? (
-                <Stack gap={2}>
-                    <List
-                        density="compact"
-                        header={
-                            <Text type="label" color="secondary">
-                                {t('auth.savedAccounts')}
-                            </Text>
-                        }
-                    >
-                        {accounts.items.map((account) => (
-                            <ListItem
-                                key={account.id}
-                                description={account.email}
-                                isDisabled={isPending}
-                                label={account.name}
-                                onClick={() => handleAccountSelect(account.email)}
-                                startContent={<Avatar src={account.avatar} name={account.name} size="md" />}
-                            />
-                        ))}
-                    </List>
-                    <Divider label={t('auth.orUseAnotherAccount')} />
-                </Stack>
-            ) : null}
 
             <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
                 <Controller

@@ -1,13 +1,10 @@
 import os
-import json
-import base64
 import pytest
 import pytest_asyncio
 from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from pathlib import Path
-from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -27,7 +24,6 @@ from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User, AccessToken
 
-SESSION_COOKIE = "longlink_session"
 TEST_PASSWORD = "longlink-test-password"
 
 
@@ -71,25 +67,11 @@ async def reset_db(
         await engine.dispose()
 
 
-def session_cookie(accounts: list[UUID]) -> Cookies:
-    """Build a signed session cookie for saved local accounts."""
+def authenticated_cookies(user_id: UUID) -> Cookies:
+    """Build an authentication cookie for one user."""
 
-    # Encode the same account_ids payload consumed by Starlette's session middleware.
-    payload = base64.b64encode(json.dumps({"account_ids": [str(account) for account in accounts]}).encode("utf-8"))
-    signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
+    # Match the active browser credential used by authenticated API clients.
     cookies = Cookies()
-    cookies.set(SESSION_COOKIE, signed, domain="testserver.local", path="/")
-    return cookies
-
-
-def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> Cookies:
-    """Build matching authentication and saved-account cookies for one user."""
-
-    # Mirror the login hook by retaining the active account in the saved list.
-    saved_accounts = accounts[:] if accounts is not None else [user_id]
-    if user_id not in saved_accounts:
-        saved_accounts.append(user_id)
-    cookies = session_cookie(saved_accounts)
     cookies.set("longlink_auth", str(user_id), domain="testserver.local", path="/")
     return cookies
 

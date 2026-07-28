@@ -37,7 +37,6 @@ class Application(SQLModel, table=True):
     icon: str | None = Field(default=None, max_length=50)
     image: str = Field(max_length=512)
     sdk: str | None = Field(default=None, max_length=128)
-    digest: str | None = Field(default=None, max_length=255)
     version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
 

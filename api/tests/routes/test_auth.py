@@ -128,7 +128,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
         "/api/auth/register/complete",
         json=completion_payload,
     )
-    accounts_response = await client.get("/api/auth/accounts")
     profile_response = await client.get("/api/me")
 
     assert unauthenticated_login.status_code == 400
@@ -143,8 +142,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert registered_user["email"] == email
     assert client.cookies.get("longlink_auth")
     assert client.cookies.get("longlink_registration") is None
-    assert accounts_response.status_code == 200
-    assert [account["id"] for account in accounts_response.json()] == [registered_user["id"]]
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == registered_user["id"]
 

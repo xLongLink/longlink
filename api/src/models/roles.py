@@ -19,32 +19,21 @@ class OrganizationRoles(StrEnum):
 
 
 class Ranks(IntEnum):
-    """Comparable privilege ranks for organization and application roles."""
+    """Comparable privilege ranks for organization roles."""
 
     read = 1
     write = 2
     maintain = 3
     admin = 4
     owner = 5
-
-
-class ApplicationRoles(StrEnum):
-    """Supported application membership roles."""
-
-    read = "read"
-    write = "write"
-    maintain = "maintain"
-    admin = "admin"
-
-
 APPLICATION_PROXY_METHOD_ROLES = {
-    "DELETE": ApplicationRoles.maintain,
-    "GET": ApplicationRoles.read,
-    "PATCH": ApplicationRoles.write,
-    "POST": ApplicationRoles.write,
-    "PUT": ApplicationRoles.write,
+    "DELETE": OrganizationRoles.maintain,
+    "GET": OrganizationRoles.read,
+    "PATCH": OrganizationRoles.write,
+    "POST": OrganizationRoles.write,
+    "PUT": OrganizationRoles.write,
 }
 APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_ROLES)
 
 
-RoleName = OrganizationRoles | ApplicationRoles
+RoleName = OrganizationRoles

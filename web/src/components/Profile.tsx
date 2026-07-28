@@ -29,7 +29,7 @@ import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
 export function UserProfile() {
     const t = useTranslator();
     const { user } = useUserProfile();
-    const { signOut, switchAccount } = useUserSessionActions();
+    const { signOut } = useUserSessionActions();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -55,14 +55,7 @@ export function UserProfile() {
                 <Stack gap={2} width="100%">
                     <Item
                         description={user.email}
-                        endContent={<ArrowUpDown aria-hidden="true" size={16} />}
                         label={user.name}
-                        onClick={() => {
-                            setIsOpen(false);
-                            void switchAccount().catch(() => {
-                                showToast({ body: t('auth.switchAccountFailed'), type: 'error' });
-                            });
-                        }}
                         startContent={<Avatar src={user.avatar} name={user.name} size="md" />}
                     />
                     <Divider />

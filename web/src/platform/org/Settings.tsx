@@ -16,7 +16,6 @@ import { z } from 'zod';
 import { useOrganizationDatabaseUsage, useOrganizationStorageUsage } from '@/data/organization';
 import { useUpdateOrganization } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile } from '@/hooks/use-user';
 import { hasMinimumRole, type Role } from '@/lib/roles';
 import type {
     ApiInvitation,
@@ -146,7 +145,6 @@ export default function Settings({
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
-    const { role: platformRole } = useUserProfile();
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
@@ -358,10 +356,8 @@ export default function Settings({
 
                 {section === 'applications' ? (
                     <ApplicationSettings
-                        organization={organization}
                         organizationId={organizationId}
                         applications={applications}
-                        platformRole={platformRole}
                         canManageApplications={hasOrganizationApplicationAccess}
                         isLoading={isLoading}
                         error={error}

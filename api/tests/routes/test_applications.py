@@ -2,13 +2,13 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
-from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
 from src.database.services import operations, applications
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -125,7 +125,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert application["status"] == "creating"
     assert application["description"] == "Dashboard app"
     assert application["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application["digest"] == "sha256:test"
     assert application["sdk"] == "1.2.3"
     assert application["version"] == "2.0.0"
     assert "compute_id" not in operation
@@ -298,68 +297,6 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     # Assert
     assert response.status_code == 503
     assert response.json() == {"detail": "Application logs unavailable"}
-
-
-async def test_application_member_routes_list_update_remove_and_reject_missing_members(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Manage simple application roles through the route layer."""
-
-    # Arrange
-    owner, member, non_member = users
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    app = await create_application(organization, owner)
-    Session = await get_session()
-    async with Session() as session:
-        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
-        await session.commit()
-    client = clients[0]
-
-    # Act
-    list_response = await client.get(f"/api/applications/{app.id}/members")
-    create_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": "read"})
-    created_role = await applications.membership_role(app.id, member.id)
-    remove_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
-    removed_role = await applications.membership_role(app.id, member.id)
-    missing_response = await client.patch(f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"})
-
-    # Assert
-    assert list_response.status_code == 200
-    assert {item["user"]["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
-    assert create_response.status_code == 204
-    assert created_role == ApplicationRoles.read
-    assert remove_response.status_code == 204
-    assert removed_role is None
-    assert missing_response.status_code == 404
-    assert missing_response.json() == {"detail": "Organization member not found"}
-
-
-async def test_application_member_update_rejects_regular_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject application role changes from users without management access."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    app = await create_application(organization, owner)
-    Session = await get_session()
-    async with Session() as session:
-        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
-        session.add(UserApplication(user_id=member.id, organization_id=organization.id, application_id=app.id, role=ApplicationRoles.read))
-        await session.commit()
-    client = clients[1]
-
-    # Act
-    response = await client.patch(f"/api/applications/{app.id}/members/{owner.id}", json={"role": "read"})
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_delete_application_soft_deletes_and_returns_reconciliation_operation(

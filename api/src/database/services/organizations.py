@@ -18,7 +18,7 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -415,14 +415,6 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
                     Application.deleted_at.is_(None),
                 )
                 .values(status=Status.deleting, **tombstone)
-            )
-            await session.execute(
-                sql_update(UserApplication)
-                .where(
-                    UserApplication.organization_id == organization_id,
-                    UserApplication.deleted_at.is_(None),
-                )
-                .values(**tombstone)
             )
             await session.execute(
                 sql_update(UserOrganization)

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
@@ -28,7 +28,6 @@ async def get(user_id: UUID, include_access: bool = False) -> User | None:
                 selectinload(User.organization_memberships)
                 .selectinload(UserOrganization.organization)
                 .selectinload(Organization.applications),
-                selectinload(User.application_memberships).selectinload(UserApplication.application),
             )
 
         return (await session.scalars(statement)).one_or_none()

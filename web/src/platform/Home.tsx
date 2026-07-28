@@ -201,7 +201,7 @@ export default function Home() {
                 </Heading>
                 <Stack
                     as="figure"
-                    className="homepage-before-after-scene relative isolate overflow-hidden"
+                    className="relative isolate overflow-hidden bg-body"
                     width="100%"
                     minHeight="100svh"
                     justify="center"
@@ -215,14 +215,14 @@ export default function Home() {
                                 <Stack
                                     aria-label="Fragmented city illustration"
                                     role="img"
-                                    className="homepage-before-after-art homepage-before-after-art-before size-full"
+                                    className="homepage-before-after-art homepage-before-after-art-before size-full bg-secondary"
                                 />
                             }
                             itemTwo={
                                 <Stack
                                     aria-label="Unified city illustration"
                                     role="img"
-                                    className="homepage-before-after-art homepage-before-after-art-after size-full"
+                                    className="homepage-before-after-art homepage-before-after-art-after size-full bg-secondary"
                                 />
                             }
                             keyboardIncrement="2%"
@@ -259,7 +259,7 @@ export default function Home() {
                                     <div className="homepage-hands-mat">
                                         <img
                                             alt="Human and robot hands reaching toward each other"
-                                            className="homepage-hands-image h-auto w-full object-contain"
+                                            className="block h-auto w-full object-contain"
                                             decoding="async"
                                             loading="lazy"
                                             src={humanRobotHandsImage}
@@ -276,7 +276,7 @@ export default function Home() {
                 </div>
             </section>
             <Section
-                className="homepage-path-section relative z-20"
+                className="homepage-path-section relative z-20 -mt-px"
                 variant="transparent"
                 padding={6}
                 paddingBlock={10}

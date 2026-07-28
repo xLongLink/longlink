@@ -27,7 +27,7 @@ export default [
     ]),
     route('orgs/:organization', './routes/organization.tsx', { id: 'organization' }),
     route('orgs/:organization/settings', './routes/organization.tsx', { id: 'organization-settings' }),
-    route('orgs/:organization/settings/applications/:settingsApplication?', './routes/organization.tsx', {
+    route('orgs/:organization/settings/applications', './routes/organization.tsx', {
         id: 'organization-application-settings',
     }),
     route('orgs/:organization/settings/people', './routes/organization.tsx', {

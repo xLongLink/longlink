@@ -1,18 +1,17 @@
 import asyncio
 import contextlib
+from src import operations as _
 from fastapi import FastAPI
 from pathlib import Path
 from src.utils import jobs
-from src.routes import auth, icons, image, proxy, users, health, accounts, branding, computes, storages, databases
+from src.routes import auth, icons, image, proxy, users, health, branding, computes, storages, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src import operations as _
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 
 
 @contextlib.asynccontextmanager
@@ -40,18 +39,10 @@ app = FastAPI(
 )
 
 
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=env.SESSION_KEY,
-    session_cookie="longlink_session",
-    same_site="lax",
-    https_only=not env.DEVELOPMENT,
-)
 install_frontend_middleware(app)
 
 # Register API routes after constructing the application.
 app.include_router(auth.router)
-app.include_router(accounts.router)
 app.include_router(applications.router)
 app.include_router(proxy.router)
 app.include_router(branding.router)

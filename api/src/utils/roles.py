@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import Literal, overload
 from dataclasses import dataclass
-from src.models.roles import Ranks, RoleName, ApplicationRoles, OrganizationRoles
+from src.models.roles import Ranks, RoleName, OrganizationRoles
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
@@ -10,17 +10,16 @@ from src.database.models.organizations import Organization
 
 @dataclass(frozen=True, slots=True)
 class ApplicationAccess:
-    """Represent loaded direct and inherited access to one active Application."""
+    """Represent inherited organization access to one active Application."""
 
     application: Application
     organization: Organization
-    application_role: ApplicationRoles | None
-    organization_role: OrganizationRoles | None
+    role: OrganizationRoles
 
-    def allows(self, required_role: ApplicationRoles) -> bool:
-        """Return whether direct or Organization authority permits an Application operation."""
+    def allows(self, required_role: OrganizationRoles) -> bool:
+        """Return whether Organization authority permits an Application operation."""
 
-        return atleast(self.application_role, required_role) or atleast(self.organization_role, OrganizationRoles.maintain)
+        return atleast(self.role, required_role)
 
 
 def rank(value: RoleName | None) -> int:
@@ -32,8 +31,8 @@ def rank(value: RoleName | None) -> int:
 
     role_type = type(value)
 
-    # Organization and application roles share the same rank scale.
-    if role_type in {OrganizationRoles, ApplicationRoles}:
+    # Organization roles share one explicit privilege rank scale.
+    if role_type is OrganizationRoles:
         return Ranks[value.name].value
 
     raise ValueError(f"Unknown role '{value}'")
@@ -74,25 +73,7 @@ def access(user: User, resource: UUID, scope: Literal["organization", "applicati
                 return membership
         return None
 
-    # Direct Application membership is supplemented by any active Organization role.
-    for membership in user.application_memberships:
-        organization_membership = next(
-            (
-                item
-                for item in user.organization_memberships
-                if item.organization.deleted_at is None and item.organization_id == membership.organization_id
-            ),
-            None,
-        )
-        if organization_membership is not None and membership.application.deleted_at is None and membership.application_id == resource:
-            return ApplicationAccess(
-                application=membership.application,
-                organization=organization_membership.organization,
-                application_role=membership.role,
-                organization_role=organization_membership.role,
-            )
-
-    # Organization membership grants base access to its active Applications.
+    # Organization membership grants access to its active Applications.
     for membership in user.organization_memberships:
         if membership.organization.deleted_at is not None:
             continue
@@ -102,8 +83,7 @@ def access(user: User, resource: UUID, scope: Literal["organization", "applicati
                 return ApplicationAccess(
                     application=application,
                     organization=membership.organization,
-                    application_role=None,
-                    organization_role=membership.role,
+                    role=membership.role,
                 )
 
     return None

@@ -1,7 +1,4 @@
 import pytest
-from uuid import uuid4
-from fastapi import Request
-from src.auth import SessionAccountsService
 from src.utils import token
 
 pytestmark = pytest.mark.no_db
@@ -19,41 +16,3 @@ def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
     assert first == repeated
     assert first != other
     assert first != "browser-token"
-
-
-def test_session_accounts_filters_invalid_and_duplicate_ids() -> None:
-    """Return only unique UUIDs from signed saved-account state."""
-
-    first_id = uuid4()
-    second_id = uuid4()
-    request = Request(
-        {
-            "type": "http",
-            "session": {"account_ids": [str(first_id), "invalid", str(first_id), None, str(second_id)]},
-        }
-    )
-
-    # Parse untrusted session values without leaking malformed identifiers.
-    accounts = SessionAccountsService(request).list()
-
-    assert accounts == [first_id, second_id]
-
-
-def test_session_accounts_remember_and_remove_local_users() -> None:
-    """Keep recent local accounts ordered and remove only the selected user."""
-
-    account_ids = [uuid4() for _ in range(10)]
-    request = Request(
-        {
-            "type": "http",
-            "session": {"account_ids": [str(account_id) for account_id in account_ids]},
-        }
-    )
-    accounts = SessionAccountsService(request)
-
-    # Move an existing account to the most-recent position, then remove it.
-    accounts.remember(account_ids[0])
-    assert request.session["account_ids"] == [str(account_id) for account_id in [*account_ids[1:], account_ids[0]]]
-
-    accounts.remove(account_ids[0])
-    assert accounts.list() == account_ids[1:]
