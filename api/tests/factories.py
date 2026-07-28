@@ -72,8 +72,7 @@ async def create_organization(owner: User, name: str = "acme", slug: str = "acme
     # Import lazily so tests can share this factory without introducing service import cycles.
     from src.database.services import organizations
 
-    organization, _ = await organizations.create(name, slug, owner, avatar=avatar)
-    return organization
+    return await organizations.create(name, slug, owner, avatar=avatar)
 
 
 async def mark_organization_running(organization: Organization) -> None:

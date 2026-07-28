@@ -4,8 +4,8 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { ArrowRight } from 'lucide-react';
-import { type PointerEvent, useEffect, useState } from 'react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import { ReactCompareSlider } from 'react-compare-slider';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
@@ -36,15 +36,15 @@ const paths = [
 ] as const;
 
 const integrationContextCount = 336_000_000;
-const humanRobotHandsImage = '/human_robot_hands_vector.svg';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
     const [count, setCount] = useState(0);
+    const countRef = useRef<HTMLHeadingElement>(null);
 
     useEffect(() => {
         // Observe the number so the count remains at zero until users can see it.
-        const target = document.getElementById('integration-context-count');
+        const target = countRef.current;
         if (!target) return;
 
         // Show the final value without movement when reduced motion is requested.
@@ -87,7 +87,7 @@ function IntegrationScale() {
 
     return (
         <Section
-            className="homepage-integration-section relative z-10 bg-transparent"
+            className="homepage-integration-section relative z-10"
             variant="transparent"
             padding={6}
             paddingBlock={10}
@@ -104,7 +104,7 @@ function IntegrationScale() {
                 </Text>
                 <Stack gap={3} hAlign="center">
                     <Heading
-                        id="integration-context-count"
+                        ref={countRef}
                         level={2}
                         type="display-1"
                         color="accent"
@@ -132,9 +132,10 @@ function IntegrationScale() {
 /** Renders the public home page. */
 export default function Home() {
     const [paintingHasEntered, setPaintingHasEntered] = useState(false);
+    const paintingRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const target = document.getElementById('homepage-hands-scroll-swing');
+        const target = paintingRef.current;
         if (!target) return;
 
         const observer = new IntersectionObserver(
@@ -166,32 +167,42 @@ export default function Home() {
     return (
         <div className="min-h-screen overflow-x-clip">
             <Navbar />
-            <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
-                <div aria-hidden="true" className="homepage-hero-horizon absolute inset-0 overflow-visible">
+            <main className="relative -mt-21 flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
+                <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <HeroGlobe />
                 </div>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
-                    <div className="space-y-5">
-                        <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] leading-[1.02] font-medium text-primary min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
-                            <span className="block whitespace-nowrap text-center">Just another dashboard</span>
-                            <span className="mt-1 block whitespace-nowrap text-center line-through">
+                    <Stack gap={5}>
+                        <Heading
+                            className="mx-auto max-w-4xl text-[1.875rem] leading-[1.02] font-medium min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl"
+                            justify="center"
+                            level={1}
+                        >
+                            <Text display="block" textWrap="nowrap" type="inherit">
+                                Just another dashboard
+                            </Text>
+                            <Text className="mt-1" display="block" hasStrikethrough textWrap="nowrap" type="inherit">
                                 Nothing to see here
-                            </span>
-                        </h1>
-                        <p className="mx-auto text-sm leading-6 text-secondary sm:text-lg">
-                            <span className="mx-auto block">
+                            </Text>
+                        </Heading>
+                        <Text as="p" className="mx-auto text-sm leading-6 sm:text-lg" color="secondary" display="block">
+                            <Text display="block" type="inherit">
                                 The narrative has changed, but you are still buying the old story
-                            </span>
-                            <span className="mx-auto block tracking-[-0.012em]">
+                            </Text>
+                            <Text className="tracking-[-0.012em]" display="block" type="inherit">
                                 The economics have shifted; flexibility now lives in code
-                            </span>
-                            <span className="mx-auto block tracking-[0.018em]">
+                            </Text>
+                            <Text className="tracking-[0.018em]" display="block" type="inherit">
                                 Build the process, not the workaround
-                            </span>
-                            <span className="mx-auto block tracking-[0.026em]">Start from solid foundations</span>
-                            <span className="mx-auto block">This is LongLink</span>
-                        </p>
-                    </div>
+                            </Text>
+                            <Text className="tracking-[0.026em]" display="block" type="inherit">
+                                Start from solid foundations
+                            </Text>
+                            <Text display="block" type="inherit">
+                                This is LongLink
+                            </Text>
+                        </Text>
+                    </Stack>
                 </section>
             </main>
             <IntegrationScale />
@@ -211,6 +222,22 @@ export default function Home() {
                         <ReactCompareSlider
                             className="homepage-before-after-slider size-full"
                             defaultPosition={50}
+                            handle={
+                                <Stack aria-hidden="true" className="pointer-events-none h-full" hAlign="center">
+                                    <Stack className="pointer-events-auto w-0.5 grow cursor-ew-resize bg-accent-bg" />
+                                    <Stack
+                                        className="homepage-before-after-handle-button pointer-events-auto size-14 shrink-0 cursor-ew-resize rounded-full border-2 border-accent-bg bg-body/80 backdrop-blur-sm"
+                                        direction="horizontal"
+                                        gap={1}
+                                        hAlign="center"
+                                        vAlign="center"
+                                    >
+                                        <ChevronLeft aria-hidden="true" className="size-4 text-accent" />
+                                        <ChevronRight aria-hidden="true" className="size-4 text-accent" />
+                                    </Stack>
+                                    <Stack className="pointer-events-auto w-0.5 grow cursor-ew-resize bg-accent-bg" />
+                                </Stack>
+                            }
                             itemOne={
                                 <Stack
                                     aria-label="Fragmented city illustration"
@@ -232,48 +259,68 @@ export default function Home() {
                 </Stack>
             </section>
             <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
-                <div className="mx-auto w-full max-w-[1000px]">
-                    <div className="homepage-hands-hanging-frame">
-                        <div aria-hidden="true" className="homepage-hands-nail" />
+                <Stack className="mx-auto" width="100%" maxWidth={1000}>
+                    <div className="relative z-2">
                         <div
-                            id="homepage-hands-scroll-swing"
-                            className={`homepage-hands-scroll-swing ${
+                            aria-hidden="true"
+                            className="homepage-hands-nail absolute top-0 left-1/2 z-4 -translate-x-1/2 rounded-full"
+                        />
+                        <div
+                            ref={paintingRef}
+                            className={`homepage-hands-scroll-swing relative ${
                                 paintingHasEntered ? 'homepage-hands-scroll-swing-active' : ''
                             }`}
                         >
                             <div
-                                className="homepage-hands-swing"
+                                className="homepage-hands-swing relative"
                                 onPointerLeave={handlePaintingPointerLeave}
                                 onPointerMove={handlePaintingPointerMove}
                             >
                                 <div
                                     aria-hidden="true"
-                                    className="homepage-hands-support homepage-hands-support-left"
+                                    className="homepage-hands-support homepage-hands-support-left absolute left-1/2 z-1 origin-left"
                                 />
                                 <div
                                     aria-hidden="true"
-                                    className="homepage-hands-support homepage-hands-support-right"
+                                    className="homepage-hands-support homepage-hands-support-right absolute left-1/2 z-1 origin-left"
                                 />
 
-                                <div className="homepage-hands-frame">
-                                    <div className="homepage-hands-mat">
+                                <div className="homepage-hands-frame relative z-2 p-0">
+                                    <div className="homepage-hands-mat relative overflow-hidden border-0 bg-body">
                                         <img
                                             alt="Human and robot hands reaching toward each other"
                                             className="block h-auto w-full object-contain"
                                             decoding="async"
                                             loading="lazy"
-                                            src={humanRobotHandsImage}
+                                            src="/human_robot_hands_vector.svg"
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="homepage-hands-description">
-                            <p className="homepage-hands-description-title">Designed for Human and Agents</p>
-                            <p className="homepage-hands-description-copy">Coming Soon</p>
+                        <div className="homepage-hands-description relative z-2">
+                            <Text
+                                as="p"
+                                className="homepage-hands-description-title relative z-1 m-0 tracking-normal"
+                                color="primary"
+                                display="block"
+                                textWrap="balance"
+                                weight="semibold"
+                            >
+                                Designed for Human and Agents
+                            </Text>
+                            <Text
+                                as="p"
+                                className="homepage-hands-description-copy relative z-1"
+                                display="block"
+                                textWrap="pretty"
+                                type="supporting"
+                            >
+                                Coming Soon
+                            </Text>
                         </div>
                     </div>
-                </div>
+                </Stack>
             </section>
             <Section
                 className="homepage-path-section relative z-20 -mt-px"

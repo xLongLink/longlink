@@ -30,7 +30,7 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
         return await session.get(ComputeRegistry, registry_id)
 
 
-async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
+async def create(name: str, slug: str, kubeconfig: str) -> ComputeRegistry:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
@@ -45,12 +45,12 @@ async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry
 
         # Translate unique registry names and slugs to one stable API conflict.
         try:
-            operation = await operations.enqueue_in_session(session, registry.id)
+            await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        return registry, operation
+        return registry
 
 
 async def delete(registry_id: UUID) -> bool:

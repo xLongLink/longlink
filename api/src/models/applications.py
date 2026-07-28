@@ -4,7 +4,6 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Icon, Image
 from src.models.statuses import Status
-from src.models.operations import OperationResponse
 
 
 class ApplicationEnvironment(BaseModel):
@@ -97,14 +96,3 @@ class ApplicationResponse(BaseModel):
 
     # Audit
     created_at: datetime
-
-
-class ApplicationMutationResponse(BaseModel):
-    """Pair an accepted LongLink Application change with its lifecycle Operation.
-
-    The operation must complete before the desired state is confirmed in the runtime.
-    """
-
-    # Result
-    application: ApplicationResponse
-    operation: OperationResponse

@@ -132,7 +132,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.fail("Application gateway state was not recorded")
 
     # Publish running only after both workload readiness and gateway publication succeed.
-    if application.status == Status.creating and await applications.mark_running(application.id, organization.compute_id) is None:
+    if application.status == Status.creating and not await applications.mark_running(application.id, organization.compute_id):
         current = await applications.get(application.id, include_deleted=True)
         if current is None or current.deleted_at is not None or current.status == Status.running:
             return jobs.complete()

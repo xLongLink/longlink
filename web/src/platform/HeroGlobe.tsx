@@ -65,7 +65,7 @@ export function HeroGlobe() {
 
             <ellipse className="homepage-hero-globe-surface" cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} />
             <ellipse
-                className="homepage-hero-globe-blue-rim"
+                className="homepage-hero-globe-blue-rim fill-none stroke-current"
                 cx={centerX}
                 cy={centerY}
                 filter="url(#hero-globe-rim-blur)"
@@ -78,10 +78,16 @@ export function HeroGlobe() {
                     mask="url(#hero-globe-land-mask)"
                     transform={`translate(${centerX} ${centerY}) scale(${mapStretch} 1) translate(${-centerX} ${-centerY})`}
                 >
-                    <path className="homepage-hero-globe-land" d={landPath} />
+                    <path className="homepage-hero-globe-land fill-none stroke-current" d={landPath} />
                 </g>
             </g>
-            <ellipse className="homepage-hero-globe-horizon" cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} />
+            <ellipse
+                className="homepage-hero-globe-horizon fill-none stroke-current"
+                cx={centerX}
+                cy={centerY}
+                rx={radiusX}
+                ry={radiusY}
+            />
         </svg>
     );
 }

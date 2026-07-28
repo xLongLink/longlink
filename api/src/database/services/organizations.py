@@ -249,7 +249,7 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         return True
 
 
-async def create(name: str, slug: str, user: User, avatar: str | None = None) -> tuple[Organization, Operation]:
+async def create(name: str, slug: str, user: User, avatar: str | None = None) -> Organization:
     """Create an Organization with automatically assigned infrastructure and queue reconciliation."""
 
     # Validate the user-derived runtime namespace before creating the row.
@@ -316,7 +316,7 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
 
         # Queue reconciliation and translate unique conflicts from autoflush or commit.
         try:
-            operation = await operations.enqueue_in_session(
+            await operations.enqueue_in_session(
                 session,
                 compute.id,
                 locked_compute=compute,
@@ -341,7 +341,7 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
                 .where(Organization.id == organization.id)
             )
         ).one()
-        return organization, operation
+        return organization
 
 
 async def update(organization_id: UUID, avatar: str, user: User) -> Organization | None:
@@ -374,7 +374,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
         return (await session.scalars(statement)).one()
 
 
-async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, Operation] | None:
+async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
     """Tombstone an Organization and nested state while atomically queueing compute cleanup."""
 
     # Soft-delete organization data in one transaction.
@@ -434,7 +434,7 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
             )
 
         # Tombstones and their reconciliation request commit atomically.
-        operation = await operations.enqueue_in_session(
+        await operations.enqueue_in_session(
             session,
             compute.id,
             locked_compute=compute,
@@ -456,4 +456,4 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
                 .where(Organization.id == organization.id)
             )
         ).one()
-        return organization, operation
+        return organization

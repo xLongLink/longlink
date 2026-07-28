@@ -6,7 +6,6 @@ from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary, UserIdentity
 from src.models.statuses import Status
 from src.models.resources import OrganizationApplicationSummary
-from src.models.operations import OperationResponse
 
 
 class OrganizationCreate(BaseModel):
@@ -86,17 +85,6 @@ class OrganizationSummary(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None
     deleted_by: UserSummary | None
-
-
-class OrganizationMutationResponse(BaseModel):
-    """Pair an accepted Organization desired-state change with its infrastructure Operation.
-
-    The operation must complete before the desired state is confirmed in managed infrastructure.
-    """
-
-    # Result
-    organization: OrganizationSummary
-    operation: OperationResponse
 
 
 class OrganizationMemberAccessResponse(BaseModel):

@@ -22,6 +22,7 @@ import type {
 
 export type Status = z.infer<typeof statusSchema>;
 export type ApiInvitation = z.infer<typeof apiInvitationSchema>;
+export type ApiOperation = z.infer<typeof apiOperationSchema>;
 export type ApiUserSummary = z.infer<typeof apiUserSummarySchema>;
 export type ApiUserOrganizationMembership = z.infer<typeof apiUserOrganizationMembershipSchema>;
 export type ApiUserProfile = z.infer<typeof apiUserProfileSchema>;
@@ -37,4 +38,3 @@ export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;
 export type ApiComputeRegistry = z.infer<typeof apiComputeRegistrySchema>;
 export type ApiComputePod = z.infer<typeof apiComputePodSchema>;
 export type ApiApplicationResponse = z.infer<typeof apiApplicationResponseSchema>;
-export type ApiOperation = z.infer<typeof apiOperationSchema>;

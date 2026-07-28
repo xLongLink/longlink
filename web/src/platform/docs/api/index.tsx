@@ -9,17 +9,10 @@ import {
     Activity,
     AppWindow,
     ArrowLeftRight,
-    ArrowUp,
-    ArrowUpDown,
     Building2,
-    CheckCheck,
-    CheckCircle,
     Code2,
-    Columns,
-    Copy,
     Database,
     HardDrive,
-    Info,
     KeyRound,
     Logs,
     Palette,
@@ -29,7 +22,6 @@ import {
     ServerCog,
     ShieldCheck,
     UserRound,
-    Wrench,
 } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 
@@ -37,54 +29,54 @@ const sharedFoundationItems: { description: string; icon: LucideIcon; name: stri
     {
         name: 'Authentication',
         description: 'Email, password, sessions, and current-user context.',
-        icon: CheckCircle,
+        icon: KeyRound,
     },
     {
         name: 'Organizations',
         description: 'Tenant boundaries, memberships, and organization resources.',
-        icon: Info,
+        icon: Building2,
     },
     {
         name: 'Permissions',
-        description: 'Organization and application roles enforced before runtime access.',
-        icon: CheckCheck,
+        description: 'Organization roles enforced before runtime access.',
+        icon: ShieldCheck,
     },
-    { name: 'Theming', description: 'Shared visual system and user interface preferences.', icon: Info },
+    { name: 'Theming', description: 'Shared visual system and user interface preferences.', icon: Palette },
     {
         name: 'Application shell',
         description: 'Consistent navigation around platform and runtime pages.',
-        icon: Columns,
+        icon: PanelTop,
     },
     {
         name: 'Application contract',
         description: 'Metadata, routing, deployment, logs, and runtime access for application services.',
-        icon: Wrench,
+        icon: AppWindow,
     },
     {
         name: 'Databases',
         description: 'Organization databases, shared schemas, and application schemas.',
-        icon: Columns,
+        icon: Database,
     },
     {
         name: 'Storage',
         description: 'One S3-compatible bucket per Organization, with shared and application prefixes.',
-        icon: Copy,
+        icon: HardDrive,
     },
     {
         name: 'Routing',
         description: 'Gateway-backed routing from authenticated users to internal application services.',
-        icon: ArrowUpDown,
+        icon: Route,
     },
     {
         name: 'Deployment',
         description: 'Container image inspection, Kubernetes resources, and rollout verification.',
-        icon: ArrowUp,
+        icon: Rocket,
     },
-    { name: 'Logs', description: 'Runtime log access for deployment checks and troubleshooting.', icon: Info },
+    { name: 'Logs', description: 'Runtime log access for deployment checks and troubleshooting.', icon: Logs },
     {
         name: 'Status',
         description: 'Application, registry, and operation state tracked by the platform.',
-        icon: CheckCircle,
+        icon: Activity,
     },
 ];
 

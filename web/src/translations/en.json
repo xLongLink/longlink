@@ -233,11 +233,11 @@
     "admin.tabs.database": {
         "defaultMessage": "Database"
     },
-    "admin.tabs.operations": {
-        "defaultMessage": "Operations"
-    },
     "admin.tabs.organizations": {
         "defaultMessage": "Organizations"
+    },
+    "admin.tabs.operations": {
+        "defaultMessage": "Operations"
     },
     "admin.tabs.storage": {
         "defaultMessage": "Storage"

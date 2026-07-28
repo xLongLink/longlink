@@ -3,19 +3,18 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
 from src.utils import names
 from src.logger import logger
-from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryMutationResponse
+from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
-@router.post("/api/computes", response_model=ComputeRegistryMutationResponse, status_code=202)
+@router.post("/api/computes", response_model=ComputeRegistryResponse, status_code=202)
 async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial reconciliation."""
 
-    registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig)
-    return {"compute": registry, "operation": operation}
+    return await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig)
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])

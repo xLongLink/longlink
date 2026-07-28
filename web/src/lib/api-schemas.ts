@@ -171,21 +171,6 @@ export const apiOperationSchema = z.object({
     available_at: z.string(),
 });
 
-export const apiComputeMutationResponseSchema = z.object({
-    compute: apiComputeRegistrySchema,
-    operation: apiOperationSchema,
-});
-
-export const apiOrganizationMutationResponseSchema = z.object({
-    organization: apiOrganizationSummarySchema,
-    operation: apiOperationSchema,
-});
-
-export const apiApplicationMutationResponseSchema = z.object({
-    application: apiApplicationResponseSchema,
-    operation: apiOperationSchema,
-});
-
 export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),

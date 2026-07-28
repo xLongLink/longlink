@@ -194,7 +194,7 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
         return application.status
 
 
-async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | None:
+async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
     """Publish Application readiness and queue fallback gateway reconciliation atomically."""
 
     # Lock the compute aggregate before updating the Application and its outbox entry.
@@ -202,22 +202,22 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | No
         compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
         if compute is None or application is None or application.deleted_at is not None:
-            return None
+            return False
 
         # Publish running only from active creation state and retain a fallback gateway reconciliation.
         if application.status != Status.creating:
-            return None
+            return False
         application.status = Status.running
-        operation = await operations.enqueue_in_session(
+        await operations.enqueue_in_session(
             session,
             compute.id,
             locked_compute=compute,
         )
         await session.commit()
-        return operation
+        return True
 
 
-async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:
+async def soft_delete(application_id: UUID, user: User) -> Application | None:
     """Tombstone a LongLink Application and atomically queue lifecycle cleanup."""
 
     # Soft-delete the application and queue its cleanup together.
@@ -249,7 +249,7 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             application.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
-        operation = await operations.enqueue_in_session(
+        await operations.enqueue_in_session(
             session,
             compute.id,
             locked_compute=compute,
@@ -260,4 +260,4 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
         await session.commit()
-        return application, operation
+        return application

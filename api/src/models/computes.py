@@ -2,7 +2,6 @@ import yaml
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.statuses import Status
-from src.models.operations import OperationResponse
 
 
 class ComputeRegistryCreate(BaseModel):
@@ -44,14 +43,6 @@ class ComputeRegistryResponse(BaseModel):
     # State
     status: Status
     version: str | None
-
-
-class ComputeRegistryMutationResponse(BaseModel):
-    """Pair an accepted compute change with its reconciliation operation."""
-
-    # Result
-    compute: ComputeRegistryResponse
-    operation: OperationResponse
 
 
 class PodResponse(BaseModel):

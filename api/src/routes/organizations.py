@@ -15,7 +15,6 @@ from src.models.organizations import (
     OrganizationSummary,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
-    OrganizationMutationResponse,
 )
 from src.database.models.users import User
 
@@ -213,7 +212,7 @@ async def update_organization_member(
         raise HTTPException(status_code=404, detail="Organization member not found")
 
 
-@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
+@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
@@ -241,11 +240,10 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    deleted, operation = result
-    return {"organization": deleted, "operation": operation}
+    return result
 
 
-@router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
+@router.post("/api/organizations", response_model=OrganizationSummary, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
     """Create Organization desired state and queue infrastructure creation."""
 
@@ -254,8 +252,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Create through the service so API and direct callers share namespace validation.
     try:
-        organization, operation = await organizations.create(payload.name, slug, user)
+        organization = await organizations.create(payload.name, slug, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    return {"organization": organization, "operation": operation}
+    return organization

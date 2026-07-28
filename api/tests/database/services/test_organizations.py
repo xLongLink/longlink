@@ -313,8 +313,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Assert
     assert result is not None
-    deleted, operation = result
-    assert deleted.deleted_id == owner.id
+    assert result.deleted_id == owner.id
     assert active_organization is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_by is not None
@@ -326,7 +325,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is not None
-    assert second_delete[1].id == operation.id
+    assert second_delete.id == result.id
     assert missing_delete is None
     assert await organizations.membership_role(organization.id, owner.id) is None
     assert await organizations.membership_role(organization.id, member.id) is None
@@ -339,7 +338,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         OperationKind.organization_create,
         OperationKind.organization_delete,
     }
-    deletion = next(item for item in open_operations if item.id == operation.id)
+    deletion = next(item for item in open_operations if item.kind == OperationKind.organization_delete)
     assert deletion.kind == OperationKind.organization_delete
     assert deletion.target_id == organization.id
     assert deletion.platform_version == env.VERSION

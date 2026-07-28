@@ -346,11 +346,12 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Ensure the development compute target is ready before assigning resources to it.
     if compute_registry is None:
-        compute_registry, operation = await compute_service.create(
+        compute_registry = await compute_service.create(
             compute.name,
             "local-compute",
             compute.kubeconfig,
         )
+        operation = await operations.enqueue(compute_registry.id)
         await reconcile_until_complete(operation.id)
     elif compute_registry.status != Status.running:
         operation = await operations.enqueue(compute_registry.id)
@@ -386,8 +387,13 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Create the local Organization or restore its administrator ownership.
     organization = next((item for item in await organization_service.fetch() if item.slug == settings.LOCAL_ORG), None)
     if organization is None:
-        organization, operation = await organization_service.create(
+        organization = await organization_service.create(
             settings.LOCAL_ORG, settings.LOCAL_ORG, admin, avatar=settings.LOCAL_ORG_AVATAR
+        )
+        operation = await operations.enqueue(
+            compute_registry.id,
+            kind=OperationKind.organization_create,
+            target_id=organization.id,
         )
         await reconcile_until_complete(operation.id)
     else:
@@ -439,8 +445,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         await cluster.applications.delete(application.id, organization.slug)
         raise RuntimeError("Local Application was deleted while seed values were staged")
 
-    operation = await operations.schedule_now(operation.id)
-    if operation is None:
+    if not await operations.schedule_now(operation.id):
         raise RuntimeError("Local Application create Operation is no longer open")
     await reconcile_until_complete(operation.id)
 

@@ -3,9 +3,8 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
-    apiApplicationMutationResponseSchema,
+    apiApplicationResponseSchema,
     apiOrganizationDetailsSchema,
-    apiOrganizationMutationResponseSchema,
     apiOrganizationSummarySchema,
     parseApiResponse,
 } from '@/lib/api-schemas';
@@ -127,7 +126,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
                 },
-                (value) => parseApiResponse(apiApplicationMutationResponseSchema, value).application
+                (value) => parseApiResponse(apiApplicationResponseSchema, value)
             );
         },
         onSuccess: async () => {
@@ -195,7 +194,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 {
                     method: 'DELETE',
                 },
-                (value) => parseApiResponse(apiApplicationMutationResponseSchema, value).application
+                (value) => parseApiResponse(apiApplicationResponseSchema, value)
             );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
@@ -219,7 +218,7 @@ export function useCreateOrganization() {
                         name,
                     }),
                 },
-                (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
+                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
             );
         },
         onSuccess: () => {
@@ -285,7 +284,7 @@ export function useDeleteOrganization() {
                 {
                     method: 'DELETE',
                 },
-                (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
+                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
             );
         },
         onSuccess: () => {

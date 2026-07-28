@@ -51,19 +51,17 @@ async def test_compute_registry_create_duplicate_and_delete(
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     created = create_response.json()
-    registry_id = created["compute"]["id"]
+    registry_id = created["id"]
     delete_response = await client.delete(f"/api/computes/{registry_id}")
     retry_response = await client.delete(f"/api/computes/{registry_id}")
     get_response = await client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
-    assert created["compute"]["name"] == "Ephemeral Compute"
-    assert created["operation"]["status"] == OperationStatus.scheduled
-    assert created["operation"]["kind"] == OperationKind.compute_reconcile
-    assert "gateway_url" not in created["compute"]
-    assert "kubeconfig" not in created["compute"]
-    assert "proxy_secret" not in created["compute"]
+    assert created["name"] == "Ephemeral Compute"
+    assert "gateway_url" not in created
+    assert "kubeconfig" not in created
+    assert "proxy_secret" not in created
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
     assert delete_response.status_code == 204

@@ -25,7 +25,7 @@ class OperationKind(StrEnum):
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one Platform resource target."""
+    """Expose administrative asynchronous reconciliation state for one Platform resource target."""
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -8,7 +8,7 @@ from src.models.operations import OperationKind
 async def test_operations_endpoint_returns_targeted_operations(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Return targeted Operations for admin views."""
+    """Return targeted Operations for administrator views."""
 
     # Arrange
     client = clients[0]
@@ -34,7 +34,7 @@ async def test_operations_endpoint_returns_targeted_operations(
 async def test_operations_endpoint_requires_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Reject Platform users from administrator operation data."""
+    """Reject Platform users from administrator Operation data."""
 
     # Act
     response = await clients[1].get("/api/operations")

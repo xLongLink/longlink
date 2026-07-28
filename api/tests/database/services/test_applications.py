@@ -200,13 +200,12 @@ async def test_soft_delete_marks_application_deleted() -> None:
 
     # Assert
     assert result is not None
-    deleted, operation = result
-    assert deleted.deleted_id == user.id
+    assert result.deleted_id == user.id
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert second_delete is not None
-    assert second_delete[1].id == operation.id
+    assert second_delete.id == result.id
     assert missing_delete is None
     assert compute_after is not None
     assert compute_after.status == Status.running
@@ -216,7 +215,7 @@ async def test_soft_delete_marks_application_deleted() -> None:
         OperationKind.application_delete,
         OperationKind.organization_create,
     }
-    deletion = next(item for item in open_operations if item.id == operation.id)
+    deletion = next(item for item in open_operations if item.kind == OperationKind.application_delete)
     assert deletion.kind == OperationKind.application_delete
     assert deletion.target_id == application.id
     assert deletion.platform_version == env.VERSION

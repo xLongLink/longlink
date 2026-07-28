@@ -165,7 +165,7 @@ async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compu
         return operation
 
 
-async def schedule_now(operation_id: UUID) -> Operation | None:
+async def schedule_now(operation_id: UUID) -> bool:
     """Make one open delayed Operation immediately eligible for claiming."""
 
     # Preserve terminal and lease state while advancing only the availability timestamp.
@@ -179,11 +179,10 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
             .values(available_at=utcnow())
         )
         if result.rowcount != 1:
-            return None
+            return False
 
-        operation = await session.get(Operation, operation_id)
         await session.commit()
-        return operation
+        return True
 
 
 async def claim_next() -> Operation | None:

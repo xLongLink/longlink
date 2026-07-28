@@ -58,7 +58,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
             key: 'finished_at',
             header: t('columns.finished'),
             width: pixel(208),
-            renderCell: (operation) => (operation.finished_at ? formatDateTime(operation.finished_at) : '—'),
+            renderCell: (operation) => (operation.finished_at ? formatDateTime(operation.finished_at) : '-'),
         },
         {
             key: 'metadata',
