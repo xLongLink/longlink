@@ -71,7 +71,7 @@ class ApplicationOrganizationResponse(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: str = ""
+    avatar: str
 
 
 class ApplicationResponse(BaseModel):
@@ -86,14 +86,14 @@ class ApplicationResponse(BaseModel):
     organization: ApplicationOrganizationResponse
 
     # Metadata
-    sdk: str | None = None
+    sdk: str | None
     name: str
     slug: str
-    icon: Icon | None = None
+    icon: Icon | None
     image: str
-    digest: str | None = None
-    version: str | None = None
-    description: str | None = None
+    digest: str | None
+    version: str | None
+    description: str | None
 
     # State
     status: Status

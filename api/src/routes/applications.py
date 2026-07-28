@@ -72,7 +72,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         sdk=metadata.sdk,
         version=metadata.version,
         description=payload.description,
-        icon=payload.icon.value if payload.icon is not None else None,
+        icon=payload.icon,
         user=user,
     )
 
@@ -160,7 +160,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         status = await applications.replace_environment(
             application.id,
             Status.running,
-            lambda: cluster.applications.replace_envs(application.id, organization.slug, payload.envs),
+            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs, require_deployment=True),
         )
     except Exception as exc:
         logger.exception("Failed to update environment for application '%s': %r", application.id, exc)

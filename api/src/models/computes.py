@@ -59,7 +59,7 @@ class PodResponse(BaseModel):
 
     # Metadata
     name: str
-    node: str | None = None
+    node: str | None
 
     # State
     status: str

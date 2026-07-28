@@ -55,7 +55,7 @@ class UserIdentity(BaseModel):
     # Metadata
     name: str
     email: EmailStr
-    avatar: str = ""
+    avatar: str
 
 
 class UserOrganizationSummary(BaseModel):
@@ -69,7 +69,7 @@ class UserOrganizationSummary(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: str = ""
+    avatar: str
 
 
 class UserOrganizationMembership(BaseModel):

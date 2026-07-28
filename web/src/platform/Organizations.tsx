@@ -58,7 +58,7 @@ export default function Organizations() {
             ),
         },
     ];
-    const tableError = error ? new Error(t('errors.loadOrganizations')) : null;
+    const tableError = error ? t('errors.loadOrganizations') : null;
 
     return (
         <PlatformLayout
@@ -78,7 +78,7 @@ export default function Organizations() {
                     <CreateOrganization />
                 </HStack>
                 {isLoading && memberships.length === 0 ? null : tableError && memberships.length === 0 ? (
-                    <Banner status="error" title={tableError.message} />
+                    <Banner status="error" title={tableError} />
                 ) : (
                     <Table
                         columns={columns}

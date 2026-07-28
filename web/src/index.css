@@ -93,10 +93,6 @@
     }
 }
 
-.homepage-feature-card {
-    box-shadow: var(--shadow-low);
-}
-
 .homepage-hero-horizon {
     --horizon-accent: var(--color-accent);
     --horizon-background: var(--color-background-body);
@@ -152,25 +148,8 @@
     stroke-width: 1.4;
 }
 
-.homepage-visual-node {
-    box-shadow: var(--shadow-med);
-}
-
-.homepage-feature-transition {
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    height: clamp(4rem, 7vw, 6.5rem);
-    pointer-events: none;
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        color-mix(in oklch, var(--color-background-body) 58%, transparent) 56%,
-        var(--color-background-body) 96%
-    );
-    backdrop-filter: blur(10px);
-    mask-image: linear-gradient(to bottom, transparent, black 42%, black);
-    transform: translateY(-100%);
+.homepage-before-after-scene {
+    background: var(--color-on-light);
 }
 
 .homepage-painting-section {

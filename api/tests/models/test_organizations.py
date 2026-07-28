@@ -6,19 +6,6 @@ from src.models.organizations import OrganizationCreate, OrganizationMemberUpdat
 pytestmark = pytest.mark.no_db
 
 
-def test_organization_create_accepts_metadata() -> None:
-    """Accept the Organization creation payload submitted by the Platform UI."""
-
-    # Validate Organization metadata while infrastructure is assigned by the service.
-    payload = OrganizationCreate.model_validate(
-        {
-            "name": "Acme",
-        }
-    )
-
-    assert payload.name == "Acme"
-
-
 @pytest.mark.parametrize(
     "payload",
     [

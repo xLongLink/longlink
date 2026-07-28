@@ -170,8 +170,6 @@ async def run_operation_scheduler() -> None:
             await asyncio.sleep(1)
             continue
 
-        logger.info("Executing %s operation %s", operation.kind, operation.id)
-
         # Execute and release one claimed operation before locking more work.
         try:
             await execute(operation, handlers[operation.kind])

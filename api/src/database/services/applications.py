@@ -63,7 +63,6 @@ async def purge(application_id: UUID) -> None:
             return
         if application.deleted_at is None:
             raise RuntimeError("Active applications cannot be purged")
-        await session.execute(delete(UserApplication).where(UserApplication.application_id == application_id))
         await session.execute(delete(Application).where(Application.id == application_id))
         await session.commit()
 
@@ -230,9 +229,8 @@ async def create(
             organization_id=organization_id,
             name=name,
             slug=slug,
-            status=Status.creating,
             description=description,
-            image=image.value,
+            image=str(image),
             sdk=sdk,
             digest=digest,
             version=version,
@@ -369,17 +367,19 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             application.updated_id = user.id
 
             # Mark active Application memberships as deleted.
-            memberships = await session.scalars(
-                select(UserApplication).where(
+            await session.execute(
+                update(UserApplication)
+                .where(
                     UserApplication.application_id == application_id,
                     UserApplication.deleted_at.is_(None),
                 )
+                .values(
+                    deleted_at=now,
+                    deleted_id=user.id,
+                    updated_at=now,
+                    updated_id=user.id,
+                )
             )
-            for membership in memberships:
-                membership.deleted_at = now
-                membership.deleted_id = user.id
-                membership.updated_at = now
-                membership.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
         operation = await operations.enqueue_in_session(

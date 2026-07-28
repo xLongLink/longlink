@@ -55,8 +55,6 @@ class Exoscale(Storage):
                     policy=self._bucket_policy(bucket, read_prefixes, write_prefix, organization_id),
                 )
                 role_id = await self._wait_operation(api, operation, require_reference=True)
-                if role_id is None:
-                    raise RuntimeError("Exoscale IAM role creation did not return a role id")
 
                 # Validate both generated values before returning runtime credentials.
                 key = await api.create_api_key(name=credential_name, role_id=role_id)

@@ -19,7 +19,6 @@ type OrganizationProps = {
 export default function Organization({ settingsSection }: OrganizationProps) {
     const t = useTranslator();
     const { organization = '', settingsApplication = '' } = useParams();
-    const section = settingsSection === undefined ? 'applications' : 'settings';
     const {
         organization: organizationDetails,
         members,
@@ -48,10 +47,10 @@ export default function Organization({ settingsSection }: OrganizationProps) {
     const content = (
         <Stack gap={1} width="100%">
             <Heading level={1}>
-                {section === 'applications' ? t('organization.applicationsTitle') : t('organization.settingsTitle')}
+                {settingsSection === undefined ? t('organization.applicationsTitle') : t('organization.settingsTitle')}
             </Heading>
             <Text as="p" color="secondary">
-                {section === 'applications'
+                {settingsSection === undefined
                     ? t('organization.applicationsDescription')
                     : t('organization.settingsDescription')}
             </Text>
@@ -68,7 +67,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         >
             <PageContainer gap={8}>
                 {content}
-                {section === 'applications' ? (
+                {settingsSection === undefined ? (
                     <Applications
                         organization={organization}
                         applications={applications}
@@ -76,7 +75,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         error={error}
                     />
                 ) : null}
-                {section === 'settings' ? (
+                {settingsSection !== undefined ? (
                     <OrganizationSettings
                         organization={organization}
                         organizationDetails={organizationDetails}
@@ -84,7 +83,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         members={members}
                         invitations={invitations}
                         organizationRole={organizationRole}
-                        routeSection={settingsSection ?? 'organization'}
+                        routeSection={settingsSection}
                         isLoading={isLoading}
                         error={error}
                     />

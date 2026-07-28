@@ -28,7 +28,7 @@ def render_mjml_template(template_name: str, **context: object) -> str:
     return result.html
 
 
-async def send_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
+async def send_mail(recipient: str, subject: str, text: str, html: str) -> None:
     """Deliver one email or log it during local development."""
 
     # Keep local development self-contained when no SMTP server is configured.
@@ -40,14 +40,13 @@ async def send_mail(recipient: str, subject: str, text: str, html: str | None = 
     if env.SMTP_HOST is None:
         raise RuntimeError("SMTP_HOST is not configured")
 
-    # Build a multipart email when HTML is available and always keep a plain-text fallback.
+    # Build a multipart email with an HTML body and plain-text fallback.
     message = EmailMessage()
     message["From"] = f"LongLink <{env.SMTP_USERNAME}>"
     message["To"] = recipient
     message["Subject"] = subject
     message.set_content(text)
-    if html is not None:
-        message.add_alternative(html, subtype="html")
+    message.add_alternative(html, subtype="html")
 
     # Deliver through an asynchronous SMTP connection with explicit transport selection.
     await aiosmtplib.send(

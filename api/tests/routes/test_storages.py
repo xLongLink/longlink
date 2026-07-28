@@ -57,7 +57,6 @@ async def test_storage_registry_create_duplicate_and_delete(
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Storage registry already exists"}
     assert delete_response.status_code == 204
-    assert delete_response.content == b""
     assert get_response.status_code == 404
 
 

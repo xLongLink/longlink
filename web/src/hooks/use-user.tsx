@@ -129,7 +129,7 @@ export function useUserOrganizations(): UserOrganizationsState {
 
     return {
         memberships: query.items,
-        isLoading: profile.isLoading || (profile.user !== null && query.isLoading),
+        isLoading: profile.isLoading || query.isLoading,
         error: profile.error ?? query.error ?? null,
     };
 }

@@ -1,7 +1,7 @@
 import ssl
 import sqlalchemy.engine
 from dataclasses import dataclass
-from src.models.types import DATABASE_SSL_MODES, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,7 +87,7 @@ def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMo
 
     # Validate an explicit SSL mode or apply the secure deployment default.
     sslmode = parsed_url.query.get("ssl", default_sslmode.value)
-    if not isinstance(sslmode, str) or sslmode not in DATABASE_SSL_MODES:
+    if not isinstance(sslmode, str) or sslmode not in DatabaseSSLMode:
         raise ValueError("PostgreSQL database URL has an invalid SSL mode")
 
     return DatabaseConnection(parsed_url.update_query_dict({"ssl": sslmode}), {})

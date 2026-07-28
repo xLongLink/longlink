@@ -1,13 +1,12 @@
 from src import adapters
 from uuid import UUID, uuid4
 from fastapi import HTTPException
-from sqlmodel import col
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, noload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -35,20 +34,18 @@ class Infrastructure:
     storage: StorageRegistry | None
 
 
-async def infrastructure(organization_id: UUID, include_deleted: bool = False) -> Infrastructure | None:
+async def infrastructure(organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
     # Resolve every immutable assignment in one database session.
     async with session_scope() as session:
         statement = (
             select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
-            .outerjoin(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-            .outerjoin(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-            .outerjoin(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
-            .where(col(Organization.id) == organization_id)
+            .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+            .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+            .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
+            .where(Organization.id == organization_id)
         )
-        if not include_deleted:
-            statement = statement.where(col(Organization.deleted_at).is_(None))
         row = (await session.execute(statement)).tuples().one_or_none()
         if row is None:
             return None
@@ -66,7 +63,7 @@ async def fetch() -> list[Organization]:
             .options(
                 joinedload(Organization.created_by),
                 joinedload(Organization.updated_by),
-                joinedload(Organization.deleted_by),
+                noload(Organization.deleted_by),
             )
             .where(Organization.deleted_at.is_(None))
         )

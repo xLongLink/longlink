@@ -5,7 +5,7 @@ from slugify import slugify as text_slugify
 KUBERNETES_SYSTEM_NAMESPACES = {"default", "kube-node-lease", "kube-public", "kube-system", "longlink-system"}
 
 
-def slugify(value: str, max_length: int = 63) -> str:
+def slugify(value: str) -> str:
     """Convert a string to a URL-safe and K8s-safe slug."""
 
     slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
@@ -15,7 +15,7 @@ def slugify(value: str, max_length: int = 63) -> str:
         raise HTTPException(status_code=409, detail="Invalid name")
 
     # Keep generated slugs within target length limits.
-    if len(slug) > max_length:
+    if len(slug) > 63:
         raise HTTPException(status_code=409, detail="Invalid name")
 
     return slug

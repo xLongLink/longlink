@@ -41,10 +41,7 @@ web/tests
 **/*.tsbuildinfo
 **/.coverage
 **/.coverage.*
-**/.dmypy.json
-**/.mypy_cache
 **/.pytest_cache
-**/.pyright
 **/.react-router
 **/.ruff_cache
 **/htmlcov

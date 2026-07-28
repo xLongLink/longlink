@@ -22,9 +22,6 @@ class DatabaseSSLMode(StrEnum):
     verify_full = "verify-full"
 
 
-DATABASE_SSL_MODES = frozenset(mode.value for mode in DatabaseSSLMode)
-
-
 class Theme(StrEnum):
     """Supported user theme preferences."""
 
@@ -123,12 +120,6 @@ class Image(str):
         reference.repository = repository
         reference.tag_or_digest = tag_or_digest
         return reference
-
-    @property
-    def value(self) -> str:
-        """Return the normalized string representation for persistence."""
-
-        return str(self)
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: GetCoreSchemaHandler) -> CoreSchema:

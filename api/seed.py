@@ -186,10 +186,9 @@ async def reconcile_local_application(
             return None
 
         # Compare mutable seed metadata before deciding whether lifecycle work is needed.
-        desired_icon = payload.icon.value if payload.icon is not None else None
         changed = (
             application.name != payload.name
-            or application.icon != desired_icon
+            or application.icon != payload.icon
             or application.image != metadata.image
             or application.sdk != metadata.sdk
             or application.digest != metadata.digest
@@ -226,7 +225,7 @@ async def reconcile_local_application(
         # Replace mutable seed metadata when the selected image or local presentation changed.
         if changed:
             application.name = payload.name
-            application.icon = desired_icon
+            application.icon = payload.icon
             application.image = metadata.image
             application.sdk = metadata.sdk
             application.digest = metadata.digest
@@ -272,11 +271,13 @@ async def seed_local_development(settings: SeedSettings) -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
     # Validate Application configuration before mutating local Platform state.
-    payload = ApplicationCreate(
-        name=settings.LOCAL_APP_NAME,
-        image=Image(settings.LOCAL_APPLICATION_IMAGE),
-        description="Local SDK development application",
-        envs={"REQUIRED": "local-development"},
+    payload = ApplicationCreate.model_validate(
+        {
+            "name": settings.LOCAL_APP_NAME,
+            "image": settings.LOCAL_APPLICATION_IMAGE,
+            "description": "Local SDK development application",
+            "envs": {"REQUIRED": "local-development"},
+        }
     )
     application_slug = names.slugify(payload.name)
 
@@ -314,15 +315,15 @@ async def seed_local_development(settings: SeedSettings) -> None:
         if set(database_url.query) - {"sslmode"}:
             raise ValueError("Application database URL only supports the sslmode query option")
         sslmode = database_url.query.get("sslmode", DatabaseSSLMode.require.value)
-        if not isinstance(sslmode, str):
-            raise ValueError("Application database URL must define one sslmode value")
         try:
-            database = DatabaseConfiguration(
-                host=database_url.host or "",
-                port=database_port,
-                username=database_url.username or "",
-                password=database_url.password or "",
-                sslmode=DatabaseSSLMode(sslmode),
+            database = DatabaseConfiguration.model_validate(
+                {
+                    "host": database_url.host or "",
+                    "port": database_port,
+                    "username": database_url.username or "",
+                    "password": database_url.password or "",
+                    "sslmode": sslmode,
+                }
             )
         except ValueError:
             raise ValueError("Application database URL has invalid connection settings") from None
@@ -404,8 +405,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Create or resume the sample Application through the API desired-state service.
     application = next((item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None)
-    created = application is None
-    if created:
+    if application is None:
         application, operation = await application_service.create(
             organization.id,
             payload.name,
@@ -416,7 +416,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             sdk=metadata.sdk,
             version=metadata.version,
             description=payload.description,
-            icon=payload.icon.value if payload.icon is not None else None,
+            icon=payload.icon,
             delay_seconds=SEED_OPERATION_DELAY_SECONDS,
         )
     else:

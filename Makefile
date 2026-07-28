@@ -46,10 +46,9 @@ web\:format: web\:install
 
 
 # Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
-tests:
-	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
-	$(MAKE) sdk:tests SDK_PYTEST_MARK='-m "not integration"'
-	$(MAKE) web:tests
+tests: api\:install sdk\:install web\:tests
+	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+	cd sdk && uv run --locked pytest -m "not integration" tests
 
 
 # Run all checks, including container-backed integration and generated scaffold tests.

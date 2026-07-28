@@ -72,10 +72,6 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
         )
         return
 
-    # Deletion Operations intentionally retain their target's deleting state.
-    return
-
-
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,

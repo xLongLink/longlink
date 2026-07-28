@@ -50,11 +50,11 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         if membership.organization_id == organization.id
     }
     memberships = await organizations.members(organization.id)
-    active_invitations = []
 
     # Show invitations only to organization managers.
-    if roles.atleast(membership.role, OrganizationRoles.maintain):
-        active_invitations = await organizations.invitations(organization.id)
+    active_invitations = (
+        await organizations.invitations(organization.id) if roles.atleast(membership.role, OrganizationRoles.maintain) else []
+    )
 
     return {
         "organization": organization,
@@ -145,7 +145,11 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
     try:
-        usage = await adapters.storage(registry).usage(bucket_name)
+        usage = await adapters.Exoscale(
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ).usage(bucket_name)
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",

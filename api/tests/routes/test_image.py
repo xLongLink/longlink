@@ -15,7 +15,7 @@ async def test_inspect_image_returns_longlink_metadata(
     async def fake_metadata(image: Image) -> LongLinkMetadata:
         """Return inspected LongLink metadata for the requested image."""
 
-        assert image.value == IMAGE_REFERENCE
+        assert image == IMAGE_REFERENCE
         return LongLinkMetadata(
             image="ghcr.io/longlink/dashboard@sha256:manifest",
             title="dashboard",
@@ -64,7 +64,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     async def fake_metadata(image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
-        assert image.value == IMAGE_REFERENCE
+        assert image == IMAGE_REFERENCE
         return None
 
     monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)

@@ -29,7 +29,6 @@ async def get(user_id: UUID, include_access: bool = False) -> User | None:
                 .selectinload(UserOrganization.organization)
                 .selectinload(Organization.applications),
                 selectinload(User.application_memberships).selectinload(UserApplication.application),
-                selectinload(User.application_memberships).selectinload(UserApplication.organization),
             )
 
         return (await session.scalars(statement)).one_or_none()

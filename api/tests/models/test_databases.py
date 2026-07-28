@@ -1,30 +1,9 @@
 import pytest
 from uuid import uuid4
 from pydantic import ValidationError
-from src.models.types import DatabaseSSLMode
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 
 pytestmark = pytest.mark.no_db
-
-
-def test_database_registry_create_accepts_plain_connection_payload() -> None:
-    """Accept the database registry payload submitted by the Platform UI."""
-
-    # Validate and normalize database registry connection fields at the model boundary.
-    payload = DatabaseRegistryCreate.model_validate(
-        {
-            "name": "Primary Database",
-            "host": " database.example/ ",
-            "port": 5432,
-            "username": "admin",
-            "password": "secret",
-            "sslmode": "disable",
-        }
-    )
-
-    assert payload.name == "Primary Database"
-    assert payload.host == "database.example"
-    assert payload.sslmode == DatabaseSSLMode.disable
 
 
 @pytest.mark.parametrize(

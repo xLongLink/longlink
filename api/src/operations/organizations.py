@@ -51,7 +51,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
     # Skip removed Organizations and already completed creation work.
-    infrastructure = await organizations.infrastructure(claimed.target_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return jobs.complete()
     organization = infrastructure.organization
@@ -90,7 +90,11 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     await sync_users(organization)
 
     # Converge the Organization bucket and shared folder marker in the same reconciliation.
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     bucket = organization.id.hex
     await object_storage.create(bucket)
     await object_storage.create_prefix(bucket, "shared/")
@@ -114,7 +118,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
-    infrastructure = await organizations.infrastructure(claimed.target_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None:
         return jobs.complete()
     organization = infrastructure.organization
@@ -138,7 +142,11 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     application_rows = await organizations.applications(organization.id, include_deleted=True)
     for application in application_rows:
         await cluster.applications.delete(application.id, organization.slug)

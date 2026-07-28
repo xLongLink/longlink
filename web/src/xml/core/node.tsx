@@ -50,7 +50,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
             // Skip loop rendering when the source is not an array.
             if (!Array.isArray(each)) return <Fragment key={index} />;
-            return <For key={index} props={node.params} nodes={node.children ?? []} />;
+            return <For key={index} items={each} props={node.params} nodes={node.children ?? []} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

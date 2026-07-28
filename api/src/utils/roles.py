@@ -76,24 +76,20 @@ def access(user: User, resource: UUID, scope: Literal["organization", "applicati
 
     # Direct Application membership is supplemented by any active Organization role.
     for membership in user.application_memberships:
-        if (
-            membership.organization.deleted_at is None
-            and membership.application.deleted_at is None
-            and membership.application_id == resource
-        ):
-            organization_role = next(
-                (
-                    item.role
-                    for item in user.organization_memberships
-                    if item.organization.deleted_at is None and item.organization_id == membership.organization_id
-                ),
-                None,
-            )
+        organization_membership = next(
+            (
+                item
+                for item in user.organization_memberships
+                if item.organization.deleted_at is None and item.organization_id == membership.organization_id
+            ),
+            None,
+        )
+        if organization_membership is not None and membership.application.deleted_at is None and membership.application_id == resource:
             return ApplicationAccess(
                 application=membership.application,
-                organization=membership.organization,
+                organization=organization_membership.organization,
                 application_role=membership.role,
-                organization_role=organization_role,
+                organization_role=organization_membership.role,
             )
 
     # Organization membership grants base access to its active Applications.

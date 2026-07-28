@@ -30,16 +30,17 @@ async def schedule_migrations() -> None:
             .scalars()
             .all()
         )
-        existing = (
-            await session.execute(
-                select(col(Operation.kind), col(Operation.target_id)).where(
-                    col(Operation.kind).in_([OperationKind.compute_reconcile, OperationKind.organization_reconcile]),
-                    col(Operation.failed).is_(False),
-                    col(Operation.platform_version) == env.VERSION,
+        existing_targets = set(
+            (
+                await session.execute(
+                    select(col(Operation.kind), col(Operation.target_id)).where(
+                        col(Operation.kind).in_([OperationKind.compute_reconcile, OperationKind.organization_reconcile]),
+                        col(Operation.failed).is_(False),
+                        col(Operation.platform_version) == env.VERSION,
+                    )
                 )
-            )
-        ).all()
-        existing_targets = set(existing)
+            ).all()
+        )
         computes_by_id = {compute.id: compute for compute in compute_rows}
 
         # Queue one release reconciliation for every compute.

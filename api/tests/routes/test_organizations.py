@@ -301,13 +301,15 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             assert bucket_name == organization.id.hex
             return {"space_used": 4096, "object_count": 6}
 
-    def fake_storage(registry_argument) -> FakeStorage:
-        """Return the fake adapter for the selected registry."""
+    def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
+        """Return the fake adapter for the selected registry credentials."""
 
-        assert registry_argument.id == registry.id
+        assert endpoint_url == registry.endpoint_url
+        assert access_key_id == registry.access_key_id
+        assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.adapters.storage", fake_storage)
+    monkeypatch.setattr("src.routes.organizations.adapters.Exoscale", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")
@@ -343,13 +345,15 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
 
             raise RuntimeError("storage offline")
 
-    def fake_storage(registry_argument) -> FakeStorage:
-        """Return the fake adapter for the selected registry."""
+    def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
+        """Return the fake adapter for the selected registry credentials."""
 
-        assert registry_argument.id == registry.id
+        assert endpoint_url == registry.endpoint_url
+        assert access_key_id == registry.access_key_id
+        assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.adapters.storage", fake_storage)
+    monkeypatch.setattr("src.routes.organizations.adapters.Exoscale", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")

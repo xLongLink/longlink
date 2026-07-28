@@ -13,7 +13,7 @@ def test_image_parses_registry_repository_and_tag() -> None:
     assert image.registry == "ghcr.io"
     assert image.repository == "longlink/dashboard"
     assert image.tag_or_digest == "latest"
-    assert image.value == "ghcr.io/longlink/dashboard:latest"
+    assert image == "ghcr.io/longlink/dashboard:latest"
 
 
 @pytest.mark.parametrize("reference", ["longlink/dashboard", "https://ghcr.io/longlink/dashboard:latest", "ghcr.io/LongLink/dashboard:latest"])

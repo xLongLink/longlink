@@ -32,7 +32,7 @@ export function Selector({ props, nodes }: Props) {
         throw new Error('Selector requires at least one SelectorOption');
     }
 
-    const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false) === true;
+    const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false);
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'Selector');
     const common = {
         description: resolveXmlString(props, 'description', ctx) || undefined,

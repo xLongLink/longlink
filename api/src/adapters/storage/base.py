@@ -39,7 +39,6 @@ class Storage(ABC):
         self._endpoint_url = endpoint_url
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
-        self._use_ssl = True
         self._region = region
         self._session = aioboto3.Session()
 
@@ -50,7 +49,7 @@ class Storage(ABC):
             "AbstractAsyncContextManager[S3Client]",
             self._session.client(
                 "s3",
-                use_ssl=self._use_ssl,
+                use_ssl=True,
                 endpoint_url=self._endpoint_url,
                 region_name=self._region,
                 aws_access_key_id=self._access_key_id,

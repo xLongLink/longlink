@@ -83,7 +83,7 @@ class Applications:
             return None
 
         # Kubernetes returns Secret data as strict base64-encoded UTF-8 values.
-        body = secret.to_dict()
+        body = secret.raw
         data = body.get("data", {})
         if data is None:
             data = {}
@@ -96,12 +96,6 @@ class Applications:
             except (binascii.Error, UnicodeDecodeError) as exc:
                 raise ValueError(f"Kubernetes Application runtime Secret value {name!r} is invalid") from exc
         return envs
-
-    async def replace_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Replace user-owned values and roll the Application without reading runtime credentials."""
-
-        # Use the same idempotent Secret and rollout path while requiring the running workload to exist.
-        await self.stage_envs(application_id, namespace, envs, require_deployment=True)
 
     async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
         """Deploy one Application and wait for its rollout."""
@@ -141,18 +135,13 @@ class Applications:
                 return
             await asyncio.sleep(5)
 
-    async def pod(self, application_id: UUID, namespace: str) -> Pod | None:
-        """Return one current Pod for a managed Application in its expected Namespace."""
-
-        pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: str(application_id)})
-        active = [pod for pod in pods if pod_is_active(pod)]
-        return min(active, key=lambda pod: pod.name) if active else None
-
     async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
         """Return recent logs for one managed Application Pod."""
 
         # A missing Pod has no diagnostic log stream.
-        pod = await self.pod(application_id, namespace)
-        if pod is None:
+        pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: str(application_id)})
+        active = [pod for pod in pods if pod_is_active(pod)]
+        if not active:
             raise ValueError("No Application Pod found")
+        pod = min(active, key=lambda item: item.name)
         return [line async for line in pod.logs(tail_lines=lines)]

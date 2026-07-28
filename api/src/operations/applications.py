@@ -29,7 +29,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 return jobs.complete()
             return jobs.fail("Application lifecycle state changed before creation")
         application.status = Status.creating
-    infrastructure = await organizations.infrastructure(application.organization_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return jobs.fail("Application Organization not found")
     organization = infrastructure.organization
@@ -58,7 +58,11 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             database_registry.password,
             database_registry.sslmode,
         )
-        object_storage = adapters.storage(storage_registry)
+        object_storage = adapters.Exoscale(
+            storage_registry.endpoint_url,
+            storage_registry.access_key_id,
+            storage_registry.secret_access_key,
+        )
 
         # Resolve the cluster-owned credentials before converging provider identities.
         bucket = organization.id.hex
@@ -149,7 +153,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
     if application.deleted_at is None:
         return jobs.fail("Active Applications cannot be deleted by lifecycle cleanup")
-    infrastructure = await organizations.infrastructure(application.organization_id, include_deleted=True)
+    infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None:
         return jobs.fail("Application Organization not found")
     organization = infrastructure.organization
@@ -174,7 +178,11 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.storage(storage_registry)
+    object_storage = adapters.Exoscale(
+        storage_registry.endpoint_url,
+        storage_registry.access_key_id,
+        storage_registry.secret_access_key,
+    )
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
