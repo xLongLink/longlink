@@ -1,13 +1,16 @@
+import { Banner } from '@astryxdesign/core/Banner';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Link } from '@astryxdesign/core/Link';
 import { Section } from '@astryxdesign/core/Section';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { Wordmark } from '@/components/Wordmark';
 import { HeroGlobe } from '@/platform/HeroGlobe';
 
 const paths = [
@@ -17,6 +20,7 @@ const paths = [
             'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
         action: 'Explore existing apps',
         href: '/marketplace',
+        isComingSoon: true,
     },
     {
         title: 'Adapt',
@@ -24,6 +28,7 @@ const paths = [
             'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
         action: 'Start from a foundation',
         href: '/docs',
+        isComingSoon: true,
     },
     {
         title: 'Create',
@@ -31,6 +36,7 @@ const paths = [
             'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
         action: 'Build a new app',
         href: '/docs',
+        isComingSoon: false,
     },
 ] as const;
 
@@ -148,7 +154,6 @@ export default function Home() {
                 scrollDistance > 0 ? Math.min(Math.max(-target.getBoundingClientRect().top / scrollDistance, 0), 1) : 0;
 
             target.style.setProperty('--homepage-before-after-position', `${progress * 100}%`);
-            target.style.setProperty('--homepage-before-after-progress', `${progress}`);
         };
 
         // Limit image updates to one animation frame while the page is scrolling.
@@ -248,7 +253,7 @@ export default function Home() {
                 className="homepage-before-after-section relative z-20"
             >
                 <Heading id="before-after-heading" level={2} className="sr-only">
-                    LongLink provides the foundation. Build with speed. Operate with confidence.
+                    LongLink provides the infrastructure. Build with speed. Operate with control.
                 </Heading>
                 <Stack
                     as="figure"
@@ -274,61 +279,109 @@ export default function Home() {
                         hAlign="center"
                         vAlign="center"
                     >
-                        <Text
-                            className="homepage-before-after-caption absolute top-12 px-6 text-center sm:top-16"
-                            color="primary"
-                            display="block"
-                            textWrap="balance"
-                            type="large"
-                            weight="medium"
-                        >
-                            LongLink provides the foundation.
-                        </Text>
-                        <Text
-                            className="homepage-before-after-copy-before absolute right-1/2 mr-4 whitespace-nowrap"
-                            color="primary"
-                            display="block"
-                            textWrap="nowrap"
-                            type="display-3"
-                        >
-                            Build
-                        </Text>
-                        <Text
-                            className="homepage-before-after-copy-after absolute right-1/2 mr-4 whitespace-nowrap"
-                            color="primary"
-                            display="block"
-                            textWrap="nowrap"
-                            type="display-3"
-                        >
-                            Operate
-                        </Text>
-                        <Text
-                            className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap"
-                            color="accent"
-                            display="block"
-                            textWrap="nowrap"
-                            type="display-3"
-                        >
-                            with
-                        </Text>
-                        <Text
-                            className="homepage-before-after-copy-before absolute left-1/2 ml-4 whitespace-nowrap"
-                            color="primary"
-                            display="block"
-                            textWrap="nowrap"
-                            type="display-3"
-                        >
-                            Speed
-                        </Text>
-                        <Text
-                            className="homepage-before-after-copy-after absolute left-1/2 ml-4 whitespace-nowrap"
-                            color="primary"
-                            display="block"
-                            textWrap="nowrap"
-                            type="display-3"
-                        >
-                            Confidence
-                        </Text>
+                        <Stack className="-translate-y-24 sm:-translate-y-28" width="100%" gap={2} hAlign="center">
+                            <Text
+                                className="px-6 text-center text-xs font-medium uppercase tracking-widest"
+                                color="secondary"
+                                display="block"
+                                textWrap="balance"
+                            >
+                                <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provides the
+                                infrastructure.
+                            </Text>
+                            <Stack
+                                className="relative h-16 sm:h-18 lg:h-20"
+                                width="100%"
+                                hAlign="center"
+                                vAlign="center"
+                            >
+                                <Stack
+                                    className="homepage-before-after-copy-before absolute inset-0 uppercase"
+                                    direction="horizontal"
+                                    gap={3}
+                                    vAlign="center"
+                                >
+                                    <StackItem className="min-w-0 basis-0" size="fill">
+                                        <Text
+                                            className="pr-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                            color="primary"
+                                            display="block"
+                                            justify="end"
+                                            textWrap="nowrap"
+                                            type="display-1"
+                                        >
+                                            Build
+                                        </Text>
+                                    </StackItem>
+                                    <Text
+                                        className="invisible text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                        display="block"
+                                        textWrap="nowrap"
+                                        type="display-1"
+                                    >
+                                        With
+                                    </Text>
+                                    <StackItem className="min-w-0 basis-0" size="fill">
+                                        <Text
+                                            className="pl-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                            color="primary"
+                                            display="block"
+                                            textWrap="nowrap"
+                                            type="display-1"
+                                        >
+                                            Speed
+                                        </Text>
+                                    </StackItem>
+                                </Stack>
+                                <Stack
+                                    className="homepage-before-after-copy-after absolute inset-0 uppercase"
+                                    direction="horizontal"
+                                    gap={3}
+                                    vAlign="center"
+                                >
+                                    <StackItem className="min-w-0 basis-0" size="fill">
+                                        <Text
+                                            className="pr-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                            color="primary"
+                                            display="block"
+                                            justify="end"
+                                            textWrap="nowrap"
+                                            type="display-1"
+                                        >
+                                            Operate
+                                        </Text>
+                                    </StackItem>
+                                    <Text
+                                        className="invisible text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                        display="block"
+                                        textWrap="nowrap"
+                                        type="display-1"
+                                    >
+                                        With
+                                    </Text>
+                                    <StackItem className="min-w-0 basis-0" size="fill">
+                                        <Text
+                                            className="pl-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                            color="primary"
+                                            display="block"
+                                            textWrap="nowrap"
+                                            type="display-1"
+                                        >
+                                            Control
+                                        </Text>
+                                    </StackItem>
+                                </Stack>
+                                <Text
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase text-2xl tracking-normal sm:text-5xl lg:text-6xl"
+                                    color="accent"
+                                    display="block"
+                                    textWrap="nowrap"
+                                    type="display-1"
+                                >
+                                    With
+                                </Text>
+                            </Stack>
+                        </Stack>
                     </Stack>
                 </Stack>
             </section>
@@ -381,7 +434,7 @@ export default function Home() {
                                 textWrap="balance"
                                 weight="semibold"
                             >
-                                Designed for Human and Agents
+                                Designed for the Agentic Era
                             </Text>
                             <Text
                                 as="p"
@@ -390,8 +443,13 @@ export default function Home() {
                                 textWrap="pretty"
                                 type="supporting"
                             >
-                                Coming Soon
+                                Humans make the decisions. Agents execute the work.
                             </Text>
+                            <Stack className="relative z-1 mt-3" hAlign="end">
+                                <Link href="/docs/agents" isStandalone weight="semibold">
+                                    Learn more
+                                </Link>
+                            </Stack>
                         </div>
                     </div>
                 </Stack>
@@ -402,51 +460,63 @@ export default function Home() {
                         Next step
                     </Text>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
-                        {paths.map(({ title, description, action, href }) => (
-                            <ClickableCard
-                                key={title}
-                                className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
-                                href={href}
-                                label={action}
-                                padding={6}
-                            >
+                        {paths.map(({ title, description, action, href, isComingSoon }) => (
+                            <Stack key={title} gap={0} width="100%">
                                 <Stack
-                                    aria-hidden="true"
-                                    className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
-                                />
-                                <Stack className="relative z-10" height="100%" gap={8} justify="between">
-                                    <Stack gap={4}>
-                                        <Heading
-                                            level={2}
-                                            type="display-1"
-                                            textWrap="nowrap"
-                                            className="text-6xl tracking-tighter sm:text-7xl"
+                                    aria-hidden={!isComingSoon}
+                                    className={isComingSoon ? undefined : 'invisible'}
+                                    gap={0}
+                                >
+                                    <Banner
+                                        container="section"
+                                        status="warning"
+                                        title={<Text type="supporting">Coming Soon</Text>}
+                                    />
+                                </Stack>
+                                <ClickableCard
+                                    className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
+                                    href={href}
+                                    label={action}
+                                    padding={6}
+                                >
+                                    <Stack
+                                        aria-hidden="true"
+                                        className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
+                                    />
+                                    <Stack className="relative z-10" height="100%" gap={8} justify="between">
+                                        <Stack gap={4}>
+                                            <Heading
+                                                level={2}
+                                                type="display-1"
+                                                textWrap="nowrap"
+                                                className="text-6xl tracking-tighter sm:text-7xl"
+                                            >
+                                                {title}
+                                            </Heading>
+                                            <Text as="p" color="secondary" textWrap="pretty">
+                                                {description}
+                                            </Text>
+                                        </Stack>
+                                        <Stack
+                                            direction="horizontal"
+                                            hAlign="between"
+                                            vAlign="center"
+                                            width="100%"
+                                            className="whitespace-nowrap"
                                         >
-                                            {title}
-                                        </Heading>
-                                        <Text as="p" color="secondary" textWrap="pretty">
-                                            {description}
-                                        </Text>
+                                            <Text weight="medium">{action}</Text>
+                                            <ArrowRight
+                                                aria-hidden="true"
+                                                className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
+                                            />
+                                        </Stack>
                                     </Stack>
                                     <Stack
-                                        direction="horizontal"
-                                        hAlign="between"
-                                        vAlign="center"
-                                        width="100%"
-                                        className="whitespace-nowrap"
-                                    >
-                                        <Text weight="medium">{action}</Text>
-                                        <ArrowRight
-                                            aria-hidden="true"
-                                            className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
-                                        />
-                                    </Stack>
-                                </Stack>
-                                <Stack
-                                    aria-hidden="true"
-                                    className="path-navigation-cue absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                                />
-                            </ClickableCard>
+                                        aria-hidden="true"
+                                        className="path-navigation-cue absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+                                    />
+                                </ClickableCard>
+                            </Stack>
                         ))}
                     </Grid>
                 </Stack>

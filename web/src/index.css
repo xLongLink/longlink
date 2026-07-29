@@ -153,7 +153,6 @@
 
 .homepage-before-after-section {
     --homepage-before-after-position: 0%;
-    --homepage-before-after-progress: 0;
     height: 200svh;
 }
 
@@ -166,11 +165,11 @@
 }
 
 .homepage-before-after-copy-before {
-    opacity: calc(1 - var(--homepage-before-after-progress));
+    clip-path: inset(0 0 0 var(--homepage-before-after-position));
 }
 
 .homepage-before-after-copy-after {
-    opacity: var(--homepage-before-after-progress);
+    clip-path: inset(0 calc(100% - var(--homepage-before-after-position)) 0 0);
 }
 
 .homepage-hands-scroll-swing {

@@ -1,6 +1,6 @@
 type WordmarkProps = {
     className?: string;
-    size?: 'default' | 'heading';
+    size?: 'default' | 'heading' | 'inherit';
 };
 
 /** Renders the LongLink wordmark. */
@@ -9,7 +9,7 @@ export function Wordmark({ className, size = 'default' }: WordmarkProps) {
         <span
             className={[
                 'inline-flex leading-none font-semibold tracking-[-0.04em] uppercase',
-                size === 'heading' ? 'text-2xl' : 'text-base',
+                size === 'heading' ? 'text-2xl' : size === 'default' ? 'text-base' : undefined,
                 className,
             ]
                 .filter(Boolean)
