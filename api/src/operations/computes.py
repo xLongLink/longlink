@@ -1,4 +1,3 @@
-from src.utils import jobs
 from src.utils.jobs import operation
 from src.environments import env
 from packaging.version import Version

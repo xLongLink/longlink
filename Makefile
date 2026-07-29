@@ -134,14 +134,14 @@ api\:clean:
 
 # Remove generated SDK build and test artifacts.
 sdk\:clean:
-	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
+	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dev.db sdk/dist sdk/*.egg-info sdk/longlink/.static/web
 	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
 
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
+	rm -rf web/.coverage web/.pytest_cache web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
 
 
 # Start isolated local services and the cluster, then wait for the local registry.

@@ -113,7 +113,11 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                workspace: [api, sdk]
+                include:
+                    - workspace: api
+                      sync-args: --extra dev
+                    - workspace: sdk
+                      sync-args: --group dev
 
         steps:
             - name: Checkout repository
@@ -132,7 +136,7 @@ jobs:
 
             - name: Install dependencies
               working-directory: ${{ matrix.workspace }}
-              run: uv sync --locked --all-extras --all-groups
+              run: uv sync --locked ${{ matrix.sync-args }}
 
             - name: Run integration tests
               working-directory: ${{ matrix.workspace }}

@@ -40,17 +40,16 @@ class Exoscale:
         """Initialize the Exoscale SOS and IAM adapter."""
 
         # Validate the SOS endpoint before using its zone for storage and control-plane clients.
-        zone = exoscale_zone(endpoint_url)
+        self.region: str = exoscale_zone(endpoint_url)
 
         # Initialize the S3-compatible bucket transport.
         self._endpoint_url = endpoint_url
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
-        self._region = zone
         self._session = aioboto3.Session()
 
         # Configure the async control-plane client for the SOS endpoint's zone.
-        self._api_url = f"https://api-{zone}.exoscale.com/v2"
+        self._api_url = f"https://api-{self.region}.exoscale.com/v2"
 
     def _client(self) -> "AbstractAsyncContextManager[S3Client]":
         """Create an async S3 client context manager with the registry credentials."""
@@ -61,7 +60,7 @@ class Exoscale:
                 "s3",
                 use_ssl=True,
                 endpoint_url=self._endpoint_url,
-                region_name=self._region,
+                region_name=self.region,
                 aws_access_key_id=self._access_key_id,
                 aws_secret_access_key=self._secret_access_key,
             ),
@@ -379,4 +378,3 @@ class Exoscale:
             return value
 
         raise RuntimeError(f"Exoscale response missing '{field}'")
-

@@ -1,5 +1,4 @@
 from src import adapters
-from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from longlink.shared import users as shared_users

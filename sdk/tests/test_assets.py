@@ -20,7 +20,7 @@ def test_logo_returns_development_fallback_asset(monkeypatch: pytest.MonkeyPatch
 
     # Assert
     assert logo == organization_assets.OrganizationAsset(
-        path=organization_assets.logo_path(),
+        path=organization_assets.LOGO_PATH,
         content=b"<svg />",
         content_type=organization_assets.LOGO_CONTENT_TYPE,
     )

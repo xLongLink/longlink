@@ -251,7 +251,6 @@ async def claim_next() -> Operation | None:
             if result.rowcount != 1:
                 await session.rollback()
                 continue
-            await session.refresh(operation)
             await session.commit()
             return operation
 

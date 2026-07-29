@@ -11,21 +11,12 @@ def test_slugify_normalizes_to_dns_label() -> None:
     assert names.slugify("  Acme Team / Reports  ") == "acme-team-reports"
 
 
-def test_slugify_rejects_empty_slug() -> None:
-    """Reject names that have no slug-safe characters."""
+@pytest.mark.parametrize("value", [" !!! ", "a" * 64])
+def test_slugify_rejects_invalid_slug(value: str) -> None:
+    """Reject names that cannot produce one Kubernetes DNS label."""
 
     with pytest.raises(HTTPException) as exc:
-        names.slugify(" !!! ")
-
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Invalid name"
-
-
-def test_slugify_rejects_overlong_slug() -> None:
-    """Reject slugs that exceed one Kubernetes DNS label."""
-
-    with pytest.raises(HTTPException) as exc:
-        names.slugify("a" * 64)
+        names.slugify(value)
 
     assert exc.value.status_code == 409
     assert exc.value.detail == "Invalid name"

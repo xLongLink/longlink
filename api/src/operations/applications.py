@@ -1,6 +1,5 @@
 import secrets
 from src import adapters
-from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from src.environments import env
@@ -8,7 +7,6 @@ from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
-from src.models.infrastructure import exoscale_zone
 from src.database.models.operations import Operation
 
 
@@ -101,7 +99,7 @@ async def create(claimed: Operation) -> str | None:
             "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
             "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
             "LONGLINK_STORAGE_PREFIX": prefix,
-            "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.endpoint_url),
+            "LONGLINK_STORAGE_REGION": object_storage.region,
             "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }

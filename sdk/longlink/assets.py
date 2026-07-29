@@ -8,7 +8,7 @@ from longlink.utils.settings import Envs
 def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.OrganizationAsset:
     """Return the organization logo asset."""
 
-    asset_path = organization_assets.logo_path()
+    asset_path = organization_assets.LOGO_PATH
 
     # Local runtimes use the SDK-managed fallback while production reads Organization shared storage.
     if env.ENV in {"development", "testing"}:

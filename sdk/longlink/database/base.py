@@ -78,7 +78,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         ).render_as_string(hide_password=False)
 
     # Configure connection health checks for every database backend.
-    engine_kwargs: dict[str, Any] = {
+    engine_kwargs: dict[str, object] = {
         "pool_pre_ping": True,
         "pool_recycle": 20,
     }
