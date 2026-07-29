@@ -62,13 +62,6 @@ export const apiOrganizationSummarySchema = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    compute_id: z.string(),
-    database_id: z.string(),
-    storage_id: z.string(),
-    status: statusSchema,
-    created_at: z.string(),
-    updated_at: z.string(),
-    deleted_at: z.string().nullable(),
 });
 
 export const apiOrganizationApplicationSchema = z.object({
@@ -97,9 +90,6 @@ const apiEnvironmentMetadataSchema = z.object({
 export const apiImageMetadataSchema = z.object({
     title: z.string().nullable(),
     description: z.string().nullable(),
-    version: z.string().nullable(),
-    sdk: z.string().nullable(),
-    digest: z.string().nullable(),
     environments: z.array(apiEnvironmentMetadataSchema),
 });
 
@@ -111,11 +101,8 @@ export const apiApplicationResponseSchema = z.object({
     name: z.string(),
     slug: z.string(),
     image: z.string(),
-    version: z.string().nullable(),
-    sdk: z.string().nullable(),
     status: statusSchema,
     description: z.string().nullable(),
-    icon: iconNameSchema,
     created_at: z.string(),
 });
 
@@ -138,7 +125,6 @@ export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
     status: statusSchema,
-    version: z.string().nullable(),
 });
 
 export const apiOperationSchema = z.object({

@@ -27,288 +27,89 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { Info } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { pageElementHrefByName } from '@/platform/docs/sdk/elements';
+import { pageReferenceDocs } from '@/platform/docs/sdk/references';
 
 type ComponentSummary = {
     name: string;
     description: string;
 };
 
-type ComponentCategory = {
+type ComponentCategoryConfiguration = {
     id: string;
     title: string;
     description: string;
+};
+
+type ComponentCategory = ComponentCategoryConfiguration & {
     components: ComponentSummary[];
 };
 
-const componentCategories: ComponentCategory[] = [
+const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
     {
         id: 'longlink-runtime-concepts',
         title: 'LongLink Runtime Concepts',
         description:
             'Cross-cutting page runtime rules for conditional rendering, translations, expressions, bindings, and file discovery.',
-        components: [
-            {
-                name: 'if',
-                description: 'Conditionally renders a node when an expression evaluates to a truthy value.',
-            },
-            {
-                name: 'i18n',
-                description: 'Looks up visible copy from the active XML translation catalog.',
-            },
-            {
-                name: 'values',
-                description: 'Supplies interpolation values for translated ICU messages.',
-            },
-            {
-                name: 'count',
-                description: 'Passes a numeric count into ICU plural translations.',
-            },
-            {
-                name: 'Expressions',
-                description: 'Evaluates a safe JavaScript expression subset against the XML runtime scope.',
-            },
-            {
-                name: 'Bindings',
-                description: 'Connects writable control values to State objects.',
-            },
-            {
-                name: 'Translations',
-                description: 'Defines localized XML page copy in flat catalog files under src/i18n.',
-            },
-            {
-                name: 'Dynamic Pages',
-                description: 'Maps bracketed XML filenames to browser route parameters.',
-            },
-            {
-                name: 'Page Files',
-                description: 'Registers XML pages from conventional SDK application source folders.',
-            },
-        ],
     },
     {
         id: 'longlink-state-elements',
         title: 'LongLink State Elements',
         description:
             'LongLink-specific XML elements prepare page state, data, actions, and repeated scopes before Astryx components render.',
-        components: [
-            {
-                name: 'longlink',
-                description: 'Wraps an XML page and declares optional page tab metadata such as name and icon.',
-            },
-            {
-                name: 'State',
-                description: 'Declares local reactive page state that controls can read from and write to.',
-            },
-            {
-                name: 'Query',
-                description: 'Fetches JSON before rendering and exposes the response as a named runtime value.',
-            },
-            {
-                name: 'Action',
-                description: 'Wraps a trigger, sends an app-relative request, and invalidates selected runtime values.',
-            },
-            {
-                name: 'For',
-                description: 'Repeats child elements for each array item with a scoped item value and index.',
-            },
-        ],
     },
     {
         id: 'action',
         title: 'Action',
         description: 'Command and navigation elements for starting work or moving users to another destination.',
-        components: [
-            {
-                name: 'Button',
-                description: 'Renders a labeled command, submit trigger, or action trigger.',
-            },
-            {
-                name: 'ButtonGroup',
-                description: 'Groups related buttons and actions under one accessible label.',
-            },
-            {
-                name: 'Link',
-                description: 'Navigates inside a LongLink Application or points to an external URL.',
-            },
-        ],
     },
     {
         id: 'container',
         title: 'Container',
         description: 'Bounded surfaces for content that should read as one independent item.',
-        components: [
-            {
-                name: 'Card',
-                description: 'Groups a discrete piece of content on an Astryx surface.',
-            },
-        ],
     },
     {
         id: 'content',
         title: 'Content',
         description: 'Text, identity, and visual primitives for readable page content.',
-        components: [
-            {
-                name: 'Avatar',
-                description: 'Shows a user or team identity from an image, name, or fallback.',
-            },
-            {
-                name: 'Code',
-                description: 'Renders an inline code value using LongLink XML content precedence.',
-            },
-            {
-                name: 'Heading',
-                description: 'Creates semantic section headings with explicit levels from 1 to 6.',
-            },
-            {
-                name: 'Icon',
-                description: 'Displays a semantic Astryx icon name such as info, success, warning, or error.',
-            },
-            {
-                name: 'Text',
-                description: 'Renders paragraph, label, span, and supporting text content.',
-            },
-        ],
     },
     {
         id: 'data-input',
         title: 'Data Input',
         description: 'Controls that collect page data through literal values, expressions, or writable state bindings.',
-        components: [
-            {
-                name: 'CheckboxInput',
-                description: 'Captures one required or optional boolean value.',
-            },
-            {
-                name: 'FileInput',
-                description: 'Stores browser File values for action form payloads.',
-            },
-            {
-                name: 'NumberInput',
-                description: 'Collects numeric values with optional ranges, steps, and units.',
-            },
-            {
-                name: 'RadioList',
-                description: 'Presents a single-choice list of RadioListItem children.',
-            },
-            {
-                name: 'RadioListItem',
-                description: 'Defines one selectable option inside a RadioList.',
-            },
-            {
-                name: 'Selector',
-                description: 'Presents a dropdown selection control with flat SelectorOption children.',
-            },
-            {
-                name: 'SelectorOption',
-                description: 'Defines one selectable value inside a Selector.',
-            },
-            {
-                name: 'Slider',
-                description: 'Captures bounded numeric values through a range control.',
-            },
-            {
-                name: 'Switch',
-                description: 'Captures an on/off state for compact boolean settings.',
-            },
-            {
-                name: 'TextArea',
-                description: 'Collects longer text values with labels, descriptions, and validation state.',
-            },
-            {
-                name: 'TextInput',
-                description: 'Collects short text values with labels, descriptions, and validation state.',
-            },
-        ],
     },
     {
         id: 'feedback-and-status',
         title: 'Feedback & Status',
         description: 'Status elements that communicate state, severity, or persistent page feedback.',
-        components: [
-            {
-                name: 'Badge',
-                description: 'Displays a compact status or enumerated label.',
-            },
-            {
-                name: 'Banner',
-                description: 'Shows persistent page-level information, warnings, errors, or success messages.',
-            },
-        ],
     },
     {
         id: 'layout',
         title: 'Layout',
         description: 'Composition primitives for arranging content without handwritten layout markup.',
-        components: [
-            {
-                name: 'Divider',
-                description: 'Separates related regions with a horizontal or vertical rule.',
-            },
-            {
-                name: 'FormLayout',
-                description: 'Arranges controls with consistent field spacing and label placement.',
-            },
-            {
-                name: 'Grid',
-                description: 'Creates fixed or responsive multi-column layouts.',
-            },
-            {
-                name: 'Stack',
-                description: 'Arranges children vertically or horizontally with Astryx spacing values.',
-            },
-        ],
     },
     {
         id: 'navigation',
         title: 'Navigation',
         description: 'Navigation structures for tabs, side navigation, and application page movement.',
-        components: [
-            {
-                name: 'SideNav',
-                description: 'Renders application navigation in a sidebar container.',
-            },
-            {
-                name: 'SideNavItem',
-                description: 'Defines one destination inside a SideNav.',
-            },
-            {
-                name: 'Tab',
-                description: 'Defines one tab destination inside a TabList.',
-            },
-            {
-                name: 'TabList',
-                description: 'Renders flat tab navigation for switching between page views.',
-            },
-        ],
     },
     {
         id: 'overlay',
         title: 'Overlay',
         description: 'Layered surfaces for focused workflows that should appear above the page.',
-        components: [
-            {
-                name: 'Dialog',
-                description: 'Renders a modal workflow from one flat owner element.',
-            },
-        ],
     },
     {
         id: 'table-and-list',
         title: 'Table & List',
         description: 'Structured display elements for row-oriented business data.',
-        components: [
-            {
-                name: 'Table',
-                description: 'Displays tabular data from an array using declared columns.',
-            },
-            {
-                name: 'TableColumn',
-                description: 'Declares one Table column with label, value, and optional formatting.',
-            },
-        ],
     },
 ];
+
+const componentCategories: ComponentCategory[] = componentCategoryConfigurations.map((category) => ({
+    ...category,
+    components: pageReferenceDocs
+        .filter((component) => component.category === category.title)
+        .map(({ name, summary: description }) => ({ name, description })),
+}));
 
 const previewRows: Array<Record<string, string>> = [{ item: 'Order', status: 'Open' }];
 const previewColumns = [

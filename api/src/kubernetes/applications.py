@@ -85,8 +85,6 @@ class Applications:
         # Kubernetes returns Secret data as strict base64-encoded UTF-8 values.
         body = secret.raw
         data = body.get("data", {})
-        if data is None:
-            data = {}
         if not isinstance(data, dict) or not all(isinstance(name, str) and isinstance(value, str) for name, value in data.items()):
             raise TypeError("Kubernetes Application runtime Secret data must contain string values")
         envs: dict[str, str] = {}

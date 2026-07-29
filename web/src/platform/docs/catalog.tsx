@@ -32,16 +32,14 @@ import * as testing from '@/platform/docs/sdk/testing';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
 
-type GroupedDocPage = ArticlePage & { group: DocGroupTitle };
-
-type DocNavigationPage = GroupedDocPage & {
+type DocNavigationPage = ArticlePage & {
     children?: DocNavigationPage[];
-    routes?: DocNavigationPage[];
+    hiddenPages?: ArticlePage[];
 };
 
 type DocPageOptions = Omit<ArticlePage, 'breadcrumbs'> & {
     children?: DocPageOptions[];
-    routes?: DocPageOptions[];
+    hiddenPages?: Array<Omit<ArticlePage, 'breadcrumbs'>>;
 };
 
 type DocSection = {
@@ -64,7 +62,7 @@ const docBreadcrumbsByGroup: Record<DocGroupTitle, ArticleBreadcrumb[]> = {
 /** Builds a docs navigation page with breadcrumbs derived from its section. */
 function docPage(
     group: DocGroupTitle,
-    { children, routes, ...page }: DocPageOptions,
+    { children, hiddenPages, ...page }: DocPageOptions,
     parentBreadcrumbs = docBreadcrumbsByGroup[group]
 ): DocNavigationPage {
     const parentBreadcrumb = parentBreadcrumbs.at(-1);
@@ -74,19 +72,19 @@ function docPage(
         parentBreadcrumb?.path === page.path
             ? parentBreadcrumbs
             : [...parentBreadcrumbs, { title: page.title, path: page.path }];
-    const articlePage = { ...page, group, breadcrumbs };
+    const articlePage = { ...page, breadcrumbs };
     const childPages = children?.map((child) => docPage(group, child, breadcrumbs)) ?? [];
-    const routePages = routes?.map((route) => docPage(group, route, breadcrumbs)) ?? [];
+    const resolvedHiddenPages = hiddenPages?.map((hiddenPage) => ({ ...hiddenPage, breadcrumbs })) ?? [];
 
     // Return leaf pages without nested navigation.
-    if (!childPages.length && !routePages.length) {
+    if (!childPages.length && !resolvedHiddenPages.length) {
         return articlePage;
     }
 
     return {
         ...articlePage,
         ...(childPages.length ? { children: childPages } : {}),
-        ...(routePages.length ? { routes: routePages } : {}),
+        ...(resolvedHiddenPages.length ? { hiddenPages: resolvedHiddenPages } : {}),
     };
 }
 
@@ -99,8 +97,8 @@ function docSection(title: DocGroupTitle, items: DocPageOptions[]): DocSection {
 }
 
 /** Flattens sidebar pages into the route catalog. */
-function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
-    const pages: GroupedDocPage[] = [];
+function flattenDocPages(items: DocNavigationPage[]): ArticlePage[] {
+    const pages: ArticlePage[] = [];
 
     // Visit every page in the navigation tree.
     for (const item of items) {
@@ -111,9 +109,9 @@ function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
             pages.push(...flattenDocPages(item.children));
         }
 
-        // Recurse into hidden routes excluded from sidebar navigation.
-        if (item.routes?.length) {
-            pages.push(...flattenDocPages(item.routes));
+        // Include hidden pages without rendering them in sidebar navigation.
+        if (item.hiddenPages?.length) {
+            pages.push(...item.hiddenPages);
         }
     }
 
@@ -196,7 +194,7 @@ const DOC_SECTIONS: DocSection[] = [
             ...documentationPages.pages,
             icon: <FileCode2 aria-hidden="true" size={16} />,
             ...pages,
-            routes: pageElementDocPages,
+            hiddenPages: pageElementDocPages,
         },
         {
             ...documentationPages.testing,
@@ -211,7 +209,7 @@ const DOC_SECTIONS: DocSection[] = [
     ]),
 ];
 
-export const DOC_PAGES: GroupedDocPage[] = DOC_SECTIONS.flatMap((section) => flattenDocPages(section.items));
+export const DOC_PAGES: ArticlePage[] = DOC_SECTIONS.flatMap((section) => flattenDocPages(section.items));
 
 export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map((section) => ({
     title: section.title,

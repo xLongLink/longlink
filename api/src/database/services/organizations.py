@@ -28,9 +28,9 @@ class Infrastructure:
     """Hold one Organization and its assigned infrastructure registries."""
 
     organization: Organization
-    compute: ComputeRegistry | None
-    database: DatabaseRegistry | None
-    storage: StorageRegistry | None
+    compute: ComputeRegistry
+    database: DatabaseRegistry
+    storage: StorageRegistry
 
 
 async def infrastructure(organization_id: UUID) -> Infrastructure | None:
@@ -40,9 +40,9 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
     async with session_scope() as session:
         statement = (
             select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
-            .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
-            .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
-            .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
+            .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+            .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+            .join(StorageRegistry, StorageRegistry.id == Organization.storage_id)
             .where(Organization.id == organization_id)
         )
         row = (await session.execute(statement)).tuples().one_or_none()

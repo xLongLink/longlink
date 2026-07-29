@@ -17,8 +17,6 @@ type ForgotPasswordValues = {
     email: string;
 };
 
-const emailInputAttributes = { autoComplete: 'email' };
-
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const t = useTranslator();
@@ -65,7 +63,7 @@ export default function ForgotPassword() {
                         name="email"
                         render={({ field, fieldState }) => (
                             <TextInput
-                                {...emailInputAttributes}
+                                {...{ autoComplete: 'email' as const }}
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired

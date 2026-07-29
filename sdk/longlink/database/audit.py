@@ -127,7 +127,7 @@ def install_audit_middleware(app: FastAPI) -> None:
 
             # Invalid headers run without an audit user.
             except ValueError:
-                user_id = None
+                pass
 
         # Keep the user bound across downstream request handling.
         with audit_user_scope(user_id):

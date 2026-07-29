@@ -7,7 +7,7 @@ from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
-from src.database.services import storage, database, invitations, organizations
+from src.database.services import invitations, organizations
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -93,9 +93,10 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve the Organization's immutable database assignment.
-    registry = await database.get(membership.organization.database_id)
-    if registry is None:
-        return None
+    infrastructure = await organizations.infrastructure(membership.organization.id)
+    if infrastructure is None:
+        raise RuntimeError("Organization infrastructure is missing")
+    registry = infrastructure.database
 
     # Inspect the exact Organization database while distinguishing absent provisioning from backend failures.
     database_name = membership.organization.id.hex
@@ -128,9 +129,10 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve the Organization's immutable storage assignment.
-    registry = await storage.get(membership.organization.storage_id)
-    if registry is None:
-        return None
+    infrastructure = await organizations.infrastructure(membership.organization.id)
+    if infrastructure is None:
+        raise RuntimeError("Organization infrastructure is missing")
+    registry = infrastructure.storage
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex

@@ -222,14 +222,18 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Start local services, pull the configured Application image, then run migrations and seed data.
+# Start local services, build or pull the configured Application image, then run migrations and seed data.
 seed: local\:resources
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	@image="$(APPLICATION_IMAGE)"; \
 		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
-		docker pull "$$image" && \
+		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then \
+			if docker image inspect "$$image" >/dev/null 2>&1; then docker push "$$image"; else $(MAKE) local:image; fi; \
+		else \
+			docker pull "$$image"; \
+		fi && \
 		printf '%s\n' "$$image" > api/.seed-image && \
 		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
 

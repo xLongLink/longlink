@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
-from src.database.services import compute
+from src.database.services import organizations
 from src.database.models.users import User
 
 router = APIRouter()
@@ -50,8 +50,11 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    registry = await compute.get(organization.compute_id)
-    if registry is None or registry.gateway_url is None or registry.gateway_ca_certificate is None:
+    infrastructure = await organizations.infrastructure(organization.id)
+    if infrastructure is None:
+        raise RuntimeError("Application Organization infrastructure is missing")
+    registry = infrastructure.compute
+    if registry.gateway_url is None or registry.gateway_ca_certificate is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     # The gateway receives only the application path; API routing stays outside the cluster.

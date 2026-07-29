@@ -1,7 +1,7 @@
 import urllib.parse
 from uuid import uuid4
 from typing import BinaryIO, cast
-from fastapi import File, UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Router
 from src.resources import fs
@@ -73,12 +73,12 @@ async def request_attachments_get_endpoint(request_id: int):
     return [
         _attachment_from_entry(request_id, entry)
         for entry in entries
-        if isinstance(entry, dict) and entry.get("type") != "directory"
+        if entry.get("type") != "directory"
     ]
 
 
 @router.post("/requests/{request_id}/attachments", response_model=RequestAttachmentRead)
-async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)):
+async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
     """Upload one file attachment for a purchase request."""
 
     # Validate the request before accepting attachment content.

@@ -77,12 +77,12 @@ To reconcile compute resources against a remote Kubernetes cluster, set the path
 KUBECONFIG=../kubeconfig.yml
 ```
 
-`make seed` deploys the published sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, by default. Run `make local`
-and set `APPLICATION_IMAGE=localhost:15000/longlink-app:dev` to seed the local sample Application instead.
+`make seed` builds and deploys `localhost:15000/longlink-app:dev` by default. Set `APPLICATION_IMAGE` to the published
+sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before seeding.
 
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
-Start local services, pull the configured Application image, run API migrations, and seed local data:
+Start local services, build or pull the configured Application image, run API migrations, and seed local data:
 
 ```bash
 make seed

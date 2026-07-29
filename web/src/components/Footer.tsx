@@ -9,11 +9,6 @@ import { Wordmark } from '@/components/Wordmark';
 import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
 
-/** Scrolls public pages back to the top after internal navigation. */
-function scrollToTop() {
-    window.scrollTo({ left: 0, top: 0 });
-}
-
 /** Renders the public landing page footer. */
 export function Footer() {
     return (
@@ -23,7 +18,7 @@ export function Footer() {
                     <Stack gap={3}>
                         <Stack direction="horizontal" gap={4} hAlign="between" vAlign="center" wrap="wrap">
                             <Stack direction="horizontal" gap={4} vAlign="center">
-                                <Link href="/" label="LongLink home" color="inherit" onClick={scrollToTop}>
+                                <Link href="/" label="LongLink home" color="inherit">
                                     <Wordmark />
                                 </Link>
                                 <Stack as="ul" direction="horizontal" gap={3} vAlign="center">
@@ -76,31 +71,13 @@ export function Footer() {
                             </Stack>
 
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
-                                <Link
-                                    href="/"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Home</span>
                                 </Link>
-                                <Link
-                                    href="/docs"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/docs" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Documentation</span>
                                 </Link>
-                                <Link
-                                    href="/pricing"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/pricing" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Pricing</span>
                                 </Link>
                             </Stack>
@@ -113,31 +90,13 @@ export function Footer() {
                                 LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                             </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link
-                                    href="/impressum"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/impressum" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Impressum</span>
                                 </Link>
-                                <Link
-                                    href="/terms"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/terms" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Terms</span>
                                 </Link>
-                                <Link
-                                    href="/privacy"
-                                    className="group"
-                                    color="secondary"
-                                    onClick={scrollToTop}
-                                    type="supporting"
-                                >
+                                <Link href="/privacy" className="group" color="secondary" type="supporting">
                                     <span className="group-hover:text-accent">Privacy</span>
                                 </Link>
                             </Stack>

@@ -10,15 +10,13 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router';
 import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
-import { Wordmark } from '@/components/Wordmark';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 
 type RegisterValues = {
     email: string;
 };
-
-const emailInputAttributes = { autoComplete: 'email' } as const;
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -27,12 +25,6 @@ export default function Register() {
     const showToast = useToast();
     const search = new URLSearchParams(location.search);
     const initialEmail = search.get('email') ?? '';
-    const welcomeTitle = (
-        <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-            <span>{t('auth.welcomeTo')}</span>
-            <Wordmark size="heading" />
-        </span>
-    );
     const schema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });
@@ -63,7 +55,7 @@ export default function Register() {
     }
 
     return (
-        <AuthPage title={welcomeTitle} description={<Divider label={t('auth.registerDescription')} />}>
+        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label={t('auth.registerDescription')} />}>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleRegister)}>
                     <Controller
@@ -71,7 +63,7 @@ export default function Register() {
                         name="email"
                         render={({ field, fieldState }) => (
                             <TextInput
-                                {...emailInputAttributes}
+                                {...{ autoComplete: 'email' as const }}
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired

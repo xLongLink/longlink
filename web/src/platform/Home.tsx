@@ -10,8 +10,8 @@ import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
 import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
+import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
 import { HeroGlobe } from '@/platform/HeroGlobe';
 import { homePage } from '@/platform/public';
@@ -211,8 +211,14 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen overflow-x-clip">
-            <Navbar />
+        <PublicPage
+            className="overflow-x-clip"
+            footer={
+                <Stack className="relative z-10" gap={0}>
+                    <Footer />
+                </Stack>
+            }
+        >
             <main className="relative -mt-21 flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <HeroGlobe />
@@ -526,9 +532,6 @@ export default function Home() {
                     </Grid>
                 </Stack>
             </Section>
-            <div className="relative z-10">
-                <Footer />
-            </div>
-        </div>
+        </PublicPage>
     );
 }

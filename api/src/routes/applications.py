@@ -135,10 +135,6 @@ async def update_application_environment(application_id: UUID, payload: Applicat
     application = access.application
     organization = access.organization
 
-    # Environment rollouts are valid only after the initial Application lifecycle completes.
-    if application.status != Status.running:
-        raise HTTPException(status_code=409, detail="Application is not running")
-
     # Resolve the Application's assigned cluster without reading its Platform runtime Secret.
     registry = await compute.get(organization.compute_id)
     if registry is None:

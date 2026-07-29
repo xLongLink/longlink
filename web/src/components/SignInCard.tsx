@@ -11,8 +11,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { z } from 'zod';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
-import { Wordmark } from '@/components/Wordmark';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
@@ -66,10 +67,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         <Stack gap={4} maxWidth={384} width="100%">
             <Stack gap={1} hAlign="center">
                 <Heading level={1} justify="center">
-                    <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-                        <span>{t('auth.welcomeTo')}</span>
-                        <Wordmark size="heading" />
-                    </span>
+                    <AuthWelcomeTitle />
                 </Heading>
                 <Divider label={t('auth.signInDescription')} />
             </Stack>
@@ -142,17 +140,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 }
             />
 
-            <Text as="p" color="secondary" justify="center" type="supporting">
-                {t('auth.agreementLead')} <br />
-                <Link href="/terms" hasUnderline type="inherit">
-                    {t('auth.termsOfService')}
-                </Link>{' '}
-                {t('auth.agreementMiddle')}{' '}
-                <Link href="/privacy" hasUnderline type="inherit">
-                    {t('auth.privacyPolicy')}
-                </Link>
-                .
-            </Text>
+            <AuthLegalAgreement />
         </Stack>
     );
 }
