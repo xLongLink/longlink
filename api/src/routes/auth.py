@@ -97,7 +97,6 @@ async def request_password_reset(
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
     credential = token.create_password_reset_token(user)
     recipient = user.email
-    await session.rollback()
     background_tasks.add_task(
         mail.send_password_reset_email,
         recipient,
@@ -183,9 +182,6 @@ async def request_registration(payload: EmailPayload, background_tasks: Backgrou
     statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         return
-
-    # End the read transaction before asynchronous mail delivery starts.
-    await session.rollback()
 
     # Email proof contains no password or pending user identifier.
     credential = token.create_registration_token(email)

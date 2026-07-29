@@ -173,7 +173,14 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
         return (await session.scalars(statement)).one_or_none()
 
 
-async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
+async def update_member_role(
+    organization_id: UUID,
+    member_id: UUID,
+    role: OrganizationRoles,
+    user: User,
+    *,
+    can_manage_owner_role: bool = True,
+) -> bool:
     """Change an Organization membership and atomically queue compute reconciliation."""
 
     # Update the member role inside one transaction.
@@ -193,6 +200,10 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         membership = (await session.scalars(statement)).one_or_none()
         if membership is None:
             return False
+
+        # Only owners may change another owner's role.
+        if membership.role == OrganizationRoles.owner and not can_manage_owner_role:
+            raise HTTPException(status_code=403, detail="Owner management permissions required")
 
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:

@@ -120,14 +120,13 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Assert
     assert response.status_code == 202
     payload = response.json()
-    application = payload
-    assert application["status"] == "creating"
-    assert application["description"] == "Dashboard app"
-    assert application["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application["sdk"] == "1.2.3"
-    assert application["version"] == "2.0.0"
+    assert payload["status"] == "creating"
+    assert payload["description"] == "Dashboard app"
+    assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert payload["sdk"] == "1.2.3"
+    assert payload["version"] == "2.0.0"
 
-    persisted = await applications.get(UUID(application["id"]))
+    persisted = await applications.get(UUID(payload["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
     assert not hasattr(persisted, "envs")

@@ -179,7 +179,7 @@ up:
 
 # Remove remote development resources, stop local services, and clean local state.
 down:
-	-cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
@@ -192,8 +192,7 @@ down:
 
 
 # Run the local LongLink Platform API server after `make seed`.
-api:
-	cd api && uv sync --locked --extra dev
+api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload

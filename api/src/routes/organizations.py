@@ -195,19 +195,20 @@ async def update_organization_member(
     if not roles.atleast(membership.role, OrganizationRoles.admin):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    can_manage_owner_role = roles.rank(membership.role) >= roles.rank(OrganizationRoles.owner)
+    can_manage_owner_role = membership.role == OrganizationRoles.owner
 
     # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    # Allow only owners to change existing owners.
-    target_role = await organizations.membership_role(membership.organization_id, member_id)
-    if target_role == OrganizationRoles.owner and not can_manage_owner_role:
-        raise HTTPException(status_code=403, detail="Owner management permissions required")
-
     # Persist the requested role only for an active Organization member.
-    updated = await organizations.update_member_role(membership.organization_id, member_id, payload.role, user)
+    updated = await organizations.update_member_role(
+        membership.organization_id,
+        member_id,
+        payload.role,
+        user,
+        can_manage_owner_role=can_manage_owner_role,
+    )
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 

@@ -69,7 +69,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["longlink*"]
-exclude = ["sample*"]
 
 [tool.setuptools.package-data]
 longlink = [".static/**"]

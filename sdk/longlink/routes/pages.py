@@ -20,7 +20,7 @@ async def get_pages(request: Request):
     """Return the registered SDK runtime pages."""
 
     pages: list[dict[str, object]] = []
-    registered_pages = getattr(request.app.state, "page_registry", [])
+    registered_pages = request.app.state.page_registry
 
     # Page handlers are registered from the SDK pages directory during app startup.
     for page in registered_pages:

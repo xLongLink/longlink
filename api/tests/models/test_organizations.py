@@ -6,18 +6,12 @@ from src.models.organizations import OrganizationCreate, OrganizationMemberUpdat
 pytestmark = pytest.mark.no_db
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {"name": ""},
-    ],
-)
-def test_organization_create_rejects_invalid_metadata(payload: dict[str, object]) -> None:
+def test_organization_create_rejects_invalid_metadata() -> None:
     """Reject Organization creation payloads with invalid metadata."""
 
     # Invalid Organization values fail before route-level access and service checks.
     with pytest.raises(ValidationError):
-        OrganizationCreate.model_validate(payload)
+        OrganizationCreate.model_validate({"name": ""})
 
 
 def test_organization_invitation_create_accepts_email_and_role() -> None:

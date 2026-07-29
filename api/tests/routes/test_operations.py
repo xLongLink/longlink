@@ -20,15 +20,14 @@ async def test_operations_endpoint_returns_targeted_operations(
 
     # Assert
     assert response.status_code == 200
-    payload = response.json()
-    assert len(payload) == 1
-    assert payload[0]["id"] == str(operation.id)
-    assert payload[0]["kind"] == OperationKind.compute_reconcile
-    assert payload[0]["target_id"] == str(infrastructure.compute.id)
-    assert "compute_id" not in payload[0]
-    assert payload[0]["status"] == operation.status
-    assert payload[0]["platform_version"] == env.VERSION
-    assert "error" not in payload[0]
+    payload, = response.json()
+    assert payload["id"] == str(operation.id)
+    assert payload["kind"] == OperationKind.compute_reconcile
+    assert payload["target_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload
+    assert payload["status"] == operation.status
+    assert payload["platform_version"] == env.VERSION
+    assert "error" not in payload
 
 
 async def test_operations_endpoint_requires_admin(
