@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
 from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -14,12 +15,12 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[ComputeRegistry]:
+async def fetch() -> Sequence[ComputeRegistry]:
     """Return registered compute backends."""
 
     # Return every registered compute target.
     async with session_scope() as session:
-        return list(await session.scalars(select(ComputeRegistry)))
+        return (await session.scalars(select(ComputeRegistry))).all()
 
 
 async def get(registry_id: UUID) -> ComputeRegistry | None:

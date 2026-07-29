@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 @contextlib.asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Run this API replica's registered Operation scheduler."""
 
     # Validate every Operation handler before starting this replica's scheduler.

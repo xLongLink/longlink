@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from sqlalchemy import or_, and_, case, text, select, update
 from src.logger import logger
+from collections.abc import Sequence
 from src.environments import env
 from packaging.version import Version
 from longlink.utils.time import utcnow
@@ -15,13 +16,13 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[Operation]:
+async def fetch() -> Sequence[Operation]:
     """Return all operations ordered by newest first."""
 
     # Read operations through a managed database session.
     async with session_scope() as session:
         statement = select(Operation).order_by(Operation.created_at.desc())
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
 async def fail_in_session(session: AsyncSession, operation: Operation, finished_at: datetime) -> None:

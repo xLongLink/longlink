@@ -6,6 +6,7 @@ from sqlalchemy import update as sql_update
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -51,13 +52,13 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
         return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def fetch() -> list[Organization]:
+async def fetch() -> Sequence[Organization]:
     """Return all organizations in the database."""
 
     # Load active organizations.
     async with session_scope() as session:
         statement = select(Organization).where(Organization.deleted_at.is_(None))
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
 async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> bool:
@@ -99,7 +100,7 @@ async def purge(organization_id: UUID) -> None:
         await session.commit()
 
 
-async def applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
+async def applications(organization_id: UUID, include_deleted: bool = False) -> Sequence[Application]:
     """Return applications for one organization."""
 
     # Query organization applications in one session.
@@ -111,10 +112,10 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
             statement = statement.where(Application.deleted_at.is_(None))
 
         statement = statement.order_by(Application.created_at.asc())
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
-async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
+async def invitations(organization_id: UUID) -> Sequence[OrganizationInvitation]:
     """Return active invitations for one organization."""
 
     # Query organization invitations in one session.
@@ -127,7 +128,7 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
             )
             .order_by(OrganizationInvitation.created_at.desc())
         )
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
 async def get(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
@@ -144,7 +145,7 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
         return (await session.scalars(statement)).one_or_none()
 
 
-async def members(organization_id: UUID, include_deleted: bool = False) -> list[UserOrganization]:
+async def members(organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
     """Return organization member rows for one organization."""
 
     # Query memberships with their users so detached callers can shape API payloads.
@@ -157,7 +158,7 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> list[
         if not include_deleted:
             statement = statement.where(UserOrganization.deleted_at.is_(None))
 
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
 async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:

@@ -47,8 +47,8 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
-    Session = await get_session()
+    session_factory = await get_session()
 
     # Open one session for the caller's scoped work.
-    async with Session() as session:
+    async with session_factory() as session:
         yield session

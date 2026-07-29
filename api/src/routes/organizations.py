@@ -37,10 +37,8 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Resolve the active Organization before assembling its related response data.
-    organization = await organizations.get(organization_id)
-    if organization is None:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    # Reuse the active Organization loaded with the authorized membership.
+    organization = membership.organization
 
     active_applications = await organizations.applications(organization.id)
     memberships = await organizations.members(organization.id)

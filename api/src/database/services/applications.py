@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Sequence, Awaitable
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -17,7 +17,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[Application]:
+async def fetch() -> Sequence[Application]:
     """Return all registered applications for admin views."""
 
     # Load active applications with related response data.
@@ -29,10 +29,10 @@ async def fetch() -> list[Application]:
             .where(Application.deleted_at.is_(None))
             .order_by(Organization.name, Application.name)
         )
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
-async def gateway_routes(compute_id: UUID) -> list[tuple[UUID, str]]:
+async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, str]]:
     """Return stable Service route identities for running Applications on one compute."""
 
     # Gateway reconciliation needs no provider credentials or Application runtime configuration.
@@ -48,7 +48,7 @@ async def gateway_routes(compute_id: UUID) -> list[tuple[UUID, str]]:
             )
             .order_by(Organization.slug, Application.id)
         )
-        return list((await session.execute(statement)).tuples())
+        return (await session.execute(statement)).tuples().all()
 
 
 async def purge(application_id: UUID) -> None:

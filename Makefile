@@ -179,11 +179,15 @@ up:
 
 # Remove remote development resources, stop local services, and clean local state.
 down:
+	@printf "Removing tracked remote development resources...\n"
 	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
+	@image="$(LOCAL_APPLICATION_IMAGE)"; repository="$${image%@*}"; repository="$${repository%:*}"; \
+		image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
+		if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml

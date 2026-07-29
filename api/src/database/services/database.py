@@ -2,18 +2,19 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[DatabaseRegistry]:
+async def fetch() -> Sequence[DatabaseRegistry]:
     """Return all registered database backends."""
 
     # Open a session for the registry list query.
     async with session_scope() as session:
-        return list(await session.scalars(select(DatabaseRegistry)))
+        return (await session.scalars(select(DatabaseRegistry))).all()
 
 
 async def get(registry_id: UUID) -> DatabaseRegistry | None:

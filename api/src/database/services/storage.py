@@ -2,17 +2,18 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
 from src.database.session import session_scope
 from src.database.models.storages import StorageRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[StorageRegistry]:
+async def fetch() -> Sequence[StorageRegistry]:
     """Return all registered storage backends."""
 
     # Open a session for the registry list query.
     async with session_scope() as session:
-        return list(await session.scalars(select(StorageRegistry)))
+        return (await session.scalars(select(StorageRegistry))).all()
 
 
 async def get(registry_id: UUID) -> StorageRegistry | None:

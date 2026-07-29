@@ -235,12 +235,20 @@ class Postgres:
         async with self._connection(organization.hex) as conn:
             schema = self.quote(conn, application.hex)
             role = self.quote(conn, runtime_username)
+            database = self.quote(conn, organization.hex)
+            shared_schema = self.quote(conn, SHARED_SCHEMA)
 
-            # DROP OWNED is only valid when the runtime role still exists.
-            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            # Remove every grant and setting assigned during Application provisioning before dropping its role.
+            await conn.exec_driver_sql(
+                f"""
+                REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
+                REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
+                REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
+                ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
+                ALTER ROLE {role} IN DATABASE {database} RESET search_path;
+                """
+            )
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
-            if role_exists.scalar_one_or_none() is not None:
-                await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
         async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:

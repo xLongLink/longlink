@@ -232,8 +232,13 @@ class Gateway:
         # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
         namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
         await self._resources.apply(Namespace, namespace)
+        await self._resources.apply(Service, service_manifest)
+
+        # Poll provider-owned Service status without repeatedly applying unchanged desired state.
         while True:
-            service = await self._resources.apply(Service, service_manifest)
+            service = await self._resources.read(Service, "longlink-gateway", "longlink-system")
+            if service is None:
+                raise RuntimeError("Gateway Service disappeared before IP allocation")
 
             # Parse the provider-owned Service status while endpoint allocation is pending.
             body = service.raw
@@ -268,5 +273,13 @@ class Gateway:
         )
         await self._resources.apply(ConfigMap, config_map)
         await self._resources.apply(NetworkPolicy, network_policy)
-        while not deployment_is_ready(await self._resources.apply(Deployment, deployment_manifest)):
+        await self._resources.apply(Deployment, deployment_manifest)
+
+        # Poll rollout status without repeatedly applying the same Deployment revision.
+        while True:
+            deployment = await self._resources.read(Deployment, "longlink-gateway", "longlink-system")
+            if deployment is None:
+                raise RuntimeError("Gateway Deployment disappeared during rollout")
+            if deployment_is_ready(deployment):
+                return
             await asyncio.sleep(5)

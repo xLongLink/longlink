@@ -110,7 +110,15 @@ class Applications:
 
         # Establish stable Service discovery before creating Application Pods.
         await self._resources.apply(Service, service)
-        while not deployment_is_ready(await self._resources.apply(Deployment, deployment)):
+        await self._resources.apply(Deployment, deployment)
+
+        # Poll rollout status without repeatedly applying the same Application revision.
+        while True:
+            deployed = await self._resources.read(Deployment, str(application_id), namespace)
+            if deployed is None:
+                raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
+            if deployment_is_ready(deployed):
+                return
             await asyncio.sleep(5)
 
     async def delete(self, application_id: UUID, namespace: str) -> None:
