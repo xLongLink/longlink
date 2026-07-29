@@ -23,13 +23,6 @@ class StorageRuntimeCredentials(TypedDict):
     secret_access_key: str
 
 
-class StorageUsage(TypedDict):
-    """Describe aggregate storage usage for one bucket."""
-
-    space_used: int
-    object_count: int
-
-
 JsonObject = dict[str, object]
 
 
@@ -66,10 +59,9 @@ class Exoscale:
             ),
         )
 
-    async def usage(self, bucket: str) -> StorageUsage | None:
+    async def usage(self, bucket: str) -> dict[str, int] | None:
         """Return aggregate usage for one bucket, or none when the bucket is absent."""
 
-        object_count = 0
         space_used = 0
 
         # Walk every listed page because S3-compatible APIs do not expose portable bucket totals.
@@ -81,7 +73,6 @@ class Exoscale:
                         size = int(item.get("Size", 0))
                         if str(item.get("Key", "")).endswith("/") and size == 0:
                             continue
-                        object_count += 1
                         space_used += size
         except ClientError as exc:
             error = exc.response.get("Error", {})
@@ -90,7 +81,7 @@ class Exoscale:
                 return None
             raise
 
-        return {"object_count": object_count, "space_used": space_used}
+        return {"space_used": space_used}
 
     async def create(self, bucket: str) -> None:
         """Create one S3-compatible bucket."""

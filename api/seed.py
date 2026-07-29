@@ -18,7 +18,7 @@ from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
-from src.models.computes import ComputeRegistryCreate
+from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -286,7 +286,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Validate the selected Kubernetes compute target before external lookups or Platform mutations.
     compute = ComputeRegistryCreate(
         name="development compute",
-        kubeconfig=settings.KUBECONFIG.read_text(encoding="utf-8"),
+        kubeconfig=kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8")),
     )
 
     # Resolve and validate immutable image metadata before mutating local Platform state.
@@ -558,7 +558,7 @@ async def cleanup_local_development() -> None:
         sslmode,
         organization_id,
     ), application_ids in database_resources.items():
-        database = adapters.Postgres(host, port, username, password, sslmode)
+        database = adapters.Postgres(host, port, username, password, DatabaseSSLMode(sslmode))
         for application_id in application_ids:
             await database.delete_schema(organization_id, application_id)
         await database.delete_database(organization_id)

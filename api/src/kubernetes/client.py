@@ -7,7 +7,7 @@ from src.kubernetes.organizations import Organizations
 class Kubernetes:
     """Expose Kubernetes lifecycle abstractions."""
 
-    def __init__(self, kubeconfig: str) -> None:
+    def __init__(self, kubeconfig: dict[str, object]) -> None:
         """Initialize components that share one lazy cluster connection."""
 
         self._resources = KubernetesResources(kubeconfig)

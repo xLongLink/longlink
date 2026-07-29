@@ -2,13 +2,6 @@ from uuid import UUID
 
 APPLICATION_ID_LABEL = "longlink.io/application-id"
 
-
-def application_deployment_name(application_id: UUID) -> str:
-    """Return the stable Deployment name for one Application."""
-
-    return str(application_id)
-
-
 def application_service_name(application_id: UUID) -> str:
     """Return the stable Service name for one Application."""
 

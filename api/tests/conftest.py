@@ -53,6 +53,7 @@ async def reset_db(
     session._engine = None
 
     engine = create_async_engine(db_url)
+    session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
@@ -101,6 +102,7 @@ async def users(password_hash: str) -> tuple[User, User, User]:
 
         # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([platform_administrator, regular_user, other_user])
+        await db_session.flush()
         db_session.add_all(
             [
                 AccessToken(token=token.access_token_digest(str(platform_administrator.id)), user_id=platform_administrator.id),

@@ -75,13 +75,13 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     )
     try:
         gateway_response = await gateway.request(
-            application.id,
-            user.id,
-            request.method,
-            path,
-            request.url.query,
-            request.headers.get("content-type"),
-            request_content(),
+            application_id=application.id,
+            user_id=user.id,
+            method=request.method,
+            path=path,
+            query=request.url.query,
+            content_type=request.headers.get("content-type"),
+            content=request_content(),
         )
     except adapters.GatewayRequestError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc

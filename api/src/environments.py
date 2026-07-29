@@ -1,6 +1,7 @@
 import os
 from typing import Self
 from pydantic import Field, model_validator
+from src.models.types import PlatformVersion
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -13,7 +14,7 @@ class Env(BaseSettings):
     """
 
     # Runtime mode
-    VERSION: str = Field(default="v0.0.0", pattern=r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
+    VERSION: PlatformVersion = PlatformVersion("v0.0.0")
     DEVELOPMENT: bool = DEVELOPMENT
 
     # Authentication

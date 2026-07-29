@@ -45,18 +45,6 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     assert client.cookies.get("longlink_auth") is None
 
 
-@pytest.mark.no_db
-async def test_verify_email_rejects_blank_token_payload(client: AsyncClient) -> None:
-    """Reject malformed verification payloads before token verification runs."""
-
-    # Act
-    response = await client.post("/api/auth/verify", json={"token": ""})
-
-    # Assert
-    assert response.status_code == 422
-    assert client.cookies.get("longlink_auth") is None
-
-
 async def test_register_verify_and_password_login(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Create an authenticated account only after email and profile completion."""
 

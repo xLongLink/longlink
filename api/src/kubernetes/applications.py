@@ -10,7 +10,6 @@ from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Dep
 from src.kubernetes.names import (
     APPLICATION_ID_LABEL,
     application_service_name,
-    application_deployment_name,
     application_runtime_secret_name,
     application_environment_secret_name,
 )
@@ -45,7 +44,7 @@ class Applications:
 
         # Repeated seed and API attempts converge the Secret before lifecycle work starts.
         secret = await self._resources.replace_secret(application_environment_secret_name(application_id), namespace, envs)
-        deployment = await self._resources.read(Deployment, application_deployment_name(application_id), namespace)
+        deployment = await self._resources.read(Deployment, str(application_id), namespace)
         if deployment is None:
             if require_deployment:
                 raise ValueError("Kubernetes Application Deployment is missing")
@@ -57,7 +56,7 @@ class Applications:
             raise TypeError("Kubernetes Application environment Secret is missing its resource version")
         await self._resources.patch(
             Deployment,
-            application_deployment_name(application_id),
+            str(application_id),
             {
                 "spec": {
                     "template": {
@@ -83,7 +82,7 @@ class Applications:
         # Read the exact Secret from the Organization Namespace.
         secret = await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace)
         if secret is None:
-            if await self._resources.read(Deployment, application_deployment_name(application_id), namespace) is not None:
+            if await self._resources.read(Deployment, str(application_id), namespace) is not None:
                 raise ValueError("Kubernetes Application runtime Secret is missing")
             return None
 
@@ -108,7 +107,6 @@ class Applications:
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
             application_id_label=APPLICATION_ID_LABEL,
-            deployment_name=application_deployment_name(application_id),
             environment_secret_name=application_environment_secret_name(application_id),
             image=json.dumps(image),
             namespace=namespace,
@@ -122,7 +120,7 @@ class Applications:
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            deployed = await self._resources.read(Deployment, application_deployment_name(application_id), namespace)
+            deployed = await self._resources.read(Deployment, str(application_id), namespace)
             if deployed is None:
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
             if deployment_is_ready(deployed):
@@ -135,7 +133,7 @@ class Applications:
         # Recheck only Kubernetes state while resources and Pods terminate.
         while await self._resources.read(Namespace, namespace) is not None:
             resources: tuple[APIObject | None, ...] = (
-                await self._resources.read(Deployment, application_deployment_name(application_id), namespace),
+                await self._resources.read(Deployment, str(application_id), namespace),
                 await self._resources.read(Service, application_service_name(application_id), namespace),
                 await self._resources.read(Secret, application_environment_secret_name(application_id), namespace),
                 await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace),

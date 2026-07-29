@@ -37,6 +37,7 @@ class GatewayClient:
 
     async def request(
         self,
+        *,
         application_id: UUID,
         user_id: UUID,
         method: str,
@@ -65,10 +66,9 @@ class GatewayClient:
         try:
             request = client.build_request(method, url, content=content, headers=headers)
             response = await client.send(request, stream=True)
-        except httpx2.HTTPError as exc:
+        except Exception as exc:
             await client.aclose()
-            raise GatewayRequestError from exc
-        except Exception:
-            await client.aclose()
+            if isinstance(exc, httpx2.HTTPError):
+                raise GatewayRequestError from exc
             raise
         return GatewayResponse(client, response)

@@ -115,7 +115,6 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         OperationKind.organization_delete,
     }
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
-    assert deletion.kind == OperationKind.organization_delete
     assert deletion.target_id == organization.id
 
 
@@ -280,7 +279,7 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             """Return fake usage counters for one Organization bucket."""
 
             assert bucket_name == organization.id.hex
-            return {"space_used": 4096, "object_count": 6}
+            return {"space_used": 4096}
 
     def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
         """Return the fake adapter for the selected registry credentials."""
@@ -300,7 +299,6 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
     assert response.json() == {
         "bucket_name": organization.id.hex,
         "space_used": 4096,
-        "object_count": 6,
     }
 
 

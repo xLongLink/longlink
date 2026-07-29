@@ -3,12 +3,15 @@ from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
 from src.environments import env
+from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -21,7 +24,7 @@ async def create_compute(name: str) -> ComputeRegistry:
     async with session_scope() as session:
         compute = ComputeRegistry(
             name=name.title(),
-            kubeconfig="apiVersion: v1\nclusters: []\n",
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             proxy_secret="proxy-secret",
             version=env.VERSION,
         )
@@ -110,38 +113,60 @@ async def test_release_schedules_running_application_reconciliation_once() -> No
 
     # Arrange
     compute = await create_compute("local")
-    organization = Organization(
-        name="Acme",
-        slug="acme",
-        compute_id=compute.id,
-        database_id=uuid4(),
-        storage_id=uuid4(),
-        status=Status.running,
+    database = DatabaseRegistry(
+        name="Primary Database",
+        host="database.example",
+        port=5432,
+        username="admin",
+        password="secret",
+        sslmode=DatabaseSSLMode.disable,
     )
-    running = Application(
-        organization_id=organization.id,
-        name="Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard@sha256:resolved",
-        status=Status.running,
-    )
-    creating = Application(
-        organization_id=organization.id,
-        name="Pending",
-        slug="pending",
-        image="ghcr.io/longlink/pending@sha256:resolved",
-        status=Status.creating,
-    )
-    deleted = Application(
-        organization_id=organization.id,
-        name="Deleted",
-        slug="deleted",
-        image="ghcr.io/longlink/deleted@sha256:resolved",
-        status=Status.running,
-        deleted_at=utcnow(),
+    storage = StorageRegistry(
+        name="Primary Storage",
+        endpoint_url="https://sos-ch-gva-2.exo.io",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
     )
     async with session_scope() as session:
-        session.add_all([organization, running, creating, deleted])
+        session.add_all([database, storage])
+        await session.flush()
+        organization = Organization(
+            name="Acme",
+            slug="acme",
+            compute_id=compute.id,
+            database_id=database.id,
+            storage_id=storage.id,
+            status=Status.running,
+        )
+        session.add(organization)
+        await session.flush()
+        running = Application(
+            organization_id=organization.id,
+            name="Dashboard",
+            slug="dashboard",
+            image="ghcr.io/longlink/dashboard@sha256:resolved",
+            status=Status.running,
+        )
+        session.add_all(
+            [
+                running,
+                Application(
+                    organization_id=organization.id,
+                    name="Pending",
+                    slug="pending",
+                    image="ghcr.io/longlink/pending@sha256:resolved",
+                    status=Status.creating,
+                ),
+                Application(
+                    organization_id=organization.id,
+                    name="Deleted",
+                    slug="deleted",
+                    image="ghcr.io/longlink/deleted@sha256:resolved",
+                    status=Status.running,
+                    deleted_at=utcnow(),
+                ),
+            ]
+        )
         await session.commit()
 
     # Act

@@ -1,7 +1,9 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Enum, Text, Column
+from sqlalchemy import JSON, Enum, Text, Column
+from src.models.types import PlatformVersion
+from src.database.types import PlatformVersionType
 from src.models.statuses import Status
 
 
@@ -18,7 +20,7 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
-    kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
+    kubeconfig: dict[str, object] = Field(sa_column=Column(JSON, nullable=False))
 
     # Reconciliation
     status: Status = Field(
@@ -28,7 +30,7 @@ class ComputeRegistry(SQLModel, table=True):
             nullable=False,
         ),
     )
-    version: str | None = Field(default=None, max_length=128)
+    version: PlatformVersion | None = Field(default=None, sa_column=Column(PlatformVersionType(), nullable=True))
 
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)

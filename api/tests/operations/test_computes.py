@@ -24,7 +24,7 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
     async with session_scope() as session:
         compute_registry = ComputeRegistry(
             name="Local compute",
-            kubeconfig="apiVersion: v1\nclusters: []\n",
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             proxy_secret="proxy-secret",
         )
         database_registry = DatabaseRegistry(

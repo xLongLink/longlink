@@ -82,7 +82,7 @@ def upgrade() -> None:
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("kubeconfig", sa.Text(), nullable=False),
+        sa.Column("kubeconfig", sa.JSON(), nullable=False),
         sa.Column(
             "status",
             sa.Enum(

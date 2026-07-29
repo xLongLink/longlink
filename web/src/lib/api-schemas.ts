@@ -155,7 +155,6 @@ export const apiOrganizationDatabaseUsageSchema = z.object({
 export const apiOrganizationStorageUsageSchema = z.object({
     bucket_name: z.string(),
     space_used: z.number().int().nonnegative(),
-    object_count: z.number().int().nonnegative(),
 });
 
 /** Validates an API response value with a Zod schema. */

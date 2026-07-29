@@ -5,6 +5,7 @@ from containers import start_postgres
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import users as shared_users
+from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -30,7 +31,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             port=container.port(POSTGRES_PORT),
             username="longlink",
             password="secret",
-            sslmode="disable",
+            sslmode=DatabaseSSLMode.disable,
         )
         active_user: shared_users.UserRow = {
             "id": UUID("11111111-1111-1111-1111-111111111111"),

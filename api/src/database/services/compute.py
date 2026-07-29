@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
+from src.models.types import PlatformVersion
 from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -31,7 +32,7 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
         return await session.get(ComputeRegistry, registry_id)
 
 
-async def create(name: str, kubeconfig: str) -> ComputeRegistry:
+async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
@@ -75,7 +76,7 @@ async def delete(registry_id: UUID) -> bool:
 
 async def record_success(
     compute_id: UUID,
-    platform_version: str,
+    platform_version: PlatformVersion,
     gateway_url: str | None,
     expected_status: Status,
     satisfy_pending: bool = False,

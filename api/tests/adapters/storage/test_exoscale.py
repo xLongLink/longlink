@@ -109,7 +109,7 @@ async def test_exoscale_usage_aggregates_bucket_and_ignores_prefix_markers(monke
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
-    assert await storage.usage("acme") == {"object_count": 3, "space_used": 12}
+    assert await storage.usage("acme") == {"space_used": 12}
 
 
 async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -45,7 +45,6 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
         ):
             return
         compute.status = Status.failed
-        return
 
     # Application creation and reconciliation failures affect only active, non-tombstoned Applications.
     if operation.kind in {OperationKind.application_create, OperationKind.application_reconcile}:
@@ -58,7 +57,6 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             )
             .values(status=Status.failed)
         )
-        return
 
     # Organization creation and reconciliation share one guarded terminal transition.
     if operation.kind in {OperationKind.organization_create, OperationKind.organization_reconcile}:
@@ -71,7 +69,6 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             )
             .values(status=Status.failed)
         )
-        return
 
 async def enqueue_in_session(
     session: AsyncSession,

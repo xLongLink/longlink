@@ -39,7 +39,7 @@ class Postgres:
     Runtime roles can write their application schema and read the organization's shared schema.
     """
 
-    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode | str) -> None:
+    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> None:
         """Initialize the PostgreSQL database adapter.
 
         Args:
@@ -55,7 +55,7 @@ class Postgres:
         self._port = port
         self._username = username
         self._password = password
-        self._sslmode = DatabaseSSLMode(sslmode)
+        self._sslmode = sslmode
 
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""

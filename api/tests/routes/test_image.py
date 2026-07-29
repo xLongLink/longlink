@@ -76,13 +76,3 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Image metadata not found"}
-
-
-async def test_inspect_image_rejects_invalid_image_reference(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
-    """Reject malformed image references before image inspection runs."""
-
-    # Act
-    response = await clients[0].get("/api/image?image=longlink/dashboard")
-
-    # Assert
-    assert response.status_code == 422

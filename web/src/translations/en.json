@@ -854,9 +854,6 @@
     "resources.noStorageResources": {
         "defaultMessage": "No storage resources found."
     },
-    "resources.objectCount": {
-        "defaultMessage": "{count} objects"
-    },
     "resources.podsDescription": {
         "defaultMessage": "Pods in namespace {namespace} on compute backend {name}."
     },

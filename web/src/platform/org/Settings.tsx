@@ -218,10 +218,7 @@ export default function Settings({
                     <S3 aria-hidden="true" className="shrink-0" />
                     <VStack gap={1}>
                         <Text weight="semibold">{resource.bucket_name}</Text>
-                        <Text type="supporting">
-                            {formatBytes(resource.space_used)} ·{' '}
-                            {t('resources.objectCount', { count: formatNumber(resource.object_count) })}
-                        </Text>
+                        <Text type="supporting">{formatBytes(resource.space_used)}</Text>
                     </VStack>
                 </HStack>
             ),

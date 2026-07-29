@@ -2,7 +2,7 @@ import json
 import kr8s
 import yaml
 import base64
-from typing import TypeVar
+from typing import TypeVar, cast
 from kr8s.asyncio import Api
 from collections.abc import Mapping
 from kr8s.asyncio.objects import Secret, APIObject, Deployment, object_from_spec
@@ -32,7 +32,7 @@ def deployment_is_ready(deployment: Deployment) -> bool:
 class KubernetesResources:
     """Provide the minimum resource operations for a dedicated LongLink compute cluster."""
 
-    def __init__(self, kubeconfig: str) -> None:
+    def __init__(self, kubeconfig: dict[str, object]) -> None:
         """Initialize lazy access to one configured cluster."""
 
         self._kubeconfig = kubeconfig
@@ -43,12 +43,8 @@ class KubernetesResources:
 
         # Lazily connect so clients that only render manifests open no cluster connection.
         if self._api_client is None:
-            kubeconfig = yaml.safe_load(self._kubeconfig)
-            if not isinstance(kubeconfig, dict):
-                raise ValueError("Kubernetes kubeconfig must be a mapping")
-
             # kr8s accepts in-memory mappings although its annotation only declares file paths.
-            self._api_client = await kr8s.asyncio.api(kubeconfig=kubeconfig, serviceaccount="")
+            self._api_client = await kr8s.asyncio.api(kubeconfig=cast(str, self._kubeconfig), serviceaccount="")
 
         return self._api_client
 

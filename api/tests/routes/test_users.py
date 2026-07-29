@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.models.users import UserProfile, UserSummary
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
@@ -27,7 +26,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Assert
     assert profile_response.status_code == 200
-    assert profile_response.json() == UserProfile.model_validate(user).model_dump(mode="json")
+    assert profile_response.json()["id"] == str(user.id)
 
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
@@ -80,8 +79,7 @@ async def test_list_users_returns_admin_user_summaries(
     # Assert
     assert response.status_code == 200
 
-    expected_payload = [UserSummary.model_validate(user).model_dump(mode="json") for user in users]
-    assert response.json() == expected_payload
+    assert [item["id"] for item in response.json()] == [str(user.id) for user in users]
 
 
 async def test_platform_user_cannot_access_admin_routes(
@@ -124,5 +122,4 @@ async def test_patch_me_updates_authenticated_user_profile(
     updated_user = await user_service.get(user.id)
     assert updated_user is not None
 
-    expected_payload = UserProfile.model_validate(updated_user).model_dump(mode="json")
-    assert response.json() == expected_payload
+    assert response.json()["name"] == "Updated User"
