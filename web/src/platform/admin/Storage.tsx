@@ -10,9 +10,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useStorages } from '@/data/storage';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiStorageRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -33,7 +34,13 @@ export default function AdminStorage() {
             toast({ body: t('admin.storageDeleted') });
         },
     });
-    const { items: storages, error, isLoading } = useStorages();
+    const {
+        items: storages,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiStorageRegistry>('/api/storages', {
+        parse: (value) => parseApiCollection(apiStorageRegistrySchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteStorageTitle'),

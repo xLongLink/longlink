@@ -29,7 +29,7 @@ type PeopleProps = {
     organizationId: string;
     members: ApiOrganizationMember[];
     invitations: ApiInvitation[];
-    activeSection?: 'members' | 'invitations';
+    activeSection: 'members' | 'invitations';
     canInviteMembers: boolean;
     canManageMembers: boolean;
     isLoading: boolean;
@@ -49,7 +49,7 @@ export default function People({
     organizationId,
     members,
     invitations,
-    activeSection = 'members',
+    activeSection,
     canInviteMembers,
     canManageMembers,
     isLoading,
@@ -129,8 +129,8 @@ export default function People({
             renderCell: (invitation) => formatDate(invitation.created_at),
         },
     ];
-    const peopleError = error ? new Error(t('errors.loadPeople')) : null;
-    const invitationsError = error ? new Error(t('errors.loadInvitations')) : null;
+    const peopleError = error ? t('errors.loadPeople') : null;
+    const invitationsError = error ? t('errors.loadInvitations') : null;
 
     return (
         <>
@@ -142,7 +142,7 @@ export default function People({
                     </VStack>
                     <Divider />
                     {isLoading && members.length === 0 ? null : peopleError && members.length === 0 ? (
-                        <Banner status="error" title={peopleError.message} />
+                        <Banner status="error" title={peopleError} />
                     ) : (
                         <Table
                             columns={memberColumns}
@@ -175,7 +175,7 @@ export default function People({
                     </HStack>
                     <Divider />
                     {isLoading && invitations.length === 0 ? null : invitationsError && invitations.length === 0 ? (
-                        <Banner status="error" title={invitationsError.message} />
+                        <Banner status="error" title={invitationsError} />
                     ) : (
                         <Table
                             columns={invitationColumns}

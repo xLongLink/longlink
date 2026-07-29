@@ -11,8 +11,9 @@ from src.database.models.operations import Operation
 
 
 @operation("application.create")
+@operation("application.reconcile")
 async def create(claimed: Operation) -> str | None:
-    """Provision and deploy one Application once, then publish its gateway route."""
+    """Converge one Application lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     application = await applications.get(claimed.target_id, include_deleted=True)
@@ -112,14 +113,18 @@ async def create(claimed: Operation) -> str | None:
         if persisted_runtime_envs is None:
             await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
 
-        # Reapply both workload resources on every retry so creation repairs partial cluster state.
-        await cluster.applications.apply(application.id, organization.slug, application.image)
     elif application.status != Status.running:
         return None
 
+    # Reapply the workload so creation retries and release reconciliation repair deployment drift.
+    await cluster.applications.apply(application.id, organization.slug, application.image)
+
+    # Running Application reconciliation owns only its workload, not shared gateway state.
+    if application.status == Status.running:
+        return None
+
     # Publish a creating Application route inline without exposing running before gateway readiness.
-    pending_route = GatewayRoute(id=application.id, namespace=organization.slug) if application.status == Status.creating else None
-    gateway_url = await computes.reconcile_gateway(registry, cluster, pending_route)
+    gateway_url = await computes.reconcile_gateway(registry, cluster, GatewayRoute(id=application.id, namespace=organization.slug))
     if not await compute.record_success(
         registry.id,
         env.VERSION,
@@ -130,7 +135,7 @@ async def create(claimed: Operation) -> str | None:
         return "Application gateway state was not recorded"
 
     # Publish running only after both workload readiness and gateway publication succeed.
-    if application.status == Status.creating and not await applications.mark_running(application.id, organization.compute_id):
+    if not await applications.mark_running(application.id, organization.compute_id):
         current = await applications.get(application.id, include_deleted=True)
         if current is None or current.deleted_at is not None or current.status == Status.running:
             return None

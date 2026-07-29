@@ -18,6 +18,7 @@ class OperationKind(StrEnum):
 
     compute_reconcile = "compute.reconcile"
     application_create = "application.create"
+    application_reconcile = "application.reconcile"
     application_delete = "application.delete"
     organization_create = "organization.create"
     organization_delete = "organization.delete"

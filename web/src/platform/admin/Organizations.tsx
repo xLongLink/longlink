@@ -12,9 +12,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy } from 'lucide-react';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useOrganizations } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiOrganizationSummarySchema, parseApiCollection } from '@/lib/api-schemas';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -34,7 +35,13 @@ export default function AdminOrganizations() {
             toast({ body: t('admin.organizationDeleted') });
         },
     });
-    const { items: organizations, error, isLoading } = useOrganizations();
+    const {
+        items: organizations,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
+        parse: (value) => parseApiCollection(apiOrganizationSummarySchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(organizations);
     const deleteDialog = useDeleteDialog({
         title: t('deleteDialog.deleteOrganizationTitle'),

@@ -8,10 +8,15 @@ import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
+import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
+import { publicSeoMeta } from '@/lib/seo';
 import { HeroGlobe } from '@/platform/HeroGlobe';
+import { homePage } from '@/platform/public';
+
+export const meta: MetaFunction = () => publicSeoMeta(homePage);
 
 const paths = [
     {

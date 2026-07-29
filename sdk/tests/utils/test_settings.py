@@ -1,7 +1,8 @@
+import pytest
 from longlink.utils.settings import Envs
 
 
-def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch) -> None:
+def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     """Read SDK runtime settings from `LONGLINK_` process variables."""
 
     # Populate every supported prefixed runtime setting and one unprefixed conflict.

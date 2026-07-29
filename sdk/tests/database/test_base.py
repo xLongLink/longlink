@@ -21,8 +21,8 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
         name: str
 
     # Inspect the inherited columns and their foreign-key targets.
+    table = getattr(FeatureAuditItem, "__table__")
     try:
-        table = getattr(FeatureAuditItem, "__table__")
         foreign_key_targets = {
             column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
             for column_name in ("created_id", "updated_id", "deleted_id")
@@ -41,7 +41,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
     finally:
 
         # Remove the temporary table from shared metadata.
-        database_base.database_metadata.remove(getattr(FeatureAuditItem, "__table__"))
+        database_base.database_metadata.remove(table)
 
 
 @pytest.mark.parametrize(

@@ -9,15 +9,15 @@ Development tools
 
 ## k3d local cluster
 
-`make up` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, and creates the k3d
-cluster. Host-facing ports bind to loopback, while k3d reaches PostgreSQL and the registry through the private bridge
-gateway. They are not exposed to the local network.
+`make local` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, creates the k3d
+cluster, and builds the local sample Application image. Host-facing ports bind to loopback, while k3d reaches PostgreSQL
+and the registry through the private bridge gateway. They are not exposed to the local network.
 
 ```bash
-make up
+make local
 ```
 
-If a `compute` cluster predates the isolated network, run `make down` before `make up` so k3d can recreate it safely.
+If a `compute` cluster predates the isolated network, run `make down` before `make local` so k3d can recreate it safely.
 
 The equivalent manual setup is:
 
@@ -77,12 +77,12 @@ To reconcile compute resources against a remote Kubernetes cluster, set the path
 KUBECONFIG=../kubeconfig.yml
 ```
 
-`make seed` builds and deploys `localhost:15000/longlink-app:dev` by default. Set `APPLICATION_IMAGE` to the published
-sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before seeding.
+`make seed` deploys the published sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, by default. Run `make local`
+and set `APPLICATION_IMAGE=localhost:15000/longlink-app:dev` to seed the local sample Application instead.
 
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
-Start local services, build or pull the configured Application image, run API migrations, and seed local data:
+Start local services, pull the configured Application image, run API migrations, and seed local data:
 
 ```bash
 make seed

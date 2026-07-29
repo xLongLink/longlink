@@ -62,8 +62,6 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         }
     }
 
-    const isPending = login.isPending;
-
     return (
         <Stack gap={4} maxWidth={384} width="100%">
             <Stack gap={1} hAlign="center">
@@ -124,7 +122,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                     />
                 </Stack>
                 <Button
-                    isDisabled={isPending}
+                    isDisabled={login.isPending}
                     isLoading={login.isPending}
                     label={login.isPending ? t('auth.signingIn') : t('actions.login')}
                     type="submit"

@@ -1,12 +1,12 @@
 import { index, layout, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
-    index('./routes/home.tsx'),
+    index('./Home.tsx'),
     route('docs/*', './routes/docs.tsx'),
     route('terms', './routes/legal.tsx', { id: 'terms' }),
     route('privacy', './routes/legal.tsx', { id: 'privacy' }),
     route('impressum', './routes/legal.tsx', { id: 'impressum' }),
-    route('pricing', './routes/pricing.tsx'),
+    route('pricing', './Pricing.tsx'),
     route('marketplace', './routes/marketplace.tsx'),
     route('auth/register', './auth/Register.tsx'),
     route('auth/verify-email', './auth/VerifyEmail.tsx'),

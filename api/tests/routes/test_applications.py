@@ -1,12 +1,11 @@
 from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
-from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
 from src.database.services import operations, applications
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 

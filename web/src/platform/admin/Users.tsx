@@ -9,8 +9,9 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useUsers } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiUserSummarySchema, parseApiCollection } from '@/lib/api-schemas';
 import type { ApiUserSummary } from '@/lib/types';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -18,7 +19,13 @@ import { useAdminPagination } from '@/platform/admin/pagination';
 export default function AdminUsers() {
     const t = useTranslator();
     const toast = useToast();
-    const { items: users, error, isLoading } = useUsers();
+    const {
+        items: users,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiUserSummary>('/api/users', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(users);
     const columns: TableColumn<ApiUserSummary>[] = [
         {

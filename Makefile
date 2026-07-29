@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build local\:image seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 APPLICATION_IMAGE ?=
 LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
@@ -146,12 +146,12 @@ web\:clean:
 
 
 # Start isolated local services and the cluster, then wait for the local registry.
-up:
+local\:resources:
 	@docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1 || docker network create "$(DEV_DOCKER_NETWORK)"
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
 		network_ip="$$(docker inspect "k3d-$(DEV_CLUSTER)-server-0" --format '{{with index .NetworkSettings.Networks "$(DEV_DOCKER_NETWORK)"}}{{.IPAddress}}{{end}}')"; \
 		if [ -z "$$network_ip" ]; then \
-			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make up.\n"; \
+			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make local.\n"; \
 			exit 1; \
 		fi; \
 		printf "k3d cluster $(DEV_CLUSTER) already exists.\n"; \
@@ -178,6 +178,11 @@ up:
 	@printf "Local registry is ready.\n"
 
 
+# Initialize local infrastructure and build the local sample Application image.
+local: local\:resources
+	$(MAKE) local:image
+
+
 # Remove remote development resources, stop local services, and clean local state.
 down:
 	@printf "Removing tracked remote development resources...\n"
@@ -189,10 +194,12 @@ down:
 	@image="$(APPLICATION_IMAGE)"; \
 		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
 		if [ -z "$$image" ] && [ -f api/.env.seed ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image || true)"; fi; \
-		if [ -z "$$image" ]; then image="$(LOCAL_APPLICATION_IMAGE)"; fi; \
-		repository="$${image%@*}"; repository="$${repository%:*}"; \
-		image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
-		if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi
+		if [ -z "$$image" ]; then image="ghcr.io/xlonglink/longlink-app:v0.0.2"; fi; \
+		for repository in "$${image%@*}" "$(LOCAL_APPLICATION_IMAGE)"; do \
+			repository="$${repository%:*}"; \
+			image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
+			if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi; \
+		done
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml api/.seed-image
@@ -215,14 +222,14 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Start local services, build or pull the configured Application image, then run migrations and seed data.
-seed: up
+# Start local services, pull the configured Application image, then run migrations and seed data.
+seed: local\:resources
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	@image="$(APPLICATION_IMAGE)"; \
 		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
-		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then $(MAKE) local:image; else docker pull "$$image"; fi && \
+		docker pull "$$image" && \
 		printf '%s\n' "$$image" > api/.seed-image && \
 		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
 

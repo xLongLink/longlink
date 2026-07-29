@@ -16,7 +16,7 @@ type PlatformLayoutTab = {
 };
 
 type PlatformLayoutProps = {
-    tabs?: Record<string, string | PlatformLayoutTab>;
+    tabs?: Record<string, PlatformLayoutTab>;
     brandOnly?: boolean;
     brandHref?: string;
     fillViewport?: boolean;
@@ -42,17 +42,14 @@ export default function PlatformLayout({
 }: PlatformLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
-    const currentPathname = location.pathname;
-    const normalizedCurrentPathname = normalizePathname(currentPathname);
+    const normalizedCurrentPathname = normalizePathname(location.pathname);
     const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
-        const href = typeof tab === 'string' ? tab : tab.href;
-        const icon = typeof tab === 'string' ? undefined : tab.icon;
-        const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
+        const targetUrl = new URL(tab.href, `${window.location.origin}${location.pathname}`);
 
         return {
             label,
-            icon,
-            href,
+            icon: tab.icon,
+            href: tab.href,
             pathname: normalizePathname(targetUrl.pathname),
         };
     });
@@ -105,7 +102,7 @@ export default function PlatformLayout({
             }
             height={fillViewport ? 'fill' : 'auto'}
             reserveTabSpace={reserveTabSpace}
-            tabs={tabEntries.map((tab) => ({ ...tab, value: tab.pathname }))}
+            tabs={tabEntries.map(({ pathname, ...tab }) => ({ ...tab, value: pathname }))}
             topNavClassName="min-h-11 px-7"
         >
             {children}

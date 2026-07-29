@@ -5,7 +5,8 @@ import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useOperations } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { apiOperationSchema, parseApiCollection } from '@/lib/api-schemas';
 import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -21,6 +22,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
     const kindLabels: Record<ApiOperation['kind'], string> = {
         'compute.reconcile': t('admin.computeReconciliation'),
         'application.create': t('admin.applicationCreation'),
+        'application.reconcile': t('admin.applicationReconciliation'),
         'application.delete': t('admin.applicationDeletion'),
         'organization.create': t('admin.organizationCreation'),
         'organization.delete': t('admin.organizationDeletion'),
@@ -83,7 +85,14 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const t = useTranslator();
-    const { items: operations, error, isLoading } = useOperations();
+    const {
+        items: operations,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiOperation>('/api/operations', {
+        refetchInterval: 5000,
+        parse: (value) => parseApiCollection(apiOperationSchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(operations, { controls: 'default' });
 
     return (

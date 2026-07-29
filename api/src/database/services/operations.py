@@ -47,8 +47,8 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
         compute.status = Status.failed
         return
 
-    # Application creation failures affect only active, non-tombstoned Applications.
-    if operation.kind == OperationKind.application_create:
+    # Application creation and reconciliation failures affect only active, non-tombstoned Applications.
+    if operation.kind in {OperationKind.application_create, OperationKind.application_reconcile}:
         await session.execute(
             update(Application)
             .where(

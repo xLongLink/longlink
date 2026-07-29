@@ -76,7 +76,6 @@ export default function ResetPassword() {
     async function handleResetPassword(payload: ResetPasswordValues) {
         try {
             await resetPassword.mutateAsync(payload);
-            sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
             if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {

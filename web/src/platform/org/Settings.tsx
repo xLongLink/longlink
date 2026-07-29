@@ -10,7 +10,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Boxes, Building2, Database, HardDrive, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { z } from 'zod';
 import { useOrganizationDatabaseUsage, useOrganizationStorageUsage } from '@/data/organization';
@@ -52,6 +52,31 @@ const organizationAvatarSchema = z.union([
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
 
+/** Renders common Organization resource usage framing. */
+function UsageSettings({
+    children,
+    description,
+    error,
+    isLoading,
+    title,
+}: {
+    children: ReactNode;
+    description: string;
+    error: Error | null;
+    isLoading: boolean;
+    title: string;
+}) {
+    return (
+        <VStack gap={4}>
+            <VStack gap={1}>
+                <Heading level={2}>{title}</Heading>
+                <Text type="supporting">{description}</Text>
+            </VStack>
+            {isLoading ? null : error ? <Banner status="error" title={error.message} /> : children}
+        </VStack>
+    );
+}
+
 /** Renders database usage while the database settings section is active. */
 function DatabaseSettings({
     organizationId,
@@ -67,27 +92,23 @@ function DatabaseSettings({
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationDatabaseUsage(organizationId);
     const rows = data ? [data] : [];
-    const visibleError = organizationError ?? error;
 
     return (
-        <VStack gap={4}>
-            <VStack gap={1}>
-                <Heading level={2}>{t('navigation.database')}</Heading>
-                <Text type="supporting">{t('organizationSettings.reviewDatabase')}</Text>
-            </VStack>
-            {isOrganizationLoading || isLoading ? null : visibleError ? (
-                <Banner status="error" title={visibleError.message} />
-            ) : (
-                <Table
-                    columns={columns}
-                    data={rows}
-                    density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
-                    hasHover
-                    idKey="database_name"
-                />
-            )}
-        </VStack>
+        <UsageSettings
+            description={t('organizationSettings.reviewDatabase')}
+            error={organizationError ?? error}
+            isLoading={isOrganizationLoading || isLoading}
+            title={t('navigation.database')}
+        >
+            <Table
+                columns={columns}
+                data={rows}
+                density="compact"
+                emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                hasHover
+                idKey="database_name"
+            />
+        </UsageSettings>
     );
 }
 
@@ -106,27 +127,23 @@ function StorageSettings({
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationStorageUsage(organizationId);
     const rows = data ? [data] : [];
-    const visibleError = organizationError ?? error;
 
     return (
-        <VStack gap={4}>
-            <VStack gap={1}>
-                <Heading level={2}>{t('navigation.storage')}</Heading>
-                <Text type="supporting">{t('organizationSettings.reviewStorage')}</Text>
-            </VStack>
-            {isOrganizationLoading || isLoading ? null : visibleError ? (
-                <Banner status="error" title={visibleError.message} />
-            ) : (
-                <Table
-                    columns={columns}
-                    data={rows}
-                    density="compact"
-                    emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
-                    hasHover
-                    idKey="bucket_name"
-                />
-            )}
-        </VStack>
+        <UsageSettings
+            description={t('organizationSettings.reviewStorage')}
+            error={organizationError ?? error}
+            isLoading={isOrganizationLoading || isLoading}
+            title={t('navigation.storage')}
+        >
+            <Table
+                columns={columns}
+                data={rows}
+                density="compact"
+                emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
+                hasHover
+                idKey="bucket_name"
+            />
+        </UsageSettings>
     );
 }
 
@@ -157,6 +174,15 @@ export default function Settings({
     const hashValue = location.hash.replace(/^#/, '');
     const peopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
     const section: SettingsSection = routeSection === 'people' ? peopleSection : routeSection;
+    const ownerCell = (
+        <HStack gap={3} align="center">
+            <Avatar src={organizationAvatar} name={organizationName} size="md" />
+            <VStack gap={1}>
+                <Text weight="semibold">{organizationName}</Text>
+                <Text type="supporting">{t('columns.organization')}</Text>
+            </VStack>
+        </HStack>
+    );
     const databaseColumns: TableColumn<ApiOrganizationDatabaseUsage>[] = [
         {
             key: 'resource',
@@ -179,15 +205,7 @@ export default function Settings({
             key: 'owner',
             header: t('columns.owner'),
             width: proportional(1),
-            renderCell: () => (
-                <HStack gap={3} align="center">
-                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{organizationName}</Text>
-                        <Text type="supporting">{t('columns.organization')}</Text>
-                    </VStack>
-                </HStack>
-            ),
+            renderCell: () => ownerCell,
         },
     ];
     const storageColumns: TableColumn<ApiOrganizationStorageUsage>[] = [
@@ -212,15 +230,7 @@ export default function Settings({
             key: 'owner',
             header: t('columns.owner'),
             width: proportional(1),
-            renderCell: () => (
-                <HStack gap={3} align="center">
-                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{organizationName}</Text>
-                        <Text type="supporting">{t('columns.organization')}</Text>
-                    </VStack>
-                </HStack>
-            ),
+            renderCell: () => ownerCell,
         },
     ];
 

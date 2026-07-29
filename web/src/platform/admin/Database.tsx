@@ -10,9 +10,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useDatabases } from '@/data/database';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiDatabaseRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -33,7 +34,13 @@ export default function AdminDatabase() {
             toast({ body: t('admin.databaseDeleted') });
         },
     });
-    const { items: databases, error, isLoading } = useDatabases();
+    const {
+        items: databases,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
+        parse: (value) => parseApiCollection(apiDatabaseRegistrySchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteDatabaseTitle'),

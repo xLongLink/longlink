@@ -45,8 +45,8 @@ BUILD_CONTEXT_IGNORE_PATTERNS = (
     "htmlcov",
     "node_modules",
 )
-SAFE_GIT_DIRECTORY_NAMES = frozenset({"objects", "refs"})
-SAFE_GIT_FILE_NAMES = frozenset({"HEAD", "packed-refs", "shallow"})
+SAFE_GIT_DIRECTORY_NAMES = ("objects", "refs")
+SAFE_GIT_FILE_NAMES = ("HEAD", "packed-refs", "shallow")
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 
@@ -174,7 +174,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None
         return empty_spec
 
     # Locate the configured settings class without executing application code.
-    module = ast.parse(envs_path.read_text())
+    module = ast.parse(envs_path.read_text(encoding="utf-8"))
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
         return empty_spec
@@ -221,7 +221,7 @@ def read_pyproject(root: Path) -> dict[str, object]:
 
     # Parse TOML into project metadata.
     try:
-        return tomllib.loads(pyproject.read_text())
+        return tomllib.loads(pyproject.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
         raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
 
@@ -472,7 +472,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"
-    dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))
+    dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])), encoding="utf-8")
 
     return dockerfile_path, version, project_metadata.name
 
@@ -563,7 +563,7 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
                 ]
             )
             subprocess.run(command, check=True)
-            image_id = image_id_path.read_text().strip()
+            image_id = image_id_path.read_text(encoding="utf-8").strip()
 
             # Push the tag only when requested.
             if push:

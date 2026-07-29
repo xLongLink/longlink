@@ -11,9 +11,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Wrench } from 'lucide-react';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useComputes } from '@/data/compute';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiComputeRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiComputeRegistry } from '@/lib/types';
@@ -32,7 +33,14 @@ export default function AdminCompute() {
             toast({ body: t('admin.computeDeleted') });
         },
     });
-    const { items: computes, error, isLoading } = useComputes();
+    const {
+        items: computes,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiComputeRegistry>('/api/computes', {
+        refetchInterval: 5000,
+        parse: (value) => parseApiCollection(apiComputeRegistrySchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(computes);
     const statusLabels = createStatusLabels(t);
     const deleteDialog = useDeleteDialog({

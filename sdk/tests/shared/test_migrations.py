@@ -1,5 +1,5 @@
 import pytest
-from uuid import UUID, uuid4
+from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
 from longlink.shared import users as shared_users
@@ -100,21 +100,17 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     try:
         async with verification_engine.connect() as connection:
             rows = (
-                (
-                    await connection.execute(
-                        text(
-                            """
+                await connection.execute(
+                    text(
+                        """
                         SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
                         FROM shared.users
                         WHERE id = :user_id
                         """
-                        ),
-                        {"user_id": user_id},
-                    )
+                    ),
+                    {"user_id": user_id},
                 )
-                .mappings()
-                .all()
-            )
+            ).mappings().all()
     finally:
         await verification_engine.dispose()
 

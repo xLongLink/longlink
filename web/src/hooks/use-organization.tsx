@@ -63,12 +63,12 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 /** Invites one organization member and refreshes organization data. */
 export function useInviteOrganizationMember(organizationId: string, canInviteMembers: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
             // Require a resolved organization before mutating.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
@@ -84,11 +84,6 @@ export function useInviteOrganizationMember(organizationId: string, canInviteMem
             });
         },
         onSuccess: async () => {
-            // Skip cache work when the organization is unresolved.
-            if (organizationPath === null) {
-                return;
-            }
-
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
@@ -98,7 +93,7 @@ export function useInviteOrganizationMember(organizationId: string, canInviteMem
 /** Creates one application and refreshes organization application data. */
 export function useCreateOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({
@@ -115,7 +110,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
             envs: Record<string, string>;
         }) => {
             // Require a resolved organization before creating apps.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
@@ -130,11 +125,6 @@ export function useCreateOrganizationApplication(organizationId: string) {
             );
         },
         onSuccess: async () => {
-            // Skip cache work when the organization is unresolved.
-            if (organizationPath === null) {
-                return;
-            }
-
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
             await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
         },
@@ -144,12 +134,12 @@ export function useCreateOrganizationApplication(organizationId: string) {
 /** Changes one organization member role and refreshes membership data. */
 export function useChangeOrganizationMemberRole(organizationId: string, canManageMembers: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
             // Require a resolved organization before mutating.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
@@ -165,11 +155,6 @@ export function useChangeOrganizationMemberRole(organizationId: string, canManag
             });
         },
         onSuccess: async () => {
-            // Skip cache work when the organization is unresolved.
-            if (organizationPath === null) {
-                return;
-            }
-
             await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
@@ -230,12 +215,12 @@ export function useCreateOrganization() {
 /** Updates mutable organization settings and refreshes organization caches. */
 export function useUpdateOrganization(organizationId: string, canManageOrganization: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = `/api/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ avatar }: { avatar: string }) => {
             // Require a resolved organization and local management permission.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
             if (!canManageOrganization) {
@@ -253,10 +238,6 @@ export function useUpdateOrganization(organizationId: string, canManageOrganizat
             );
         },
         onSuccess: async () => {
-            if (organizationPath === null) {
-                return;
-            }
-
             // Refresh every response that embeds Organization metadata.
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),

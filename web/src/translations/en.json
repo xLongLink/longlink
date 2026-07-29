@@ -128,6 +128,9 @@
     "admin.applicationCreation": {
         "defaultMessage": "Application creation"
     },
+    "admin.applicationReconciliation": {
+        "defaultMessage": "Application reconciliation"
+    },
     "admin.applicationDeletion": {
         "defaultMessage": "Application deletion"
     },

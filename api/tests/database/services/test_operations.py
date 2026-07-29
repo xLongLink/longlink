@@ -10,6 +10,8 @@ from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
 async def create_compute(name: str) -> ComputeRegistry:
@@ -101,6 +103,60 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
         (OperationKind.application_create, first_application_id),
         (OperationKind.organization_create, organization_id),
     }
+
+
+async def test_release_schedules_running_application_reconciliation_once() -> None:
+    """Queue one current-release reconciliation for every running Application."""
+
+    # Arrange
+    compute = await create_compute("local")
+    organization = Organization(
+        name="Acme",
+        slug="acme",
+        compute_id=compute.id,
+        database_id=uuid4(),
+        storage_id=uuid4(),
+        status=Status.running,
+    )
+    running = Application(
+        organization_id=organization.id,
+        name="Dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard@sha256:resolved",
+        status=Status.running,
+    )
+    creating = Application(
+        organization_id=organization.id,
+        name="Pending",
+        slug="pending",
+        image="ghcr.io/longlink/pending@sha256:resolved",
+        status=Status.creating,
+    )
+    deleted = Application(
+        organization_id=organization.id,
+        name="Deleted",
+        slug="deleted",
+        image="ghcr.io/longlink/deleted@sha256:resolved",
+        status=Status.running,
+        deleted_at=utcnow(),
+    )
+    async with session_scope() as session:
+        session.add_all([organization, running, creating, deleted])
+        await session.commit()
+
+    # Act
+    await platform_release.schedule_migrations()
+    await platform_release.schedule_migrations()
+    reconciliations = [
+        operation
+        for operation in await operations.fetch()
+        if operation.kind == OperationKind.application_reconcile
+    ]
+
+    # Assert
+    assert len(reconciliations) == 1
+    assert reconciliations[0].target_id == running.id
+    assert reconciliations[0].platform_version == env.VERSION
 
 
 async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:

@@ -7,8 +7,13 @@ import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { CheckCircle, ChevronRight, Info, Wrench, type LucideIcon } from 'lucide-react';
+import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { publicSeoMeta } from '@/lib/seo';
+import { pricingPage } from '@/platform/public';
+
+export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 
 const pricingOptions: {
     description: string;

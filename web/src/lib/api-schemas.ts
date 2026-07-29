@@ -146,6 +146,7 @@ export const apiOperationSchema = z.object({
     kind: z.enum([
         'compute.reconcile',
         'application.create',
+        'application.reconcile',
         'application.delete',
         'organization.create',
         'organization.delete',

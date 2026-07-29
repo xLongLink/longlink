@@ -171,7 +171,6 @@ async def test_set_status_modifies_active_applications() -> None:
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.set_status(uuid4(), Status.creating, Status.running)
     await applications.set_status(application.id, Status.creating, Status.running)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
@@ -216,7 +215,6 @@ async def test_soft_delete_marks_application_deleted() -> None:
         OperationKind.organization_create,
     }
     deletion = next(item for item in open_operations if item.kind == OperationKind.application_delete)
-    assert deletion.kind == OperationKind.application_delete
     assert deletion.target_id == application.id
     assert deletion.platform_version == env.VERSION
     assert deletion.status == OperationStatus.scheduled

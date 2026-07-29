@@ -11,7 +11,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useApplications } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { apiApplicationResponseSchema, parseApiCollection } from '@/lib/api-schemas';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiApplicationResponse, Status } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
@@ -82,7 +83,14 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const t = useTranslator();
-    const { items: applications, error, isLoading } = useApplications();
+    const {
+        items: applications,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+        refetchInterval: 5000,
+        parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
+    });
     const { pageItems, pagination } = useAdminPagination(applications);
 
     return (

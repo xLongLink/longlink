@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Any
 from datetime import datetime
 from sqlmodel import Field
 from contextlib import asynccontextmanager
@@ -21,12 +20,6 @@ class Table(Base):
 
     # SQLAlchemy configuration
     __allow_unmapped__ = True
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Allow inherited SDK relationship annotations on mapped subclasses."""
-
-        cls.__allow_unmapped__ = True
-        super().__init_subclass__(**kwargs)
 
     # Audit timestamps
     created_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)

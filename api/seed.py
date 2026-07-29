@@ -53,7 +53,7 @@ class SeedSettings(BaseSettings):
     LOCAL_ORG: str = Field(default="test", min_length=1)
     LOCAL_APP_NAME: str = Field(default="sample", min_length=1)
     LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
-    APPLICATION_IMAGE: str = Field(default="localhost:15000/longlink-app:dev", min_length=1)
+    APPLICATION_IMAGE: str = Field(default="ghcr.io/xlonglink/longlink-app:v0.0.2", min_length=1)
 
     # Local infrastructure
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")

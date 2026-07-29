@@ -43,13 +43,7 @@ const defaultCreateApplicationValues = {
 } satisfies CreateApplicationInput;
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateApplication({
-    organizationId,
-    canCreate,
-}: {
-    organizationId: string;
-    canCreate: boolean;
-}) {
+export default function CreateApplication({ organizationId }: { organizationId: string }) {
     const t = useTranslator();
     const toast = useToast();
     const createApplication = useCreateOrganizationApplication(organizationId);
@@ -76,11 +70,6 @@ export default function CreateApplication({
     });
     const iconOptions = iconCatalog ?? [];
     const declaredEnvironments = imageMetadata?.environments ?? [];
-
-    // Hide creation for roles without application access.
-    if (!canCreate) {
-        return null;
-    }
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
