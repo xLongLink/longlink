@@ -4,9 +4,8 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { type PointerEvent, useEffect, useRef, useState } from 'react';
-import { ReactCompareSlider } from 'react-compare-slider';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { HeroGlobe } from '@/platform/HeroGlobe';
@@ -132,7 +131,44 @@ function IntegrationScale() {
 /** Renders the public home page. */
 export default function Home() {
     const [paintingHasEntered, setPaintingHasEntered] = useState(false);
+    const comparisonRef = useRef<HTMLElement>(null);
     const paintingRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const target = comparisonRef.current;
+        if (!target) return;
+
+        let frame: number | undefined;
+
+        // Map the sticky section's vertical scroll distance to the image reveal position.
+        const updatePosition = () => {
+            frame = undefined;
+            const scrollDistance = target.offsetHeight - window.innerHeight;
+            const progress =
+                scrollDistance > 0 ? Math.min(Math.max(-target.getBoundingClientRect().top / scrollDistance, 0), 1) : 0;
+
+            target.style.setProperty('--homepage-before-after-position', `${progress * 100}%`);
+            target.style.setProperty('--homepage-before-after-progress', `${progress}`);
+        };
+
+        // Limit image updates to one animation frame while the page is scrolling.
+        const queuePositionUpdate = () => {
+            if (frame !== undefined) return;
+
+            frame = requestAnimationFrame(updatePosition);
+        };
+
+        updatePosition();
+        window.addEventListener('resize', queuePositionUpdate);
+        window.addEventListener('scroll', queuePositionUpdate, { passive: true });
+
+        return () => {
+            if (frame !== undefined) cancelAnimationFrame(frame);
+
+            window.removeEventListener('resize', queuePositionUpdate);
+            window.removeEventListener('scroll', queuePositionUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         const target = paintingRef.current;
@@ -206,59 +242,97 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <section aria-labelledby="before-after-heading" className="relative z-20">
+            <section
+                ref={comparisonRef}
+                aria-labelledby="before-after-heading"
+                className="homepage-before-after-section relative z-20"
+            >
                 <Heading id="before-after-heading" level={2} className="sr-only">
-                    Before and after LongLink
+                    LongLink provides the foundation. Build with speed. Operate with confidence.
                 </Heading>
                 <Stack
                     as="figure"
-                    className="relative isolate overflow-hidden bg-body"
+                    className="sticky top-0 isolate overflow-hidden bg-body"
                     width="100%"
                     minHeight="100svh"
                     justify="center"
                     hAlign="center"
                 >
-                    <Stack className="absolute inset-0">
-                        <ReactCompareSlider
-                            className="homepage-before-after-slider size-full"
-                            defaultPosition={50}
-                            handle={
-                                <Stack aria-hidden="true" className="pointer-events-none h-full" hAlign="center">
-                                    <Stack className="pointer-events-auto w-0.5 grow cursor-ew-resize bg-accent-bg" />
-                                    <Stack
-                                        className="homepage-before-after-handle-button pointer-events-auto size-14 shrink-0 cursor-ew-resize rounded-full border-2 border-accent-bg bg-body/80 backdrop-blur-sm"
-                                        direction="horizontal"
-                                        gap={1}
-                                        hAlign="center"
-                                        vAlign="center"
-                                    >
-                                        <ChevronLeft aria-hidden="true" className="size-4 text-accent" />
-                                        <ChevronRight aria-hidden="true" className="size-4 text-accent" />
-                                    </Stack>
-                                    <Stack className="pointer-events-auto w-0.5 grow cursor-ew-resize bg-accent-bg" />
-                                </Stack>
-                            }
-                            itemOne={
-                                <Stack
-                                    aria-label="Fragmented city illustration"
-                                    role="img"
-                                    className="homepage-before-after-art homepage-before-after-art-before size-full bg-secondary"
-                                />
-                            }
-                            itemTwo={
-                                <Stack
-                                    aria-label="Unified city illustration"
-                                    role="img"
-                                    className="homepage-before-after-art homepage-before-after-art-after size-full bg-secondary"
-                                />
-                            }
-                            keyboardIncrement="2%"
-                            onlyHandleDraggable={false}
-                        />
+                    <Stack
+                        aria-label="Fragmented city illustration"
+                        role="img"
+                        className="homepage-before-after-art homepage-before-after-art-before absolute inset-0 bg-secondary"
+                    />
+                    <Stack
+                        aria-label="Unified city illustration"
+                        role="img"
+                        className="homepage-before-after-art homepage-before-after-art-after homepage-before-after-reveal absolute inset-0 bg-secondary"
+                    />
+                    <Stack
+                        aria-hidden="true"
+                        className="homepage-before-after-copy pointer-events-none absolute inset-0 z-1"
+                        hAlign="center"
+                        vAlign="center"
+                    >
+                        <Text
+                            className="homepage-before-after-caption absolute top-12 px-6 text-center sm:top-16"
+                            color="primary"
+                            display="block"
+                            textWrap="balance"
+                            type="large"
+                            weight="medium"
+                        >
+                            LongLink provides the foundation.
+                        </Text>
+                        <Text
+                            className="homepage-before-after-copy-before absolute right-1/2 mr-4 whitespace-nowrap"
+                            color="primary"
+                            display="block"
+                            textWrap="nowrap"
+                            type="display-3"
+                        >
+                            Build
+                        </Text>
+                        <Text
+                            className="homepage-before-after-copy-after absolute right-1/2 mr-4 whitespace-nowrap"
+                            color="primary"
+                            display="block"
+                            textWrap="nowrap"
+                            type="display-3"
+                        >
+                            Operate
+                        </Text>
+                        <Text
+                            className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap"
+                            color="accent"
+                            display="block"
+                            textWrap="nowrap"
+                            type="display-3"
+                        >
+                            with
+                        </Text>
+                        <Text
+                            className="homepage-before-after-copy-before absolute left-1/2 ml-4 whitespace-nowrap"
+                            color="primary"
+                            display="block"
+                            textWrap="nowrap"
+                            type="display-3"
+                        >
+                            Speed
+                        </Text>
+                        <Text
+                            className="homepage-before-after-copy-after absolute left-1/2 ml-4 whitespace-nowrap"
+                            color="primary"
+                            display="block"
+                            textWrap="nowrap"
+                            type="display-3"
+                        >
+                            Confidence
+                        </Text>
                     </Stack>
                 </Stack>
             </section>
-            <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
+            <section className="relative z-20 overflow-hidden px-6 py-24 sm:py-32">
                 <Stack className="mx-auto" width="100%" maxWidth={1000}>
                     <div className="relative z-2">
                         <div
@@ -322,12 +396,7 @@ export default function Home() {
                     </div>
                 </Stack>
             </section>
-            <Section
-                className="homepage-path-section relative z-20 -mt-px"
-                variant="transparent"
-                padding={6}
-                paddingBlock={10}
-            >
+            <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
                     <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
                         Next step
@@ -382,7 +451,7 @@ export default function Home() {
                     </Grid>
                 </Stack>
             </Section>
-            <div className="homepage-tertiary-section relative z-10">
+            <div className="relative z-10">
                 <Footer />
             </div>
         </div>

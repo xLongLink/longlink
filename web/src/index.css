@@ -140,77 +140,37 @@
 }
 
 .homepage-before-after-art {
-    mask: var(--homepage-before-after-art) center / cover no-repeat;
-    -webkit-mask: var(--homepage-before-after-art) center / cover no-repeat;
+    background: var(--homepage-before-after-art) center / cover no-repeat;
 }
 
 .homepage-before-after-art-before {
-    --homepage-before-after-art: url('/images/before-longlink.svg');
+    --homepage-before-after-art: url('/images/before-longlink.png');
 }
 
 .homepage-before-after-art-after {
-    --homepage-before-after-art: url('/images/after-longlink.svg');
+    --homepage-before-after-art: url('/images/after-longlink.png');
 }
 
-.homepage-before-after-slider [role='slider']:focus-visible .homepage-before-after-handle-button {
-    outline: calc(var(--border-width) * 2) solid var(--color-accent);
-    outline-offset: var(--spacing-1);
+.homepage-before-after-section {
+    --homepage-before-after-position: 0%;
+    --homepage-before-after-progress: 0;
+    height: 200svh;
 }
 
-@media (min-width: 40rem) {
-    .homepage-before-after-art {
-        mask-size: contain;
-        -webkit-mask-size: contain;
-    }
+.homepage-before-after-reveal {
+    clip-path: inset(0 calc(100% - var(--homepage-before-after-position)) 0 0);
 }
 
-.homepage-painting-section {
-    --homepage-background-primary: var(--color-background-body);
-    --homepage-background-secondary: color-mix(
-        in oklch,
-        var(--color-background-body) 42%,
-        var(--color-background-card) 58%
-    );
-    --homepage-background-tertiary: color-mix(
-        in oklch,
-        var(--color-background-body) 20%,
-        var(--color-background-muted) 80%
-    );
-    --painting-divider-height: clamp(3rem, 5vw, 4.75rem);
-    background:
-        radial-gradient(circle at 50% 8%, rgb(255 255 255 / 4%), transparent 28%), var(--homepage-background-secondary);
+.homepage-before-after-copy {
+    text-shadow: 0 0 var(--spacing-2) var(--color-background-body);
 }
 
-.homepage-painting-section::before,
-.homepage-painting-section::after {
-    position: absolute;
-    inset-inline: 0;
-    z-index: 1;
-    height: calc(var(--painting-divider-height) + 2px);
-    content: '';
-    pointer-events: none;
+.homepage-before-after-copy-before {
+    opacity: calc(1 - var(--homepage-before-after-progress));
 }
 
-.homepage-painting-section::before {
-    top: 0;
-    background: var(--homepage-background-primary);
-    clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-
-.homepage-painting-section::after {
-    bottom: -1px;
-    background: var(--homepage-background-tertiary);
-    clip-path: polygon(0 0, 100% 100%, 0 100%);
-}
-
-.homepage-path-section,
-.homepage-tertiary-section {
-    --homepage-background-tertiary: color-mix(
-        in oklch,
-        var(--color-background-body) 20%,
-        var(--color-background-muted) 80%
-    );
-    background: var(--homepage-background-tertiary);
+.homepage-before-after-copy-after {
+    opacity: var(--homepage-before-after-progress);
 }
 
 .homepage-hands-scroll-swing {
