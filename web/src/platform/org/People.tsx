@@ -154,9 +154,7 @@ export default function People({
                         />
                     )}
                 </VStack>
-            ) : null}
-
-            {activeSection === 'invitations' ? (
+            ) : (
                 <VStack gap={4}>
                     <HStack gap={4} justify="between" align="end" wrap="wrap">
                         <VStack gap={1}>
@@ -187,7 +185,7 @@ export default function People({
                         />
                     )}
                 </VStack>
-            ) : null}
+            )}
 
             <AlertDialog
                 isOpen={roleChangeTarget !== null}

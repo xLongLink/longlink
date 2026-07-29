@@ -64,15 +64,10 @@ export default function CreateDatabase() {
             ),
         onSuccess: async () => {
             setOpen(false);
-            resetDialogState();
+            form.reset();
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
         },
     });
-
-    /** Clears connection secrets when the dialog closes. */
-    function resetDialogState() {
-        form.reset();
-    }
 
     /** Updates dialog state while protecting an in-flight registration. */
     function handleOpenChange(nextOpen: boolean) {
@@ -81,7 +76,7 @@ export default function CreateDatabase() {
         }
         setOpen(nextOpen);
         if (!nextOpen) {
-            resetDialogState();
+            form.reset();
         }
     }
 

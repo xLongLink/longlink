@@ -77,6 +77,9 @@ To reconcile compute resources against a remote Kubernetes cluster, set the path
 KUBECONFIG=../kubeconfig.yml
 ```
 
+Remote compute targets require an `APPLICATION_IMAGE` that they can pull; the local registry image is only available to
+the cluster created by `make local`.
+
 `make seed` builds and deploys `localhost:15000/longlink-app:dev` by default. Set `APPLICATION_IMAGE` to the published
 sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before seeding.
 

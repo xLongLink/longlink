@@ -278,6 +278,11 @@ async def seed_local_development(settings: SeedSettings) -> None:
     )
     application_slug = names.slugify(payload.name)
 
+    # Local registry images can only be pulled by the compute cluster created by make local.
+    local_kubeconfig = Path(__file__).with_name("kubeconfig.yaml").resolve()
+    if str(payload.image).startswith("localhost:") and settings.KUBECONFIG.resolve() != local_kubeconfig:
+        raise ValueError("Local Application image requires the compute kubeconfig created by make local")
+
     # Validate the selected Kubernetes compute target before external lookups or Platform mutations.
     compute = ComputeRegistryCreate(
         name="development compute",

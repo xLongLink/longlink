@@ -27,11 +27,6 @@ export function UserProfile() {
         return null;
     }
 
-    /** Closes the profile navigation after selecting an internal link. */
-    function closeProfile() {
-        setIsOpen(false);
-    }
-
     return (
         <Popover
             alignment="end"
@@ -60,21 +55,21 @@ export function UserProfile() {
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/organizations"
                             label={t('profile.organizations')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/settings"
                             label={t('profile.settings')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
                             href="/docs"
                             label={t('common.documentation')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             rel="noopener noreferrer"
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
                             target="_blank"
@@ -99,7 +94,7 @@ export function UserProfile() {
                                         }
                                         href={href}
                                         label={t(profileLabel)}
-                                        onClickCapture={closeProfile}
+                                        onClickCapture={() => setIsOpen(false)}
                                         startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
                                     />
                                 ))}

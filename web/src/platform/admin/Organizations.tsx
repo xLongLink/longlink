@@ -27,9 +27,8 @@ export default function AdminOrganizations() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
-        mutationFn: async (organizationId: string) => {
-            await fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' });
-        },
+        mutationFn: (organizationId: string) =>
+            fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
             toast({ body: t('admin.organizationDeleted') });

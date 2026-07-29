@@ -26,9 +26,7 @@ export default function AdminDatabase() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
-        mutationFn: async (databaseId: string) => {
-            await fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' });
-        },
+        mutationFn: (databaseId: string) => fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             toast({ body: t('admin.databaseDeleted') });

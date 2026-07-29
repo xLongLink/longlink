@@ -86,8 +86,8 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FakeProxyClient)
+    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", FakeProxyClient)
     client = clients[0]
 
     # Proxy a request carrying trusted and untrusted browser headers.
@@ -185,8 +185,8 @@ async def test_application_proxy_rejects_oversized_request_body(
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FakeProxyClient)
+    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", FakeProxyClient)
     assert proxy_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
     client = clients[0]
@@ -304,8 +304,8 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FailingProxyClient)
+    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", FailingProxyClient)
     client = clients[0]
 
     # Proxy a request through the failing gateway client.

@@ -58,8 +58,6 @@ export default function Organizations() {
             ),
         },
     ];
-    const tableError = error ? t('errors.loadOrganizations') : null;
-
     return (
         <PlatformLayout
             brandOnly
@@ -77,8 +75,8 @@ export default function Organizations() {
                     </VStack>
                     <CreateOrganization />
                 </HStack>
-                {isLoading && memberships.length === 0 ? null : tableError && memberships.length === 0 ? (
-                    <Banner status="error" title={tableError} />
+                {isLoading && memberships.length === 0 ? null : error && memberships.length === 0 ? (
+                    <Banner status="error" title={t('errors.loadOrganizations')} />
                 ) : (
                     <Table
                         columns={columns}

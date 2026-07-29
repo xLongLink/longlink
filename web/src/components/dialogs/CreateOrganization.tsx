@@ -35,11 +35,6 @@ export default function CreateOrganization() {
         resolver: zodResolver(createOrganizationSchema),
     });
 
-    /** Clears the organization creation form state. */
-    function resetDialogState() {
-        form.reset(defaultCreateOrganizationValues);
-    }
-
     /** Updates dialog state while protecting an in-flight creation. */
     function handleOpenChange(nextOpen: boolean) {
         if (!nextOpen && createOrganization.isPending) {
@@ -47,7 +42,7 @@ export default function CreateOrganization() {
         }
         setOpen(nextOpen);
         if (!nextOpen) {
-            resetDialogState();
+            form.reset(defaultCreateOrganizationValues);
         }
     }
 
@@ -81,7 +76,7 @@ export default function CreateOrganization() {
                                             name: payload.name,
                                         });
                                         setOpen(false);
-                                        resetDialogState();
+                                        form.reset(defaultCreateOrganizationValues);
                                     } catch (mutationError) {
                                         toast({
                                             body:

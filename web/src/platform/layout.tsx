@@ -44,7 +44,7 @@ export default function PlatformLayout({
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
     const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
-        const targetUrl = new URL(tab.href, `${window.location.origin}${location.pathname}`);
+        const targetUrl = new URL(tab.href, window.location.origin);
 
         return {
             label,

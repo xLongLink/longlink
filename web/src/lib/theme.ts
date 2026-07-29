@@ -77,6 +77,15 @@ const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     rose: { label: 'Rose', accent: '#f43f5e', accentForeground: '#0f172a' },
 };
 
+export const ACCENT_BOOTSTRAP_VALUES = Object.fromEntries(
+    ACCENT_VALUES.map((value) => [
+        value,
+        value === 'neutral'
+            ? ['light-dark(oklch(0.205 0 0), oklch(0.922 0 0))', 'light-dark(oklch(0.985 0 0), oklch(0.205 0 0))']
+            : [ACCENT_TOKENS[value].accent, ACCENT_TOKENS[value].accentForeground],
+    ])
+) as Record<Accent, [string, string]>;
+
 const themes = new Map<string, DefinedTheme>();
 
 /** Theme mode options available in the UI. */

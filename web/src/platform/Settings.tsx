@@ -36,7 +36,6 @@ import PlatformLayout from '@/platform/layout';
 
 type SettingsSection = 'account' | 'appearance' | 'organizations';
 
-const RADIUS_STEP = 0.05;
 const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
     value,
     label: formatRadius(value),
@@ -65,6 +64,14 @@ export default function Settings() {
     const accountName = name.trim();
     const isLoading = isProfileLoading || areOrganizationsLoading;
 
+    /** Displays a failed account preference update. */
+    function showAccountUpdateError(error: unknown) {
+        toast({
+            body: error instanceof Error ? error.message : t('errors.updateAccount'),
+            type: 'error',
+        });
+    }
+
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
         setAccountError(null);
@@ -88,7 +95,6 @@ export default function Settings() {
         // Persist the account name and surface any failure.
         try {
             await updateUser({ name: accountName });
-            setEditedName(accountName);
             toast({ body: t('settings.usernameSaved') });
         } catch (error) {
             toast({
@@ -236,15 +242,7 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.theme')}
                                         onChange={(value) => {
-                                            void updateUser({ theme: value as Theme }).catch((error: unknown) => {
-                                                toast({
-                                                    body:
-                                                        error instanceof Error
-                                                            ? error.message
-                                                            : t('errors.updateAccount'),
-                                                    type: 'error',
-                                                });
-                                            });
+                                            void updateUser({ theme: value as Theme }).catch(showAccountUpdateError);
                                         }}
                                     />
                                     <Selector
@@ -270,15 +268,7 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.color')}
                                         onChange={(value) => {
-                                            void updateUser({ accent: value as Accent }).catch((error: unknown) => {
-                                                toast({
-                                                    body:
-                                                        error instanceof Error
-                                                            ? error.message
-                                                            : t('errors.updateAccount'),
-                                                    type: 'error',
-                                                });
-                                            });
+                                            void updateUser({ accent: value as Accent }).catch(showAccountUpdateError);
                                         }}
                                     />
                                     <Slider
@@ -287,7 +277,7 @@ export default function Settings() {
                                         width={320}
                                         min={MIN_RADIUS}
                                         max={MAX_RADIUS}
-                                        step={RADIUS_STEP}
+                                        step={0.05}
                                         marks={RADIUS_MARKS}
                                         formatValue={formatRadius}
                                         isDisabled={isPending}
@@ -296,15 +286,7 @@ export default function Settings() {
                                         }}
                                         onChangeEnd={(value: number) => {
                                             void updateUser({ radius: value })
-                                                .catch((error: unknown) => {
-                                                    toast({
-                                                        body:
-                                                            error instanceof Error
-                                                                ? error.message
-                                                                : t('errors.updateAccount'),
-                                                        type: 'error',
-                                                    });
-                                                })
+                                                .catch(showAccountUpdateError)
                                                 .finally(() => {
                                                     setEditedRadius(null);
                                                 });

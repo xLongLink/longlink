@@ -9,7 +9,9 @@ from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from importlib.resources import files
+from src.models.gateways import APPLICATION_ID_HEADER, GATEWAY_SECRET_HEADER
 from kr8s.asyncio.objects import Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from src.kubernetes.names import application_service_name
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from src.kubernetes.resources import KubernetesDocument, KubernetesResources, deployment_is_ready
 from cryptography.hazmat.primitives import hashes, serialization
@@ -44,15 +46,15 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
     routes: list[EnvoyDocument] = []
     clusters: list[EnvoyDocument] = []
     gateway_secret_match: EnvoyDocument = {
-        "name": "x-longlink-gateway-secret",
+        "name": GATEWAY_SECRET_HEADER,
         "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
     }
     for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
         application_id = str(route.id)
-        service_name = f"app-{application_id}"
+        service_name = application_service_name(route.id)
         cluster_name = f"{route.namespace}-{application_id}"
         application_id_match: EnvoyDocument = {
-            "name": "x-longlink-application-id",
+            "name": APPLICATION_ID_HEADER,
             "string_match": {"exact": application_id},
         }
         routes.append(
@@ -65,7 +67,7 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
                     "cluster": cluster_name,
                     "timeout": "300s",
                 },
-                "request_headers_to_remove": ["x-longlink-gateway-secret", "x-longlink-application-id"],
+                "request_headers_to_remove": [GATEWAY_SECRET_HEADER, APPLICATION_ID_HEADER],
             }
         )
         clusters.append(

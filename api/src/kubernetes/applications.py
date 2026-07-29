@@ -7,9 +7,14 @@ from src.utils import templates
 from collections.abc import Mapping
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Deployment
+from src.kubernetes.names import (
+    APPLICATION_ID_LABEL,
+    application_service_name,
+    application_deployment_name,
+    application_runtime_secret_name,
+    application_environment_secret_name,
+)
 from src.kubernetes.resources import KubernetesResources, deployment_is_ready
-
-APPLICATION_ID_LABEL = "longlink.io/application-id"
 
 
 def pod_is_active(pod: Pod) -> bool:
@@ -39,8 +44,8 @@ class Applications:
         """Stage user-owned values and roll an existing workload when present."""
 
         # Repeated seed and API attempts converge the Secret before lifecycle work starts.
-        secret = await self._resources.replace_secret(f"{application_id}-environment", namespace, envs)
-        deployment = await self._resources.read(Deployment, str(application_id), namespace)
+        secret = await self._resources.replace_secret(application_environment_secret_name(application_id), namespace, envs)
+        deployment = await self._resources.read(Deployment, application_deployment_name(application_id), namespace)
         if deployment is None:
             if require_deployment:
                 raise ValueError("Kubernetes Application Deployment is missing")
@@ -52,7 +57,7 @@ class Applications:
             raise TypeError("Kubernetes Application environment Secret is missing its resource version")
         await self._resources.patch(
             Deployment,
-            str(application_id),
+            application_deployment_name(application_id),
             {
                 "spec": {
                     "template": {
@@ -70,15 +75,15 @@ class Applications:
     async def stage_runtime_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
         """Commit Platform-owned runtime values before creating the Application workload."""
 
-        await self._resources.create_secret(f"{application_id}-runtime", namespace, envs)
+        await self._resources.create_secret(application_runtime_secret_name(application_id), namespace, envs)
 
     async def read_runtime_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
         """Read Platform-owned values from one Application runtime Secret."""
 
         # Read the exact Secret from the Organization Namespace.
-        secret = await self._resources.read(Secret, f"{application_id}-runtime", namespace)
+        secret = await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace)
         if secret is None:
-            if await self._resources.read(Deployment, str(application_id), namespace) is not None:
+            if await self._resources.read(Deployment, application_deployment_name(application_id), namespace) is not None:
                 raise ValueError("Kubernetes Application runtime Secret is missing")
             return None
 
@@ -102,8 +107,13 @@ class Applications:
         deployment, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
+            application_id_label=APPLICATION_ID_LABEL,
+            deployment_name=application_deployment_name(application_id),
+            environment_secret_name=application_environment_secret_name(application_id),
             image=json.dumps(image),
             namespace=namespace,
+            runtime_secret_name=application_runtime_secret_name(application_id),
+            service_name=application_service_name(application_id),
         )
 
         # Establish stable Service discovery before creating Application Pods.
@@ -112,7 +122,7 @@ class Applications:
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            deployed = await self._resources.read(Deployment, str(application_id), namespace)
+            deployed = await self._resources.read(Deployment, application_deployment_name(application_id), namespace)
             if deployed is None:
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
             if deployment_is_ready(deployed):
@@ -123,20 +133,19 @@ class Applications:
         """Delete one Application and wait until its Pods have terminated."""
 
         # Recheck only Kubernetes state while resources and Pods terminate.
-        canonical_id = str(application_id)
         while await self._resources.read(Namespace, namespace) is not None:
             resources: tuple[APIObject | None, ...] = (
-                await self._resources.read(Deployment, canonical_id, namespace),
-                await self._resources.read(Service, f"app-{canonical_id}", namespace),
-                await self._resources.read(Secret, f"{canonical_id}-environment", namespace),
-                await self._resources.read(Secret, f"{canonical_id}-runtime", namespace),
+                await self._resources.read(Deployment, application_deployment_name(application_id), namespace),
+                await self._resources.read(Service, application_service_name(application_id), namespace),
+                await self._resources.read(Secret, application_environment_secret_name(application_id), namespace),
+                await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace),
             )
             for resource in resources:
                 if resource is not None and resource.metadata.get("deletionTimestamp") is None:
                     await self._resources.delete(type(resource), resource.name, namespace)
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: canonical_id})
+            pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: str(application_id)})
             if all(resource is None for resource in resources) and not any(pod_is_active(pod) for pod in pods):
                 return
             await asyncio.sleep(5)

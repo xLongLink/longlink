@@ -1,39 +1,15 @@
+import { ACCENT_BOOTSTRAP_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_PREFERENCES_KEY, THEME_VALUES } from '@/lib/theme';
+
 const themeBootstrap = `
 (() => {
-    const accents = {
-        slate: ['#64748b', '#f8fafc'],
-        gray: ['#6b7280', '#f8fafc'],
-        zinc: ['#71717a', '#f8fafc'],
-        neutral: [
-            'light-dark(oklch(0.205 0 0), oklch(0.922 0 0))',
-            'light-dark(oklch(0.985 0 0), oklch(0.205 0 0))',
-        ],
-        stone: ['#78716c', '#f8fafc'],
-        red: ['#ef4444', '#0f172a'],
-        orange: ['#f97316', '#0f172a'],
-        amber: ['#f59e0b', '#0f172a'],
-        yellow: ['#eab308', '#0f172a'],
-        lime: ['#84cc16', '#0f172a'],
-        green: ['#22c55e', '#0f172a'],
-        emerald: ['#10b981', '#0f172a'],
-        teal: ['#14b8a6', '#0f172a'],
-        cyan: ['#06b6d4', '#0f172a'],
-        sky: ['#0ea5e9', '#0f172a'],
-        blue: ['#3b82f6', '#f8fafc'],
-        indigo: ['#6366f1', '#f8fafc'],
-        violet: ['#8b5cf6', '#f8fafc'],
-        purple: ['#a855f7', '#f8fafc'],
-        fuchsia: ['#d946ef', '#0f172a'],
-        pink: ['#ec4899', '#0f172a'],
-        rose: ['#f43f5e', '#0f172a'],
-    };
+    const accents = ${JSON.stringify(ACCENT_BOOTSTRAP_VALUES)};
 
     try {
-        const preferences = JSON.parse(localStorage.getItem('longlink-theme'));
+        const preferences = JSON.parse(localStorage.getItem('${THEME_PREFERENCES_KEY}'));
         const accent = Object.hasOwn(accents, preferences?.accent) ? accents[preferences.accent] : null;
         const radius = preferences?.radius;
         const mode = preferences?.theme;
-        if (!accent || !['light', 'dark', 'system'].includes(mode) || !Number.isFinite(radius) || radius < 0 || radius > 1.5) {
+        if (!accent || !${JSON.stringify(THEME_VALUES)}.includes(mode) || !Number.isFinite(radius) || radius < ${MIN_RADIUS} || radius > ${MAX_RADIUS}) {
             return;
         }
 
@@ -60,7 +36,7 @@ const themeBootstrap = `
         }\`;
         document.head.append(style);
     } catch {
-        localStorage.removeItem('longlink-theme');
+        localStorage.removeItem('${THEME_PREFERENCES_KEY}');
     }
 })();`;
 

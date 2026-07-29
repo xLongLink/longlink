@@ -48,12 +48,10 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const toast = useToast();
     const createApplication = useCreateOrganizationApplication(organizationId);
     const isCreatingApplication = createApplication.isPending;
-    const imageFormId = useId();
-    const metadataFormId = useId();
-    const environmentFormId = useId();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
+    const [declaredEnvironments, setDeclaredEnvironments] = useState<ApiImageMetadata['environments']>([]);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({
@@ -69,14 +67,12 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         staleTime: Infinity,
     });
     const iconOptions = iconCatalog ?? [];
-    const declaredEnvironments = imageMetadata?.environments ?? [];
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
         form.reset(defaultCreateApplicationValues);
-        setImageMetadata(null);
-        setIsInspecting(false);
+        setDeclaredEnvironments([]);
         setError(null);
     }
 
@@ -92,7 +88,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 parseApiResponse(apiImageMetadataSchema, value)
             );
 
-            setImageMetadata(metadata);
+            setDeclaredEnvironments(metadata.environments);
             form.setValue('name', metadata.title ?? '', { shouldValidate: true });
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
             form.setValue('envs', {}, { shouldValidate: true });
@@ -205,7 +201,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                     content={
                         <LayoutContent>
                             {step === 'image' ? (
-                                <form id={imageFormId} onSubmit={form.handleSubmit(handleInspectImage)}>
+                                <form id={formId} onSubmit={form.handleSubmit(handleInspectImage)}>
                                     <FormLayout>
                                         <Controller
                                             control={form.control}
@@ -228,7 +224,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 </form>
                             ) : step === 'metadata' ? (
                                 <form
-                                    id={metadataFormId}
+                                    id={formId}
                                     onSubmit={(event) => {
                                         event.preventDefault();
 
@@ -291,7 +287,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                     </FormLayout>
                                 </form>
                             ) : (
-                                <form id={environmentFormId} onSubmit={form.handleSubmit(handleCreateApp)}>
+                                <form id={formId} onSubmit={form.handleSubmit(handleCreateApp)}>
                                     <FormLayout>
                                         {declaredEnvironments.map((env) => (
                                             <Controller
@@ -334,7 +330,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                         clickAction={() => handleOpenChange(false)}
                                     />
                                     <Button
-                                        form={imageFormId}
+                                        form={formId}
                                         type="submit"
                                         label={isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
                                         variant="primary"
@@ -359,7 +355,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
-                                            form={metadataFormId}
+                                            form={formId}
                                             type="submit"
                                             label={t('actions.next')}
                                             variant="primary"
@@ -386,7 +382,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
-                                            form={environmentFormId}
+                                            form={formId}
                                             type="submit"
                                             label={isCreatingApplication ? t('actions.creating') : t('actions.create')}
                                             variant="primary"

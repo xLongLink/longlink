@@ -3,16 +3,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: $application_id
+    name: $deployment_name
     namespace: $namespace
 spec:
     selector:
         matchLabels:
-            longlink.io/application-id: $application_id
+            $application_id_label: $application_id
     template:
         metadata:
             labels:
-                longlink.io/application-id: $application_id
+                $application_id_label: $application_id
         spec:
             automountServiceAccountToken: false
             securityContext:
@@ -29,9 +29,9 @@ spec:
                       failureThreshold: 3
                   envFrom:
                       - secretRef:
-                            name: $application_id-environment
+                             name: $environment_secret_name
                       - secretRef:
-                            name: $application_id-runtime
+                             name: $runtime_secret_name
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:
@@ -48,10 +48,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    name: app-$application_id
+    name: $service_name
     namespace: $namespace
 spec:
     selector:
-        longlink.io/application-id: $application_id
+        $application_id_label: $application_id
     ports:
         - port: 8000

@@ -62,8 +62,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         isLoading={isLoading}
                         error={error}
                     />
-                ) : null}
-                {settingsSection !== undefined ? (
+                ) : (
                     <OrganizationSettings
                         organization={organization}
                         organizationDetails={organizationDetails}
@@ -75,7 +74,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         isLoading={isLoading}
                         error={error}
                     />
-                ) : null}
+                )}
             </PageContainer>
         </PlatformLayout>
     );
