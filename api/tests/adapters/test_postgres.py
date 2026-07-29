@@ -125,11 +125,11 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert database_usage is not None
         assert database_usage["space_used"] > 0
         assert database_usage["table_count"] >= 2
-        assert server_usage["space_used"] > 0
+        assert server_usage > 0
         assert database_usage_after_schema_delete is not None
         assert database_usage_after_schema_delete["table_count"] < database_usage["table_count"]
         assert database_usage_after_delete is None
-        assert server_usage_after_delete["space_used"] == 0
+        assert server_usage_after_delete == 0
     finally:
         try:
             if runtime_engine is not None:

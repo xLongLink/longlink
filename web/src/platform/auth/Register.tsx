@@ -44,13 +44,12 @@ export default function Register() {
     const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
     const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
     const registration = useMutation({
-        mutationFn: async (payload: RegisterValues) => {
-            await fetchApiVoid('/api/auth/register', {
+        mutationFn: (payload: RegisterValues) =>
+            fetchApiVoid('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Requests an email link without creating a pending account. */

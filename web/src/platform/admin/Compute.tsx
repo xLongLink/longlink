@@ -2,7 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -20,11 +20,32 @@ import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
-/** Returns localized admin compute table columns. */
-function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[] {
+/** Renders the admin compute page. */
+export default function AdminCompute() {
+    const t = useTranslator();
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const deleteCompute = useMutation({
+        mutationFn: async (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
+            toast({ body: t('admin.computeDeleted') });
+        },
+    });
+    const { items: computes, error, isLoading } = useComputes();
+    const { pageItems, pagination } = useAdminPagination(computes);
     const statusLabels = createStatusLabels(t);
-
-    return [
+    const deleteDialog = useDeleteDialog({
+        title: t('admin.deleteComputeTitle'),
+        mutation: deleteCompute,
+        items: computes,
+        getId: (compute) => compute.id,
+        description: (compute) => t('admin.deleteComputeDescription', { name: compute.name }),
+        errorMessage: t('admin.failedDeleteCompute'),
+        fallbackDescription: t('admin.deleteComputeFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
+    });
+    const columns: TableColumn<ApiComputeRegistry>[] = [
         {
             key: 'compute',
             header: t('admin.computeTitle'),
@@ -42,35 +63,6 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
             width: pixel(128),
             renderCell: (compute) => statusLabels[compute.status],
         },
-    ];
-}
-
-/** Renders the admin compute page. */
-export default function AdminCompute() {
-    const t = useTranslator();
-    const toast = useToast();
-    const queryClient = useQueryClient();
-    const deleteCompute = useMutation({
-        mutationFn: async (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
-            toast({ body: t('admin.computeDeleted') });
-        },
-    });
-    const { items: computes, error, isLoading } = useComputes();
-    const { pageItems, pagination } = useAdminPagination(computes);
-    const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteComputeTitle'),
-        mutation: deleteCompute,
-        items: computes,
-        getId: (compute) => compute.id,
-        description: (compute) => t('admin.deleteComputeDescription', { name: compute.name }),
-        errorMessage: t('admin.failedDeleteCompute'),
-        fallbackDescription: t('admin.deleteComputeFallback'),
-        onError: (message) => toast({ body: message, type: 'error' }),
-    });
-    const columns: TableColumn<ApiComputeRegistry>[] = [
-        ...createComputeColumns(t),
         {
             key: 'actions',
             header: t('columns.action'),

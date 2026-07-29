@@ -36,7 +36,7 @@ export default function CreateCompute() {
         resolver: zodResolver(schema),
     });
     const mutation = useMutation({
-        mutationFn: async (payload: Values) =>
+        mutationFn: (payload: Values) =>
             fetchApiJson(
                 '/api/computes',
                 {

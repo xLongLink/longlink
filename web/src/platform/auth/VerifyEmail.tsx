@@ -95,8 +95,8 @@ export default function VerifyEmail() {
         },
     });
     const completion = useMutation({
-        mutationFn: async (payload: RegistrationCompleteValues) => {
-            return fetchApiJson(
+        mutationFn: (payload: RegistrationCompleteValues) =>
+            fetchApiJson(
                 '/api/auth/register/complete',
                 {
                     method: 'POST',
@@ -104,8 +104,7 @@ export default function VerifyEmail() {
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
                 (value) => parseApiResponse(apiUserProfileSchema, value)
-            );
-        },
+            ),
     });
     const verifyRegistration = verification.mutate;
 

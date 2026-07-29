@@ -154,7 +154,6 @@ export default function Settings({
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
-    const canManageOrganizationMembers = hasMinimumRole(organizationRole, 'admin');
     const hashValue = location.hash.replace(/^#/, '');
     const peopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
     const section: SettingsSection = routeSection === 'people' ? peopleSection : routeSection;
@@ -348,7 +347,7 @@ export default function Settings({
                         invitations={invitations}
                         activeSection={section}
                         canInviteMembers={hasOrganizationApplicationAccess}
-                        canManageMembers={canManageOrganizationMembers}
+                        canManageMembers={canManageOrganization}
                         isLoading={isLoading}
                         error={error}
                     />

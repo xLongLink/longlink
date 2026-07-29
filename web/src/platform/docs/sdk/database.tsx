@@ -116,7 +116,6 @@ async def create_project() -> None:
             migrations to keep the database schema aligned:
         </Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'longlink migrate', label: 'pip', value: 'pip' },
                 { code: 'uv run longlink migrate', label: 'uv', value: 'uv' },

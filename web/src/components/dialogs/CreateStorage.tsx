@@ -42,7 +42,7 @@ export default function CreateStorage() {
         resolver: zodResolver(schema),
     });
     const mutation = useMutation({
-        mutationFn: async (payload: Values) =>
+        mutationFn: (payload: Values) =>
             fetchApiJson(
                 '/api/storages',
                 {

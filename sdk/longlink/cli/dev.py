@@ -2,7 +2,6 @@ import click
 import uvicorn
 from pathlib import Path
 from longlink.logger import logger, log_config
-from longlink.constants import DEV_PORT
 
 
 @click.command(name="dev")
@@ -18,7 +17,7 @@ def dev_command(host: str) -> None:
     uvicorn.run(
         "main:app",
         host=host,
-        port=DEV_PORT,
+        port=1707,
         reload=True,
         app_dir=str(Path.cwd()),
         log_config=log_config,

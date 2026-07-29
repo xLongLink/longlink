@@ -2,7 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -18,38 +18,6 @@ import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { PostgreSQL } from '@/svg/PostgreSQL';
-
-/** Returns localized admin database table columns. */
-function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry>[] {
-    return [
-        {
-            key: 'database',
-            header: t('columns.database'),
-            width: proportional(1),
-            renderCell: (database) => (
-                <HStack gap={3} align="center">
-                    <PostgreSQL height={24} width={24} />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{database.name}</Text>
-                        <Text type="supporting">{`${database.host}:${database.port}`}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'username',
-            header: t('labels.username'),
-            width: proportional(1),
-            renderCell: (database) => database.username,
-        },
-        {
-            key: 'sslmode',
-            header: t('labels.sslMode'),
-            width: pixel(128),
-            renderCell: (database) => database.sslmode,
-        },
-    ];
-}
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
@@ -78,7 +46,32 @@ export default function AdminDatabase() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<ApiDatabaseRegistry>[] = [
-        ...createDatabaseColumns(t),
+        {
+            key: 'database',
+            header: t('columns.database'),
+            width: proportional(1),
+            renderCell: (database) => (
+                <HStack gap={3} align="center">
+                    <PostgreSQL height={24} width={24} />
+                    <VStack gap={1}>
+                        <Text weight="semibold">{database.name}</Text>
+                        <Text type="supporting">{`${database.host}:${database.port}`}</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
+        {
+            key: 'username',
+            header: t('labels.username'),
+            width: proportional(1),
+            renderCell: (database) => database.username,
+        },
+        {
+            key: 'sslmode',
+            header: t('labels.sslMode'),
+            width: pixel(128),
+            renderCell: (database) => database.sslmode,
+        },
         {
             key: 'actions',
             header: t('columns.action'),

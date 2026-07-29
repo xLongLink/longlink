@@ -312,7 +312,7 @@ class Postgres:
         usage = result.mappings().one()
         return {"space_used": int(usage["space_used"]), "table_count": int(usage["table_count"])}
 
-    async def usage(self) -> dict[str, int]:
+    async def usage(self) -> int:
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
@@ -327,6 +327,6 @@ class Postgres:
                 )
             )
 
-            # Normalize the scalar result to the shared usage response shape.
+            # Normalize the scalar result to the API response value.
             database_size = result.scalar_one()
-            return {"space_used": int(database_size)}
+            return int(database_size)

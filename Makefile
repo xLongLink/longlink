@@ -1,6 +1,7 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: up down build api\:build sdk\:build local\:image seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
-LOCAL_APPLICATION_IMAGE ?= ghcr.io/xlonglink/longlink-app:v0.0.2
+APPLICATION_IMAGE ?=
+LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
@@ -185,12 +186,16 @@ down:
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
-	@image="$(LOCAL_APPLICATION_IMAGE)"; repository="$${image%@*}"; repository="$${repository%:*}"; \
+	@image="$(APPLICATION_IMAGE)"; \
+		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
+		if [ -z "$$image" ] && [ -f api/.env.seed ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image || true)"; fi; \
+		if [ -z "$$image" ]; then image="$(LOCAL_APPLICATION_IMAGE)"; fi; \
+		repository="$${image%@*}"; repository="$${repository%:*}"; \
 		image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
 		if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -rf sdk/dev
-	rm -f api/dev.db api/kubeconfig.yaml
+	rm -f api/dev.db api/kubeconfig.yaml api/.seed-image
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 
@@ -202,13 +207,24 @@ api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
-# Start local services, pull the seed Application image, then run migrations and seed data.
+# Build and push the local sample Application image into the development registry.
+local\:image: sdk\:build
+	rm -rf sdk/dev
+	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+
+
+# Start local services, build or pull the configured Application image, then run migrations and seed data.
 seed: up
-	docker pull "$(LOCAL_APPLICATION_IMAGE)"
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true LOCAL_APPLICATION_IMAGE="$(LOCAL_APPLICATION_IMAGE)" uv run --locked python seed.py
+	@image="$(APPLICATION_IMAGE)"; \
+		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
+		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then $(MAKE) local:image; else docker pull "$$image"; fi && \
+		printf '%s\n' "$$image" > api/.seed-image && \
+		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
 
 
 # Run the Vite web app.
@@ -220,5 +236,5 @@ web: web\:install
 sdk: sdk\:build
 	rm -rf sdk/dev
 	cd sdk && uv run --locked longlink init --folder dev
-	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
+	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
 	cd sdk/dev && uv run longlink dev

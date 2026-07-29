@@ -56,14 +56,13 @@ def test_storage_registry_response_filters_provider_credentials() -> None:
         {
             "id": uuid4(),
             "name": "Primary Storage",
-            "slug": "primary-storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         }
     )
 
-    data = payload.model_dump(mode="json")
+    data = payload.model_dump()
     assert data["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
     assert "access_key_id" not in data
     assert "secret_access_key" not in data

@@ -82,7 +82,6 @@ export const content = (
         </Heading>
         <Text as="p">Install LongLink:</Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'pip install longlink', label: 'pip', value: 'pip' },
                 { code: 'uv add longlink', label: 'uv', value: 'uv' },
@@ -90,7 +89,6 @@ export const content = (
         />
         <Text as="p">Create the application scaffold:</Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'longlink init', label: 'pip', value: 'pip' },
                 { code: 'uv run longlink init', label: 'uv', value: 'uv' },
@@ -110,7 +108,6 @@ export const content = (
         </Heading>
         <Text as="p">Install development dependencies:</Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'pip install .[dev]', label: 'pip', value: 'pip' },
                 { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },
@@ -120,7 +117,6 @@ export const content = (
             Run the development server against <Code>main:app</Code> with the embedded SDK web bundle:
         </Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'longlink dev', label: 'pip', value: 'pip' },
                 { code: 'uv run longlink dev', label: 'uv', value: 'uv' },

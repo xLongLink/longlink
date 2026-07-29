@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
@@ -45,14 +46,13 @@ export default function CreateDatabase() {
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [passwordVisible, setPasswordVisible] = useState(false);
     const form = useForm<Values>({
         defaultValues: { name: '', host: '', port: 5432, sslmode: 'require', username: '', password: '' },
         mode: 'onChange',
         resolver: zodResolver(schema),
     });
     const mutation = useMutation({
-        mutationFn: async (payload: Values) =>
+        mutationFn: (payload: Values) =>
             fetchApiJson(
                 '/api/databases',
                 {
@@ -72,7 +72,6 @@ export default function CreateDatabase() {
     /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {
         form.reset();
-        setPasswordVisible(false);
     }
 
     /** Updates dialog state while protecting an in-flight registration. */
@@ -210,29 +209,16 @@ export default function CreateDatabase() {
                                         control={form.control}
                                         name="password"
                                         render={({ field }) => (
-                                            <Stack gap={1}>
-                                                <TextInput
-                                                    ref={field.ref}
-                                                    label={t('labels.password')}
-                                                    type={passwordVisible ? 'text' : 'password'}
-                                                    value={field.value}
-                                                    htmlName={field.name}
-                                                    isRequired
-                                                    onBlur={field.onBlur}
-                                                    onChange={field.onChange}
-                                                />
-                                                <Button
-                                                    label={
-                                                        passwordVisible
-                                                            ? t('auth.hidePassword')
-                                                            : t('auth.showPassword')
-                                                    }
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    aria-pressed={passwordVisible}
-                                                    clickAction={() => setPasswordVisible((current) => !current)}
-                                                />
-                                            </Stack>
+                                            <PasswordInput
+                                                key={open ? 'open' : 'closed'}
+                                                ref={field.ref}
+                                                label={t('labels.password')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
                                         )}
                                     />
                                 </FormLayout>

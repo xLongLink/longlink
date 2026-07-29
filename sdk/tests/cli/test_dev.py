@@ -26,7 +26,7 @@ def test_dev_command_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
         {
             "app": "main:app",
             "host": "127.0.0.1",
-            "port": cli_dev.DEV_PORT,
+            "port": 1707,
             "reload": True,
             "app_dir": str(Path.cwd()),
             "log_config": cli_dev.log_config,

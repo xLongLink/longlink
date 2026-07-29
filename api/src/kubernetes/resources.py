@@ -196,4 +196,4 @@ class KubernetesResources:
         try:
             await resource.delete()
         except kr8s.NotFoundError:
-            return
+            pass

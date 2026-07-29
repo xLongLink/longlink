@@ -14,7 +14,7 @@ def translations_command() -> None:
     """Manage the current application's XML translation catalog."""
 
 
-@click.command(name="generate")
+@translations_command.command(name="generate")
 def generate_command() -> None:
     """Generate the current application's translation file from XML `i18n` keys."""
 
@@ -102,9 +102,7 @@ def generate_command() -> None:
             keys.add(key)
 
     # Build a deterministic flat catalog and preserve entries by exact key.
-    generated_catalog: dict[str, dict[str, str]] = {}
-    for key in sorted(keys):
-        generated_catalog[key] = existing_catalog.get(key, {"defaultMessage": ""})
+    generated_catalog = {key: existing_catalog.get(key, {"defaultMessage": ""}) for key in sorted(keys)}
 
     # Write the generated catalog to the conventional application path.
     DEFAULT_TRANSLATION_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -116,6 +114,3 @@ def generate_command() -> None:
     click.echo(
         f"Generated {DEFAULT_TRANSLATION_FILE} from {len(keys)} translation keys."
     )
-
-
-translations_command.add_command(generate_command)

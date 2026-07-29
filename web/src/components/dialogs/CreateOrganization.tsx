@@ -16,12 +16,11 @@ const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
 });
 
-type CreateOrganizationInput = z.input<typeof createOrganizationSchema>;
-type CreateOrganizationValues = z.output<typeof createOrganizationSchema>;
+type CreateOrganizationValues = z.infer<typeof createOrganizationSchema>;
 
 const defaultCreateOrganizationValues = {
     name: '',
-} satisfies CreateOrganizationInput;
+} satisfies CreateOrganizationValues;
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
@@ -30,7 +29,7 @@ export default function CreateOrganization() {
     const createOrganization = useCreateOrganization();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const form = useForm<CreateOrganizationInput, unknown, CreateOrganizationValues>({
+    const form = useForm<CreateOrganizationValues>({
         defaultValues: defaultCreateOrganizationValues,
         mode: 'onChange',
         resolver: zodResolver(createOrganizationSchema),

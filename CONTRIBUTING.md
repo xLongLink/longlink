@@ -75,5 +75,5 @@ make web            # Start the Vite platform frontend
 After `make api` and `make web` are running, a different published Application image can be seeded without restarting them:
 
 ```bash
-make seed LOCAL_APPLICATION_IMAGE=ghcr.io/xlonglink/longlink-app:v0.0.2
+make seed APPLICATION_IMAGE=ghcr.io/xlonglink/longlink-app:v0.0.2
 ```

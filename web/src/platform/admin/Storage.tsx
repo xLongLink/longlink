@@ -2,7 +2,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -18,26 +18,6 @@ import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { S3 } from '@/svg/S3';
-
-/** Returns localized admin storage table columns. */
-function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[] {
-    return [
-        {
-            key: 'storage',
-            header: t('admin.storageTitle'),
-            width: proportional(2),
-            renderCell: (storage) => (
-                <HStack gap={3} align="center">
-                    <S3 height={24} width={24} />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{storage.name}</Text>
-                        <Text type="supporting">{storage.endpoint_url}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-    ];
-}
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
@@ -66,7 +46,20 @@ export default function AdminStorage() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<ApiStorageRegistry>[] = [
-        ...createStorageColumns(t),
+        {
+            key: 'storage',
+            header: t('admin.storageTitle'),
+            width: proportional(2),
+            renderCell: (storage) => (
+                <HStack gap={3} align="center">
+                    <S3 height={24} width={24} />
+                    <VStack gap={1}>
+                        <Text weight="semibold">{storage.name}</Text>
+                        <Text type="supporting">{storage.endpoint_url}</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
         {
             key: 'actions',
             header: t('columns.action'),

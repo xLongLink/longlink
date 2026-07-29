@@ -30,7 +30,6 @@ def test_database_registry_response_filters_password() -> None:
         {
             "id": uuid4(),
             "name": "Primary Database",
-            "slug": "primary-database",
             "host": "database.example",
             "port": 5432,
             "sslmode": "disable",
@@ -39,6 +38,6 @@ def test_database_registry_response_filters_password() -> None:
         }
     )
 
-    data = payload.model_dump(mode="json")
+    data = payload.model_dump()
     assert data["username"] == "admin"
     assert "password" not in data

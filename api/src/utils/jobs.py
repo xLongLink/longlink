@@ -7,9 +7,6 @@ from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 
-OPERATION_HANDLER_TIMEOUT_SECONDS = 20 * 60
-
-
 JobHandler = Callable[[Operation], Awaitable[str | None]]
 
 handlers: dict[str, JobHandler] = {}
@@ -82,7 +79,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
 
     # Bound one complete handler execution under its worker lease.
     try:
-        async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
+        async with asyncio.timeout(2 * 60):
             reason = await handler(operation)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
@@ -96,8 +93,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     except TimeoutError:
         reason = "Operation timed out"
     except HTTPException as exc:
-        detail = str(exc.detail)
-        reason = detail
+        reason = str(exc.detail)
     except Exception as exc:
         logger.exception("Operation %s failed: %r", operation.id, exc)
         reason = str(exc) or type(exc).__name__

@@ -31,13 +31,12 @@ export default function ForgotPassword() {
         resolver: zodResolver(schema),
     });
     const requestReset = useMutation({
-        mutationFn: async (payload: ForgotPasswordValues) => {
-            await fetchApiVoid('/api/auth/forgot-password', {
+        mutationFn: (payload: ForgotPasswordValues) =>
+            fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Requests password reset instructions and reports transient failures. */

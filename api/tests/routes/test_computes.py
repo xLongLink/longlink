@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 
 

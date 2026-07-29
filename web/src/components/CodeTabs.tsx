@@ -11,8 +11,8 @@ type CodeTabItem = {
 };
 
 /** Renders connected tabs for switching between equivalent code snippets. */
-export function CodeTabs({ defaultValue, items }: { defaultValue: string; items: [CodeTabItem, ...CodeTabItem[]] }) {
-    const [value, setValue] = useState(defaultValue);
+export function CodeTabs({ items }: { items: [CodeTabItem, ...CodeTabItem[]] }) {
+    const [value, setValue] = useState(items[0].value);
     const selectedItem = items.find((item) => item.value === value) ?? items[0];
 
     return (

@@ -53,7 +53,7 @@ class SeedSettings(BaseSettings):
     LOCAL_ORG: str = Field(default="test", min_length=1)
     LOCAL_APP_NAME: str = Field(default="sample", min_length=1)
     LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
-    LOCAL_APPLICATION_IMAGE: str = Field(default="ghcr.io/xlonglink/longlink-app:v0.0.2", min_length=1)
+    APPLICATION_IMAGE: str = Field(default="localhost:15000/longlink-app:dev", min_length=1)
 
     # Local infrastructure
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
@@ -271,7 +271,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     payload = ApplicationCreate.model_validate(
         {
             "name": settings.LOCAL_APP_NAME,
-            "image": settings.LOCAL_APPLICATION_IMAGE,
+            "image": settings.APPLICATION_IMAGE,
             "description": "Local SDK development application",
             "envs": {"REQUIRED": "local-development"},
         }
@@ -567,12 +567,17 @@ def main() -> None:
     # Cleanup removes remote resources before make deletes their local inventory.
     parser = argparse.ArgumentParser()
     parser.add_argument("--cleanup", action="store_true")
+    parser.add_argument("--print-image", action="store_true")
     arguments = parser.parse_args()
     if arguments.cleanup:
         asyncio.run(cleanup_local_development())
         return
 
+    # Let Make pull the same configured image that the seed process will deploy.
     settings = SeedSettings()
+    if arguments.print_image:
+        print(settings.APPLICATION_IMAGE)
+        return
     asyncio.run(seed_local_development(settings))
     print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
 

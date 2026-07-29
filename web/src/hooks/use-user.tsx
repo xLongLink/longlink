@@ -19,8 +19,6 @@ type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'r
 
 type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 
-type StoredThemePreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
-
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
 type UserProfileState = {
@@ -48,7 +46,7 @@ const DEFAULT_USER_PREFERENCES = {
 } as const satisfies UserPreferences;
 
 /** Caches non-sensitive theme preferences for the next page's first paint. */
-function storeThemePreferences({ theme, accent, radius }: StoredThemePreferences): void {
+function storeThemePreferences({ theme, accent, radius }: UserPreferences): void {
     localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ theme, accent, radius }));
 }
 
@@ -118,7 +116,6 @@ export function useUserOrganizations(): UserOrganizationsState {
     const profile = useUserProfile();
     const query = useCollectionQuery<ApiUserOrganizationMembership>(profile.user ? '/api/me/organizations' : null, {
         parse: (value) => parseApiCollection(apiUserOrganizationMembershipSchema, value),
-        retry: false,
     });
 
     return {

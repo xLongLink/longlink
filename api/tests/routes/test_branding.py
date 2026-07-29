@@ -1,6 +1,6 @@
 import pytest
 from httpx2 import AsyncClient
-from src.models.users import ACCENT_COLOR_VALUES
+from src.routes.branding import ACCENT_COLOR_VALUES
 
 pytestmark = pytest.mark.no_db
 

@@ -3,7 +3,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
@@ -19,25 +19,6 @@ import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
-
-/** Returns localized admin organization table columns. */
-function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganizationSummary>[] {
-    return [
-        {
-            key: 'name',
-            header: t('columns.name'),
-            width: proportional(1),
-            renderCell: (organization) => (
-                <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
-                    <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                        {organization.name}
-                    </Link>
-                </HStack>
-            ),
-        },
-    ];
-}
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -66,7 +47,19 @@ export default function AdminOrganizations() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<ApiOrganizationSummary>[] = [
-        ...createOrganizationColumns(t),
+        {
+            key: 'name',
+            header: t('columns.name'),
+            width: proportional(1),
+            renderCell: (organization) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
+                    <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                        {organization.name}
+                    </Link>
+                </HStack>
+            ),
+        },
         {
             key: 'actions',
             header: t('columns.action'),
