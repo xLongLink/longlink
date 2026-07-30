@@ -47,7 +47,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
 
         return claims.pop(0)
 
-    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.JobHandler) -> Operation:
+    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.OperationHandler) -> Operation:
         """Record executed operations."""
 
         assert supplied_handler is handler

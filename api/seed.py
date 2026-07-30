@@ -2,7 +2,6 @@ import asyncio
 import argparse
 import subprocess
 from src import adapters
-from src import operations as _
 from uuid import UUID
 from pwdlib import PasswordHash
 from pathlib import Path
@@ -12,6 +11,7 @@ from sqlmodel import col
 from src.utils import jobs, names, images
 from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
+from src.operations import handlers
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import DatabaseSSLMode
@@ -254,7 +254,7 @@ async def reconcile_until_complete(operation_id: UUID) -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-        result = await jobs.execute(operation, jobs.handlers[operation.kind])
+        result = await jobs.execute(operation, handlers[operation.kind])
         if result.id != operation_id:
             continue
         if result.finished_at is not None:
@@ -402,7 +402,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         if administrator_changed or owner_changed:
             operation = await operations.enqueue(
                 compute_registry.id,
-                kind=OperationKind.organization_reconcile,
+                kind=OperationKind.organization_create,
                 target_id=organization.id,
             )
             await reconcile_until_complete(operation.id)

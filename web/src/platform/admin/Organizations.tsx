@@ -15,7 +15,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiOrganizationSummarySchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiOrganizationSummarySchema } from '@/lib/api-schemas';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -30,7 +30,7 @@ export default function AdminOrganizations() {
         mutationFn: (organizationId: string) =>
             fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             toast({ body: t('admin.organizationDeleted') });
         },
     });
@@ -39,7 +39,7 @@ export default function AdminOrganizations() {
         error,
         isLoading,
     } = useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
-        parse: (value) => parseApiCollection(apiOrganizationSummarySchema, value),
+        parse: (value) => apiOrganizationSummarySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(organizations);
     const deleteDialog = useDeleteDialog({

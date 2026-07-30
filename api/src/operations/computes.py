@@ -1,4 +1,3 @@
-from src.utils.jobs import operation
 from src.environments import env
 from packaging.version import Version
 from src.models.statuses import Status
@@ -64,7 +63,6 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
     return f"https://{gateway_host}"
 
 
-@operation("compute.reconcile")
 async def reconcile(claimed: Operation) -> str | None:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 

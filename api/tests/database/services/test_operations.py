@@ -108,8 +108,8 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
     }
 
 
-async def test_release_schedules_running_application_reconciliation_once() -> None:
-    """Queue one current-release reconciliation for every running Application."""
+async def test_release_schedules_running_application_creation_once() -> None:
+    """Queue one current-release Application operation for every running Application."""
 
     # Arrange
     compute = await create_compute("local")
@@ -172,16 +172,16 @@ async def test_release_schedules_running_application_reconciliation_once() -> No
     # Act
     await platform_release.schedule_migrations()
     await platform_release.schedule_migrations()
-    reconciliations = [
+    application_operations = [
         operation
         for operation in await operations.fetch()
-        if operation.kind == OperationKind.application_reconcile
+        if operation.kind == OperationKind.application_create
     ]
 
     # Assert
-    assert len(reconciliations) == 1
-    assert reconciliations[0].target_id == running.id
-    assert reconciliations[0].platform_version == env.VERSION
+    assert len(application_operations) == 1
+    assert application_operations[0].target_id == running.id
+    assert application_operations[0].platform_version == env.VERSION
 
 
 async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:

@@ -13,7 +13,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiStorageRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiStorageRegistrySchema } from '@/lib/api-schemas';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -28,7 +28,7 @@ export default function AdminStorage() {
     const deleteStorage = useMutation({
         mutationFn: (storageId: string) => fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' }),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
             toast({ body: t('admin.storageDeleted') });
         },
     });
@@ -37,7 +37,7 @@ export default function AdminStorage() {
         error,
         isLoading,
     } = useCollectionQuery<ApiStorageRegistry>('/api/storages', {
-        parse: (value) => parseApiCollection(apiStorageRegistrySchema, value),
+        parse: (value) => apiStorageRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({

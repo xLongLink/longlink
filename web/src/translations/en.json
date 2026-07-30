@@ -122,14 +122,8 @@
     "admin.organizationDeletion": {
         "defaultMessage": "Organization deletion"
     },
-    "admin.organizationReconciliation": {
-        "defaultMessage": "Organization reconciliation"
-    },
     "admin.applicationCreation": {
         "defaultMessage": "Application creation"
-    },
-    "admin.applicationReconciliation": {
-        "defaultMessage": "Application reconciliation"
     },
     "admin.applicationDeletion": {
         "defaultMessage": "Application deletion"

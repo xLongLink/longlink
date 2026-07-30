@@ -13,7 +13,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiDatabaseRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -28,7 +28,7 @@ export default function AdminDatabase() {
     const deleteDatabase = useMutation({
         mutationFn: (databaseId: string) => fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
             toast({ body: t('admin.databaseDeleted') });
         },
     });
@@ -37,7 +37,7 @@ export default function AdminDatabase() {
         error,
         isLoading,
     } = useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
-        parse: (value) => parseApiCollection(apiDatabaseRegistrySchema, value),
+        parse: (value) => apiDatabaseRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({

@@ -5,10 +5,9 @@ from contextlib import AbstractAsyncContextManager, suppress
 from collections.abc import Mapping
 from exoscale.api.v2 import AsyncClient
 from botocore.exceptions import ClientError
-from exoscale.api.generator import BaseAsyncClient
 from exoscale.api.exceptions import ExoscaleAPIClientException
 from src.models.infrastructure import exoscale_zone
-from exoscale.api.v2_response_types import Operation
+from exoscale.api.v2_response_types import IamPolicy, Operation
 
 # Import typing-only S3 stubs without adding runtime dependencies.
 if TYPE_CHECKING:
@@ -21,9 +20,6 @@ class StorageRuntimeCredentials(TypedDict):
 
     access_key_id: str
     secret_access_key: str
-
-
-JsonObject = dict[str, object]
 
 
 class Exoscale:
@@ -70,10 +66,7 @@ class Exoscale:
                 paginator = client.get_paginator("list_objects_v2")
                 async for page in paginator.paginate(Bucket=bucket):
                     for item in page.get("Contents", []):
-                        size = int(item.get("Size", 0))
-                        if str(item.get("Key", "")).endswith("/") and size == 0:
-                            continue
-                        space_used += size
+                        space_used += int(item.get("Size", 0))
         except ClientError as exc:
             error = exc.response.get("Error", {})
             status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
@@ -120,7 +113,8 @@ class Exoscale:
                 await client.delete_bucket(Bucket=bucket)
             except ClientError as exc:
                 error = exc.response.get("Error", {})
-                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"}:
+                status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"} and status != 404:
                     raise
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
@@ -195,7 +189,10 @@ class Exoscale:
 
         # Keep role and key provisioning in one managed async client session.
         try:
-            async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as api:
+            async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
+
+                # The generated context manager returns itself but types the result as its incomplete base class.
+                api = cast(AsyncClient, client)
 
                 # Bind the runtime policy to the organization authenticated by the provisioning key.
                 organization = await api.get_organization()
@@ -233,7 +230,10 @@ class Exoscale:
         credential_name = f"longlink-{name}"
 
         # Keep credential cleanup in one managed async client session.
-        async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as api:
+        async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
+
+            # The generated context manager returns itself but types the result as its incomplete base class.
+            api = cast(AsyncClient, client)
 
             # Delete every matching API key before deleting roles they may reference.
             keys = await api.list_api_keys()
@@ -242,12 +242,7 @@ class Exoscale:
                 raise RuntimeError("Exoscale API key inventory response is invalid")
 
             for item in api_keys:
-                if not isinstance(item, dict):
-                    raise RuntimeError("Exoscale API key inventory item is invalid")
-                item_name = item.get("name")
-                if not isinstance(item_name, str):
-                    raise RuntimeError("Exoscale API key inventory item is missing its name")
-                if item_name != credential_name:
+                if not isinstance(item, dict) or item.get("name") != credential_name:
                     continue
 
                 key = item.get("key")
@@ -268,12 +263,7 @@ class Exoscale:
                 raise RuntimeError("Exoscale IAM role inventory response is invalid")
 
             for item in iam_roles:
-                if not isinstance(item, dict):
-                    raise RuntimeError("Exoscale IAM role inventory item is invalid")
-                item_name = item.get("name")
-                if not isinstance(item_name, str):
-                    raise RuntimeError("Exoscale IAM role inventory item is missing its name")
-                if item_name != credential_name:
+                if not isinstance(item, dict) or item.get("name") != credential_name:
                     continue
 
                 role_id = item.get("id")
@@ -287,7 +277,7 @@ class Exoscale:
                 else:
                     await self._wait_operation(api, operation, require_reference=False)
 
-    async def _wait_operation(self, api: BaseAsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
+    async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""
 
         # Delegate operation polling and error handling to the async client.
@@ -304,7 +294,7 @@ class Exoscale:
 
         return None
 
-    def _bucket_policy(self, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str, organization_id: UUID) -> JsonObject:
+    def _bucket_policy(self, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str, organization_id: UUID) -> IamPolicy:
         """Build one IAM policy for shared reads and private Application writes."""
 
         # Application writes are also readable, while shared prefixes remain read-only.

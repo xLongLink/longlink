@@ -1,46 +1,11 @@
 import asyncio
 from fastapi import HTTPException
 from src.logger import logger
-from collections.abc import Callable, Awaitable, Coroutine
+from src.operations import OperationHandler, handlers
+from collections.abc import Coroutine
 from longlink.utils.time import utcnow
 from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.operations import Operation
-
-JobHandler = Callable[[Operation], Awaitable[str | None]]
-
-handlers: dict[str, JobHandler] = {}
-
-
-def operation(name: str) -> Callable[[JobHandler], JobHandler]:
-    """Return a decorator that registers an operation handler by name."""
-
-    # Reject empty names before they can create unreachable registry entries.
-    if not name.strip():
-        raise ValueError("Operation name cannot be empty")
-
-    def decorator(handler: JobHandler) -> JobHandler:
-        """Register one operation handler while preserving the decorated function."""
-
-        # Refuse duplicates so operation dispatch remains deterministic.
-        if name in handlers:
-            raise ValueError(f"Operation handler already registered for '{name}'")
-        handlers[name] = handler
-        return handler
-
-    return decorator
-
-
-def validate_handlers() -> None:
-    """Require one registered handler for every persisted operation kind."""
-
-    # Fail startup when a handler is missing or registered under an unsupported name.
-    expected = {kind.value for kind in OperationKind}
-    registered = set(handlers)
-    if registered != expected:
-        missing = sorted(expected - registered)
-        unsupported = sorted(registered - expected)
-        raise RuntimeError(f"Invalid operation handlers; missing={missing}, unsupported={unsupported}")
 
 
 async def _finish_transition(transition: Coroutine[object, object, Operation | None]) -> Operation | None:
@@ -68,7 +33,7 @@ async def _finish_transition(transition: Coroutine[object, object, Operation | N
     return updated
 
 
-async def execute(operation: Operation, handler: JobHandler) -> Operation:
+async def execute(operation: Operation, handler: OperationHandler) -> Operation:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry a live worker lock.

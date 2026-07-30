@@ -70,8 +70,8 @@ async def test_exoscale_usage_returns_none_for_missing_bucket(monkeypatch: pytes
     assert await storage.usage("missing") is None
 
 
-async def test_exoscale_usage_aggregates_bucket_and_ignores_prefix_markers(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Aggregate whole-bucket usage while skipping zero-byte prefix markers."""
+async def test_exoscale_usage_aggregates_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Aggregate whole-bucket usage."""
 
     class Paginator:
         """Yield fake S3 object-list pages."""

@@ -24,13 +24,6 @@ type PlatformLayoutProps = {
     children: ReactNode;
 };
 
-type PlatformLayoutTabEntry = {
-    icon?: LucideIcon;
-    label: string;
-    href: string;
-    pathname: string;
-};
-
 /** Renders the Platform shell with either breadcrumbs or brand-only header chrome. */
 export default function PlatformLayout({
     tabs,
@@ -53,28 +46,16 @@ export default function PlatformLayout({
             pathname: normalizePathname(targetUrl.pathname),
         };
     });
-    const activeTabPathname = getActiveTabPathname(tabEntries, normalizedCurrentPathname);
-    const { user } = useUserProfile();
-
-    /** Returns whether a tab pathname is active for the current path. */
-    function isTabPathActive(tabPathname: string, pathname: string): boolean {
-        // Exact tab matches are always active.
-        if (tabPathname === pathname) {
-            return true;
-        }
-
-        return pathname.startsWith(`${tabPathname}/`);
-    }
-
-    /** Selects the deepest matching tab path for the current route. */
-    function getActiveTabPathname(items: PlatformLayoutTabEntry[], pathname: string): string | undefined {
-        const matching = items.filter((item) => isTabPathActive(item.pathname, pathname));
-
-        return matching.reduce<string | undefined>(
-            (best, item) => (best === undefined || item.pathname.length > best.length ? item.pathname : best),
+    const activeTabPathname = tabEntries
+        .filter(
+            (tab) =>
+                tab.pathname === normalizedCurrentPathname || normalizedCurrentPathname.startsWith(`${tab.pathname}/`)
+        )
+        .reduce<string | undefined>(
+            (best, tab) => (best === undefined || tab.pathname.length > best.length ? tab.pathname : best),
             undefined
         );
-    }
+    const { user } = useUserProfile();
 
     return (
         <TopLayout

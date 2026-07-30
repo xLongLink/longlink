@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-from src import operations as _
 from fastapi import FastAPI
 from pathlib import Path
 from src.utils import jobs
@@ -18,8 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Run this API replica's registered Operation scheduler."""
 
-    # Validate every Operation handler before starting this replica's scheduler.
-    jobs.validate_handlers()
+    # Start this replica's scheduler with the explicit registered handlers.
     worker = asyncio.create_task(jobs.run_operation_scheduler())
 
     # Always stop the Operation scheduler when the application lifespan exits.

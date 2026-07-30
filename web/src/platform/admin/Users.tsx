@@ -11,7 +11,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiUserSummarySchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiUserSummarySchema } from '@/lib/api-schemas';
 import type { ApiUserSummary } from '@/lib/types';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -24,7 +24,7 @@ export default function AdminUsers() {
         error,
         isLoading,
     } = useCollectionQuery<ApiUserSummary>('/api/users', {
-        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
+        parse: (value) => apiUserSummarySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(users);
     const columns: TableColumn<ApiUserSummary>[] = [

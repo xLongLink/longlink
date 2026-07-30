@@ -31,7 +31,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
-                    const profileKey = userProfileQueryKey();
+                    const profileKey = userProfileQueryKey;
 
                     await clearSessionQueries(queryClient, [profileKey]);
                     queryClient.setQueryData(profileKey, null);

@@ -38,8 +38,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         resolver: zodResolver(loginSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const registerQuery = email ? new URLSearchParams({ email }).toString() : '';
-    const registerHref = registerQuery ? `/auth/register?${registerQuery}` : '/auth/register';
+    const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
         mutationFn: (payload: LoginValues) =>
             fetchApiVoid('/api/auth/password/login', {
@@ -53,7 +52,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey });
             navigate('/organizations', { replace: true });
         } catch (loginError) {
             showToast({

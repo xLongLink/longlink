@@ -1,7 +1,6 @@
 import secrets
 from src import adapters
 from src.operations import computes
-from src.utils.jobs import operation
 from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
@@ -10,8 +9,6 @@ from src.kubernetes.gateway import GatewayRoute
 from src.database.models.operations import Operation
 
 
-@operation("application.create")
-@operation("application.reconcile")
 async def create(claimed: Operation) -> str | None:
     """Converge one Application lifecycle target or running workload."""
 
@@ -143,7 +140,6 @@ async def create(claimed: Operation) -> str | None:
     return None
 
 
-@operation("application.delete")
 async def delete(claimed: Operation) -> str | None:
     """Remove one Application route, runtime, provider state, and tombstone."""
 

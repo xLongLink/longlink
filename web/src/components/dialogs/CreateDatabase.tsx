@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -60,12 +60,12 @@ export default function CreateDatabase() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => parseApiResponse(apiDatabaseRegistrySchema, value)
+                (value) => apiDatabaseRegistrySchema.parse(value)
             ),
         onSuccess: async () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
         },
     });
 

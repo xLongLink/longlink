@@ -236,7 +236,7 @@ async def update_member_role(
             session,
             compute.id,
             locked_compute=compute,
-            kind=OperationKind.organization_reconcile,
+            kind=OperationKind.organization_create,
             target_id=organization.id,
         )
         await session.commit()

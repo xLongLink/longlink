@@ -163,11 +163,8 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
-    assert {item.kind for item in open_operations} == {
-        OperationKind.organization_create,
-        OperationKind.organization_reconcile,
-    }
-    projection = next(item for item in open_operations if item.kind == OperationKind.organization_reconcile)
+    assert {item.kind for item in open_operations} == {OperationKind.organization_create}
+    projection = next(item for item in open_operations if item.kind == OperationKind.organization_create)
     assert projection.target_id == organization.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled

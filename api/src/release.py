@@ -47,8 +47,8 @@ async def schedule_migrations() -> None:
                         col(Operation.kind).in_(
                             [
                                 OperationKind.compute_reconcile,
-                                OperationKind.organization_reconcile,
-                                OperationKind.application_reconcile,
+                                OperationKind.organization_create,
+                                OperationKind.application_create,
                             ]
                         ),
                         col(Operation.failed).is_(False),
@@ -69,29 +69,29 @@ async def schedule_migrations() -> None:
                 locked_compute=compute,
             )
 
-        # Queue one release reconciliation for every active Organization.
+        # Queue one release operation for every active Organization.
         for organization in organization_rows:
-            if (OperationKind.organization_reconcile, organization.id) in existing_targets:
+            if (OperationKind.organization_create, organization.id) in existing_targets:
                 continue
             compute = computes_by_id[organization.compute_id]
             await operation_service.enqueue_in_session(
                 session,
                 organization.compute_id,
                 locked_compute=compute,
-                kind=OperationKind.organization_reconcile,
+                kind=OperationKind.organization_create,
                 target_id=organization.id,
             )
 
-        # Queue one release reconciliation for every running Application.
+        # Queue one release operation for every running Application.
         for application_id, compute_id in application_rows:
-            if (OperationKind.application_reconcile, application_id) in existing_targets:
+            if (OperationKind.application_create, application_id) in existing_targets:
                 continue
             compute = computes_by_id[compute_id]
             await operation_service.enqueue_in_session(
                 session,
                 compute_id,
                 locked_compute=compute,
-                kind=OperationKind.application_reconcile,
+                kind=OperationKind.application_create,
                 target_id=application_id,
             )
 

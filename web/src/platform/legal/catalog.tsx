@@ -15,28 +15,26 @@ function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
     };
 }
 
-const termsPage = legalPage({
-    ...legalPages.terms,
-    icon: <FileText aria-hidden="true" size={16} />,
-    content: termsContent,
-    metadata: termsMetadata,
-});
-
-const impressumPage = legalPage({
-    ...legalPages.impressum,
-    icon: <Landmark aria-hidden="true" size={16} />,
-    content: impressumContent,
-    metadata: impressumMetadata,
-});
-
-const privacyPage = legalPage({
-    ...legalPages.privacy,
-    icon: <ShieldCheck aria-hidden="true" size={16} />,
-    content: privacyContent,
-    metadata: privacyMetadata,
-});
-
-export const LEGAL_PAGES: ArticlePage[] = [termsPage, impressumPage, privacyPage];
+export const LEGAL_PAGES: ArticlePage[] = [
+    legalPage({
+        ...legalPages.terms,
+        icon: <FileText aria-hidden="true" size={16} />,
+        content: termsContent,
+        metadata: termsMetadata,
+    }),
+    legalPage({
+        ...legalPages.impressum,
+        icon: <Landmark aria-hidden="true" size={16} />,
+        content: impressumContent,
+        metadata: impressumMetadata,
+    }),
+    legalPage({
+        ...legalPages.privacy,
+        icon: <ShieldCheck aria-hidden="true" size={16} />,
+        content: privacyContent,
+        metadata: privacyMetadata,
+    }),
+];
 
 export const LEGAL_GROUPS: ArticleNavigationGroup[] = [
     {

@@ -3,12 +3,7 @@ import { createContext, useContext, useEffect } from 'react';
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
-import {
-    apiUserOrganizationMembershipSchema,
-    apiUserProfileSchema,
-    parseApiCollection,
-    parseApiResponse,
-} from '@/lib/api-schemas';
+import { apiUserOrganizationMembershipSchema, apiUserProfileSchema } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
@@ -54,7 +49,7 @@ function storeThemePreferences({ theme, accent, radius }: UserPreferences): void
 function useUserQuery() {
     return useApiQuery<User | null>('/api/me', {
         // Auth state must refresh immediately after login/logout redirects.
-        parse: (value) => (value === null ? null : parseApiResponse(apiUserProfileSchema, value)),
+        parse: (value) => (value === null ? null : apiUserProfileSchema.parse(value)),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -115,7 +110,7 @@ export function useUserProfile(): UserProfileState {
 export function useUserOrganizations(): UserOrganizationsState {
     const profile = useUserProfile();
     const query = useCollectionQuery<ApiUserOrganizationMembership>(profile.user ? '/api/me/organizations' : null, {
-        parse: (value) => parseApiCollection(apiUserOrganizationMembershipSchema, value),
+        parse: (value) => apiUserOrganizationMembershipSchema.array().parse(value),
     });
 
     return {
@@ -155,12 +150,12 @@ export function useUpdateUser() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => parseApiResponse(apiUserProfileSchema, value)
+                (value) => apiUserProfileSchema.parse(value)
             );
         },
         onSuccess: (user) => {
             storeThemePreferences(user);
-            queryClient.setQueryData(userProfileQueryKey(), user);
+            queryClient.setQueryData(userProfileQueryKey, user);
         },
     });
 }

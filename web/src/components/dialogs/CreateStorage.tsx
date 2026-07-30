@@ -12,7 +12,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiStorageRegistrySchema } from '@/lib/api-schemas';
 import { storagesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -50,12 +50,12 @@ export default function CreateStorage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => parseApiResponse(apiStorageRegistrySchema, value)
+                (value) => apiStorageRegistrySchema.parse(value)
             ),
         onSuccess: async () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
         },
     });
 

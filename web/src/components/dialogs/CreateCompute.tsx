@@ -13,7 +13,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiComputeRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiComputeRegistrySchema } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -44,12 +44,12 @@ export default function CreateCompute() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => parseApiResponse(apiComputeRegistrySchema, value)
+                (value) => apiComputeRegistrySchema.parse(value)
             ),
         onSuccess: async () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey });
         },
     });
 

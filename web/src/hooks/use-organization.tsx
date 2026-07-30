@@ -6,7 +6,6 @@ import {
     apiApplicationResponseSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationSummarySchema,
-    parseApiResponse,
 } from '@/lib/api-schemas';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
@@ -38,7 +37,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
     const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
-        parse: (value) => parseApiResponse(apiOrganizationDetailsSchema, value),
+        parse: (value) => apiOrganizationDetailsSchema.parse(value),
         refetchInterval: 5000,
         retry: false,
     });
@@ -84,7 +83,7 @@ export function useInviteOrganizationMember(organizationId: string, canInviteMem
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
@@ -121,12 +120,12 @@ export function useCreateOrganizationApplication(organizationId: string) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
                 },
-                (value) => parseApiResponse(apiApplicationResponseSchema, value)
+                (value) => apiApplicationResponseSchema.parse(value)
             );
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
         },
     });
 }
@@ -155,8 +154,8 @@ export function useChangeOrganizationMemberRole(organizationId: string, canManag
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
@@ -179,11 +178,11 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 {
                     method: 'DELETE',
                 },
-                (value) => parseApiResponse(apiApplicationResponseSchema, value)
+                (value) => apiApplicationResponseSchema.parse(value)
             );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
-            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
         },
     });
 }
@@ -203,11 +202,11 @@ export function useCreateOrganization() {
                         name,
                     }),
                 },
-                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+                (value) => apiOrganizationSummarySchema.parse(value)
             );
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
+            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
         },
     });
 }
@@ -234,16 +233,16 @@ export function useUpdateOrganization(organizationId: string, canManageOrganizat
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar }),
                 },
-                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+                (value) => apiOrganizationSummarySchema.parse(value)
             );
         },
         onSuccess: async () => {
             // Refresh every response that embeds Organization metadata.
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
-                queryClient.invalidateQueries({ queryKey: applicationsQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: organizationsQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
             ]);
         },
     });
@@ -265,11 +264,11 @@ export function useDeleteOrganization() {
                 {
                     method: 'DELETE',
                 },
-                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+                (value) => apiOrganizationSummarySchema.parse(value)
             );
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
+            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
         },
     });
 }

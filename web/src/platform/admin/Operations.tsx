@@ -1,18 +1,19 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { apiOperationSchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiOperationSchema } from '@/lib/api-schemas';
 import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
-/** Returns localized admin operation table columns. */
-function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
+/** Renders the admin operations page. */
+export default function AdminOperations() {
+    const t = useTranslator();
     const statusLabels: Record<ApiOperation['status'], string> = {
         scheduled: t('admin.operationStatus.scheduled'),
         active: t('admin.operationStatus.active'),
@@ -22,14 +23,11 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
     const kindLabels: Record<ApiOperation['kind'], string> = {
         'compute.reconcile': t('admin.computeReconciliation'),
         'application.create': t('admin.applicationCreation'),
-        'application.reconcile': t('admin.applicationReconciliation'),
         'application.delete': t('admin.applicationDeletion'),
         'organization.create': t('admin.organizationCreation'),
         'organization.delete': t('admin.organizationDeletion'),
-        'organization.reconcile': t('admin.organizationReconciliation'),
     };
-
-    return [
+    const columns: TableColumn<ApiOperation>[] = [
         {
             key: 'operation',
             header: t('columns.operation'),
@@ -80,18 +78,13 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
             ),
         },
     ];
-}
-
-/** Renders the admin operations page. */
-export default function AdminOperations() {
-    const t = useTranslator();
     const {
         items: operations,
         error,
         isLoading,
     } = useCollectionQuery<ApiOperation>('/api/operations', {
         refetchInterval: 5000,
-        parse: (value) => parseApiCollection(apiOperationSchema, value),
+        parse: (value) => apiOperationSchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(operations, { controls: 'default' });
 
@@ -105,7 +98,7 @@ export default function AdminOperations() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={createOperationColumns(t)}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

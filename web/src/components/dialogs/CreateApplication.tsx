@@ -15,7 +15,7 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiIconsSchema, apiImageMetadataSchema } from '@/lib/api-schemas';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import type { ApiImageMetadata } from '@/lib/types';
 
@@ -63,10 +63,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const name = useWatch({ control: form.control, name: 'name' });
     const icon = useWatch({ control: form.control, name: 'icon' });
     const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
-        parse: (value) => parseApiResponse(apiIconsSchema, value),
+        parse: (value) => apiIconsSchema.parse(value),
         staleTime: Infinity,
     });
-    const iconOptions = iconCatalog ?? [];
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
@@ -85,7 +84,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         try {
             const query = new URLSearchParams({ image: payload.image });
             const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
-                parseApiResponse(apiImageMetadataSchema, value)
+                apiImageMetadataSchema.parse(value)
             );
 
             setDeclaredEnvironments(metadata.environments);
@@ -271,7 +270,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             label={t('labels.icon')}
                                             options={[
                                                 { value: '__none__', label: t('dialogs.none') },
-                                                ...iconOptions.map((name) => ({ value: name, label: name })),
+                                                ...(iconCatalog ?? []).map((name) => ({ value: name, label: name })),
                                             ]}
                                             value={icon}
                                             placeholder={t('dialogs.chooseIcon')}

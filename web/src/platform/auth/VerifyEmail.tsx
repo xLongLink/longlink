@@ -17,7 +17,7 @@ import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 
@@ -38,10 +38,11 @@ export default function VerifyEmail() {
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [fragmentToken] = useState(
-        () => new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? ''
-    );
-    const [token] = useState(() => fragmentToken || sessionStorage.getItem(REGISTRATION_TOKEN_KEY) || '');
+    const [{ fragmentToken, token }] = useState(() => {
+        const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? '';
+
+        return { fragmentToken, token: fragmentToken || sessionStorage.getItem(REGISTRATION_TOKEN_KEY) || '' };
+    });
     const [accountExists, setAccountExists] = useState(false);
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
@@ -58,7 +59,7 @@ export default function VerifyEmail() {
         mutationFn: async (registrationToken: string) => {
             if (!registrationToken) {
                 return fetchApiJson('/api/auth/register/setup', undefined, (value) =>
-                    parseApiResponse(apiRegistrationVerifiedSchema, value)
+                    apiRegistrationVerifiedSchema.parse(value)
                 );
             }
 
@@ -69,7 +70,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: registrationToken }),
                 },
-                (value) => parseApiResponse(apiRegistrationVerifiedSchema, value)
+                (value) => apiRegistrationVerifiedSchema.parse(value)
             );
         },
         onSuccess: (setup) => {
@@ -91,7 +92,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
-                (value) => parseApiResponse(apiUserProfileSchema, value)
+                (value) => apiUserProfileSchema.parse(value)
             ),
     });
     const verifyRegistration = verification.mutate;
@@ -100,7 +101,7 @@ export default function VerifyEmail() {
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
             const user = await completion.mutateAsync(payload);
-            const profileKey = userProfileQueryKey();
+            const profileKey = userProfileQueryKey;
 
             await clearSessionQueries(queryClient, [profileKey]);
             queryClient.setQueryData(profileKey, user);

@@ -13,8 +13,6 @@ import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import { formatDate } from '@/lib/utils';
 import type { ArticlePage } from '@/platform/catalog';
 
-type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
-
 /** Renders shared documentation and legal article content. */
 export function Article({ page }: { page: ArticlePage }) {
     const t = useTranslator();
@@ -91,7 +89,7 @@ export function Article({ page }: { page: ArticlePage }) {
 }
 
 /** Renders article body content and source metadata. */
-function ArticleContent({ content, metadata }: ArticleContentProps) {
+function ArticleContent({ content, metadata }: Pick<ArticlePage, 'content' | 'metadata'>) {
     const t = useTranslator();
     const lastUpdated = formatDate(new Date(metadata.lastUpdated));
 

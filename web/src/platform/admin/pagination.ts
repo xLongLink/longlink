@@ -14,20 +14,17 @@ export function useAdminPagination<T extends Record<string, unknown>>(
     const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
     const currentPage = Math.min(page, pageCount);
 
-    // Preserve the existing compact LongLink controls unless a table uses Astryx defaults.
-    const controlOptions =
-        controls === 'compact'
-            ? {
-                  label: `${t('actions.previous')} / ${t('actions.next')}`,
-                  size: 'sm' as const,
-              }
-            : {};
     const pagination = useTablePagination<T>({
         page: currentPage,
         onPageChange: setPage,
         totalItems: items.length,
         pageSize: PAGE_SIZE,
-        ...controlOptions,
+        ...(controls === 'compact'
+            ? {
+                  label: `${t('actions.previous')} / ${t('actions.next')}`,
+                  size: 'sm' as const,
+              }
+            : {}),
     });
 
     return {

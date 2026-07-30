@@ -7,7 +7,7 @@ let isDevelopmentNoticeDismissed = false;
 
 /** Warns visitors that the hosted LongLink environment is still under development. */
 export function DevelopmentNotice() {
-    const [isDismissed, setIsDismissed] = useState(isDevelopmentNoticeDismissed);
+    const [isDismissed, setIsDismissed] = useState(() => isDevelopmentNoticeDismissed);
 
     if (isDismissed) {
         return null;

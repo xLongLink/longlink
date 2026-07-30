@@ -1,12 +1,10 @@
 from src import adapters
 from src.operations import computes
-from src.utils.jobs import operation
 from longlink.shared import users as shared_users
 from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
-from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
@@ -40,18 +38,14 @@ async def sync_users(organization: Organization, db: adapters.Postgres) -> None:
     await shared_users.sync_url(db.shared_schema_url(organization.id), users)
 
 
-@operation("organization.create")
-@operation("organization.reconcile")
 async def reconcile(claimed: Operation) -> str | None:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
-    # Skip removed Organizations and already completed creation work.
+    # Skip removed Organizations.
     infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return None
     organization = infrastructure.organization
-    if claimed.kind == OperationKind.organization_create and organization.status == Status.running:
-        return None
 
     # A new execution makes a previously failed Organization visibly active again.
     if organization.status == Status.failed:
@@ -108,7 +102,6 @@ async def reconcile(claimed: Operation) -> str | None:
     return None
 
 
-@operation("organization.delete")
 async def delete(claimed: Operation) -> str | None:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 

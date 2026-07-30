@@ -132,11 +132,9 @@ export const apiOperationSchema = z.object({
     kind: z.enum([
         'compute.reconcile',
         'application.create',
-        'application.reconcile',
         'application.delete',
         'organization.create',
         'organization.delete',
-        'organization.reconcile',
     ]),
     target_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
@@ -156,13 +154,3 @@ export const apiOrganizationStorageUsageSchema = z.object({
     bucket_name: z.string(),
     space_used: z.number().int().nonnegative(),
 });
-
-/** Validates an API response value with a Zod schema. */
-export function parseApiResponse<T>(schema: z.ZodType<T>, value: unknown): T {
-    return schema.parse(value);
-}
-
-/** Validates an API collection response value with an item schema. */
-export function parseApiCollection<T>(schema: z.ZodType<T>, value: unknown): T[] {
-    return z.array(schema).parse(value);
-}

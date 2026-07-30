@@ -14,7 +14,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiComputeRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
+import { apiComputeRegistrySchema } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiComputeRegistry } from '@/lib/types';
@@ -27,9 +27,9 @@ export default function AdminCompute() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
-        mutationFn: async (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
+        mutationFn: (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey });
             toast({ body: t('admin.computeDeleted') });
         },
     });
@@ -39,7 +39,7 @@ export default function AdminCompute() {
         isLoading,
     } = useCollectionQuery<ApiComputeRegistry>('/api/computes', {
         refetchInterval: 5000,
-        parse: (value) => parseApiCollection(apiComputeRegistrySchema, value),
+        parse: (value) => apiComputeRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(computes);
     const statusLabels = createStatusLabels(t);

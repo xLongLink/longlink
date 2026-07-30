@@ -23,8 +23,7 @@ export default function Organizations() {
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
-    const search = new URLSearchParams(location.search);
-    const initialEmail = search.get('email') ?? '';
+    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
     const isLoading = isProfileLoading || areOrganizationsLoading;
     const error = profileError ?? organizationsError;
 
