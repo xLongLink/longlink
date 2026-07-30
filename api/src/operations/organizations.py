@@ -1,11 +1,11 @@
-from src.adapters.postgres import Postgres
-from src.adapters.storage.exoscale import Exoscale
 from src.operations import computes
 from longlink.shared import users as shared_users
 from src.environments import env
 from src.models.statuses import Status
+from src.adapters.postgres import Postgres
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 

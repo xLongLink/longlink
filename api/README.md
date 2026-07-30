@@ -5,7 +5,6 @@
 The Platform manages authentication, permissions, organizations, infrastructure resources, deployments, routing, and operational state while Applications run independently as Python services built with the LongLink SDK.
 </div>
 
-
 <br />
 
 ## Resources
@@ -65,15 +64,14 @@ Work that is too long for an API request is queued as a durable, typed Operation
 
 - Release is triggered with `vX.Y.Z` and a container is created.
 - Alembic migrations run, then `python -m src.release` schedules release migration Operations:
-  - One `compute.reconcile` for every compute.
-  - One `organization.create` for every active Organization.
-  - One `application.create` for every running Application.
+    - One `compute.reconcile` for every compute.
+    - One `organization.create` for every active Organization.
+    - One `application.create` for every running Application.
 - Each API replica starts (`main.py`).
-  - `FastAPI` manage user request.
-  - `lifespan` claims and executes Operations.
+    - `FastAPI` manage user request.
+    - `lifespan` claims and executes Operations.
 
 <br />
-
 
 ## Development
 
@@ -83,7 +81,6 @@ Work that is too long for an API request is queued as a durable, typed Operation
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 ```
-
 
 Run from `api/`:
 
@@ -95,7 +92,6 @@ DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 # In another terminal:
 DEVELOPMENT=true uv run python seed.py
 ```
-
 
 <br />
 <br />

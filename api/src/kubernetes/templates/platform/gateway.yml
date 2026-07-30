@@ -59,11 +59,11 @@ spec:
                   livenessProbe:
                       httpGet: *health-check
                   volumeMounts:
-                       - name: config
-                         mountPath: /etc/envoy
-                         readOnly: true
-                       - name: tls
-                         mountPath: /etc/envoy-tls
+                      - name: config
+                        mountPath: /etc/envoy
+                        readOnly: true
+                      - name: tls
+                        mountPath: /etc/envoy-tls
                   resources:
                       requests:
                           cpu: 100m

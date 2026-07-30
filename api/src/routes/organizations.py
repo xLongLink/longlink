@@ -1,13 +1,12 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.adapters.postgres import Postgres
-from src.adapters.storage.exoscale import Exoscale
 from src.auth import authuser, authadmin, current_authenticated_user
 from src.utils import mail, names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
+from src.adapters.postgres import Postgres
 from src.database.services import storage, database, operations, invitations, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import (
@@ -19,6 +18,7 @@ from src.models.organizations import (
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
+from src.adapters.storage.exoscale import Exoscale
 
 router = APIRouter()
 

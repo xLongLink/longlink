@@ -1,12 +1,12 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.adapters.gateway import GatewayClient, GatewayRequestError
 from src.auth import authuser
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
+from src.adapters.gateway import GatewayClient, GatewayRequestError
 from src.database.services import compute, organizations
 from src.database.models.users import User
 

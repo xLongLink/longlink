@@ -1,9 +1,9 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.adapters.postgres import Postgres
 from src.auth import authadmin
 from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
+from src.adapters.postgres import Postgres
 from src.database.services import database
 
 router = APIRouter(dependencies=[Depends(authadmin)])

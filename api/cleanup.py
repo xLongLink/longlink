@@ -1,8 +1,6 @@
 import asyncio
 import argparse
 from seed import SeedSettings, application_database_configuration
-from src.adapters.postgres import Postgres
-from src.adapters.storage.exoscale import Exoscale
 from uuid import UUID
 from pathlib import Path
 from sqlalchemy import text, inspect
@@ -12,8 +10,10 @@ from sqlalchemy.engine import make_url
 from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Secret, Namespace, NetworkPolicy
 from src.database.session import session_scope
+from src.adapters.postgres import Postgres
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.applications import secret_values
+from src.adapters.storage.exoscale import Exoscale
 
 
 async def cleanup(*, reset_cluster: bool = False) -> None:

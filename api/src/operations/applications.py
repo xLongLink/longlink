@@ -1,12 +1,12 @@
 import secrets
-from src.adapters.postgres import Postgres
-from src.adapters.storage.exoscale import Exoscale
 from src.operations import computes
 from src.environments import env
 from src.models.statuses import Status
+from src.adapters.postgres import Postgres
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
+from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
 
 
