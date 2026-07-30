@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 
 
@@ -51,19 +50,17 @@ async def test_compute_registry_create_duplicate_and_delete(
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     created = create_response.json()
-    registry_id = created["compute"]["id"]
+    registry_id = created["id"]
     delete_response = await client.delete(f"/api/computes/{registry_id}")
     retry_response = await client.delete(f"/api/computes/{registry_id}")
     get_response = await client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
-    assert created["compute"]["name"] == "Ephemeral Compute"
-    assert created["operation"]["status"] == OperationStatus.scheduled
-    assert created["operation"]["kind"] == OperationKind.compute_reconcile
-    assert "gateway_url" not in created["compute"]
-    assert "kubeconfig" not in created["compute"]
-    assert "proxy_secret" not in created["compute"]
+    assert created["name"] == "Ephemeral Compute"
+    assert "gateway_url" not in created
+    assert "kubeconfig" not in created
+    assert "proxy_secret" not in created
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
     assert delete_response.status_code == 204
@@ -104,97 +101,12 @@ async def test_compute_registry_routes_require_admin(
     # Act
     read_response = await client.get("/api/computes")
     get_response = await client.get(f"/api/computes/{registry.id}")
-    diagnostics_response = await client.get(f"/api/computes/{registry.id}/namespaces")
     write_response = await client.post(
         "/api/computes",
         json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
 
     # Assert
-    for response in (read_response, get_response, diagnostics_response, write_response):
+    for response in (read_response, get_response, write_response):
         assert response.status_code == 403
         assert response.json() == {"detail": "Permission required"}
-
-
-async def test_compute_diagnostics_return_namespaces_and_pods(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-) -> None:
-    """Return simple live namespace and pod diagnostics from the compute adapter."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    class Pod:
-        """Minimal pod object returned by the fake Kubernetes client."""
-
-        name = "dashboard-123"
-        raw = {"status": {"phase": "Running"}, "spec": {"nodeName": "node-a"}}
-
-    class FakeKubernetes:
-        """Return deterministic diagnostic data."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Validate the selected compute registry."""
-
-            assert kubeconfig == infrastructure.compute.kubeconfig
-
-        async def namespaces(self) -> list[str]:
-            """Return visible namespaces."""
-
-            return ["acme"]
-
-        async def pods(self, namespace: str) -> list[Pod]:
-            """Return visible pods in the requested namespace."""
-
-            assert namespace == "acme"
-            return [Pod()]
-
-    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeKubernetes)
-    client = clients[0]
-
-    # Act
-    namespaces_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
-    pods_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/acme/pods")
-    missing_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/missing/pods")
-
-    # Assert
-    assert namespaces_response.status_code == 200
-    assert namespaces_response.json() == ["acme"]
-    assert pods_response.status_code == 200
-    assert pods_response.json() == [{"name": "dashboard-123", "node": "node-a", "status": "Running"}]
-    assert missing_response.status_code == 404
-    assert missing_response.json() == {"detail": "Compute namespace not found"}
-
-
-async def test_compute_diagnostics_return_unavailable_when_backend_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-) -> None:
-    """Return a stable error when live namespace inspection fails."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    class FailingKubernetes:
-        """Raise a provider error for namespace inspection."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Accept the selected registry kubeconfig."""
-
-            assert kubeconfig == infrastructure.compute.kubeconfig
-
-        async def namespaces(self) -> list[str]:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("cluster offline")
-
-    monkeypatch.setattr("src.routes.computes.Kubernetes", FailingKubernetes)
-    client = clients[0]
-
-    # Act
-    response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Compute namespaces unavailable"}

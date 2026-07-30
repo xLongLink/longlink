@@ -3,10 +3,9 @@ from typing import Literal
 from datetime import datetime
 from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
-from src.models.users import UserSummary, UserIdentity
+from src.models.users import UserIdentity
 from src.models.statuses import Status
 from src.models.resources import OrganizationApplicationSummary
-from src.models.operations import OperationResponse
 
 
 class OrganizationCreate(BaseModel):
@@ -82,21 +81,7 @@ class OrganizationSummary(BaseModel):
     # Audit
     created_at: datetime
     updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
     deleted_at: datetime | None
-    deleted_by: UserSummary | None
-
-
-class OrganizationMutationResponse(BaseModel):
-    """Pair an accepted Organization desired-state change with its infrastructure Operation.
-
-    The operation must complete before the desired state is confirmed in managed infrastructure.
-    """
-
-    # Result
-    organization: OrganizationSummary
-    operation: OperationResponse
 
 
 class OrganizationMemberAccessResponse(BaseModel):
@@ -111,12 +96,6 @@ class OrganizationMemberAccessResponse(BaseModel):
     role: OrganizationRoles
 
 
-class OrganizationApplicationAccessResponse(BaseModel):
-    """Represent one compact LongLink Application available to an Organization member."""
-
-    # Relationships
-    application: OrganizationApplicationSummary
-
 class OrganizationDetails(BaseModel):
     """Represent an Organization with its members and Application access."""
 
@@ -126,4 +105,4 @@ class OrganizationDetails(BaseModel):
     # Relationships
     members: list[OrganizationMemberAccessResponse]
     invitations: list[OrganizationInvitationResponse]
-    applications: list[OrganizationApplicationAccessResponse]
+    applications: list[OrganizationApplicationSummary]

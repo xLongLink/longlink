@@ -24,10 +24,7 @@ class Infrastructure:
     storage: StorageRegistry
 
 
-async def create_ready_infrastructure(
-    slug: str = "local",
-    name: str = "Local testing",
-) -> Infrastructure:
+async def create_ready_infrastructure(name: str = "Local testing") -> Infrastructure:
     """Create independent registries with a ready compute target and no provider side effects."""
 
     # Test setup persists the exact assignable registry shape while avoiding provider side effects.
@@ -35,8 +32,7 @@ async def create_ready_infrastructure(
         suffix = uuid4().hex[:8]
         compute = ComputeRegistry(
             name=f"{name} compute {suffix}",
-            slug=f"{slug}-{suffix}-compute",
-            kubeconfig="apiVersion: v1\nclusters: []\n",
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             gateway_ca_certificate="test-ca",
             gateway_tls_certificate="test-certificate",
@@ -47,7 +43,6 @@ async def create_ready_infrastructure(
         )
         database = DatabaseRegistry(
             name=f"{name} database {suffix}",
-            slug=f"{slug}-{suffix}-database",
             host="database.example",
             port=5432,
             username="admin",
@@ -56,7 +51,6 @@ async def create_ready_infrastructure(
         )
         storage = StorageRegistry(
             name=f"{name} storage {suffix}",
-            slug=f"{slug}-{suffix}-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
@@ -72,8 +66,7 @@ async def create_organization(owner: User, name: str = "acme", slug: str = "acme
     # Import lazily so tests can share this factory without introducing service import cycles.
     from src.database.services import organizations
 
-    organization, _ = await organizations.create(name, slug, owner, avatar=avatar)
-    return organization
+    return await organizations.create(name, slug, owner, avatar=avatar)
 
 
 async def mark_organization_running(organization: Organization) -> None:

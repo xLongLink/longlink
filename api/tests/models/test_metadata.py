@@ -11,7 +11,7 @@ def test_longlink_metadata_tracks_runtime_image_outside_serialized_payload() -> 
     metadata = LongLinkMetadata(image="ghcr.io/longlink/dashboard@sha256:manifest", title="Dashboard")
 
     assert metadata.image == "ghcr.io/longlink/dashboard@sha256:manifest"
-    assert "image" not in metadata.model_dump(mode="json")
+    assert "image" not in metadata.model_dump()
 
 
 def test_longlink_metadata_serializes_environment_metadata() -> None:
@@ -24,6 +24,6 @@ def test_longlink_metadata_serializes_environment_metadata() -> None:
         environments=[EnvironmentMetadata(name="API_KEY", type="str", required=True, description="API key")],
     )
 
-    assert metadata.model_dump(mode="json")["environments"] == [
+    assert metadata.model_dump()["environments"] == [
         {"name": "API_KEY", "type": "str", "required": True, "description": "API key"}
     ]

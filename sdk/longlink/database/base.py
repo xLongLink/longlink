@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Any
 from datetime import datetime
 from sqlmodel import Field
 from contextlib import asynccontextmanager
@@ -21,12 +20,6 @@ class Table(Base):
 
     # SQLAlchemy configuration
     __allow_unmapped__ = True
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Allow inherited SDK relationship annotations on mapped subclasses."""
-
-        cls.__allow_unmapped__ = True
-        super().__init_subclass__(**kwargs)
 
     # Audit timestamps
     created_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
@@ -78,7 +71,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         ).render_as_string(hide_password=False)
 
     # Configure connection health checks for every database backend.
-    engine_kwargs: dict[str, Any] = {
+    engine_kwargs: dict[str, object] = {
         "pool_pre_ping": True,
         "pool_recycle": 20,
     }

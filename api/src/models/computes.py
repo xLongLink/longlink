@@ -1,8 +1,33 @@
+import json
 import yaml
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict, field_validator
+from src.models.types import PlatformVersion
 from src.models.statuses import Status
-from src.models.operations import OperationResponse
+
+
+def kubeconfig_mapping(value: object) -> dict[str, object]:
+    """Parse one YAML or mapping kubeconfig into a JSON-compatible mapping."""
+
+    # Parse user-supplied YAML only at the API boundary.
+    if isinstance(value, str):
+        try:
+            value = yaml.safe_load(value)
+        except yaml.YAMLError as exc:
+            raise ValueError("Kubernetes kubeconfig must be valid YAML") from exc
+
+    # Persist only object-shaped Kubernetes configurations.
+    if not isinstance(value, dict):
+        raise ValueError("Kubernetes kubeconfig must be a mapping")
+
+    # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
+    try:
+        normalized = json.loads(json.dumps(value))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Kubernetes kubeconfig must be JSON-compatible") from exc
+    if not isinstance(normalized, dict):
+        raise ValueError("Kubernetes kubeconfig must be a mapping")
+    return normalized
 
 
 class ComputeRegistryCreate(BaseModel):
@@ -12,21 +37,14 @@ class ComputeRegistryCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
     # Connection
-    kubeconfig: str = Field(min_length=1, max_length=1024 * 1024)
+    kubeconfig: dict[str, object]
 
-    @field_validator("kubeconfig")
+    @field_validator("kubeconfig", mode="before")
     @classmethod
-    def validate_kubeconfig(cls, value: str) -> str:
-        """Reject kubeconfigs that are not YAML mappings before persistence."""
+    def validate_kubeconfig(cls, value: object) -> dict[str, object]:
+        """Parse and validate kubeconfigs before persistence."""
 
-        # Parse the user-controlled document at the API boundary.
-        try:
-            kubeconfig = yaml.safe_load(value)
-        except yaml.YAMLError as exc:
-            raise ValueError("Kubernetes kubeconfig must be valid YAML") from exc
-        if not isinstance(kubeconfig, dict):
-            raise ValueError("Kubernetes kubeconfig must be a mapping")
-        return value
+        return kubeconfig_mapping(value)
 
 
 class ComputeRegistryResponse(BaseModel):
@@ -39,27 +57,7 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # State
     status: Status
-    version: str | None
-
-
-class ComputeRegistryMutationResponse(BaseModel):
-    """Pair an accepted compute change with its reconciliation operation."""
-
-    # Result
-    compute: ComputeRegistryResponse
-    operation: OperationResponse
-
-
-class PodResponse(BaseModel):
-    """Represent a pod in a namespace."""
-
-    # Metadata
-    name: str
-    node: str | None
-
-    # State
-    status: str
+    version: PlatformVersion | None

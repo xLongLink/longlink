@@ -21,7 +21,7 @@ router = APIRouter()
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one revocable browser session."""
 
-    email = str(payload.email)
+    email = payload.email
 
     # Load the case-insensitive account identity before verifying its credential.
     statement = select(User).where(func.lower(col(User.email)) == func.lower(email))
@@ -78,7 +78,7 @@ async def logout(
     )
 
 
-@router.post("/api/auth/forgot-password", status_code=202, response_model=None, tags=["auth"])
+@router.post("/api/auth/forgot-password", status_code=202, tags=["auth"])
 async def request_password_reset(
     payload: EmailPayload,
     background_tasks: BackgroundTasks,
@@ -86,7 +86,7 @@ async def request_password_reset(
 ):
     """Queue password reset delivery without disclosing account existence."""
 
-    email = str(payload.email)
+    email = payload.email
 
     # Missing and inactive accounts receive the same response as eligible accounts.
     statement = select(User).where(func.lower(col(User.email)) == func.lower(email), col(User.deleted_at).is_(None))
@@ -97,7 +97,6 @@ async def request_password_reset(
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
     credential = token.create_password_reset_token(user)
     recipient = user.email
-    await session.rollback()
     background_tasks.add_task(
         mail.send_password_reset_email,
         recipient,
@@ -177,15 +176,12 @@ async def reset_password(
 async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_auth_session)):
     """Send a stateless registration link when the email has no account."""
 
-    email = str(payload.email)
+    email = payload.email
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
     statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         return
-
-    # End the read transaction before asynchronous mail delivery starts.
-    await session.rollback()
 
     # Email proof contains no password or pending user identifier.
     credential = token.create_registration_token(email)
@@ -205,7 +201,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     response.set_cookie(
         "longlink_registration",
         payload.token,
-        max_age=token.REGISTRATION_TOKEN_LIFETIME_SECONDS,
+        max_age=token.EMAIL_TOKEN_LIFETIME_SECONDS,
         path="/api/auth/register",
         secure=not env.DEVELOPMENT,
         httponly=True,
@@ -243,7 +239,7 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
 
     # Prevent another browser tab's setup cookie from changing the displayed account identity.
-    if str(payload.email) != email:
+    if payload.email != email:
         raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
 
     # Reject token replay and concurrent account creation before expensive password hashing.

@@ -1,80 +1,11 @@
 import asyncio
-from enum import StrEnum
 from fastapi import HTTPException
 from src.logger import logger
-from dataclasses import dataclass
-from collections.abc import Callable, Awaitable, Coroutine
+from src.operations import OperationHandler, handlers
+from collections.abc import Coroutine
 from longlink.utils.time import utcnow
 from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.operations import Operation
-
-OPERATION_HANDLER_TIMEOUT_SECONDS = 20 * 60
-
-
-class OperationOutcomeState(StrEnum):
-    """Supported results from one operation handler execution."""
-
-    complete = "complete"
-    fail = "fail"
-
-
-@dataclass(frozen=True)
-class OperationOutcome:
-    """Represent the requested state transition during handler execution."""
-
-    state: OperationOutcomeState
-    reason: str | None = None
-
-
-JobHandler = Callable[[Operation], Awaitable[OperationOutcome]]
-
-handlers: dict[str, JobHandler] = {}
-
-
-def operation(name: str) -> Callable[[JobHandler], JobHandler]:
-    """Return a decorator that registers an operation handler by name."""
-
-    # Reject empty names before they can create unreachable registry entries.
-    if not name.strip():
-        raise ValueError("Operation name cannot be empty")
-
-    def decorator(handler: JobHandler) -> JobHandler:
-        """Register one operation handler while preserving the decorated function."""
-
-        # Refuse duplicates so operation dispatch remains deterministic.
-        if name in handlers:
-            raise ValueError(f"Operation handler already registered for '{name}'")
-        handlers[name] = handler
-        return handler
-
-    return decorator
-
-
-def validate_handlers() -> None:
-    """Require one registered handler for every persisted operation kind."""
-
-    # Fail startup when a handler is missing or registered under an unsupported name.
-    expected = {kind.value for kind in OperationKind}
-    registered = set(handlers)
-    if registered != expected:
-        missing = sorted(expected - registered)
-        unsupported = sorted(registered - expected)
-        raise RuntimeError(f"Invalid operation handlers; missing={missing}, unsupported={unsupported}")
-
-
-def complete() -> OperationOutcome:
-    """Return an outcome that completes the operation."""
-
-    # The dispatcher owns the database transition for completed operations.
-    return OperationOutcome(OperationOutcomeState.complete)
-
-
-def fail(reason: str) -> OperationOutcome:
-    """Return an outcome that fails the operation with a logged reason."""
-
-    # The dispatcher owns logging and the terminal database transition.
-    return OperationOutcome(OperationOutcomeState.fail, reason=reason)
 
 
 async def _finish_transition(transition: Coroutine[object, object, Operation | None]) -> Operation | None:
@@ -102,7 +33,7 @@ async def _finish_transition(transition: Coroutine[object, object, Operation | N
     return updated
 
 
-async def execute(operation: Operation, handler: JobHandler) -> Operation:
+async def execute(operation: Operation, handler: OperationHandler) -> Operation:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry a live worker lock.
@@ -113,8 +44,8 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
 
     # Bound one complete handler execution under its worker lease.
     try:
-        async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
-            outcome = await handler(operation)
+        async with asyncio.timeout(2 * 60):
+            reason = await handler(operation)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
@@ -125,23 +56,19 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
             logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
         raise
     except TimeoutError:
-        outcome = fail("Operation timed out")
+        reason = "Operation timed out"
     except HTTPException as exc:
-        detail = str(exc.detail)
-        outcome = fail(detail)
+        reason = str(exc.detail)
     except Exception as exc:
         logger.exception("Operation %s failed: %r", operation.id, exc)
-        outcome = fail(str(exc) or type(exc).__name__)
+        reason = str(exc) or type(exc).__name__
 
     # Persist exactly one transition that releases the claimed operation.
-    match outcome.state:
-        case OperationOutcomeState.complete:
-            transition = operations.complete(operation.id)
-        case OperationOutcomeState.fail:
-            logger.error("Operation %s failed: %s", operation.id, outcome.reason or "unknown reason")
-            transition = operations.fail(operation.id)
-        case _:
-            raise ValueError(f"Unsupported operation outcome '{outcome.state}'")
+    if reason is None:
+        transition = operations.complete(operation.id)
+    else:
+        logger.error("Operation %s failed: %s", operation.id, reason)
+        transition = operations.fail(operation.id)
 
     # Finish the terminal database transition even when shutdown cancels this worker.
     updated = await _finish_transition(transition)

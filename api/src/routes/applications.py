@@ -7,7 +7,7 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import Status
 from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
-from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationEnvironment, ApplicationMutationResponse
+from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationEnvironment
 from src.database.models.users import User
 
 router = APIRouter()
@@ -20,7 +20,7 @@ async def list_applications(_user: User = Depends(authadmin)):
     return await applications.fetch()
 
 
-@router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationMutationResponse, status_code=202)
+@router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
     """Create Application state and queue its explicit deployment lifecycle."""
 
@@ -78,16 +78,14 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         )
         if status != Status.creating:
             raise RuntimeError("Application is no longer creating")
-        scheduled = await operations.schedule_now(operation.id)
-        if scheduled is None:
+        if not await operations.schedule_now(operation.id):
             raise RuntimeError("Application create Operation is no longer open")
-        operation = scheduled
     except Exception as exc:
         logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
         await applications.soft_delete(application.id, user)
         raise HTTPException(status_code=503, detail="Application environment could not be staged") from exc
 
-    return {"application": application, "operation": operation}
+    return application
 
 
 @router.get("/api/applications/{application_id}/logs", response_model=list[str])
@@ -100,7 +98,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise HTTPException(status_code=403, detail="Access required")
 
     # Application logs require Organization maintenance authority.
-    if not access.allows(OrganizationRoles.maintain):
+    if not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
@@ -132,14 +130,10 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         raise HTTPException(status_code=403, detail="Access required")
 
     # Runtime configuration requires Organization maintenance authority.
-    if not access.allows(OrganizationRoles.maintain):
+    if not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
     application = access.application
     organization = access.organization
-
-    # Environment rollouts are valid only after the initial Application lifecycle completes.
-    if application.status != Status.running:
-        raise HTTPException(status_code=409, detail="Application is not running")
 
     # Resolve the Application's assigned cluster without reading its Platform runtime Secret.
     registry = await compute.get(organization.compute_id)
@@ -165,7 +159,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         raise HTTPException(status_code=409, detail="Application is not running")
 
 
-@router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationMutationResponse)
+@router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
@@ -181,12 +175,11 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
             raise HTTPException(status_code=403, detail="Access required")
 
     # Active Applications require Organization maintenance authority.
-    if access is not None and not access.allows(OrganizationRoles.maintain):
+    if access is not None and not roles.atleast(access.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
     result = await applications.soft_delete(application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    deleted, operation = result
-    return {"application": deleted, "operation": operation}
+    return result

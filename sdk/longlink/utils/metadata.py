@@ -34,19 +34,22 @@ class Metadata(BaseModel):
     def from_pyproject(cls, pyproject_data: MetadataPayload, **overrides: object) -> Self:
         """Build metadata from an already parsed pyproject payload."""
 
-        # Read LongLink tool metadata first, then fall back to PEP 621 fields and model defaults.
-        defaults = {field: cls.model_fields[field].default for field in cls.model_fields}
+        # Read LongLink tool metadata first, then fall back to PEP 621 fields.
         tool_data = metadata_section(metadata_section(pyproject_data, "tool"), "longlink")
         project_data = metadata_section(pyproject_data, "project")
         metadata_data = {
-            "name": tool_data.get("name") or project_data.get("name") or defaults["name"],
-            "title": tool_data.get("title") or defaults["title"],
-            "summary": tool_data.get("summary") or defaults["summary"],
-            "description": tool_data.get("description") or project_data.get("description") or defaults["description"],
-            "version": tool_data.get("version") or project_data.get("version") or defaults["version"],
-            "terms_of_service": tool_data.get("terms_of_service") or defaults["terms_of_service"],
-            "contact": tool_data.get("contact") or defaults["contact"],
-            "license_info": tool_data.get("license_info") or defaults["license_info"],
+            field: value
+            for field, value in {
+                "name": tool_data.get("name") or project_data.get("name"),
+                "title": tool_data.get("title"),
+                "summary": tool_data.get("summary"),
+                "description": tool_data.get("description") or project_data.get("description"),
+                "version": tool_data.get("version") or project_data.get("version"),
+                "terms_of_service": tool_data.get("terms_of_service"),
+                "contact": tool_data.get("contact"),
+                "license_info": tool_data.get("license_info"),
+            }.items()
+            if value
         }
 
         # Let explicit constructor values win over parsed project metadata.

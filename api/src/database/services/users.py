@@ -1,18 +1,19 @@
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from collections.abc import Sequence
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[User]:
+async def fetch() -> Sequence[User]:
     """Return all users in the database."""
 
     # Read users through a managed database session.
     async with session_scope() as session:
-        return list(await session.scalars(select(User)))
+        return (await session.scalars(select(User))).all()
 
 
 async def get(user_id: UUID, include_access: bool = False) -> User | None:

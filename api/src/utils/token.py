@@ -14,8 +14,7 @@ from src.database.models.users import User, AccessToken
 JWT_ALGORITHM = "HS256"
 REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
 PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
-REGISTRATION_TOKEN_LIFETIME_SECONDS = 3600
-PASSWORD_RESET_TOKEN_LIFETIME_SECONDS = 3600
+EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 
 
 def access_token_digest(token: str) -> str:
@@ -41,7 +40,7 @@ def create_registration_token(email: str) -> str:
         {
             "email": email,
             "aud": REGISTRATION_TOKEN_AUDIENCE,
-            "exp": utcnow() + timedelta(seconds=REGISTRATION_TOKEN_LIFETIME_SECONDS),
+            "exp": utcnow() + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
@@ -69,7 +68,7 @@ def create_password_reset_token(user: User) -> str:
             "sub": str(user.id),
             "password_fingerprint": password_fingerprint(user.hashed_password),
             "aud": PASSWORD_RESET_TOKEN_AUDIENCE,
-            "exp": utcnow() + timedelta(seconds=PASSWORD_RESET_TOKEN_LIFETIME_SECONDS),
+            "exp": utcnow() + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,

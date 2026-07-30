@@ -51,7 +51,7 @@ jobs:
 
             - name: Run tests
               working-directory: api
-              run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+              run: uv run --locked pytest -m "not integration" tests
 
             - name: Run type checks
               working-directory: api
@@ -113,7 +113,11 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                workspace: [api, sdk]
+                include:
+                    - workspace: api
+                      sync-args: --extra dev
+                    - workspace: sdk
+                      sync-args: --group dev
 
         steps:
             - name: Checkout repository
@@ -132,11 +136,11 @@ jobs:
 
             - name: Install dependencies
               working-directory: ${{ matrix.workspace }}
-              run: uv sync --locked --all-extras --all-groups
+              run: uv sync --locked ${{ matrix.sync-args }}
 
             - name: Run integration tests
               working-directory: ${{ matrix.workspace }}
-              run: ENVIRONMENT=testing uv run --locked pytest -m integration tests
+              run: uv run --locked pytest -m integration tests
 
     # Verify that a generated Application installs and runs in an isolated environment.
     sdk-scaffold-tests:

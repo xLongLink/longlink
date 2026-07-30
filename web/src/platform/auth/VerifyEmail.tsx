@@ -2,11 +2,8 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
-import { HStack } from '@astryxdesign/core/HStack';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,12 +11,13 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 import { AuthPage } from '@/components/AuthPage';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
-import { Wordmark } from '@/components/Wordmark';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 
@@ -32,8 +30,6 @@ type RegistrationCompleteValues = {
 type RegistrationSetup = z.infer<typeof apiRegistrationVerifiedSchema>;
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
-const nameInputAttributes = { autoComplete: 'given-name' } as const;
-const surnameInputAttributes = { autoComplete: 'family-name' } as const;
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -42,21 +38,14 @@ export default function VerifyEmail() {
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [fragmentToken] = useState(
-        () => new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? ''
-    );
-    const [token] = useState(() => fragmentToken || sessionStorage.getItem(REGISTRATION_TOKEN_KEY) || '');
+    const [{ fragmentToken, token }] = useState(() => {
+        const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? '';
+
+        return { fragmentToken, token: fragmentToken || sessionStorage.getItem(REGISTRATION_TOKEN_KEY) || '' };
+    });
     const [accountExists, setAccountExists] = useState(false);
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const welcomeTitle = (
-        <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-            <Text color="inherit" type="inherit">
-                {t('auth.welcomeTo')}
-            </Text>
-            <Wordmark size="heading" />
-        </HStack>
-    );
     const schema = z.object({
         name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),
         surname: z.string().trim().min(1, t('auth.surnameRequired')).max(127, t('auth.surnameTooLong')),
@@ -70,7 +59,7 @@ export default function VerifyEmail() {
         mutationFn: async (registrationToken: string) => {
             if (!registrationToken) {
                 return fetchApiJson('/api/auth/register/setup', undefined, (value) =>
-                    parseApiResponse(apiRegistrationVerifiedSchema, value)
+                    apiRegistrationVerifiedSchema.parse(value)
                 );
             }
 
@@ -81,7 +70,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: registrationToken }),
                 },
-                (value) => parseApiResponse(apiRegistrationVerifiedSchema, value)
+                (value) => apiRegistrationVerifiedSchema.parse(value)
             );
         },
         onSuccess: (setup) => {
@@ -95,17 +84,16 @@ export default function VerifyEmail() {
         },
     });
     const completion = useMutation({
-        mutationFn: async (payload: RegistrationCompleteValues) => {
-            return fetchApiJson(
+        mutationFn: (payload: RegistrationCompleteValues) =>
+            fetchApiJson(
                 '/api/auth/register/complete',
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
-                (value) => parseApiResponse(apiUserProfileSchema, value)
-            );
-        },
+                (value) => apiUserProfileSchema.parse(value)
+            ),
     });
     const verifyRegistration = verification.mutate;
 
@@ -113,7 +101,7 @@ export default function VerifyEmail() {
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
             const user = await completion.mutateAsync(payload);
-            const profileKey = userProfileQueryKey();
+            const profileKey = userProfileQueryKey;
 
             await clearSessionQueries(queryClient, [profileKey]);
             queryClient.setQueryData(profileKey, user);
@@ -213,7 +201,10 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage title={welcomeTitle} description={<Divider label={t('auth.completeRegistrationDescription')} />}>
+        <AuthPage
+            title={<AuthWelcomeTitle />}
+            description={<Divider label={t('auth.completeRegistrationDescription')} />}
+        >
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
@@ -222,7 +213,7 @@ export default function VerifyEmail() {
                             name="name"
                             render={({ field, fieldState }) => (
                                 <TextInput
-                                    {...nameInputAttributes}
+                                    {...{ autoComplete: 'given-name' as const }}
                                     ref={field.ref}
                                     hasAutoFocus
                                     htmlName={field.name}
@@ -245,7 +236,7 @@ export default function VerifyEmail() {
                             name="surname"
                             render={({ field, fieldState }) => (
                                 <TextInput
-                                    {...surnameInputAttributes}
+                                    {...{ autoComplete: 'family-name' as const }}
                                     ref={field.ref}
                                     htmlName={field.name}
                                     isRequired
@@ -292,17 +283,7 @@ export default function VerifyEmail() {
                     />
                 </Stack>
                 <Divider />
-                <Text as="p" color="secondary" justify="center" type="supporting">
-                    {t('auth.agreementLead')} <br />
-                    <Link href="/terms" hasUnderline type="inherit">
-                        {t('auth.termsOfService')}
-                    </Link>{' '}
-                    {t('auth.agreementMiddle')}{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
-                        {t('auth.privacyPolicy')}
-                    </Link>
-                    .
-                </Text>
+                <AuthLegalAgreement />
             </Stack>
         </AuthPage>
     );

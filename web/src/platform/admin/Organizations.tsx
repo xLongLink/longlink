@@ -3,7 +3,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
@@ -12,17 +12,47 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy } from 'lucide-react';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useOrganizations } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiOrganizationSummarySchema } from '@/lib/api-schemas';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
-import { formatDateTime, useDeleteDialog } from '@/lib/utils';
+import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
-/** Returns localized admin organization table columns. */
-function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganizationSummary>[] {
-    return [
+/** Renders the admin organizations page. */
+export default function AdminOrganizations() {
+    const t = useTranslator();
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const deleteOrganization = useMutation({
+        mutationFn: (organizationId: string) =>
+            fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' }),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
+            toast({ body: t('admin.organizationDeleted') });
+        },
+    });
+    const {
+        items: organizations,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
+        parse: (value) => apiOrganizationSummarySchema.array().parse(value),
+    });
+    const { pageItems, pagination } = useAdminPagination(organizations);
+    const deleteDialog = useDeleteDialog({
+        title: t('deleteDialog.deleteOrganizationTitle'),
+        mutation: deleteOrganization,
+        items: organizations,
+        getId: (organization) => organization.id,
+        description: (organization) => t('admin.deleteOrganizationDescription', { name: organization.name }),
+        errorMessage: t('deleteDialog.failedDeleteOrganization'),
+        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
+    });
+    const columns: TableColumn<ApiOrganizationSummary>[] = [
         {
             key: 'name',
             header: t('columns.name'),
@@ -36,90 +66,6 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
                 </HStack>
             ),
         },
-        {
-            key: 'created_by',
-            header: t('columns.createdBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.created_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.created_by.name}</Text>
-                            <Text type="supporting">{formatDateTime(organization.created_at)}</Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
-        },
-        {
-            key: 'updated_by',
-            header: t('columns.updatedBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.updated_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.updated_by.name}</Text>
-                            <Text type="supporting">{formatDateTime(organization.updated_at)}</Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
-        },
-        {
-            key: 'deleted_by',
-            header: t('columns.deletedBy'),
-            width: pixel(256),
-            renderCell: (organization) =>
-                organization.deleted_by ? (
-                    <HStack gap={3} align="center">
-                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="md" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organization.deleted_by.name}</Text>
-                            <Text type="supporting">
-                                {organization.deleted_at ? formatDateTime(organization.deleted_at) : '—'}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                ) : (
-                    '—'
-                ),
-        },
-    ];
-}
-
-/** Renders the admin organizations page. */
-export default function AdminOrganizations() {
-    const t = useTranslator();
-    const toast = useToast();
-    const queryClient = useQueryClient();
-    const deleteOrganization = useMutation({
-        mutationFn: async (organizationId: string) => {
-            await fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
-            toast({ body: t('admin.organizationDeleted') });
-        },
-    });
-    const { items: organizations, error, isLoading } = useOrganizations();
-    const { pageItems, pagination } = useAdminPagination(organizations);
-    const deleteDialog = useDeleteDialog({
-        title: t('deleteDialog.deleteOrganizationTitle'),
-        mutation: deleteOrganization,
-        items: organizations,
-        getId: (organization) => organization.id,
-        description: (organization) => t('admin.deleteOrganizationDescription', { name: organization.name }),
-        errorMessage: t('deleteDialog.failedDeleteOrganization'),
-        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
-        onError: (message) => toast({ body: message, type: 'error' }),
-    });
-    const columns: TableColumn<ApiOrganizationSummary>[] = [
-        ...createOrganizationColumns(t),
         {
             key: 'actions',
             header: t('columns.action'),

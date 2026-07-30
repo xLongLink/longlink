@@ -17,8 +17,6 @@ type ForgotPasswordValues = {
     email: string;
 };
 
-const emailInputAttributes = { autoComplete: 'email' };
-
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const t = useTranslator();
@@ -31,13 +29,12 @@ export default function ForgotPassword() {
         resolver: zodResolver(schema),
     });
     const requestReset = useMutation({
-        mutationFn: async (payload: ForgotPasswordValues) => {
-            await fetchApiVoid('/api/auth/forgot-password', {
+        mutationFn: (payload: ForgotPasswordValues) =>
+            fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Requests password reset instructions and reports transient failures. */
@@ -66,7 +63,7 @@ export default function ForgotPassword() {
                         name="email"
                         render={({ field, fieldState }) => (
                             <TextInput
-                                {...emailInputAttributes}
+                                {...{ autoComplete: 'email' as const }}
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired

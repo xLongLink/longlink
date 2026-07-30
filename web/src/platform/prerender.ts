@@ -1,6 +1,6 @@
 import { documentationPublicPages } from './docs/pages';
-import { homePage, legalPages, pricingPage, type PublicPage } from './public';
+import { homePage, legalPages, pricingPage } from './public';
 
-const publicPages: PublicPage[] = [homePage, pricingPage, ...documentationPublicPages, ...Object.values(legalPages)];
-
-export const publicPagePaths = publicPages.map((page) => page.path);
+export const publicPagePaths = [homePage, pricingPage, ...documentationPublicPages, ...Object.values(legalPages)].map(
+    (page) => page.path
+);

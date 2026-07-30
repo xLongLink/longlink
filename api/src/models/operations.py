@@ -2,6 +2,7 @@ from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
+from src.models.types import PlatformVersion
 
 
 class OperationStatus(StrEnum):
@@ -21,11 +22,10 @@ class OperationKind(StrEnum):
     application_delete = "application.delete"
     organization_create = "organization.create"
     organization_delete = "organization.delete"
-    organization_reconcile = "organization.reconcile"
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one Platform resource target."""
+    """Expose administrative asynchronous reconciliation state for one Platform resource target."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -38,7 +38,7 @@ class OperationResponse(BaseModel):
 
     # State
     status: OperationStatus
-    platform_version: str
+    platform_version: PlatformVersion
 
     # Timestamps
     created_at: datetime

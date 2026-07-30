@@ -4,9 +4,7 @@ import { useApiQuery } from '@/hooks/use-api';
 type UseCollectionQueryOptions<TData> = {
     retry?: boolean;
     refetchInterval?: number;
-    refetchOnMount?: boolean | 'always';
-    enabled?: boolean;
-    parse?: (value: unknown) => TData[];
+    parse: (value: unknown) => TData[];
 };
 
 type UseCollectionQueryResult<TData> = UseQueryResult<Array<TData>, Error> & {
@@ -19,13 +17,11 @@ Object.freeze(EMPTY_COLLECTION);
 /** Fetches a collection resource and exposes a stable empty array fallback. */
 export function useCollectionQuery<TData>(
     path: string | null,
-    options: UseCollectionQueryOptions<TData> = {}
+    options: UseCollectionQueryOptions<TData>
 ): UseCollectionQueryResult<TData> {
     const query = useApiQuery<Array<TData>>(path, {
         retry: options.retry ?? false,
-        refetchOnMount: options.refetchOnMount,
         refetchInterval: options.refetchInterval,
-        enabled: options.enabled,
         parse: options.parse,
     });
 

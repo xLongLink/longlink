@@ -1,9 +1,5 @@
 import { useApiQuery } from '@/hooks/use-api';
-import {
-    apiOrganizationDatabaseUsageSchema,
-    apiOrganizationStorageUsageSchema,
-    parseApiResponse,
-} from '@/lib/api-schemas';
+import { apiOrganizationDatabaseUsageSchema, apiOrganizationStorageUsageSchema } from '@/lib/api-schemas';
 import type { ApiOrganizationDatabaseUsage, ApiOrganizationStorageUsage } from '@/lib/types';
 
 /** Fetches database usage for one organization. */
@@ -11,7 +7,7 @@ export function useOrganizationDatabaseUsage(organizationId: string) {
     return useApiQuery<ApiOrganizationDatabaseUsage | null>(
         organizationId ? `/api/organizations/${organizationId}/database` : null,
         {
-            parse: (value) => parseApiResponse(apiOrganizationDatabaseUsageSchema.nullable(), value),
+            parse: (value) => apiOrganizationDatabaseUsageSchema.nullable().parse(value),
             retry: false,
         }
     );
@@ -22,7 +18,7 @@ export function useOrganizationStorageUsage(organizationId: string) {
     return useApiQuery<ApiOrganizationStorageUsage | null>(
         organizationId ? `/api/organizations/${organizationId}/storage` : null,
         {
-            parse: (value) => parseApiResponse(apiOrganizationStorageUsageSchema.nullable(), value),
+            parse: (value) => apiOrganizationStorageUsageSchema.nullable().parse(value),
             retry: false,
         }
     );

@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
@@ -34,9 +34,6 @@ class Organization(SQLModel, table=True):
     database_id: UUID = Field(foreign_key="database_registries.id", index=True)
     storage_id: UUID = Field(foreign_key="storage_registries.id", index=True)
 
-    # Database
-    shared_schema_url: str = Field(max_length=2048)
-
     # State
     status: Status = Field(
         default=Status.creating,
@@ -48,13 +45,10 @@ class Organization(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
-    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
-    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Relationships

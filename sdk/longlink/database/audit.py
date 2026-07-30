@@ -111,6 +111,7 @@ def install_audit_middleware(app: FastAPI) -> None:
     Middleware keeps the user context active for the whole request lifecycle.
     """
 
+    @app.middleware("http")
     async def audit_context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Bind the request user ID for the duration of the request."""
 
@@ -126,12 +127,8 @@ def install_audit_middleware(app: FastAPI) -> None:
 
             # Invalid headers run without an audit user.
             except ValueError:
-                user_id = None
+                pass
 
         # Keep the user bound across downstream request handling.
         with audit_user_scope(user_id):
-            response = await call_next(request)
-            return response
-
-    # Register the audit context middleware for every HTTP request.
-    app.middleware("http")(audit_context_middleware)
+            return await call_next(request)

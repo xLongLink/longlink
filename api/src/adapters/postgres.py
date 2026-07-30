@@ -39,7 +39,7 @@ class Postgres:
     Runtime roles can write their application schema and read the organization's shared schema.
     """
 
-    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode | str) -> None:
+    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> None:
         """Initialize the PostgreSQL database adapter.
 
         Args:
@@ -55,7 +55,7 @@ class Postgres:
         self._port = port
         self._username = username
         self._password = password
-        self._sslmode = DatabaseSSLMode(sslmode)
+        self._sslmode = sslmode
 
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
@@ -127,7 +127,7 @@ class Postgres:
         finally:
             await engine.dispose()
 
-    async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
+    async def prepare_organization_database(self, organization: UUID) -> None:
         """Converge one organization database, run SDK-owned shared-schema migrations, and restore shared-schema restrictions.
 
         Repeated calls resume the same topology after partial provisioning.
@@ -145,7 +145,7 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or application schemas rely on it.
-        await shared_migrations.migrate_database(shared_schema_url)
+        await shared_migrations.migrate_database(self.shared_schema_url(organization))
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:
@@ -235,12 +235,20 @@ class Postgres:
         async with self._connection(organization.hex) as conn:
             schema = self.quote(conn, application.hex)
             role = self.quote(conn, runtime_username)
+            database = self.quote(conn, organization.hex)
+            shared_schema = self.quote(conn, SHARED_SCHEMA)
 
-            # DROP OWNED is only valid when the runtime role still exists.
-            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            # Remove every grant and setting assigned during Application provisioning before dropping its role.
+            await conn.exec_driver_sql(
+                f"""
+                REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
+                REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
+                REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
+                ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
+                ALTER ROLE {role} IN DATABASE {database} RESET search_path;
+                """
+            )
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
-            if role_exists.scalar_one_or_none() is not None:
-                await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
         async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
@@ -304,7 +312,7 @@ class Postgres:
         usage = result.mappings().one()
         return {"space_used": int(usage["space_used"]), "table_count": int(usage["table_count"])}
 
-    async def usage(self) -> dict[str, int]:
+    async def usage(self) -> int:
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
@@ -319,6 +327,6 @@ class Postgres:
                 )
             )
 
-            # Normalize the scalar result to the shared usage response shape.
+            # Normalize the scalar result to the API response value.
             database_size = result.scalar_one()
-            return {"space_used": int(database_size)}
+            return int(database_size)

@@ -7,8 +7,9 @@ from importlib.resources.abc import Traversable
 def readyml_list(template_path: str | Path | Traversable, **context: object) -> list[dict[str, object]]:
     """Render one YAML template file into a manifest list."""
 
-    source = Path(template_path) if isinstance(template_path, str) else template_path
-    rendered = Template(source.read_text(encoding="utf-8")).substitute(**context)
+    rendered = Template((Path(template_path) if isinstance(template_path, str) else template_path).read_text(encoding="utf-8")).substitute(
+        **context
+    )
     docs: list[dict[str, object]] = []
 
     # Parse each rendered YAML document separately.

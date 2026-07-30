@@ -7,8 +7,12 @@ import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { CheckCircle, ChevronRight, Info, Wrench, type LucideIcon } from 'lucide-react';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+import type { MetaFunction } from 'react-router';
+import { PublicPage } from '@/layout/PublicPage';
+import { publicSeoMeta } from '@/lib/seo';
+import { pricingPage } from '@/platform/public';
+
+export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 
 const pricingOptions: {
     description: string;
@@ -55,8 +59,7 @@ const pricingOptions: {
 /** Renders the public pricing page. */
 export default function Pricing() {
     return (
-        <Stack minHeight="100vh" gap={0}>
-            <Navbar />
+        <PublicPage>
             <main>
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
@@ -144,7 +147,6 @@ export default function Pricing() {
                     </Stack>
                 </Section>
             </main>
-            <Footer />
-        </Stack>
+        </PublicPage>
     );
 }

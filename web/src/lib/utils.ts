@@ -84,11 +84,6 @@ export function useDeleteDialog<TItem>({
     const [targetId, setTargetId] = useState<string | null>(null);
     const target = targetId === null ? null : (items.find((item) => getId(item) === targetId) ?? null);
 
-    /** Clears the selected delete target. */
-    function close() {
-        setTargetId(null);
-    }
-
     return {
         openFor: (item: TItem) => {
             setTargetId(getId(item));
@@ -101,7 +96,7 @@ export function useDeleteDialog<TItem>({
             onOpenChange: (open: boolean) => {
                 // Closing the dialog clears its selected item.
                 if (!open) {
-                    close();
+                    setTargetId(null);
                 }
             },
             onConfirm: async () => {
@@ -113,7 +108,7 @@ export function useDeleteDialog<TItem>({
                 // Run the delete mutation and surface any failure.
                 try {
                     await mutation.mutateAsync(targetId);
-                    close();
+                    setTargetId(null);
                 } catch (mutationError) {
                     onError(mutationError instanceof Error ? mutationError.message : errorMessage);
                 }

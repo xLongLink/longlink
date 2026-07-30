@@ -40,45 +40,41 @@ export function Navbar() {
                             }
                             label="Main navigation"
                             centerContent={
-                                <div className="hidden sm:flex">
-                                    <Stack direction="horizontal" gap={4} vAlign="center">
-                                        <Link
-                                            href="/docs"
-                                            className="group hover:no-underline"
-                                            color="secondary"
-                                            isStandalone
-                                            weight="normal"
-                                        >
-                                            <span className="transition-colors group-hover:text-accent">
-                                                Documentation
-                                            </span>
-                                        </Link>
-                                        <Link
-                                            href="/pricing"
-                                            className="group hover:no-underline"
-                                            color="secondary"
-                                            isStandalone
-                                            weight="normal"
-                                        >
-                                            <span className="transition-colors group-hover:text-accent">Pricing</span>
-                                        </Link>
-                                        <Link
-                                            as="a"
-                                            className="group"
-                                            color="secondary"
-                                            href="https://github.com/xLongLink/longlink"
-                                            isStandalone
-                                            rel="noopener noreferrer"
-                                            target="_blank"
-                                            weight="normal"
-                                        >
-                                            <span className="inline-flex items-center gap-1 group-hover:text-accent">
-                                                GitHub
-                                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                                            </span>
-                                        </Link>
-                                    </Stack>
-                                </div>
+                                <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
+                                    <Link
+                                        href="/docs"
+                                        className="group hover:no-underline"
+                                        color="secondary"
+                                        isStandalone
+                                        weight="normal"
+                                    >
+                                        <span className="transition-colors group-hover:text-accent">Documentation</span>
+                                    </Link>
+                                    <Link
+                                        href="/pricing"
+                                        className="group hover:no-underline"
+                                        color="secondary"
+                                        isStandalone
+                                        weight="normal"
+                                    >
+                                        <span className="transition-colors group-hover:text-accent">Pricing</span>
+                                    </Link>
+                                    <Link
+                                        as="a"
+                                        className="group"
+                                        color="secondary"
+                                        href="https://github.com/xLongLink/longlink"
+                                        isStandalone
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                        weight="normal"
+                                    >
+                                        <span className="inline-flex items-center gap-1 group-hover:text-accent">
+                                            GitHub
+                                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                                        </span>
+                                    </Link>
+                                </Stack>
                             }
                         />
                     </Card>

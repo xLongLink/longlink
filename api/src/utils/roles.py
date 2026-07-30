@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import Literal, overload
 from dataclasses import dataclass
-from src.models.roles import Ranks, RoleName, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
@@ -16,34 +16,22 @@ class ApplicationAccess:
     organization: Organization
     role: OrganizationRoles
 
-    def allows(self, required_role: OrganizationRoles) -> bool:
-        """Return whether Organization authority permits an Application operation."""
 
-        return atleast(self.role, required_role)
+ROLE_RANKS = {role: index for index, role in enumerate(OrganizationRoles, start=1)}
 
 
-def rank(value: RoleName | None) -> int:
-    """Return the numeric rank for one role within its own role scope."""
+def rank(value: OrganizationRoles | None) -> int:
+    """Return the numeric rank for one Organization role."""
 
     # Missing roles have no privileges in any role scope.
     if value is None:
         return 0
 
-    role_type = type(value)
-
-    # Organization roles share one explicit privilege rank scale.
-    if role_type is OrganizationRoles:
-        return Ranks[value.name].value
-
-    raise ValueError(f"Unknown role '{value}'")
+    return ROLE_RANKS[value]
 
 
-def atleast(value: RoleName | None, required_role: RoleName) -> bool:
-    """Return whether one role satisfies the required role."""
-
-    # Missing or cross-scope roles never satisfy requirements.
-    if value is None or type(value) is not type(required_role):
-        return False
+def atleast(value: OrganizationRoles | None, required_role: OrganizationRoles) -> bool:
+    """Return whether one Organization role satisfies the required role."""
 
     # Enforce the minimum privilege rank.
     return rank(value) >= rank(required_role)

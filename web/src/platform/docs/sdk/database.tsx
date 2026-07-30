@@ -2,12 +2,12 @@ import { Code } from '@astryxdesign/core/Code';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import type { LucideIcon } from 'lucide-react';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { CodeBlock } from '@/components/CodeBlock';
 import { CodeTabs } from '@/components/CodeTabs';
+import { EnvironmentTable } from '@/platform/docs/sdk/EnvironmentTable';
 
 const environments: { backend: React.ReactNode; icon: LucideIcon; name: string }[] = [
     {
@@ -65,28 +65,7 @@ export const content = (
             </Link>{' '}
             database session.
         </Text>
-        <Table<Record<string, unknown>> density="compact">
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Environment</TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {environments.map(({ backend, icon: EnvironmentIcon, name }) => (
-                    <TableRow key={name}>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <EnvironmentIcon aria-hidden="true" className="text-accent" size={16} />
-                                    <Text weight="semibold">{name}</Text>
-                                </Stack>
-                                <Text type="supporting">{backend}</Text>
-                            </Stack>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+        <EnvironmentTable environments={environments} />
         <Text as="p">
             In production, the LongLink Platform provisions the organization database, shared user schema, and
             application schema, then injects the runtime connection settings into the application.
@@ -116,7 +95,6 @@ async def create_project() -> None:
             migrations to keep the database schema aligned:
         </Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'longlink migrate', label: 'pip', value: 'pip' },
                 { code: 'uv run longlink migrate', label: 'uv', value: 'uv' },

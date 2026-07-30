@@ -1,6 +1,7 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
-LOCAL_APPLICATION_IMAGE ?= ghcr.io/xlonglink/longlink-app:v0.0.2
+APPLICATION_IMAGE ?=
+LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
@@ -47,7 +48,7 @@ web\:format: web\:install
 
 # Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
 tests: api\:install sdk\:install web\:tests
-	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
+	cd api && uv run --locked pytest -m "not integration" tests
 	cd sdk && uv run --locked pytest -m "not integration" tests
 
 
@@ -57,7 +58,7 @@ tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
 
 # Run API tests, including container-backed integration tests.
 api\:tests: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) tests
+	cd api && uv run --locked pytest $(API_PYTEST_MARK) tests
 
 
 # Build the embedded web bundle, then run SDK tests.
@@ -76,7 +77,7 @@ coverage: api\:coverage sdk\:coverage
 
 # Report API coverage without container-backed integration tests.
 api\:coverage: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
+	cd api && uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
 
 
 # Report SDK coverage without container-backed integration tests.
@@ -134,23 +135,23 @@ api\:clean:
 
 # Remove generated SDK build and test artifacts.
 sdk\:clean:
-	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
+	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dev.db sdk/dist sdk/*.egg-info sdk/longlink/.static/web
 	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
 
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
+	rm -rf web/.coverage web/.pytest_cache web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
 
 
 # Start isolated local services and the cluster, then wait for the local registry.
-up:
+local\:resources:
 	@docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1 || docker network create "$(DEV_DOCKER_NETWORK)"
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
 		network_ip="$$(docker inspect "k3d-$(DEV_CLUSTER)-server-0" --format '{{with index .NetworkSettings.Networks "$(DEV_DOCKER_NETWORK)"}}{{.IPAddress}}{{end}}')"; \
 		if [ -z "$$network_ip" ]; then \
-			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make up.\n"; \
+			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make local.\n"; \
 			exit 1; \
 		fi; \
 		printf "k3d cluster $(DEV_CLUSTER) already exists.\n"; \
@@ -177,35 +178,64 @@ up:
 	@printf "Local registry is ready.\n"
 
 
+# Initialize local infrastructure and build the local sample Application image.
+local: local\:resources
+	$(MAKE) local:image
+
+
 # Remove remote development resources, stop local services, and clean local state.
 down:
-	-cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	@printf "Removing tracked remote development resources...\n"
+	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
+	@image="$(APPLICATION_IMAGE)"; \
+		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
+		if [ -z "$$image" ] && [ -f api/.env.seed ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image || true)"; fi; \
+		if [ -z "$$image" ]; then image="ghcr.io/xlonglink/longlink-app:v0.0.2"; fi; \
+		for repository in "$${image%@*}" "$(LOCAL_APPLICATION_IMAGE)"; do \
+			repository="$${repository%:*}"; \
+			image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
+			if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi; \
+		done
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -rf sdk/dev
-	rm -f api/dev.db api/kubeconfig.yaml
+	rm -f api/dev.db api/kubeconfig.yaml api/.seed-image
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 
 
 # Run the local LongLink Platform API server after `make seed`.
-api:
-	cd api && uv sync --locked --extra dev
+api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
-# Start local services, pull the seed Application image, then run migrations and seed data.
-seed: up
-	docker pull "$(LOCAL_APPLICATION_IMAGE)"
+# Build and push the local sample Application image into the development registry.
+local\:image: sdk\:build
+	rm -rf sdk/dev
+	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+
+
+# Start local services, build or pull the configured Application image, then run migrations and seed data.
+seed: local\:resources
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true LOCAL_APPLICATION_IMAGE="$(LOCAL_APPLICATION_IMAGE)" uv run --locked python seed.py
+	@image="$(APPLICATION_IMAGE)"; \
+		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
+		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then \
+			if docker image inspect "$$image" >/dev/null 2>&1; then docker push "$$image"; else $(MAKE) local:image; fi; \
+		else \
+			docker pull "$$image"; \
+		fi && \
+		printf '%s\n' "$$image" > api/.seed-image && \
+		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
 
 
 # Run the Vite web app.
@@ -217,5 +247,5 @@ web: web\:install
 sdk: sdk\:build
 	rm -rf sdk/dev
 	cd sdk && uv run --locked longlink init --folder dev
-	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
+	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
 	cd sdk/dev && uv run longlink dev

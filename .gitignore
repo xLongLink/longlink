@@ -49,6 +49,7 @@ TEMP
 *.sqlite-*
 *.sqlite3
 *.sqlite3-*
+.seed-image
 .codex
 
 # Local secrets and machine-specific config

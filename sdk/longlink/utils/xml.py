@@ -91,7 +91,10 @@ class Element:
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
-        schema = load_xml_schema(self._schema_file_path().resolve())
+        schema_path = self.schema_path
+        if schema_path is None:
+            raise ValueError("No XSD schema path configured")
+        schema = load_xml_schema((schema_path if schema_path.is_absolute() else ROOT / schema_path).resolve())
 
         # Parse user XML once for validation and downstream metadata extraction.
         try:
@@ -118,21 +121,6 @@ class Element:
                 raise ValueError(f"XML is invalid: Line {paragraph.sourceline}: P does not support the value attribute")
 
         return xml_doc
-
-
-    def _schema_file_path(self) -> Path:
-        """Resolve the XSD file path for validation."""
-
-        # In-memory XML can opt out of schema validation.
-        if self.schema_path is None:
-            raise ValueError("No XSD schema path configured")
-
-        # Absolute schema paths are already resolved by the caller.
-        if self.schema_path.is_absolute():
-            return self.schema_path
-
-        return ROOT / self.schema_path
-
 
 class Longlink(Element):
     """Load and validate LongLink XML documents from disk.

@@ -163,11 +163,8 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
-    assert {item.kind for item in open_operations} == {
-        OperationKind.organization_create,
-        OperationKind.organization_reconcile,
-    }
-    projection = next(item for item in open_operations if item.kind == OperationKind.organization_reconcile)
+    assert {item.kind for item in open_operations} == {OperationKind.organization_create}
+    projection = next(item for item in open_operations if item.kind == OperationKind.organization_create)
     assert projection.target_id == organization.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
@@ -313,12 +310,10 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Assert
     assert result is not None
-    deleted, operation = result
-    assert deleted.deleted_id == owner.id
+    assert result.deleted_id == owner.id
     assert active_organization is None
     assert deleted_organization is not None
-    assert deleted_organization.deleted_by is not None
-    assert deleted_organization.deleted_by.id == owner.id
+    assert deleted_organization.deleted_id == owner.id
     assert await organizations.members(organization.id) == []
     assert await organizations.invitations(organization.id) == []
     assert await organizations.applications(organization.id) == []
@@ -326,7 +321,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is not None
-    assert second_delete[1].id == operation.id
+    assert second_delete.id == result.id
     assert missing_delete is None
     assert await organizations.membership_role(organization.id, owner.id) is None
     assert await organizations.membership_role(organization.id, member.id) is None
@@ -339,7 +334,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         OperationKind.organization_create,
         OperationKind.organization_delete,
     }
-    deletion = next(item for item in open_operations if item.id == operation.id)
+    deletion = next(item for item in open_operations if item.kind == OperationKind.organization_delete)
     assert deletion.kind == OperationKind.organization_delete
     assert deletion.target_id == organization.id
     assert deletion.platform_version == env.VERSION

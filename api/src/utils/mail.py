@@ -16,9 +16,10 @@ def render_mjml_template(template_name: str, **context: object) -> str:
     """Render one bundled MJML template to HTML."""
 
     # Render the MJML source with escaped string context values.
-    template = Template((Path(__file__).with_name("templates") / template_name).read_text(encoding="utf-8"))
     escaped_context = {name: escape(str(value), quote=True) for name, value in context.items()}
-    source = template.substitute(**escaped_context)
+    source = Template((Path(__file__).with_name("templates") / template_name).read_text(encoding="utf-8")).substitute(
+        **escaped_context
+    )
 
     # Compile the rendered MJML markup to email-safe HTML.
     result = mjml_to_html(source.encode("utf-8"))

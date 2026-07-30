@@ -3,6 +3,8 @@ from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Index, Column
+from src.models.types import PlatformVersion
+from src.database.types import PlatformVersionType
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
@@ -44,7 +46,7 @@ class Operation(SQLModel, table=True):
 
     # State
     failed: bool = Field(default=False, nullable=False)
-    platform_version: str = Field(max_length=128)
+    platform_version: PlatformVersion = Field(sa_column=Column(PlatformVersionType(), nullable=False))
 
     # Lock
     lease_expires_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)

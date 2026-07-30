@@ -1,4 +1,5 @@
 import pytest
+from src import adapters
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
@@ -13,7 +14,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
 
     # Arrange
     owner, member = users[0], users[1]
-    await create_ready_infrastructure()
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
     base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
     deleted_at = base_time + timedelta(minutes=2)
@@ -44,10 +45,17 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     monkeypatch.setattr(organization_operations.shared_users, "sync_url", sync_url)
 
     # Act
-    await organization_operations.sync_users(organization)
+    db = adapters.Postgres(
+        infrastructure.database.host,
+        infrastructure.database.port,
+        infrastructure.database.username,
+        infrastructure.database.password,
+        infrastructure.database.sslmode,
+    )
+    await organization_operations.sync_users(organization, db)
 
     # Assert
-    assert calls[0][0] == organization.shared_schema_url
+    assert calls[0][0] == db.shared_schema_url(organization.id)
     rows = {row["id"]: row for row in calls[0][1]}
     assert rows[owner.id]["role"] == OrganizationRoles.owner
     assert rows[owner.id]["deleted_at"] is None

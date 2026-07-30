@@ -24,13 +24,11 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
     async with session_scope() as session:
         compute_registry = ComputeRegistry(
             name="Local compute",
-            slug="local-compute",
-            kubeconfig="apiVersion: v1\nclusters: []\n",
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             proxy_secret="proxy-secret",
         )
         database_registry = DatabaseRegistry(
             name="Local database",
-            slug="local-database",
             host="postgres.example",
             port=5432,
             password="control-password",
@@ -39,7 +37,6 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
         )
         storage_registry = StorageRegistry(
             name="Local storage",
-            slug="local-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
@@ -61,7 +58,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         compute_id=compute_registry.id,
         database_id=database_registry.id,
         storage_id=storage_registry.id,
-        shared_schema_url="postgresql://shared/acme",
         status=Status.running,
     )
     running = Application(
@@ -69,7 +65,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         name="Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:resolved",
-        digest="sha256:resolved",
         status=Status.running,
     )
     creating = Application(
@@ -117,7 +112,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    operation = await operations.enqueue(compute_registry.id)
+    await operations.enqueue(compute_registry.id)
     claimed = await operations.claim_next()
     assert claimed is not None
 
@@ -162,7 +157,7 @@ async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypa
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
-    operation = await operations.enqueue(compute_registry.id)
+    await operations.enqueue(compute_registry.id)
     claimed = await operations.claim_next()
     assert claimed is not None
 

@@ -2,7 +2,6 @@ from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
-from src.utils import names
 from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.database.services import database
@@ -16,7 +15,6 @@ async def create_database_registry(payload: DatabaseRegistryCreate):
 
     return await database.create(
         payload.name,
-        names.slugify(payload.name),
         payload.host,
         payload.port,
         payload.username,
@@ -68,9 +66,7 @@ async def get_database_usage(registry_id: UUID):
     # Inspect backend usage through the adapter.
     db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
-        data = await db.usage()
+        return await db.usage()
     except Exception as exc:
         logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
-
-    return data["space_used"]

@@ -23,19 +23,17 @@ async def list_requests() -> list[PurchaseRequest]:
     return purchase_requests
 
 
-async def get_request(request_id: int) -> PurchaseRequest | None:
-    """Return one purchase request with its platform-managed audit users."""
+async def get_request(request_id: int, include_audit_users: bool = True) -> PurchaseRequest | None:
+    """Return one purchase request, optionally with its platform-managed audit users."""
 
-    # Query the request and eagerly load its shared audit users for display.
+    # Query the request and load audit users only when its response needs them.
     async with get_session() as session:
-        statement = (
-            select(PurchaseRequest)
-            .options(
+        statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
+        if include_audit_users:
+            statement = statement.options(
                 selectinload(PurchaseRequest.created_by),
                 selectinload(PurchaseRequest.updated_by),
             )
-            .where(PurchaseRequest.id == request_id)
-        )
         result = await session.exec(statement)
         request = result.first()
 
@@ -76,14 +74,20 @@ async def update_request_status(request_id: int, status: str) -> PurchaseRequest
 
     # Load the request and return immediately when it does not exist.
     async with get_session() as session:
-        request = await session.get(PurchaseRequest, request_id)
+        statement = (
+            select(PurchaseRequest)
+            .options(
+                selectinload(PurchaseRequest.created_by),
+                selectinload(PurchaseRequest.updated_by),
+            )
+            .where(PurchaseRequest.id == request_id)
+        )
+        request = (await session.exec(statement)).first()
         if request is None:
             return None
 
         # Persist the requested workflow status.
         request.status = status
-        session.add(request)
         await session.commit()
 
-    # Reload the request with the audit relationships used by API responses.
-    return await get_request(request_id)
+    return request

@@ -10,7 +10,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router';
 import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
-import { Wordmark } from '@/components/Wordmark';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 
@@ -18,21 +18,12 @@ type RegisterValues = {
     email: string;
 };
 
-const emailInputAttributes = { autoComplete: 'email' } as const;
-
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
     const t = useTranslator();
     const location = useLocation();
     const showToast = useToast();
-    const search = new URLSearchParams(location.search);
-    const initialEmail = search.get('email') ?? '';
-    const welcomeTitle = (
-        <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-            <span>{t('auth.welcomeTo')}</span>
-            <Wordmark size="heading" />
-        </span>
-    );
+    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
     const schema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });
@@ -44,13 +35,12 @@ export default function Register() {
     const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
     const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
     const registration = useMutation({
-        mutationFn: async (payload: RegisterValues) => {
-            await fetchApiVoid('/api/auth/register', {
+        mutationFn: (payload: RegisterValues) =>
+            fetchApiVoid('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Requests an email link without creating a pending account. */
@@ -64,7 +54,7 @@ export default function Register() {
     }
 
     return (
-        <AuthPage title={welcomeTitle} description={<Divider label={t('auth.registerDescription')} />}>
+        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label={t('auth.registerDescription')} />}>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleRegister)}>
                     <Controller
@@ -72,7 +62,7 @@ export default function Register() {
                         name="email"
                         render={({ field, fieldState }) => (
                             <TextInput
-                                {...emailInputAttributes}
+                                {...{ autoComplete: 'email' as const }}
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired

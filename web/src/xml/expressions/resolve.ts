@@ -24,7 +24,7 @@ function resolveRawValue(ctx: ExecutionContext | null | undefined, key: string):
 
     // Walk lexical scopes from child to parent.
     for (let scope = ctx; scope; scope = scope.parent) {
-        const values = scope.values ?? {};
+        const values = scope.values;
 
         // Prefer values stored in the scope.
         if (hasSafeProperty(values, key)) return readSafeProperty(values, key);

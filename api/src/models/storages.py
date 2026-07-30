@@ -18,7 +18,6 @@ class OrganizationStorageUsageResponse(BaseModel):
 
     # Usage
     space_used: int = Field(ge=0)
-    object_count: int = Field(ge=0)
 
 
 class StorageRegistryResponse(BaseModel):
@@ -31,7 +30,6 @@ class StorageRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    slug: str
 
     # Connection
     endpoint_url: str

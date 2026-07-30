@@ -2,27 +2,55 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useDatabases } from '@/data/database';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 
-/** Returns localized admin database table columns. */
-function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry>[] {
-    return [
+/** Renders the admin database page. */
+export default function AdminDatabase() {
+    const t = useTranslator();
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const deleteDatabase = useMutation({
+        mutationFn: (databaseId: string) => fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' }),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
+            toast({ body: t('admin.databaseDeleted') });
+        },
+    });
+    const {
+        items: databases,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
+        parse: (value) => apiDatabaseRegistrySchema.array().parse(value),
+    });
+    const { pageItems, pagination } = useAdminPagination(databases);
+    const deleteDialog = useDeleteDialog({
+        title: t('admin.deleteDatabaseTitle'),
+        mutation: deleteDatabase,
+        items: databases,
+        getId: (database) => database.id,
+        description: (database) => t('admin.deleteDatabaseDescription', { name: database.name }),
+        errorMessage: t('admin.failedDeleteDatabase'),
+        fallbackDescription: t('admin.deleteDatabaseFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
+    });
+    const columns: TableColumn<ApiDatabaseRegistry>[] = [
         {
             key: 'database',
             header: t('columns.database'),
@@ -49,37 +77,6 @@ function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry
             width: pixel(128),
             renderCell: (database) => database.sslmode,
         },
-    ];
-}
-
-/** Renders the admin database page. */
-export default function AdminDatabase() {
-    const t = useTranslator();
-    const toast = useToast();
-    const queryClient = useQueryClient();
-    const deleteDatabase = useMutation({
-        mutationFn: async (databaseId: string) => {
-            await fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
-            toast({ body: t('admin.databaseDeleted') });
-        },
-    });
-    const { items: databases, error, isLoading } = useDatabases();
-    const { pageItems, pagination } = useAdminPagination(databases);
-    const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteDatabaseTitle'),
-        mutation: deleteDatabase,
-        items: databases,
-        getId: (database) => database.id,
-        description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
-        errorMessage: t('admin.failedDeleteDatabase'),
-        fallbackDescription: t('admin.deleteDatabaseFallback'),
-        onError: (message) => toast({ body: message, type: 'error' }),
-    });
-    const columns: TableColumn<ApiDatabaseRegistry>[] = [
-        ...createDatabaseColumns(t),
         {
             key: 'actions',
             header: t('columns.action'),
@@ -89,21 +86,7 @@ export default function AdminDatabase() {
                 <MoreMenu
                     label={t('common.openActionsFor', { name: database.name })}
                     size="sm"
-                    items={[
-                        {
-                            label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
-                            icon: <Copy size={16} />,
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(database.slug);
-                                    toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
-                                } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                }
-                            },
-                        },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },
-                    ]}
+                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) }]}
                 />
             ),
         },

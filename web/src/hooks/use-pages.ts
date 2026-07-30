@@ -13,7 +13,7 @@ type RuntimePage = z.infer<typeof pageSchema>;
 
 /** Fetches the registered XML runtime pages. */
 export function usePages(pagesPath: string, enabled: boolean) {
-    return useApiQuery<RuntimePage[]>(enabled ? pagesPath : null, {
+    return useApiQuery<RuntimePage[]>(pagesPath, {
         enabled,
         parse: (value) => z.array(pageSchema).parse(value),
     });

@@ -1,11 +1,31 @@
 import contextlib
+from typing import Protocol
 from src.utils import urls
+from sqlalchemy import event
 from collections.abc import AsyncGenerator
 from src.environments import env
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
+
+
+class SQLiteConnection(Protocol):
+    """Describe the DBAPI operation used to enable SQLite foreign keys."""
+
+    def execute(self, statement: str) -> object:
+        """Execute one SQLite statement."""
+
+
+def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
+    """Enable foreign-key enforcement for every connection on one SQLite engine."""
+
+    # SQLite disables foreign keys by default, unlike Platform production databases.
+    @event.listens_for(engine.sync_engine, "connect")
+    def configure_connection(connection: SQLiteConnection, _record: object) -> None:
+        """Enable foreign keys before SQLite connections serve queries."""
+
+        connection.execute("PRAGMA foreign_keys=ON")
 
 
 async def get_session() -> async_sessionmaker[AsyncSession]:
@@ -34,6 +54,10 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 
     _engine = create_async_engine(connection.url, **engine_kwargs)
 
+    # Match production referential integrity for SQLite development databases.
+    if connection.url.drivername.startswith("sqlite+"):
+        enable_sqlite_foreign_keys(_engine)
+
     # Verify connection once before exposing the session factory.
     async with _engine.connect() as connection:
         await connection.run_sync(lambda _: None)
@@ -47,8 +71,8 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
-    Session = await get_session()
+    session_factory = await get_session()
 
     # Open one session for the caller's scoped work.
-    async with Session() as session:
+    async with session_factory() as session:
         yield session

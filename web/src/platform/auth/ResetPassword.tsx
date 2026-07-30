@@ -24,10 +24,11 @@ export default function ResetPassword() {
     const t = useTranslator();
     const showToast = useToast();
     const location = useLocation();
-    const [fragmentToken] = useState(
-        () => new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? ''
-    );
-    const [token] = useState(() => fragmentToken || sessionStorage.getItem(PASSWORD_RESET_TOKEN_KEY) || '');
+    const [{ fragmentToken, token }] = useState(() => {
+        const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? '';
+
+        return { fragmentToken, token: fragmentToken || sessionStorage.getItem(PASSWORD_RESET_TOKEN_KEY) || '' };
+    });
     const verificationStarted = useRef(false);
     const schema = z.object({
         password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
@@ -37,13 +38,12 @@ export default function ResetPassword() {
         resolver: zodResolver(schema),
     });
     const verification = useMutation({
-        mutationFn: async (resetToken: string) => {
+        mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                await fetchApiVoid('/api/auth/reset-password/setup');
-                return;
+                return fetchApiVoid('/api/auth/reset-password/setup');
             }
 
-            await fetchApiVoid('/api/auth/reset-password/verify', {
+            return fetchApiVoid('/api/auth/reset-password/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: resetToken }),
@@ -76,7 +76,6 @@ export default function ResetPassword() {
     async function handleResetPassword(payload: ResetPasswordValues) {
         try {
             await resetPassword.mutateAsync(payload);
-            sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
             if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {

@@ -2,14 +2,13 @@ import pytest
 from pathlib import Path
 from longlink.cli import build
 from click.testing import CliRunner
-from longlink.cli.build import build_app, build_command, read_env_spec, render_dockerfile, resolve_image_tag
 
 
 def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
     """Keep editable sources, migrations, and production-safe defaults in built images."""
 
     # Act
-    dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
+    dockerfile = build.render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
 
     # Assert required build and runtime behavior.
     for expected in (
@@ -38,7 +37,7 @@ def test_resolve_image_tag_formats_local_and_registry_tags(name: str, version: s
     """Build normalized local and registry-prefixed image tags."""
 
     # Act
-    image_tag = resolve_image_tag(name, version, registry)
+    image_tag = build.resolve_image_tag(name, version, registry)
 
     # Assert
     assert image_tag == expected
@@ -53,7 +52,7 @@ def test_build_reports_missing_project_file_before_docker() -> None:
     with runner.isolated_filesystem():
 
         # Act
-        result = runner.invoke(build_command)
+        result = runner.invoke(build.build_command)
 
         # Assert
         assert result.exit_code == 1
@@ -115,7 +114,7 @@ def test_read_env_spec_emits_supported_environment_metadata(
         (tmp_path / "pyproject.toml").write_text(project_config)
 
     # Act
-    env_spec = read_env_spec(tmp_path)
+    env_spec = build.read_env_spec(tmp_path)
 
     # Assert
     assert env_spec == expected_spec
@@ -146,7 +145,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     build_context = tmp_path / "context"
 
     # Act
-    build_app(build_context, base_path=root, tag="dev")
+    build.build_app(build_context, base_path=root, tag="dev")
 
     # Assert
     assert (build_context / "main.py").is_file()

@@ -7,7 +7,7 @@ from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
-from src.database.services import storage, database, invitations, organizations
+from src.database.services import invitations, organizations
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -15,7 +15,6 @@ from src.models.organizations import (
     OrganizationSummary,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
-    OrganizationMutationResponse,
 )
 from src.database.models.users import User
 
@@ -38,10 +37,8 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Resolve the active Organization before assembling its related response data.
-    organization = await organizations.get(organization_id)
-    if organization is None:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    # Reuse the active Organization loaded with the authorized membership.
+    organization = membership.organization
 
     active_applications = await organizations.applications(organization.id)
     memberships = await organizations.members(organization.id)
@@ -55,7 +52,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "organization": organization,
         "members": memberships,
         "invitations": active_invitations,
-        "applications": [{"application": application} for application in active_applications],
+        "applications": active_applications,
     }
 
 
@@ -96,9 +93,10 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve the Organization's immutable database assignment.
-    registry = await database.get(membership.organization.database_id)
-    if registry is None:
-        return None
+    infrastructure = await organizations.infrastructure(membership.organization.id)
+    if infrastructure is None:
+        raise RuntimeError("Organization infrastructure is missing")
+    registry = infrastructure.database
 
     # Inspect the exact Organization database while distinguishing absent provisioning from backend failures.
     database_name = membership.organization.id.hex
@@ -131,9 +129,10 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve the Organization's immutable storage assignment.
-    registry = await storage.get(membership.organization.storage_id)
-    if registry is None:
-        return None
+    infrastructure = await organizations.infrastructure(membership.organization.id)
+    if infrastructure is None:
+        raise RuntimeError("Organization infrastructure is missing")
+    registry = infrastructure.storage
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
@@ -196,24 +195,25 @@ async def update_organization_member(
     if not roles.atleast(membership.role, OrganizationRoles.admin):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    can_manage_owner_role = roles.rank(membership.role) >= roles.rank(OrganizationRoles.owner)
+    can_manage_owner_role = membership.role == OrganizationRoles.owner
 
     # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    # Allow only owners to change existing owners.
-    target_role = await organizations.membership_role(membership.organization_id, member_id)
-    if target_role == OrganizationRoles.owner and not can_manage_owner_role:
-        raise HTTPException(status_code=403, detail="Owner management permissions required")
-
     # Persist the requested role only for an active Organization member.
-    updated = await organizations.update_member_role(membership.organization_id, member_id, payload.role, user)
+    updated = await organizations.update_member_role(
+        membership.organization_id,
+        member_id,
+        payload.role,
+        user,
+        can_manage_owner_role=can_manage_owner_role,
+    )
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 
 
-@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
+@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
@@ -241,11 +241,10 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    deleted, operation = result
-    return {"organization": deleted, "operation": operation}
+    return result
 
 
-@router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
+@router.post("/api/organizations", response_model=OrganizationSummary, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
     """Create Organization desired state and queue infrastructure creation."""
 
@@ -254,8 +253,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Create through the service so API and direct callers share namespace validation.
     try:
-        organization, operation = await organizations.create(payload.name, slug, user)
+        organization = await organizations.create(payload.name, slug, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    return {"organization": organization, "operation": operation}
+    return organization

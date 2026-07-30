@@ -7,13 +7,13 @@ type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
     UseQueryOptions<TQueryFnData, Error, TData, Array<string>>,
     'queryKey' | 'queryFn'
 > & {
-    parse?: (value: unknown) => TQueryFnData;
+    parse: (value: unknown) => TQueryFnData;
 };
 
 /** Fetches one API resource through the shared transport and React Query cache. */
 export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
     path: string | null,
-    options: UseApiQueryOptions<TQueryFnData, TData> = {}
+    options: UseApiQueryOptions<TQueryFnData, TData>
 ): UseQueryResult<TData, Error> {
     const { parse, ...queryOptions } = options;
     const queryClient = useQueryClient();
@@ -31,7 +31,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
-                    const profileKey = userProfileQueryKey();
+                    const profileKey = userProfileQueryKey;
 
                     await clearSessionQueries(queryClient, [profileKey]);
                     queryClient.setQueryData(profileKey, null);

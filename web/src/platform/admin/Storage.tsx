@@ -2,27 +2,55 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useStorages } from '@/data/storage';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { apiStorageRegistrySchema } from '@/lib/api-schemas';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { S3 } from '@/svg/S3';
 
-/** Returns localized admin storage table columns. */
-function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[] {
-    return [
+/** Renders the admin storage page. */
+export default function AdminStorage() {
+    const t = useTranslator();
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const deleteStorage = useMutation({
+        mutationFn: (storageId: string) => fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' }),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
+            toast({ body: t('admin.storageDeleted') });
+        },
+    });
+    const {
+        items: storages,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiStorageRegistry>('/api/storages', {
+        parse: (value) => apiStorageRegistrySchema.array().parse(value),
+    });
+    const { pageItems, pagination } = useAdminPagination(storages);
+    const deleteDialog = useDeleteDialog({
+        title: t('admin.deleteStorageTitle'),
+        mutation: deleteStorage,
+        items: storages,
+        getId: (storage) => storage.id,
+        description: (storage) => t('admin.deleteStorageDescription', { name: storage.name }),
+        errorMessage: t('admin.failedDeleteStorage'),
+        fallbackDescription: t('admin.deleteStorageFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
+    });
+    const columns: TableColumn<ApiStorageRegistry>[] = [
         {
             key: 'storage',
             header: t('admin.storageTitle'),
@@ -37,37 +65,6 @@ function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[
                 </HStack>
             ),
         },
-    ];
-}
-
-/** Renders the admin storage page. */
-export default function AdminStorage() {
-    const t = useTranslator();
-    const toast = useToast();
-    const queryClient = useQueryClient();
-    const deleteStorage = useMutation({
-        mutationFn: async (storageId: string) => {
-            await fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
-            toast({ body: t('admin.storageDeleted') });
-        },
-    });
-    const { items: storages, error, isLoading } = useStorages();
-    const { pageItems, pagination } = useAdminPagination(storages);
-    const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteStorageTitle'),
-        mutation: deleteStorage,
-        items: storages,
-        getId: (storage) => storage.id,
-        description: (storage) => t('admin.deleteStorageDescription', { slug: storage.slug }),
-        errorMessage: t('admin.failedDeleteStorage'),
-        fallbackDescription: t('admin.deleteStorageFallback'),
-        onError: (message) => toast({ body: message, type: 'error' }),
-    });
-    const columns: TableColumn<ApiStorageRegistry>[] = [
-        ...createStorageColumns(t),
         {
             key: 'actions',
             header: t('columns.action'),
@@ -77,21 +74,7 @@ export default function AdminStorage() {
                 <MoreMenu
                     label={t('common.openActionsFor', { name: storage.name })}
                     size="sm"
-                    items={[
-                        {
-                            label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
-                            icon: <Copy size={16} />,
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(storage.slug);
-                                    toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
-                                } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
-                                }
-                            },
-                        },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) },
-                    ]}
+                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) }]}
                 />
             ),
         },

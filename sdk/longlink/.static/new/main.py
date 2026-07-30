@@ -1,9 +1,6 @@
-from longlink import LongLink, create_engine
+from longlink import LongLink
 from src.routes import assets, requests
 from src.resources import env
-
-# Create and cache the Application database engine before serving requests.
-create_engine(env)
 
 # Build the LongLink application and register its API routes.
 app = LongLink(env=env)

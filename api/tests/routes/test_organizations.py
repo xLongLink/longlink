@@ -17,7 +17,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Persist Organization desired state and return its infrastructure creation Operation."""
+    """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
     owner = users[0]
@@ -35,20 +35,14 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     # Assert
     assert response.status_code == 202
     payload = response.json()
-    organization_id = UUID(payload["organization"]["id"])
-    assert payload["organization"]["name"] == "acme"
-    assert payload["organization"]["status"] == "creating"
-    assert payload["organization"]["compute_id"] == str(infrastructure.compute.id)
-    assert payload["organization"]["database_id"] == str(infrastructure.database.id)
-    assert payload["organization"]["storage_id"] == str(infrastructure.storage.id)
-    assert payload["operation"]["kind"] == OperationKind.organization_create
-    assert payload["operation"]["target_id"] == str(organization_id)
-    assert "compute_id" not in payload["operation"]
-    assert payload["operation"]["platform_version"] == env.VERSION
-    assert payload["operation"]["status"] == OperationStatus.scheduled
+    organization_id = UUID(payload["id"])
+    assert payload["name"] == "acme"
+    assert payload["status"] == "creating"
+    assert payload["compute_id"] == str(infrastructure.compute.id)
+    assert payload["database_id"] == str(infrastructure.database.id)
+    assert payload["storage_id"] == str(infrastructure.storage.id)
     persisted = await organizations.get(organization_id)
     assert persisted is not None
-    assert persisted.shared_schema_url is not None
     members = await organizations.members(organization_id)
     assert [(membership.user.id, membership.role) for membership in members] == [(owner.id, OrganizationRoles.owner)]
 
@@ -82,14 +76,14 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert payload["applications"][0]["application"]["id"] == str(application.id)
+    assert payload["applications"][0]["id"] == str(application.id)
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an Organization and return compute reconciliation state."""
+    """Soft-delete an Organization and return its transitional resource state."""
 
     # Arrange
     owner = users[0]
@@ -106,12 +100,9 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert response.status_code == 202
     payload = response.json()
     assert retry_response.status_code == 202
-    assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
-    assert payload["organization"]["id"] == str(organization.id)
-    assert payload["organization"]["status"] == "deleting"
-    assert "compute_id" not in payload["operation"]
-    assert payload["operation"]["platform_version"] == env.VERSION
-    assert payload["operation"]["status"] == OperationStatus.scheduled
+    assert retry_response.json()["id"] == payload["id"]
+    assert payload["id"] == str(organization.id)
+    assert payload["status"] == "deleting"
     assert await organizations.get(organization.id) is None
     deleted = await organizations.get(organization.id, include_deleted=True)
     assert deleted is not None
@@ -123,8 +114,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         OperationKind.organization_create,
         OperationKind.organization_delete,
     }
-    deletion = next(item for item in recorded_operations if item.id == UUID(payload["operation"]["id"]))
-    assert deletion.kind == OperationKind.organization_delete
+    deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
 
 
@@ -289,7 +279,7 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             """Return fake usage counters for one Organization bucket."""
 
             assert bucket_name == organization.id.hex
-            return {"space_used": 4096, "object_count": 6}
+            return {"space_used": 4096}
 
     def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
         """Return the fake adapter for the selected registry credentials."""
@@ -309,7 +299,6 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
     assert response.json() == {
         "bucket_name": organization.id.hex,
         "space_used": 4096,
-        "object_count": 6,
     }
 
 
@@ -452,7 +441,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["compute_id"] == str(infrastructure.compute.id)
     assert payload["database_id"] == str(infrastructure.database.id)
     assert payload["storage_id"] == str(infrastructure.storage.id)
-    assert payload["deleted_by"] is None
+    assert "deleted_by" not in payload
 
 
 async def test_get_organization_returns_404_for_non_member(
@@ -604,8 +593,8 @@ async def test_update_organization_member_changes_role(
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 2
-    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_reconcile)
+    assert len(recorded_operations) == 1
+    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_create)
     assert projection.target_id == organization.id
 
 

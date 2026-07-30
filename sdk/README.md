@@ -13,7 +13,7 @@
 
 <br/>
 
-## Gettin started
+## Getting started
 
 ```bash
 longlink init

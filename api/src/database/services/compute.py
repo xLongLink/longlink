@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
+from src.models.types import PlatformVersion
 from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -14,12 +16,12 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[ComputeRegistry]:
+async def fetch() -> Sequence[ComputeRegistry]:
     """Return registered compute backends."""
 
     # Return every registered compute target.
     async with session_scope() as session:
-        return list(await session.scalars(select(ComputeRegistry)))
+        return (await session.scalars(select(ComputeRegistry))).all()
 
 
 async def get(registry_id: UUID) -> ComputeRegistry | None:
@@ -30,27 +32,26 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
         return await session.get(ComputeRegistry, registry_id)
 
 
-async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
+async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
     async with session_scope() as session:
         registry = ComputeRegistry(
             name=name,
-            slug=slug,
             kubeconfig=kubeconfig,
             proxy_secret=secrets.token_urlsafe(32),
         )
         session.add(registry)
 
-        # Translate unique registry names and slugs to one stable API conflict.
+        # Translate unique registry names to one stable API conflict.
         try:
-            operation = await operations.enqueue_in_session(session, registry.id)
+            await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        return registry, operation
+        return registry
 
 
 async def delete(registry_id: UUID) -> bool:
@@ -75,7 +76,7 @@ async def delete(registry_id: UUID) -> bool:
 
 async def record_success(
     compute_id: UUID,
-    platform_version: str,
+    platform_version: PlatformVersion,
     gateway_url: str | None,
     expected_status: Status,
     satisfy_pending: bool = False,

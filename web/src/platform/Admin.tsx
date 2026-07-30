@@ -1,8 +1,8 @@
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 import { Outlet } from 'react-router';
 import { Auth } from '@/components/Auth';
 import { PageContainer } from '@/components/PageContainer';
+import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 import PlatformLayout from '@/platform/layout';
 
 /** Renders the admin shell with tabbed navigation. */
@@ -12,15 +12,9 @@ export default function Admin() {
     return (
         <Auth requiresAdministrator>
             <PlatformLayout
-                tabs={{
-                    [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },
-                    [t('admin.tabs.applications')]: { href: '/admin/applications', icon: AppWindow },
-                    [t('admin.tabs.organizations')]: { href: '/admin/organizations', icon: Building2 },
-                    [t('admin.tabs.database')]: { href: '/admin/database', icon: Database },
-                    [t('admin.tabs.storage')]: { href: '/admin/storage', icon: HardDrive },
-                    [t('admin.tabs.compute')]: { href: '/admin/compute', icon: Wrench },
-                    [t('admin.tabs.operations')]: { href: '/admin/operations', icon: ArrowUpDown },
-                }}
+                tabs={Object.fromEntries(
+                    ADMIN_NAVIGATION.map((item) => [t(item.tabLabel), { href: item.href, icon: item.icon }])
+                )}
             >
                 <PageContainer gap={8}>
                     <Outlet />

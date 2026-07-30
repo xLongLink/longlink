@@ -1,41 +1,34 @@
 import secrets
 from src import adapters
-from src.utils import jobs
 from src.operations import computes
-from src.utils.jobs import operation
 from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
-from src.models.infrastructure import exoscale_zone
 from src.database.models.operations import Operation
 
 
-@operation("application.create")
-async def create(claimed: Operation) -> jobs.OperationOutcome:
-    """Provision and deploy one Application once, then publish its gateway route."""
+async def create(claimed: Operation) -> str | None:
+    """Converge one Application lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     application = await applications.get(claimed.target_id, include_deleted=True)
     if application is None or application.deleted_at is not None:
-        return jobs.complete()
+        return None
 
     # A new create execution makes a previously failed Application visibly active again.
     if application.status == Status.failed:
         if not await applications.set_status(application.id, Status.failed, Status.creating):
-            current = await applications.get(application.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return jobs.complete()
-            return jobs.fail("Application lifecycle state changed before creation")
+            return None
         application.status = Status.creating
     infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
-        return jobs.fail("Application Organization not found")
+        return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
     if registry is None:
-        return jobs.fail("Compute registry not found")
+        return "Compute registry not found"
 
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -44,10 +37,10 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         # Resolve the Application's immutable provider assignments.
         database_registry = infrastructure.database
         if database_registry is None:
-            return jobs.fail("Database registry not found")
+            return "Database registry not found"
         storage_registry = infrastructure.storage
         if storage_registry is None:
-            return jobs.fail("Storage registry not found")
+            return "Storage registry not found"
         db = adapters.Postgres(
             database_registry.host,
             database_registry.port,
@@ -68,7 +61,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         try:
             persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
         except (TypeError, ValueError):
-            return jobs.fail("Application runtime Secret is invalid")
+            return "Application runtime Secret is invalid"
 
         # Generate credentials only until the runtime Secret commits their durable values.
         if persisted_runtime_envs is None:
@@ -79,7 +72,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
             storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
             if not database_password or not storage_access_key_id or not storage_secret_access_key:
-                return jobs.fail("Application runtime Secret is invalid")
+                return "Application runtime Secret is invalid"
             credentials = {
                 "access_key_id": storage_access_key_id,
                 "secret_access_key": storage_secret_access_key,
@@ -101,27 +94,31 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
             "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
             "LONGLINK_STORAGE_PREFIX": prefix,
-            "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.endpoint_url),
+            "LONGLINK_STORAGE_REGION": object_storage.region,
             "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
 
         # Existing runtime values are immutable during creation and must match the expected contract exactly.
         if persisted_runtime_envs is not None and persisted_runtime_envs != runtime_envs:
-            return jobs.fail("Application runtime Secret is invalid")
+            return "Application runtime Secret is invalid"
 
         # Commit newly generated credentials before creating a workload that can consume them.
         if persisted_runtime_envs is None:
             await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
 
-        # Reapply both workload resources on every retry so creation repairs partial cluster state.
-        await cluster.applications.apply(application.id, organization.slug, application.image)
     elif application.status != Status.running:
-        return jobs.complete()
+        return None
+
+    # Reapply the workload so creation retries and release reconciliation repair deployment drift.
+    await cluster.applications.apply(application.id, organization.slug, application.image)
+
+    # Running Application reconciliation owns only its workload, not shared gateway state.
+    if application.status == Status.running:
+        return None
 
     # Publish a creating Application route inline without exposing running before gateway readiness.
-    pending_route = GatewayRoute(id=application.id, namespace=organization.slug) if application.status == Status.creating else None
-    gateway_url = await computes.reconcile_gateway(registry, cluster, pending_route)
+    gateway_url = await computes.reconcile_gateway(registry, cluster, GatewayRoute(id=application.id, namespace=organization.slug))
     if not await compute.record_success(
         registry.id,
         env.VERSION,
@@ -129,38 +126,34 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         registry.status,
         satisfy_pending=True,
     ):
-        return jobs.fail("Application gateway state was not recorded")
+        return "Application gateway state was not recorded"
 
     # Publish running only after both workload readiness and gateway publication succeed.
-    if application.status == Status.creating and await applications.mark_running(application.id, organization.compute_id) is None:
-        current = await applications.get(application.id, include_deleted=True)
-        if current is None or current.deleted_at is not None or current.status == Status.running:
-            return jobs.complete()
-        return jobs.fail("Application lifecycle state changed before readiness was recorded")
-    return jobs.complete()
+    if not await applications.mark_running(application.id, organization.compute_id):
+        return None
+    return None
 
 
-@operation("application.delete")
-async def delete(claimed: Operation) -> jobs.OperationOutcome:
+async def delete(claimed: Operation) -> str | None:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     application = await applications.get(claimed.target_id, include_deleted=True)
     if application is None:
-        return jobs.complete()
+        return None
     if application.deleted_at is None:
-        return jobs.fail("Active Applications cannot be deleted by lifecycle cleanup")
+        return "Active Applications cannot be deleted by lifecycle cleanup"
     infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None:
-        return jobs.fail("Application Organization not found")
+        return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
     if registry is None:
-        return jobs.fail("Compute registry not found")
+        return "Compute registry not found"
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
     if database_registry is None or storage_registry is None:
-        return jobs.fail("Application provider registry not found")
+        return "Application provider registry not found"
     cluster = Kubernetes(registry.kubeconfig)
 
     # Remove the gateway route and await rollout before terminating the backend Service and Pods.
@@ -189,6 +182,6 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         gateway_url,
         registry.status,
     ):
-        return jobs.fail("Application gateway state was not recorded")
+        return "Application gateway state was not recorded"
     await applications.purge(application.id)
-    return jobs.complete()
+    return None

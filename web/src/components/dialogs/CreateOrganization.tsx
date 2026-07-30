@@ -16,12 +16,11 @@ const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
 });
 
-type CreateOrganizationInput = z.input<typeof createOrganizationSchema>;
-type CreateOrganizationValues = z.output<typeof createOrganizationSchema>;
+type CreateOrganizationValues = z.infer<typeof createOrganizationSchema>;
 
 const defaultCreateOrganizationValues = {
     name: '',
-} satisfies CreateOrganizationInput;
+} satisfies CreateOrganizationValues;
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
@@ -30,16 +29,11 @@ export default function CreateOrganization() {
     const createOrganization = useCreateOrganization();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const form = useForm<CreateOrganizationInput, unknown, CreateOrganizationValues>({
+    const form = useForm<CreateOrganizationValues>({
         defaultValues: defaultCreateOrganizationValues,
         mode: 'onChange',
         resolver: zodResolver(createOrganizationSchema),
     });
-
-    /** Clears the organization creation form state. */
-    function resetDialogState() {
-        form.reset(defaultCreateOrganizationValues);
-    }
 
     /** Updates dialog state while protecting an in-flight creation. */
     function handleOpenChange(nextOpen: boolean) {
@@ -48,7 +42,7 @@ export default function CreateOrganization() {
         }
         setOpen(nextOpen);
         if (!nextOpen) {
-            resetDialogState();
+            form.reset(defaultCreateOrganizationValues);
         }
     }
 
@@ -82,7 +76,7 @@ export default function CreateOrganization() {
                                             name: payload.name,
                                         });
                                         setOpen(false);
-                                        resetDialogState();
+                                        form.reset(defaultCreateOrganizationValues);
                                     } catch (mutationError) {
                                         toast({
                                             body:

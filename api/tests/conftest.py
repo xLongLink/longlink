@@ -5,6 +5,7 @@ from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from pathlib import Path
+from contextlib import AsyncExitStack
 from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -14,7 +15,6 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 
 # Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
-os.environ["ENVIRONMENT"] = "testing"
 
 from main import app
 from sqlmodel import SQLModel
@@ -53,6 +53,7 @@ async def reset_db(
     session._engine = None
 
     engine = create_async_engine(db_url)
+    session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
@@ -101,6 +102,7 @@ async def users(password_hash: str) -> tuple[User, User, User]:
 
         # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([platform_administrator, regular_user, other_user])
+        await db_session.flush()
         db_session.add_all(
             [
                 AccessToken(token=token.access_token_digest(str(platform_administrator.id)), user_id=platform_administrator.id),
@@ -124,26 +126,17 @@ async def client() -> AsyncIterator[AsyncClient]:
 async def clients(users: tuple[User, User, User]) -> AsyncIterator[tuple[AsyncClient, AsyncClient, AsyncClient]]:
     """Build authenticated clients for the Platform administrator and regular users."""
 
-    # Pair each database token with its auth cookie and signed account list.
-    platform_administrator, regular_user, other_user = users
-    async with (
-        AsyncClient(
-            transport=ASGITransport(app=app),
-            base_url="http://testserver",
-            cookies=authenticated_cookies(platform_administrator.id),
-            follow_redirects=True,
-        ) as administrator_client,
-        AsyncClient(
-            transport=ASGITransport(app=app),
-            base_url="http://testserver",
-            cookies=authenticated_cookies(regular_user.id),
-            follow_redirects=True,
-        ) as regular_user_client,
-        AsyncClient(
-            transport=ASGITransport(app=app),
-            base_url="http://testserver",
-            cookies=authenticated_cookies(other_user.id),
-            follow_redirects=True,
-        ) as other_user_client,
-    ):
-        yield administrator_client, regular_user_client, other_user_client
+    # Give every identity an isolated cookie jar while sharing the in-process application.
+    async with AsyncExitStack() as stack:
+        clients = [
+            await stack.enter_async_context(
+                AsyncClient(
+                    transport=ASGITransport(app=app),
+                    base_url="http://testserver",
+                    cookies=authenticated_cookies(user.id),
+                    follow_redirects=True,
+                )
+            )
+            for user in users
+        ]
+        yield clients[0], clients[1], clients[2]

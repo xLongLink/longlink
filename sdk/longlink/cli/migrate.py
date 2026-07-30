@@ -8,10 +8,9 @@ def migrate_command() -> None:
 
     # Bring the database current before generating a new metadata revision.
     apply_migrations()
-    migration_created = make_migrations()
 
     # Apply the generated migration only when Alembic detected schema changes.
-    if migration_created:
+    if make_migrations():
         apply_migrations()
         click.echo("Migrations generated and applied successfully.")
         return

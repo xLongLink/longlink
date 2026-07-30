@@ -34,19 +34,6 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         return <NotFound />;
     }
 
-    const content = (
-        <Stack gap={1} width="100%">
-            <Heading level={1}>
-                {settingsSection === undefined ? t('organization.applicationsTitle') : t('organization.settingsTitle')}
-            </Heading>
-            <Text as="p" color="secondary">
-                {settingsSection === undefined
-                    ? t('organization.applicationsDescription')
-                    : t('organization.settingsDescription')}
-            </Text>
-        </Stack>
-    );
-
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PlatformLayout
@@ -56,7 +43,18 @@ export default function Organization({ settingsSection }: OrganizationProps) {
             }}
         >
             <PageContainer gap={8}>
-                {content}
+                <Stack gap={1} width="100%">
+                    <Heading level={1}>
+                        {settingsSection === undefined
+                            ? t('organization.applicationsTitle')
+                            : t('organization.settingsTitle')}
+                    </Heading>
+                    <Text as="p" color="secondary">
+                        {settingsSection === undefined
+                            ? t('organization.applicationsDescription')
+                            : t('organization.settingsDescription')}
+                    </Text>
+                </Stack>
                 {settingsSection === undefined ? (
                     <Applications
                         organization={organization}
@@ -64,8 +62,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         isLoading={isLoading}
                         error={error}
                     />
-                ) : null}
-                {settingsSection !== undefined ? (
+                ) : (
                     <OrganizationSettings
                         organization={organization}
                         organizationDetails={organizationDetails}
@@ -77,7 +74,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         isLoading={isLoading}
                         error={error}
                     />
-                ) : null}
+                )}
             </PageContainer>
         </PlatformLayout>
     );

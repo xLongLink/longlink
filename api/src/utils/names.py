@@ -2,8 +2,6 @@ import re
 from fastapi import HTTPException
 from slugify import slugify as text_slugify
 
-KUBERNETES_SYSTEM_NAMESPACES = {"default", "kube-node-lease", "kube-public", "kube-system", "longlink-system"}
-
 
 def slugify(value: str) -> str:
     """Convert a string to a URL-safe and K8s-safe slug."""
@@ -33,5 +31,5 @@ def knames(value: str) -> None:
         raise ValueError("Value must contain only lowercase letters, numbers, and hyphens")
 
     # Runtime names must not collide with Kubernetes or LongLink system namespaces.
-    if value in KUBERNETES_SYSTEM_NAMESPACES:
+    if value in {"default", "kube-node-lease", "kube-public", "kube-system", "longlink-system"}:
         raise ValueError("Value is reserved")

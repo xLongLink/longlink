@@ -2,7 +2,6 @@ import asyncio
 import argparse
 import subprocess
 from src import adapters
-from src import operations as _
 from uuid import UUID
 from pwdlib import PasswordHash
 from pathlib import Path
@@ -12,13 +11,14 @@ from sqlmodel import col
 from src.utils import jobs, names, images
 from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
+from src.operations import handlers
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
-from src.models.computes import ComputeRegistryCreate
+from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -53,7 +53,7 @@ class SeedSettings(BaseSettings):
     LOCAL_ORG: str = Field(default="test", min_length=1)
     LOCAL_APP_NAME: str = Field(default="sample", min_length=1)
     LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
-    LOCAL_APPLICATION_IMAGE: str = Field(default="ghcr.io/xlonglink/longlink-app:v0.0.2", min_length=1)
+    APPLICATION_IMAGE: str = Field(default="localhost:15000/longlink-app:dev", min_length=1)
 
     # Local infrastructure
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
@@ -254,7 +254,7 @@ async def reconcile_until_complete(operation_id: UUID) -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-        result = await jobs.execute(operation, jobs.handlers[operation.kind])
+        result = await jobs.execute(operation, handlers[operation.kind])
         if result.id != operation_id:
             continue
         if result.finished_at is not None:
@@ -271,17 +271,22 @@ async def seed_local_development(settings: SeedSettings) -> None:
     payload = ApplicationCreate.model_validate(
         {
             "name": settings.LOCAL_APP_NAME,
-            "image": settings.LOCAL_APPLICATION_IMAGE,
+            "image": settings.APPLICATION_IMAGE,
             "description": "Local SDK development application",
             "envs": {"REQUIRED": "local-development"},
         }
     )
     application_slug = names.slugify(payload.name)
 
+    # Local registry images can only be pulled by the compute cluster created by make local.
+    local_kubeconfig = Path(__file__).with_name("kubeconfig.yaml").resolve()
+    if str(payload.image).startswith("localhost:") and settings.KUBECONFIG.resolve() != local_kubeconfig:
+        raise ValueError("Local Application image requires the compute kubeconfig created by make local")
+
     # Validate the selected Kubernetes compute target before external lookups or Platform mutations.
     compute = ComputeRegistryCreate(
         name="development compute",
-        kubeconfig=settings.KUBECONFIG.read_text(encoding="utf-8"),
+        kubeconfig=kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8")),
     )
 
     # Resolve and validate immutable image metadata before mutating local Platform state.
@@ -326,7 +331,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             raise ValueError("Application database URL has invalid connection settings") from None
 
     # Reject registry changes before mutating existing local Platform state.
-    database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
+    database_registry = next((item for item in await database_service.fetch() if item.name == "development database"), None)
     if database_registry is not None and (
         database_registry.host != database.host
         or database_registry.port != database.port
@@ -337,7 +342,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         raise ValueError("Development database registry uses different settings; run make down before changing them")
 
     # Reject compute changes because gateway identity and Organization assignments are bound to one cluster.
-    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    compute_registry = next((item for item in await compute_service.fetch() if item.name == "development compute"), None)
     if compute_registry is not None and compute_registry.kubeconfig != compute.kubeconfig:
         raise ValueError("Development compute registry uses a different kubeconfig; run make down before changing it")
 
@@ -346,11 +351,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Ensure the development compute target is ready before assigning resources to it.
     if compute_registry is None:
-        compute_registry, operation = await compute_service.create(
-            compute.name,
-            "local-compute",
-            compute.kubeconfig,
+        compute_registry = await compute_service.create(
+            "development compute", compute.kubeconfig
         )
+        operation = await operations.enqueue(compute_registry.id)
         await reconcile_until_complete(operation.id)
     elif compute_registry.status != Status.running:
         operation = await operations.enqueue(compute_registry.id)
@@ -360,18 +364,16 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if database_registry is None:
         database_registry = await database_service.create(
             "development database",
-            "local-database",
             database.host,
             database.port,
             database.username,
             database.password,
             database.sslmode,
         )
-    storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
+    storage_registry = next((item for item in await storage_service.fetch() if item.name == "local storage"), None)
     if storage_registry is None:
         storage_registry = await storage_service.create(
             "local storage",
-            "local-storage",
             settings.EXOSCALE_STORAGE_ENDPOINT_URL,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,
@@ -386,8 +388,13 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Create the local Organization or restore its administrator ownership.
     organization = next((item for item in await organization_service.fetch() if item.slug == settings.LOCAL_ORG), None)
     if organization is None:
-        organization, operation = await organization_service.create(
+        organization = await organization_service.create(
             settings.LOCAL_ORG, settings.LOCAL_ORG, admin, avatar=settings.LOCAL_ORG_AVATAR
+        )
+        operation = await operations.enqueue(
+            compute_registry.id,
+            kind=OperationKind.organization_create,
+            target_id=organization.id,
         )
         await reconcile_until_complete(operation.id)
     else:
@@ -395,7 +402,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         if administrator_changed or owner_changed:
             operation = await operations.enqueue(
                 compute_registry.id,
-                kind=OperationKind.organization_reconcile,
+                kind=OperationKind.organization_create,
                 target_id=organization.id,
             )
             await reconcile_until_complete(operation.id)
@@ -439,14 +446,13 @@ async def seed_local_development(settings: SeedSettings) -> None:
         await cluster.applications.delete(application.id, organization.slug)
         raise RuntimeError("Local Application was deleted while seed values were staged")
 
-    operation = await operations.schedule_now(operation.id)
-    if operation is None:
+    if not await operations.schedule_now(operation.id):
         raise RuntimeError("Local Application create Operation is no longer open")
     await reconcile_until_complete(operation.id)
 
 
 async def cleanup_local_development() -> None:
-    """Delete Exoscale resources tracked by local Platform state."""
+    """Delete remote development resources tracked by local Platform state."""
 
     # Avoid creating a new SQLite database when local development has no persisted state.
     database_url = make_url(env.DATABASE_URL)
@@ -457,41 +463,78 @@ async def cleanup_local_development() -> None:
             print("No local Platform state requires cleanup.")
             return
 
-    # Inventory every Exoscale resource before make removes the local database.
+    # Inventory remote resources before make removes the local database.
     async with session_scope() as session:
         connection = await session.connection()
         tables = await connection.run_sync(lambda sync_connection: inspect(sync_connection).get_table_names())
-        if not {"applications", "organizations", "storage_registries"}.issubset(tables):
-            print("No Exoscale development resources require cleanup.")
+        if not {"applications", "database_registries", "organizations", "storage_registries"}.issubset(tables):
+            print("No remote development resources require cleanup.")
             return
         result = await session.execute(
             text(
                 """
-                SELECT storage_registries.endpoint_url,
+                SELECT organizations.id,
+                       applications.id,
+                       database_registries.host,
+                       database_registries.port,
+                       database_registries.username,
+                       database_registries.password,
+                       database_registries.sslmode,
+                       storage_registries.endpoint_url,
                        storage_registries.access_key_id,
-                       storage_registries.secret_access_key,
-                       organizations.id,
-                       applications.id
+                       storage_registries.secret_access_key
                 FROM organizations
-                JOIN storage_registries ON storage_registries.id = organizations.storage_id
+                LEFT JOIN database_registries ON database_registries.id = organizations.database_id
+                LEFT JOIN storage_registries ON storage_registries.id = organizations.storage_id
                 LEFT JOIN applications ON applications.organization_id = organizations.id
                 """
             )
         )
-        resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
-        for endpoint_url, access_key_id, secret_access_key, organization_id, application_id in result:
-            key = (
-                str(endpoint_url),
-                str(access_key_id),
-                str(secret_access_key),
-                UUID(str(organization_id)),
-            )
-            applications = resources.setdefault(key, set())
-            if application_id is not None:
-                applications.add(UUID(str(application_id)))
+        storage_resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
+        database_resources: dict[tuple[str, int, str, str, str, UUID], set[UUID]] = {}
+        for (
+            organization_id,
+            application_id,
+            database_host,
+            database_port,
+            database_username,
+            database_password,
+            database_sslmode,
+            endpoint_url,
+            access_key_id,
+            secret_access_key,
+        ) in result:
+            organization = UUID(str(organization_id))
 
-    if not resources:
-        print("No Exoscale development resources require cleanup.")
+            # Group Application credentials and Organization buckets by their storage registry.
+            if endpoint_url is not None and access_key_id is not None and secret_access_key is not None:
+                storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
+                storage_applications = storage_resources.setdefault(storage_key, set())
+                if application_id is not None:
+                    storage_applications.add(UUID(str(application_id)))
+
+            # Group Application schemas and Organization databases by their database registry.
+            if (
+                database_host is not None
+                and database_port is not None
+                and database_username is not None
+                and database_password is not None
+                and database_sslmode is not None
+            ):
+                database_key = (
+                    str(database_host),
+                    int(database_port),
+                    str(database_username),
+                    str(database_password),
+                    str(database_sslmode),
+                    organization,
+                )
+                database_applications = database_resources.setdefault(database_key, set())
+                if application_id is not None:
+                    database_applications.add(UUID(str(application_id)))
+
+    if not storage_resources and not database_resources:
+        print("No remote development resources require cleanup.")
         return
 
     # Remove scoped credentials before emptying and deleting each Organization bucket.
@@ -500,13 +543,27 @@ async def cleanup_local_development() -> None:
         access_key_id,
         secret_access_key,
         organization_id,
-    ), application_ids in resources.items():
+    ), application_ids in storage_resources.items():
         storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key)
         for application_id in application_ids:
             await storage.revoke(application_id.hex)
         await storage.delete(organization_id.hex)
 
-    print(f"Removed Exoscale resources for {len(resources)} development Organizations.")
+    # Remove Application roles before deleting each Organization database.
+    for (
+        host,
+        port,
+        username,
+        password,
+        sslmode,
+        organization_id,
+    ), application_ids in database_resources.items():
+        database = adapters.Postgres(host, port, username, password, DatabaseSSLMode(sslmode))
+        for application_id in application_ids:
+            await database.delete_schema(organization_id, application_id)
+        await database.delete_database(organization_id)
+
+    print(f"Removed remote resources for {len(storage_resources)} storage and {len(database_resources)} database development Organizations.")
 
 
 def main() -> None:
@@ -515,12 +572,17 @@ def main() -> None:
     # Cleanup removes remote resources before make deletes their local inventory.
     parser = argparse.ArgumentParser()
     parser.add_argument("--cleanup", action="store_true")
+    parser.add_argument("--print-image", action="store_true")
     arguments = parser.parse_args()
     if arguments.cleanup:
         asyncio.run(cleanup_local_development())
         return
 
+    # Let Make pull the same configured image that the seed process will deploy.
     settings = SeedSettings()
+    if arguments.print_image:
+        print(settings.APPLICATION_IMAGE)
+        return
     asyncio.run(seed_local_development(settings))
     print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
 

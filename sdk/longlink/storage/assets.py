@@ -14,13 +14,6 @@ class OrganizationAsset:
     content: bytes
     content_type: str
 
-
-def logo_path() -> str:
-    """Return the path for the Organization logo within shared storage."""
-
-    return LOGO_PATH
-
-
 def organization_asset(path: str, content: bytes, *, default_content_type: str = "application/octet-stream") -> OrganizationAsset:
     """Return normalized organization asset data."""
 

@@ -34,7 +34,6 @@ export const content = (
         </Text>
         <Text as="p">To install the development dependencies, run:</Text>
         <CodeTabs
-            defaultValue="pip"
             items={[
                 { code: 'pip install .[dev]', label: 'pip', value: 'pip' },
                 { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },

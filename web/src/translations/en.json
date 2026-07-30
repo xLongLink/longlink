@@ -107,15 +107,6 @@
     "admin.copyEmail": {
         "defaultMessage": "Copy email"
     },
-    "admin.copyComputeSlug": {
-        "defaultMessage": "Compute slug"
-    },
-    "admin.copyDatabaseSlug": {
-        "defaultMessage": "Database slug"
-    },
-    "admin.copyStorageSlug": {
-        "defaultMessage": "Storage slug"
-    },
     "admin.databaseTitle": {
         "defaultMessage": "Database"
     },
@@ -131,9 +122,6 @@
     "admin.organizationDeletion": {
         "defaultMessage": "Organization deletion"
     },
-    "admin.organizationReconciliation": {
-        "defaultMessage": "Organization reconciliation"
-    },
     "admin.applicationCreation": {
         "defaultMessage": "Application creation"
     },
@@ -141,7 +129,7 @@
         "defaultMessage": "Application deletion"
     },
     "admin.deleteComputeDescription": {
-        "defaultMessage": "Remove compute {slug} from the LongLink Platform? Its Kubernetes resources will remain unchanged."
+        "defaultMessage": "Remove compute {name} from the LongLink Platform? Its Kubernetes resources will remain unchanged."
     },
     "admin.deleteComputeFallback": {
         "defaultMessage": "Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged."
@@ -150,7 +138,7 @@
         "defaultMessage": "Delete compute"
     },
     "admin.deleteDatabaseDescription": {
-        "defaultMessage": "Delete database {slug}?"
+        "defaultMessage": "Delete database {name}?"
     },
     "admin.deleteDatabaseFallback": {
         "defaultMessage": "Delete this database?"
@@ -162,7 +150,7 @@
         "defaultMessage": "Delete organization {name}?"
     },
     "admin.deleteStorageDescription": {
-        "defaultMessage": "Delete storage {slug}?"
+        "defaultMessage": "Delete storage {name}?"
     },
     "admin.deleteStorageFallback": {
         "defaultMessage": "Delete this storage registry?"
@@ -233,11 +221,11 @@
     "admin.tabs.database": {
         "defaultMessage": "Database"
     },
-    "admin.tabs.operations": {
-        "defaultMessage": "Operations"
-    },
     "admin.tabs.organizations": {
         "defaultMessage": "Organizations"
+    },
+    "admin.tabs.operations": {
+        "defaultMessage": "Operations"
     },
     "admin.tabs.storage": {
         "defaultMessage": "Storage"
@@ -859,9 +847,6 @@
     },
     "resources.noStorageResources": {
         "defaultMessage": "No storage resources found."
-    },
-    "resources.objectCount": {
-        "defaultMessage": "{count} objects"
     },
     "resources.podsDescription": {
         "defaultMessage": "Pods in namespace {namespace} on compute backend {name}."

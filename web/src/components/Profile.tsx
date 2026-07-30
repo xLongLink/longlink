@@ -8,22 +8,11 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { Popover } from '@astryxdesign/core/Popover';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import {
-    AppWindow,
-    ArrowUpDown,
-    BookOpen,
-    Building2,
-    ChevronRight,
-    Database,
-    ExternalLink,
-    HardDrive,
-    Settings2,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
+import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function UserProfile() {
@@ -36,11 +25,6 @@ export function UserProfile() {
     // Hide the profile menu until a user is loaded.
     if (!user) {
         return null;
-    }
-
-    /** Closes the profile navigation after selecting an internal link. */
-    function closeProfile() {
-        setIsOpen(false);
     }
 
     return (
@@ -71,21 +55,21 @@ export function UserProfile() {
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/organizations"
                             label={t('profile.organizations')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/settings"
                             label={t('profile.settings')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
                             href="/docs"
                             label={t('common.documentation')}
-                            onClickCapture={closeProfile}
+                            onClickCapture={() => setIsOpen(false)}
                             rel="noopener noreferrer"
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
                             target="_blank"
@@ -102,71 +86,18 @@ export function UserProfile() {
                                     </Text>
                                 }
                             >
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/users"
-                                    label={t('profile.users')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/applications"
-                                    label={t('profile.applications')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/organizations"
-                                    label={t('profile.organizations')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/database"
-                                    label={t('profile.database')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<Database aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/storage"
-                                    label={t('profile.storage')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<HardDrive aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/compute"
-                                    label={t('profile.compute')}
-                                    onClickCapture={closeProfile}
-                                    startContent={<Wrench aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    endContent={
-                                        <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
-                                    }
-                                    href="/admin/operations"
-                                    label={t('profile.operations')}
-                                    onClickCapture={closeProfile}
-                                    startContent={
-                                        <ArrowUpDown aria-hidden="true" className="text-secondary" size={16} />
-                                    }
-                                />
+                                {ADMIN_NAVIGATION.map(({ href, icon: Icon, profileLabel }) => (
+                                    <ListItem
+                                        key={href}
+                                        endContent={
+                                            <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
+                                        }
+                                        href={href}
+                                        label={t(profileLabel)}
+                                        onClickCapture={() => setIsOpen(false)}
+                                        startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
+                                    />
+                                ))}
                             </List>
                             <Divider />
                         </>

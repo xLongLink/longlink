@@ -4,14 +4,15 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useApplications } from '@/data/admin';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { apiApplicationResponseSchema } from '@/lib/api-schemas';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiApplicationResponse, Status } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
@@ -24,11 +25,11 @@ const statusVariants = {
     deleting: 'neutral',
 } satisfies Record<Status, ComponentProps<typeof Badge>['variant']>;
 
-/** Builds localized admin application table columns. */
-function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[] {
+/** Renders the admin applications page. */
+export default function AdminApplications() {
+    const t = useTranslator();
     const statusLabels = createStatusLabels(t);
-
-    return [
+    const columns: TableColumn<ApiApplicationResponse>[] = [
         {
             key: 'name',
             header: t('columns.application'),
@@ -77,12 +78,14 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
             renderCell: (app) => formatDateTime(app.created_at),
         },
     ];
-}
-
-/** Renders the admin applications page. */
-export default function AdminApplications() {
-    const t = useTranslator();
-    const { items: applications, error, isLoading } = useApplications();
+    const {
+        items: applications,
+        error,
+        isLoading,
+    } = useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+        refetchInterval: 5000,
+        parse: (value) => apiApplicationResponseSchema.array().parse(value),
+    });
     const { pageItems, pagination } = useAdminPagination(applications);
 
     return (
@@ -95,7 +98,7 @@ export default function AdminApplications() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={createAppColumns(t)}
+                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}

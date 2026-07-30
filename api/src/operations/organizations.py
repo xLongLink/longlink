@@ -1,18 +1,15 @@
 from src import adapters
-from src.utils import jobs
 from src.operations import computes
-from src.utils.jobs import operation
 from longlink.shared import users as shared_users
 from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
-from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def sync_users(organization: Organization) -> None:
+async def sync_users(organization: Organization, db: adapters.Postgres) -> None:
     """Seed the Organization shared schema from Platform-owned users and memberships."""
 
     # Read deleted memberships too so deactivations propagate into the shared schema.
@@ -38,41 +35,34 @@ async def sync_users(organization: Organization) -> None:
         )
 
     # The Platform is authoritative and Applications receive read-only access.
-    await shared_users.sync_url(organization.shared_schema_url, users)
+    await shared_users.sync_url(db.shared_schema_url(organization.id), users)
 
 
-@operation("organization.create")
-@operation("organization.reconcile")
-async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
+async def reconcile(claimed: Operation) -> str | None:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
-    # Skip removed Organizations and already completed creation work.
+    # Skip removed Organizations.
     infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
-        return jobs.complete()
+        return None
     organization = infrastructure.organization
-    if claimed.kind == OperationKind.organization_create and organization.status == Status.running:
-        return jobs.complete()
 
     # A new execution makes a previously failed Organization visibly active again.
     if organization.status == Status.failed:
         if not await organizations.set_runtime(organization.id, Status.failed, Status.creating):
-            current = await organizations.get(organization.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return jobs.complete()
-            return jobs.fail("Organization lifecycle state changed before convergence")
+            return None
         organization.status = Status.creating
 
     # Resolve the Organization's immutable provider and compute assignments.
     database_registry = infrastructure.database
     if database_registry is None:
-        return jobs.fail("Database registry not found")
+        return "Database registry not found"
     storage_registry = infrastructure.storage
     if storage_registry is None:
-        return jobs.fail("Storage registry not found")
+        return "Storage registry not found"
     compute_registry = infrastructure.compute
     if compute_registry is None:
-        return jobs.fail("Compute registry not found")
+        return "Compute registry not found"
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     db = adapters.Postgres(
@@ -82,8 +72,8 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
         database_registry.password,
         database_registry.sslmode,
     )
-    await db.prepare_organization_database(organization.id, organization.shared_schema_url)
-    await sync_users(organization)
+    await db.prepare_organization_database(organization.id)
+    await sync_users(organization, db)
 
     # Converge the Organization bucket and shared folder marker in the same reconciliation.
     object_storage = adapters.Exoscale(
@@ -102,31 +92,27 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     # Restore running after successful reconciliation of a failed Organization.
     if organization.status == Status.creating:
         if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
-            current = await organizations.get(organization.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return jobs.complete()
-            return jobs.fail("Organization lifecycle state changed before readiness was recorded")
-    return jobs.complete()
+            return None
+    return None
 
 
-@operation("organization.delete")
-async def delete(claimed: Operation) -> jobs.OperationOutcome:
+async def delete(claimed: Operation) -> str | None:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     infrastructure = await organizations.infrastructure(claimed.target_id)
     if infrastructure is None:
-        return jobs.complete()
+        return None
     organization = infrastructure.organization
     if organization.deleted_at is None:
-        return jobs.fail("Active Organizations cannot be deleted by lifecycle cleanup")
+        return "Active Organizations cannot be deleted by lifecycle cleanup"
     compute_registry = infrastructure.compute
     if compute_registry is None:
-        return jobs.fail("Compute registry not found")
+        return "Compute registry not found"
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
     if database_registry is None or storage_registry is None:
-        return jobs.fail("Organization provider registry not found")
+        return "Organization provider registry not found"
     cluster = Kubernetes(compute_registry.kubeconfig)
 
     # Remove every Organization route before terminating any child Application Service.
@@ -164,6 +150,6 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         gateway_url,
         compute_registry.status,
     ):
-        return jobs.fail("Organization gateway state was not recorded")
+        return "Organization gateway state was not recorded"
     await organizations.purge(organization.id)
-    return jobs.complete()
+    return None

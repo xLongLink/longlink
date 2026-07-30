@@ -35,10 +35,10 @@ def normalize_mount_path(path: str) -> str:
 
 
 def default_source_directory(route_path: str) -> Path:
-    """Return the default source directory for one SDK-managed route path."""
+    """Return the default source directory for one normalized SDK-managed route path."""
 
     source_directory = (Path.cwd() / "src").resolve()
-    route_directory = (source_directory / normalize_mount_path(route_path).strip("/")).resolve()
+    route_directory = (source_directory / route_path.strip("/")).resolve()
 
     # Prevent mounts from escaping the application source tree.
     if not route_directory.is_relative_to(source_directory):
@@ -83,7 +83,7 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         # Prepare environment settings and the mutable page registry.
-        environments = env if isinstance(env, Envs) else Envs()
+        environments = env if env is not None else Envs()
         page_registry: list[PageDefinition] = []
         self.state.page_registry = page_registry
 
@@ -150,7 +150,7 @@ class LongLink(FastAPI):
     def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
         """Register a user-defined route under `/api`."""
 
-        return super().add_api_route(user_api_path(path), endpoint, **kwargs)
+        super().add_api_route(user_api_path(path), endpoint, **kwargs)
 
 
     def api_route(self, path: str, **kwargs: Any) -> RouteDecorator:
@@ -180,7 +180,7 @@ class LongLink(FastAPI):
     def include_router(self, router: APIRouter, *, prefix: str = "", **kwargs: Any) -> None:
         """Include a user-defined router under `/api`."""
 
-        return super().include_router(router, prefix=user_router_prefix(prefix), **kwargs)
+        super().include_router(router, prefix=user_router_prefix(prefix), **kwargs)
 
 
     def options(self, path: str, **kwargs: Any) -> RouteDecorator:

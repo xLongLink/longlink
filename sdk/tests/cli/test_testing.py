@@ -1,8 +1,8 @@
 import sys
 import pytest
 import subprocess
+from longlink.cli import testing as cli_testing
 from click.testing import CliRunner
-from longlink.cli.testing import test_command as longlink_test_command
 
 
 def test_test_command_runs_pytest_with_current_interpreter(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -18,10 +18,10 @@ def test_test_command_runs_pytest_with_current_interpreter(monkeypatch: pytest.M
         assert not check
         return subprocess.CompletedProcess(command, 3)
 
-    monkeypatch.setattr(subprocess, "run", run)
+    monkeypatch.setattr(cli_testing.subprocess, "run", run)
 
     # Invoke the CLI with a path and passthrough pytest argument.
-    result = CliRunner().invoke(longlink_test_command, ["tests/unit", "-q"])
+    result = CliRunner().invoke(cli_testing.test_command, ["tests/unit", "-q"])
 
     # Verify argument forwarding and exit-code propagation.
     assert result.exit_code == 3

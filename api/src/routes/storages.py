@@ -1,7 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
-from src.utils import names
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
 
@@ -14,7 +13,6 @@ async def create_storage_registry(payload: StorageRegistryCreate):
 
     return await storage.create(
         payload.name,
-        names.slugify(payload.name),
         payload.endpoint_url,
         payload.access_key_id,
         payload.secret_access_key,

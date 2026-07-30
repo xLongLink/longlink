@@ -23,8 +23,7 @@ export default function Organizations() {
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
-    const search = new URLSearchParams(location.search);
-    const initialEmail = search.get('email') ?? '';
+    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
     const isLoading = isProfileLoading || areOrganizationsLoading;
     const error = profileError ?? organizationsError;
 
@@ -58,8 +57,6 @@ export default function Organizations() {
             ),
         },
     ];
-    const tableError = error ? t('errors.loadOrganizations') : null;
-
     return (
         <PlatformLayout
             brandOnly
@@ -77,8 +74,8 @@ export default function Organizations() {
                     </VStack>
                     <CreateOrganization />
                 </HStack>
-                {isLoading && memberships.length === 0 ? null : tableError && memberships.length === 0 ? (
-                    <Banner status="error" title={tableError} />
+                {isLoading && memberships.length === 0 ? null : error && memberships.length === 0 ? (
+                    <Banner status="error" title={t('errors.loadOrganizations')} />
                 ) : (
                     <Table
                         columns={columns}

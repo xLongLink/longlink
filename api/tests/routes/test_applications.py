@@ -1,12 +1,11 @@
 from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
-from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
 from src.database.services import operations, applications
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -120,19 +119,13 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Assert
     assert response.status_code == 202
     payload = response.json()
-    application = payload["application"]
-    operation = payload["operation"]
-    assert application["status"] == "creating"
-    assert application["description"] == "Dashboard app"
-    assert application["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application["sdk"] == "1.2.3"
-    assert application["version"] == "2.0.0"
-    assert "compute_id" not in operation
-    assert operation["kind"] == OperationKind.application_create
-    assert operation["platform_version"] == env.VERSION
-    assert operation["status"] == OperationStatus.scheduled
+    assert payload["status"] == "creating"
+    assert payload["description"] == "Dashboard app"
+    assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert payload["sdk"] == "1.2.3"
+    assert payload["version"] == "2.0.0"
 
-    persisted = await applications.get(UUID(application["id"]))
+    persisted = await applications.get(UUID(payload["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
     assert not hasattr(persisted, "envs")
@@ -143,7 +136,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     }
     queued = await operations.fetch()
     assert len(queued) == 2
-    assert any(str(item.id) == operation["id"] for item in queued)
+    assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in queued)
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -299,11 +292,11 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     assert response.json() == {"detail": "Application logs unavailable"}
 
 
-async def test_delete_application_soft_deletes_and_returns_reconciliation_operation(
+async def test_delete_application_soft_deletes_and_returns_transitional_resource(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an Application and return its compute Operation."""
+    """Soft-delete an Application and return its transitional resource state."""
 
     # Arrange
     user = users[0]
@@ -320,13 +313,9 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     assert response.status_code == 202
     payload = response.json()
     assert retry_response.status_code == 202
-    assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
-    assert payload["application"]["id"] == str(app.id)
-    assert payload["application"]["status"] == "deleting"
-    assert "compute_id" not in payload["operation"]
-    assert payload["operation"]["kind"] == OperationKind.application_delete
-    assert payload["operation"]["platform_version"] == env.VERSION
-    assert payload["operation"]["status"] == OperationStatus.scheduled
+    assert retry_response.json()["id"] == payload["id"]
+    assert payload["id"] == str(app.id)
+    assert payload["status"] == "deleting"
     assert await applications.get(app.id) is None
     deleted = await applications.get(app.id, include_deleted=True)
     assert deleted is not None
@@ -337,4 +326,4 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
         OperationKind.application_delete,
         OperationKind.organization_create,
     }
-    assert any(str(item.id) == payload["operation"]["id"] for item in recorded_operations)
+    assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

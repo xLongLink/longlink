@@ -11,8 +11,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { z } from 'zod';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
-import { Wordmark } from '@/components/Wordmark';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
@@ -37,8 +38,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         resolver: zodResolver(loginSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const registerQuery = email ? new URLSearchParams({ email }).toString() : '';
-    const registerHref = registerQuery ? `/auth/register?${registerQuery}` : '/auth/register';
+    const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
         mutationFn: (payload: LoginValues) =>
             fetchApiVoid('/api/auth/password/login', {
@@ -52,7 +52,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
+            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey });
             navigate('/organizations', { replace: true });
         } catch (loginError) {
             showToast({
@@ -62,16 +62,11 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         }
     }
 
-    const isPending = login.isPending;
-
     return (
         <Stack gap={4} maxWidth={384} width="100%">
             <Stack gap={1} hAlign="center">
                 <Heading level={1} justify="center">
-                    <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
-                        <span>{t('auth.welcomeTo')}</span>
-                        <Wordmark size="heading" />
-                    </span>
+                    <AuthWelcomeTitle />
                 </Heading>
                 <Divider label={t('auth.signInDescription')} />
             </Stack>
@@ -124,7 +119,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                     />
                 </Stack>
                 <Button
-                    isDisabled={isPending}
+                    isDisabled={login.isPending}
                     isLoading={login.isPending}
                     label={login.isPending ? t('auth.signingIn') : t('actions.login')}
                     type="submit"
@@ -144,17 +139,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 }
             />
 
-            <Text as="p" color="secondary" justify="center" type="supporting">
-                {t('auth.agreementLead')} <br />
-                <Link href="/terms" hasUnderline type="inherit">
-                    {t('auth.termsOfService')}
-                </Link>{' '}
-                {t('auth.agreementMiddle')}{' '}
-                <Link href="/privacy" hasUnderline type="inherit">
-                    {t('auth.privacyPolicy')}
-                </Link>
-                .
-            </Text>
+            <AuthLegalAgreement />
         </Stack>
     );
 }

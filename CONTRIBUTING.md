@@ -50,9 +50,9 @@ make api:tests      # Run API tests
 make sdk:tests      # Run SDK tests
 make web:tests      # Run web tests, typecheck, and bundle builds
 
-make up             # Start the services, initialize the cluster
+make local          # Initialize local services, cluster, and Application image
 make web            # Run the Vite web app
-make seed           # Prepare local services and seed data without starting the API server
+make seed           # Prepare local services and seed published sample data without starting the API server
 make api            # Run the LongLink Platform API after seeding
 
 make down           # Remove remote development resources, local services, volumes, and the cluster
@@ -75,5 +75,5 @@ make web            # Start the Vite platform frontend
 After `make api` and `make web` are running, a different published Application image can be seeded without restarting them:
 
 ```bash
-make seed LOCAL_APPLICATION_IMAGE=ghcr.io/xlonglink/longlink-app:v0.0.2
+make seed APPLICATION_IMAGE=ghcr.io/xlonglink/longlink-app:v0.0.2
 ```

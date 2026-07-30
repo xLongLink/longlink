@@ -2,8 +2,6 @@ import pytest
 from botocore.exceptions import ClientError
 from src.adapters.storage import exoscale
 
-Exoscale = exoscale.Exoscale
-
 pytestmark = pytest.mark.no_db
 
 
@@ -27,7 +25,7 @@ async def test_exoscale_bucket_accepts_existing_owned_bucket(monkeypatch: pytest
             assert Bucket == "bucket"
             raise ClientError({"Error": {"Code": "BucketAlreadyOwnedByYou"}}, "CreateBucket")
 
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
     await storage.create("bucket")
@@ -66,14 +64,14 @@ async def test_exoscale_usage_returns_none_for_missing_bucket(monkeypatch: pytes
             assert name == "list_objects_v2"
             return Paginator()
 
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
     assert await storage.usage("missing") is None
 
 
-async def test_exoscale_usage_aggregates_bucket_and_ignores_prefix_markers(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Aggregate whole-bucket usage while skipping zero-byte prefix markers."""
+async def test_exoscale_usage_aggregates_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Aggregate whole-bucket usage."""
 
     class Paginator:
         """Yield fake S3 object-list pages."""
@@ -108,10 +106,10 @@ async def test_exoscale_usage_aggregates_bucket_and_ignores_prefix_markers(monke
             assert name == "list_objects_v2"
             return Paginator()
 
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
-    assert await storage.usage("acme") == {"object_count": 3, "space_used": 12}
+    assert await storage.usage("acme") == {"space_used": 12}
 
 
 async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -186,7 +184,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
             return {}
 
     monkeypatch.setattr(exoscale, "AsyncClient", Client)
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act
     credentials = await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
@@ -258,7 +256,7 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
             return {"reference": {"id": "runtime-role"}}
 
     monkeypatch.setattr(exoscale, "AsyncClient", Client)
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act and assert
     with pytest.raises(RuntimeError, match="key generation failed"):

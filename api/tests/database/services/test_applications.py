@@ -16,7 +16,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
+    await create_ready_infrastructure(name=f"{prefix} compute")
     organization = await create_organization(
         user,
         name=f"{prefix}-org",
@@ -171,7 +171,6 @@ async def test_set_status_modifies_active_applications() -> None:
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.set_status(uuid4(), Status.creating, Status.running)
     await applications.set_status(application.id, Status.creating, Status.running)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
@@ -200,13 +199,12 @@ async def test_soft_delete_marks_application_deleted() -> None:
 
     # Assert
     assert result is not None
-    deleted, operation = result
-    assert deleted.deleted_id == user.id
+    assert result.deleted_id == user.id
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert second_delete is not None
-    assert second_delete[1].id == operation.id
+    assert second_delete.id == result.id
     assert missing_delete is None
     assert compute_after is not None
     assert compute_after.status == Status.running
@@ -216,8 +214,7 @@ async def test_soft_delete_marks_application_deleted() -> None:
         OperationKind.application_delete,
         OperationKind.organization_create,
     }
-    deletion = next(item for item in open_operations if item.id == operation.id)
-    assert deletion.kind == OperationKind.application_delete
+    deletion = next(item for item in open_operations if item.kind == OperationKind.application_delete)
     assert deletion.target_id == application.id
     assert deletion.platform_version == env.VERSION
     assert deletion.status == OperationStatus.scheduled

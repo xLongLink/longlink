@@ -13,7 +13,7 @@ type ArticleTocItem = {
 /** Metadata shared by article-like public pages. */
 type ArticleMetadata = {
     toc?: ArticleTocItem[];
-    lastUpdated?: string;
+    lastUpdated: string;
     editUrl?: string;
 };
 

@@ -1,7 +1,5 @@
 import { hasProtocol } from 'ufo';
 
-const DEFAULT_API_URL = '';
-
 type ApiErrorPayload = {
     detail?:
         | string
@@ -36,7 +34,7 @@ export function apiQueryKey(path: string): [string, string] {
 
 /** Resolves an API path against the configured API origin. */
 function apiUrl(path: string): string {
-    const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+    const baseUrl = import.meta.env.VITE_API_URL || '';
 
     // Reject path separators that could bypass URL checks.
     if (path.includes('\\')) {
@@ -91,18 +89,13 @@ async function readApiError(response: Response): Promise<ApiErrorResponse> {
     return { message: fallback };
 }
 
-/** Builds request headers shared by API and SDK XML action requests. */
-function createApiHeaders(initHeaders?: HeadersInit): Headers {
-    return new Headers(initHeaders);
-}
-
 /** Sends one API request with shared URL, credential, and header handling. */
 export async function fetchApiResponse(
     path: string,
     init?: RequestInit,
     fetchImpl: typeof fetch = fetch
 ): Promise<Response> {
-    const headers = createApiHeaders(init?.headers);
+    const headers = new Headers(init?.headers);
 
     // Request JSON by default unless callers override Accept.
     if (!headers.has('Accept')) {

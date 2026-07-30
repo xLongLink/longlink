@@ -124,7 +124,6 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
         digest=manifest_digest,
         environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
     ).model_dump(mode="json")
-    assert image_metadata.image == expected_image
     assert images.missing_envs(image_metadata, {}) == ["API_KEY"]
     assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]
     assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []

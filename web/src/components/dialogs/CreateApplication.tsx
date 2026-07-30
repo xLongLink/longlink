@@ -15,7 +15,7 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
+import { apiIconsSchema, apiImageMetadataSchema } from '@/lib/api-schemas';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import type { ApiImageMetadata } from '@/lib/types';
 
@@ -43,23 +43,15 @@ const defaultCreateApplicationValues = {
 } satisfies CreateApplicationInput;
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateApplication({
-    organizationId,
-    canCreate,
-}: {
-    organizationId: string;
-    canCreate: boolean;
-}) {
+export default function CreateApplication({ organizationId }: { organizationId: string }) {
     const t = useTranslator();
     const toast = useToast();
     const createApplication = useCreateOrganizationApplication(organizationId);
     const isCreatingApplication = createApplication.isPending;
-    const imageFormId = useId();
-    const metadataFormId = useId();
-    const environmentFormId = useId();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
+    const [declaredEnvironments, setDeclaredEnvironments] = useState<ApiImageMetadata['environments']>([]);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({
@@ -71,23 +63,15 @@ export default function CreateApplication({
     const name = useWatch({ control: form.control, name: 'name' });
     const icon = useWatch({ control: form.control, name: 'icon' });
     const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
-        parse: (value) => parseApiResponse(apiIconsSchema, value),
+        parse: (value) => apiIconsSchema.parse(value),
         staleTime: Infinity,
     });
-    const iconOptions = iconCatalog ?? [];
-    const declaredEnvironments = imageMetadata?.environments ?? [];
-
-    // Hide creation for roles without application access.
-    if (!canCreate) {
-        return null;
-    }
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
         form.reset(defaultCreateApplicationValues);
-        setImageMetadata(null);
-        setIsInspecting(false);
+        setDeclaredEnvironments([]);
         setError(null);
     }
 
@@ -100,10 +84,10 @@ export default function CreateApplication({
         try {
             const query = new URLSearchParams({ image: payload.image });
             const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
-                parseApiResponse(apiImageMetadataSchema, value)
+                apiImageMetadataSchema.parse(value)
             );
 
-            setImageMetadata(metadata);
+            setDeclaredEnvironments(metadata.environments);
             form.setValue('name', metadata.title ?? '', { shouldValidate: true });
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
             form.setValue('envs', {}, { shouldValidate: true });
@@ -216,7 +200,7 @@ export default function CreateApplication({
                     content={
                         <LayoutContent>
                             {step === 'image' ? (
-                                <form id={imageFormId} onSubmit={form.handleSubmit(handleInspectImage)}>
+                                <form id={formId} onSubmit={form.handleSubmit(handleInspectImage)}>
                                     <FormLayout>
                                         <Controller
                                             control={form.control}
@@ -239,7 +223,7 @@ export default function CreateApplication({
                                 </form>
                             ) : step === 'metadata' ? (
                                 <form
-                                    id={metadataFormId}
+                                    id={formId}
                                     onSubmit={(event) => {
                                         event.preventDefault();
 
@@ -286,7 +270,7 @@ export default function CreateApplication({
                                             label={t('labels.icon')}
                                             options={[
                                                 { value: '__none__', label: t('dialogs.none') },
-                                                ...iconOptions.map((name) => ({ value: name, label: name })),
+                                                ...(iconCatalog ?? []).map((name) => ({ value: name, label: name })),
                                             ]}
                                             value={icon}
                                             placeholder={t('dialogs.chooseIcon')}
@@ -302,7 +286,7 @@ export default function CreateApplication({
                                     </FormLayout>
                                 </form>
                             ) : (
-                                <form id={environmentFormId} onSubmit={form.handleSubmit(handleCreateApp)}>
+                                <form id={formId} onSubmit={form.handleSubmit(handleCreateApp)}>
                                     <FormLayout>
                                         {declaredEnvironments.map((env) => (
                                             <Controller
@@ -345,7 +329,7 @@ export default function CreateApplication({
                                         clickAction={() => handleOpenChange(false)}
                                     />
                                     <Button
-                                        form={imageFormId}
+                                        form={formId}
                                         type="submit"
                                         label={isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
                                         variant="primary"
@@ -370,7 +354,7 @@ export default function CreateApplication({
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
-                                            form={metadataFormId}
+                                            form={formId}
                                             type="submit"
                                             label={t('actions.next')}
                                             variant="primary"
@@ -397,7 +381,7 @@ export default function CreateApplication({
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
-                                            form={environmentFormId}
+                                            form={formId}
                                             type="submit"
                                             label={isCreatingApplication ? t('actions.creating') : t('actions.create')}
                                             variant="primary"

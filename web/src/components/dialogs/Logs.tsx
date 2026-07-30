@@ -28,9 +28,13 @@ export default function Logs({
     onOpenChange: (open: boolean) => void;
 }) {
     const t = useTranslator();
-    const logsQuery = useApiQuery<string[]>(`/api/applications/${applicationId}/logs`, { parse: parseLogLines });
-    const logLines = logsQuery.data ?? [];
-    const logsError = logsQuery.error ? logsQuery.error.message || t('appView.loadLogsFailed') : null;
+    const {
+        data: logLines = [],
+        error,
+        isFetching,
+    } = useApiQuery<string[]>(`/api/applications/${applicationId}/logs`, {
+        parse: parseLogLines,
+    });
 
     return (
         <Dialog isOpen onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
@@ -44,12 +48,12 @@ export default function Logs({
                 }
                 content={
                     <LayoutContent>
-                        {logsQuery.isFetching ? (
+                        {isFetching ? (
                             <Stack align="center" padding={6}>
                                 <Spinner />
                             </Stack>
-                        ) : logsError ? (
-                            <Banner status="error" title={logsError} />
+                        ) : error ? (
+                            <Banner status="error" title={error.message || t('appView.loadLogsFailed')} />
                         ) : (
                             <CodeBlock
                                 code={logLines.length > 0 ? logLines.join('\n') : t('appView.emptyLogs')}

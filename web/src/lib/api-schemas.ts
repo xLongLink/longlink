@@ -27,8 +27,6 @@ export const apiUserSummarySchema = apiUserIdentitySchema.extend({
     role: platformRoleSchema,
 });
 
-const nullableUserSummarySchema = apiUserSummarySchema.nullable();
-
 const apiOrganizationReferenceSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -64,29 +62,15 @@ export const apiOrganizationSummarySchema = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    compute_id: z.string(),
-    database_id: z.string(),
-    storage_id: z.string(),
-    status: statusSchema,
-    created_at: z.string(),
-    updated_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
-const apiOrganizationApplicationSummarySchema = z.object({
+export const apiOrganizationApplicationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
     icon: iconNameSchema,
     description: z.string().nullable(),
     status: statusSchema,
-});
-
-export const apiOrganizationApplicationSchema = z.object({
-    application: apiOrganizationApplicationSummarySchema,
 });
 
 export const apiOrganizationDetailsSchema = z.object({
@@ -106,9 +90,6 @@ const apiEnvironmentMetadataSchema = z.object({
 export const apiImageMetadataSchema = z.object({
     title: z.string().nullable(),
     description: z.string().nullable(),
-    version: z.string().nullable(),
-    sdk: z.string().nullable(),
-    digest: z.string().nullable(),
     environments: z.array(apiEnvironmentMetadataSchema),
 });
 
@@ -120,18 +101,14 @@ export const apiApplicationResponseSchema = z.object({
     name: z.string(),
     slug: z.string(),
     image: z.string(),
-    version: z.string().nullable(),
-    sdk: z.string().nullable(),
     status: statusSchema,
     description: z.string().nullable(),
-    icon: iconNameSchema,
     created_at: z.string(),
 });
 
 export const apiDatabaseRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     host: z.string(),
     port: z.number(),
     sslmode: databaseSslModeSchema,
@@ -141,16 +118,13 @@ export const apiDatabaseRegistrySchema = z.object({
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     endpoint_url: z.string(),
 });
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
-    slug: z.string(),
     status: statusSchema,
-    version: z.string().nullable(),
 });
 
 export const apiOperationSchema = z.object({
@@ -161,7 +135,6 @@ export const apiOperationSchema = z.object({
         'application.delete',
         'organization.create',
         'organization.delete',
-        'organization.reconcile',
     ]),
     target_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
@@ -169,27 +142,6 @@ export const apiOperationSchema = z.object({
     created_at: z.string(),
     finished_at: z.string().nullable(),
     available_at: z.string(),
-});
-
-export const apiComputeMutationResponseSchema = z.object({
-    compute: apiComputeRegistrySchema,
-    operation: apiOperationSchema,
-});
-
-export const apiOrganizationMutationResponseSchema = z.object({
-    organization: apiOrganizationSummarySchema,
-    operation: apiOperationSchema,
-});
-
-export const apiApplicationMutationResponseSchema = z.object({
-    application: apiApplicationResponseSchema,
-    operation: apiOperationSchema,
-});
-
-export const apiComputePodSchema = z.object({
-    name: z.string(),
-    status: z.string(),
-    node: z.string().nullable(),
 });
 
 export const apiOrganizationDatabaseUsageSchema = z.object({
@@ -201,15 +153,4 @@ export const apiOrganizationDatabaseUsageSchema = z.object({
 export const apiOrganizationStorageUsageSchema = z.object({
     bucket_name: z.string(),
     space_used: z.number().int().nonnegative(),
-    object_count: z.number().int().nonnegative(),
 });
-
-/** Validates an API response value with a Zod schema. */
-export function parseApiResponse<T>(schema: z.ZodType<T>, value: unknown): T {
-    return schema.parse(value);
-}
-
-/** Validates an API collection response value with an item schema. */
-export function parseApiCollection<T>(schema: z.ZodType<T>, value: unknown): T[] {
-    return z.array(schema).parse(value);
-}

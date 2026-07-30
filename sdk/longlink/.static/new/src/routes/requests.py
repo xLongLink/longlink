@@ -1,7 +1,7 @@
 import urllib.parse
 from uuid import uuid4
 from typing import BinaryIO, cast
-from fastapi import File, UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Router
 from src.resources import fs
@@ -59,10 +59,10 @@ async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
     # Validate the request before accessing its attachment storage.
-    await _require_request(request_id)
+    await _require_request(request_id, include_audit_users=False)
 
     # List the request directory and treat missing storage as an empty collection.
-    attachments_directory = _attachments_directory(request_id)
+    attachments_directory = f"{ATTACHMENTS_DIRECTORY}/{request_id}"
 
     try:
         entries = fs.ls(attachments_directory, detail=True)
@@ -73,16 +73,16 @@ async def request_attachments_get_endpoint(request_id: int):
     return [
         _attachment_from_entry(request_id, entry)
         for entry in entries
-        if isinstance(entry, dict) and entry.get("type") != "directory"
+        if entry.get("type") != "directory"
     ]
 
 
 @router.post("/requests/{request_id}/attachments", response_model=RequestAttachmentRead)
-async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)):
+async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
     """Upload one file attachment for a purchase request."""
 
     # Validate the request before accepting attachment content.
-    await _require_request(request_id)
+    await _require_request(request_id, include_audit_users=False)
 
     # Normalize the supplied name and derive its unique storage path.
     file_name = _safe_file_name(file.filename)
@@ -92,7 +92,7 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile = 
 
     # Create the attachment directory and close the upload after storage completes.
     try:
-        fs.makedirs(_attachments_directory(request_id), exist_ok=True)
+        fs.makedirs(f"{ATTACHMENTS_DIRECTORY}/{request_id}", exist_ok=True)
 
         with cast(BinaryIO, fs.open(storage_path, "wb")) as stored_file:
 
@@ -116,7 +116,7 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
     """Download one purchase request attachment."""
 
     # Validate the request before accessing its attachment storage.
-    await _require_request(request_id)
+    await _require_request(request_id, include_audit_users=False)
 
     # Resolve the attachment path and reject files that are not present.
     storage_path = _attachment_path(request_id, file_id)
@@ -142,32 +142,22 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str):
     """Delete one purchase request attachment."""
 
     # Validate the request before modifying its attachment storage.
-    await _require_request(request_id)
+    await _require_request(request_id, include_audit_users=False)
 
     # Resolve the attachment path and remove the file when it is present.
     storage_path = _attachment_path(request_id, file_id)
     if fs.exists(storage_path):
         fs.rm(storage_path)
 
-    return Response(status_code=204)
-
-
-async def _require_request(request_id: int) -> PurchaseRequest:
+async def _require_request(request_id: int, include_audit_users: bool = True) -> PurchaseRequest:
     """Return one purchase request or raise a 404 response."""
 
     # Retrieve the request and translate a missing record into an API error.
-    request = await requests.get_request(request_id)
+    request = await requests.get_request(request_id, include_audit_users=include_audit_users)
     if request is None:
         raise HTTPException(status_code=404, detail="Purchase request not found")
 
     return request
-
-
-def _attachments_directory(request_id: int) -> str:
-    """Return the storage directory for one purchase request."""
-
-    return f"{ATTACHMENTS_DIRECTORY}/{request_id}"
-
 
 def _attachment_path(request_id: int, file_id: str) -> str:
     """Return the validated storage path for one attachment id."""
@@ -177,7 +167,7 @@ def _attachment_path(request_id: int, file_id: str) -> str:
     if file_name != file_id or file_name in {"", ".", ".."}:
         raise HTTPException(status_code=404, detail="Attachment not found")
 
-    return f"{_attachments_directory(request_id)}/{file_name}"
+    return f"{ATTACHMENTS_DIRECTORY}/{request_id}/{file_name}"
 
 
 def _safe_file_name(file_name: str | None) -> str:

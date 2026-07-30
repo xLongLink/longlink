@@ -3,24 +3,28 @@ from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
 from src.environments import env
+from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
-async def create_compute(slug: str) -> ComputeRegistry:
+async def create_compute(name: str) -> ComputeRegistry:
     """Create one isolated compute row without queueing reconciliation."""
 
     # Operation service tests need only a minimal compute target at the current Platform version.
     async with session_scope() as session:
         compute = ComputeRegistry(
-            name=slug.title(),
-            slug=slug,
-            kubeconfig="apiVersion: v1\nclusters: []\n",
+            name=name.title(),
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             proxy_secret="proxy-secret",
             version=env.VERSION,
         )
@@ -102,6 +106,82 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
         (OperationKind.application_create, first_application_id),
         (OperationKind.organization_create, organization_id),
     }
+
+
+async def test_release_schedules_running_application_creation_once() -> None:
+    """Queue one current-release Application operation for every running Application."""
+
+    # Arrange
+    compute = await create_compute("local")
+    database = DatabaseRegistry(
+        name="Primary Database",
+        host="database.example",
+        port=5432,
+        username="admin",
+        password="secret",
+        sslmode=DatabaseSSLMode.disable,
+    )
+    storage = StorageRegistry(
+        name="Primary Storage",
+        endpoint_url="https://sos-ch-gva-2.exo.io",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
+    )
+    async with session_scope() as session:
+        session.add_all([database, storage])
+        await session.flush()
+        organization = Organization(
+            name="Acme",
+            slug="acme",
+            compute_id=compute.id,
+            database_id=database.id,
+            storage_id=storage.id,
+            status=Status.running,
+        )
+        session.add(organization)
+        await session.flush()
+        running = Application(
+            organization_id=organization.id,
+            name="Dashboard",
+            slug="dashboard",
+            image="ghcr.io/longlink/dashboard@sha256:resolved",
+            status=Status.running,
+        )
+        session.add_all(
+            [
+                running,
+                Application(
+                    organization_id=organization.id,
+                    name="Pending",
+                    slug="pending",
+                    image="ghcr.io/longlink/pending@sha256:resolved",
+                    status=Status.creating,
+                ),
+                Application(
+                    organization_id=organization.id,
+                    name="Deleted",
+                    slug="deleted",
+                    image="ghcr.io/longlink/deleted@sha256:resolved",
+                    status=Status.running,
+                    deleted_at=utcnow(),
+                ),
+            ]
+        )
+        await session.commit()
+
+    # Act
+    await platform_release.schedule_migrations()
+    await platform_release.schedule_migrations()
+    application_operations = [
+        operation
+        for operation in await operations.fetch()
+        if operation.kind == OperationKind.application_create
+    ]
+
+    # Assert
+    assert len(application_operations) == 1
+    assert application_operations[0].target_id == running.id
+    assert application_operations[0].platform_version == env.VERSION
 
 
 async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:

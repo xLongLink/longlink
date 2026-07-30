@@ -154,6 +154,6 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
         await operations.enqueue_in_session(
             session,
             organization_computes[organization_id],
-            kind=OperationKind.organization_reconcile,
+            kind=OperationKind.organization_create,
             target_id=organization_id,
         )

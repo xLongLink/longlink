@@ -1,36 +1,22 @@
 import { apiQueryKey } from '@/lib/api';
 
-/** Builds the current user profile query key. */
-export function userProfileQueryKey() {
-    return apiQueryKey('/api/me');
-}
+/** Current user profile query key. */
+export const userProfileQueryKey = apiQueryKey('/api/me');
 
-/** Builds the current user's organization memberships query key. */
-export function userOrganizationsQueryKey() {
-    return apiQueryKey('/api/me/organizations');
-}
+/** Current user's organization memberships query key. */
+export const userOrganizationsQueryKey = apiQueryKey('/api/me/organizations');
 
-/** Builds the organizations list query key. */
-export function organizationsQueryKey() {
-    return apiQueryKey('/api/organizations');
-}
+/** Organizations list query key. */
+export const organizationsQueryKey = apiQueryKey('/api/organizations');
 
-/** Builds the applications list query key. */
-export function applicationsQueryKey() {
-    return apiQueryKey('/api/applications');
-}
+/** Applications list query key. */
+export const applicationsQueryKey = apiQueryKey('/api/applications');
 
-/** Builds the databases list query key. */
-export function databasesQueryKey() {
-    return apiQueryKey('/api/databases');
-}
+/** Databases list query key. */
+export const databasesQueryKey = apiQueryKey('/api/databases');
 
-/** Builds the computes list query key. */
-export function computesQueryKey() {
-    return apiQueryKey('/api/computes');
-}
+/** Computes list query key. */
+export const computesQueryKey = apiQueryKey('/api/computes');
 
-/** Builds the storages list query key. */
-export function storagesQueryKey() {
-    return apiQueryKey('/api/storages');
-}
+/** Storages list query key. */
+export const storagesQueryKey = apiQueryKey('/api/storages');

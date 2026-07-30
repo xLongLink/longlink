@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from sqlalchemy import or_, and_, case, text, select, update
 from src.logger import logger
+from collections.abc import Sequence
 from src.environments import env
 from packaging.version import Version
 from longlink.utils.time import utcnow
@@ -15,13 +16,13 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch() -> list[Operation]:
+async def fetch() -> Sequence[Operation]:
     """Return all operations ordered by newest first."""
 
     # Read operations through a managed database session.
     async with session_scope() as session:
         statement = select(Operation).order_by(Operation.created_at.desc())
-        return list(await session.scalars(statement))
+        return (await session.scalars(statement)).all()
 
 
 async def fail_in_session(session: AsyncSession, operation: Operation, finished_at: datetime) -> None:
@@ -44,9 +45,8 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
         ):
             return
         compute.status = Status.failed
-        return
 
-    # Application creation failures affect only active, non-tombstoned Applications.
+    # Application convergence failures affect only active, non-tombstoned Applications.
     if operation.kind == OperationKind.application_create:
         await session.execute(
             update(Application)
@@ -57,10 +57,9 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             )
             .values(status=Status.failed)
         )
-        return
 
-    # Organization creation and reconciliation share one guarded terminal transition.
-    if operation.kind in {OperationKind.organization_create, OperationKind.organization_reconcile}:
+    # Organization convergence failures affect only active, non-tombstoned Organizations.
+    if operation.kind == OperationKind.organization_create:
         await session.execute(
             update(Organization)
             .where(
@@ -70,7 +69,6 @@ async def fail_in_session(session: AsyncSession, operation: Operation, finished_
             )
             .values(status=Status.failed)
         )
-        return
 
 async def enqueue_in_session(
     session: AsyncSession,
@@ -165,7 +163,7 @@ async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compu
         return operation
 
 
-async def schedule_now(operation_id: UUID) -> Operation | None:
+async def schedule_now(operation_id: UUID) -> bool:
     """Make one open delayed Operation immediately eligible for claiming."""
 
     # Preserve terminal and lease state while advancing only the availability timestamp.
@@ -179,11 +177,10 @@ async def schedule_now(operation_id: UUID) -> Operation | None:
             .values(available_at=utcnow())
         )
         if result.rowcount != 1:
-            return None
+            return False
 
-        operation = await session.get(Operation, operation_id)
         await session.commit()
-        return operation
+        return True
 
 
 async def claim_next() -> Operation | None:
@@ -252,7 +249,6 @@ async def claim_next() -> Operation | None:
             if result.rowcount != 1:
                 await session.rollback()
                 continue
-            await session.refresh(operation)
             await session.commit()
             return operation
 
