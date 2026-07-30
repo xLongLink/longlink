@@ -70,7 +70,6 @@ export default function ResetPassword() {
     const hasTokenError =
         (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
         (resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN');
-    const verifyToken = verification.mutate;
 
     /** Saves the new password while keeping invalid-token failures inline. */
     async function handleResetPassword(payload: ResetPasswordValues) {
@@ -104,8 +103,10 @@ export default function ResetPassword() {
         }
 
         verificationStarted.current = true;
-        verifyToken(token);
-    }, [token, verifyToken]);
+        verification.mutate(token);
+
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
+    }, [token, verification.mutate]);
 
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {

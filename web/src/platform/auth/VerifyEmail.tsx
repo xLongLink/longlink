@@ -95,16 +95,13 @@ export default function VerifyEmail() {
                 (value) => apiUserProfileSchema.parse(value)
             ),
     });
-    const verifyRegistration = verification.mutate;
-
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
             const user = await completion.mutateAsync(payload);
-            const profileKey = userProfileQueryKey;
 
-            await clearSessionQueries(queryClient, [profileKey]);
-            queryClient.setQueryData(profileKey, user);
+            await clearSessionQueries(queryClient, [userProfileQueryKey]);
+            queryClient.setQueryData(userProfileQueryKey, user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             navigate('/organizations', { replace: true });
         } catch (error) {
@@ -140,13 +137,15 @@ export default function VerifyEmail() {
 
     useEffect(() => {
         // Repeat the idempotent exchange when Strict Mode remounts the mutation observer.
-        verifyRegistration(token);
-    }, [token, verifyRegistration]);
+        verification.mutate(token);
+
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
+    }, [token, verification.mutate]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoveryQuery = recoverySetup?.email ? new URLSearchParams({ email: recoverySetup.email }).toString() : '';
-    const recoveryRegisterHref = recoveryQuery ? `/auth/register?${recoveryQuery}` : '/auth/register';
-    const recoverySignInHref = recoveryQuery ? `/organizations?${recoveryQuery}` : '/organizations';
+    const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
+    const recoveryRegisterHref = `/auth/register${recoverySearch}`;
+    const recoverySignInHref = `/organizations${recoverySearch}`;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {

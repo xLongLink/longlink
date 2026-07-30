@@ -92,7 +92,4 @@ export const pageElementDocPages = pageReferenceDocs.map((element) => ({
     metadata: elementMetadata(element),
 }));
 
-export const pageElementHrefByName = pageElementDocPages.reduce<Record<string, string>>((paths, page) => {
-    paths[page.title] = page.path;
-    return paths;
-}, {});
+export const pageElementHrefByName = Object.fromEntries(pageElementDocPages.map(({ title, path }) => [title, path]));

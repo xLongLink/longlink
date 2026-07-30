@@ -91,7 +91,6 @@ function DatabaseSettings({
 }) {
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationDatabaseUsage(organizationId);
-    const rows = data ? [data] : [];
 
     return (
         <UsageSettings
@@ -102,7 +101,7 @@ function DatabaseSettings({
         >
             <Table
                 columns={columns}
-                data={rows}
+                data={data ? [data] : []}
                 density="compact"
                 emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                 hasHover
@@ -126,7 +125,6 @@ function StorageSettings({
 }) {
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationStorageUsage(organizationId);
-    const rows = data ? [data] : [];
 
     return (
         <UsageSettings
@@ -137,7 +135,7 @@ function StorageSettings({
         >
             <Table
                 columns={columns}
-                data={rows}
+                data={data ? [data] : []}
                 density="compact"
                 emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
                 hasHover

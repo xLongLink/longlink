@@ -206,10 +206,6 @@ export default function Home() {
         event.currentTarget.style.setProperty('--painting-swing', `${horizontalPosition * 2.8}deg`);
     }
 
-    function handlePaintingPointerLeave(event: PointerEvent<HTMLDivElement>) {
-        event.currentTarget.style.setProperty('--painting-swing', '0deg');
-    }
-
     return (
         <PublicPage
             className="overflow-x-clip"
@@ -411,7 +407,9 @@ export default function Home() {
                         >
                             <div
                                 className="homepage-hands-swing relative"
-                                onPointerLeave={handlePaintingPointerLeave}
+                                onPointerLeave={(event) =>
+                                    event.currentTarget.style.setProperty('--painting-swing', '0deg')
+                                }
                                 onPointerMove={handlePaintingPointerMove}
                             >
                                 <div

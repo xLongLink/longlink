@@ -146,8 +146,6 @@ function ComponentCategorySection({ category }: { category: ComponentCategory })
 
 /** Renders one component summary card in the XML page gallery. */
 function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
-    const href = pageElementHrefByName[component.name];
-
     return (
         <Stack className="group relative" gap={2}>
             <Card aria-hidden="true" inert minHeight={190} variant="muted">
@@ -159,7 +157,7 @@ function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
             <RouterLink
                 aria-label={`Open ${component.name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={href}
+                to={pageElementHrefByName[component.name]}
             />
         </Stack>
     );

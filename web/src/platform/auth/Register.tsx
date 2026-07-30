@@ -32,8 +32,7 @@ export default function Register() {
         resolver: zodResolver(schema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
-    const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
+    const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
         mutationFn: (payload: RegisterValues) =>
             fetchApiVoid('/api/auth/register', {

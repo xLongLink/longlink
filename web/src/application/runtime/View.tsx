@@ -47,7 +47,6 @@ type PageState = {
     cacheKey: string;
     path: string;
     routePath: string;
-    stateKey: string;
     ast: ASTNode[] | null;
     parseError: string | null;
     error: string | null;
@@ -63,7 +62,6 @@ type PageParseResult = {
 type PageRouteMatch = {
     page: RuntimePage;
     params: Record<string, string>;
-    path: string;
 };
 
 type RuntimeRoute = RouteObject & {
@@ -71,16 +69,6 @@ type RuntimeRoute = RouteObject & {
 };
 
 const emptyRouteParams: Record<string, string> = {};
-
-/** Resolves persisted icon slugs for runtime tabs. */
-function resolveRuntimeIcon(name: string | undefined): LucideIcon | undefined {
-    // Ignore empty and unsupported icon names.
-    if (!name) {
-        return undefined;
-    }
-
-    return getIconComponent(name);
-}
 
 /**
  * Removes leading and trailing slashes from a route path.
@@ -118,7 +106,6 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): Pag
         params: Object.fromEntries(
             Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
         ),
-        path: routePath,
     };
 }
 
@@ -138,13 +125,6 @@ function resolveApplicationHref(routePath: string, organization?: string, applic
     }
 
     return `${basePath}/${normalizedRoutePath}`;
-}
-
-/** Resolves route params inside a URL template. */
-function resolveTemplate(template: string, params: Record<string, string | undefined>): string {
-    const resolvedTemplate = template.includes('/:') ? generatePath(template, params) : template;
-
-    return resolvedTemplate.replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
 }
 
 /** Creates an isolated page runtime context while preserving supplied shared runtime values. */
@@ -172,7 +152,6 @@ function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionC
 /** Creates the cached state holder for one XML page. */
 function createPageState(
     key: string,
-    stateKey: string,
     path: string,
     routePath: string,
     params: Record<string, string>,
@@ -188,10 +167,9 @@ function createPageState(
         cacheKey: key,
         path,
         routePath,
-        stateKey,
         ast: null,
         error: null,
-        loading: false,
+        loading: true,
         parseError: null,
         runtimeContext: pageRuntimeContext,
     };
@@ -227,8 +205,7 @@ export default function View({
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
-    const routeParams: Record<string, string | undefined> = { organization, application };
-    const resolvedPages = resolveTemplate(pages, routeParams);
+    const resolvedPages = pages;
     const resolvedPagesBaseUrl = resolvedPages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const navigationBaseUrl = resolveApplicationHref('', organization, application);
     const pageCacheKey = `${resolvedPages}\u0000${runtimeKey ?? ''}`;
@@ -244,14 +221,8 @@ export default function View({
     const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? registeredPages?.[0] : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
-    let activeRoutePath = normalizedRoutePath;
-    let activeRouteParams = emptyRouteParams;
-
-    // Use route params from the matching page.
-    if (activeRouteMatch) {
-        activeRoutePath = activeRouteMatch.path;
-        activeRouteParams = activeRouteMatch.params;
-    }
+    const activeRoutePath = normalizedRoutePath;
+    const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
     const activePageStateKey = activePage ? `${activePage.path}\u0000${activeRoutePath}\u0000${activePage.tab}` : '';
     const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
@@ -260,6 +231,10 @@ export default function View({
         activePageState.path === activePagePath &&
         activePageState.routePath === activeRoutePath;
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
+    const fallbackActionProps = {
+        actionHref: organization ? `/orgs/${organization}` : '/organizations',
+        actionLabel: organization ? t('actions.backToOrganization') : t('actions.backToOrganizations'),
+    };
 
     // Keep future page contexts aligned with the latest caller-supplied values.
     useEffect(() => {
@@ -296,41 +271,36 @@ export default function View({
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
             const label = page.name || startCase(page.tab);
-            const icon = resolveRuntimeIcon(page.icon);
+            const icon = page.icon ? getIconComponent(page.icon) : undefined;
             const routePattern = pageRoutePattern(page);
             const dynamic = pageRouteIsDynamic(page);
             const currentGroup = tabGroups.get(page.tab);
 
+            // Keep existing tab groups active when any of their routes is active.
+            if (currentGroup) {
+                currentGroup.active = currentGroup.active || page.tab === activePageTab;
+            }
+
             // Dynamic pages need concrete params, so they cannot be direct navigation targets.
-            if (!routePattern || dynamic) {
-                if (currentGroup) {
-                    currentGroup.active = currentGroup.active || page.tab === activePageTab;
-                }
+            if (!routePattern || dynamic || currentGroup) {
                 continue;
             }
 
             const href = resolveApplicationHref(routePattern, organization, application);
 
             // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
-            if (!currentGroup) {
-                tabGroups.set(page.tab, {
-                    active: page.tab === activePageTab,
-                    href,
-                    icon,
-                    label,
-                });
-                continue;
-            }
-
-            currentGroup.active = currentGroup.active || page.tab === activePageTab;
+            tabGroups.set(page.tab, {
+                active: page.tab === activePageTab,
+                href,
+                icon,
+                label,
+            });
         }
 
         return Object.fromEntries(
             Array.from(tabGroups.values()).map((tab) => [
                 tab.label,
-                tab.icon
-                    ? { active: tab.active, href: tab.href, icon: tab.icon }
-                    : { active: tab.active, href: tab.href },
+                { active: tab.active, href: tab.href, icon: tab.icon },
             ])
         );
     }, [activePageTab, application, organization, registeredPages]);
@@ -352,9 +322,7 @@ export default function View({
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
             existingPageState.routePath === activeRoutePath &&
-            (existingPageState.ast !== null ||
-                existingPageState.error !== null ||
-                existingPageState.parseError !== null)
+            !existingPageState.loading
         ) {
             return;
         }
@@ -369,18 +337,14 @@ export default function View({
             return;
         }
 
-        const loadingPageState = {
-            ...createPageState(
-                pageCacheKey,
-                activePageStateKey,
-                pagePath,
-                activeRoutePath,
-                activeRouteParams,
-                navigationBaseUrl,
-                runtimeContextRef.current
-            ),
-            loading: true,
-        };
+        const loadingPageState = createPageState(
+            pageCacheKey,
+            pagePath,
+            activeRoutePath,
+            activeRouteParams,
+            navigationBaseUrl,
+            runtimeContextRef.current
+        );
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -523,8 +487,7 @@ export default function View({
             <XmlLayout tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                        {...fallbackActionProps}
                         isAlert={applicationStatus === 'failed'}
                         message={
                             applicationStatus === 'failed'
@@ -548,8 +511,7 @@ export default function View({
             <XmlLayout tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
-                        actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                        {...fallbackActionProps}
                         message={error.message || t('appView.loadApplicationFailed')}
                         title={t('appView.unableToLoadApplication')}
                     />
@@ -563,18 +525,19 @@ export default function View({
         return <NotFound />;
     }
 
-    const renderedPagePanels = Object.values(pageStates).map((pageState) => {
+    const activePageError = activePageState?.error || activePageState?.parseError;
+    const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
         if (!pageState.ast || pageState.cacheKey !== pageCacheKey || pageState.error || pageState.parseError) {
             return null;
         }
 
-        const pageIsActive = pageState.stateKey === activePageStateKey;
+        const pageIsActive = pageStateKey === activePageStateKey;
 
         return (
-            <Stack key={pageState.stateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
+            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
                 <RenderXML
-                    key={`${runtimeKey ?? 'runtime'}-${pageState.stateKey}`}
+                    key={`${runtimeKey ?? 'runtime'}-${pageStateKey}`}
                     active={pageIsActive}
                     ast={pageState.ast}
                     baseUrl={resolvedPagesBaseUrl}
@@ -590,37 +553,21 @@ export default function View({
     if (!activePage) {
         activeFallback = (
             <ErrorState
-                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                {...fallbackActionProps}
                 message={t('appView.emptyApplication')}
                 title={t('appView.unexpectedApplicationResponse')}
             />
         );
-    } else if (activePageStateIsCurrent && activePageState.error) {
+    } else if (activePageStateIsCurrent && activePageError) {
         activeFallback = (
-            <ErrorState
-                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
-                message={activePageState.error}
-                title={t('appView.unableToLoadPage')}
-            />
-        );
-    } else if (activePageStateIsCurrent && activePageState.parseError) {
-        activeFallback = (
-            <ErrorState
-                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
-                message={activePageState.parseError}
-                title={t('appView.unableToLoadPage')}
-            />
+            <ErrorState {...fallbackActionProps} message={activePageError} title={t('appView.unableToLoadPage')} />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;
     } else if (!activePageState.ast) {
         activeFallback = (
             <ErrorState
-                actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                {...fallbackActionProps}
                 message={t('appView.emptyResponse')}
                 title={t('appView.unexpectedApplicationResponse')}
             />
