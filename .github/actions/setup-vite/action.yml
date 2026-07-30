@@ -1,0 +1,14 @@
+name: Setup Vite+
+description: Install the Vite+ environment and web dependencies used by LongLink CI.
+
+runs:
+    using: composite
+    steps:
+        - name: Setup Vite+
+          uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
+          with:
+              cache: true
+              node-version-file: package.json
+              run-install: |
+                  args: ['--frozen-lockfile']
+              working-directory: web

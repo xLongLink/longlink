@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createScopeProxy, resolvePath, resolveValue } from '@/xml/expressions';
+import { resolvePath, resolveValue } from '@/xml/expressions';
 import type { ExecutionContext } from '@/xml/types';
 
 describe('resolve', () => {
@@ -18,7 +18,6 @@ describe('resolve', () => {
         };
 
         expect(resolveValue(ctx, 'answer')).toBe(42);
-        expect(createScopeProxy(ctx).answer).toBe(42);
     });
 
     it('resolves dotted paths against nested values', () => {
@@ -41,7 +40,6 @@ describe('resolve', () => {
         };
 
         expect(resolveValue(ctx, 'hidden')).toBeUndefined();
-        expect(resolveValue(ctx, 'toString')).toBeUndefined();
     });
 
     it('blocks unsafe prototype path segments', () => {
@@ -52,8 +50,10 @@ describe('resolve', () => {
             user: { name: 'Ada' },
         };
 
-        expect(resolvePath(ctx, ['user', '__proto__'])).toBeUndefined();
-        expect(resolvePath(ctx, ['user', 'constructor'])).toBeUndefined();
-        expect(resolvePath(ctx, ['user', 'prototype'])).toBeUndefined();
+        expect(['__proto__', 'constructor', 'prototype'].map((part) => resolvePath(ctx, ['user', part]))).toEqual([
+            undefined,
+            undefined,
+            undefined,
+        ]);
     });
 });

@@ -12,6 +12,39 @@ permissions:
     contents: read
 
 jobs:
+    format:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Python environment
+              uses: ./.github/actions/setup-python
+
+            - name: Setup web environment
+              uses: ./.github/actions/setup-vite
+
+            - name: Install API dependencies
+              working-directory: api
+              run: uv sync --locked --extra dev
+
+            - name: Check API formatting
+              working-directory: api
+              run: uv run --locked ruff check . && uv run --locked isort --check-only .
+
+            - name: Install SDK dependencies
+              working-directory: sdk
+              run: uv sync --locked --group dev
+
+            - name: Check SDK formatting
+              working-directory: sdk
+              run: uv run --locked isort --check-only .
+
+            - name: Check web formatting
+              working-directory: web
+              run: vp run check
+
     # The API is packaged into a container, so test it on the supported Python runtime.
     api-tests:
         runs-on: ubuntu-latest
@@ -20,25 +53,11 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - name: Setup Python
-              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-              with:
-                  python-version: '3.14.6'
+            - name: Setup Python environment
+              uses: ./.github/actions/setup-python
 
-            - name: Setup uv
-              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-              with:
-                  enable-cache: true
-                  version: '0.11.32'
-
-            - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
-              with:
-                  cache: true
-                  node-version-file: package.json
-                  run-install: |
-                      args: ['--frozen-lockfile']
-                  working-directory: web
+            - name: Setup web environment
+              uses: ./.github/actions/setup-vite
 
             - name: Install dependencies
               working-directory: api
@@ -52,9 +71,9 @@ jobs:
               working-directory: api
               run: uv run --locked pytest -m "not integration" tests
 
-            - name: Run quality checks
+            - name: Run integration tests
               working-directory: api
-              run: uv run --locked ruff check . && uv run --locked isort --check-only .
+              run: uv run --locked pytest -m integration tests
 
             - name: Run type checks
               working-directory: api
@@ -68,25 +87,11 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - name: Setup Python
-              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-              with:
-                  python-version: '3.14.6'
+            - name: Setup Python environment
+              uses: ./.github/actions/setup-python
 
-            - name: Setup uv
-              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-              with:
-                  enable-cache: true
-                  version: '0.11.32'
-
-            - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
-              with:
-                  cache: true
-                  node-version-file: package.json
-                  run-install: |
-                      args: ['--frozen-lockfile']
-                  working-directory: web
+            - name: Setup web environment
+              uses: ./.github/actions/setup-vite
 
             - name: Install dependencies
               working-directory: sdk
@@ -100,6 +105,10 @@ jobs:
               working-directory: sdk
               run: uv run --locked pytest -m "not integration" tests
 
+            - name: Run integration tests
+              working-directory: sdk
+              run: uv run --locked pytest -m integration tests
+
             - name: Run type checks
               working-directory: sdk
               run: uv run --locked --group dev ty check
@@ -107,78 +116,6 @@ jobs:
             - name: Build SDK distribution
               working-directory: sdk
               run: uv build
-
-    # Keep Docker-backed infrastructure coverage outside the fast Python jobs.
-    integration-tests:
-        runs-on: ubuntu-latest
-
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - workspace: api
-                      sync-args: --extra dev
-                    - workspace: sdk
-                      sync-args: --group dev
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Setup Python
-              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-              with:
-                  python-version: '3.14.6'
-
-            - name: Setup uv
-              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-              with:
-                  enable-cache: true
-                  version: '0.11.32'
-
-            - name: Install dependencies
-              working-directory: ${{ matrix.workspace }}
-              run: uv sync --locked ${{ matrix.sync-args }}
-
-            - name: Run integration tests
-              working-directory: ${{ matrix.workspace }}
-              run: uv run --locked pytest -m integration tests
-
-    # Verify that a generated Application installs and runs in an isolated environment.
-    sdk-scaffold-tests:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Setup Python
-              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-              with:
-                  python-version: '3.14.6'
-
-            - name: Setup uv
-              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-              with:
-                  enable-cache: true
-                  version: '0.11.32'
-
-            - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
-              with:
-                  cache: true
-                  node-version-file: package.json
-                  run-install: |
-                      args: ['--frozen-lockfile']
-                  working-directory: web
-
-            - name: Install SDK dependencies
-              working-directory: sdk
-              run: uv sync --locked --group dev
-
-            - name: Build SDK web bundle
-              working-directory: web
-              run: vp run build:sdk:bundle --logLevel warn
 
             - name: Run generated scaffold tests
               working-directory: sdk
@@ -192,22 +129,12 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
-              with:
-                  cache: true
-                  node-version-file: package.json
-                  run-install: |
-                      args: ['--frozen-lockfile']
-                  working-directory: web
+            - name: Setup web environment
+              uses: ./.github/actions/setup-vite
 
             - name: Run tests
               working-directory: web
               run: vp run test
-
-            - name: Run static checks
-              working-directory: web
-              run: vp run check
 
             - name: Run type checks
               working-directory: web

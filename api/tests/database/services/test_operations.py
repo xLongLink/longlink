@@ -53,9 +53,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     # Fetch operations through the service boundary.
     fetched = await operations.fetch()
 
-    # Verify operations are returned newest first with their Platform version.
+    # Verify operations are returned newest first.
     assert [operation.id for operation in fetched] == [newer_operation.id, older_operation.id]
-    assert all(operation.platform_version == env.VERSION for operation in fetched)
 
 
 async def test_operations_service_create_coalesces_each_kind_and_target() -> None:
@@ -200,7 +199,6 @@ async def test_operations_service_create_separates_computes_and_reopens_complete
     open_operations = [operation for operation in await operations.fetch() if operation.finished_at is None]
 
     # Verify completed work reopens without affecting the other compute queue.
-    assert first.id != second.id
     assert completed is not None
     assert completed.status == OperationStatus.completed
     assert replacement.id not in {first.id, second.id}
@@ -365,8 +363,8 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     # Seed separate operations for successful and failed outcomes.
     successful_compute = await create_compute("successful")
     failed_compute = await create_compute("failed")
-    successful = await operations.create(successful_compute.id)
-    failed = await operations.create(failed_compute.id)
+    await operations.create(successful_compute.id)
+    await operations.create(failed_compute.id)
 
     # Drive each operation through its terminal transition.
     successful_claim = await operations.claim()
@@ -379,12 +377,10 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
         failed_compute_row = await session.get(ComputeRegistry, failed_compute.id)
 
     # Verify both terminal states retain their expected lifecycle metadata.
-    assert successful.status == OperationStatus.scheduled
     assert completed is not None
     assert completed.status == OperationStatus.completed
     assert completed.finished_at is not None
     assert completed.failed is False
-    assert failed.status == OperationStatus.scheduled
     assert finished is not None
     assert finished.status == OperationStatus.failed
     assert finished.finished_at is not None

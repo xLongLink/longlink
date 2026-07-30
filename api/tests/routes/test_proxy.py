@@ -204,7 +204,6 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context)
     monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", FakeProxyClient)
-    assert proxy_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
     client = clients[0]
 

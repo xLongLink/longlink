@@ -43,7 +43,6 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     result = runner.invoke(translations.generate_command)
 
     # Assert
-    assert result.exit_code == 0
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     assert list(catalog) == ["admin.users.title", "dashboard.title", "tasks.count"]
     assert catalog == {

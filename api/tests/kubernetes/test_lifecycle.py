@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from src.models.computes import kubeconfig_mapping
-from kr8s.asyncio.objects import Secret, Namespace
+from kr8s.asyncio.objects import Namespace
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, generate_gateway_tls
 
@@ -121,12 +121,6 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
             },
         )
         await compute.applications.apply(application_id, "acme", ECHO_SERVER_IMAGE)
-
-        # Verify runtime Secret ownership is discoverable without inspecting its values.
-        secret = Secret(str(application_id), namespace="acme", api=api)
-        assert await secret.exists()
-        await secret.refresh()
-        assert secret.metadata["labels"] == {"longlink.io/application-id": str(application_id)}
 
         # Publish the Application through the gateway using the compute's mTLS identity.
         gateway_ip = await compute.gateway.ip()

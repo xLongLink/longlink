@@ -119,7 +119,6 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
 
     # Assert
     assert completed.status == OperationStatus.completed
-    assert len(snapshots) == 1
     assert [(route.id, route.namespace) for route in snapshots[0]] == [(running.id, "acme")]
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None

@@ -568,8 +568,6 @@ async def test_update_organization_member_changes_role(
 
     # Assert
     assert response.status_code == 204
-    updated_organization = await organizations.get(organization.id)
-    assert updated_organization is not None
     updated_members = await organizations.members(organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin

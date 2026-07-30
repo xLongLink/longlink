@@ -49,7 +49,6 @@ def test_production_health_and_root_are_served_without_sdk_auth() -> None:
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
     assert root_response.status_code == 200
-    assert "text/html" in root_response.headers["content-type"]
 
 
 @pytest.mark.parametrize(

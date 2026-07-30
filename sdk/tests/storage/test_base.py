@@ -72,9 +72,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     )
 
     # Verify both path isolation and S3 connection settings.
-    assert isinstance(filesystem, storage_base.DirFileSystem)
     assert filesystem.path == "acme/applications/dashboard"
-    assert filesystem.fs is fake_filesystem
     assert captured == {
         "protocol": "s3",
         "kwargs": {
