@@ -6,15 +6,15 @@ const centerX = 700;
 const centerY = 720;
 const radiusX = 900;
 const radiusY = 535;
-const mapStretch = radiusX / radiusY;
 
 // Cast the static TopoJSON import at the data boundary; world-atlas exposes a borderless land object.
-const worldTopology = worldAtlas as unknown as Parameters<typeof feature>[0];
-const land = feature(worldTopology, 'land') as GeoPermissibleObjects;
+const land = feature(worldAtlas as unknown as Parameters<typeof feature>[0], 'land') as GeoPermissibleObjects;
 
 // Project the land once because the hero globe is a static background asset.
-const projection = geoOrthographic().translate([centerX, centerY]).scale(radiusY).rotate([35, -18]).clipAngle(90);
-const landPath = geoPath<typeof land>(projection)(land) ?? '';
+const landPath =
+    geoPath<typeof land>(
+        geoOrthographic().translate([centerX, centerY]).scale(radiusY).rotate([35, -18]).clipAngle(90)
+    )(land) ?? '';
 
 /** Renders the projected world landmass inside the landing-page globe. */
 export function HeroGlobe() {
@@ -76,7 +76,7 @@ export function HeroGlobe() {
                 <rect className="homepage-hero-globe-cap-shadow" height="1260" width="1400" />
                 <g
                     mask="url(#hero-globe-land-mask)"
-                    transform={`translate(${centerX} ${centerY}) scale(${mapStretch} 1) translate(${-centerX} ${-centerY})`}
+                    transform={`translate(${centerX} ${centerY}) scale(${radiusX / radiusY} 1) translate(${-centerX} ${-centerY})`}
                 >
                     <path className="homepage-hero-globe-land fill-none stroke-current" d={landPath} />
                 </g>

@@ -127,9 +127,6 @@ export default function People({
             renderCell: (invitation) => formatDate(invitation.created_at),
         },
     ];
-    const peopleError = error ? t('errors.loadPeople') : null;
-    const invitationsError = error ? t('errors.loadInvitations') : null;
-
     return (
         <>
             {activeSection === 'members' ? (
@@ -139,8 +136,8 @@ export default function People({
                         <Text type="supporting">{t('people.membersDescription')}</Text>
                     </VStack>
                     <Divider />
-                    {isLoading && members.length === 0 ? null : peopleError && members.length === 0 ? (
-                        <Banner status="error" title={peopleError} />
+                    {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
+                        <Banner status="error" title={t('errors.loadPeople')} />
                     ) : (
                         <Table
                             columns={memberColumns}
@@ -170,8 +167,8 @@ export default function People({
                         />
                     </HStack>
                     <Divider />
-                    {isLoading && invitations.length === 0 ? null : invitationsError && invitations.length === 0 ? (
-                        <Banner status="error" title={invitationsError} />
+                    {isLoading && invitations.length === 0 ? null : error && invitations.length === 0 ? (
+                        <Banner status="error" title={t('errors.loadInvitations')} />
                     ) : (
                         <Table
                             columns={invitationColumns}

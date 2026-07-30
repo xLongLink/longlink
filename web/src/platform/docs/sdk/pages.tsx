@@ -111,12 +111,6 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
         .map(({ name, summary: description }) => ({ name, description })),
 }));
 
-const previewRows: Array<Record<string, string>> = [{ item: 'Order', status: 'Open' }];
-const previewColumns = [
-    { key: 'item', header: 'Item' },
-    { key: 'status', header: 'Status' },
-];
-
 export const metadata = {
     toc: componentCategories.map((category) => ({ id: category.id, label: category.title })),
     lastUpdated: '2026-07-21',
@@ -386,7 +380,14 @@ function renderComponentPreview(name: string) {
         case 'Table':
             return (
                 <Stack width={170}>
-                    <AstryxTable columns={previewColumns} data={previewRows} density="compact" />
+                    <AstryxTable
+                        columns={[
+                            { key: 'item', header: 'Item' },
+                            { key: 'status', header: 'Status' },
+                        ]}
+                        data={[{ item: 'Order', status: 'Open' }]}
+                        density="compact"
+                    />
                 </Stack>
             );
         case 'TableColumn':

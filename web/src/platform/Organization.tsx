@@ -24,6 +24,7 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
         isLoading,
         error,
     } = useOrganization(organization);
+    const isSettings = settingsSection !== undefined;
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -41,24 +42,13 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
                     <Heading level={1}>
-                        {settingsSection === undefined
-                            ? t('organization.applicationsTitle')
-                            : t('organization.settingsTitle')}
+                        {isSettings ? t('organization.settingsTitle') : t('organization.applicationsTitle')}
                     </Heading>
                     <Text as="p" color="secondary">
-                        {settingsSection === undefined
-                            ? t('organization.applicationsDescription')
-                            : t('organization.settingsDescription')}
+                        {isSettings ? t('organization.settingsDescription') : t('organization.applicationsDescription')}
                     </Text>
                 </Stack>
-                {settingsSection === undefined ? (
-                    <Applications
-                        organization={organization}
-                        applications={applications}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : (
+                {isSettings ? (
                     <OrganizationSettings
                         organization={organization}
                         organizationDetails={organizationDetails}
@@ -67,6 +57,13 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
                         invitations={invitations}
                         organizationRole={organizationRole}
                         routeSection={settingsSection}
+                        isLoading={isLoading}
+                        error={error}
+                    />
+                ) : (
+                    <Applications
+                        organization={organization}
+                        applications={applications}
                         isLoading={isLoading}
                         error={error}
                     />

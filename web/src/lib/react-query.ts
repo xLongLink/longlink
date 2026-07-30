@@ -17,10 +17,8 @@ export function createQueryClient(): QueryClient {
 export async function clearSessionQueries(client: QueryClient, preserve: QueryKey[] = []): Promise<void> {
     const preservedHashes = new Set(preserve.map((key) => hashKey(key)));
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === 'api';
-    const isUnpreservedSessionQuery = (query: { queryHash: string; queryKey: readonly unknown[] }) =>
-        isSessionQuery(query) && !preservedHashes.has(query.queryHash);
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });
-    client.removeQueries({ predicate: isUnpreservedSessionQuery });
+    client.removeQueries({ predicate: (query) => isSessionQuery(query) && !preservedHashes.has(query.queryHash) });
 }

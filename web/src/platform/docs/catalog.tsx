@@ -65,21 +65,14 @@ function docPage(
     { children, hiddenPages, ...page }: DocPageOptions,
     parentBreadcrumbs = docBreadcrumbsByGroup[group]
 ): DocNavigationPage {
-    const parentBreadcrumb = parentBreadcrumbs.at(-1);
-
     // Section overview pages use the parent breadcrumb; descendants append themselves.
     const breadcrumbs =
-        parentBreadcrumb?.path === page.path
+        parentBreadcrumbs.at(-1)?.path === page.path
             ? parentBreadcrumbs
             : [...parentBreadcrumbs, { title: page.title, path: page.path }];
     const articlePage = { ...page, breadcrumbs };
     const childPages = children?.map((child) => docPage(group, child, breadcrumbs)) ?? [];
     const resolvedHiddenPages = hiddenPages?.map((hiddenPage) => ({ ...hiddenPage, breadcrumbs })) ?? [];
-
-    // Return leaf pages without nested navigation.
-    if (!childPages.length && !resolvedHiddenPages.length) {
-        return articlePage;
-    }
 
     return {
         ...articlePage,
@@ -102,17 +95,7 @@ function flattenDocPages(items: DocNavigationPage[]): ArticlePage[] {
 
     // Visit every page in the navigation tree.
     for (const item of items) {
-        pages.push(item);
-
-        // Recurse into nested pages.
-        if (item.children?.length) {
-            pages.push(...flattenDocPages(item.children));
-        }
-
-        // Include hidden pages without rendering them in sidebar navigation.
-        if (item.hiddenPages?.length) {
-            pages.push(...item.hiddenPages);
-        }
+        pages.push(item, ...flattenDocPages(item.children ?? []), ...(item.hiddenPages ?? []));
     }
 
     return pages;
@@ -120,18 +103,12 @@ function flattenDocPages(items: DocNavigationPage[]): ArticlePage[] {
 
 /** Converts a docs page into a sidebar navigation item. */
 function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
-    const item: ArticleNavigationItem = {
+    return {
         title: page.title,
         path: page.path,
         icon: page.icon,
+        ...(page.children?.length ? { children: page.children.map(navigationItem) } : {}),
     };
-
-    // Preserve nested pages in sidebar items.
-    if (page.children?.length) {
-        item.children = page.children.map(navigationItem);
-    }
-
-    return item;
 }
 
 const DOC_SECTIONS: DocSection[] = [

@@ -18,11 +18,9 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
     const { parse, ...queryOptions } = options;
     const queryClient = useQueryClient();
 
-    const enabled = path !== null && (queryOptions.enabled ?? true);
-
     return useQuery<TQueryFnData, Error, TData, Array<string>>({
         ...queryOptions,
-        enabled,
+        enabled: path !== null && (queryOptions.enabled ?? true),
         queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
         queryFn: async ({ signal }) => {
             // Normalize known API errors before React Query stores them.
@@ -31,10 +29,8 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
-                    const profileKey = userProfileQueryKey;
-
-                    await clearSessionQueries(queryClient, [profileKey]);
-                    queryClient.setQueryData(profileKey, null);
+                    await clearSessionQueries(queryClient, [userProfileQueryKey]);
+                    queryClient.setQueryData(userProfileQueryKey, null);
                 }
 
                 throw error;

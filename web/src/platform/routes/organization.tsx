@@ -13,11 +13,9 @@ const sections: Record<string, SettingsRouteSection> = {
 
 /** Protects an organization route and selects its settings section from the matched route. */
 export default function OrganizationRoute() {
-    const routeId = useMatches().at(-1)?.id ?? '';
-
     return (
         <Auth>
-            <Organization settingsSection={sections[routeId]} />
+            <Organization settingsSection={sections[useMatches().at(-1)?.id ?? '']} />
         </Auth>
     );
 }

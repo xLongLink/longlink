@@ -7,7 +7,6 @@ DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
 SDK_PYTEST_MARK ?=
 
-
 # Install all API, SDK, and web dependencies.
 install: api\:install sdk\:install web\:install
 
@@ -222,20 +221,12 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Start local services, build or pull the configured Application image, then run migrations and seed data.
-seed: local\:resources
+# Seed the configured Kubernetes compute without preparing local infrastructure.
+seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	@image="$(APPLICATION_IMAGE)"; \
-		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
-		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then \
-			if docker image inspect "$$image" >/dev/null 2>&1; then docker push "$$image"; else $(MAKE) local:image; fi; \
-		else \
-			docker pull "$$image"; \
-		fi && \
-		printf '%s\n' "$$image" > api/.seed-image && \
-		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
+	cd api && DEVELOPMENT=true uv run --locked python seed.py
 
 
 # Run the Vite web app.

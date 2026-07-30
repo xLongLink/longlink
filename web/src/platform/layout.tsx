@@ -46,14 +46,13 @@ export default function PlatformLayout({
             value: normalizePathname(targetUrl.pathname),
         };
     });
-    const activeTabPathname = tabEntries
-        .filter(
-            (tab) => tab.value === normalizedCurrentPathname || normalizedCurrentPathname.startsWith(`${tab.value}/`)
-        )
-        .reduce<string | undefined>(
-            (best, tab) => (best === undefined || tab.value.length > best.length ? tab.value : best),
-            undefined
-        );
+    const activeTabPathname = tabEntries.reduce<string | undefined>((best, tab) => {
+        if (tab.value !== normalizedCurrentPathname && !normalizedCurrentPathname.startsWith(`${tab.value}/`)) {
+            return best;
+        }
+
+        return best === undefined || tab.value.length > best.length ? tab.value : best;
+    }, undefined);
     const { user } = useUserProfile();
 
     return (

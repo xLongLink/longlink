@@ -534,17 +534,13 @@ def main() -> None:
     # Cleanup removes remote resources before make deletes their local inventory.
     parser = argparse.ArgumentParser()
     parser.add_argument("--cleanup", action="store_true")
-    parser.add_argument("--print-image", action="store_true")
     arguments = parser.parse_args()
     if arguments.cleanup:
         asyncio.run(cleanup_local_development())
         return
 
-    # Let Make pull the same configured image that the seed process will deploy.
+    # Load the configured development resources before seeding them.
     settings = SeedSettings()
-    if arguments.print_image:
-        print(settings.APPLICATION_IMAGE)
-        return
     asyncio.run(seed_local_development(settings))
 
 
