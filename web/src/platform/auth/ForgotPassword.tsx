@@ -35,19 +35,13 @@ export default function ForgotPassword() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             }),
-    });
-
-    /** Requests password reset instructions and reports transient failures. */
-    async function handleRequestReset(payload: ForgotPasswordValues) {
-        try {
-            await requestReset.mutateAsync(payload);
-        } catch (error) {
+        onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : t('appView.retryLater'),
                 type: 'error',
             });
-        }
-    }
+        },
+    });
 
     return (
         <AuthPage title={t('auth.forgotPasswordTitle')} description={t('auth.forgotPasswordDescription')}>
@@ -57,7 +51,7 @@ export default function ForgotPassword() {
                     <Button href="/organizations" label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleRequestReset)}>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit((values) => requestReset.mutate(values))}>
                     <Controller
                         control={form.control}
                         name="email"

@@ -9,7 +9,6 @@ from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -33,9 +32,9 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
 
 
 async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
-    """Register one compute target and queue its initial reconciliation."""
+    """Register one compute target."""
 
-    # Persist the target and its outbox row atomically.
+    # Persist the target without coupling registry management to lifecycle scheduling.
     async with session_scope() as session:
         registry = ComputeRegistry(
             name=name,
@@ -46,7 +45,6 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
 
         # Translate unique registry names to one stable API conflict.
         try:
-            await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc

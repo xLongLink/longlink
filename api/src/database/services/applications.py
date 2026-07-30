@@ -12,7 +12,6 @@ from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -89,16 +88,15 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
-    delay_seconds: float = 30,
-) -> tuple[Application, Operation]:
-    """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
+) -> Application:
+    """Create an Organization-owned LongLink Application."""
 
     # Validate direct service callers while preserving already-validated API values.
     image = Image(image)
     if "@" not in image:
         raise ValueError("Application image must be pinned to its resolved digest")
 
-    # Create the application and lifecycle operation transactionally.
+    # Create the Application after validating its Organization lifecycle state.
     async with session_scope() as session:
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
@@ -137,17 +135,8 @@ async def create(
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Application slug already exists") from exc
 
-        # Queue the delayed deployment lifecycle after the application identifier exists.
-        operation = await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.application_create,
-            target_id=application.id,
-            delay_seconds=delay_seconds,
-        )
         await session.commit()
-        return application, operation
+        return application
 
 
 async def set_status(application_id: UUID, expected_status: Status, status: Status) -> bool:

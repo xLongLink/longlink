@@ -164,6 +164,28 @@ async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compu
         return operation
 
 
+async def create(
+    compute_id: UUID,
+    *,
+    kind: OperationKind = OperationKind.compute_reconcile,
+    target_id: UUID | None = None,
+    delay_seconds: float = 0,
+) -> Operation:
+    """Create one registered Platform operation in a dedicated transaction."""
+
+    # Keep API request orchestration outside resource persistence services.
+    async with session_scope() as session:
+        operation = await enqueue_in_session(
+            session,
+            compute_id,
+            kind=kind,
+            target_id=target_id,
+            delay_seconds=delay_seconds,
+        )
+        await session.commit()
+        return operation
+
+
 async def schedule_now(operation_id: UUID) -> bool:
     """Make one open delayed Operation immediately eligible for claiming."""
 

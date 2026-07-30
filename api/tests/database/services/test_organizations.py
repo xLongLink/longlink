@@ -277,7 +277,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner)
     await mark_organization_running(organization)
-    application, _ = await applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         "dashboard",
@@ -330,7 +330,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
     assert {item.kind for item in open_operations} == {
-        OperationKind.application_create,
         OperationKind.organization_create,
         OperationKind.organization_delete,
     }

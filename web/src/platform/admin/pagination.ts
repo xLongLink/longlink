@@ -7,7 +7,7 @@ const PAGE_SIZE = 25;
 /** Provides consistent client-side pagination for Platform admin tables. */
 export function useAdminPagination<T extends Record<string, unknown>>(
     items: T[],
-    { controls = 'compact' }: { controls?: 'compact' | 'default' } = {}
+    controls: 'compact' | 'default' = 'compact'
 ) {
     const t = useTranslator();
     const [page, setPage] = useState(1);

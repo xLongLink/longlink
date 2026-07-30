@@ -1,4 +1,4 @@
-.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api\:quality api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 APPLICATION_IMAGE ?=
 LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
@@ -33,6 +33,12 @@ format: api\:format sdk\:format web\:format
 # Format API imports.
 api\:format: api\:install
 	cd api && uv run --locked isort .
+
+
+# Verify API linting and import formatting without modifying source files.
+api\:quality: api\:install
+	cd api && uv run --locked ruff check .
+	cd api && uv run --locked isort --check-only .
 
 
 # Format SDK imports.
@@ -206,7 +212,7 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-# Run the local LongLink Platform API server after `make seed`.
+# Run the local LongLink Platform API server before `make seed`.
 api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release

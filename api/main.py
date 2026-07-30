@@ -8,9 +8,9 @@ from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from collections.abc import AsyncGenerator
 from src.environments import env
-from src.database.services import users as user_service
 from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
+from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
 
 

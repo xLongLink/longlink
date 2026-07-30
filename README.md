@@ -65,8 +65,8 @@ longlink dev
 Work on the LongLink Platform:
 
 ```bash
-make seed
 make api    # In one terminal
+make seed   # In another terminal after the API starts
 make web    # In another terminal
 ```
 

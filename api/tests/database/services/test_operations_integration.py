@@ -29,7 +29,6 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
             await connection.run_sync(SQLModel.metadata.create_all)
 
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
-        monkeypatch.setattr(database_session, "_engine", engine)
         monkeypatch.setattr(database_session, "Session", session_factory)
 
         # Create independent compute targets without invoking registry service queue side effects.

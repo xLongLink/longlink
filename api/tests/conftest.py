@@ -21,13 +21,29 @@ os.environ["DEVELOPMENT"] = "true"
 
 from main import app
 from sqlmodel import SQLModel
-from src.utils import token
+from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User, AccessToken
 
 TEST_PASSWORD = "longlink-test-password"
+
+
+@pytest.fixture
+def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
+    """Capture outbound email without sending it through SMTP."""
+
+    # Replace the mail transport at its external-system boundary.
+    messages: list[tuple[str, str, str, str | None]] = []
+
+    async def capture(recipient: str, subject: str, text: str, html: str | None = None) -> None:
+        """Record one attempted email delivery."""
+
+        messages.append((recipient, subject, text, html))
+
+    monkeypatch.setattr(mail, "send_mail", capture)
+    return messages
 
 
 @pytest_asyncio.fixture(autouse=True)

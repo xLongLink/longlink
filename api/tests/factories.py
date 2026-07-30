@@ -7,6 +7,7 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -64,9 +65,15 @@ async def create_organization(owner: User, name: str = "acme", slug: str = "acme
     """Create one Organization through automatic infrastructure assignment."""
 
     # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import organizations
+    from src.database.services import operations, organizations
 
-    return await organizations.create(name, slug, owner, avatar=avatar)
+    organization = await organizations.create(name, slug, owner, avatar=avatar)
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.organization_create,
+        target_id=organization.id,
+    )
+    return organization
 
 
 async def mark_organization_running(organization: Organization) -> None:
@@ -91,13 +98,13 @@ async def create_application(
     """Create one Application after making its Organization ready."""
 
     # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import applications
+    from src.database.services import operations, applications
 
     # Application creation requires the parent Organization to be running.
     await mark_organization_running(organization)
     parsed_image = Image(image)
     resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@{digest}"
-    application, _ = await applications.create(
+    application = await applications.create(
         organization.id,
         name,
         slug=slug,
@@ -105,5 +112,11 @@ async def create_application(
         description=description,
         icon=icon,
         user=owner,
+    )
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+        delay_seconds=30,
     )
     return application

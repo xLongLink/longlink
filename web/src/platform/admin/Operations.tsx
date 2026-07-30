@@ -86,7 +86,7 @@ export default function AdminOperations() {
         refetchInterval: 5000,
         parse: (value) => apiOperationSchema.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(operations, { controls: 'default' });
+    const { pageItems, pagination } = useAdminPagination(operations, 'default');
 
     return (
         <VStack gap={6} width="100%">

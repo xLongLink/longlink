@@ -5,8 +5,9 @@ from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import Status
-from src.database.services import compute, operations, applications
+from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationEnvironment
 from src.database.models.users import User
 
@@ -38,11 +39,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     logger.info("Creating application desired state %s/%s", organization.slug, application_slug)
 
-    # Resolve the assigned cluster before committing Application state that requires Secret staging.
-    registry = await compute.get(organization.compute_id)
-    if registry is None:
-        raise HTTPException(status_code=503, detail="No compute cluster configured")
-
     # Resolve immutable image metadata before creating durable Application state.
     metadata = await images.metadata(payload.image)
     if metadata is None or metadata.digest is None:
@@ -56,7 +52,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    application, operation = await applications.create(
+    application = await applications.create(
         organization.id,
         payload.name,
         application_slug,
@@ -67,6 +63,15 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         icon=payload.icon,
         user=user,
     )
+    operation = await operations.create(
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+        delay_seconds=30,
+    )
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
+        raise RuntimeError("Application Organization compute registry is missing")
 
     # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
     try:
@@ -93,7 +98,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     """Return recent pod logs for one managed application."""
 
     # Load application access before exposing logs.
-    access = roles.access(user, application_id, "application")
+    access = await organizations.application_access(user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -123,7 +128,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
     """Replace user-owned environment values and roll one running Application."""
 
     # Load Application access before changing its runtime configuration.
-    access = roles.access(user, application_id, "application")
+    access = await organizations.application_access(user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -168,7 +173,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
             raise HTTPException(status_code=403, detail="Access required")
         access = None
     else:
-        access = roles.access(user, application_id, "application")
+        access = await organizations.application_access(user.id, application_id)
         if access is None:
             raise HTTPException(status_code=403, detail="Access required")
 

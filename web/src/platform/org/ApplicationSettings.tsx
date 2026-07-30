@@ -112,12 +112,7 @@ export default function ApplicationSettings({
                 <Logs
                     applicationId={logsTarget.id}
                     applicationName={logsTarget.name}
-                    onOpenChange={(open) => {
-                        // Clear the selected log target when closing.
-                        if (!open) {
-                            setLogsTarget(null);
-                        }
-                    }}
+                    onOpenChange={(open) => !open && setLogsTarget(null)}
                 />
             ) : null}
 

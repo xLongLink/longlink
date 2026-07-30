@@ -3,33 +3,22 @@ from main import app
 from httpx2 import AsyncClient, ASGITransport
 from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
-from src.utils import mail as mail_module
 from urllib.parse import parse_qs, urlparse
 from src.database.session import get_session
 from src.database.models.users import User, AccessToken
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
-    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, users: tuple[User, User, User], captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
     """Return accepted without sending registration mail for an existing account."""
-
-    # Arrange
-    messages: list[tuple[str, str, str, str | None]] = []
-
-    async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
-        """Capture unexpected authentication email delivery."""
-
-        messages.append((recipient, subject, text, html))
-
-    monkeypatch.setattr(mail_module, "send_mail", capture_mail)
 
     # Act
     response = await client.post("/api/auth/register", json={"email": users[0].email})
 
     # Assert
     assert response.status_code == 202
-    assert messages == []
+    assert captured_mail == []
 
 
 @pytest.mark.no_db
@@ -45,7 +34,7 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     assert client.cookies.get("longlink_auth") is None
 
 
-async def test_register_verify_and_password_login(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_register_verify_and_password_login(client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]]) -> None:
     """Create an authenticated account only after email and profile completion."""
 
     # Arrange
@@ -58,15 +47,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
         "password": TEST_PASSWORD,
     }
     login_payload = {"email": email, "password": TEST_PASSWORD}
-    messages: list[tuple[str, str, str, str | None]] = []
-
-    async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
-        """Capture an authentication email without using SMTP."""
-
-        messages.append((recipient, subject, text, html))
-
-    monkeypatch.setattr(mail_module, "send_mail", capture_mail)
-
     # Request a stateless email link without creating a pending user.
     register_response = await client.post("/api/auth/register", json=registration_payload)
     Session = await get_session()
@@ -75,25 +55,27 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
 
     assert register_response.status_code == 202
     assert pending_user is None
-    assert messages[0][:2] == (email, "Welcome to LongLink")
+    assert captured_mail[0][:2] == (email, "Welcome to LongLink")
     verification_url = next(
-        line.removeprefix("Continue account setup: ") for line in messages[0][2].splitlines() if line.startswith("Continue account setup: ")
+        line.removeprefix("Continue account setup: ")
+        for line in captured_mail[0][2].splitlines()
+        if line.startswith("Continue account setup: ")
     )
     verification_token = parse_qs(urlparse(verification_url).fragment)["token"][0]
     assert verification_token
-    assert messages[0][3] is not None
-    assert verification_token in messages[0][3]
-    assert "/auth/verify-email#token=" in messages[0][3]
-    assert "email=" not in messages[0][3]
-    assert "code=" not in messages[0][3]
-    assert "Continue account setup" in messages[0][3]
-    assert "Welcome to" in messages[0][3]
-    assert "continue account setup" in messages[0][3]
-    assert "If you did not sign up for LongLink" in messages[0][3]
-    assert "expires in" not in messages[0][3]
-    assert "https://github.com/xLongLink/longlink" in messages[0][3]
-    assert "https://www.linkedin.com/company/longlink" in messages[0][3]
-    assert "mailto:info@longlink.dev" in messages[0][3]
+    assert captured_mail[0][3] is not None
+    assert verification_token in captured_mail[0][3]
+    assert "/auth/verify-email#token=" in captured_mail[0][3]
+    assert "email=" not in captured_mail[0][3]
+    assert "code=" not in captured_mail[0][3]
+    assert "Continue account setup" in captured_mail[0][3]
+    assert "Welcome to" in captured_mail[0][3]
+    assert "continue account setup" in captured_mail[0][3]
+    assert "If you did not sign up for LongLink" in captured_mail[0][3]
+    assert "expires in" not in captured_mail[0][3]
+    assert "https://github.com/xLongLink/longlink" in captured_mail[0][3]
+    assert "https://www.linkedin.com/company/longlink" in captured_mail[0][3]
+    assert "mailto:info@longlink.dev" in captured_mail[0][3]
 
     # Verify email ownership without creating a user or browser session.
     verify_response = await client.post("/api/auth/verify", json={"token": verification_token})
@@ -153,18 +135,10 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
 
 
 async def test_forgot_and_reset_password(
-    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, users: tuple[User, User, User], captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
     """Reset a local password with the emailed one-time recovery token."""
 
-    messages: list[tuple[str, str, str, str | None]] = []
-
-    async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
-        """Capture an authentication email without using SMTP."""
-
-        messages.append((recipient, subject, text, html))
-
-    monkeypatch.setattr(mail_module, "send_mail", capture_mail)
     user, _, _ = users
     client.cookies.update(authenticated_cookies(user.id))
 
@@ -177,8 +151,8 @@ async def test_forgot_and_reset_password(
 
     assert missing_response.status_code == 202
     assert forgot_response.status_code == 202
-    assert messages[0][:2] == (user.email, "Reset your LongLink password")
-    reset_url = next(line for line in messages[0][2].splitlines() if line.startswith("http"))
+    assert captured_mail[0][:2] == (user.email, "Reset your LongLink password")
+    reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
     parsed_reset_url = urlparse(reset_url)
     assert parse_qs(parsed_reset_url.query) == {}
 

@@ -59,7 +59,7 @@ export default function ResetPassword() {
             fetchApiVoid('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: payload.password }),
+                body: JSON.stringify(payload),
             }),
     });
     const hasTokenError =

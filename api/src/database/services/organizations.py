@@ -33,6 +33,15 @@ class Infrastructure:
     storage: StorageRegistry
 
 
+@dataclass(frozen=True, slots=True)
+class ApplicationAccess:
+    """Hold a user's active Organization-derived access to one Application."""
+
+    application: Application
+    organization: Organization
+    role: OrganizationRoles
+
+
 async def infrastructure(organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
@@ -50,6 +59,33 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
             return None
         organization, compute, database, storage = row
         return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
+
+
+async def application_access(user_id: UUID, application_id: UUID) -> ApplicationAccess | None:
+    """Return a user's active Organization-derived access to one Application."""
+
+    # Resolve only the requested Application and active Organization membership.
+    async with session_scope() as session:
+        statement = (
+            select(Application, Organization, UserOrganization.role)
+            .join(Organization, Organization.id == Application.organization_id)
+            .join(
+                UserOrganization,
+                UserOrganization.organization_id == Organization.id,
+            )
+            .where(
+                Application.id == application_id,
+                Application.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+                UserOrganization.user_id == user_id,
+                UserOrganization.deleted_at.is_(None),
+            )
+        )
+        row = (await session.execute(statement)).one_or_none()
+        if row is None:
+            return None
+        application, organization, role = row
+        return ApplicationAccess(application=application, organization=organization, role=role)
 
 
 async def fetch() -> Sequence[Organization]:
@@ -207,6 +243,10 @@ async def update_member_role(
         if membership.role == OrganizationRoles.owner and not can_manage_owner_role:
             raise HTTPException(status_code=403, detail="Owner management permissions required")
 
+        # Repeated role assignments do not require persistence or reconciliation.
+        if membership.role == role:
+            return True
+
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
             # Reject demotion when this is the only owner.
@@ -245,7 +285,7 @@ async def update_member_role(
 
 
 async def create(name: str, slug: str, user: User, avatar: str | None = None) -> Organization:
-    """Create an Organization with automatically assigned infrastructure and queue reconciliation."""
+    """Create an Organization with automatically assigned infrastructure."""
 
     # Validate the user-derived runtime namespace before creating the row.
     organization_id = uuid4()
@@ -298,15 +338,8 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
         )
         session.add(organization)
 
-        # Queue reconciliation and translate unique conflicts from autoflush or commit.
+        # Translate unique conflicts from autoflush or commit.
         try:
-            await operations.enqueue_in_session(
-                session,
-                compute.id,
-                locked_compute=compute,
-                kind=OperationKind.organization_create,
-                target_id=organization.id,
-            )
             await session.commit()
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
@@ -328,6 +361,8 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
         ).one_or_none()
         if organization is None:
             return None
+        if organization.avatar == avatar:
+            return organization
         organization.avatar = avatar
         organization.updated_at = utcnow()
         organization.updated_id = user.id

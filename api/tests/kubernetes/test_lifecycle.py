@@ -9,10 +9,10 @@ from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from dataclasses import dataclass
 from collections.abc import Iterator
+from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
-from src.models.computes import kubeconfig_mapping
 
 pytestmark = [pytest.mark.no_db, pytest.mark.integration]
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"

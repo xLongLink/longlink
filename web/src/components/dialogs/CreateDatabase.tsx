@@ -16,26 +16,19 @@ import { z } from 'zod';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
+import { apiDatabaseRegistrySchema, DATABASE_SSL_MODES } from '@/lib/api-schemas';
 import { databasesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),
     host: z.string().trim().min(1),
     port: z.number().int().min(1).max(65535),
-    sslmode: z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']),
+    sslmode: z.enum(DATABASE_SSL_MODES),
     username: z.string().trim().min(1),
     password: z.string().min(1),
 });
 
-const SSL_MODE_OPTIONS = [
-    { value: 'disable', label: 'disable' },
-    { value: 'allow', label: 'allow' },
-    { value: 'prefer', label: 'prefer' },
-    { value: 'require', label: 'require' },
-    { value: 'verify-ca', label: 'verify-ca' },
-    { value: 'verify-full', label: 'verify-full' },
-];
+const SSL_MODE_OPTIONS = DATABASE_SSL_MODES.map((value) => ({ value, label: value }));
 
 type Values = z.infer<typeof schema>;
 

@@ -132,11 +132,11 @@ class Applications:
 
         # Recheck only Kubernetes state while resources and Pods terminate.
         while await self._resources.read(Namespace, namespace) is not None:
-            resources: tuple[APIObject | None, ...] = (
-                await self._resources.read(Deployment, str(application_id), namespace),
-                await self._resources.read(Service, application_service_name(application_id), namespace),
-                await self._resources.read(Secret, application_environment_secret_name(application_id), namespace),
-                await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace),
+            resources: tuple[APIObject | None, ...] = await asyncio.gather(
+                self._resources.read(Deployment, str(application_id), namespace),
+                self._resources.read(Service, application_service_name(application_id), namespace),
+                self._resources.read(Secret, application_environment_secret_name(application_id), namespace),
+                self._resources.read(Secret, application_runtime_secret_name(application_id), namespace),
             )
             for resource in resources:
                 if resource is not None and resource.metadata.get("deletionTimestamp") is None:

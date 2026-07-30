@@ -67,9 +67,11 @@ function ElementReference({ element }: { element: ElementDoc }) {
     );
 }
 
-/** Builds table-of-contents metadata for one element page. */
-function elementMetadata(element: ElementDoc) {
-    return {
+export const pageElementDocPages = pageReferenceDocs.map((element) => ({
+    ...pageElementPage(element),
+    icon: <FileCode2 aria-hidden="true" size={16} />,
+    content: <ElementReference element={element} />,
+    metadata: {
         toc: [
             { id: 'definition', label: 'Definition' },
             { id: 'usage', label: 'Usage' },
@@ -79,14 +81,7 @@ function elementMetadata(element: ElementDoc) {
         ],
         lastUpdated: '2026-07-21',
         editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts',
-    };
-}
-
-export const pageElementDocPages = pageReferenceDocs.map((element) => ({
-    ...pageElementPage(element),
-    icon: <FileCode2 aria-hidden="true" size={16} />,
-    content: <ElementReference element={element} />,
-    metadata: elementMetadata(element),
+    },
 }));
 
 export const pageElementHrefByName = Object.fromEntries(pageElementDocPages.map(({ title, path }) => [title, path]));

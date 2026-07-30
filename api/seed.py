@@ -21,13 +21,13 @@ from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import users as user_service
 from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
-from src.database.services import users as user_service
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
@@ -185,7 +185,6 @@ async def reconcile_local_application(
             application.icon = payload.icon
             application.image = metadata.image
             application.sdk = metadata.sdk
-            application.digest = metadata.digest
             application.version = metadata.version
             application.description = payload.description
             application.status = Status.creating
@@ -316,10 +315,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
         compute_registry = await compute_service.create(
             "development compute", compute.kubeconfig
         )
-        operation = await operations.enqueue(compute_registry.id)
+        operation = await operations.create(compute_registry.id)
         await reconcile_until_complete(operation.id)
     elif compute_registry.status != Status.running:
-        operation = await operations.enqueue(compute_registry.id)
+        operation = await operations.create(compute_registry.id)
         await reconcile_until_complete(operation.id)
 
     # Register the development database and storage backends independently.
@@ -353,7 +352,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         organization = await organization_service.create(
             settings.LOCAL_ORG, settings.LOCAL_ORG, admin, avatar=settings.LOCAL_ORG_AVATAR
         )
-        operation = await operations.enqueue(
+        operation = await operations.create(
             compute_registry.id,
             kind=OperationKind.organization_create,
             target_id=organization.id,
@@ -362,7 +361,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     else:
         owner_changed = await ensure_local_organization_owner(organization.id, admin.id)
         if owner_changed:
-            operation = await operations.enqueue(
+            operation = await operations.create(
                 compute_registry.id,
                 kind=OperationKind.organization_create,
                 target_id=organization.id,
@@ -372,7 +371,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Create or resume the sample Application through the API desired-state service.
     application = next((item for item in await organization_service.applications(organization.id) if item.slug == application_slug), None)
     if application is None:
-        application, operation = await application_service.create(
+        application = await application_service.create(
             organization.id,
             payload.name,
             application_slug,
@@ -382,6 +381,11 @@ async def seed_local_development(settings: SeedSettings) -> None:
             version=metadata.version,
             description=payload.description,
             icon=payload.icon,
+        )
+        operation = await operations.create(
+            compute_registry.id,
+            kind=OperationKind.application_create,
+            target_id=application.id,
             delay_seconds=SEED_OPERATION_DELAY_SECONDS,
         )
     else:

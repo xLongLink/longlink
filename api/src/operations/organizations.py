@@ -55,14 +55,8 @@ async def reconcile(claimed: Operation) -> str | None:
 
     # Resolve the Organization's immutable provider and compute assignments.
     database_registry = infrastructure.database
-    if database_registry is None:
-        return "Database registry not found"
     storage_registry = infrastructure.storage
-    if storage_registry is None:
-        return "Storage registry not found"
     compute_registry = infrastructure.compute
-    if compute_registry is None:
-        return "Compute registry not found"
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     db = adapters.Postgres(
@@ -107,12 +101,8 @@ async def delete(claimed: Operation) -> str | None:
     if organization.deleted_at is None:
         return "Active Organizations cannot be deleted by lifecycle cleanup"
     compute_registry = infrastructure.compute
-    if compute_registry is None:
-        return "Compute registry not found"
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
-    if database_registry is None or storage_registry is None:
-        return "Organization provider registry not found"
     cluster = Kubernetes(compute_registry.kubeconfig)
 
     # Remove every Organization route before terminating any child Application Service.

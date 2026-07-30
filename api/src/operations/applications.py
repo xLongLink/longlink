@@ -27,8 +27,6 @@ async def create(claimed: Operation) -> str | None:
         return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
-    if registry is None:
-        return "Compute registry not found"
 
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -36,11 +34,7 @@ async def create(claimed: Operation) -> str | None:
     if application.status == Status.creating:
         # Resolve the Application's immutable provider assignments.
         database_registry = infrastructure.database
-        if database_registry is None:
-            return "Database registry not found"
         storage_registry = infrastructure.storage
-        if storage_registry is None:
-            return "Storage registry not found"
         db = adapters.Postgres(
             database_registry.host,
             database_registry.port,
@@ -148,12 +142,8 @@ async def delete(claimed: Operation) -> str | None:
         return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
-    if registry is None:
-        return "Compute registry not found"
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
-    if database_registry is None or storage_registry is None:
-        return "Application provider registry not found"
     cluster = Kubernetes(registry.kubeconfig)
 
     # Remove the gateway route and await rollout before terminating the backend Service and Pods.

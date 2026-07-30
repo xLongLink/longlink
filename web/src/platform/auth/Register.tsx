@@ -40,22 +40,18 @@ export default function Register() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             }),
-    });
-
-    /** Requests an email link without creating a pending account. */
-    async function handleRegister(payload: RegisterValues) {
-        try {
-            await registration.mutateAsync(payload);
+        onSuccess: () => {
             showToast({ body: t('auth.verificationEmailSent'), type: 'info' });
-        } catch {
+        },
+        onError: () => {
             showToast({ body: t('auth.registrationRequestFailed'), type: 'error' });
-        }
-    }
+        },
+    });
 
     return (
         <AuthPage title={<AuthWelcomeTitle />} description={<Divider label={t('auth.registerDescription')} />}>
             <Stack gap={3}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleRegister)}>
+                <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller
                         control={form.control}
                         name="email"

@@ -80,8 +80,8 @@ Work that is too long for an API request is queued as a durable, typed Operation
 <br />
 
 ```
-make seed
-make api
+make api    # In one terminal
+make seed   # In another terminal after the API starts
 ```
 
 
@@ -91,8 +91,9 @@ Run from `api/`:
 uv sync --extra dev
 uv run alembic upgrade head
 uv run python -m src.release
-uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+# In another terminal:
+DEVELOPMENT=true uv run python seed.py
 ```
 
 

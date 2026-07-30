@@ -36,8 +36,12 @@ async def patch_me(
 ):
     """Update the authenticated user's details."""
 
-    # Apply only non-null profile fields supplied by the caller.
-    updates = payload.model_dump(exclude_unset=True, exclude_none=True)
+    # Apply only supplied values that change the persisted profile.
+    updates = {
+        field: value
+        for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items()
+        if getattr(user, field) != value
+    }
     for field, value in updates.items():
         setattr(user, field, value)
 

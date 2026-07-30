@@ -58,10 +58,14 @@ function IntegrationScale() {
         if (!target) return;
 
         // Show the final value without movement when reduced motion is requested.
-        let frame = 0;
+        let frame: number | undefined;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             frame = requestAnimationFrame(() => setCount(integrationContextCount));
-            return () => cancelAnimationFrame(frame);
+            return () => {
+                if (frame !== undefined) {
+                    cancelAnimationFrame(frame);
+                }
+            };
         }
 
         // Count up once using the design system's slow motion duration.
@@ -91,7 +95,9 @@ function IntegrationScale() {
 
         return () => {
             observer.disconnect();
-            cancelAnimationFrame(frame);
+            if (frame !== undefined) {
+                cancelAnimationFrame(frame);
+            }
         };
     }, []);
 
