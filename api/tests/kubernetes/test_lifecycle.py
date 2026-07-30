@@ -12,6 +12,7 @@ from collections.abc import Iterator
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
+from src.models.computes import kubeconfig_mapping
 
 pytestmark = [pytest.mark.no_db, pytest.mark.integration]
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -126,7 +127,7 @@ def kubernetes_compute() -> Iterator[tuple[Kubernetes, int]]:
     container.start()
 
     try:
-        yield Kubernetes(container.config_yaml()), container.port(K3S_GATEWAY_PORT)
+        yield Kubernetes(kubeconfig_mapping(container.config_yaml())), container.port(K3S_GATEWAY_PORT)
     finally:
         container.stop()
 
