@@ -86,6 +86,8 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
+    *,
+    require_ready: bool = True,
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
@@ -106,9 +108,12 @@ async def create(
         ).one_or_none()
         if compute is None or organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        if compute.status != Status.running:
-            raise HTTPException(status_code=409, detail="Compute registry is not ready")
-        if organization.deleted_at is not None or organization.status != Status.running:
+        if require_ready:
+            if compute.status != Status.running:
+                raise HTTPException(status_code=409, detail="Compute registry is not ready")
+            if organization.deleted_at is not None or organization.status != Status.running:
+                raise HTTPException(status_code=409, detail="Organization is not ready")
+        elif organization.deleted_at is not None:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
         # Build the Application row before checking its Organization-scoped uniqueness.
@@ -182,7 +187,7 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
         return application.status
 
 
-async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
+async def mark_running(application_id: UUID) -> bool:
     """Publish Application readiness."""
 
     # Lock the Application before publishing readiness.

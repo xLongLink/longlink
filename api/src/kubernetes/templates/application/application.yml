@@ -29,9 +29,7 @@ spec:
                       failureThreshold: 3
                   envFrom:
                       - secretRef:
-                             name: $environment_secret_name
-                      - secretRef:
-                             name: $runtime_secret_name
+                            name: $application_id
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:
@@ -48,7 +46,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-    name: $service_name
+    name: app-$application_id
     namespace: $namespace
 spec:
     selector:

@@ -123,7 +123,7 @@ async def create(claimed: Operation) -> str | None:
         return "Application gateway state was not recorded"
 
     # Publish running only after both workload readiness and gateway publication succeed.
-    if not await applications.mark_running(application.id, organization.compute_id):
+    if not await applications.mark_running(application.id):
         return None
     await operations.create(organization.compute_id)
     return None

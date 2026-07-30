@@ -273,7 +273,15 @@ async def update_member_role(
     return True
 
 
-async def create(name: str, slug: str, user: User, avatar: str | None = None) -> Organization:
+async def create(
+    name: str,
+    slug: str,
+    user: User,
+    avatar: str | None = None,
+    *,
+    compute_id: UUID | None = None,
+    require_running_compute: bool = True,
+) -> Organization:
     """Create an Organization with automatically assigned infrastructure."""
 
     # Validate the user-derived runtime namespace before creating the row.
@@ -282,13 +290,18 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Lock the first ready compute reconciliation root.
-        compute_statement = (
-            select(ComputeRegistry).where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1).with_for_update()
-        )
+        # Lock the requested compute or select the first ready compute for interactive creation.
+        compute_statement = select(ComputeRegistry)
+        if compute_id is not None:
+            compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
+        elif require_running_compute:
+            compute_statement = compute_statement.where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1)
+        compute_statement = compute_statement.with_for_update()
         compute = (await session.scalars(compute_statement)).one_or_none()
         if compute is None:
             raise HTTPException(status_code=503, detail="No compute registry available")
+        if require_running_compute and compute.status != Status.running:
+            raise HTTPException(status_code=503, detail="No ready compute registry available")
 
         # Lock the first available database registry.
         database_statement = select(DatabaseRegistry).order_by(DatabaseRegistry.id).limit(1).with_for_update()

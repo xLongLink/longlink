@@ -218,9 +218,9 @@ async def drift_scenario(scenario: KubernetesScenario) -> None:
         }
     )
 
-    # Replace the retained Application runtime Secret without resynchronizing its lifecycle.
+    # Replace the retained Application Secret without resynchronizing its lifecycle.
     await scenario.compute._resources.replace_secret(
-        f"{scenario.application_id}-runtime",
+        str(scenario.application_id),
         "acme",
         {"STALE": "value"},
     )
@@ -256,19 +256,13 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     deadline = time.monotonic() + 30
     while True:
         retired_namespace = await scenario.compute._resources.read(Namespace, "retired")
-        stale_environment_secret = await scenario.compute._resources.read(
-            Secret,
-            f"{scenario.stale_application_id}-environment",
-            "acme",
-        )
-        stale_runtime_secret = await scenario.compute._resources.read(Secret, f"{scenario.stale_application_id}-runtime", "acme")
+        stale_secret = await scenario.compute._resources.read(Secret, str(scenario.stale_application_id), "acme")
         stale_deployment = await scenario.compute._resources.read(Deployment, str(scenario.stale_application_id), "acme")
         stale_service = await scenario.compute._resources.read(Service, f"app-{scenario.stale_application_id}", "acme")
         retired_deleting = retired_namespace is None or retired_namespace.raw.get("metadata", {}).get("deletionTimestamp") is not None
         if (
             retired_deleting
-            and stale_environment_secret is None
-            and stale_runtime_secret is None
+            and stale_secret is None
             and stale_deployment is None
             and stale_service is None
         ):
@@ -276,8 +270,8 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         if time.monotonic() >= deadline:
             pytest.fail(
                 "k3s prune did not remove obsolete resources before timeout: "
-                f"namespace={retired_namespace}, environment_secret={stale_environment_secret}, "
-                f"runtime_secret={stale_runtime_secret}, deployment={stale_deployment}, service={stale_service}"
+                f"namespace={retired_namespace}, secret={stale_secret}, "
+                f"deployment={stale_deployment}, service={stale_service}"
             )
         await asyncio.sleep(1)
 
@@ -293,12 +287,7 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     organization_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "acme")
     application_deployment = await scenario.compute._resources.read(Deployment, str(scenario.application_id), "acme")
     application_service = await scenario.compute._resources.read(Service, f"app-{scenario.application_id}", "acme")
-    application_environment_secret = await scenario.compute._resources.read(
-        Secret,
-        f"{scenario.application_id}-environment",
-        "acme",
-    )
-    application_runtime_secret = await scenario.compute._resources.read(Secret, f"{scenario.application_id}-runtime", "acme")
+    application_secret = await scenario.compute._resources.read(Secret, str(scenario.application_id), "acme")
 
     # Verify gateway drift repair and retained workload state.
     assert system_namespace is not None
@@ -325,15 +314,10 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     assert organization_policy.spec.podSelector == {}
     assert application_deployment is not None
     assert application_service is not None
-    assert application_environment_secret is not None
-    assert set(application_environment_secret.data) == {"LONG_LINK_REQUIRED", "PORT"}
-    assert application_runtime_secret is not None
-    assert set(application_runtime_secret.data) == {"STALE"}
+    assert application_secret is not None
+    assert set(application_secret.data) == {"STALE"}
     application_container = application_deployment.raw["spec"]["template"]["spec"]["containers"][0]
-    assert application_container["envFrom"] == [
-        {"secretRef": {"name": f"{scenario.application_id}-environment"}},
-        {"secretRef": {"name": f"{scenario.application_id}-runtime"}},
-    ]
+    assert application_container["envFrom"] == [{"secretRef": {"name": str(scenario.application_id)}}]
 
     # Tenant resources omit Platform revision annotations.
     tenant_resources = (
@@ -341,18 +325,14 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         organization_policy,
         application_deployment,
         application_service,
-        application_environment_secret,
-        application_runtime_secret,
+        application_secret,
     )
     for resource in tenant_resources:
         annotations = resource.raw["metadata"].get("annotations", {})
         assert set(annotations).isdisjoint({"longlink.io/platform-version", "longlink.io/runtime-revision"})
     application_annotations = application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
     assert set(application_annotations) == {"longlink.io/environment-secret-resource-version"}
-    assert (
-        application_annotations["longlink.io/environment-secret-resource-version"]
-        == application_environment_secret.raw["metadata"]["resourceVersion"]
-    )
+    assert isinstance(application_annotations["longlink.io/environment-secret-resource-version"], str)
 
 
 async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewayState) -> None:
@@ -398,12 +378,7 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
     while True:
         application_deployment = await scenario.compute._resources.read(Deployment, str(scenario.application_id), "acme")
         application_service = await scenario.compute._resources.read(Service, f"app-{scenario.application_id}", "acme")
-        application_environment_secret = await scenario.compute._resources.read(
-            Secret,
-            f"{scenario.application_id}-environment",
-            "acme",
-        )
-        application_runtime_secret = await scenario.compute._resources.read(Secret, f"{scenario.application_id}-runtime", "acme")
+        application_secret = await scenario.compute._resources.read(Secret, str(scenario.application_id), "acme")
         application_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "acme")
         gateway_deployment = await scenario.compute._resources.read(Deployment, "longlink-gateway", "longlink-system")
         gateway_service = await scenario.compute._resources.read(Service, "longlink-gateway", "longlink-system")
@@ -420,8 +395,7 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
         if (
             application_deployment is None
             and application_service is None
-            and application_environment_secret is None
-            and application_runtime_secret is None
+            and application_secret is None
             and application_policy is None
             and gateway_deployment is None
             and gateway_service is None

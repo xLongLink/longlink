@@ -10,8 +10,8 @@ from sqlalchemy.engine import make_url
 from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Namespace, Deployment, NetworkPolicy
 from src.database.session import session_scope
-from src.kubernetes.names import APPLICATION_ID_LABEL
 from src.kubernetes.resources import KubernetesResources
+from src.kubernetes.applications import APPLICATION_ID_LABEL
 
 
 async def cleanup() -> None:

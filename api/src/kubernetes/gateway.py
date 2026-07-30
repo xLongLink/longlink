@@ -11,7 +11,6 @@ from cryptography import x509
 from importlib.resources import files
 from src.models.gateways import APPLICATION_ID_HEADER, GATEWAY_SECRET_HEADER
 from kr8s.asyncio.objects import Service, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.names import application_service_name
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from src.kubernetes.resources import KubernetesDocument, KubernetesResources, deployment_is_ready
 from cryptography.hazmat.primitives import hashes, serialization
@@ -51,7 +50,6 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
     }
     for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
         application_id = str(route.id)
-        service_name = application_service_name(route.id)
         cluster_name = f"{route.namespace}-{application_id}"
         application_id_match: EnvoyDocument = {
             "name": APPLICATION_ID_HEADER,
@@ -83,7 +81,7 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
                                     "endpoint": {
                                         "address": {
                                             "socket_address": {
-                                                "address": f"{service_name}.{route.namespace}.svc",
+                                                "address": f"app-{application_id}.{route.namespace}.svc",
                                                 "port_value": 8000,
                                             }
                                         }
