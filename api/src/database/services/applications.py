@@ -9,9 +9,9 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
+from src.database.services.errors import ConflictError, NotFoundError
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.database.services.errors import ConflictError, NotFoundError
 
 
 async def fetch() -> Sequence[Application]:

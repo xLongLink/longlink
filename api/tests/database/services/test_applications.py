@@ -5,9 +5,9 @@ from src.environments import env
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
-from src.database.services.errors import ConflictError
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
+from src.database.services.errors import ConflictError
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 

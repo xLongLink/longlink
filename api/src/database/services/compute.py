@@ -9,9 +9,9 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
+from src.database.services.errors import ConflictError
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
-from src.database.services.errors import ConflictError
 
 
 async def fetch() -> Sequence[ComputeRegistry]:

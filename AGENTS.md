@@ -92,8 +92,8 @@ longlink/
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - If a constant is used only once, then hardcode the value instead.
-- The code need to be pytonic, where is needed prefer easy to read over efficiency. 
- 
+- The code need to be pytonic, where is needed prefer easy to read over efficiency.
+
 ## JavaScript / TypeScript Guidelines
 
 - Validate inputs at system boundaries.

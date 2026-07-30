@@ -4,9 +4,9 @@ from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
+from src.database.services.errors import ConflictError
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
-from src.database.services.errors import ConflictError
 
 
 async def fetch() -> Sequence[DatabaseRegistry]:

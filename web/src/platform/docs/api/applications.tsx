@@ -55,8 +55,8 @@ export const content = (
             Access
         </Heading>
         <Text as="p">
-            Applications do not have separate roles. Each member's Organization role applies to every Application in that
-            Organization, including runtime requests, logs, creation, and deletion.
+            Applications do not have separate roles. Each member's Organization role applies to every Application in
+            that Organization, including runtime requests, logs, creation, and deletion.
         </Text>
     </Stack>
 );

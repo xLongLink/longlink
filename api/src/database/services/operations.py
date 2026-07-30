@@ -8,9 +8,9 @@ from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.operations import OperationKind
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fetch() -> Sequence[Operation]:
