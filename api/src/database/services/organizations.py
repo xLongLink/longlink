@@ -66,16 +66,17 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        result = await session.execute(
-            sql_update(Organization)
-            .where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-                Organization.status == expected_status,
+        if (
+            await session.execute(
+                sql_update(Organization)
+                .where(
+                    Organization.id == organization_id,
+                    Organization.deleted_at.is_(None),
+                    Organization.status == expected_status,
+                )
+                .values(status=status)
             )
-            .values(status=status)
-        )
-        if result.rowcount != 1:
+        ).rowcount != 1:
             return False
         await session.commit()
         return True

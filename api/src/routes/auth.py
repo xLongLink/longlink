@@ -31,8 +31,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Verify the supplied password before issuing a session.
-    verified = PasswordHash.recommended().verify(payload.password, user.hashed_password)
-    if not verified or user.deleted_at is not None:
+    if not PasswordHash.recommended().verify(payload.password, user.hashed_password) or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Issue the session and accept email-bound Organization access atomically.
@@ -96,10 +95,9 @@ async def request_password_reset(
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
     credential = token.create_password_reset_token(user)
-    recipient = user.email
     background_tasks.add_task(
         mail.send_password_reset_email,
-        recipient,
+        user.email,
         credential,
     )
 

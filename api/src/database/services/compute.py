@@ -64,8 +64,7 @@ async def delete(registry_id: UUID) -> bool:
             return False
 
         # Organizations must retain a valid registered compute assignment.
-        organization_id = await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
-        if organization_id is not None:
+        if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
         # Operations retain historical state and naturally complete if their compute target no longer exists.
@@ -127,8 +126,7 @@ async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certific
             registry.gateway_tls_certificate,
             registry.gateway_tls_private_key,
         )
-        desired = (ca_certificate, certificate, private_key)
-        if current == desired:
+        if current == (ca_certificate, certificate, private_key):
             return True
         if any(value is not None for value in current):
             raise RuntimeError("Compute registry gateway TLS identity is immutable")
@@ -144,15 +142,16 @@ async def set_status(compute_id: UUID, expected_status: Status, status: Status) 
 
     # Guard reconciliation writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        result = await session.execute(
-            update(ComputeRegistry)
-            .where(
-                ComputeRegistry.id == compute_id,
-                ComputeRegistry.status == expected_status,
+        if (
+            await session.execute(
+                update(ComputeRegistry)
+                .where(
+                    ComputeRegistry.id == compute_id,
+                    ComputeRegistry.status == expected_status,
+                )
+                .values(status=status)
             )
-            .values(status=status)
-        )
-        if result.rowcount != 1:
+        ).rowcount != 1:
             return False
         await session.commit()
         return True

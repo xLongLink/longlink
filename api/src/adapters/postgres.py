@@ -71,7 +71,7 @@ class Postgres:
         )
 
         # Attach PostgreSQL driver options after URL creation so credentials stay structured.
-        query: dict[str, str] = {"sslmode": self._sslmode.value}
+        query = {"sslmode": self._sslmode.value}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
@@ -103,19 +103,15 @@ class Postgres:
         The adapter owns the engine lifecycle and disposes it after every operation.
         """
 
-        # Keep connection behavior consistent while allowing CREATE/DROP DATABASE autocommit operations.
-        engine_kwargs: dict[str, object] = {"pool_pre_ping": True}
-
-        # Enable autocommit only for PostgreSQL database lifecycle statements.
-        if autocommit:
-            engine_kwargs["isolation_level"] = "AUTOCOMMIT"
-
-        # Build a short-lived engine per operation to avoid leaking connection pools across adapter calls.
-        engine: AsyncEngine = create_async_engine(self.url(database, search_path=search_path), **engine_kwargs)
+        # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
+        engine: AsyncEngine = create_async_engine(
+            self.url(database, search_path=search_path),
+            pool_pre_ping=True,
+            **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
+        )
 
         # Ensure the operation-scoped engine is disposed after use.
         try:
-
             # Use explicit connections for autocommit operations and transactions for normal operations.
             connection_context = engine.connect() if autocommit else engine.begin()
 
@@ -135,11 +131,10 @@ class Postgres:
 
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
-
             # Create the database only when PostgreSQL does not already list it.
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
-            if result.scalar_one_or_none() is None:
-
+            if (
+                await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
+            ).scalar_one_or_none() is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
@@ -223,7 +218,6 @@ class Postgres:
 
         # Skip cleanup when the organization database was already removed.
         async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
-
             # Stop once PostgreSQL confirms the organization database is absent.
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
             if result.scalar_one_or_none() is None:

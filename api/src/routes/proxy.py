@@ -86,8 +86,6 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     except adapters.GatewayRequestError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
-    response_headers = dict(PROXY_RESPONSE_SECURITY_HEADERS)
-
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
     if response_content_type is not None:
@@ -96,8 +94,11 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             await gateway_response.aclose()
             raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 
-        # Only content type crosses the runtime-to-browser boundary.
-        response_headers["content-type"] = response_content_type
+    # Only content type crosses the runtime-to-browser boundary.
+    response_headers = {
+        **PROXY_RESPONSE_SECURITY_HEADERS,
+        **({"content-type": response_content_type} if response_content_type is not None else {}),
+    }
 
     async def response_content() -> AsyncIterator[bytes]:
         """Stream the upstream response and release network resources on completion."""

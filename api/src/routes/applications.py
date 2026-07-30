@@ -112,12 +112,10 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.applications.logs(application.id, organization.slug)
+        return await compute_client.applications.logs(application.id, organization.slug)
     except Exception as exc:
         logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
-
-    return logs
 
 
 @router.put("/api/applications/{application_id}/environment", status_code=204)

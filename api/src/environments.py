@@ -61,4 +61,4 @@ class Env(BaseSettings):
         return self
 
 
-env = Env(**{})
+env = Env()
