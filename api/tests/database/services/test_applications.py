@@ -188,7 +188,7 @@ async def test_set_status_modifies_active_applications() -> None:
 
 
 async def test_soft_delete_marks_application_deleted() -> None:
-    """Soft-delete an application and queue its cleanup operation."""
+    """Soft-delete an application without scheduling its cleanup operation."""
 
     # Arrange
     user, organization, application = await create_application_context("delete")
@@ -216,10 +216,5 @@ async def test_soft_delete_marks_application_deleted() -> None:
     assert compute_after.version == env.VERSION
     assert {item.kind for item in open_operations} == {
         OperationKind.application_create,
-        OperationKind.application_delete,
         OperationKind.organization_create,
     }
-    deletion = next(item for item in open_operations if item.kind == OperationKind.application_delete)
-    assert deletion.target_id == application.id
-    assert deletion.platform_version == env.VERSION
-    assert deletion.status == OperationStatus.scheduled

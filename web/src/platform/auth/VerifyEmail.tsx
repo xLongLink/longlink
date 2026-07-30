@@ -165,7 +165,7 @@ export default function VerifyEmail() {
     if (!verification.data) {
         return (
             <AuthPage title={t('auth.verifyEmailTitle')} description={t('auth.verifyingEmail')}>
-                <Button isDisabled isLoading label={t('auth.verifyingEmail')} variant="primary" />
+                <Button isLoading label={t('auth.verifyingEmail')} variant="primary" />
             </AuthPage>
         );
     }
@@ -262,7 +262,6 @@ export default function VerifyEmail() {
                         )}
                     />
                     <Button
-                        isDisabled={completion.isPending}
                         isLoading={completion.isPending}
                         label={completion.isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
                         type="submit"

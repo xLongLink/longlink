@@ -37,13 +37,11 @@ export default function PlatformLayout({
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
     const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
-        const targetUrl = new URL(tab.href, window.location.origin);
-
         return {
             label,
             icon: tab.icon,
             href: tab.href,
-            value: normalizePathname(targetUrl.pathname),
+            value: normalizePathname(new URL(tab.href, window.location.origin).pathname),
         };
     });
     const activeTabPathname = tabEntries.reduce<string | undefined>((best, tab) => {

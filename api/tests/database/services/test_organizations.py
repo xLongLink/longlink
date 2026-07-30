@@ -331,10 +331,4 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert reloaded_compute.version == env.VERSION
     assert {item.kind for item in open_operations} == {
         OperationKind.organization_create,
-        OperationKind.organization_delete,
     }
-    deletion = next(item for item in open_operations if item.kind == OperationKind.organization_delete)
-    assert deletion.kind == OperationKind.organization_delete
-    assert deletion.target_id == organization.id
-    assert deletion.platform_version == env.VERSION
-    assert deletion.status == OperationStatus.scheduled

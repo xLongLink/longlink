@@ -6,13 +6,10 @@ from collections.abc import Sequence
 from src.environments import env
 from packaging.version import Version
 from longlink.utils.time import utcnow
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
-from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 
 
 async def fetch() -> Sequence[Operation]:
@@ -146,9 +143,6 @@ async def claim() -> Operation | None:
                 return None
             if operation.lease_expires_at is not None:
                 operation_id = operation.id
-            else:
-                operation_id = None
-            if operation_id is not None:
                 logger.error("Operation %s failed after its worker lease expired", operation_id)
                 await session.rollback()
                 await fail(operation_id)
@@ -200,9 +194,9 @@ async def complete(operation_id: UUID) -> Operation | None:
 
 
 async def fail(operation_id: UUID) -> Operation | None:
-    """Fail one leased Operation and apply its lifecycle consequence."""
+    """Fail one leased Operation."""
 
-    # Lock the leased Operation before applying its terminal resource state.
+    # Lock the leased Operation before marking it terminal.
     async with session_scope() as session:
         operation = await session.scalar(
             select(Operation)
@@ -218,37 +212,9 @@ async def fail(operation_id: UUID) -> Operation | None:
         if operation is None:
             return None
 
-        # Mark the leased Operation terminal before updating its active target.
+        # Mark the leased Operation terminal.
         operation.failed = True
         operation.finished_at = utcnow()
         operation.lease_expires_at = None
-        if operation.kind == OperationKind.compute_reconcile:
-            compute = await session.get(ComputeRegistry, operation.target_id, with_for_update=True)
-            if compute is not None and not (
-                compute.status == Status.running
-                and compute.version is not None
-                and Version(compute.version) >= Version(operation.platform_version)
-            ):
-                compute.status = Status.failed
-        elif operation.kind == OperationKind.application_create:
-            await session.execute(
-                update(Application)
-                .where(
-                    Application.id == operation.target_id,
-                    Application.deleted_at.is_(None),
-                    Application.status.in_({Status.creating, Status.failed}),
-                )
-                .values(status=Status.failed)
-            )
-        elif operation.kind == OperationKind.organization_create:
-            await session.execute(
-                update(Organization)
-                .where(
-                    Organization.id == operation.target_id,
-                    Organization.deleted_at.is_(None),
-                    Organization.status.in_({Status.creating, Status.failed}),
-                )
-                .values(status=Status.failed)
-            )
         await session.commit()
         return operation

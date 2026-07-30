@@ -74,7 +74,6 @@ export default function ForgotPassword() {
                         )}
                     />
                     <Button
-                        isDisabled={requestReset.isPending}
                         isLoading={requestReset.isPending}
                         label={requestReset.isPending ? t('auth.sendingResetEmail') : t('auth.sendResetEmail')}
                         type="submit"

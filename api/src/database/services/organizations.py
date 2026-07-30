@@ -11,8 +11,6 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -263,7 +261,7 @@ async def update_member_role(
             if len(owner_ids) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
-        # Persist the role change before creating reconciliation on the Organization's compute.
+        # Persist the role change.
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
@@ -272,11 +270,6 @@ async def update_member_role(
             return False
         await session.commit()
 
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.organization_create,
-        target_id=organization_id,
-    )
     return True
 
 
@@ -368,7 +361,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
-    """Tombstone an Organization and nested state before creating compute cleanup."""
+    """Tombstone an Organization and nested state."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
@@ -427,9 +420,4 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
         await session.commit()
 
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.organization_delete,
-        target_id=organization_id,
-    )
     return organization

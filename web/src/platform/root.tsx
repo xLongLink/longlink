@@ -23,9 +23,11 @@ function PlatformShell() {
 
     // Keep cached first-paint overrides until the server-backed theme is ready.
     useLayoutEffect(() => {
-        if (!isLoading) {
-            document.getElementById(THEME_BOOTSTRAP_ID)?.remove();
+        if (isLoading) {
+            return;
         }
+
+        document.getElementById(THEME_BOOTSTRAP_ID)?.remove();
     }, [isLoading]);
 
     return (

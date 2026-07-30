@@ -168,4 +168,4 @@ async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypa
     assert failed.status == OperationStatus.failed
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
-    assert refreshed.status == Status.failed
+    assert refreshed.status == Status.creating

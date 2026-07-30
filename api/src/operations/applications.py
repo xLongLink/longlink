@@ -3,7 +3,7 @@ from src import adapters
 from src.operations import computes
 from src.environments import env
 from src.models.statuses import Status
-from src.database.services import compute, applications, organizations
+from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
 from src.database.models.operations import Operation
@@ -125,6 +125,7 @@ async def create(claimed: Operation) -> str | None:
     # Publish running only after both workload readiness and gateway publication succeed.
     if not await applications.mark_running(application.id, organization.compute_id):
         return None
+    await operations.create(organization.compute_id)
     return None
 
 

@@ -57,7 +57,7 @@ export default function AdminStorage() {
             width: proportional(2),
             renderCell: (storage) => (
                 <HStack gap={3} align="center">
-                    <S3 height={24} width={24} />
+                    <S3 />
                     <VStack gap={1}>
                         <Text weight="semibold">{storage.name}</Text>
                         <Text type="supporting">{storage.endpoint_url}</Text>

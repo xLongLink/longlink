@@ -120,7 +120,7 @@ export default function ResetPassword() {
     if (!verification.isSuccess) {
         return (
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.resetPasswordDescription')}>
-                <Button isDisabled isLoading label={t('auth.resetPassword')} variant="primary" />
+                <Button isLoading label={t('auth.resetPassword')} variant="primary" />
             </AuthPage>
         );
     }
@@ -155,7 +155,6 @@ export default function ResetPassword() {
                         )}
                     />
                     <Button
-                        isDisabled={resetPassword.isPending}
                         isLoading={resetPassword.isPending}
                         label={resetPassword.isPending ? t('auth.resettingPassword') : t('auth.resetPassword')}
                         type="submit"

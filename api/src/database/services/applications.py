@@ -8,8 +8,6 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
@@ -185,7 +183,7 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
 
 
 async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
-    """Publish Application readiness and create fallback gateway reconciliation."""
+    """Publish Application readiness."""
 
     # Lock the Application before publishing readiness.
     async with session_scope() as session:
@@ -199,14 +197,13 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
         application.status = Status.running
         await session.commit()
 
-    await operations.create(compute_id)
     return True
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
-    """Tombstone a LongLink Application and create lifecycle cleanup."""
+    """Tombstone a LongLink Application."""
 
-    # Soft-delete the application before creating its cleanup operation.
+    # Soft-delete the application state.
     async with session_scope() as session:
         # Resolve parents before taking locks in aggregate order.
         current = await session.get(Application, application_id)
@@ -237,9 +234,4 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         application.organization = organization
         await session.commit()
 
-    await operations.create(
-        current_organization.compute_id,
-        kind=OperationKind.application_delete,
-        target_id=application_id,
-    )
     return application

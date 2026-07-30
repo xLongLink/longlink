@@ -25,13 +25,15 @@ export function AstryxProvider({
     mode: ThemeMode;
     radius?: number;
 }) {
-    const theme =
-        accent === 'neutral' && radius === DEFAULT_RADIUS
-            ? longlinkNeutralDefaultTheme
-            : getAstryxTheme(accent, radius);
-
     return (
-        <Theme theme={theme} mode={mode}>
+        <Theme
+            theme={
+                accent === 'neutral' && radius === DEFAULT_RADIUS
+                    ? longlinkNeutralDefaultTheme
+                    : getAstryxTheme(accent, radius)
+            }
+            mode={mode}
+        >
             <LinkProvider component={AstryxRouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>{children}</LayerProvider>
             </LinkProvider>

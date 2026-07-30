@@ -296,7 +296,7 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert expired_row.finished_at is not None
     assert expired_row.lease_expires_at is None
     assert expired_compute_row is not None
-    assert expired_compute_row.status == Status.failed
+    assert expired_compute_row.status == Status.creating
 
 
 async def test_operations_service_expiry_preserves_published_compute_success() -> None:
@@ -391,7 +391,7 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     assert finished.finished_at is not None
     assert finished.failed is True
     assert failed_compute_row is not None
-    assert failed_compute_row.status == Status.failed
+    assert failed_compute_row.status == Status.creating
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:

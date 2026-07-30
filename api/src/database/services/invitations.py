@@ -75,7 +75,20 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         return invitation
 
 
-async def accept_in_session(session: AsyncSession, user: User) -> list[tuple[UUID, UUID]]:
+async def accept(user_id: UUID) -> list[tuple[UUID, UUID]]:
+    """Accept pending invitations for one persisted user."""
+
+    # Resolve the recipient before changing invitation or membership state.
+    async with session_scope() as session:
+        user = await session.get(User, user_id)
+        if user is None:
+            return []
+        targets = await accept_pending(session, user)
+        await session.commit()
+        return targets
+
+
+async def accept_pending(session: AsyncSession, user: User) -> list[tuple[UUID, UUID]]:
     """Accept pending invitations and return Organization reconciliation targets."""
 
     normalized_email = user.email.strip().lower()

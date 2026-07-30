@@ -31,7 +31,6 @@ import { pageReferenceDocs } from '@/platform/docs/sdk/references';
 
 type ComponentSummary = {
     name: string;
-    description: string;
 };
 
 type ComponentCategoryConfiguration = {
@@ -108,8 +107,10 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
     ...category,
     components: pageReferenceDocs
         .filter((component) => component.category === category.title)
-        .map(({ name, summary: description }) => ({ name, description })),
+        .map(({ name }) => ({ name })),
 }));
+
+const noop = () => undefined;
 
 export const metadata = {
     toc: componentCategories.map((category) => ({ id: category.id, label: category.title })),
@@ -141,7 +142,7 @@ function ComponentCategorySection({ category }: { category: ComponentCategory })
 /** Renders one component summary card in the XML page gallery. */
 function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
     return (
-        <Stack className="group relative" gap={2}>
+        <Stack className="relative" gap={2}>
             <Card aria-hidden="true" inert minHeight={190} variant="muted">
                 <Center minHeight={150}>{renderComponentPreview(component.name)}</Center>
             </Card>
@@ -227,7 +228,7 @@ function renderComponentPreview(name: string) {
         case 'Text':
             return <Text type="supporting">Readable text</Text>;
         case 'CheckboxInput':
-            return <CheckboxInput label="Approved" size="sm" value onChange={() => undefined} />;
+            return <CheckboxInput label="Approved" size="sm" value onChange={noop} />;
         case 'FileInput':
             return (
                 <Stack width={140}>
@@ -238,7 +239,7 @@ function renderComponentPreview(name: string) {
                         mode="input"
                         placeholder="File"
                         value={null}
-                        onChange={() => undefined}
+                        onChange={noop}
                     />
                 </Stack>
             );
@@ -252,7 +253,7 @@ function renderComponentPreview(name: string) {
                     units="qty"
                     value={3}
                     width={130}
-                    onChange={() => undefined}
+                    onChange={noop}
                 />
             );
         case 'RadioList':
@@ -263,7 +264,7 @@ function renderComponentPreview(name: string) {
                         orientation="horizontal"
                         size="sm"
                         value="team"
-                        onChange={() => undefined}
+                        onChange={noop}
                         isLabelHidden
                     >
                         <RadioListItem label="Solo" value="solo" />
@@ -284,7 +285,7 @@ function renderComponentPreview(name: string) {
                     size="sm"
                     value="open"
                     width={120}
-                    onChange={() => undefined}
+                    onChange={noop}
                     isLabelHidden
                 />
             );
@@ -293,35 +294,19 @@ function renderComponentPreview(name: string) {
         case 'Slider':
             return (
                 <Stack width={150}>
-                    <Slider label="Progress" value={60} valueDisplay="none" onChange={() => undefined} isLabelHidden />
+                    <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />
                 </Stack>
             );
         case 'Switch':
-            return <Switch label="Enabled" value onChange={() => undefined} />;
+            return <Switch label="Enabled" value onChange={noop} />;
         case 'TextArea':
             return (
                 <Stack width={150}>
-                    <TextArea
-                        isLabelHidden
-                        label="Notes"
-                        rows={1}
-                        size="sm"
-                        value="Review complete"
-                        onChange={() => undefined}
-                    />
+                    <TextArea isLabelHidden label="Notes" rows={1} size="sm" value="Review complete" onChange={noop} />
                 </Stack>
             );
         case 'TextInput':
-            return (
-                <TextInput
-                    isLabelHidden
-                    label="Name"
-                    size="sm"
-                    value="New order"
-                    width={140}
-                    onChange={() => undefined}
-                />
-            );
+            return <TextInput isLabelHidden label="Name" size="sm" value="New order" width={140} onChange={noop} />;
         case 'Badge':
             return <Badge label="Open" variant="info" />;
         case 'Banner':
@@ -338,8 +323,8 @@ function renderComponentPreview(name: string) {
             return (
                 <Stack width={150}>
                     <FormLayout direction="vertical">
-                        <TextInput isLabelHidden label="Title" size="sm" value="Request" onChange={() => undefined} />
-                        <CheckboxInput label="Active" size="sm" value onChange={() => undefined} />
+                        <TextInput isLabelHidden label="Title" size="sm" value="Request" onChange={noop} />
+                        <CheckboxInput label="Active" size="sm" value onChange={noop} />
                     </FormLayout>
                 </Stack>
             );
@@ -369,7 +354,7 @@ function renderComponentPreview(name: string) {
         case 'TabList':
             return (
                 <Stack width={170}>
-                    <TabList aria-label="Preview tabs" size="sm" value="overview" onChange={() => undefined}>
+                    <TabList aria-label="Preview tabs" size="sm" value="overview" onChange={noop}>
                         <Tab label="Overview" value="overview" />
                         <Tab label="Activity" value="activity" />
                     </TabList>

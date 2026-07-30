@@ -58,17 +58,13 @@ function IntegrationScale() {
         if (!target) return;
 
         // Show the final value without movement when reduced motion is requested.
-        let frame: number | undefined;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            frame = requestAnimationFrame(() => setCount(integrationContextCount));
-            return () => {
-                if (frame !== undefined) {
-                    cancelAnimationFrame(frame);
-                }
-            };
+            setCount(integrationContextCount);
+            return;
         }
 
         // Count up once using the design system's slow motion duration.
+        let frame: number | undefined;
         const duration =
             Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-slow-max')) * 2;
         const observer = new IntersectionObserver(

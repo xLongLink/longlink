@@ -37,8 +37,8 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
 
     # Issue the session and accept email-bound Organization access atomically.
     credential = token.create_access_token(session, user)
-    targets = await invitations.accept_in_session(session, user)
     await session.commit()
+    targets = await invitations.accept(user.id)
 
     for compute_id, organization_id in targets:
         await operations.create(
@@ -265,12 +265,13 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         await session.flush()
-        targets = await invitations.accept_in_session(session, user)
         credential = token.create_access_token(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
+
+    targets = await invitations.accept(user.id)
 
     for compute_id, organization_id in targets:
         await operations.create(

@@ -73,7 +73,6 @@ export default function Register() {
                         )}
                     />
                     <Button
-                        isDisabled={registration.isPending}
                         isLoading={registration.isPending}
                         label={
                             registration.isPending

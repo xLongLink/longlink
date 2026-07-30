@@ -210,6 +210,11 @@ async def update_organization_member(
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
+    await operations.create(
+        membership.organization.compute_id,
+        kind=OperationKind.organization_create,
+        target_id=membership.organization_id,
+    )
 
 
 @router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
@@ -233,10 +238,15 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    # Tombstone the Organization and queue its lifecycle cleanup atomically.
+    # Tombstone the Organization before creating its lifecycle cleanup.
     result = await organizations.soft_delete(organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+    await operations.create(
+        result.compute_id,
+        kind=OperationKind.organization_delete,
+        target_id=result.id,
+    )
 
     return result
 

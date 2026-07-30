@@ -87,7 +87,13 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             raise RuntimeError("Application create Operation is no longer open")
     except Exception as exc:
         logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
-        await applications.soft_delete(application.id, user)
+        deleted = await applications.soft_delete(application.id, user)
+        if deleted is not None:
+            await operations.create(
+                deleted.organization.compute_id,
+                kind=OperationKind.application_delete,
+                target_id=deleted.id,
+            )
         raise HTTPException(status_code=503, detail="Application environment could not be staged") from exc
 
     return application
@@ -184,5 +190,10 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     result = await applications.soft_delete(application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
+    await operations.create(
+        result.organization.compute_id,
+        kind=OperationKind.application_delete,
+        target_id=result.id,
+    )
 
     return result
