@@ -5,7 +5,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { LucideIcon } from 'lucide-react';
 import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
 
 const industryLevels = [
@@ -42,7 +41,7 @@ const geographyLevels = [
     { label: 'Municipal', value: '400,000+', href: 'https://gadm.org/data.html' },
 ];
 
-const approaches: { description: string; icon: LucideIcon; name: string }[] = [
+const approaches = [
     { name: 'Spreadsheets', description: 'What happens when the person leaves?', icon: Columns },
     {
         name: 'Generic SaaS',

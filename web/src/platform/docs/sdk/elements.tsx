@@ -8,9 +8,6 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { pageElementPage } from '@/platform/docs/pages';
 import { pageReferenceDocs, type ElementDoc } from './references';
 
-const lastUpdated = '2026-07-21';
-const editUrl = 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts';
-
 /** Renders one XML element documentation article. */
 function ElementReference({ element }: { element: ElementDoc }) {
     return (
@@ -80,8 +77,8 @@ function elementMetadata(element: ElementDoc) {
             ...(element.children ? [{ id: 'children', label: 'Children' }] : []),
             { id: 'example', label: 'Example' },
         ],
-        lastUpdated,
-        editUrl,
+        lastUpdated: '2026-07-21',
+        editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts',
     };
 }
 

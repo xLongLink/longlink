@@ -125,16 +125,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             return;
         }
 
-        const envs: Record<string, string> = {};
         // Collect configured environment values while skipping optional empty fields.
-        for (const [key, value] of Object.entries(application.data.envs)) {
-            // Skip optional empty environment values.
-            if (value.length === 0) {
-                continue;
-            }
-
-            envs[key] = value;
-        }
+        const envs = Object.fromEntries(Object.entries(application.data.envs).filter(([, value]) => value.length > 0));
 
         // Submit the new app and close the dialog on success.
         try {

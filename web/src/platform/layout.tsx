@@ -43,16 +43,15 @@ export default function PlatformLayout({
             label,
             icon: tab.icon,
             href: tab.href,
-            pathname: normalizePathname(targetUrl.pathname),
+            value: normalizePathname(targetUrl.pathname),
         };
     });
     const activeTabPathname = tabEntries
         .filter(
-            (tab) =>
-                tab.pathname === normalizedCurrentPathname || normalizedCurrentPathname.startsWith(`${tab.pathname}/`)
+            (tab) => tab.value === normalizedCurrentPathname || normalizedCurrentPathname.startsWith(`${tab.value}/`)
         )
         .reduce<string | undefined>(
-            (best, tab) => (best === undefined || tab.pathname.length > best.length ? tab.pathname : best),
+            (best, tab) => (best === undefined || tab.value.length > best.length ? tab.value : best),
             undefined
         );
     const { user } = useUserProfile();
@@ -83,7 +82,7 @@ export default function PlatformLayout({
             }
             height={fillViewport ? 'fill' : 'auto'}
             reserveTabSpace={reserveTabSpace}
-            tabs={tabEntries.map(({ pathname, ...tab }) => ({ ...tab, value: pathname }))}
+            tabs={tabEntries}
             topNavClassName="min-h-11 px-7"
         >
             {children}

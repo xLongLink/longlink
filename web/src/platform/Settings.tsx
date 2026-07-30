@@ -34,8 +34,6 @@ import {
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
 
-type SettingsSection = 'account' | 'appearance' | 'organizations';
-
 const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
     value,
     label: formatRadius(value),
@@ -58,8 +56,7 @@ export default function Settings() {
     const [editedRadius, setEditedRadius] = useState<number | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
     const hash = location.hash.replace(/^#/, '');
-    const section: SettingsSection =
-        hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
+    const section = hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
     const isLoading = isProfileLoading || areOrganizationsLoading;

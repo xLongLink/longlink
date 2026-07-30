@@ -6,7 +6,7 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CheckCircle, ChevronRight, Info, Wrench, type LucideIcon } from 'lucide-react';
+import { CheckCircle, ChevronRight, Info, Wrench } from 'lucide-react';
 import type { MetaFunction } from 'react-router';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
@@ -14,14 +14,7 @@ import { pricingPage } from '@/platform/public';
 
 export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 
-const pricingOptions: {
-    description: string;
-    features: { description: string | null; label: string }[];
-    icon: LucideIcon;
-    name: string;
-    period: string | null;
-    price: string;
-}[] = [
+const pricingOptions = [
     {
         name: 'Free',
         icon: CheckCircle,

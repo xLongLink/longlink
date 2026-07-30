@@ -17,14 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 
-type ApplicationSettingsProps = {
-    organizationId: string;
-    applications: ApiOrganizationApplication[];
-    canManageApplications: boolean;
-    isLoading: boolean;
-    error: Error | null;
-};
-
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
     organizationId,
@@ -32,7 +24,13 @@ export default function ApplicationSettings({
     canManageApplications,
     isLoading,
     error,
-}: ApplicationSettingsProps) {
+}: {
+    organizationId: string;
+    applications: ApiOrganizationApplication[];
+    canManageApplications: boolean;
+    isLoading: boolean;
+    error: Error | null;
+}) {
     const t = useTranslator();
     const toast = useToast();
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);

@@ -11,12 +11,8 @@ import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
 
-type OrganizationProps = {
-    settingsSection?: SettingsRouteSection;
-};
-
 /** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ settingsSection }: OrganizationProps) {
+export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {
     const t = useTranslator();
     const { organization = '' } = useParams();
     const {

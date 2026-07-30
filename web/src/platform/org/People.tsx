@@ -25,17 +25,6 @@ import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMember } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
-type PeopleProps = {
-    organizationId: string;
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
-    activeSection: 'members' | 'invitations';
-    canInviteMembers: boolean;
-    canManageMembers: boolean;
-    isLoading: boolean;
-    error: Error | null;
-};
-
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     read: 'read',
     write: 'write',
@@ -54,7 +43,16 @@ export default function People({
     canManageMembers,
     isLoading,
     error,
-}: PeopleProps) {
+}: {
+    organizationId: string;
+    members: ApiOrganizationMember[];
+    invitations: ApiInvitation[];
+    activeSection: 'members' | 'invitations';
+    canInviteMembers: boolean;
+    canManageMembers: boolean;
+    isLoading: boolean;
+    error: Error | null;
+}) {
     const t = useTranslator();
     const toast = useToast();
     const [inviteOpen, setInviteOpen] = useState(false);

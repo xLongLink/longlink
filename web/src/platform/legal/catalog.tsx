@@ -5,13 +5,14 @@ import { content as privacyContent, metadata as privacyMetadata } from '@/platfo
 import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
 import { homePage, legalPages } from '@/platform/public';
 
-const homeBreadcrumb = { title: 'Home', path: homePage.path };
-
 /** Builds a legal page with its standard Home breadcrumb. */
 function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
     return {
         ...page,
-        breadcrumbs: [homeBreadcrumb, { title: page.title, path: page.path }],
+        breadcrumbs: [
+            { title: 'Home', path: homePage.path },
+            { title: page.title, path: page.path },
+        ],
     };
 }
 

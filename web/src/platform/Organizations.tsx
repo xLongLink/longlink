@@ -23,7 +23,6 @@ export default function Organizations() {
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
-    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
     const isLoading = isProfileLoading || areOrganizationsLoading;
     const error = profileError ?? organizationsError;
 
@@ -32,7 +31,7 @@ export default function Organizations() {
         return (
             <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <VStack height="100%" justify="center" align="center" width="100%">
-                    <SignInCard initialEmail={initialEmail} />
+                    <SignInCard initialEmail={new URLSearchParams(location.search).get('email') ?? ''} />
                 </VStack>
             </PlatformLayout>
         );

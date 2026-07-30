@@ -31,18 +31,6 @@ import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';
 import People from './People';
 
-type SettingsProps = {
-    organization: string;
-    organizationDetails: ApiOrganizationSummary | undefined;
-    applications: ApiOrganizationApplication[];
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
-    organizationRole: Role | null;
-    routeSection: SettingsRouteSection;
-    isLoading: boolean;
-    error: Error | null;
-};
-
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
 type SettingsSection = Exclude<SettingsRouteSection, 'people'> | PeopleSection;
@@ -156,7 +144,17 @@ export default function Settings({
     routeSection,
     isLoading,
     error,
-}: SettingsProps) {
+}: {
+    organization: string;
+    organizationDetails: ApiOrganizationSummary | undefined;
+    applications: ApiOrganizationApplication[];
+    members: ApiOrganizationMember[];
+    invitations: ApiInvitation[];
+    organizationRole: Role | null;
+    routeSection: SettingsRouteSection;
+    isLoading: boolean;
+    error: Error | null;
+}) {
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();

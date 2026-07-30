@@ -4,10 +4,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { LucideIcon } from 'lucide-react';
 import { ArrowUp, CheckCircle, Columns, Copy, EyeOff, Wrench } from 'lucide-react';
 
-const applicationRoles: { access: string; icon: LucideIcon; name: string }[] = [
+const applicationRoles = [
     {
         name: 'read',
         access: 'View and open the application runtime. Use read runtime methods such as GET.',
@@ -30,7 +29,7 @@ const applicationRoles: { access: string; icon: LucideIcon; name: string }[] = [
     },
 ];
 
-const runtimeResources: { description: string[]; icon: LucideIcon; name: string }[] = [
+const runtimeResources = [
     { name: 'Database', icon: Columns, description: ['Dedicated schema', 'Read access from shared'] },
     { name: 'File Storage', icon: Copy, description: ['Application prefix', 'Read access to shared prefix'] },
     { name: 'Infrastructure', icon: Wrench, description: ['Versioned runtime', 'Environment management'] },
