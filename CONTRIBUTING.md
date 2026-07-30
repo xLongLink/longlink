@@ -44,12 +44,6 @@ make ty             # Run API and SDK type checks
 make api:ty         # Run API type checks
 make sdk:ty         # Run SDK type checks
 
-make tests          # Run API, SDK, and web tests
-make coverage       # Report fast API and SDK test coverage
-make api:tests      # Run API tests
-make sdk:tests      # Run SDK tests
-make web:tests      # Run web tests, typecheck, and bundle builds
-
 make local          # Initialize local services, cluster, and Application image
 make web            # Run the Vite web app
 make seed           # Prepare local services and seed published sample data without starting the API server

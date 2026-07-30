@@ -3,6 +3,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute, operations
+from src.database.services.errors import ConflictError
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -11,7 +12,10 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial reconciliation."""
 
-    registry = await compute.create(payload.name, payload.kubeconfig)
+    try:
+        registry = await compute.create(payload.name, payload.kubeconfig)
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     await operations.create(registry.id)
     return registry
 
@@ -40,5 +44,9 @@ async def delete_compute_registry(registry_id: UUID):
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered compute that is not assigned to an Organization.
-    if not await compute.delete(registry_id):
+    try:
+        deleted = await compute.delete(registry_id)
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if not deleted:
         raise HTTPException(status_code=404, detail="Compute registry not found")

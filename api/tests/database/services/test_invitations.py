@@ -1,12 +1,12 @@
 import pytest
 from uuid import uuid4
-from fastapi import HTTPException
 from factories import create_organization, create_ready_infrastructure
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import invitations, organizations
 from src.database.models.users import User
+from src.database.services.errors import ConflictError, NotFoundError
 from src.database.models.invitations import OrganizationInvitation
 
 
@@ -45,12 +45,11 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
     organization_id = uuid4()
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(NotFoundError) as exc:
         await invitations.create(organization_id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Assert
-    assert exc.value.status_code == 404
-    assert exc.value.detail == "Organization not found"
+    assert str(exc.value) == "Organization not found"
 
 
 async def test_create_rejects_invitation_for_existing_member_email(users: tuple[User, User, User]) -> None:
@@ -62,12 +61,11 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     organization = await create_organization(owner)
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError) as exc:
         await invitations.create(organization.id, owner.email.upper(), OrganizationRoles.write, owner)
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "User is already a member"
+    assert str(exc.value) == "User is already a member"
 
 
 async def test_create_rejects_duplicate_invitation_email_case_insensitively(users: tuple[User, User, User]) -> None:
@@ -80,12 +78,11 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
     await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError) as exc:
         await invitations.create(organization.id, "INVITED@example.com", OrganizationRoles.admin, owner)
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Invitation already exists"
+    assert str(exc.value) == "Invitation already exists"
 
 
 async def test_organization_invitations_ignore_deleted_invitations(users: tuple[User, User, User]) -> None:

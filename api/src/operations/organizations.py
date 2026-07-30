@@ -120,9 +120,11 @@ async def delete(claimed: Operation) -> str | None:
         storage_registry.access_key_id,
         storage_registry.secret_access_key,
     )
+
+    # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
     application_rows = await organizations.applications(organization.id, include_deleted=True)
+    await cluster.organizations.delete(organization.slug)
     for application in application_rows:
-        await cluster.applications.delete(application.id, organization.slug)
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
         await object_storage.delete_prefix(
@@ -131,8 +133,6 @@ async def delete(claimed: Operation) -> str | None:
         )
         await applications.purge(application.id)
 
-    # Delete the known Organization Namespace only after all child workloads terminate.
-    await cluster.organizations.delete(organization.slug)
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(

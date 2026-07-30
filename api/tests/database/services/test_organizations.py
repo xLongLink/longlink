@@ -1,6 +1,5 @@
 import pytest
 from uuid import uuid4
-from fastapi import HTTPException
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import OrganizationRoles
@@ -10,6 +9,7 @@ from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
+from src.database.services.errors import ConflictError, UnavailableError
 from src.database.models.association import UserOrganization
 
 
@@ -161,12 +161,11 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     organization = await create_organization(owner)
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError) as exc:
         await organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Organization must have at least one owner"
+    assert str(exc.value) == "Organization must have at least one owner"
     membership = next(item for item in await organizations.members(organization.id) if item.user_id == owner.id)
     assert membership.role == OrganizationRoles.owner
 
@@ -222,12 +221,11 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
     await compute.set_status(infrastructure.compute.id, Status.running, Status.failed)
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(UnavailableError) as exc:
         await create_organization(owner)
 
     # Assert
-    assert exc.value.status_code == 503
-    assert exc.value.detail == "No compute registry available"
+    assert str(exc.value) == "No compute registry available"
     assert await organizations.fetch() == []
     reloaded_compute = await compute.get(infrastructure.compute.id)
     assert reloaded_compute is not None

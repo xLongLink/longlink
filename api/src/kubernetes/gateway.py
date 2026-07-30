@@ -13,7 +13,7 @@ from importlib.resources import files
 from src.models.gateways import APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
-from src.kubernetes.client import deployment_is_ready
+from src.kubernetes.client import apply_resource, deployment_is_ready
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -198,6 +198,7 @@ def render_gateway_manifests(tls: GatewayTLSMaterial, envoy_config: str) -> tupl
     runtime_revision = hashlib.sha256(
         json.dumps(
             {
+                "ca_certificate": tls.ca_certificate,
                 "certificate": tls.certificate,
                 "envoy_config": envoy_config,
                 "private_key": tls.private_key,
@@ -229,15 +230,9 @@ class Gateway:
         namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
         api = await self._client.api()
         namespace_resource = Namespace(namespace, api=api)
-        if await namespace_resource.exists():
-            await namespace_resource.patch(namespace)
-        else:
-            await namespace_resource.create()
+        await apply_resource(namespace_resource, namespace)
         service_resource = Service(service_manifest, api=api)
-        if await service_resource.exists():
-            await service_resource.patch(service_manifest)
-        else:
-            await service_resource.create()
+        await apply_resource(service_resource, service_manifest)
 
         # Poll provider-owned Service status without repeatedly applying unchanged desired state.
         while True:
@@ -279,25 +274,13 @@ class Gateway:
             },
             api=api,
         )
-        if await tls_secret.exists():
-            await tls_secret.patch({"stringData": {"tls.crt": tls.certificate, "tls.key": tls.private_key}})
-        else:
-            await tls_secret.create()
+        await apply_resource(tls_secret, tls_secret.raw)
         config = ConfigMap(config_map, api=api)
-        if await config.exists():
-            await config.patch(config_map)
-        else:
-            await config.create()
+        await apply_resource(config, config_map)
         policy = NetworkPolicy(network_policy, api=api)
-        if await policy.exists():
-            await policy.patch(network_policy)
-        else:
-            await policy.create()
+        await apply_resource(policy, network_policy)
         deployment = Deployment(deployment_manifest, api=api)
-        if await deployment.exists():
-            await deployment.patch(deployment_manifest)
-        else:
-            await deployment.create()
+        await apply_resource(deployment, deployment_manifest)
 
         # Poll rollout status without repeatedly applying the same Deployment revision.
         while True:

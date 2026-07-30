@@ -42,7 +42,6 @@ classifiers = [
 dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
-    "pytest-cov>=7.1.0",
     "ty>=0.0.64",
     "ruff>=0.16.0",
     "lxml-stubs>=0.5.1",
@@ -96,13 +95,6 @@ testpaths = ["tests"]
 markers = ["integration: marks integration tests requiring Docker"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-
-[tool.coverage.run]
-omit = [
-    "longlink/__main__.py",
-    "longlink/database/env.py",
-    "longlink/shared/alembic/*",
-]
 
 [tool.ty.src]
 include = ["longlink", "tests"]

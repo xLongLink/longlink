@@ -108,8 +108,8 @@ export const content = (
                     label={
                         <Text>
                             Organization and access data: organization name, slug, avatar, infrastructure assignments,
-                            memberships, application roles, invitation email addresses, invited roles, and audit records
-                            for created, updated, or deleted resources.
+                            memberships and organization roles, invitation email addresses, invited roles, and audit
+                            records for created, updated, or deleted resources.
                         </Text>
                     }
                 />
