@@ -1,5 +1,7 @@
 import { useLocation, type MetaFunction } from 'react-router';
-import ArticleLayout from '@/layout/ArticleLayout';
+import { Article } from '@/components/Article';
+import { Sidebar } from '@/components/Sidebar';
+import SideLayout from '@/layout/SideLayout';
 import { noIndexMeta, publicSeoMeta } from '@/lib/seo';
 import type { ArticleNavigationGroup, ArticlePage } from '@/platform/catalog';
 import NotFound from '@/platform/NotFound';
@@ -19,5 +21,11 @@ export function ArticleRoute({ groups, pages }: { groups: ArticleNavigationGroup
     const location = useLocation();
     const page = pages.find((item) => item.path === normalizePathname(location.pathname));
 
-    return page ? <ArticleLayout groups={groups} page={page} /> : <NotFound />;
+    return page ? (
+        <SideLayout sideNav={<Sidebar currentPath={location.pathname} groups={groups} />}>
+            <Article page={page} />
+        </SideLayout>
+    ) : (
+        <NotFound />
+    );
 }

@@ -1,4 +1,3 @@
-from src import adapters
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser
@@ -7,7 +6,8 @@ from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
-from src.database.services import organizations
+from src.adapters.gateway import GatewayClient, GatewayRequestError
+from src.database.services import compute, organizations
 from src.database.models.users import User
 
 router = APIRouter()
@@ -29,7 +29,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     """
 
     # Load application access before proxying runtime traffic.
-    access = roles.access(user, application_id, "application")
+    access = await organizations.application_access(user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -49,11 +49,15 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    infrastructure = await organizations.infrastructure(organization.id)
-    if infrastructure is None:
-        raise RuntimeError("Application Organization infrastructure is missing")
-    registry = infrastructure.compute
-    if registry.gateway_url is None or registry.gateway_ca_certificate is None:
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
+        raise RuntimeError("Application Organization compute registry is missing")
+    if (
+        registry.gateway_url is None
+        or registry.gateway_ca_certificate is None
+        or registry.gateway_tls_certificate is None
+        or registry.gateway_tls_private_key is None
+    ):
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
@@ -68,10 +72,11 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    gateway = adapters.GatewayClient(
+    gateway = GatewayClient(
         registry.gateway_url,
         registry.gateway_ca_certificate,
-        registry.proxy_secret,
+        registry.gateway_tls_certificate,
+        registry.gateway_tls_private_key,
     )
     try:
         gateway_response = await gateway.request(
@@ -83,10 +88,8 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             content_type=request.headers.get("content-type"),
             content=request_content(),
         )
-    except adapters.GatewayRequestError as exc:
+    except GatewayRequestError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
-
-    response_headers = dict(PROXY_RESPONSE_SECURITY_HEADERS)
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
@@ -96,8 +99,11 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             await gateway_response.aclose()
             raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 
-        # Only content type crosses the runtime-to-browser boundary.
-        response_headers["content-type"] = response_content_type
+    # Only content type crosses the runtime-to-browser boundary.
+    response_headers = {
+        **PROXY_RESPONSE_SECURITY_HEADERS,
+        **({"content-type": response_content_type} if response_content_type is not None else {}),
+    }
 
     async def response_content() -> AsyncIterator[bytes]:
         """Stream the upstream response and release network resources on completion."""

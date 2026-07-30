@@ -4,13 +4,14 @@ import { PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 
 export const statusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
+export const DATABASE_SSL_MODES = ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'] as const;
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
 const themeSchema = z.enum(THEME_VALUES);
 const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
-const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']);
+const databaseSslModeSchema = z.enum(DATABASE_SSL_MODES);
 
 export const apiRegistrationVerifiedSchema = z.object({
     email: z.email(),

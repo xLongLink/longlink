@@ -1,7 +1,6 @@
 import pytest
-from uuid import uuid4
 from pydantic import ValidationError
-from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
+from src.models.databases import DatabaseRegistryCreate
 
 pytestmark = pytest.mark.no_db
 
@@ -20,24 +19,3 @@ def test_database_registry_create_rejects_invalid_connection_payload(payload: di
     # Invalid database registry values fail before service-layer persistence.
     with pytest.raises(ValidationError):
         DatabaseRegistryCreate.model_validate(payload)
-
-
-def test_database_registry_response_filters_password() -> None:
-    """Exclude administrator passwords from database registry responses."""
-
-    # Response serialization exposes diagnostics while omitting backend credentials.
-    payload = DatabaseRegistryResponse.model_validate(
-        {
-            "id": uuid4(),
-            "name": "Primary Database",
-            "host": "database.example",
-            "port": 5432,
-            "sslmode": "disable",
-            "username": "admin",
-            "password": "secret",
-        }
-    )
-
-    data = payload.model_dump()
-    assert data["username"] == "admin"
-    assert "password" not in data

@@ -62,7 +62,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
             user=user,
         )
     await mark_organization_running(organization)
-    application, operation = await applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -70,6 +70,11 @@ async def test_create_requires_running_organization_and_queues_application_lifec
         sdk="1.2.3",
         version="2.0.0",
         user=user,
+    )
+    operation = await operations.create(
+        infrastructure.compute.id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
     )
     reloaded_compute = await compute.get(infrastructure.compute.id)
     open_after = [item for item in await operations.fetch() if item.finished_at is None]
@@ -124,7 +129,7 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
 
     # Arrange
     user, organization, deleted_application = await create_application_context("collections")
-    active_application, _ = await applications.create(
+    active_application = await applications.create(
         organization.id,
         "Reports",
         slug="reports",
@@ -183,7 +188,7 @@ async def test_set_status_modifies_active_applications() -> None:
 
 
 async def test_soft_delete_marks_application_deleted() -> None:
-    """Soft-delete an application and queue its cleanup operation."""
+    """Soft-delete an application without scheduling its cleanup operation."""
 
     # Arrange
     user, organization, application = await create_application_context("delete")
@@ -211,10 +216,5 @@ async def test_soft_delete_marks_application_deleted() -> None:
     assert compute_after.version == env.VERSION
     assert {item.kind for item in open_operations} == {
         OperationKind.application_create,
-        OperationKind.application_delete,
         OperationKind.organization_create,
     }
-    deletion = next(item for item in open_operations if item.kind == OperationKind.application_delete)
-    assert deletion.target_id == application.id
-    assert deletion.platform_version == env.VERSION
-    assert deletion.status == OperationStatus.scheduled

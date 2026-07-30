@@ -8,11 +8,8 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -89,16 +86,17 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
-    delay_seconds: float = 30,
-) -> tuple[Application, Operation]:
-    """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
+    *,
+    require_ready: bool = True,
+) -> Application:
+    """Create an Organization-owned LongLink Application."""
 
     # Validate direct service callers while preserving already-validated API values.
     image = Image(image)
     if "@" not in image:
         raise ValueError("Application image must be pinned to its resolved digest")
 
-    # Create the application and lifecycle operation transactionally.
+    # Create the Application after validating its Organization lifecycle state.
     async with session_scope() as session:
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
@@ -110,9 +108,12 @@ async def create(
         ).one_or_none()
         if compute is None or organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        if compute.status != Status.running:
-            raise HTTPException(status_code=409, detail="Compute registry is not ready")
-        if organization.deleted_at is not None or organization.status != Status.running:
+        if require_ready:
+            if compute.status != Status.running:
+                raise HTTPException(status_code=409, detail="Compute registry is not ready")
+            if organization.deleted_at is not None or organization.status != Status.running:
+                raise HTTPException(status_code=409, detail="Organization is not ready")
+        elif organization.deleted_at is not None:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
         # Build the Application row before checking its Organization-scoped uniqueness.
@@ -137,17 +138,44 @@ async def create(
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Application slug already exists") from exc
 
-        # Queue the delayed deployment lifecycle after the application identifier exists.
-        operation = await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.application_create,
-            target_id=application.id,
-            delay_seconds=delay_seconds,
-        )
         await session.commit()
-        return application, operation
+        return application
+
+
+async def replace_image(
+    application_id: UUID,
+    image: Image | str,
+    user: User,
+    sdk: str | None = None,
+    version: str | None = None,
+) -> Application | None:
+    """Replace one active Application's resolved image metadata."""
+
+    # Require the replacement image to retain the immutable digest deployment contract.
+    image = Image(image)
+    if "@" not in image:
+        raise ValueError("Application image must be pinned to its resolved digest")
+
+    # Lock and update only active Application desired state.
+    async with session_scope() as session:
+        application = (
+            await session.scalars(
+                select(Application)
+                .where(Application.id == application_id, Application.deleted_at.is_(None))
+                .with_for_update()
+            )
+        ).one_or_none()
+        if application is None:
+            return None
+        if application.image == image and application.sdk == sdk and application.version == version:
+            return application
+        application.image = str(image)
+        application.sdk = sdk
+        application.version = version
+        application.updated_at = utcnow()
+        application.updated_id = user.id
+        await session.commit()
+        return application
 
 
 async def set_status(application_id: UUID, expected_status: Status, status: Status) -> bool:
@@ -155,16 +183,17 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        result = await session.execute(
-            update(Application)
-            .where(
-                Application.id == application_id,
-                Application.deleted_at.is_(None),
-                Application.status == expected_status,
+        if (
+            await session.execute(
+                update(Application)
+                .where(
+                    Application.id == application_id,
+                    Application.deleted_at.is_(None),
+                    Application.status == expected_status,
+                )
+                .values(status=status)
             )
-            .values(status=status)
-        )
-        if result.rowcount != 1:
+        ).rowcount != 1:
             return False
         await session.commit()
         return True
@@ -194,33 +223,28 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
         return application.status
 
 
-async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
-    """Publish Application readiness and queue fallback gateway reconciliation atomically."""
+async def mark_running(application_id: UUID) -> bool:
+    """Publish Application readiness."""
 
-    # Lock the compute aggregate before updating the Application and its outbox entry.
+    # Lock the Application before publishing readiness.
     async with session_scope() as session:
-        compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
-        if compute is None or application is None or application.deleted_at is not None:
+        if application is None or application.deleted_at is not None:
             return False
 
         # Publish running only from active creation state and retain a fallback gateway reconciliation.
         if application.status != Status.creating:
             return False
         application.status = Status.running
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-        )
         await session.commit()
-        return True
+
+    return True
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
-    """Tombstone a LongLink Application and atomically queue lifecycle cleanup."""
+    """Tombstone a LongLink Application."""
 
-    # Soft-delete the application and queue its cleanup together.
+    # Soft-delete the application state.
     async with session_scope() as session:
         # Resolve parents before taking locks in aggregate order.
         current = await session.get(Application, application_id)
@@ -230,13 +254,12 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         if current_organization is None:
             return None
 
-        # Lock the aggregate resources and stop if any disappear during acquisition.
-        compute = await session.get(ComputeRegistry, current_organization.compute_id, with_for_update=True)
+        # Lock the Organization and Application state before tombstoning.
         organization = (
             await session.scalars(select(Organization).where(Organization.id == current.organization_id).with_for_update())
         ).one_or_none()
         application = (await session.scalars(select(Application).where(Application.id == application_id).with_for_update())).one_or_none()
-        if compute is None or organization is None or application is None:
+        if organization is None or application is None:
             return None
 
         # Record the tombstone once; repeated requests only ensure cleanup remains queued.
@@ -248,16 +271,8 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             application.updated_at = now
             application.updated_id = user.id
 
-        # Application tombstone and reconciliation request are one Platform transaction.
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.application_delete,
-            target_id=application.id,
-        )
-
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
         await session.commit()
-        return application
+
+    return application

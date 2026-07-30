@@ -64,7 +64,7 @@ async def authuser(authenticated: User = Depends(current_authenticated_user)) ->
     """Load the authenticated user with current LongLink resource access."""
 
     # Reject stale or soft-deleted accounts after token authentication.
-    user = await users.get(authenticated.id, include_access=True)
+    user = await users.get(authenticated.id, include_organizations=True)
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user

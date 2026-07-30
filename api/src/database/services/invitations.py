@@ -23,32 +23,32 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
     # Use one session for validation and invitation creation.
     async with session_scope() as session:
         # Require an active target organization.
-        organization_id_exists = (
+        if (
             await session.scalars(
                 select(Organization.id).where(
                     Organization.id == organization_id,
                     Organization.deleted_at.is_(None),
                 )
             )
-        ).one_or_none()
-        if organization_id_exists is None:
+        ).one_or_none() is None:
             raise HTTPException(status_code=404, detail="Organization not found")
 
         # Reject emails that already belong to the organization.
-        member_id = (
+        if (
             await session.scalars(
-                select(User.id).join(UserOrganization, UserOrganization.user_id == User.id).where(
+                select(User.id)
+                .join(UserOrganization, UserOrganization.user_id == User.id)
+                .where(
                     UserOrganization.organization_id == organization_id,
                     UserOrganization.deleted_at.is_(None),
                     func.lower(User.email) == normalized_email,
                 )
             )
-        ).one_or_none()
-        if member_id is not None:
+        ).one_or_none() is not None:
             raise HTTPException(status_code=409, detail="User is already a member")
 
         # Keep one pending invitation per email address.
-        invitation_id = (
+        if (
             await session.scalars(
                 select(OrganizationInvitation.id).where(
                     OrganizationInvitation.organization_id == organization_id,
@@ -56,8 +56,7 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
                     func.lower(OrganizationInvitation.email) == normalized_email,
                 )
             )
-        ).one_or_none()
-        if invitation_id is not None:
+        ).one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Invitation already exists")
 
         invitation = OrganizationInvitation(
@@ -78,8 +77,28 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         return invitation
 
 
-async def accept_in_session(session: AsyncSession, user: User) -> None:
-    """Accept pending invitations for one user's verified email in the caller's transaction."""
+async def accept(user_id: UUID) -> None:
+    """Accept pending invitations and schedule their Organization reconciliation."""
+
+    # Resolve the recipient before changing invitation or membership state.
+    async with session_scope() as session:
+        user = await session.get(User, user_id)
+        if user is None:
+            return
+        targets = await accept_pending(session, user)
+        await session.commit()
+
+    # Reconcile each Organization after its new membership is durable.
+    for compute_id, organization_id in targets:
+        await operations.create(
+            compute_id,
+            kind=OperationKind.organization_create,
+            target_id=organization_id,
+        )
+
+
+async def accept_pending(session: AsyncSession, user: User) -> list[tuple[UUID, UUID]]:
+    """Accept pending invitations and return Organization reconciliation targets."""
 
     normalized_email = user.email.strip().lower()
 
@@ -98,7 +117,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
         )
     ).all()
     if not rows:
-        return
+        return []
 
     # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
     organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
@@ -149,11 +168,4 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
             item.deleted_at = now
             item.deleted_id = user.id
 
-    # Publish new Organization access to managed runtimes after the transaction commits.
-    for organization_id in sorted(changed_organization_ids, key=str):
-        await operations.enqueue_in_session(
-            session,
-            organization_computes[organization_id],
-            kind=OperationKind.organization_create,
-            target_id=organization_id,
-        )
+    return [(organization_computes[organization_id], organization_id) for organization_id in sorted(changed_organization_ids, key=str)]

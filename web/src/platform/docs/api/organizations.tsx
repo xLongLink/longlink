@@ -4,10 +4,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { LucideIcon } from 'lucide-react';
 import { ArrowUp, CheckCheck, CheckCircle, Columns, Copy, EyeOff, Info, Wrench } from 'lucide-react';
 
-const organizationRoles: { access: string; icon: LucideIcon; name: string }[] = [
+const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },
     {
         name: 'write',
@@ -31,7 +30,7 @@ const organizationRoles: { access: string; icon: LucideIcon; name: string }[] = 
     },
 ];
 
-const organizationResources: { description: string; icon: LucideIcon; name: string }[] = [
+const organizationResources = [
     { name: 'Users', description: 'Members and roles', icon: Info },
     { name: 'Database', description: 'Database schemas', icon: Columns },
     { name: 'File Storage', description: 'One bucket with scoped prefixes', icon: Copy },

@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from src.logger import logger
 from src.operations import OperationHandler, handlers
 from collections.abc import Coroutine
+from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.services import operations
 from src.database.models.operations import Operation
@@ -44,7 +45,7 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
 
     # Bound one complete handler execution under its worker lease.
     try:
-        async with asyncio.timeout(2 * 60):
+        async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
             reason = await handler(operation)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
@@ -86,7 +87,7 @@ async def run_operation_scheduler() -> None:
     # Keep polling after transient database failures so the worker remains available.
     while True:
         try:
-            operation = await operations.claim_next()
+            operation = await operations.claim()
         except Exception as exc:
             logger.exception("Operation scheduler polling failed: %r", exc)
             await asyncio.sleep(1)

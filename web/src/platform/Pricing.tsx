@@ -6,7 +6,7 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CheckCircle, ChevronRight, Info, Wrench, type LucideIcon } from 'lucide-react';
+import { CheckCircle, ChevronRight, Info, Wrench } from 'lucide-react';
 import type { MetaFunction } from 'react-router';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
@@ -14,14 +14,7 @@ import { pricingPage } from '@/platform/public';
 
 export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 
-const pricingOptions: {
-    description: string;
-    features: { description: string | null; label: string }[];
-    icon: LucideIcon;
-    name: string;
-    period: string | null;
-    price: string;
-}[] = [
+const pricingOptions = [
     {
         name: 'Free',
         icon: CheckCircle,
@@ -74,39 +67,35 @@ export default function Pricing() {
                         </Stack>
 
                         <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
-                            {pricingOptions.map((option) => {
-                                const OptionIcon = option.icon;
-
+                            {pricingOptions.map(({ description, features, icon: OptionIcon, name, period, price }) => {
                                 return (
-                                    <Card key={option.name} minHeight={520}>
+                                    <Card key={name} minHeight={520}>
                                         <Stack gap={6}>
                                             <Stack gap={3} align="center">
                                                 <OptionIcon aria-hidden="true" className="text-accent" size={20} />
                                                 <Heading level={2} justify="center">
-                                                    {option.name}
+                                                    {name}
                                                 </Heading>
                                                 <Text as="p" type="supporting" justify="center">
-                                                    {option.description}
+                                                    {description}
                                                 </Text>
                                                 <Stack direction="horizontal" gap={2} align="end" justify="center">
                                                     <Text type="display-3" weight="semibold">
-                                                        {option.price}
+                                                        {price}
                                                     </Text>
-                                                    {option.period ? (
-                                                        <Text type="supporting">{option.period}</Text>
-                                                    ) : null}
+                                                    {period ? <Text type="supporting">{period}</Text> : null}
                                                 </Stack>
                                             </Stack>
 
-                                            {option.name === 'Team' ? (
+                                            {name === 'Team' ? (
                                                 <Text as="p">Everything included in Free, plus...</Text>
                                             ) : null}
-                                            {option.name === 'Work' ? (
+                                            {name === 'Work' ? (
                                                 <Text as="p">Everything included in Team, plus...</Text>
                                             ) : null}
 
                                             <List hasDividers>
-                                                {option.features.map((feature) => (
+                                                {features.map((feature) => (
                                                     <ListItem
                                                         key={feature.label}
                                                         startContent={

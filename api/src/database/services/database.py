@@ -59,8 +59,7 @@ async def delete(registry_id: UUID) -> bool:
             return False
 
         # Keep registries assigned to active or cleanup-pending Organizations available.
-        organization_id = await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1))
-        if organization_id is not None:
+        if await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1)) is not None:
             raise HTTPException(status_code=409, detail="Database registry is used by organizations")
 
         # Internal registries have no soft-delete or audit lifecycle.

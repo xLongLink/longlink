@@ -8,10 +8,9 @@ export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
 
 /** Builds React Router metadata for one prerendered public page. */
 export function publicSeoMeta(page: PublicPage): MetaDescriptor[] {
-    const routePath = publicRoutePath(page.path);
-    const canonicalUrl = `${SITE_URL}${routePath}`;
-    const title =
-        page.seoTitle ?? (page.path.startsWith('/docs') ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`);
+    const canonicalUrl = `${SITE_URL}${publicRoutePath(page.path)}`;
+    const isDocumentation = page.path.startsWith('/docs');
+    const title = page.seoTitle ?? (isDocumentation ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`);
     const structuredData =
         page.path === '/'
             ? {
@@ -36,7 +35,7 @@ export function publicSeoMeta(page: PublicPage): MetaDescriptor[] {
               }
             : {
                   '@context': 'https://schema.org',
-                  '@type': page.path.startsWith('/docs') ? 'TechArticle' : 'WebPage',
+                  '@type': isDocumentation ? 'TechArticle' : 'WebPage',
                   name: title,
                   description: page.description,
                   url: canonicalUrl,

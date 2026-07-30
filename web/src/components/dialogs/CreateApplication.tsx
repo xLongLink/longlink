@@ -62,6 +62,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const image = useWatch({ control: form.control, name: 'image' });
     const name = useWatch({ control: form.control, name: 'name' });
     const icon = useWatch({ control: form.control, name: 'icon' });
+    const hasImage = image.trim().length > 0;
+    const hasRequiredMetadata = hasImage && name.trim().length > 0;
+    const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
     const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
         parse: (value) => apiIconsSchema.parse(value),
         staleTime: Infinity,
@@ -125,16 +128,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             return;
         }
 
-        const envs: Record<string, string> = {};
         // Collect configured environment values while skipping optional empty fields.
-        for (const [key, value] of Object.entries(application.data.envs)) {
-            // Skip optional empty environment values.
-            if (value.length === 0) {
-                continue;
-            }
-
-            envs[key] = value;
-        }
+        const envs = Object.fromEntries(Object.entries(application.data.envs).filter(([, value]) => value.length > 0));
 
         // Submit the new app and close the dialog on success.
         try {
@@ -218,7 +213,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 />
                                             )}
                                         />
-                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                        {errorStatus}
                                     </FormLayout>
                                 </form>
                             ) : step === 'metadata' ? (
@@ -228,7 +223,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                         event.preventDefault();
 
                                         // Advance only after required metadata is present.
-                                        if (name.trim().length > 0 && image.trim().length > 0) {
+                                        if (hasRequiredMetadata) {
                                             setStep('envs');
                                         }
                                     }}
@@ -282,7 +277,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 })
                                             }
                                         />
-                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                        {errorStatus}
                                     </FormLayout>
                                 </form>
                             ) : (
@@ -312,7 +307,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 )}
                                             />
                                         ))}
-                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                        {errorStatus}
                                     </FormLayout>
                                 </form>
                             )}
@@ -333,7 +328,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                         type="submit"
                                         label={isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
                                         variant="primary"
-                                        isDisabled={image.trim().length === 0}
+                                        isDisabled={!hasImage}
                                         isLoading={isInspecting}
                                     />
                                 </Stack>
@@ -358,7 +353,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             type="submit"
                                             label={t('actions.next')}
                                             variant="primary"
-                                            isDisabled={name.trim().length === 0 || image.trim().length === 0}
+                                            isDisabled={!hasRequiredMetadata}
                                         />
                                     </Stack>
                                 </Stack>
@@ -385,11 +380,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             type="submit"
                                             label={isCreatingApplication ? t('actions.creating') : t('actions.create')}
                                             variant="primary"
-                                            isDisabled={
-                                                name.trim().length === 0 ||
-                                                image.trim().length === 0 ||
-                                                !form.formState.isValid
-                                            }
+                                            isDisabled={!hasRequiredMetadata || !form.formState.isValid}
                                             isLoading={isCreatingApplication}
                                         />
                                     </Stack>

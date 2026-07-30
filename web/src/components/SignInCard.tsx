@@ -119,7 +119,6 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                     />
                 </Stack>
                 <Button
-                    isDisabled={login.isPending}
                     isLoading={login.isPending}
                     label={login.isPending ? t('auth.signingIn') : t('actions.login')}
                     type="submit"

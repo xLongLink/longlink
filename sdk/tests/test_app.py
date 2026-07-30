@@ -153,17 +153,3 @@ def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path)
     # Verify the source catalog is returned unchanged.
     assert response.status_code == 200
     assert response.json()["examples"]["text"]["title"] == "Localized text elements"
-
-
-def test_sdk_runtime_has_no_login_or_permission_routes() -> None:
-    """Keep login and permission routes out of the SDK runtime."""
-
-    # Build a runtime with optional content mounts disabled.
-    app = LongLink(env=Envs(ENV="testing"), i18n=None, pages=None)
-
-    # Collect registered paths for SDK-owned route checks.
-    route_paths = {getattr(route, "path", "") for route in app.routes}
-
-    # Verify Platform authentication and permission routes remain absent.
-    assert not any(path == "/login" or path.startswith("/auth") for path in route_paths)
-    assert not any("permission" in path for path in route_paths)

@@ -1,4 +1,4 @@
-.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down reset build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api\:quality api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 APPLICATION_IMAGE ?=
 LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
@@ -6,7 +6,6 @@ DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
 SDK_PYTEST_MARK ?=
-
 
 # Install all API, SDK, and web dependencies.
 install: api\:install sdk\:install web\:install
@@ -34,6 +33,12 @@ format: api\:format sdk\:format web\:format
 # Format API imports.
 api\:format: api\:install
 	cd api && uv run --locked isort .
+
+
+# Verify API linting and import formatting without modifying source files.
+api\:quality: api\:install
+	cd api && uv run --locked ruff check .
+	cd api && uv run --locked isort --check-only .
 
 
 # Format SDK imports.
@@ -186,14 +191,13 @@ local: local\:resources
 # Remove remote development resources, stop local services, and clean local state.
 down:
 	@printf "Removing tracked remote development resources...\n"
-	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	cd api && DEVELOPMENT=true uv run --locked python cleanup.py
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@image="$(APPLICATION_IMAGE)"; \
 		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
-		if [ -z "$$image" ] && [ -f api/.env.seed ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image || true)"; fi; \
 		if [ -z "$$image" ]; then image="ghcr.io/xlonglink/longlink-app:v0.0.2"; fi; \
 		for repository in "$${image%@*}" "$(LOCAL_APPLICATION_IMAGE)"; do \
 			repository="$${repository%:*}"; \
@@ -207,7 +211,12 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-# Run the local LongLink Platform API server after `make seed`.
+# Restore the configured dedicated cluster and providers to their clean baseline.
+reset: api\:install
+	cd api && uv run --locked python cleanup.py --reset-cluster
+
+
+# Run the local LongLink Platform API server before `make seed`.
 api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
@@ -222,20 +231,12 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Start local services, build or pull the configured Application image, then run migrations and seed data.
-seed: local\:resources
+# Seed the configured Kubernetes compute without preparing local infrastructure.
+seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	@image="$(APPLICATION_IMAGE)"; \
-		if [ -z "$$image" ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image)"; fi; \
-		if [ "$$image" = "$(LOCAL_APPLICATION_IMAGE)" ]; then \
-			if docker image inspect "$$image" >/dev/null 2>&1; then docker push "$$image"; else $(MAKE) local:image; fi; \
-		else \
-			docker pull "$$image"; \
-		fi && \
-		printf '%s\n' "$$image" > api/.seed-image && \
-		cd api && DEVELOPMENT=true APPLICATION_IMAGE="$$image" uv run --locked python seed.py
+	cd api && DEVELOPMENT=true uv run --locked python seed.py
 
 
 # Run the Vite web app.

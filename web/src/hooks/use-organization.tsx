@@ -47,12 +47,13 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
         (missingOrganization
             ? (Object.assign(new Error('Organization not found'), { status: 404 }) as Error & { status?: number })
             : null);
+    const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {
-        organization: organizationQuery.data?.organization,
-        members: organizationQuery.data?.members ?? [],
-        invitations: organizationQuery.data?.invitations ?? [],
-        applications: organizationQuery.data?.applications ?? [],
+        organization,
+        members,
+        invitations,
+        applications,
         role: membership?.role ?? null,
         isLoading: isUserLoading || organizationQuery.isLoading,
         error,
@@ -192,8 +193,8 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ name }: { name: string }) => {
-            return fetchApiJson(
+        mutationFn: ({ name }: { name: string }) =>
+            fetchApiJson(
                 '/api/organizations',
                 {
                     method: 'POST',
@@ -203,8 +204,7 @@ export function useCreateOrganization() {
                     }),
                 },
                 (value) => apiOrganizationSummarySchema.parse(value)
-            );
-        },
+            ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
         },

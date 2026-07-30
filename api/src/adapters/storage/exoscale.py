@@ -262,6 +262,25 @@ class Exoscale:
                     else:
                         await self._wait_operation(api, operation, require_reference=False)
 
+    async def credentials_exist(self, name: str) -> bool:
+        """Return whether scoped Exoscale credentials remain for one Application."""
+
+        # Inspect both generated resource types because interrupted provisioning can leave either one.
+        credential_name = f"longlink-{name}"
+        async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
+            api = cast(AsyncClient, client)
+            resources = (
+                ("api-keys", await api.list_api_keys()),
+                ("iam-roles", await api.list_iam_roles()),
+            )
+            for collection, response in resources:
+                items = response.get(collection)
+                if not isinstance(items, list):
+                    raise RuntimeError(f"Exoscale {collection} inventory response is invalid")
+                if any(isinstance(item, dict) and item.get("name") == credential_name for item in items):
+                    return True
+        return False
+
     async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""
 

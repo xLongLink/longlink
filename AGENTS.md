@@ -93,7 +93,6 @@ longlink/
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - If a constant is used only once, then hardcode the value instead.
 
-
 ## JavaScript / TypeScript Guidelines
 
 - Validate inputs at system boundaries.

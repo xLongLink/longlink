@@ -1,4 +1,3 @@
-import secrets
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select, update
@@ -9,7 +8,6 @@ from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -33,20 +31,18 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
 
 
 async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
-    """Register one compute target and queue its initial reconciliation."""
+    """Register one compute target."""
 
-    # Persist the target and its outbox row atomically.
+    # Persist the target without coupling registry management to lifecycle scheduling.
     async with session_scope() as session:
         registry = ComputeRegistry(
             name=name,
             kubeconfig=kubeconfig,
-            proxy_secret=secrets.token_urlsafe(32),
         )
         session.add(registry)
 
         # Translate unique registry names to one stable API conflict.
         try:
-            await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
@@ -64,8 +60,7 @@ async def delete(registry_id: UUID) -> bool:
             return False
 
         # Organizations must retain a valid registered compute assignment.
-        organization_id = await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
-        if organization_id is not None:
+        if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
         # Operations retain historical state and naturally complete if their compute target no longer exists.
@@ -112,7 +107,12 @@ async def record_success(
         return True
 
 
-async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
+async def initialize_gateway_tls(
+    compute_id: UUID,
+    ca_certificate: str,
+    certificate: str,
+    private_key: str,
+) -> bool:
     """Persist a compute's immutable gateway TLS identity once."""
 
     # Lock the compute so concurrent first reconciliations cannot publish different identities.
@@ -127,8 +127,7 @@ async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certific
             registry.gateway_tls_certificate,
             registry.gateway_tls_private_key,
         )
-        desired = (ca_certificate, certificate, private_key)
-        if current == desired:
+        if current == (ca_certificate, certificate, private_key):
             return True
         if any(value is not None for value in current):
             raise RuntimeError("Compute registry gateway TLS identity is immutable")
@@ -144,15 +143,16 @@ async def set_status(compute_id: UUID, expected_status: Status, status: Status) 
 
     # Guard reconciliation writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        result = await session.execute(
-            update(ComputeRegistry)
-            .where(
-                ComputeRegistry.id == compute_id,
-                ComputeRegistry.status == expected_status,
+        if (
+            await session.execute(
+                update(ComputeRegistry)
+                .where(
+                    ComputeRegistry.id == compute_id,
+                    ComputeRegistry.status == expected_status,
+                )
+                .values(status=status)
             )
-            .values(status=status)
-        )
-        if result.rowcount != 1:
+        ).rowcount != 1:
             return False
         await session.commit()
         return True

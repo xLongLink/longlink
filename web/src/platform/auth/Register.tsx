@@ -21,9 +21,8 @@ type RegisterValues = {
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
     const t = useTranslator();
-    const location = useLocation();
     const showToast = useToast();
-    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
+    const initialEmail = new URLSearchParams(useLocation().search).get('email') ?? '';
     const schema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });
@@ -32,8 +31,7 @@ export default function Register() {
         resolver: zodResolver(schema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
-    const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
+    const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
         mutationFn: (payload: RegisterValues) =>
             fetchApiVoid('/api/auth/register', {
@@ -41,22 +39,18 @@ export default function Register() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             }),
-    });
-
-    /** Requests an email link without creating a pending account. */
-    async function handleRegister(payload: RegisterValues) {
-        try {
-            await registration.mutateAsync(payload);
+        onSuccess: () => {
             showToast({ body: t('auth.verificationEmailSent'), type: 'info' });
-        } catch {
+        },
+        onError: () => {
             showToast({ body: t('auth.registrationRequestFailed'), type: 'error' });
-        }
-    }
+        },
+    });
 
     return (
         <AuthPage title={<AuthWelcomeTitle />} description={<Divider label={t('auth.registerDescription')} />}>
             <Stack gap={3}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleRegister)}>
+                <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller
                         control={form.control}
                         name="email"
@@ -79,7 +73,6 @@ export default function Register() {
                         )}
                     />
                     <Button
-                        isDisabled={registration.isPending}
                         isLoading={registration.isPending}
                         label={
                             registration.isPending

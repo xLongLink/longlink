@@ -4,12 +4,10 @@ import { Text } from '@astryxdesign/core/Text';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+export type EnvironmentRow = { backend: ReactNode; icon: LucideIcon; name: string };
+
 /** Renders the SDK backend selected for each runtime environment. */
-export function EnvironmentTable({
-    environments,
-}: {
-    environments: { backend: ReactNode; icon: LucideIcon; name: string }[];
-}) {
+export function EnvironmentTable({ environments }: { environments: EnvironmentRow[] }) {
     return (
         <Table<Record<string, unknown>> density="compact">
             <TableHeader>

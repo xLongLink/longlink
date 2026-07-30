@@ -31,14 +31,13 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Verify the supplied password before issuing a session.
-    verified = PasswordHash.recommended().verify(payload.password, user.hashed_password)
-    if not verified or user.deleted_at is not None:
+    if not PasswordHash.recommended().verify(payload.password, user.hashed_password) or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Issue the session and accept email-bound Organization access atomically.
     credential = token.create_access_token(session, user)
-    await invitations.accept_in_session(session, user)
     await session.commit()
+    await invitations.accept(user.id)
 
     # Publish authentication only after all persistent login effects commit.
     response.headers["Cache-Control"] = "no-store"
@@ -96,10 +95,9 @@ async def request_password_reset(
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
     credential = token.create_password_reset_token(user)
-    recipient = user.email
     background_tasks.add_task(
         mail.send_password_reset_email,
-        recipient,
+        user.email,
         credential,
     )
 
@@ -248,24 +246,24 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
 
     # Build the authenticated account and its first revocable session in one transaction.
-    is_initial_admin = env.INITIAL_ADMIN_EMAIL is not None and email.casefold() == env.INITIAL_ADMIN_EMAIL.casefold()
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
         hashed_password=PasswordHash.recommended().hash(payload.password),
-        role=PlatformRoles.administrator if is_initial_admin else PlatformRoles.user,
+        role=PlatformRoles.user,
     )
     session.add(user)
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         await session.flush()
-        await invitations.accept_in_session(session, user)
         credential = token.create_access_token(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
+
+    await invitations.accept(user.id)
 
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"

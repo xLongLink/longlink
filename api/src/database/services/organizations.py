@@ -11,8 +11,6 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -31,6 +29,15 @@ class Infrastructure:
     compute: ComputeRegistry
     database: DatabaseRegistry
     storage: StorageRegistry
+
+
+@dataclass(frozen=True, slots=True)
+class ApplicationAccess:
+    """Hold a user's active Organization-derived access to one Application."""
+
+    application: Application
+    organization: Organization
+    role: OrganizationRoles
 
 
 async def infrastructure(organization_id: UUID) -> Infrastructure | None:
@@ -52,6 +59,33 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
         return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
+async def application_access(user_id: UUID, application_id: UUID) -> ApplicationAccess | None:
+    """Return a user's active Organization-derived access to one Application."""
+
+    # Resolve only the requested Application and active Organization membership.
+    async with session_scope() as session:
+        statement = (
+            select(Application, Organization, UserOrganization.role)
+            .join(Organization, Organization.id == Application.organization_id)
+            .join(
+                UserOrganization,
+                UserOrganization.organization_id == Organization.id,
+            )
+            .where(
+                Application.id == application_id,
+                Application.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+                UserOrganization.user_id == user_id,
+                UserOrganization.deleted_at.is_(None),
+            )
+        )
+        row = (await session.execute(statement)).one_or_none()
+        if row is None:
+            return None
+        application, organization, role = row
+        return ApplicationAccess(application=application, organization=organization, role=role)
+
+
 async def fetch() -> Sequence[Organization]:
     """Return all organizations in the database."""
 
@@ -66,16 +100,17 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     async with session_scope() as session:
-        result = await session.execute(
-            sql_update(Organization)
-            .where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-                Organization.status == expected_status,
+        if (
+            await session.execute(
+                sql_update(Organization)
+                .where(
+                    Organization.id == organization_id,
+                    Organization.deleted_at.is_(None),
+                    Organization.status == expected_status,
+                )
+                .values(status=status)
             )
-            .values(status=status)
-        )
-        if result.rowcount != 1:
+        ).rowcount != 1:
             return False
         await session.commit()
         return True
@@ -161,19 +196,6 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> Seque
         return (await session.scalars(statement)).all()
 
 
-async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
-    """Return one member role for an organization."""
-
-    # Query one active organization membership role.
-    async with session_scope() as session:
-        statement = select(UserOrganization.role).where(
-            UserOrganization.organization_id == organization_id,
-            UserOrganization.user_id == user_id,
-            UserOrganization.deleted_at.is_(None),
-        )
-        return (await session.scalars(statement)).one_or_none()
-
-
 async def update_member_role(
     organization_id: UUID,
     member_id: UUID,
@@ -182,7 +204,7 @@ async def update_member_role(
     *,
     can_manage_owner_role: bool = True,
 ) -> bool:
-    """Change an Organization membership and atomically queue compute reconciliation."""
+    """Change one active Organization membership."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
@@ -206,6 +228,10 @@ async def update_member_role(
         if membership.role == OrganizationRoles.owner and not can_manage_owner_role:
             raise HTTPException(status_code=403, detail="Owner management permissions required")
 
+        # Repeated role assignments do not require persistence or reconciliation.
+        if membership.role == role:
+            return True
+
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
             # Reject demotion when this is the only owner.
@@ -222,29 +248,25 @@ async def update_member_role(
             if len(owner_ids) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
-        # Persist the role change and queue reconciliation on the Organization's compute.
+        # Persist the role change.
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
-        organization = await session.get(Organization, organization_id)
-        if organization is None:
-            return False
-        compute = await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
-        if compute is None:
-            raise RuntimeError("Organization compute registry not found")
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.organization_create,
-            target_id=organization.id,
-        )
         await session.commit()
-        return True
+
+    return True
 
 
-async def create(name: str, slug: str, user: User, avatar: str | None = None) -> Organization:
-    """Create an Organization with automatically assigned infrastructure and queue reconciliation."""
+async def create(
+    name: str,
+    slug: str,
+    user: User,
+    avatar: str | None = None,
+    *,
+    compute_id: UUID | None = None,
+    require_running_compute: bool = True,
+) -> Organization:
+    """Create an Organization with automatically assigned infrastructure."""
 
     # Validate the user-derived runtime namespace before creating the row.
     organization_id = uuid4()
@@ -252,13 +274,18 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Lock the first ready compute reconciliation root.
-        compute_statement = (
-            select(ComputeRegistry).where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1).with_for_update()
-        )
+        # Lock the requested compute or select the first ready compute for interactive creation.
+        compute_statement = select(ComputeRegistry)
+        if compute_id is not None:
+            compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
+        elif require_running_compute:
+            compute_statement = compute_statement.where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1)
+        compute_statement = compute_statement.with_for_update()
         compute = (await session.scalars(compute_statement)).one_or_none()
         if compute is None:
             raise HTTPException(status_code=503, detail="No compute registry available")
+        if require_running_compute and compute.status != Status.running:
+            raise HTTPException(status_code=503, detail="No ready compute registry available")
 
         # Lock the first available database registry.
         database_statement = select(DatabaseRegistry).order_by(DatabaseRegistry.id).limit(1).with_for_update()
@@ -297,15 +324,8 @@ async def create(name: str, slug: str, user: User, avatar: str | None = None) ->
         )
         session.add(organization)
 
-        # Queue reconciliation and translate unique conflicts from autoflush or commit.
+        # Translate unique conflicts from autoflush or commit.
         try:
-            await operations.enqueue_in_session(
-                session,
-                compute.id,
-                locked_compute=compute,
-                kind=OperationKind.organization_create,
-                target_id=organization.id,
-            )
             await session.commit()
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
@@ -327,6 +347,8 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
         ).one_or_none()
         if organization is None:
             return None
+        if organization.avatar == avatar:
+            return organization
         organization.avatar = avatar
         organization.updated_at = utcnow()
         organization.updated_id = user.id
@@ -336,21 +358,13 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
-    """Tombstone an Organization and nested state while atomically queueing compute cleanup."""
+    """Tombstone an Organization and nested state."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        # Resolve the parent before taking locks in aggregate order.
-        current = await session.get(Organization, organization_id)
-        if current is None:
-            return None
-
-        # Lock the aggregate resources and stop if any disappear during acquisition.
-        compute = await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
-        organization = (
-            await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
-        ).one_or_none()
-        if compute is None or organization is None:
+        # Lock the Organization state before tombstoning its nested rows.
+        organization = await session.get(Organization, organization_id, with_for_update=True)
+        if organization is None:
             return None
 
         # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
@@ -394,14 +408,6 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .values(**tombstone)
             )
 
-        # Tombstones and their reconciliation request commit atomically.
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.organization_delete,
-            target_id=organization.id,
-        )
-
         await session.commit()
-        return organization
+
+    return organization

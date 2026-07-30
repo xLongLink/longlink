@@ -14,10 +14,5 @@ const ROLE_RANKS = {
 
 /** Returns whether one role is at least as privileged as the required role. */
 export function hasMinimumRole(role: Role | null | undefined, requiredRole: Role) {
-    // Missing membership roles cannot satisfy role requirements.
-    if (role === null || role === undefined) {
-        return false;
-    }
-
-    return ROLE_RANKS[role] >= ROLE_RANKS[requiredRole];
+    return role != null && ROLE_RANKS[role] >= ROLE_RANKS[requiredRole];
 }

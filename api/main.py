@@ -10,12 +10,16 @@ from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
+from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
 
 
 @contextlib.asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Run this API replica's registered Operation scheduler."""
+
+    # Reconcile the configured Platform administrator before serving authenticated traffic.
+    await user_service.ensure_administrator()
 
     # Start this replica's scheduler with the explicit registered handlers.
     worker = asyncio.create_task(jobs.run_operation_scheduler())

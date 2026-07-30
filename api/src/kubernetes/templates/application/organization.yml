@@ -12,6 +12,8 @@ metadata:
     namespace: $namespace
 spec:
     podSelector: {}
+    policyTypes:
+        - Ingress
     ingress:
         - from:
               - namespaceSelector:
@@ -20,3 +22,6 @@ spec:
                 podSelector:
                     matchLabels:
                         app: longlink-gateway
+          ports:
+              - protocol: TCP
+                port: 8000

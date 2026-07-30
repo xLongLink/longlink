@@ -10,7 +10,6 @@ import PlatformLayout from '@/platform/layout';
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {
     const t = useTranslator();
-    const location = useLocation();
 
     return (
         <PlatformLayout brandOnly>
@@ -22,7 +21,7 @@ export default function NotFound() {
                             <Button href="/docs" label={t('actions.seeDocs')} variant="secondary" />
                         </Stack>
                     }
-                    description={t('notFound.description', { path: location.pathname })}
+                    description={t('notFound.description', { path: useLocation().pathname })}
                     headingLevel={1}
                     icon={<Search aria-hidden="true" size={24} />}
                     title={t('notFound.title')}

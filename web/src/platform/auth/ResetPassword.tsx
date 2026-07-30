@@ -4,14 +4,14 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack } from '@astryxdesign/core/Stack';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useLocation } from 'react-router';
 import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiVoid } from '@/lib/api';
+import { useFragmentToken } from './use-fragment-token';
 
 type ResetPasswordValues = {
     password: string;
@@ -23,12 +23,7 @@ const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 export default function ResetPassword() {
     const t = useTranslator();
     const showToast = useToast();
-    const location = useLocation();
-    const [{ fragmentToken, token }] = useState(() => {
-        const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? '';
-
-        return { fragmentToken, token: fragmentToken || sessionStorage.getItem(PASSWORD_RESET_TOKEN_KEY) || '' };
-    });
+    const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
     const verificationStarted = useRef(false);
     const schema = z.object({
         password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
@@ -64,13 +59,12 @@ export default function ResetPassword() {
             fetchApiVoid('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: payload.password }),
+                body: JSON.stringify(payload),
             }),
     });
     const hasTokenError =
         (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
         (resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN');
-    const verifyToken = verification.mutate;
 
     /** Saves the new password while keeping invalid-token failures inline. */
     async function handleResetPassword(payload: ResetPasswordValues) {
@@ -89,14 +83,6 @@ export default function ResetPassword() {
         }
     }
 
-    useLayoutEffect(() => {
-        // URL fragments do not reach the server; remove the credential before the page paints.
-        if (fragmentToken) {
-            sessionStorage.setItem(PASSWORD_RESET_TOKEN_KEY, fragmentToken);
-            window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
-        }
-    }, [fragmentToken, location.pathname, location.search]);
-
     useEffect(() => {
         // Strict Mode may rerun effects, but credential exchange needs only one initial request.
         if (verificationStarted.current) {
@@ -104,8 +90,10 @@ export default function ResetPassword() {
         }
 
         verificationStarted.current = true;
-        verifyToken(token);
-    }, [token, verifyToken]);
+        verification.mutate(token);
+
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
+    }, [token, verification.mutate]);
 
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {
@@ -132,7 +120,7 @@ export default function ResetPassword() {
     if (!verification.isSuccess) {
         return (
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.resetPasswordDescription')}>
-                <Button isDisabled isLoading label={t('auth.resetPassword')} variant="primary" />
+                <Button isLoading label={t('auth.resetPassword')} variant="primary" />
             </AuthPage>
         );
     }
@@ -167,7 +155,6 @@ export default function ResetPassword() {
                         )}
                     />
                     <Button
-                        isDisabled={resetPassword.isPending}
                         isLoading={resetPassword.isPending}
                         label={resetPassword.isPending ? t('auth.resettingPassword') : t('auth.resetPassword')}
                         type="submit"

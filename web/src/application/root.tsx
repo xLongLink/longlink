@@ -1,13 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
-import { Outlet, type MetaFunction } from 'react-router';
+import { Outlet } from 'react-router';
 import '@/index.css';
 import { Document } from '@/layout/Document';
 import { I18nProvider } from '@/lib/i18n';
 import { createQueryClient } from '@/lib/react-query';
 import { AstryxProvider } from '@/providers';
 
-export const meta: MetaFunction = () => [{ title: 'LongLink' }];
+export const meta = () => [{ title: 'LongLink' }];
 
 /** Renders the complete embedded Application HTML document. */
 export function Layout({ children }: { children: ReactNode }) {

@@ -1,21 +1,22 @@
 import { FileText, Landmark, ShieldCheck } from 'lucide-react';
-import type { ArticleNavigationGroup, ArticlePage } from '@/platform/catalog';
+import type { ArticlePage } from '@/platform/catalog';
 import { content as impressumContent, metadata as impressumMetadata } from '@/platform/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
 import { homePage, legalPages } from '@/platform/public';
 
-const homeBreadcrumb = { title: 'Home', path: homePage.path };
-
 /** Builds a legal page with its standard Home breadcrumb. */
 function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
     return {
         ...page,
-        breadcrumbs: [homeBreadcrumb, { title: page.title, path: page.path }],
+        breadcrumbs: [
+            { title: 'Home', path: homePage.path },
+            { title: page.title, path: page.path },
+        ],
     };
 }
 
-export const LEGAL_PAGES: ArticlePage[] = [
+export const LEGAL_PAGES = [
     legalPage({
         ...legalPages.terms,
         icon: <FileText aria-hidden="true" size={16} />,
@@ -36,7 +37,7 @@ export const LEGAL_PAGES: ArticlePage[] = [
     }),
 ];
 
-export const LEGAL_GROUPS: ArticleNavigationGroup[] = [
+export const LEGAL_GROUPS = [
     {
         title: 'Legal',
         items: LEGAL_PAGES.map((page) => ({

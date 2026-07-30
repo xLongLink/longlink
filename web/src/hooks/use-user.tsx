@@ -82,25 +82,12 @@ export function useUserProfile(): UserProfileState {
 
     const { data: user, error, isLoading } = context;
 
-    // Return anonymous defaults when no authenticated user is loaded.
-    if (!user) {
-        return {
-            user: null,
-            role: 'user',
-            theme: DEFAULT_USER_PREFERENCES.theme,
-            accent: DEFAULT_USER_PREFERENCES.accent,
-            radius: DEFAULT_USER_PREFERENCES.radius,
-            isLoading,
-            error: error ?? null,
-        };
-    }
-
     return {
-        user,
-        role: user.role,
-        theme: user.theme,
-        accent: user.accent,
-        radius: user.radius,
+        user: user ?? null,
+        role: user?.role ?? 'user',
+        theme: user?.theme ?? DEFAULT_USER_PREFERENCES.theme,
+        accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
+        radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
         isLoading,
         error: error ?? null,
     };
@@ -142,8 +129,8 @@ export function useUpdateUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (payload: UserUpdate) => {
-            return fetchApiJson(
+        mutationFn: (payload: UserUpdate) =>
+            fetchApiJson(
                 '/api/me',
                 {
                     method: 'PATCH',
@@ -151,8 +138,7 @@ export function useUpdateUser() {
                     body: JSON.stringify(payload),
                 },
                 (value) => apiUserProfileSchema.parse(value)
-            );
-        },
+            ),
         onSuccess: (user) => {
             storeThemePreferences(user);
             queryClient.setQueryData(userProfileQueryKey, user);

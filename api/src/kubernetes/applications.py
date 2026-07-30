@@ -1,19 +1,37 @@
 import json
 import base64
 import asyncio
+import hashlib
 import binascii
 from uuid import UUID
+from typing import TYPE_CHECKING
 from src.utils import templates
 from collections.abc import Mapping
 from importlib.resources import files
-from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Deployment
-from src.kubernetes.names import (
-    APPLICATION_ID_LABEL,
-    application_service_name,
-    application_runtime_secret_name,
-    application_environment_secret_name,
-)
-from src.kubernetes.resources import KubernetesResources, deployment_is_ready
+from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment
+from src.kubernetes.client import deployment_is_ready
+
+if TYPE_CHECKING:
+    from src.kubernetes.client import Kubernetes
+
+APPLICATION_ID_LABEL = "longlink.io/application-id"
+RUNTIME_ENV_PREFIX = "LONGLINK_"
+
+
+def secret_values(secret: Secret) -> dict[str, str]:
+    """Decode the string values stored in one Kubernetes Secret."""
+
+    # Kubernetes returns Secret data as strict base64-encoded UTF-8 values.
+    data = secret.raw.get("data", {})
+    if not isinstance(data, dict) or not all(isinstance(name, str) and isinstance(value, str) for name, value in data.items()):
+        raise TypeError("Kubernetes Application Secret data must contain string values")
+    envs: dict[str, str] = {}
+    for name, value in data.items():
+        try:
+            envs[name] = base64.b64decode(value, validate=True).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError) as exc:
+            raise ValueError(f"Kubernetes Application Secret value {name!r} is invalid") from exc
+    return envs
 
 
 def pod_is_active(pod: Pod) -> bool:
@@ -27,102 +45,102 @@ def pod_is_active(pod: Pod) -> bool:
 class Applications:
     """Manage explicit Application deployment, deletion, readiness, and logs."""
 
-    def __init__(self, resources: KubernetesResources) -> None:
+    def __init__(self, client: "Kubernetes") -> None:
         """Initialize Application lifecycle access through shared cluster resources."""
 
-        self._resources = resources
+        self._client = client
 
-    async def stage_envs(
+    async def replace_secret(
         self,
         application_id: UUID,
         namespace: str,
         envs: Mapping[str, str],
-        *,
-        require_deployment: bool = False,
+        preserve_platform_values: bool,
     ) -> None:
-        """Stage user-owned values and roll an existing workload when present."""
+        """Replace shared Application values while retaining the other owner domain."""
 
-        # Repeated seed and API attempts converge the Secret before lifecycle work starts.
-        secret = await self._resources.replace_secret(application_environment_secret_name(application_id), namespace, envs)
-        deployment = await self._resources.read(Deployment, str(application_id), namespace)
-        if deployment is None:
-            if require_deployment:
-                raise ValueError("Kubernetes Application Deployment is missing")
-            return
+        # Read and retain values owned by the caller outside this update boundary.
+        api = await self._client.api()
+        secret = Secret(str(application_id), namespace=namespace, api=api)
+        existing: dict[str, str] = {}
+        if await secret.exists():
+            await secret.refresh()
+            existing = secret_values(secret)
+            await secret.delete()
+        preserved = {
+            name: value
+            for name, value in existing.items()
+            if name.startswith(RUNTIME_ENV_PREFIX) is preserve_platform_values
+        }
 
-        # Roll an existing workload when staged values change before a lifecycle retry.
-        resource_version = secret.metadata.get("resourceVersion")
-        if not isinstance(resource_version, str):
-            raise TypeError("Kubernetes Application environment Secret is missing its resource version")
-        await self._resources.patch(
-            Deployment,
-            str(application_id),
+        # Recreate the Secret with the complete user and Platform configuration.
+        await Secret(
             {
-                "spec": {
-                    "template": {
-                        "metadata": {
-                            "annotations": {
-                                "longlink.io/environment-secret-resource-version": resource_version,
-                            }
-                        }
-                    }
-                }
+                "metadata": {"name": str(application_id), "namespace": namespace},
+                "stringData": {**preserved, **envs},
             },
-            namespace,
-        )
+            api=api,
+        ).create()
+
+    async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
+        """Stage user-owned values for the next Application deployment."""
+
+        # Keep Platform-owned values separate from the user environment supplied at this boundary.
+        if any(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
+            raise ValueError("Application environment cannot include LongLink-managed variables")
+
+        # Preserve Platform-owned values while replacing the complete user environment.
+        await self.replace_secret(application_id, namespace, envs, preserve_platform_values=True)
 
     async def stage_runtime_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
         """Commit Platform-owned runtime values before creating the Application workload."""
 
-        await self._resources.create_secret(application_runtime_secret_name(application_id), namespace, envs)
-
-    async def read_runtime_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
-        """Read Platform-owned values from one Application runtime Secret."""
-
-        # Read the exact Secret from the Organization Namespace.
-        secret = await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace)
-        if secret is None:
-            if await self._resources.read(Deployment, str(application_id), namespace) is not None:
-                raise ValueError("Kubernetes Application runtime Secret is missing")
-            return None
-
-        # Kubernetes returns Secret data as strict base64-encoded UTF-8 values.
-        body = secret.raw
-        data = body.get("data", {})
-        if not isinstance(data, dict) or not all(isinstance(name, str) and isinstance(value, str) for name, value in data.items()):
-            raise TypeError("Kubernetes Application runtime Secret data must contain string values")
-        envs: dict[str, str] = {}
-        for name, value in data.items():
-            try:
-                envs[name] = base64.b64decode(value, validate=True).decode("utf-8")
-            except (binascii.Error, UnicodeDecodeError) as exc:
-                raise ValueError(f"Kubernetes Application runtime Secret value {name!r} is invalid") from exc
-        return envs
+        # Keep user-owned values while replacing the complete Platform runtime contract.
+        if not envs or not all(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
+            raise ValueError("Application runtime must contain only LongLink-managed variables")
+        await self.replace_secret(application_id, namespace, envs, preserve_platform_values=False)
 
     async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
         """Deploy one Application and wait for its rollout."""
+
+        # Bind the Pod revision to its complete Secret so credential rotation always restarts it.
+        api = await self._client.api()
+        secret = Secret(str(application_id), namespace=namespace, api=api)
+        if not await secret.exists():
+            raise RuntimeError("Kubernetes Application runtime Secret not found")
+        await secret.refresh()
+        runtime_revision = hashlib.sha256(
+            json.dumps(secret_values(secret), sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
 
         # Render workload resources before the first cluster mutation.
         deployment, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
             application_id_label=APPLICATION_ID_LABEL,
-            environment_secret_name=application_environment_secret_name(application_id),
             image=json.dumps(image),
             namespace=namespace,
-            runtime_secret_name=application_runtime_secret_name(application_id),
-            service_name=application_service_name(application_id),
+            runtime_revision=runtime_revision,
         )
 
-        # Establish stable Service discovery before creating Application Pods.
-        await self._resources.apply(Service, service)
-        await self._resources.apply(Deployment, deployment)
+        # Create or update the Service before the Deployment starts Application Pods.
+        service_resource = Service(service, api=api)
+        if await service_resource.exists():
+            await service_resource.patch(service)
+        else:
+            await service_resource.create()
+        deployment_resource = Deployment(deployment, api=api)
+        if await deployment_resource.exists():
+            await deployment_resource.patch(deployment)
+        else:
+            await deployment_resource.create()
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            deployed = await self._resources.read(Deployment, str(application_id), namespace)
-            if deployed is None:
+            deployed = Deployment(str(application_id), namespace=namespace, api=api)
+            if not await deployed.exists():
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
+            await deployed.refresh()
             if deployment_is_ready(deployed):
                 return
             await asyncio.sleep(5)
@@ -131,20 +149,29 @@ class Applications:
         """Delete one Application and wait until its Pods have terminated."""
 
         # Recheck only Kubernetes state while resources and Pods terminate.
-        while await self._resources.read(Namespace, namespace) is not None:
-            resources: tuple[APIObject | None, ...] = (
-                await self._resources.read(Deployment, str(application_id), namespace),
-                await self._resources.read(Service, application_service_name(application_id), namespace),
-                await self._resources.read(Secret, application_environment_secret_name(application_id), namespace),
-                await self._resources.read(Secret, application_runtime_secret_name(application_id), namespace),
+        api = await self._client.api()
+        namespace_resource = Namespace(namespace, api=api)
+        while await namespace_resource.exists():
+            resources = (
+                Deployment(str(application_id), namespace=namespace, api=api),
+                Service(f"app-{application_id}", namespace=namespace, api=api),
+                Secret(str(application_id), namespace=namespace, api=api),
             )
+            existing = []
             for resource in resources:
-                if resource is not None and resource.metadata.get("deletionTimestamp") is None:
-                    await self._resources.delete(type(resource), resource.name, namespace)
+                if await resource.exists():
+                    await resource.refresh()
+                    existing.append(resource)
+                    if resource.metadata.get("deletionTimestamp") is None:
+                        await resource.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: str(application_id)})
-            if all(resource is None for resource in resources) and not any(pod_is_active(pod) for pod in pods):
+            pods = [
+                pod
+                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+                if isinstance(pod, Pod)
+            ]
+            if not existing and not any(pod_is_active(pod) for pod in pods):
                 return
             await asyncio.sleep(5)
 
@@ -152,7 +179,12 @@ class Applications:
         """Return recent logs for one managed Application Pod."""
 
         # A missing Pod has no diagnostic log stream.
-        pods = await self._resources.list(Pod, namespace, {APPLICATION_ID_LABEL: str(application_id)})
+        api = await self._client.api()
+        pods = [
+            pod
+            async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+            if isinstance(pod, Pod)
+        ]
         active = [pod for pod in pods if pod_is_active(pod)]
         if not active:
             raise ValueError("No Application Pod found")

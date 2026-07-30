@@ -59,6 +59,8 @@ COPY . /workspace
 WORKDIR {workdir}
 
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
+ENV UV_PYTHON=/usr/local/bin/python
+ENV UV_PYTHON_DOWNLOADS=never
 
 RUN uv sync --locked --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
 

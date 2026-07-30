@@ -4,7 +4,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { LucideIcon } from 'lucide-react';
 import {
     Activity,
     AppWindow,
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 
-const sharedFoundationItems: { description: string; icon: LucideIcon; name: string }[] = [
+const sharedFoundationItems = [
     {
         name: 'Authentication',
         description: 'Email, password, sessions, and current-user context.',

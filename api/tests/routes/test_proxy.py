@@ -1,6 +1,7 @@
 import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
+from pathlib import Path
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import proxy as proxy_routes
 from src.models.roles import OrganizationRoles
@@ -27,7 +28,16 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     await applications.set_status(app.id, Status.creating, Status.running)
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
-    tls = object()
+    class FakeTLS:
+        """Capture the Platform client identity loaded into one TLS context."""
+
+        def load_cert_chain(self, certfile: str | Path, keyfile: str | Path) -> None:
+            """Capture the mTLS certificate and private key contents."""
+
+            captured["client_certificate"] = Path(certfile).read_text(encoding="ascii")
+            captured["client_private_key"] = Path(keyfile).read_text(encoding="ascii")
+
+    tls = FakeTLS()
 
     def fake_ssl_context(*, cadata: str) -> object:
         """Capture the compute CA used for gateway verification."""
@@ -116,6 +126,8 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     )
     assert "set-cookie" not in response.headers
     assert captured["cadata"] == registry.gateway_ca_certificate
+    assert captured["client_certificate"] == registry.gateway_tls_certificate
+    assert captured["client_private_key"] == registry.gateway_tls_private_key
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
@@ -124,7 +136,6 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
     assert isinstance(headers, dict)
-    assert headers["x-longlink-gateway-secret"] == registry.proxy_secret
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
@@ -155,7 +166,13 @@ async def test_application_proxy_rejects_oversized_request_body(
     organization = await create_organization(owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, Status.creating, Status.running)
-    tls = object()
+    class FakeTLS:
+        """Accept a client identity while testing request-size validation."""
+
+        def load_cert_chain(self, certfile: str | Path, keyfile: str | Path) -> None:
+            """Accept mTLS setup before the request body is consumed."""
+
+    tls = FakeTLS()
 
     def fake_ssl_context(*, cadata: str) -> object:
         """Return a test TLS context."""
@@ -274,7 +291,13 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     await applications.set_status(app.id, Status.creating, Status.running)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
-    tls = object()
+    class FakeTLS:
+        """Accept a client identity while testing transport failure handling."""
+
+        def load_cert_chain(self, certfile: str | Path, keyfile: str | Path) -> None:
+            """Accept mTLS setup before simulating a transport failure."""
+
+    tls = FakeTLS()
 
     def fake_ssl_context(*, cadata: str) -> object:
         """Return a test TLS context for the generated compute CA."""

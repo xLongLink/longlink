@@ -11,12 +11,8 @@ import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
 
-type OrganizationProps = {
-    settingsSection?: SettingsRouteSection;
-};
-
 /** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ settingsSection }: OrganizationProps) {
+export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {
     const t = useTranslator();
     const { organization = '' } = useParams();
     const {
@@ -28,6 +24,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         isLoading,
         error,
     } = useOrganization(organization);
+    const isSettings = settingsSection !== undefined;
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -45,24 +42,13 @@ export default function Organization({ settingsSection }: OrganizationProps) {
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
                     <Heading level={1}>
-                        {settingsSection === undefined
-                            ? t('organization.applicationsTitle')
-                            : t('organization.settingsTitle')}
+                        {isSettings ? t('organization.settingsTitle') : t('organization.applicationsTitle')}
                     </Heading>
                     <Text as="p" color="secondary">
-                        {settingsSection === undefined
-                            ? t('organization.applicationsDescription')
-                            : t('organization.settingsDescription')}
+                        {isSettings ? t('organization.settingsDescription') : t('organization.applicationsDescription')}
                     </Text>
                 </Stack>
-                {settingsSection === undefined ? (
-                    <Applications
-                        organization={organization}
-                        applications={applications}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : (
+                {isSettings ? (
                     <OrganizationSettings
                         organization={organization}
                         organizationDetails={organizationDetails}
@@ -71,6 +57,13 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         invitations={invitations}
                         organizationRole={organizationRole}
                         routeSection={settingsSection}
+                        isLoading={isLoading}
+                        error={error}
+                    />
+                ) : (
+                    <Applications
+                        organization={organization}
+                        applications={applications}
                         isLoading={isLoading}
                         error={error}
                     />

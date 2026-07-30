@@ -49,7 +49,7 @@ function TopLayout({
                 label={t('common.mainNavigation')}
             />
 
-            {!hasTabs && !reserveTabSpace ? null : (
+            {hasTabs || reserveTabSpace ? (
                 <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
                     {hasTabs ? (
                         <TabList
@@ -82,7 +82,7 @@ function TopLayout({
                         />
                     )}
                 </Stack>
-            )}
+            ) : null}
         </Stack>
     );
 

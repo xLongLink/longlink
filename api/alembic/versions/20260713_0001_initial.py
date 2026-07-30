@@ -99,7 +99,6 @@ def upgrade() -> None:
         ),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("gateway_url", sa.String(length=512), nullable=True),
-        sa.Column("proxy_secret", sa.String(length=255), nullable=False),
         sa.Column("gateway_ca_certificate", sa.Text(), nullable=True),
         sa.Column("gateway_tls_certificate", sa.Text(), nullable=True),
         sa.Column("gateway_tls_private_key", sa.Text(), nullable=True),

@@ -58,13 +58,13 @@ function IntegrationScale() {
         if (!target) return;
 
         // Show the final value without movement when reduced motion is requested.
-        let frame = 0;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            frame = requestAnimationFrame(() => setCount(integrationContextCount));
-            return () => cancelAnimationFrame(frame);
+            setCount(integrationContextCount);
+            return;
         }
 
         // Count up once using the design system's slow motion duration.
+        let frame: number | undefined;
         const duration =
             Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-slow-max')) * 2;
         const observer = new IntersectionObserver(
@@ -91,7 +91,9 @@ function IntegrationScale() {
 
         return () => {
             observer.disconnect();
-            cancelAnimationFrame(frame);
+            if (frame !== undefined) {
+                cancelAnimationFrame(frame);
+            }
         };
     }, []);
 
@@ -204,10 +206,6 @@ export default function Home() {
         const horizontalPosition = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
 
         event.currentTarget.style.setProperty('--painting-swing', `${horizontalPosition * 2.8}deg`);
-    }
-
-    function handlePaintingPointerLeave(event: PointerEvent<HTMLDivElement>) {
-        event.currentTarget.style.setProperty('--painting-swing', '0deg');
     }
 
     return (
@@ -411,7 +409,9 @@ export default function Home() {
                         >
                             <div
                                 className="homepage-hands-swing relative"
-                                onPointerLeave={handlePaintingPointerLeave}
+                                onPointerLeave={(event) =>
+                                    event.currentTarget.style.setProperty('--painting-swing', '0deg')
+                                }
                                 onPointerMove={handlePaintingPointerMove}
                             >
                                 <div

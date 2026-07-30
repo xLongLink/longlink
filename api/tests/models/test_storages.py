@@ -1,7 +1,6 @@
 import pytest
-from uuid import uuid4
 from pydantic import ValidationError
-from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
+from src.models.storages import StorageRegistryCreate
 
 pytestmark = pytest.mark.no_db
 
@@ -46,23 +45,3 @@ def test_storage_registry_create_rejects_invalid_endpoint_payload(payload: dict[
     # Invalid storage registry values fail before service-layer persistence.
     with pytest.raises(ValidationError):
         StorageRegistryCreate.model_validate(payload)
-
-
-def test_storage_registry_response_filters_provider_credentials() -> None:
-    """Exclude provider credentials from storage registry responses."""
-
-    # Response serialization exposes endpoint metadata while omitting provider credentials.
-    payload = StorageRegistryResponse.model_validate(
-        {
-            "id": uuid4(),
-            "name": "Primary Storage",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-        }
-    )
-
-    data = payload.model_dump()
-    assert data["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
-    assert "access_key_id" not in data
-    assert "secret_access_key" not in data

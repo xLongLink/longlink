@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.no_db]
 POSTGRES_PORT = 5432
 
 
-async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
     """Coalesce duplicate work and globally lease one Operation across PostgreSQL workers."""
 
     container = start_postgres("longlink", "secret", "longlink", POSTGRES_PORT)
@@ -29,7 +29,6 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
             await connection.run_sync(SQLModel.metadata.create_all)
 
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
-        monkeypatch.setattr(database_session, "_engine", engine)
         monkeypatch.setattr(database_session, "Session", session_factory)
 
         # Create independent compute targets without invoking registry service queue side effects.
@@ -37,23 +36,21 @@ async def test_claim_next_globally_leases_one_operation_to_one_concurrent_worker
             first_compute = ComputeRegistry(
                 name="First",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                proxy_secret="first-secret",
             )
             second_compute = ComputeRegistry(
                 name="Second",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                proxy_secret="second-secret",
             )
             session.add_all([first_compute, second_compute])
             await session.commit()
 
-        # Race duplicate enqueue transactions, then add unrelated work on another compute.
-        enqueue_tasks = [asyncio.create_task(operations.enqueue(first_compute.id)) for _ in range(2)]
-        duplicates = await asyncio.gather(*enqueue_tasks)
-        waiting = await operations.enqueue(second_compute.id)
+        # Race duplicate operation creations, then add unrelated work on another compute.
+        creation_tasks = [asyncio.create_task(operations.create(first_compute.id)) for _ in range(2)]
+        duplicates = await asyncio.gather(*creation_tasks)
+        waiting = await operations.create(second_compute.id)
 
-        # Run two workers concurrently so each claim uses an independent session and PostgreSQL row lock.
-        workers = [asyncio.create_task(operations.claim_next()) for _ in range(2)]
+        # Run two workers concurrently so each claim uses an independent session and row lock.
+        workers = [asyncio.create_task(operations.claim()) for _ in range(2)]
         claims = await asyncio.gather(*workers)
         claimed = [claim for claim in claims if claim is not None]
 

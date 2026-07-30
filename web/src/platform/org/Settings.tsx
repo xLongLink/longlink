@@ -31,21 +31,8 @@ import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';
 import People from './People';
 
-type SettingsProps = {
-    organization: string;
-    organizationDetails: ApiOrganizationSummary | undefined;
-    applications: ApiOrganizationApplication[];
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
-    organizationRole: Role | null;
-    routeSection: SettingsRouteSection;
-    isLoading: boolean;
-    error: Error | null;
-};
-
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
-type SettingsSection = Exclude<SettingsRouteSection, 'people'> | PeopleSection;
 
 const organizationAvatarSchema = z.union([
     z.literal(''),
@@ -91,7 +78,6 @@ function DatabaseSettings({
 }) {
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationDatabaseUsage(organizationId);
-    const rows = data ? [data] : [];
 
     return (
         <UsageSettings
@@ -102,7 +88,7 @@ function DatabaseSettings({
         >
             <Table
                 columns={columns}
-                data={rows}
+                data={data ? [data] : []}
                 density="compact"
                 emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                 hasHover
@@ -126,7 +112,6 @@ function StorageSettings({
 }) {
     const t = useTranslator();
     const { data, error, isLoading } = useOrganizationStorageUsage(organizationId);
-    const rows = data ? [data] : [];
 
     return (
         <UsageSettings
@@ -137,7 +122,7 @@ function StorageSettings({
         >
             <Table
                 columns={columns}
-                data={rows}
+                data={data ? [data] : []}
                 density="compact"
                 emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
                 hasHover
@@ -158,7 +143,17 @@ export default function Settings({
     routeSection,
     isLoading,
     error,
-}: SettingsProps) {
+}: {
+    organization: string;
+    organizationDetails: ApiOrganizationSummary | undefined;
+    applications: ApiOrganizationApplication[];
+    members: ApiOrganizationMember[];
+    invitations: ApiInvitation[];
+    organizationRole: Role | null;
+    routeSection: SettingsRouteSection;
+    isLoading: boolean;
+    error: Error | null;
+}) {
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
@@ -171,9 +166,8 @@ export default function Settings({
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
-    const hashValue = location.hash.replace(/^#/, '');
-    const peopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
-    const section: SettingsSection = routeSection === 'people' ? peopleSection : routeSection;
+    const peopleSection: PeopleSection = location.hash.replace(/^#/, '') === 'invitations' ? 'invitations' : 'members';
+    const section = routeSection === 'people' ? peopleSection : routeSection;
     const ownerCell = (
         <HStack gap={3} align="center">
             <Avatar src={organizationAvatar} name={organizationName} size="md" />

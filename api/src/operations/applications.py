@@ -1,11 +1,12 @@
 import secrets
-from src import adapters
 from src.operations import computes
 from src.environments import env
 from src.models.statuses import Status
-from src.database.services import compute, applications, organizations
+from src.adapters.postgres import Postgres
+from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute
+from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
 
 
@@ -27,8 +28,6 @@ async def create(claimed: Operation) -> str | None:
         return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
-    if registry is None:
-        return "Compute registry not found"
 
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -36,47 +35,26 @@ async def create(claimed: Operation) -> str | None:
     if application.status == Status.creating:
         # Resolve the Application's immutable provider assignments.
         database_registry = infrastructure.database
-        if database_registry is None:
-            return "Database registry not found"
         storage_registry = infrastructure.storage
-        if storage_registry is None:
-            return "Storage registry not found"
-        db = adapters.Postgres(
+        db = Postgres(
             database_registry.host,
             database_registry.port,
             database_registry.username,
             database_registry.password,
             database_registry.sslmode,
         )
-        object_storage = adapters.Exoscale(
+        object_storage = Exoscale(
             storage_registry.endpoint_url,
             storage_registry.access_key_id,
             storage_registry.secret_access_key,
         )
 
-        # Resolve the cluster-owned credentials before converging provider identities.
+        # Generate fresh credentials for this explicit creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
         await object_storage.create_prefix(bucket, prefix)
-        try:
-            persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
-        except (TypeError, ValueError):
-            return "Application runtime Secret is invalid"
-
-        # Generate credentials only until the runtime Secret commits their durable values.
-        if persisted_runtime_envs is None:
-            database_password = secrets.token_urlsafe(24)
-            credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
-        else:
-            database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
-            storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
-            storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
-            if not database_password or not storage_access_key_id or not storage_secret_access_key:
-                return "Application runtime Secret is invalid"
-            credentials = {
-                "access_key_id": storage_access_key_id,
-                "secret_access_key": storage_secret_access_key,
-            }
+        database_password = secrets.token_urlsafe(24)
+        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
 
         connection = await db.schema(organization.id, application.id, database_password)
 
@@ -99,13 +77,8 @@ async def create(claimed: Operation) -> str | None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
 
-        # Existing runtime values are immutable during creation and must match the expected contract exactly.
-        if persisted_runtime_envs is not None and persisted_runtime_envs != runtime_envs:
-            return "Application runtime Secret is invalid"
-
-        # Commit newly generated credentials before creating a workload that can consume them.
-        if persisted_runtime_envs is None:
-            await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
+        # Commit the generated runtime values before creating a workload that can consume them.
+        await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
 
     elif application.status != Status.running:
         return None
@@ -129,8 +102,9 @@ async def create(claimed: Operation) -> str | None:
         return "Application gateway state was not recorded"
 
     # Publish running only after both workload readiness and gateway publication succeed.
-    if not await applications.mark_running(application.id, organization.compute_id):
+    if not await applications.mark_running(application.id):
         return None
+    await operations.create(organization.compute_id)
     return None
 
 
@@ -148,12 +122,8 @@ async def delete(claimed: Operation) -> str | None:
         return "Application Organization not found"
     organization = infrastructure.organization
     registry = infrastructure.compute
-    if registry is None:
-        return "Compute registry not found"
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
-    if database_registry is None or storage_registry is None:
-        return "Application provider registry not found"
     cluster = Kubernetes(registry.kubeconfig)
 
     # Remove the gateway route and await rollout before terminating the backend Service and Pods.
@@ -161,14 +131,14 @@ async def delete(claimed: Operation) -> str | None:
     await cluster.applications.delete(application.id, organization.slug)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
-    db = adapters.Postgres(
+    db = Postgres(
         database_registry.host,
         database_registry.port,
         database_registry.username,
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.Exoscale(
+    object_storage = Exoscale(
         storage_registry.endpoint_url,
         storage_registry.access_key_id,
         storage_registry.secret_access_key,

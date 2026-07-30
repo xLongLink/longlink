@@ -7,7 +7,6 @@ type CodeTabItem = {
     code: string;
     label: string;
     value: string;
-    language?: string;
 };
 
 /** Renders connected tabs for switching between equivalent code snippets. */
@@ -22,7 +21,7 @@ export function CodeTabs({ items }: { items: [CodeTabItem, ...CodeTabItem[]] }) 
                     <Tab key={item.value} label={item.label} value={item.value} />
                 ))}
             </TabList>
-            <CodeBlock language={selectedItem.language ?? 'bash'}>{selectedItem.code}</CodeBlock>
+            <CodeBlock language="bash">{selectedItem.code}</CodeBlock>
         </Stack>
     );
 }

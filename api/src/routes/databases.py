@@ -1,9 +1,9 @@
-from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
 from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
+from src.adapters.postgres import Postgres
 from src.database.services import database
 
 router = APIRouter(dependencies=[Depends(authadmin)])
@@ -64,7 +64,7 @@ async def get_database_usage(registry_id: UUID):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
     # Inspect backend usage through the adapter.
-    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
+    db = Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
         return await db.usage()
     except Exception as exc:

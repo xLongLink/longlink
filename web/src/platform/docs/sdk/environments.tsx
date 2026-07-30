@@ -51,6 +51,6 @@ export const content = (
             Point the <Code>tool.longlink</Code> section in <Code>pyproject.toml</Code> to the environment class so
             LongLink knows which settings your application uses when it is built and deployed.
         </Text>
-        <CodeBlock language="text">{'[tool.longlink]\nenvironment = "src.envs:Env"'}</CodeBlock>
+        <CodeBlock language="plaintext">{'[tool.longlink]\nenvironment = "src.envs:Env"'}</CodeBlock>
     </Stack>
 );

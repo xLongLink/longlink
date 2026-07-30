@@ -7,9 +7,9 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { z } from 'zod';
 import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 import { AuthPage } from '@/components/AuthPage';
@@ -20,6 +20,7 @@ import { ApiError, fetchApiJson } from '@/lib/api';
 import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
+import { useFragmentToken } from './use-fragment-token';
 
 type RegistrationCompleteValues = {
     name: string;
@@ -35,14 +36,9 @@ const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 export default function VerifyEmail() {
     const t = useTranslator();
     const showToast = useToast();
-    const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [{ fragmentToken, token }] = useState(() => {
-        const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? '';
-
-        return { fragmentToken, token: fragmentToken || sessionStorage.getItem(REGISTRATION_TOKEN_KEY) || '' };
-    });
+    const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const [accountExists, setAccountExists] = useState(false);
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
@@ -95,16 +91,13 @@ export default function VerifyEmail() {
                 (value) => apiUserProfileSchema.parse(value)
             ),
     });
-    const verifyRegistration = verification.mutate;
-
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
             const user = await completion.mutateAsync(payload);
-            const profileKey = userProfileQueryKey;
 
-            await clearSessionQueries(queryClient, [profileKey]);
-            queryClient.setQueryData(profileKey, user);
+            await clearSessionQueries(queryClient, [userProfileQueryKey]);
+            queryClient.setQueryData(userProfileQueryKey, user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             navigate('/organizations', { replace: true });
         } catch (error) {
@@ -130,23 +123,17 @@ export default function VerifyEmail() {
         }
     }
 
-    useLayoutEffect(() => {
-        // URL fragments do not reach the server; remove the credential before the page paints.
-        if (fragmentToken) {
-            sessionStorage.setItem(REGISTRATION_TOKEN_KEY, fragmentToken);
-            window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
-        }
-    }, [fragmentToken, location.pathname, location.search]);
-
     useEffect(() => {
         // Repeat the idempotent exchange when Strict Mode remounts the mutation observer.
-        verifyRegistration(token);
-    }, [token, verifyRegistration]);
+        verification.mutate(token);
+
+        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
+    }, [token, verification.mutate]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoveryQuery = recoverySetup?.email ? new URLSearchParams({ email: recoverySetup.email }).toString() : '';
-    const recoveryRegisterHref = recoveryQuery ? `/auth/register?${recoveryQuery}` : '/auth/register';
-    const recoverySignInHref = recoveryQuery ? `/organizations?${recoveryQuery}` : '/organizations';
+    const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
+    const recoveryRegisterHref = `/auth/register${recoverySearch}`;
+    const recoverySignInHref = `/organizations${recoverySearch}`;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -178,7 +165,7 @@ export default function VerifyEmail() {
     if (!verification.data) {
         return (
             <AuthPage title={t('auth.verifyEmailTitle')} description={t('auth.verifyingEmail')}>
-                <Button isDisabled isLoading label={t('auth.verifyingEmail')} variant="primary" />
+                <Button isLoading label={t('auth.verifyingEmail')} variant="primary" />
             </AuthPage>
         );
     }
@@ -275,7 +262,6 @@ export default function VerifyEmail() {
                         )}
                     />
                     <Button
-                        isDisabled={completion.isPending}
                         isLoading={completion.isPending}
                         label={completion.isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
                         type="submit"

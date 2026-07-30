@@ -37,24 +37,20 @@ export default function PlatformLayout({
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
     const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
-        const targetUrl = new URL(tab.href, window.location.origin);
-
         return {
             label,
             icon: tab.icon,
             href: tab.href,
-            pathname: normalizePathname(targetUrl.pathname),
+            value: normalizePathname(new URL(tab.href, window.location.origin).pathname),
         };
     });
-    const activeTabPathname = tabEntries
-        .filter(
-            (tab) =>
-                tab.pathname === normalizedCurrentPathname || normalizedCurrentPathname.startsWith(`${tab.pathname}/`)
-        )
-        .reduce<string | undefined>(
-            (best, tab) => (best === undefined || tab.pathname.length > best.length ? tab.pathname : best),
-            undefined
-        );
+    const activeTabPathname = tabEntries.reduce<string | undefined>((best, tab) => {
+        if (tab.value !== normalizedCurrentPathname && !normalizedCurrentPathname.startsWith(`${tab.value}/`)) {
+            return best;
+        }
+
+        return best === undefined || tab.value.length > best.length ? tab.value : best;
+    }, undefined);
     const { user } = useUserProfile();
 
     return (
@@ -83,7 +79,7 @@ export default function PlatformLayout({
             }
             height={fillViewport ? 'fill' : 'auto'}
             reserveTabSpace={reserveTabSpace}
-            tabs={tabEntries.map(({ pathname, ...tab }) => ({ ...tab, value: pathname }))}
+            tabs={tabEntries}
             topNavClassName="min-h-11 px-7"
         >
             {children}

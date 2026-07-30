@@ -22,7 +22,7 @@ function decodeSegment(segment: string): string {
 
 /** Builds breadcrumbs for organization and application routes. */
 function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
-    const organization = segments[1] ?? '';
+    const organization = segments[1];
     const application = segments[2] === 'apps' ? segments[3] : null;
     const organizationCrumb: BreadcrumbTrailItem = {
         label: startCase(decodeSegment(organization)),

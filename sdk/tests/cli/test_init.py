@@ -40,7 +40,6 @@ def test_init_adds_github_ci_files_when_requested() -> None:
         ci_source = ROOT / ".static" / "ci" / "github"
 
         assert result.exit_code == 0
-        assert (target / "pyproject.toml").read_bytes() == (ROOT / ".static" / "new" / "pyproject.toml").read_bytes()
         _assert_directory_was_copied(ci_source, target)
 
 

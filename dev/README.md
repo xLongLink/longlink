@@ -43,7 +43,7 @@ umask 077
 k3d kubeconfig get compute > api/kubeconfig.yaml
 ```
 
-## Local seed setup
+## Seed setup
 
 Create the ignored seed configuration from the tracked sample:
 
@@ -71,25 +71,55 @@ The URL's database path is not persisted; LongLink provisions a separate databas
 the seed at a PostgreSQL server containing production LongLink data. `make down` does not remove databases or roles
 from a configured remote server.
 
-To reconcile compute resources against a remote Kubernetes cluster, set the path to its ignored kubeconfig:
+`make seed` selects its compute from `KUBECONFIG`. Without it, seed uses `api/kubeconfig.yaml` created by `make local`.
+To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 
 ```bash
 KUBECONFIG=../kubeconfig.yml
 ```
 
-Remote compute targets require an `APPLICATION_IMAGE` that they can pull; the local registry image is only available to
-the cluster created by `make local`.
+Remote compute targets require an `APPLICATION_IMAGE` that they can pull. `make seed` never creates local infrastructure
+or builds Application images; use `make local` before seeding a local cluster. The local registry image is only available
+to the cluster created by `make local`.
 
-`make seed` builds and deploys `localhost:15000/longlink-app:dev` by default. Set `APPLICATION_IMAGE` to the published
-sample image, `ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before seeding.
+The local seed defaults to `localhost:15000/longlink-app:dev`. Set `APPLICATION_IMAGE` to the published sample image,
+`ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before remote seeding.
 
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
-Start local services, build or pull the configured Application image, run API migrations, and seed local data:
+Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations
+and seed local or remote compute data:
+
+```bash
+make api
+```
 
 ```bash
 make seed
 ```
+
+## Cleanup
+
+Clean the compute, database, and storage resources configured in `api/.env.seed`:
+
+```bash
+cd api
+uv run --locked python cleanup.py
+```
+
+To restore a dedicated cluster to its newly provisioned baseline, use the repository reset command:
+
+```bash
+make reset
+```
+
+This removes every namespace except `default`, the Kubernetes system namespaces, and the provider-managed
+`cilium-secrets` namespace. It also removes and verifies all LongLink PostgreSQL databases and roles, Exoscale buckets
+and credentials, and Platform registry state recovered from either the Platform database or Kubernetes runtime Secrets.
+Do not run this command against a cluster that contains non-LongLink workloads.
+
+The command deletes `longlink-system` and all discovered LongLink Organization namespaces, then removes the seeded
+database schemas, databases, storage credentials, and buckets tracked in Platform state.
 
 LongLink resolves the pulled tag through the registry and deploys its immutable digest.
 LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove those
