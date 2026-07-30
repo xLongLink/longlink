@@ -9,7 +9,7 @@ from src.utils import templates
 from collections.abc import Mapping
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment
-from src.kubernetes.client import deployment_is_ready
+from src.kubernetes.client import apply_resource, deployment_is_ready
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -50,60 +50,46 @@ class Applications:
 
         self._client = client
 
-    async def replace_secret(
-        self,
-        application_id: UUID,
-        namespace: str,
-        envs: Mapping[str, str],
-        preserve_platform_values: bool,
-    ) -> None:
-        """Replace shared Application values while retaining the other owner domain."""
+    async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
+        """Create the user-owned values for an Application deployment."""
 
-        # Read and retain values owned by the caller outside this update boundary.
+        # Keep Platform-owned values outside the user environment supplied at this boundary.
+        if any(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
+            raise ValueError("Application environment cannot include LongLink-managed variables")
+
+        # Create the immutable Application Secret before Platform provisioning completes its values.
         api = await self._client.api()
-        secret = Secret(str(application_id), namespace=namespace, api=api)
-        existing: dict[str, str] = {}
-        if await secret.exists():
-            await secret.refresh()
-            existing = secret_values(secret)
-            await secret.delete()
-        preserved = {
-            name: value
-            for name, value in existing.items()
-            if name.startswith(RUNTIME_ENV_PREFIX) is preserve_platform_values
-        }
-
-        # Recreate the Secret with the complete user and Platform configuration.
         await Secret(
             {
-                "metadata": {"name": str(application_id), "namespace": namespace},
-                "stringData": {**preserved, **envs},
+                "metadata": {
+                    "name": str(application_id),
+                    "namespace": namespace,
+                    "labels": {APPLICATION_ID_LABEL: str(application_id)},
+                },
+                "stringData": envs,
             },
             api=api,
         ).create()
 
-    async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Stage user-owned values for the next Application deployment."""
-
-        # Keep Platform-owned values separate from the user environment supplied at this boundary.
-        if any(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
-            raise ValueError("Application environment cannot include LongLink-managed variables")
-
-        # Preserve Platform-owned values while replacing the complete user environment.
-        await self.replace_secret(application_id, namespace, envs, preserve_platform_values=True)
-
     async def stage_runtime_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Commit Platform-owned runtime values before creating the Application workload."""
+        """Add Platform-owned runtime values before creating the Application workload."""
 
-        # Keep user-owned values while replacing the complete Platform runtime contract.
+        # Accept only the complete Platform runtime contract.
         if not envs or not all(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
             raise ValueError("Application runtime must contain only LongLink-managed variables")
-        await self.replace_secret(application_id, namespace, envs, preserve_platform_values=False)
+
+        # Add generated runtime values to the user Secret before a Pod can consume it.
+        api = await self._client.api()
+        secret = Secret(str(application_id), namespace=namespace, api=api)
+        if not await secret.exists():
+            raise RuntimeError("Kubernetes Application Secret not found")
+        data = {name: base64.b64encode(value.encode()).decode("ascii") for name, value in envs.items()}
+        await secret.patch({"data": data}, type="merge")
 
     async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
         """Deploy one Application and wait for its rollout."""
 
-        # Bind the Pod revision to its complete Secret so credential rotation always restarts it.
+        # Bind the Pod revision to its complete Secret before creating the workload.
         api = await self._client.api()
         secret = Secret(str(application_id), namespace=namespace, api=api)
         if not await secret.exists():
@@ -125,15 +111,9 @@ class Applications:
 
         # Create or update the Service before the Deployment starts Application Pods.
         service_resource = Service(service, api=api)
-        if await service_resource.exists():
-            await service_resource.patch(service)
-        else:
-            await service_resource.create()
+        await apply_resource(service_resource, service)
         deployment_resource = Deployment(deployment, api=api)
-        if await deployment_resource.exists():
-            await deployment_resource.patch(deployment)
-        else:
-            await deployment_resource.create()
+        await apply_resource(deployment_resource, deployment)
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:

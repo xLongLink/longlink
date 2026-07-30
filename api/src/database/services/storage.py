@@ -1,11 +1,11 @@
 from uuid import UUID
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from src.database.session import session_scope
 from src.database.models.storages import StorageRegistry
 from src.database.models.organizations import Organization
+from src.database.services.errors import ConflictError
 
 
 async def fetch() -> Sequence[StorageRegistry]:
@@ -41,7 +41,7 @@ async def create(name: str, endpoint_url: str, access_key_id: str, secret_access
         try:
             await session.commit()
         except IntegrityError as exc:
-            raise HTTPException(status_code=409, detail="Storage registry already exists") from exc
+            raise ConflictError("Storage registry already exists") from exc
 
         return registry
 
@@ -57,7 +57,7 @@ async def delete(registry_id: UUID) -> bool:
 
         # Keep registries assigned to active or cleanup-pending Organizations available.
         if await session.scalar(select(Organization.id).where(Organization.storage_id == registry_id).limit(1)) is not None:
-            raise HTTPException(status_code=409, detail="Storage registry is used by organizations")
+            raise ConflictError("Storage registry is used by organizations")
 
         # Internal registries have no soft-delete or audit lifecycle.
         await session.delete(registry)

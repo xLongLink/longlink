@@ -1,5 +1,4 @@
 from uuid import UUID, uuid4
-from fastapi import HTTPException
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
@@ -19,6 +18,7 @@ from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+from src.database.services.errors import ConflictError, ForbiddenError, UnavailableError
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,15 +29,6 @@ class Infrastructure:
     compute: ComputeRegistry
     database: DatabaseRegistry
     storage: StorageRegistry
-
-
-@dataclass(frozen=True, slots=True)
-class ApplicationAccess:
-    """Hold a user's active Organization-derived access to one Application."""
-
-    application: Application
-    organization: Organization
-    role: OrganizationRoles
 
 
 async def infrastructure(organization_id: UUID) -> Infrastructure | None:
@@ -59,8 +50,8 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
         return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def application_access(user_id: UUID, application_id: UUID) -> ApplicationAccess | None:
-    """Return a user's active Organization-derived access to one Application."""
+async def application_access(user_id: UUID, application_id: UUID) -> tuple[Application, Organization, OrganizationRoles] | None:
+    """Return one Application, its Organization, and a user's active Organization role."""
 
     # Resolve only the requested Application and active Organization membership.
     async with session_scope() as session:
@@ -83,7 +74,7 @@ async def application_access(user_id: UUID, application_id: UUID) -> Application
         if row is None:
             return None
         application, organization, role = row
-        return ApplicationAccess(application=application, organization=organization, role=role)
+        return application, organization, role
 
 
 async def fetch() -> Sequence[Organization]:
@@ -226,7 +217,7 @@ async def update_member_role(
 
         # Only owners may change another owner's role.
         if membership.role == OrganizationRoles.owner and not can_manage_owner_role:
-            raise HTTPException(status_code=403, detail="Owner management permissions required")
+            raise ForbiddenError("Owner management permissions required")
 
         # Repeated role assignments do not require persistence or reconciliation.
         if membership.role == role:
@@ -246,7 +237,7 @@ async def update_member_role(
             )
             owner_ids = (await session.scalars(owner_statement)).all()
             if len(owner_ids) <= 1:
-                raise HTTPException(status_code=409, detail="Organization must have at least one owner")
+                raise ConflictError("Organization must have at least one owner")
 
         # Persist the role change.
         membership.updated_at = utcnow()
@@ -283,21 +274,21 @@ async def create(
         compute_statement = compute_statement.with_for_update()
         compute = (await session.scalars(compute_statement)).one_or_none()
         if compute is None:
-            raise HTTPException(status_code=503, detail="No compute registry available")
+            raise UnavailableError("No compute registry available")
         if require_running_compute and compute.status != Status.running:
-            raise HTTPException(status_code=503, detail="No ready compute registry available")
+            raise UnavailableError("No ready compute registry available")
 
         # Lock the first available database registry.
         database_statement = select(DatabaseRegistry).order_by(DatabaseRegistry.id).limit(1).with_for_update()
         database_registry = (await session.scalars(database_statement)).one_or_none()
         if database_registry is None:
-            raise HTTPException(status_code=503, detail="No database registry available")
+            raise UnavailableError("No database registry available")
 
         # Lock the first available storage registry.
         storage_statement = select(StorageRegistry).order_by(StorageRegistry.id).limit(1).with_for_update()
         storage_registry = (await session.scalars(storage_statement)).one_or_none()
         if storage_registry is None:
-            raise HTTPException(status_code=503, detail="No storage registry available")
+            raise UnavailableError("No storage registry available")
 
         # Build the Organization with its immutable infrastructure assignments.
         organization = Organization(
@@ -330,7 +321,7 @@ async def create(
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
         except IntegrityError as exc:
-            raise HTTPException(status_code=409, detail="Organization already exists") from exc
+            raise ConflictError("Organization already exists") from exc
 
         return organization
 

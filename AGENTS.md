@@ -2,7 +2,7 @@
 
 - When listing improvement suggestions, use numbered lists.
 - Project is in MVP mode - No need for backwards compatibility
-- At the end of each task, list 5 cleanup and simplification opportunities, list the file and a short explanation
+- At the end of each task, list 5 cleanup, refactoring and simplification that would result in removal of code, list the file and a two line explanation
 
 ## Product Language
 
@@ -92,7 +92,8 @@ longlink/
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - If a constant is used only once, then hardcode the value instead.
-
+- The code need to be pytonic, where is needed prefer easy to read over efficiency. 
+ 
 ## JavaScript / TypeScript Guidelines
 
 - Validate inputs at system boundaries.

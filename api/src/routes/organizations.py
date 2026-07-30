@@ -8,6 +8,7 @@ from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
 from src.adapters.postgres import Postgres
 from src.database.services import storage, database, operations, invitations, organizations
+from src.database.services.errors import ConflictError, ForbiddenError, NotFoundError, UnavailableError
 from src.models.operations import OperationKind
 from src.models.organizations import (
     OrganizationCreate,
@@ -173,7 +174,12 @@ async def create_organization_invitation(organization_id: UUID, payload: Organiz
     if roles.rank(payload.role) > roles.rank(membership.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    invitation = await invitations.create(membership.organization_id, payload.email, payload.role, user)
+    try:
+        invitation = await invitations.create(membership.organization_id, payload.email, payload.role, user)
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     await mail.send_organization_invitation_email(invitation.email, membership.organization.name, invitation.role)
 
 
@@ -202,13 +208,18 @@ async def update_organization_member(
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
     # Persist the requested role only for an active Organization member.
-    updated = await organizations.update_member_role(
-        membership.organization_id,
-        member_id,
-        payload.role,
-        user,
-        can_manage_owner_role=can_manage_owner_role,
-    )
+    try:
+        updated = await organizations.update_member_role(
+            membership.organization_id,
+            member_id,
+            payload.role,
+            user,
+            can_manage_owner_role=can_manage_owner_role,
+        )
+    except ForbiddenError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
     await operations.create(
@@ -264,6 +275,10 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         organization = await organizations.create(payload.name, slug, user)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except UnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     await operations.create(
         organization.compute_id,

@@ -1,5 +1,4 @@
 from uuid import UUID
-from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -12,6 +11,7 @@ from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
+from src.database.services.errors import ConflictError
 
 
 async def fetch() -> Sequence[ComputeRegistry]:
@@ -45,7 +45,7 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
         try:
             await session.commit()
         except IntegrityError as exc:
-            raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
+            raise ConflictError("Compute registry already exists") from exc
 
         return registry
 
@@ -61,7 +61,7 @@ async def delete(registry_id: UUID) -> bool:
 
         # Organizations must retain a valid registered compute assignment.
         if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
-            raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
+            raise ConflictError("Compute registry is used by organizations")
 
         # Operations retain historical state and naturally complete if their compute target no longer exists.
         await session.delete(registry)

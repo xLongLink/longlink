@@ -5,6 +5,7 @@ from src.logger import logger
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.adapters.postgres import Postgres
 from src.database.services import database
+from src.database.services.errors import ConflictError
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -13,14 +14,17 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_database_registry(payload: DatabaseRegistryCreate):
     """Register one database backend."""
 
-    return await database.create(
-        payload.name,
-        payload.host,
-        payload.port,
-        payload.username,
-        payload.password,
-        payload.sslmode,
-    )
+    try:
+        return await database.create(
+            payload.name,
+            payload.host,
+            payload.port,
+            payload.username,
+            payload.password,
+            payload.sslmode,
+        )
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
@@ -47,7 +51,11 @@ async def delete_database_registry(registry_id: UUID):
     """Delete one unused database backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.
-    if not await database.delete(registry_id):
+    try:
+        deleted = await database.delete(registry_id)
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if not deleted:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
 

@@ -1,5 +1,4 @@
 from uuid import UUID
-from fastapi import HTTPException
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
@@ -12,6 +11,7 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+from src.database.services.errors import ConflictError, NotFoundError
 
 
 async def fetch() -> Sequence[Application]:
@@ -101,20 +101,20 @@ async def create(
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
         if current is None:
-            raise HTTPException(status_code=404, detail="Organization not found")
+            raise NotFoundError("Organization not found")
         compute = await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
         organization = (
             await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).one_or_none()
         if compute is None or organization is None:
-            raise HTTPException(status_code=404, detail="Organization not found")
+            raise NotFoundError("Organization not found")
         if require_ready:
             if compute.status != Status.running:
-                raise HTTPException(status_code=409, detail="Compute registry is not ready")
+                raise ConflictError("Compute registry is not ready")
             if organization.deleted_at is not None or organization.status != Status.running:
-                raise HTTPException(status_code=409, detail="Organization is not ready")
+                raise ConflictError("Organization is not ready")
         elif organization.deleted_at is not None:
-            raise HTTPException(status_code=409, detail="Organization is not ready")
+            raise ConflictError("Organization is not ready")
 
         # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
@@ -136,7 +136,7 @@ async def create(
         try:
             await session.flush()
         except IntegrityError as exc:
-            raise HTTPException(status_code=409, detail="Application slug already exists") from exc
+            raise ConflictError("Application slug already exists") from exc
 
         await session.commit()
         return application
@@ -199,10 +199,10 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
         return True
 
 
-async def replace_environment(application_id: UUID, expected_status: Status, replace: Callable[[], Awaitable[None]]) -> Status | None:
-    """Replace cluster environment state while preventing concurrent Application deletion."""
+async def stage_environment(application_id: UUID, expected_status: Status, stage: Callable[[], Awaitable[None]]) -> Status | None:
+    """Stage initial cluster environment state while preventing concurrent Application deletion."""
 
-    # Lock the active Application across the external replacement so tombstoning cannot race Secret creation.
+    # Lock the active Application across initial Secret creation so tombstoning cannot race it.
     async with session_scope() as session:
         application = (
             await session.scalars(
@@ -217,9 +217,9 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
         if application is None:
             return None
 
-        # Mutate Kubernetes only while the locked Application remains in the caller's expected lifecycle state.
+        # Create Kubernetes state only while the locked Application remains in the expected lifecycle state.
         if application.status == expected_status:
-            await replace()
+            await stage()
         return application.status
 
 

@@ -1,11 +1,11 @@
 import pytest
 from uuid import uuid4
-from fastapi import HTTPException
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
+from src.database.services.errors import ConflictError
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -53,7 +53,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     open_before = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError) as exc:
         await applications.create(
             organization.id,
             "Dashboard",
@@ -80,8 +80,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     open_after = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Organization is not ready"
+    assert str(exc.value) == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
@@ -110,7 +109,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     user, organization, _ = await create_application_context("duplicate")
 
     # Act
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError) as exc:
         await applications.create(
             organization.id,
             "Duplicate dashboard",
@@ -120,8 +119,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
         )
 
     # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Application slug already exists"
+    assert str(exc.value) == "Application slug already exists"
 
 
 async def test_fetch_and_organization_applications_ignore_deleted_applications() -> None:

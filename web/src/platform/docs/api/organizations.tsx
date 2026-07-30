@@ -37,31 +37,6 @@ const organizationResources = [
     { name: 'Applications', description: 'Runtime services', icon: Wrench },
 ];
 
-/** Renders the organization resource ownership diagram. */
-function OrganizationResourcesDiagram() {
-    return (
-        <Stack gap={4}>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <CheckCircle aria-hidden="true" className="text-accent" size={20} />
-                    <Text weight="semibold">Organization</Text>
-                </Stack>
-            </Card>
-            <Grid columns={{ minWidth: 160, max: 4, repeat: 'fit' }} gap={4}>
-                {organizationResources.map(({ description, icon: ResourceIcon, name }) => (
-                    <Card key={name} variant="muted">
-                        <Stack gap={2} align="center">
-                            <ResourceIcon aria-hidden="true" className="text-accent" size={20} />
-                            <Text weight="semibold">{name}</Text>
-                            <Text type="supporting">{description}</Text>
-                        </Stack>
-                    </Card>
-                ))}
-            </Grid>
-        </Stack>
-    );
-}
-
 export const metadata = {
     toc: [{ id: 'roles', label: 'Roles' }],
     lastUpdated: '2026-07-25',
@@ -81,7 +56,25 @@ export const content = (
             Every application belongs to one organization. Organization membership controls who can see the workspace,
             manage people, deploy applications, inspect resources, and open application runtimes.
         </Text>
-        <OrganizationResourcesDiagram />
+        <Stack gap={4}>
+            <Card variant="muted">
+                <Stack gap={2} align="center">
+                    <CheckCircle aria-hidden="true" className="text-accent" size={20} />
+                    <Text weight="semibold">Organization</Text>
+                </Stack>
+            </Card>
+            <Grid columns={{ minWidth: 160, max: 4, repeat: 'fit' }} gap={4}>
+                {organizationResources.map(({ description, icon: ResourceIcon, name }) => (
+                    <Card key={name} variant="muted">
+                        <Stack gap={2} align="center">
+                            <ResourceIcon aria-hidden="true" className="text-accent" size={20} />
+                            <Text weight="semibold">{name}</Text>
+                            <Text type="supporting">{description}</Text>
+                        </Stack>
+                    </Card>
+                ))}
+            </Grid>
+        </Stack>
         <Heading id="roles" level={2}>
             Roles
         </Heading>

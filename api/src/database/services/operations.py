@@ -10,6 +10,7 @@ from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fetch() -> Sequence[Operation]:
@@ -30,57 +31,71 @@ async def create(
 ) -> Operation:
     """Create one registered Platform operation in a dedicated transaction."""
 
-    # Serialize operation creation through its compute aggregate.
+    # Commit independently for simple callers that do not compose a larger command.
     async with session_scope() as session:
-        target = target_id or compute_id
-        if kind == OperationKind.compute_reconcile and target != compute_id:
-            raise ValueError("Compute operations must target their compute registry")
-        if kind != OperationKind.compute_reconcile and target_id is None:
-            raise ValueError("Resource operations require an explicit target")
+        operation = await enqueue(session, compute_id, kind=kind, target_id=target_id, delay_seconds=delay_seconds)
+        await session.commit()
+        return operation
 
-        # Lock the compute before resolving its current release target.
-        compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if compute is None:
-            raise ValueError("Operation compute registry not found")
-        versions = (
-            await session.scalars(
-                select(Operation.platform_version)
-                .where(
-                    Operation.kind == kind,
-                    Operation.target_id == target,
-                )
-                .distinct()
-            )
-        ).all()
-        latest_version = max(
-            Version(version) for version in [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])]
-        )
-        platform_version = f"v{latest_version}"
 
-        # Reuse scheduled work and preserve active work as an immutable retry boundary.
-        operation = await session.scalar(
-            select(Operation)
+async def enqueue(
+    session: AsyncSession,
+    compute_id: UUID,
+    *,
+    kind: OperationKind = OperationKind.compute_reconcile,
+    target_id: UUID | None = None,
+    delay_seconds: float = 0,
+) -> Operation:
+    """Add one Platform operation to an existing command transaction."""
+
+    target = compute_id if target_id is None else target_id
+    if kind == OperationKind.compute_reconcile and target != compute_id:
+        raise ValueError("Compute operations must target their compute registry")
+    if kind != OperationKind.compute_reconcile and target_id is None:
+        raise ValueError("Resource operations require an explicit target")
+
+    # Lock the compute before resolving its current release target.
+    compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
+    if compute is None:
+        raise ValueError("Operation compute registry not found")
+    versions = (
+        await session.scalars(
+            select(Operation.platform_version)
             .where(
                 Operation.kind == kind,
                 Operation.target_id == target,
-                Operation.platform_version == platform_version,
-                Operation.finished_at.is_(None),
-                Operation.lease_expires_at.is_(None),
             )
-            .order_by(Operation.created_at, Operation.id)
-            .limit(1)
-            .with_for_update()
+            .distinct()
         )
-        if operation is None:
-            operation = Operation(
-                kind=kind,
-                target_id=target,
-                platform_version=platform_version,
-                available_at=utcnow() + timedelta(seconds=max(0, delay_seconds)),
-            )
-            session.add(operation)
-        await session.commit()
-        return operation
+    ).all()
+    latest_version = max(
+        Version(version) for version in [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])]
+    )
+    platform_version = f"v{latest_version}"
+
+    # Reuse scheduled work and preserve active work as an immutable retry boundary.
+    operation = await session.scalar(
+        select(Operation)
+        .where(
+            Operation.kind == kind,
+            Operation.target_id == target,
+            Operation.platform_version == platform_version,
+            Operation.finished_at.is_(None),
+            Operation.lease_expires_at.is_(None),
+        )
+        .order_by(Operation.created_at, Operation.id)
+        .limit(1)
+        .with_for_update()
+    )
+    if operation is None:
+        operation = Operation(
+            kind=kind,
+            target_id=target,
+            platform_version=platform_version,
+            available_at=utcnow() + timedelta(seconds=max(0, delay_seconds)),
+        )
+        session.add(operation)
+    return operation
 
 
 async def schedule_now(operation_id: UUID) -> bool:

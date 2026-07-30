@@ -6,9 +6,10 @@ from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import Status
 from src.database.services import compute, operations, applications, organizations
+from src.database.services.errors import ConflictError, NotFoundError
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
-from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationEnvironment
+from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 
 router = APIRouter()
@@ -52,17 +53,22 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    application = await applications.create(
-        organization.id,
-        payload.name,
-        application_slug,
-        image=metadata.image,
-        sdk=metadata.sdk,
-        version=metadata.version,
-        description=payload.description,
-        icon=payload.icon,
-        user=user,
-    )
+    try:
+        application = await applications.create(
+            organization.id,
+            payload.name,
+            application_slug,
+            image=metadata.image,
+            sdk=metadata.sdk,
+            version=metadata.version,
+            description=payload.description,
+            icon=payload.icon,
+            user=user,
+        )
+    except NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     operation = await operations.create(
         organization.compute_id,
         kind=OperationKind.application_create,
@@ -76,7 +82,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
     try:
         cluster = Kubernetes(registry.kubeconfig)
-        status = await applications.replace_environment(
+        status = await applications.stage_environment(
             application.id,
             Status.creating,
             lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
@@ -107,12 +113,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     access = await organizations.application_access(user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role = access
 
     # Application logs require Organization maintenance authority.
-    if not roles.atleast(access.role, OrganizationRoles.maintain):
+    if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
-    application = access.application
-    organization = access.organization
 
     # The Organization's compute registry is the Application's only cluster assignment.
     registry = await compute.get(organization.compute_id)
@@ -129,45 +134,6 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
 
-@router.put("/api/applications/{application_id}/environment", status_code=204)
-async def update_application_environment(application_id: UUID, payload: ApplicationEnvironment, user: User = Depends(authuser)):
-    """Replace user-owned environment values for a future Application deployment."""
-
-    # Load Application access before changing its runtime configuration.
-    access = await organizations.application_access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    # Runtime configuration requires Organization maintenance authority.
-    if not roles.atleast(access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-    application = access.application
-    organization = access.organization
-
-    # Resolve the Application's assigned cluster without reading its Platform runtime Secret.
-    registry = await compute.get(organization.compute_id)
-    if registry is None:
-        raise HTTPException(status_code=503, detail="No compute cluster configured")
-
-    # Replace only user-owned values and map cluster errors to a stable API response.
-    try:
-        cluster = Kubernetes(registry.kubeconfig)
-        status = await applications.replace_environment(
-            application.id,
-            Status.running,
-            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
-        )
-    except Exception as exc:
-        logger.exception("Failed to update environment for application '%s': %r", application.id, exc)
-        raise HTTPException(status_code=503, detail="Application environment could not be updated") from exc
-
-    # Reject state that changed after authorization without mutating Kubernetes.
-    if status is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-    if status != Status.running:
-        raise HTTPException(status_code=409, detail="Application is not running")
-
-
 @router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
@@ -182,10 +148,11 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         access = await organizations.application_access(user.id, application_id)
         if access is None:
             raise HTTPException(status_code=403, detail="Access required")
+        _, _, role = access
 
-    # Active Applications require Organization maintenance authority.
-    if access is not None and not roles.atleast(access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
+        # Active Applications require Organization maintenance authority.
+        if not roles.atleast(role, OrganizationRoles.maintain):
+            raise HTTPException(status_code=403, detail="Permission required")
 
     result = await applications.soft_delete(application_id, user)
     if result is None:

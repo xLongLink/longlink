@@ -1,7 +1,7 @@
 import kr8s
 from typing import cast
 from kr8s.asyncio import Api
-from kr8s.asyncio.objects import Deployment
+from kr8s.asyncio.objects import APIObject, Deployment
 
 
 def deployment_is_ready(deployment: Deployment) -> bool:
@@ -21,6 +21,16 @@ def deployment_is_ready(deployment: Deployment) -> bool:
         and status.get("readyReplicas") == replicas
         and status.get("availableReplicas") == replicas
     )
+
+
+async def apply_resource(resource: APIObject, manifest: dict[str, object]) -> None:
+    """Create or patch one Kubernetes resource to its desired manifest."""
+
+    # Patch existing resources to repair drift without recreating their identities.
+    if await resource.exists():
+        await resource.patch(manifest)
+    else:
+        await resource.create()
 
 
 class Kubernetes:

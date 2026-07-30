@@ -49,7 +49,6 @@ jobs:
                   cache: true
                   node-version-file: package.json
                   run-install: |
-                      cwd: .
                       args: ['--frozen-lockfile']
                   working-directory: web
 

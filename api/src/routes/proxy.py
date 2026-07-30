@@ -32,17 +32,16 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     access = await organizations.application_access(user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role = access
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
-    if not roles.atleast(access.role, required_role):
+    if not roles.atleast(role, required_role):
         raise HTTPException(
             status_code=403,
             detail=f"Organization {required_role.value} access required",
         )
-    application = access.application
-    organization = access.organization
 
     # Let the web runtime show a loading state while application creation is still pending.
     if application.status != Status.running:

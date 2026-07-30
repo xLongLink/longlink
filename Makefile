@@ -1,11 +1,9 @@
-.PHONY: local local\:resources local\:image down reset build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api\:quality api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
 
 APPLICATION_IMAGE ?=
 LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
-API_PYTEST_MARK ?=
-SDK_PYTEST_MARK ?=
 
 # Install all API, SDK, and web dependencies.
 install: api\:install sdk\:install web\:install
@@ -35,12 +33,6 @@ api\:format: api\:install
 	cd api && uv run --locked isort .
 
 
-# Verify API linting and import formatting without modifying source files.
-api\:quality: api\:install
-	cd api && uv run --locked ruff check .
-	cd api && uv run --locked isort --check-only .
-
-
 # Format SDK imports.
 sdk\:format: sdk\:install
 	cd sdk && uv run --locked isort .
@@ -49,52 +41,6 @@ sdk\:format: sdk\:install
 # Format web code and repository docs.
 web\:format: web\:install
 	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
-
-
-# Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
-tests: api\:install sdk\:install web\:tests
-	cd api && uv run --locked pytest -m "not integration" tests
-	cd sdk && uv run --locked pytest -m "not integration" tests
-
-
-# Run all checks, including container-backed integration and generated scaffold tests.
-tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
-
-
-# Run API tests, including container-backed integration tests.
-api\:tests: api\:install api\:build
-	cd api && uv run --locked pytest $(API_PYTEST_MARK) tests
-
-
-# Build the embedded web bundle, then run SDK tests.
-sdk\:tests: sdk\:install sdk\:build
-	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) tests
-
-
-# Generate an isolated application and run its shipped tests.
-sdk\:scaffold\:tests: sdk\:install sdk\:build
-	cd sdk && sh tests/scaffold-smoke.sh
-
-
-# Report coverage from the fast API and SDK suites.
-coverage: api\:coverage sdk\:coverage
-
-
-# Report API coverage without container-backed integration tests.
-api\:coverage: api\:install api\:build
-	cd api && uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
-
-
-# Report SDK coverage without container-backed integration tests.
-sdk\:coverage: sdk\:install sdk\:build
-	cd sdk && uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
-
-
-# Run web static checks, tests, typechecks, and bundle builds.
-web\:tests: web\:install
-	cd web && vp run check
-	cd web && vp run test
-	cd web && vp run build:prepared
 
 
 # Run API and SDK ty checks.
@@ -209,11 +155,6 @@ down:
 	rm -f api/dev.db api/kubeconfig.yaml api/.seed-image
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
-
-
-# Restore the configured dedicated cluster and providers to their clean baseline.
-reset: api\:install
-	cd api && uv run --locked python cleanup.py --reset-cluster
 
 
 # Run the local LongLink Platform API server before `make seed`.
