@@ -23,9 +23,9 @@ class Env(BaseSettings):
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
 
     # Initial Platform administrator
-    LOCAL_ADMIN_NAME: str = Field(min_length=1)
-    LOCAL_ADMIN_EMAIL: str = Field(min_length=1)
-    LOCAL_ADMIN_PASSWORD: str = Field(min_length=1)
+    ADMIN_NAME: str = Field(min_length=1)
+    ADMIN_EMAIL: str = Field(min_length=1)
+    ADMIN_PASSWORD: str = Field(min_length=1)
 
     # Authentication email delivery
     SMTP_HOST: str | None = None

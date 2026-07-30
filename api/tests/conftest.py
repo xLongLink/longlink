@@ -12,9 +12,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 # Seed the required settings before importing the FastAPI app.
 os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
-os.environ.setdefault("LOCAL_ADMIN_NAME", "Test Administrator")
-os.environ.setdefault("LOCAL_ADMIN_EMAIL", "test-administrator@example.com")
-os.environ.setdefault("LOCAL_ADMIN_PASSWORD", "longlink-test-password")
+os.environ.setdefault("ADMIN_NAME", "Test Administrator")
+os.environ.setdefault("ADMIN_EMAIL", "test-administrator@example.com")
+os.environ.setdefault("ADMIN_PASSWORD", "longlink-test-password")
 
 # Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"

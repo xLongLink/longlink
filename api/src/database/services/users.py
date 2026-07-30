@@ -45,14 +45,14 @@ async def ensure_administrator() -> tuple[User, bool]:
     # Match the configured identity case-insensitively before reconciling its credentials and access.
     hasher = PasswordHash.recommended()
     async with session_scope() as session:
-        statement = select(User).where(func.lower(col(User.email)) == env.LOCAL_ADMIN_EMAIL.casefold())
+        statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL.casefold())
         user = (await session.execute(statement)).scalar_one_or_none()
         created = user is None
         if user is None:
             user = User(
-                name=env.LOCAL_ADMIN_NAME,
-                email=env.LOCAL_ADMIN_EMAIL,
-                hashed_password=hasher.hash(env.LOCAL_ADMIN_PASSWORD),
+                name=env.ADMIN_NAME,
+                email=env.ADMIN_EMAIL,
+                hashed_password=hasher.hash(env.ADMIN_PASSWORD),
                 role=PlatformRoles.administrator,
             )
             session.add(user)
@@ -71,16 +71,16 @@ async def ensure_administrator() -> tuple[User, bool]:
         if created:
             changed = True
         else:
-            verified = hasher.verify(env.LOCAL_ADMIN_PASSWORD, user.hashed_password)
+            verified = hasher.verify(env.ADMIN_PASSWORD, user.hashed_password)
             changed = (
                 not verified
-                or user.name != env.LOCAL_ADMIN_NAME
+                or user.name != env.ADMIN_NAME
                 or user.role != PlatformRoles.administrator
                 or user.deleted_at is not None
             )
             if not verified:
-                user.hashed_password = hasher.hash(env.LOCAL_ADMIN_PASSWORD)
-            user.name = env.LOCAL_ADMIN_NAME
+                user.hashed_password = hasher.hash(env.ADMIN_PASSWORD)
+            user.name = env.ADMIN_NAME
             user.role = PlatformRoles.administrator
             user.deleted_at = None
 
@@ -93,5 +93,5 @@ async def administrator() -> User | None:
 
     # Match the configured administrator identity without loading unrelated Platform users.
     async with session_scope() as session:
-        statement = select(User).where(func.lower(col(User.email)) == env.LOCAL_ADMIN_EMAIL.casefold())
+        statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL.casefold())
         return (await session.execute(statement)).scalar_one_or_none()
