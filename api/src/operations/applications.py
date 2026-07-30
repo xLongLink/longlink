@@ -15,11 +15,6 @@ async def create(claimed: Operation) -> str | None:
     if application is None or application.deleted_at is not None:
         return None
 
-    # A new create execution makes a previously failed Application visibly active again.
-    if application.status == Status.failed:
-        if not await applications.set_status(application.id, Status.failed, Status.creating):
-            return None
-        application.status = Status.creating
     infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"

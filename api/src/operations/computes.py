@@ -63,14 +63,6 @@ async def reconcile(claimed: Operation) -> str | None:
     if registry.version is not None and Version(registry.version) > platform_version:
         return None
 
-    # A fresh reconciliation execution makes a previously failed target visibly active again.
-    if registry.status == Status.failed:
-        if not await compute.set_status(registry.id, Status.failed, Status.creating):
-            current = await compute.get(registry.id)
-            if current is None or (current.version is not None and Version(current.version) > platform_version):
-                return None
-            return "Compute lifecycle state changed before reconciliation"
-        registry.status = Status.creating
     cluster = Kubernetes(registry.kubeconfig)
 
     # Compute reconciliation is structurally unable to deploy or delete tenant resources.

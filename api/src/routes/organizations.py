@@ -224,7 +224,7 @@ async def update_organization_member(
         raise HTTPException(status_code=404, detail="Organization member not found")
     await operations.create(
         membership.organization.compute_id,
-        kind=OperationKind.organization_create,
+        kind=OperationKind.organization_users_sync,
         target_id=membership.organization_id,
     )
 

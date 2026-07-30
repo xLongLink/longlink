@@ -315,6 +315,7 @@ def upgrade() -> None:
                 "application.delete",
                 "organization.create",
                 "organization.delete",
+                "organization.users.sync",
                 name="operation_kind_enum",
                 native_enum=False,
             ),

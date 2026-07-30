@@ -4,13 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from src.models.types import PlatformVersion
 from packaging.version import Version
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.services.errors import ConflictError
-from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
@@ -74,7 +71,6 @@ async def record_success(
     platform_version: PlatformVersion,
     gateway_url: str | None,
     expected_status: Status,
-    satisfy_pending: bool = False,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
 
@@ -89,20 +85,6 @@ async def record_success(
         registry.gateway_url = gateway_url
         registry.version = platform_version
         registry.status = Status.running
-
-        # Inline reconciliation can atomically retire fallback work that it fully satisfied.
-        if satisfy_pending:
-            await session.execute(
-                update(Operation)
-                .where(
-                    Operation.kind == OperationKind.compute_reconcile,
-                    Operation.target_id == compute_id,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at.is_(None),
-                    Operation.finished_at.is_(None),
-                )
-                .values(finished_at=utcnow())
-            )
         await session.commit()
         return True
 

@@ -572,8 +572,8 @@ async def test_update_organization_member_changes_role(
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_create)
+    assert len(recorded_operations) == 2
+    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_users_sync)
     assert projection.target_id == organization.id
 
 

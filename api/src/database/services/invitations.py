@@ -153,12 +153,12 @@ async def accept(user_id: UUID) -> None:
                 item.deleted_at = now
                 item.deleted_id = user.id
 
-        # Queue reconciliation with membership and invitation changes in one transaction.
+        # Queue user projection with membership and invitation changes in one transaction.
         for organization_id in sorted(changed_organization_ids, key=str):
             await operations.enqueue(
                 session,
                 organization_computes[organization_id],
-                kind=OperationKind.organization_create,
+                kind=OperationKind.organization_users_sync,
                 target_id=organization_id,
             )
         await session.commit()
