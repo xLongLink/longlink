@@ -1,11 +1,9 @@
 import pytest
 from uuid import uuid4
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
-from src.environments import env
 from src.models.statuses import Status
 from src.database.session import get_session
-from src.database.services import compute, operations, applications, organizations
-from src.models.operations import OperationKind, OperationStatus
+from src.database.services import applications, organizations
 from src.database.models.users import User
 from src.database.services.errors import ConflictError
 from src.database.models.applications import Application
@@ -43,14 +41,13 @@ async def create_user(prefix: str) -> User:
         return user
 
 
-async def test_create_requires_running_organization_and_queues_application_lifecycle() -> None:
-    """Create Applications only for running Organizations and queue separate lifecycle work."""
+async def test_create_requires_running_organization() -> None:
+    """Create Applications only for running Organizations."""
 
     # Arrange
     user = await create_user("app")
-    infrastructure = await create_ready_infrastructure()
+    await create_ready_infrastructure()
     organization = await create_organization(user)
-    open_before = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Act
     with pytest.raises(ConflictError) as exc:
@@ -71,13 +68,6 @@ async def test_create_requires_running_organization_and_queues_application_lifec
         version="2.0.0",
         user=user,
     )
-    operation = await operations.create(
-        infrastructure.compute.id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-    )
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_after = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert str(exc.value) == "Organization is not ready"
@@ -86,20 +76,6 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
     assert application.sdk == "1.2.3"
     assert application.version == "2.0.0"
-    assert operation.id != open_before[0].id
-    assert operation.kind == OperationKind.application_create
-    assert open_before[0].kind == OperationKind.organization_create
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == Status.running
-    assert reloaded_compute.version == env.VERSION
-    assert len(open_before) == 1
-    assert {item.id for item in open_after} == {open_before[0].id, operation.id}
-    assert {(item.kind, item.target_id) for item in open_after} == {
-        (OperationKind.organization_create, organization.id),
-        (OperationKind.application_create, application.id),
-    }
-    assert all(item.platform_version == env.VERSION for item in open_after)
-    assert all(item.status == OperationStatus.scheduled for item in open_after)
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
@@ -189,7 +165,7 @@ async def test_soft_delete_marks_application_deleted() -> None:
     """Soft-delete an application without scheduling its cleanup operation."""
 
     # Arrange
-    user, organization, application = await create_application_context("delete")
+    user, _, application = await create_application_context("delete")
 
     # Act
     result = await applications.soft_delete(application.id, user)
@@ -197,8 +173,6 @@ async def test_soft_delete_marks_application_deleted() -> None:
     deleted_application = await applications.get(application.id, include_deleted=True)
     second_delete = await applications.soft_delete(application.id, user)
     missing_delete = await applications.soft_delete(uuid4(), user)
-    compute_after = await compute.get(organization.compute_id)
-    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert result is not None
@@ -209,10 +183,3 @@ async def test_soft_delete_marks_application_deleted() -> None:
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
-    assert compute_after is not None
-    assert compute_after.status == Status.running
-    assert compute_after.version == env.VERSION
-    assert {item.kind for item in open_operations} == {
-        OperationKind.application_create,
-        OperationKind.organization_create,
-    }

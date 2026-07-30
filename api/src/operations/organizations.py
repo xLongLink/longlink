@@ -1,9 +1,7 @@
-from src.operations import computes
 from longlink.shared import users as shared_users
-from src.environments import env
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
-from src.database.services import compute, applications, organizations
+from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
@@ -106,8 +104,6 @@ async def delete(claimed: Operation) -> str | None:
     storage_registry = infrastructure.storage
     cluster = Kubernetes(compute_registry.kubeconfig)
 
-    # Remove every Organization route before terminating any child Application Service.
-    gateway_url = await computes.reconcile_gateway(compute_registry, cluster)
     db = Postgres(
         database_registry.host,
         database_registry.port,
@@ -135,12 +131,5 @@ async def delete(claimed: Operation) -> str | None:
 
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
-    if not await compute.record_success(
-        compute_registry.id,
-        env.VERSION,
-        gateway_url,
-        compute_registry.status,
-    ):
-        return "Organization gateway state was not recorded"
     await organizations.purge(organization.id)
     return None

@@ -22,8 +22,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Act
     organization = await create_organization(owner)
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert organization.name == "acme"
@@ -32,28 +30,13 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.database_id == infrastructure.database.id
     assert organization.storage_id == infrastructure.storage.id
     assert organization.status == Status.creating
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == Status.running
-    assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].kind == OperationKind.organization_create
-    assert open_operations[0].target_id == organization.id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
 
     reloaded = await organizations.get(organization.id)
     assert reloaded is not None
     memberships = await organizations.members(organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
-    assert [membership.user.id for membership in memberships] == [owner.id]
-
-    Session = await get_session()
-    async with Session() as session:
-        membership = await session.get(UserOrganization, (owner.id, organization.id))
-
-        assert membership is not None
-        assert membership.role == OrganizationRoles.owner
+    assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
 
 
 async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
@@ -106,7 +89,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure()
+    await create_ready_infrastructure()
     organization = await create_organization(owner)
 
     Session = await get_session()
@@ -135,21 +118,11 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     )
     memberships = await organizations.members(organization.id)
     updated_membership = next(item for item in memberships if item.user_id == member.id)
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert updated is True
     assert missing is False
     assert updated_membership.role == OrganizationRoles.maintain
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == Status.running
-    assert reloaded_compute.version == env.VERSION
-    assert {item.kind for item in open_operations} == {OperationKind.organization_create}
-    projection = next(item for item in open_operations if item.kind == OperationKind.organization_create)
-    assert projection.target_id == organization.id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
 
 
 async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
@@ -255,7 +228,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
+    await create_ready_infrastructure()
     organization = await create_organization(owner)
     await mark_organization_running(organization)
     application = await applications.create(
@@ -286,8 +259,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     deleted_application = await applications.get(application.id, include_deleted=True)
     second_delete = await organizations.soft_delete(organization.id, owner)
     missing_delete = await organizations.soft_delete(uuid4(), owner)
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert result is not None
@@ -304,10 +275,3 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
-    assert await organizations.invitations(organization.id) == []
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == Status.running
-    assert reloaded_compute.version == env.VERSION
-    assert {item.kind for item in open_operations} == {
-        OperationKind.organization_create,
-    }

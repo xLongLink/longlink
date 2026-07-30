@@ -69,17 +69,11 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ConflictError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
-    operation = await operations.create(
-        organization.compute_id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-        delay_seconds=30,
-    )
     registry = await compute.get(organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
 
-    # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
+    # Store user environment values before queueing a workload that requires them.
     try:
         cluster = Kubernetes(registry.kubeconfig)
         status = await applications.stage_environment(
@@ -89,12 +83,16 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         )
         if status != Status.creating:
             raise RuntimeError("Application is no longer creating")
-        if not await operations.schedule_now(operation.id):
-            raise RuntimeError("Application create Operation is no longer open")
+        await operations.create(
+            organization.compute_id,
+            kind=OperationKind.application_create,
+            target_id=application.id,
+        )
     except Exception as exc:
         logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
         deleted = await applications.soft_delete(application.id, user)
         if deleted is not None:
+            await operations.create(deleted.organization.compute_id)
             await operations.create(
                 deleted.organization.compute_id,
                 kind=OperationKind.application_delete,
@@ -157,6 +155,9 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     result = await applications.soft_delete(application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    # Remove the tombstoned Application from the shared gateway before deleting its workload.
+    await operations.create(result.organization.compute_id)
     await operations.create(
         result.organization.compute_id,
         kind=OperationKind.application_delete,

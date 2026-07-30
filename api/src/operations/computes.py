@@ -8,7 +8,7 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 
-async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pending_route: GatewayRoute | None = None) -> str:
+async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> str:
     """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
 
     # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
@@ -42,25 +42,10 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
     else:
         raise RuntimeError("Compute registry has incomplete gateway TLS material")
 
-    # Reapply only gateway state until its route snapshot matches current Platform state.
-    while True:
-        route_rows = await applications.gateway_routes(registry.id)
-        routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
-        if pending_route is not None and all(route.id != pending_route.id for route in routes):
-            pending = await applications.get(pending_route.id, include_deleted=True)
-            if pending is not None and pending.deleted_at is None and pending.status == Status.creating:
-                routes = (*routes, pending_route)
-        await cluster.gateway.apply(routes, tls)
-
-        # A stable snapshot prevents a concurrent tombstone from leaving a stale published route.
-        current_rows = await applications.gateway_routes(registry.id)
-        current_routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in current_rows)
-        if pending_route is not None and all(route.id != pending_route.id for route in current_routes):
-            pending = await applications.get(pending_route.id, include_deleted=True)
-            if pending is not None and pending.deleted_at is None and pending.status == Status.creating:
-                current_routes = (*current_routes, pending_route)
-        if current_routes == routes:
-            break
+    # Apply one authoritative running-Application route snapshot per compute Operation.
+    route_rows = await applications.gateway_routes(registry.id)
+    routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
+    await cluster.gateway.apply(routes, tls)
 
     # Format the typed gateway IP for URL authority syntax.
     gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)

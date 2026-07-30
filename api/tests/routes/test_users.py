@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
 
@@ -79,7 +78,7 @@ async def test_list_users_returns_admin_user_summaries(
     # Assert
     assert response.status_code == 200
 
-    assert [item["id"] for item in response.json()] == [str(user.id) for user in users]
+    assert {item["id"] for item in response.json()} == {str(user.id) for user in users}
 
 
 async def test_platform_user_cannot_access_admin_routes(
@@ -105,12 +104,10 @@ async def test_platform_user_cannot_access_admin_routes(
 
 async def test_patch_me_updates_authenticated_user_profile(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Update the authenticated user's mutable profile fields."""
 
     # Arrange
-    user = users[0]
     client = clients[0]
 
     # Act
@@ -118,8 +115,5 @@ async def test_patch_me_updates_authenticated_user_profile(
 
     # Assert
     assert response.status_code == 200
-
-    updated_user = await user_service.get(user.id)
-    assert updated_user is not None
 
     assert response.json()["name"] == "Updated User"

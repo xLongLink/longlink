@@ -1,11 +1,8 @@
 import secrets
-from src.operations import computes
-from src.environments import env
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
-from src.database.services import compute, operations, applications, organizations
+from src.database.services import operations, applications, organizations
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.gateway import GatewayRoute
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
 
@@ -90,18 +87,7 @@ async def create(claimed: Operation) -> str | None:
     if application.status == Status.running:
         return None
 
-    # Publish a creating Application route inline without exposing running before gateway readiness.
-    gateway_url = await computes.reconcile_gateway(registry, cluster, GatewayRoute(id=application.id, namespace=organization.slug))
-    if not await compute.record_success(
-        registry.id,
-        env.VERSION,
-        gateway_url,
-        registry.status,
-        satisfy_pending=True,
-    ):
-        return "Application gateway state was not recorded"
-
-    # Publish running only after both workload readiness and gateway publication succeed.
+    # Publish running after workload readiness, then queue the shared gateway reconciliation.
     if not await applications.mark_running(application.id):
         return None
     await operations.create(organization.compute_id)
@@ -126,8 +112,7 @@ async def delete(claimed: Operation) -> str | None:
     storage_registry = infrastructure.storage
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Remove the gateway route and await rollout before terminating the backend Service and Pods.
-    gateway_url = await computes.reconcile_gateway(registry, cluster)
+    # The route was removed by the compute Operation queued with the tombstone.
     await cluster.applications.delete(application.id, organization.slug)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
@@ -146,12 +131,5 @@ async def delete(claimed: Operation) -> str | None:
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
-    if not await compute.record_success(
-        registry.id,
-        env.VERSION,
-        gateway_url,
-        registry.status,
-    ):
-        return "Application gateway state was not recorded"
     await applications.purge(application.id)
     return None

@@ -254,6 +254,9 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     result = await organizations.soft_delete(organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Remove every tombstoned Application route before namespace cascade cleanup.
+    await operations.create(result.compute_id)
     await operations.create(
         result.compute_id,
         kind=OperationKind.organization_delete,
