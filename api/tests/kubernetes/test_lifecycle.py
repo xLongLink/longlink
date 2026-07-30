@@ -10,7 +10,7 @@ from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_c
 from dataclasses import dataclass
 from collections.abc import Iterator
 from src.models.computes import kubeconfig_mapping
-from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from kr8s.asyncio.objects import Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
 
@@ -59,11 +59,29 @@ async def apply_gateway(
     return GatewayState(gateway_ip, tls)
 
 
+async def read_resource(
+    compute: Kubernetes,
+    resource_class: type[APIObject],
+    name: str,
+    namespace: str | None = None,
+) -> APIObject | None:
+    """Read one Kubernetes resource directly for integration assertions."""
+
+    # Construct the typed resource against the test cluster and normalize absence.
+    resource = resource_class(name, namespace=namespace if resource_class.namespaced else None, api=await compute.api())
+    if not await resource.exists():
+        return None
+    await resource.refresh()
+    return resource
+
+
 async def delete_gateway_resources(compute: Kubernetes) -> None:
     """Delete gateway resources created only for the real-cluster lifecycle test."""
 
     # Keep destructive namespace cleanup outside the production gateway abstraction.
-    await compute._resources.delete(Namespace, "longlink-system")
+    resource = Namespace("longlink-system", api=await compute.api())
+    if await resource.exists():
+        await resource.delete()
 
 
 class K3SRuntimeContainer(DockerRuntimeContainer):
@@ -187,7 +205,6 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         scenario.application_id,
         "acme",
         {"LONG_LINK_REQUIRED": "updated", "PORT": "8000"},
-        require_deployment=True,
     )
     await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 
@@ -205,8 +222,7 @@ async def drift_scenario(scenario: KubernetesScenario) -> None:
     """Introduce gateway and Application drift before lifecycle reconciliation."""
 
     # Replace the gateway configuration with invalid desired data.
-    await scenario.compute._resources.apply(
-        ConfigMap,
+    config_map = ConfigMap(
         {
             "apiVersion": "v1",
             "kind": "ConfigMap",
@@ -215,15 +231,22 @@ async def drift_scenario(scenario: KubernetesScenario) -> None:
                 "namespace": "longlink-system",
             },
             "data": {"envoy.yaml": "drift"},
-        }
+        },
+        api=await scenario.compute.api(),
     )
+    await config_map.patch(config_map.raw)
 
     # Replace the retained Application Secret without resynchronizing its lifecycle.
-    await scenario.compute._resources.replace_secret(
-        str(scenario.application_id),
-        "acme",
-        {"STALE": "value"},
-    )
+    secret = Secret(str(scenario.application_id), namespace="acme", api=await scenario.compute.api())
+    if await secret.exists():
+        await secret.delete()
+    await Secret(
+        {
+            "metadata": {"name": str(scenario.application_id), "namespace": "acme"},
+            "stringData": {"STALE": "value"},
+        },
+        api=await scenario.compute.api(),
+    ).create()
 
 
 async def prune_scenario(
@@ -255,10 +278,10 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     # Wait for asynchronous Namespace and workload deletion to complete.
     deadline = time.monotonic() + 30
     while True:
-        retired_namespace = await scenario.compute._resources.read(Namespace, "retired")
-        stale_secret = await scenario.compute._resources.read(Secret, str(scenario.stale_application_id), "acme")
-        stale_deployment = await scenario.compute._resources.read(Deployment, str(scenario.stale_application_id), "acme")
-        stale_service = await scenario.compute._resources.read(Service, f"app-{scenario.stale_application_id}", "acme")
+        retired_namespace = await read_resource(scenario.compute, Namespace, "retired")
+        stale_secret = await read_resource(scenario.compute, Secret, str(scenario.stale_application_id), "acme")
+        stale_deployment = await read_resource(scenario.compute, Deployment, str(scenario.stale_application_id), "acme")
+        stale_service = await read_resource(scenario.compute, Service, f"app-{scenario.stale_application_id}", "acme")
         retired_deleting = retired_namespace is None or retired_namespace.raw.get("metadata", {}).get("deletionTimestamp") is not None
         if (
             retired_deleting
@@ -276,18 +299,18 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         await asyncio.sleep(1)
 
     # Read the retained gateway and tenant resources after pruning settles.
-    system_namespace = await scenario.compute._resources.read(Namespace, "longlink-system")
-    organization_namespace = await scenario.compute._resources.read(Namespace, "acme")
-    gateway_config_map = await scenario.compute._resources.read(ConfigMap, "longlink-gateway", "longlink-system")
-    gateway_auth_secret = await scenario.compute._resources.read(Secret, "longlink-gateway-auth", "longlink-system")
-    gateway_tls_secret = await scenario.compute._resources.read(Secret, "longlink-gateway-tls", "longlink-system")
-    gateway_deployment = await scenario.compute._resources.read(Deployment, "longlink-gateway", "longlink-system")
-    gateway_service = await scenario.compute._resources.read(Service, "longlink-gateway", "longlink-system")
-    gateway_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
-    organization_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "acme")
-    application_deployment = await scenario.compute._resources.read(Deployment, str(scenario.application_id), "acme")
-    application_service = await scenario.compute._resources.read(Service, f"app-{scenario.application_id}", "acme")
-    application_secret = await scenario.compute._resources.read(Secret, str(scenario.application_id), "acme")
+    system_namespace = await read_resource(scenario.compute, Namespace, "longlink-system")
+    organization_namespace = await read_resource(scenario.compute, Namespace, "acme")
+    gateway_config_map = await read_resource(scenario.compute, ConfigMap, "longlink-gateway", "longlink-system")
+    gateway_auth_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-auth", "longlink-system")
+    gateway_tls_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-tls", "longlink-system")
+    gateway_deployment = await read_resource(scenario.compute, Deployment, "longlink-gateway", "longlink-system")
+    gateway_service = await read_resource(scenario.compute, Service, "longlink-gateway", "longlink-system")
+    gateway_policy = await read_resource(scenario.compute, NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
+    organization_policy = await read_resource(scenario.compute, NetworkPolicy, "longlink-gateway-ingress", "acme")
+    application_deployment = await read_resource(scenario.compute, Deployment, str(scenario.application_id), "acme")
+    application_service = await read_resource(scenario.compute, Service, f"app-{scenario.application_id}", "acme")
+    application_secret = await read_resource(scenario.compute, Secret, str(scenario.application_id), "acme")
 
     # Verify gateway drift repair and retained workload state.
     assert system_namespace is not None
@@ -330,9 +353,7 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     for resource in tenant_resources:
         annotations = resource.raw["metadata"].get("annotations", {})
         assert set(annotations).isdisjoint({"longlink.io/platform-version", "longlink.io/runtime-revision"})
-    application_annotations = application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
-    assert set(application_annotations) == {"longlink.io/environment-secret-resource-version"}
-    assert isinstance(application_annotations["longlink.io/environment-secret-resource-version"], str)
+    assert "annotations" not in application_deployment.raw["spec"]["template"]["metadata"]
 
 
 async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewayState) -> None:
@@ -376,18 +397,18 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
     # Wait until all exact resources are absent or their Namespaces are terminating.
     deadline = time.monotonic() + 30
     while True:
-        application_deployment = await scenario.compute._resources.read(Deployment, str(scenario.application_id), "acme")
-        application_service = await scenario.compute._resources.read(Service, f"app-{scenario.application_id}", "acme")
-        application_secret = await scenario.compute._resources.read(Secret, str(scenario.application_id), "acme")
-        application_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "acme")
-        gateway_deployment = await scenario.compute._resources.read(Deployment, "longlink-gateway", "longlink-system")
-        gateway_service = await scenario.compute._resources.read(Service, "longlink-gateway", "longlink-system")
-        gateway_config_map = await scenario.compute._resources.read(ConfigMap, "longlink-gateway", "longlink-system")
-        gateway_auth_secret = await scenario.compute._resources.read(Secret, "longlink-gateway-auth", "longlink-system")
-        gateway_tls_secret = await scenario.compute._resources.read(Secret, "longlink-gateway-tls", "longlink-system")
-        gateway_policy = await scenario.compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
-        organization_namespace = await scenario.compute._resources.read(Namespace, "acme")
-        system_namespace = await scenario.compute._resources.read(Namespace, "longlink-system")
+        application_deployment = await read_resource(scenario.compute, Deployment, str(scenario.application_id), "acme")
+        application_service = await read_resource(scenario.compute, Service, f"app-{scenario.application_id}", "acme")
+        application_secret = await read_resource(scenario.compute, Secret, str(scenario.application_id), "acme")
+        application_policy = await read_resource(scenario.compute, NetworkPolicy, "longlink-gateway-ingress", "acme")
+        gateway_deployment = await read_resource(scenario.compute, Deployment, "longlink-gateway", "longlink-system")
+        gateway_service = await read_resource(scenario.compute, Service, "longlink-gateway", "longlink-system")
+        gateway_config_map = await read_resource(scenario.compute, ConfigMap, "longlink-gateway", "longlink-system")
+        gateway_auth_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-auth", "longlink-system")
+        gateway_tls_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-tls", "longlink-system")
+        gateway_policy = await read_resource(scenario.compute, NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
+        organization_namespace = await read_resource(scenario.compute, Namespace, "acme")
+        system_namespace = await read_resource(scenario.compute, Namespace, "longlink-system")
         organization_deleting = (
             organization_namespace is None or organization_namespace.raw.get("metadata", {}).get("deletionTimestamp") is not None
         )
@@ -410,33 +431,6 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
         if time.monotonic() >= deadline:
             pytest.fail("k3s resources did not enter the deleted state before the cleanup timeout")
         await asyncio.sleep(1)
-
-
-async def test_kubernetes_exact_secret_replacement_preserves_noops_and_removes_omitted_keys(
-    kubernetes_compute: tuple[Kubernetes, int],
-) -> None:
-    """Exercise exact Secret replacement against the Kubernetes API."""
-
-    # Create an isolated Namespace and initial exact Secret.
-    compute, _ = kubernetes_compute
-    namespace = "secret-contract"
-
-    try:
-        async with asyncio.timeout(120):
-            await compute.organizations.apply(namespace)
-            first = await compute._resources.create_secret("contract", namespace, {"KEEP": "one", "REMOVE": "two"})
-
-            # An unchanged replacement must avoid a write and preserve the resource version.
-            unchanged = await compute._resources.replace_secret("contract", namespace, {"KEEP": "one", "REMOVE": "two"})
-            assert unchanged.metadata.resourceVersion == first.metadata.resourceVersion
-
-            # A changed replacement must write once and remove omitted keys.
-            changed = await compute._resources.replace_secret("contract", namespace, {"KEEP": "updated"})
-            assert changed.metadata.resourceVersion != first.metadata.resourceVersion
-            assert set(changed.data) == {"KEEP"}
-            assert base64.b64decode(changed.data["KEEP"]).decode("utf-8") == "updated"
-    finally:
-        await compute._resources.delete(Namespace, namespace)
 
 
 async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup(

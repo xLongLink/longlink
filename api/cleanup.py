@@ -8,10 +8,9 @@ from src.environments import env
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import make_url
 from src.models.computes import kubeconfig_mapping
-from kr8s.asyncio.objects import Namespace, Deployment, NetworkPolicy
+from kr8s.asyncio.objects import Namespace
 from src.database.session import session_scope
-from src.kubernetes.resources import KubernetesResources
-from src.kubernetes.applications import APPLICATION_ID_LABEL
+from src.kubernetes.client import Kubernetes
 
 
 async def cleanup() -> None:
@@ -22,35 +21,21 @@ async def cleanup() -> None:
     kubeconfig = settings.KUBECONFIG.resolve()
     if not kubeconfig.is_file():
         raise ValueError(f"Kubeconfig not found: {kubeconfig}")
-    resources = KubernetesResources(kubeconfig_mapping(kubeconfig.read_text(encoding="utf-8")))
-    policies, deployments = await asyncio.gather(
-        resources.list(NetworkPolicy),
-        resources.list(Deployment),
-    )
-    namespaces = {"longlink-system"}
-    for policy in policies:
-        namespace = policy.metadata.get("namespace")
-        if policy.name == "longlink-gateway-ingress" and isinstance(namespace, str):
-            namespaces.add(namespace)
-    for deployment in deployments:
-        namespace = deployment.metadata.get("namespace")
-        selector = deployment.spec.get("selector")
-        labels = selector.get("matchLabels") if isinstance(selector, dict) else None
-        if isinstance(namespace, str) and isinstance(labels, dict) and APPLICATION_ID_LABEL in labels:
-            namespaces.add(namespace)
+    cluster = Kubernetes(kubeconfig_mapping(kubeconfig.read_text(encoding="utf-8")))
+    api = await cluster.api()
 
-    # Delete only namespaces identified by LongLink-owned resources and wait for their cascading cleanup.
+    # Delete only the development Namespaces configured by the local seed settings.
     managed: list[str] = []
-    for namespace in sorted(namespaces):
-        if await resources.read(Namespace, namespace) is not None:
+    for namespace in ("longlink-system", settings.LOCAL_ORG):
+        if await Namespace(namespace, api=api).exists():
             managed.append(namespace)
     removed_compute = len(managed)
     for namespace in managed:
-        await resources.delete(Namespace, namespace)
+        await Namespace(namespace, api=api).delete()
     while managed:
         remaining: list[str] = []
         for namespace in managed:
-            if await resources.read(Namespace, namespace) is not None:
+            if await Namespace(namespace, api=api).exists():
                 remaining.append(namespace)
         if not remaining:
             break

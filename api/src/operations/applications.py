@@ -48,29 +48,12 @@ async def create(claimed: Operation) -> str | None:
             storage_registry.secret_access_key,
         )
 
-        # Resolve the cluster-owned credentials before converging provider identities.
+        # Generate fresh credentials for this explicit creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
         await object_storage.create_prefix(bucket, prefix)
-        try:
-            persisted_runtime_envs = await cluster.applications.read_runtime_envs(application.id, organization.slug)
-        except (TypeError, ValueError):
-            return "Application runtime Secret is invalid"
-
-        # Generate credentials only until the runtime Secret commits their durable values.
-        if persisted_runtime_envs is None:
-            database_password = secrets.token_urlsafe(24)
-            credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
-        else:
-            database_password = persisted_runtime_envs.get("LONGLINK_DATABASE_PASSWORD")
-            storage_access_key_id = persisted_runtime_envs.get("LONGLINK_STORAGE_USERNAME")
-            storage_secret_access_key = persisted_runtime_envs.get("LONGLINK_STORAGE_PASSWORD")
-            if not database_password or not storage_access_key_id or not storage_secret_access_key:
-                return "Application runtime Secret is invalid"
-            credentials = {
-                "access_key_id": storage_access_key_id,
-                "secret_access_key": storage_secret_access_key,
-            }
+        database_password = secrets.token_urlsafe(24)
+        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
 
         connection = await db.schema(organization.id, application.id, database_password)
 
@@ -93,13 +76,8 @@ async def create(claimed: Operation) -> str | None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
 
-        # Existing runtime values are immutable during creation and must match the expected contract exactly.
-        if persisted_runtime_envs is not None and persisted_runtime_envs != runtime_envs:
-            return "Application runtime Secret is invalid"
-
-        # Commit newly generated credentials before creating a workload that can consume them.
-        if persisted_runtime_envs is None:
-            await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
+        # Commit the generated runtime values before creating a workload that can consume them.
+        await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
 
     elif application.status != Status.running:
         return None

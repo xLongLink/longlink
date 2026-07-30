@@ -131,7 +131,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
 @router.put("/api/applications/{application_id}/environment", status_code=204)
 async def update_application_environment(application_id: UUID, payload: ApplicationEnvironment, user: User = Depends(authuser)):
-    """Replace user-owned environment values and roll one running Application."""
+    """Replace user-owned environment values for a future Application deployment."""
 
     # Load Application access before changing its runtime configuration.
     access = await organizations.application_access(user.id, application_id)
@@ -155,7 +155,7 @@ async def update_application_environment(application_id: UUID, payload: Applicat
         status = await applications.replace_environment(
             application.id,
             Status.running,
-            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs, require_deployment=True),
+            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
         )
     except Exception as exc:
         logger.exception("Failed to update environment for application '%s': %r", application.id, exc)

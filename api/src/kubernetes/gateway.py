@@ -4,20 +4,25 @@ import asyncio
 import hashlib
 import ipaddress
 from uuid import UUID
+from typing import TYPE_CHECKING
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from importlib.resources import files
 from src.models.gateways import APPLICATION_ID_HEADER, GATEWAY_SECRET_HEADER
-from kr8s.asyncio.objects import Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
-from src.kubernetes.resources import KubernetesDocument, KubernetesResources, deployment_is_ready
+from src.kubernetes.client import deployment_is_ready
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+if TYPE_CHECKING:
+    from src.kubernetes.client import Kubernetes
+
 PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
 
+KubernetesDocument = dict[str, object]
 EnvoyDocument = dict[str, object]
 
 
@@ -221,24 +226,34 @@ def render_gateway_manifests(
 class Gateway:
     """Manage the compute gateway endpoint and runtime resources."""
 
-    def __init__(self, resources: KubernetesResources) -> None:
+    def __init__(self, client: "Kubernetes") -> None:
         """Initialize gateway lifecycle access through shared cluster resources."""
 
-        self._resources = resources
+        self._client = client
 
     async def ip(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
         """Apply gateway endpoint resources and wait for the allocated IP."""
 
         # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
         namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
-        await self._resources.apply(Namespace, namespace)
-        await self._resources.apply(Service, service_manifest)
+        api = await self._client.api()
+        namespace_resource = Namespace(namespace, api=api)
+        if await namespace_resource.exists():
+            await namespace_resource.patch(namespace)
+        else:
+            await namespace_resource.create()
+        service_resource = Service(service_manifest, api=api)
+        if await service_resource.exists():
+            await service_resource.patch(service_manifest)
+        else:
+            await service_resource.create()
 
         # Poll provider-owned Service status without repeatedly applying unchanged desired state.
         while True:
-            service = await self._resources.read(Service, "longlink-gateway", "longlink-system")
-            if service is None:
+            service = Service("longlink-gateway", namespace="longlink-system", api=api)
+            if not await service.exists():
                 raise RuntimeError("Gateway Service disappeared before IP allocation")
+            await service.refresh()
 
             # Parse the provider-owned Service status while endpoint allocation is pending.
             body = service.raw
@@ -264,22 +279,52 @@ class Gateway:
         config_map, deployment_manifest, network_policy = render_gateway_manifests(proxy_secret, tls, render_envoy_config(routes))
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
-        await self._resources.replace_secret("longlink-gateway-auth", "longlink-system", {"gateway-secret": proxy_secret})
-        await self._resources.replace_secret(
-            "longlink-gateway-tls",
-            "longlink-system",
-            {"tls.crt": tls.certificate, "tls.key": tls.private_key},
-            "kubernetes.io/tls",
+        api = await self._client.api()
+        auth_secret = Secret(
+            {
+                "metadata": {"name": "longlink-gateway-auth", "namespace": "longlink-system"},
+                "stringData": {"gateway-secret": proxy_secret},
+            },
+            api=api,
         )
-        await self._resources.apply(ConfigMap, config_map)
-        await self._resources.apply(NetworkPolicy, network_policy)
-        await self._resources.apply(Deployment, deployment_manifest)
+        if await auth_secret.exists():
+            await auth_secret.patch({"stringData": {"gateway-secret": proxy_secret}})
+        else:
+            await auth_secret.create()
+        tls_secret = Secret(
+            {
+                "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+                "stringData": {"tls.crt": tls.certificate, "tls.key": tls.private_key},
+                "type": "kubernetes.io/tls",
+            },
+            api=api,
+        )
+        if await tls_secret.exists():
+            await tls_secret.patch({"stringData": {"tls.crt": tls.certificate, "tls.key": tls.private_key}})
+        else:
+            await tls_secret.create()
+        config = ConfigMap(config_map, api=api)
+        if await config.exists():
+            await config.patch(config_map)
+        else:
+            await config.create()
+        policy = NetworkPolicy(network_policy, api=api)
+        if await policy.exists():
+            await policy.patch(network_policy)
+        else:
+            await policy.create()
+        deployment = Deployment(deployment_manifest, api=api)
+        if await deployment.exists():
+            await deployment.patch(deployment_manifest)
+        else:
+            await deployment.create()
 
         # Poll rollout status without repeatedly applying the same Deployment revision.
         while True:
-            deployment = await self._resources.read(Deployment, "longlink-gateway", "longlink-system")
-            if deployment is None:
+            deployment = Deployment("longlink-gateway", namespace="longlink-system", api=api)
+            if not await deployment.exists():
                 raise RuntimeError("Gateway Deployment disappeared during rollout")
+            await deployment.refresh()
             if deployment_is_ready(deployment):
                 return
             await asyncio.sleep(5)
