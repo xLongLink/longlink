@@ -86,7 +86,7 @@ async def run_operation_scheduler() -> None:
     # Keep polling after transient database failures so the worker remains available.
     while True:
         try:
-            operation = await operations.claim_next()
+            operation = await operations.claim()
         except Exception as exc:
             logger.exception("Operation scheduler polling failed: %r", exc)
             await asyncio.sleep(1)

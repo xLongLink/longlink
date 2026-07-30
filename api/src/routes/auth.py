@@ -10,7 +10,8 @@ from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, Registrat
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile
-from src.database.services import invitations
+from src.database.services import operations, invitations
+from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -36,8 +37,15 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
 
     # Issue the session and accept email-bound Organization access atomically.
     credential = token.create_access_token(session, user)
-    await invitations.accept_in_session(session, user)
+    targets = await invitations.accept_in_session(session, user)
     await session.commit()
+
+    for compute_id, organization_id in targets:
+        await operations.create(
+            compute_id,
+            kind=OperationKind.organization_create,
+            target_id=organization_id,
+        )
 
     # Publish authentication only after all persistent login effects commit.
     response.headers["Cache-Control"] = "no-store"
@@ -257,12 +265,19 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         await session.flush()
-        await invitations.accept_in_session(session, user)
+        targets = await invitations.accept_in_session(session, user)
         credential = token.create_access_token(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
+
+    for compute_id, organization_id in targets:
+        await operations.create(
+            compute_id,
+            kind=OperationKind.organization_create,
+            target_id=organization_id,
+        )
 
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"

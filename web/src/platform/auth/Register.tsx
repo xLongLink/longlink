@@ -21,9 +21,8 @@ type RegisterValues = {
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
     const t = useTranslator();
-    const location = useLocation();
     const showToast = useToast();
-    const initialEmail = new URLSearchParams(location.search).get('email') ?? '';
+    const initialEmail = new URLSearchParams(useLocation().search).get('email') ?? '';
     const schema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });

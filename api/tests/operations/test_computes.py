@@ -112,8 +112,8 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    await operations.enqueue(compute_registry.id)
-    claimed = await operations.claim_next()
+    await operations.create(compute_registry.id)
+    claimed = await operations.claim()
     assert claimed is not None
 
     # Act
@@ -157,8 +157,8 @@ async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypa
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
-    await operations.enqueue(compute_registry.id)
-    claimed = await operations.claim_next()
+    await operations.create(compute_registry.id)
+    claimed = await operations.claim()
     assert claimed is not None
 
     # Act

@@ -1,5 +1,5 @@
 import { FileText, Landmark, ShieldCheck } from 'lucide-react';
-import type { ArticleNavigationGroup, ArticlePage } from '@/platform/catalog';
+import type { ArticlePage } from '@/platform/catalog';
 import { content as impressumContent, metadata as impressumMetadata } from '@/platform/legal/impressum';
 import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';
 import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
@@ -16,7 +16,7 @@ function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
     };
 }
 
-export const LEGAL_PAGES: ArticlePage[] = [
+export const LEGAL_PAGES = [
     legalPage({
         ...legalPages.terms,
         icon: <FileText aria-hidden="true" size={16} />,
@@ -37,7 +37,7 @@ export const LEGAL_PAGES: ArticlePage[] = [
     }),
 ];
 
-export const LEGAL_GROUPS: ArticleNavigationGroup[] = [
+export const LEGAL_GROUPS = [
     {
         title: 'Legal',
         items: LEGAL_PAGES.map((page) => ({

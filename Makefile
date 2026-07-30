@@ -191,14 +191,13 @@ local: local\:resources
 # Remove remote development resources, stop local services, and clean local state.
 down:
 	@printf "Removing tracked remote development resources...\n"
-	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	cd api && DEVELOPMENT=true uv run --locked python cleanup.py
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@image="$(APPLICATION_IMAGE)"; \
 		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
-		if [ -z "$$image" ] && [ -f api/.env.seed ]; then image="$$(cd api && DEVELOPMENT=true uv run --locked python seed.py --print-image || true)"; fi; \
 		if [ -z "$$image" ]; then image="ghcr.io/xlonglink/longlink-app:v0.0.2"; fi; \
 		for repository in "$${image%@*}" "$(LOCAL_APPLICATION_IMAGE)"; do \
 			repository="$${repository%:*}"; \

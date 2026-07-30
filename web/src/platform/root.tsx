@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useLayoutEffect, useState, type ReactNode } from 'react';
 import { Outlet, type MetaFunction } from 'react-router';
 import '@/index.css';
-import { ThemeBootstrap } from '@/components/ThemeBootstrap';
+import { ThemeBootstrap, THEME_BOOTSTRAP_ID } from '@/components/ThemeBootstrap';
 import { UserProvider, useUserProfile } from '@/hooks/use-user';
 import { Document } from '@/layout/Document';
 import { I18nProvider } from '@/lib/i18n';
@@ -24,7 +24,7 @@ function PlatformShell() {
     // Keep cached first-paint overrides until the server-backed theme is ready.
     useLayoutEffect(() => {
         if (!isLoading) {
-            document.getElementById('longlink-theme-bootstrap')?.remove();
+            document.getElementById(THEME_BOOTSTRAP_ID)?.remove();
         }
     }, [isLoading]);
 

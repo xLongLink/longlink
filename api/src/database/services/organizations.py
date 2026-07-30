@@ -263,25 +263,21 @@ async def update_member_role(
             if len(owner_ids) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
-        # Persist the role change and queue reconciliation on the Organization's compute.
+        # Persist the role change before creating reconciliation on the Organization's compute.
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
         organization = await session.get(Organization, organization_id)
         if organization is None:
             return False
-        compute = await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
-        if compute is None:
-            raise RuntimeError("Organization compute registry not found")
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.organization_create,
-            target_id=organization.id,
-        )
         await session.commit()
-        return True
+
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.organization_create,
+        target_id=organization_id,
+    )
+    return True
 
 
 async def create(name: str, slug: str, user: User, avatar: str | None = None) -> Organization:
@@ -372,7 +368,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
-    """Tombstone an Organization and nested state while atomically queueing compute cleanup."""
+    """Tombstone an Organization and nested state before creating compute cleanup."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
@@ -381,12 +377,11 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
         if current is None:
             return None
 
-        # Lock the aggregate resources and stop if any disappear during acquisition.
-        compute = await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
+        # Lock the Organization state and stop if it disappears during acquisition.
         organization = (
             await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).one_or_none()
-        if compute is None or organization is None:
+        if organization is None:
             return None
 
         # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
@@ -430,14 +425,11 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .values(**tombstone)
             )
 
-        # Tombstones and their reconciliation request commit atomically.
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.organization_delete,
-            target_id=organization.id,
-        )
-
         await session.commit()
-        return organization
+
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.organization_delete,
+        target_id=organization_id,
+    )
+    return organization

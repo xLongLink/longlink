@@ -25,60 +25,54 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className="group"
+                                            className="hover:text-accent"
                                             color="secondary"
                                             href="https://www.linkedin.com/company/longlink"
                                             label="LinkedIn"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className="group-hover:text-accent">
-                                                <LinkedIn aria-hidden="true" className="size-4" />
-                                            </span>
+                                            <LinkedIn aria-hidden="true" className="size-4" />
                                         </Link>
                                     </li>
                                     <li>
                                         <Link
                                             as="a"
-                                            className="group"
+                                            className="hover:text-accent"
                                             color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className="group-hover:text-accent">
-                                                <GitHub aria-hidden="true" className="size-4" />
-                                            </span>
+                                            <GitHub aria-hidden="true" className="size-4" />
                                         </Link>
                                     </li>
                                     <li>
                                         <Link
                                             as="a"
-                                            className="group"
+                                            className="hover:text-accent"
                                             color="secondary"
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className="group-hover:text-accent">
-                                                <Package aria-hidden="true" size={16} />
-                                            </span>
+                                            <Package aria-hidden="true" size={16} />
                                         </Link>
                                     </li>
                                 </Stack>
                             </Stack>
 
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
-                                <Link href="/" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Home</span>
+                                <Link href="/" className="hover:text-accent" color="secondary" type="supporting">
+                                    Home
                                 </Link>
-                                <Link href="/docs" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Documentation</span>
+                                <Link href="/docs" className="hover:text-accent" color="secondary" type="supporting">
+                                    Documentation
                                 </Link>
-                                <Link href="/pricing" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Pricing</span>
+                                <Link href="/pricing" className="hover:text-accent" color="secondary" type="supporting">
+                                    Pricing
                                 </Link>
                             </Stack>
                         </Stack>
@@ -90,14 +84,19 @@ export function Footer() {
                                 LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                             </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link href="/impressum" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Impressum</span>
+                                <Link
+                                    href="/impressum"
+                                    className="hover:text-accent"
+                                    color="secondary"
+                                    type="supporting"
+                                >
+                                    Impressum
                                 </Link>
-                                <Link href="/terms" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Terms</span>
+                                <Link href="/terms" className="hover:text-accent" color="secondary" type="supporting">
+                                    Terms
                                 </Link>
-                                <Link href="/privacy" className="group" color="secondary" type="supporting">
-                                    <span className="group-hover:text-accent">Privacy</span>
+                                <Link href="/privacy" className="hover:text-accent" color="secondary" type="supporting">
+                                    Privacy
                                 </Link>
                             </Stack>
                         </Stack>

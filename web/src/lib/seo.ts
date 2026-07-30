@@ -8,8 +8,7 @@ export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
 
 /** Builds React Router metadata for one prerendered public page. */
 export function publicSeoMeta(page: PublicPage): MetaDescriptor[] {
-    const routePath = publicRoutePath(page.path);
-    const canonicalUrl = `${SITE_URL}${routePath}`;
+    const canonicalUrl = `${SITE_URL}${publicRoutePath(page.path)}`;
     const title =
         page.seoTitle ?? (page.path.startsWith('/docs') ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`);
     const structuredData =

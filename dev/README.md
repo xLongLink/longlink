@@ -98,6 +98,18 @@ make api
 make seed
 ```
 
+## Cleanup
+
+Clean the compute, database, and storage resources configured in `api/.env.seed`:
+
+```bash
+cd api
+uv run --locked python cleanup.py
+```
+
+The command deletes `longlink-system` and all discovered LongLink Organization namespaces, then removes the seeded
+database schemas, databases, storage credentials, and buckets tracked in Platform state.
+
 LongLink resolves the pulled tag through the registry and deploys its immutable digest.
 LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove those
 resources before local Platform state is deleted. PostgreSQL remains local by default because it matches the production

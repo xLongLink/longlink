@@ -42,7 +42,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
         assert claimed is operation
         return None
 
-    async def fake_claim_next() -> Operation | None:
+    async def fake_claim() -> Operation | None:
         """Return one operation and then no work."""
 
         return claims.pop(0)
@@ -59,7 +59,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
 
         raise StopScheduler()
 
-    monkeypatch.setattr(operation_worker.operations, "claim_next", fake_claim_next)
+    monkeypatch.setattr(operation_worker.operations, "claim", fake_claim)
     monkeypatch.setattr(operation_worker, "execute", fake_execute)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
     monkeypatch.setitem(operation_worker.handlers, OperationKind.compute_reconcile, handler)

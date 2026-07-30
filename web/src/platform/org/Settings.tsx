@@ -33,7 +33,6 @@ import People from './People';
 
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
-type SettingsSection = Exclude<SettingsRouteSection, 'people'> | PeopleSection;
 
 const organizationAvatarSchema = z.union([
     z.literal(''),
@@ -167,9 +166,8 @@ export default function Settings({
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
-    const hashValue = location.hash.replace(/^#/, '');
-    const peopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
-    const section: SettingsSection = routeSection === 'people' ? peopleSection : routeSection;
+    const peopleSection: PeopleSection = location.hash.replace(/^#/, '') === 'invitations' ? 'invitations' : 'members';
+    const section = routeSection === 'people' ? peopleSection : routeSection;
     const ownerCell = (
         <HStack gap={3} align="center">
             <Avatar src={organizationAvatar} name={organizationName} size="md" />

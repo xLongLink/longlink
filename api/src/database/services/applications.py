@@ -185,32 +185,28 @@ async def replace_environment(application_id: UUID, expected_status: Status, rep
 
 
 async def mark_running(application_id: UUID, compute_id: UUID) -> bool:
-    """Publish Application readiness and queue fallback gateway reconciliation atomically."""
+    """Publish Application readiness and create fallback gateway reconciliation."""
 
-    # Lock the compute aggregate before updating the Application and its outbox entry.
+    # Lock the Application before publishing readiness.
     async with session_scope() as session:
-        compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
-        if compute is None or application is None or application.deleted_at is not None:
+        if application is None or application.deleted_at is not None:
             return False
 
         # Publish running only from active creation state and retain a fallback gateway reconciliation.
         if application.status != Status.creating:
             return False
         application.status = Status.running
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-        )
         await session.commit()
-        return True
+
+    await operations.create(compute_id)
+    return True
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
-    """Tombstone a LongLink Application and atomically queue lifecycle cleanup."""
+    """Tombstone a LongLink Application and create lifecycle cleanup."""
 
-    # Soft-delete the application and queue its cleanup together.
+    # Soft-delete the application before creating its cleanup operation.
     async with session_scope() as session:
         # Resolve parents before taking locks in aggregate order.
         current = await session.get(Application, application_id)
@@ -220,13 +216,12 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         if current_organization is None:
             return None
 
-        # Lock the aggregate resources and stop if any disappear during acquisition.
-        compute = await session.get(ComputeRegistry, current_organization.compute_id, with_for_update=True)
+        # Lock the Organization and Application state before tombstoning.
         organization = (
             await session.scalars(select(Organization).where(Organization.id == current.organization_id).with_for_update())
         ).one_or_none()
         application = (await session.scalars(select(Application).where(Application.id == application_id).with_for_update())).one_or_none()
-        if compute is None or organization is None or application is None:
+        if organization is None or application is None:
             return None
 
         # Record the tombstone once; repeated requests only ensure cleanup remains queued.
@@ -238,16 +233,13 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             application.updated_at = now
             application.updated_id = user.id
 
-        # Application tombstone and reconciliation request are one Platform transaction.
-        await operations.enqueue_in_session(
-            session,
-            compute.id,
-            locked_compute=compute,
-            kind=OperationKind.application_delete,
-            target_id=application.id,
-        )
-
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
         await session.commit()
-        return application
+
+    await operations.create(
+        current_organization.compute_id,
+        kind=OperationKind.application_delete,
+        target_id=application_id,
+    )
+    return application

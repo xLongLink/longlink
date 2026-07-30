@@ -43,25 +43,25 @@ export function Navbar() {
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
                                     <Link
                                         href="/docs"
-                                        className="group hover:no-underline"
+                                        className="transition-colors hover:text-accent hover:no-underline"
                                         color="secondary"
                                         isStandalone
                                         weight="normal"
                                     >
-                                        <span className="transition-colors group-hover:text-accent">Documentation</span>
+                                        Documentation
                                     </Link>
                                     <Link
                                         href="/pricing"
-                                        className="group hover:no-underline"
+                                        className="transition-colors hover:text-accent hover:no-underline"
                                         color="secondary"
                                         isStandalone
                                         weight="normal"
                                     >
-                                        <span className="transition-colors group-hover:text-accent">Pricing</span>
+                                        Pricing
                                     </Link>
                                     <Link
                                         as="a"
-                                        className="group"
+                                        className="inline-flex items-center gap-1 hover:text-accent"
                                         color="secondary"
                                         href="https://github.com/xLongLink/longlink"
                                         isStandalone
@@ -69,10 +69,8 @@ export function Navbar() {
                                         target="_blank"
                                         weight="normal"
                                     >
-                                        <span className="inline-flex items-center gap-1 group-hover:text-accent">
-                                            GitHub
-                                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                                        </span>
+                                        GitHub
+                                        <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                                     </Link>
                                 </Stack>
                             }

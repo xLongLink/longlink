@@ -98,7 +98,7 @@ export const content = (
             <Code>longlink init</Code> creates an application scaffold with separate directories for routes, schemas,
             database models and services, XML pages, translations, migrations, environment declarations, and tests:
         </Text>
-        <CodeBlock language="text">
+        <CodeBlock language="plaintext">
             {
                 '├── src/\n│   ├── database/         # Database models and services\n│   ├── i18n/             # Translation catalogs\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
             }

@@ -6,8 +6,6 @@ from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -77,8 +75,8 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         return invitation
 
 
-async def accept_in_session(session: AsyncSession, user: User) -> None:
-    """Accept pending invitations for one user's verified email in the caller's transaction."""
+async def accept_in_session(session: AsyncSession, user: User) -> list[tuple[UUID, UUID]]:
+    """Accept pending invitations and return Organization reconciliation targets."""
 
     normalized_email = user.email.strip().lower()
 
@@ -97,7 +95,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
         )
     ).all()
     if not rows:
-        return
+        return []
 
     # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
     organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
@@ -148,11 +146,4 @@ async def accept_in_session(session: AsyncSession, user: User) -> None:
             item.deleted_at = now
             item.deleted_id = user.id
 
-    # Publish new Organization access to managed runtimes after the transaction commits.
-    for organization_id in sorted(changed_organization_ids, key=str):
-        await operations.enqueue_in_session(
-            session,
-            organization_computes[organization_id],
-            kind=OperationKind.organization_create,
-            target_id=organization_id,
-        )
+    return [(organization_computes[organization_id], organization_id) for organization_id in sorted(changed_organization_ids, key=str)]

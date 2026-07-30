@@ -1,5 +1,7 @@
 import { ACCENT_BOOTSTRAP_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_PREFERENCES_KEY, THEME_VALUES } from '@/lib/theme';
 
+export const THEME_BOOTSTRAP_ID = 'longlink-theme-bootstrap';
+
 const themeBootstrap = `
 (() => {
     const accents = ${JSON.stringify(ACCENT_BOOTSTRAP_VALUES)};
@@ -20,7 +22,7 @@ const themeBootstrap = `
         }
 
         const style = document.createElement('style');
-        style.id = 'longlink-theme-bootstrap';
+        style.id = '${THEME_BOOTSTRAP_ID}';
         style.textContent = \`:root, :root [data-astryx-theme] {
             color-scheme: \${mode === 'system' ? 'light dark' : mode} !important;
             --color-accent: \${accent[0]} !important;

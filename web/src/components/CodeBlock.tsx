@@ -3,7 +3,7 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { useToast } from '@/hooks/use-toast';
 
 /** Renders a syntax-highlighted code block for docs and examples. */
-export function CodeBlock({ children, language = 'text' }: { children: string; language?: string }) {
+export function CodeBlock({ children, language = 'plaintext' }: { children: string; language?: string }) {
     const t = useTranslator();
     const showToast = useToast();
 
@@ -11,7 +11,7 @@ export function CodeBlock({ children, language = 'text' }: { children: string; l
         <AstryxCodeBlock
             code={children.trim()}
             highlightMode="spans"
-            language={language === 'text' ? 'plaintext' : language}
+            language={language}
             width="100%"
             onCopy={() => showToast({ body: t('toasts.copiedToClipboard') })}
         />

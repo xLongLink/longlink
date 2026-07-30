@@ -7,20 +7,18 @@ async def schedule_migrations() -> None:
     # Load every relationship target before the standalone process configures SQLModel mappers.
     from sqlmodel import col
     from sqlalchemy import select
-    from src.environments import env
     from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
     from src.models.statuses import Status
     from src.database.session import session_scope
     from src.database.services import operations as operation_service
     from src.models.operations import OperationKind
     from src.database.models.computes import ComputeRegistry
-    from src.database.models.operations import Operation
     from src.database.models.applications import Application
     from src.database.models.organizations import Organization
 
-    # Lock compute aggregates and load active Organization and Application migration targets.
+    # Load active Organization and Application migration targets.
     async with session_scope() as session:
-        compute_rows = (await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)).with_for_update())).all()
+        compute_rows = (await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)))).all()
         organization_rows = (
             await session.scalars(
                 select(Organization)
@@ -41,7 +39,7 @@ async def schedule_migrations() -> None:
             )
         ).all()
 
-        # Collect release targets in dependency order before filtering already scheduled work.
+        # Collect release targets in dependency order.
         targets = [(OperationKind.compute_reconcile, compute.id, compute.id) for compute in compute_rows]
         targets.extend(
             (OperationKind.organization_create, organization.id, organization.compute_id) for organization in organization_rows
@@ -49,33 +47,13 @@ async def schedule_migrations() -> None:
         targets.extend(
             (OperationKind.application_create, application_id, compute_id) for application_id, compute_id in application_rows
         )
-        existing_targets = set(
-            (
-                await session.execute(
-                    select(col(Operation.kind), col(Operation.target_id)).where(
-                        col(Operation.kind).in_({kind for kind, _, _ in targets}),
-                        col(Operation.failed).is_(False),
-                        col(Operation.platform_version) == env.VERSION,
-                    )
-                )
-            ).all()
+    # Create or reuse each current-release operation through its dedicated transaction.
+    for kind, target_id, compute_id in targets:
+        await operation_service.create(
+            compute_id,
+            kind=kind,
+            target_id=target_id,
         )
-        computes_by_id = {compute.id: compute for compute in compute_rows}
-
-        # Queue every target that does not already have current release work.
-        for kind, target_id, compute_id in targets:
-            if (kind, target_id) in existing_targets:
-                continue
-            compute = computes_by_id[compute_id]
-            await operation_service.enqueue_in_session(
-                session,
-                compute_id,
-                locked_compute=compute,
-                kind=kind,
-                target_id=target_id,
-            )
-
-        await session.commit()
 
 
 def main() -> None:

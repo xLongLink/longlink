@@ -13,7 +13,7 @@ async def test_operations_endpoint_returns_targeted_operations(
     # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    operation = await operations.enqueue(infrastructure.compute.id)
+    operation = await operations.create(infrastructure.compute.id)
 
     # Act
     response = await client.get("/api/operations")

@@ -84,7 +84,7 @@ export function pageElementPage(page: ElementDoc): PublicPage {
     };
 }
 
-export const documentationPublicPages: PublicPage[] = [
+export const documentationPublicPages = [
     ...Object.values(documentationPages),
     ...pageReferenceDocs.map(pageElementPage),
 ];
