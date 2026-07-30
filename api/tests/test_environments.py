@@ -14,6 +14,9 @@ def test_development_mode_uses_the_development_flag() -> None:
     process_environment = os.environ.copy()
     process_environment.pop("DEVELOPMENT", None)
     process_environment["DEVELOPMENT"] = "true"
+    process_environment.setdefault("LOCAL_ADMIN_NAME", "Test Administrator")
+    process_environment.setdefault("LOCAL_ADMIN_EMAIL", "test-administrator@example.com")
+    process_environment.setdefault("LOCAL_ADMIN_PASSWORD", "longlink-test-password")
 
     # Import the actual module constant once in a fresh interpreter.
     result = subprocess.run(

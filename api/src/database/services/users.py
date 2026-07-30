@@ -1,11 +1,16 @@
 from uuid import UUID
-from sqlalchemy import select
+from pwdlib import PasswordHash
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import col
 from sqlalchemy.orm import selectinload
 from collections.abc import Sequence
+from src.environments import env
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
+from src.models.roles import PlatformRoles
 
 
 async def fetch() -> Sequence[User]:
@@ -32,3 +37,61 @@ async def get(user_id: UUID, include_access: bool = False) -> User | None:
             )
 
         return (await session.scalars(statement)).one_or_none()
+
+
+async def ensure_administrator() -> tuple[User, bool]:
+    """Create or repair the configured initial Platform administrator."""
+
+    # Match the configured identity case-insensitively before reconciling its credentials and access.
+    hasher = PasswordHash.recommended()
+    async with session_scope() as session:
+        statement = select(User).where(func.lower(col(User.email)) == env.LOCAL_ADMIN_EMAIL.casefold())
+        user = (await session.execute(statement)).scalar_one_or_none()
+        created = user is None
+        if user is None:
+            user = User(
+                name=env.LOCAL_ADMIN_NAME,
+                email=env.LOCAL_ADMIN_EMAIL,
+                hashed_password=hasher.hash(env.LOCAL_ADMIN_PASSWORD),
+                role=PlatformRoles.administrator,
+            )
+            session.add(user)
+
+            # Concurrent Platform startup may create the configured administrator first.
+            try:
+                await session.flush()
+            except IntegrityError:
+                await session.rollback()
+                user = (await session.execute(statement)).scalar_one_or_none()
+                if user is None:
+                    raise
+                created = False
+
+        # Reconcile an existing account, including one created concurrently by another replica.
+        if created:
+            changed = True
+        else:
+            verified = hasher.verify(env.LOCAL_ADMIN_PASSWORD, user.hashed_password)
+            changed = (
+                not verified
+                or user.name != env.LOCAL_ADMIN_NAME
+                or user.role != PlatformRoles.administrator
+                or user.deleted_at is not None
+            )
+            if not verified:
+                user.hashed_password = hasher.hash(env.LOCAL_ADMIN_PASSWORD)
+            user.name = env.LOCAL_ADMIN_NAME
+            user.role = PlatformRoles.administrator
+            user.deleted_at = None
+
+        await session.commit()
+        return user, changed
+
+
+async def administrator() -> User | None:
+    """Return the configured Platform administrator."""
+
+    # Match the configured administrator identity without loading unrelated Platform users.
+    async with session_scope() as session:
+        statement = select(User).where(func.lower(col(User.email)) == env.LOCAL_ADMIN_EMAIL.casefold())
+        return (await session.execute(statement)).scalar_one_or_none()

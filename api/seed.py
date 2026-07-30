@@ -3,7 +3,6 @@ import argparse
 import subprocess
 from src import adapters
 from uuid import UUID
-from pwdlib import PasswordHash
 from pathlib import Path
 from datetime import timedelta
 from pydantic import Field, field_validator
@@ -13,7 +12,7 @@ from sqlalchemy import text, select, update, inspect
 from sqlalchemy.exc import ArgumentError
 from src.operations import handlers
 from src.environments import env
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
@@ -28,10 +27,10 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
+from src.database.services import users as user_service
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
-from src.database.models.users import User
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -43,11 +42,6 @@ SEED_OPERATION_DELAY_SECONDS = 315360000
 
 class SeedSettings(BaseSettings):
     """Define credentials required only while seeding development."""
-
-    # Local administrator
-    LOCAL_ADMIN_NAME: str = Field(default="Example LongLink", min_length=1)
-    LOCAL_ADMIN_EMAIL: str = Field(default="example@longlink.dev", min_length=1)
-    LOCAL_ADMIN_PASSWORD: str = Field(default="longlink-admin", min_length=1)
 
     # Local Organization and Application
     LOCAL_ORG: str = Field(default="test", min_length=1)
@@ -69,7 +63,7 @@ class SeedSettings(BaseSettings):
     EXOSCALE_STORAGE_ENDPOINT_URL: str = Field(min_length=1)
 
     model_config = SettingsConfigDict(
-        env_file=(".env.seed", ".env"),
+        env_file=".env.seed",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -98,40 +92,6 @@ def local_database_host(settings: SeedSettings) -> str:
     if not host:
         raise RuntimeError(f"Docker network '{settings.LOCAL_DOCKER_NETWORK}' has no gateway address")
     return host
-
-
-async def seed_local_administrator(settings: SeedSettings) -> tuple[User, bool]:
-    """Create or repair the local administrator and report shared user changes."""
-
-    # Create the local account or repair its development credentials and role.
-    hasher = PasswordHash.recommended()
-    async with session_scope() as session:
-        result = await session.execute(select(User).where(col(User.email) == settings.LOCAL_ADMIN_EMAIL))
-        user = result.scalar_one_or_none()
-        if user is None:
-            user = User(
-                email=settings.LOCAL_ADMIN_EMAIL,
-                hashed_password=hasher.hash(settings.LOCAL_ADMIN_PASSWORD),
-            )
-            session.add(user)
-            user_changed = True
-        else:
-            verified = hasher.verify(settings.LOCAL_ADMIN_PASSWORD, user.hashed_password)
-            user_changed = (
-                not verified
-                or user.name != settings.LOCAL_ADMIN_NAME
-                or user.role != PlatformRoles.administrator
-                or user.deleted_at is not None
-            )
-            if not verified:
-                user.hashed_password = hasher.hash(settings.LOCAL_ADMIN_PASSWORD)
-
-        user.name = settings.LOCAL_ADMIN_NAME
-        user.role = PlatformRoles.administrator
-        user.deleted_at = None
-
-        await session.commit()
-        return user, user_changed
 
 
 async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) -> bool:
@@ -346,8 +306,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if compute_registry is not None and compute_registry.kubeconfig != compute.kubeconfig:
         raise ValueError("Development compute registry uses a different kubeconfig; run make down before changing it")
 
-    # Create or restore the local Platform administrator.
-    admin, administrator_changed = await seed_local_administrator(settings)
+    # Require the Platform lifespan to initialize the configured administrator before seeding resources.
+    admin = await user_service.administrator()
+    if admin is None:
+        raise RuntimeError("Configured Platform administrator does not exist; start the Platform API before seeding")
 
     # Ensure the development compute target is ready before assigning resources to it.
     if compute_registry is None:
@@ -399,7 +361,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         await reconcile_until_complete(operation.id)
     else:
         owner_changed = await ensure_local_organization_owner(organization.id, admin.id)
-        if administrator_changed or owner_changed:
+        if owner_changed:
             operation = await operations.enqueue(
                 compute_registry.id,
                 kind=OperationKind.organization_create,
@@ -584,7 +546,6 @@ def main() -> None:
         print(settings.APPLICATION_IMAGE)
         return
     asyncio.run(seed_local_development(settings))
-    print(f"Local administrator: {settings.LOCAL_ADMIN_EMAIL} / {settings.LOCAL_ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

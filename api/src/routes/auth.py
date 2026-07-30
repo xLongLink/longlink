@@ -248,12 +248,11 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
 
     # Build the authenticated account and its first revocable session in one transaction.
-    is_initial_admin = env.INITIAL_ADMIN_EMAIL is not None and email.casefold() == env.INITIAL_ADMIN_EMAIL.casefold()
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
         hashed_password=PasswordHash.recommended().hash(payload.password),
-        role=PlatformRoles.administrator if is_initial_admin else PlatformRoles.user,
+        role=PlatformRoles.user,
     )
     session.add(user)
 

@@ -20,8 +20,12 @@ class Env(BaseSettings):
     # Authentication
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
     SESSION_KEY: str = Field(min_length=32)
-    INITIAL_ADMIN_EMAIL: str | None = None
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
+
+    # Initial Platform administrator
+    LOCAL_ADMIN_NAME: str = Field(min_length=1)
+    LOCAL_ADMIN_EMAIL: str = Field(min_length=1)
+    LOCAL_ADMIN_PASSWORD: str = Field(min_length=1)
 
     # Authentication email delivery
     SMTP_HOST: str | None = None
