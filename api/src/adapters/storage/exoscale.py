@@ -163,7 +163,8 @@ class Exoscale:
                     await self._delete_objects(client, bucket, objects)
             except ClientError as exc:
                 error = exc.response.get("Error", {})
-                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"}:
+                status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"} and status != 404:
                     raise
 
     async def _delete_objects(self, client: "S3Client", bucket: str, objects: "list[ObjectIdentifierTypeDef]") -> None:
@@ -235,47 +236,31 @@ class Exoscale:
             # The generated context manager returns itself but types the result as its incomplete base class.
             api = cast(AsyncClient, client)
 
-            # Delete every matching API key before deleting roles they may reference.
-            keys = await api.list_api_keys()
-            api_keys = keys.get("api-keys")
-            if not isinstance(api_keys, list):
-                raise RuntimeError("Exoscale API key inventory response is invalid")
+            # Delete matching keys before roles because keys may reference their role.
+            resources = (
+                ("API key", "api-keys", "key", api.list_api_keys, lambda resource_id: api.delete_api_key(id=resource_id)),
+                ("IAM role", "iam-roles", "id", api.list_iam_roles, lambda resource_id: api.delete_iam_role(id=resource_id)),
+            )
+            for name, collection, identifier, list_resources, delete_resource in resources:
+                response = await list_resources()
+                items = response.get(collection)
+                if not isinstance(items, list):
+                    raise RuntimeError(f"Exoscale {name} inventory response is invalid")
 
-            for item in api_keys:
-                if not isinstance(item, dict) or item.get("name") != credential_name:
-                    continue
+                for item in items:
+                    if not isinstance(item, dict) or item.get("name") != credential_name:
+                        continue
 
-                key = item.get("key")
-                if not isinstance(key, str) or not key:
-                    raise RuntimeError("Exoscale API key inventory item is missing its key id")
-                try:
-                    operation = await api.delete_api_key(id=key)
-                except ExoscaleAPIClientException as exc:
-                    if exc.response is None or exc.response.status_code != 404:
-                        raise
-                else:
-                    await self._wait_operation(api, operation, require_reference=False)
-
-            # Delete every matching role after keys have been removed.
-            roles = await api.list_iam_roles()
-            iam_roles = roles.get("iam-roles")
-            if not isinstance(iam_roles, list):
-                raise RuntimeError("Exoscale IAM role inventory response is invalid")
-
-            for item in iam_roles:
-                if not isinstance(item, dict) or item.get("name") != credential_name:
-                    continue
-
-                role_id = item.get("id")
-                if not isinstance(role_id, str) or not role_id:
-                    raise RuntimeError("Exoscale IAM role inventory item is missing its role id")
-                try:
-                    operation = await api.delete_iam_role(id=role_id)
-                except ExoscaleAPIClientException as exc:
-                    if exc.response is None or exc.response.status_code != 404:
-                        raise
-                else:
-                    await self._wait_operation(api, operation, require_reference=False)
+                    resource_id = item.get(identifier)
+                    if not isinstance(resource_id, str) or not resource_id:
+                        raise RuntimeError(f"Exoscale {name} inventory item is missing its {identifier} id")
+                    try:
+                        operation = await delete_resource(resource_id)
+                    except ExoscaleAPIClientException as exc:
+                        if exc.response is None or exc.response.status_code != 404:
+                            raise
+                    else:
+                        await self._wait_operation(api, operation, require_reference=False)
 
     async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""

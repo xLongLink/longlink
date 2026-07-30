@@ -40,17 +40,20 @@ async def schedule_migrations() -> None:
                 .order_by(col(Organization.compute_id), col(Application.id))
             )
         ).all()
+
+        # Collect release targets in dependency order before filtering already scheduled work.
+        targets = [(OperationKind.compute_reconcile, compute.id, compute.id) for compute in compute_rows]
+        targets.extend(
+            (OperationKind.organization_create, organization.id, organization.compute_id) for organization in organization_rows
+        )
+        targets.extend(
+            (OperationKind.application_create, application_id, compute_id) for application_id, compute_id in application_rows
+        )
         existing_targets = set(
             (
                 await session.execute(
                     select(col(Operation.kind), col(Operation.target_id)).where(
-                        col(Operation.kind).in_(
-                            [
-                                OperationKind.compute_reconcile,
-                                OperationKind.organization_create,
-                                OperationKind.application_create,
-                            ]
-                        ),
+                        col(Operation.kind).in_({kind for kind, _, _ in targets}),
                         col(Operation.failed).is_(False),
                         col(Operation.platform_version) == env.VERSION,
                     )
@@ -59,40 +62,17 @@ async def schedule_migrations() -> None:
         )
         computes_by_id = {compute.id: compute for compute in compute_rows}
 
-        # Queue one release reconciliation for every compute.
-        for compute in compute_rows:
-            if (OperationKind.compute_reconcile, compute.id) in existing_targets:
-                continue
-            await operation_service.enqueue_in_session(
-                session,
-                compute.id,
-                locked_compute=compute,
-            )
-
-        # Queue one release operation for every active Organization.
-        for organization in organization_rows:
-            if (OperationKind.organization_create, organization.id) in existing_targets:
-                continue
-            compute = computes_by_id[organization.compute_id]
-            await operation_service.enqueue_in_session(
-                session,
-                organization.compute_id,
-                locked_compute=compute,
-                kind=OperationKind.organization_create,
-                target_id=organization.id,
-            )
-
-        # Queue one release operation for every running Application.
-        for application_id, compute_id in application_rows:
-            if (OperationKind.application_create, application_id) in existing_targets:
+        # Queue every target that does not already have current release work.
+        for kind, target_id, compute_id in targets:
+            if (kind, target_id) in existing_targets:
                 continue
             compute = computes_by_id[compute_id]
             await operation_service.enqueue_in_session(
                 session,
                 compute_id,
                 locked_compute=compute,
-                kind=OperationKind.application_create,
-                target_id=application_id,
+                kind=kind,
+                target_id=target_id,
             )
 
         await session.commit()

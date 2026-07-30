@@ -50,10 +50,7 @@ async def reconcile(claimed: Operation) -> str | None:
     # A new execution makes a previously failed Organization visibly active again.
     if organization.status == Status.failed:
         if not await organizations.set_runtime(organization.id, Status.failed, Status.creating):
-            current = await organizations.get(organization.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return None
-            return "Organization lifecycle state changed before convergence"
+            return None
         organization.status = Status.creating
 
     # Resolve the Organization's immutable provider and compute assignments.
@@ -95,10 +92,7 @@ async def reconcile(claimed: Operation) -> str | None:
     # Restore running after successful reconciliation of a failed Organization.
     if organization.status == Status.creating:
         if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
-            current = await organizations.get(organization.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return None
-            return "Organization lifecycle state changed before readiness was recorded"
+            return None
     return None
 
 

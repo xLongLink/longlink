@@ -20,10 +20,7 @@ async def create(claimed: Operation) -> str | None:
     # A new create execution makes a previously failed Application visibly active again.
     if application.status == Status.failed:
         if not await applications.set_status(application.id, Status.failed, Status.creating):
-            current = await applications.get(application.id, include_deleted=True)
-            if current is None or current.deleted_at is not None or current.status == Status.running:
-                return None
-            return "Application lifecycle state changed before creation"
+            return None
         application.status = Status.creating
     infrastructure = await organizations.infrastructure(application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
@@ -133,10 +130,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Publish running only after both workload readiness and gateway publication succeed.
     if not await applications.mark_running(application.id, organization.compute_id):
-        current = await applications.get(application.id, include_deleted=True)
-        if current is None or current.deleted_at is not None or current.status == Status.running:
-            return None
-        return "Application lifecycle state changed before readiness was recorded"
+        return None
     return None
 
 
