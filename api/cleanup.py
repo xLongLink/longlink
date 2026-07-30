@@ -1,7 +1,8 @@
 import asyncio
 import argparse
-from src import adapters
 from seed import SeedSettings, application_database_configuration
+from src.adapters.postgres import Postgres
+from src.adapters.storage.exoscale import Exoscale
 from uuid import UUID
 from pathlib import Path
 from sqlalchemy import text, inspect
@@ -249,7 +250,7 @@ async def cleanup(*, reset_cluster: bool = False) -> None:
 
     # Revoke Application credentials before emptying and deleting each Organization bucket.
     for (endpoint_url, access_key_id, secret_access_key, organization), application_ids in storage_resources.items():
-        storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key)
+        storage = Exoscale(endpoint_url, access_key_id, secret_access_key)
         for application in application_ids:
             await storage.revoke(application.hex)
         await storage.delete(organization.hex)
@@ -266,7 +267,7 @@ async def cleanup(*, reset_cluster: bool = False) -> None:
 
     # Remove Application schemas and roles before deleting each Organization database.
     for (host, port, username, password, sslmode, organization), application_ids in database_resources.items():
-        database = adapters.Postgres(host, port, username, password, sslmode)
+        database = Postgres(host, port, username, password, sslmode)
         for application in application_ids:
             await database.delete_schema(organization, application)
         await database.delete_database(organization)

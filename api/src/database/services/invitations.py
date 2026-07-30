@@ -4,8 +4,10 @@ from src.utils import roles
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
+from src.models.operations import OperationKind
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
+from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -75,17 +77,24 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         return invitation
 
 
-async def accept(user_id: UUID) -> list[tuple[UUID, UUID]]:
-    """Accept pending invitations for one persisted user."""
+async def accept(user_id: UUID) -> None:
+    """Accept pending invitations and schedule their Organization reconciliation."""
 
     # Resolve the recipient before changing invitation or membership state.
     async with session_scope() as session:
         user = await session.get(User, user_id)
         if user is None:
-            return []
+            return
         targets = await accept_pending(session, user)
         await session.commit()
-        return targets
+
+    # Reconcile each Organization after its new membership is durable.
+    for compute_id, organization_id in targets:
+        await operations.create(
+            compute_id,
+            kind=OperationKind.organization_create,
+            target_id=organization_id,
+        )
 
 
 async def accept_pending(session: AsyncSession, user: User) -> list[tuple[UUID, UUID]]:

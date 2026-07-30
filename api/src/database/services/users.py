@@ -84,12 +84,3 @@ async def ensure_administrator() -> tuple[User, bool]:
 
         await session.commit()
         return user, changed
-
-
-async def administrator() -> User | None:
-    """Return the configured Platform administrator."""
-
-    # Match the configured administrator identity without loading unrelated Platform users.
-    async with session_scope() as session:
-        statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL.casefold())
-        return (await session.execute(statement)).scalar_one_or_none()

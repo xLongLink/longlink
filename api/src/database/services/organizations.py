@@ -196,19 +196,6 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> Seque
         return (await session.scalars(statement)).all()
 
 
-async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
-    """Return one member role for an organization."""
-
-    # Query one active organization membership role.
-    async with session_scope() as session:
-        statement = select(UserOrganization.role).where(
-            UserOrganization.organization_id == organization_id,
-            UserOrganization.user_id == user_id,
-            UserOrganization.deleted_at.is_(None),
-        )
-        return (await session.scalars(statement)).one_or_none()
-
-
 async def update_member_role(
     organization_id: UUID,
     member_id: UUID,
@@ -217,7 +204,7 @@ async def update_member_role(
     *,
     can_manage_owner_role: bool = True,
 ) -> bool:
-    """Change an Organization membership and atomically queue compute reconciliation."""
+    """Change one active Organization membership."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
@@ -265,9 +252,6 @@ async def update_member_role(
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
-        organization = await session.get(Organization, organization_id)
-        if organization is None:
-            return False
         await session.commit()
 
     return True
@@ -378,15 +362,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        # Resolve the parent before taking locks in aggregate order.
-        current = await session.get(Organization, organization_id)
-        if current is None:
-            return None
-
-        # Lock the Organization state and stop if it disappears during acquisition.
-        organization = (
-            await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
-        ).one_or_none()
+        # Lock the Organization state before tombstoning its nested rows.
+        organization = await session.get(Organization, organization_id, with_for_update=True)
         if organization is None:
             return None
 

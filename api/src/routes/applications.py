@@ -26,7 +26,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     """Create Application state and queue its explicit deployment lifecycle."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 

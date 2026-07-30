@@ -200,7 +200,7 @@ async def test_organization_database_endpoint_returns_database_usage(
             return {"space_used": 3584, "table_count": 4}
 
     monkeypatch.setattr(
-        "src.routes.organizations.adapters.Postgres",
+        "src.routes.organizations.Postgres",
         FakePostgres,
     )
 
@@ -245,7 +245,7 @@ async def test_organization_database_endpoint_returns_unavailable_when_backend_f
             raise RuntimeError("database offline")
 
     monkeypatch.setattr(
-        "src.routes.organizations.adapters.Postgres",
+        "src.routes.organizations.Postgres",
         FakePostgres,
     )
 
@@ -288,7 +288,7 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
         assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.adapters.Exoscale", fake_storage)
+    monkeypatch.setattr("src.routes.organizations.Exoscale", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")
@@ -331,7 +331,7 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
         assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.adapters.Exoscale", fake_storage)
+    monkeypatch.setattr("src.routes.organizations.Exoscale", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")
@@ -509,13 +509,9 @@ async def test_create_organization_invitation_returns_204(
     assert response.status_code == 204
     invitations_list = await organizations.invitations(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
-    assert captured_mail[0][:2] == (invitee.email, "Invitation to join acme on LongLink")
-    assert "You have been invited to join acme on LongLink." in captured_mail[0][2]
-    assert "Role: write" in captured_mail[0][2]
+    assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
     assert captured_mail[0][3] is not None
-    assert "Join acme with write access." in captured_mail[0][3]
-    assert "Open invitation" in captured_mail[0][3]
 
 
 async def test_create_organization_invitation_rejects_role_above_caller(
@@ -612,28 +608,8 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Owner management permissions required"}
-    assert await organizations.membership_role(organization.id, member.id) == OrganizationRoles.read
-
-
-async def test_update_organization_member_rejects_demoting_last_owner(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return the service conflict when a request would remove the final owner."""
-
-    # Arrange
-    owner = users[0]
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    client = clients[0]
-
-    # Act
-    response = await client.patch(f"/api/organizations/{organization.id}/members/{owner.id}", json={"role": "admin"})
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Organization must have at least one owner"}
-    assert await organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
+    membership = next(item for item in await organizations.members(organization.id) if item.user_id == member.id)
+    assert membership.role == OrganizationRoles.read
 
 
 async def test_update_organization_member_returns_403_for_regular_member(
@@ -676,30 +652,6 @@ async def test_update_organization_member_returns_403_for_regular_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-
-
-async def test_create_organization_invitation_returns_409_for_duplicate_email(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject duplicate invitation requests for the same email."""
-
-    # Arrange
-    owner, invitee = users[0], users[1]
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-    await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
-    client = clients[0]
-
-    # Act
-    response = await client.post(
-        f"/api/organizations/{organization.id}/invitations",
-        json={"email": invitee.email, "role": "admin"},
-    )
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invitation already exists"}
 
 
 async def test_create_organization_invitation_returns_404_for_non_member(

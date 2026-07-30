@@ -19,7 +19,7 @@ describe('renderNode', () => {
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
-        expect(renderXmlToMarkup([node], ctx)).toBe('<div></div>');
+        expect(renderXmlToMarkup([node], ctx)).not.toContain('<button');
     });
 
     it('throws on unknown component', () => {

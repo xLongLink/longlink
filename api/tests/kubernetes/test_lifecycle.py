@@ -281,12 +281,7 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
         stale_deployment = await read_resource(scenario.compute, Deployment, str(scenario.stale_application_id), "acme")
         stale_service = await read_resource(scenario.compute, Service, f"app-{scenario.stale_application_id}", "acme")
         retired_deleting = retired_namespace is None or retired_namespace.raw.get("metadata", {}).get("deletionTimestamp") is not None
-        if (
-            retired_deleting
-            and stale_secret is None
-            and stale_deployment is None
-            and stale_service is None
-        ):
+        if retired_deleting and stale_secret is None and stale_deployment is None and stale_service is None:
             break
         if time.monotonic() >= deadline:
             pytest.fail(
@@ -337,7 +332,7 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     application_container = application_deployment.raw["spec"]["template"]["spec"]["containers"][0]
     assert application_container["envFrom"] == [{"secretRef": {"name": str(scenario.application_id)}}]
 
-    # Tenant resources omit Platform revision annotations.
+    # Tenant resource metadata omits Platform revisions while the Pod template tracks its runtime.
     tenant_resources = (
         organization_namespace,
         organization_policy,
@@ -348,13 +343,16 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     for resource in tenant_resources:
         annotations = resource.raw["metadata"].get("annotations", {})
         assert set(annotations).isdisjoint({"longlink.io/platform-version", "longlink.io/runtime-revision"})
-    assert "annotations" not in application_deployment.raw["spec"]["template"]["metadata"]
+    pod_annotations = application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
+    assert set(pod_annotations) == {"longlink.io/runtime-revision"}
+    assert pod_annotations["longlink.io/runtime-revision"]
 
 
 async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewayState) -> None:
     """Verify the retained Application through the CA-validated gateway and Pod logs."""
 
-    # Ensure the retained Application workload is serving before exercising the public gateway.
+    # Restore a valid user environment and roll out the retained Application before serving.
+    await scenario.compute.applications.stage_envs(scenario.application_id, "acme", {"PORT": "8000"})
     await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 
     # Confirm a client without LongLink's certificate cannot complete the gateway TLS handshake.

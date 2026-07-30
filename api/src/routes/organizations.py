@@ -1,6 +1,7 @@
-from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
+from src.adapters.postgres import Postgres
+from src.adapters.storage.exoscale import Exoscale
 from src.auth import authuser, authadmin, current_authenticated_user
 from src.utils import mail, names, roles
 from src.logger import logger
@@ -34,7 +35,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     """Return one organization and its metadata."""
 
     # Load organization access before exposing organization details.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -62,7 +63,7 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
     """Update mutable organization settings."""
 
     # Load organization access before changing its settings.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -85,7 +86,7 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
     """Return maintainer-only live usage for the Organization database."""
 
     # Load organization access before exposing database resources.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -100,7 +101,7 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
 
     # Inspect the exact Organization database while distinguishing absent provisioning from backend failures.
     database_name = membership.organization.id.hex
-    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
+    db = Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
         usage = await db.database_usage(database_name)
     except Exception as exc:
@@ -120,7 +121,7 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
     """Return maintainer-only live usage for the Organization bucket."""
 
     # Load organization access before exposing storage resources.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -136,7 +137,7 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
     try:
-        usage = await adapters.Exoscale(
+        usage = await Exoscale(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -160,7 +161,7 @@ async def create_organization_invitation(organization_id: UUID, payload: Organiz
     """Create one invitation for an organization member."""
 
     # Load organization access before creating invitations.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -186,7 +187,7 @@ async def update_organization_member(
     """Update one organization member role."""
 
     # Load organization access before updating members.
-    membership = roles.access(user, organization_id, "organization")
+    membership = roles.access(user, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -230,7 +231,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     # Require active Organization ownership for the first deletion request.
     if not retry and user.role != PlatformRoles.administrator:
-        membership = roles.access(user, organization_id, "organization")
+        membership = roles.access(user, organization_id)
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
 

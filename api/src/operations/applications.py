@@ -1,5 +1,6 @@
 import secrets
-from src import adapters
+from src.adapters.postgres import Postgres
+from src.adapters.storage.exoscale import Exoscale
 from src.operations import computes
 from src.environments import env
 from src.models.statuses import Status
@@ -35,14 +36,14 @@ async def create(claimed: Operation) -> str | None:
         # Resolve the Application's immutable provider assignments.
         database_registry = infrastructure.database
         storage_registry = infrastructure.storage
-        db = adapters.Postgres(
+        db = Postgres(
             database_registry.host,
             database_registry.port,
             database_registry.username,
             database_registry.password,
             database_registry.sslmode,
         )
-        object_storage = adapters.Exoscale(
+        object_storage = Exoscale(
             storage_registry.endpoint_url,
             storage_registry.access_key_id,
             storage_registry.secret_access_key,
@@ -130,14 +131,14 @@ async def delete(claimed: Operation) -> str | None:
     await cluster.applications.delete(application.id, organization.slug)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
-    db = adapters.Postgres(
+    db = Postgres(
         database_registry.host,
         database_registry.port,
         database_registry.username,
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.Exoscale(
+    object_storage = Exoscale(
         storage_registry.endpoint_url,
         storage_registry.access_key_id,
         storage_registry.secret_access_key,

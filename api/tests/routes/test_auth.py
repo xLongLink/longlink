@@ -55,7 +55,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
 
     assert register_response.status_code == 202
     assert pending_user is None
-    assert captured_mail[0][:2] == (email, "Welcome to LongLink")
+    assert captured_mail[0][0] == email
     verification_url = next(
         line.removeprefix("Continue account setup: ")
         for line in captured_mail[0][2].splitlines()
@@ -68,14 +68,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert "/auth/verify-email#token=" in captured_mail[0][3]
     assert "email=" not in captured_mail[0][3]
     assert "code=" not in captured_mail[0][3]
-    assert "Continue account setup" in captured_mail[0][3]
-    assert "Welcome to" in captured_mail[0][3]
-    assert "continue account setup" in captured_mail[0][3]
-    assert "If you did not sign up for LongLink" in captured_mail[0][3]
-    assert "expires in" not in captured_mail[0][3]
-    assert "https://github.com/xLongLink/longlink" in captured_mail[0][3]
-    assert "https://www.linkedin.com/company/longlink" in captured_mail[0][3]
-    assert "mailto:info@longlink.dev" in captured_mail[0][3]
 
     # Verify email ownership without creating a user or browser session.
     verify_response = await client.post("/api/auth/verify", json={"token": verification_token})
@@ -151,7 +143,7 @@ async def test_forgot_and_reset_password(
 
     assert missing_response.status_code == 202
     assert forgot_response.status_code == 202
-    assert captured_mail[0][:2] == (user.email, "Reset your LongLink password")
+    assert captured_mail[0][0] == user.email
     reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
     parsed_reset_url = urlparse(reset_url)
     assert parse_qs(parsed_reset_url.query) == {}

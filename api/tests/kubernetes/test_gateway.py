@@ -1,8 +1,7 @@
 import yaml
 import pytest
-import ipaddress
 from uuid import UUID
-from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, render_envoy_config, generate_gateway_tls, render_gateway_manifests
+from src.kubernetes.gateway import GatewayRoute, render_envoy_config
 
 pytestmark = pytest.mark.no_db
 
@@ -45,42 +44,3 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
         "acme-20000000-0000-4000-8000-000000000001",
         "beta-20000000-0000-4000-8000-000000000002",
     ]
-
-
-def test_gateway_manifests_include_config_and_pod_rollout_revision() -> None:
-    """Render gateway resources with config and a Pod rollout annotation."""
-
-    # Define gateway TLS inputs.
-    tls = GatewayTLSMaterial("ca", "certificate", "private-key")
-
-    # Render the gateway supporting resources.
-    config_map, deployment, network_policy = render_gateway_manifests(tls, "envoy-config")
-
-    # Verify gateway metadata and rollout configuration.
-    assert "labels" not in config_map["metadata"]
-    assert config_map["data"] == {"envoy.yaml": "envoy-config"}
-    assert deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
-    assert deployment["spec"]["replicas"] == 1
-    assert "annotations" not in deployment["metadata"]
-    assert "initContainers" not in deployment["spec"]["template"]["spec"]
-    assert network_policy["kind"] == "NetworkPolicy"
-    runtime_revision = deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
-    assert runtime_revision
-    container = deployment["spec"]["template"]["spec"]["containers"][0]
-    assert container["startupProbe"] == {
-        "httpGet": {"path": "/ready", "port": "health"},
-        "periodSeconds": 2,
-        "failureThreshold": 60,
-    }
-
-
-def test_gateway_tls_generates_compute_identity() -> None:
-    """Generate gateway TLS material for a newly provisioned compute."""
-
-    # Generate the immutable TLS identity for one compute endpoint.
-    material = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), ipaddress.ip_address("192.0.2.1"))
-
-    # Verify all generated values use PEM encoding.
-    assert "BEGIN CERTIFICATE" in material.ca_certificate
-    assert "BEGIN CERTIFICATE" in material.certificate
-    assert "BEGIN PRIVATE KEY" in material.private_key

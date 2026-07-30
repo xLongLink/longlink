@@ -140,7 +140,7 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
 
             raise RuntimeError("database offline")
 
-    monkeypatch.setattr("src.routes.databases.adapters.Postgres", FakePostgres)
+    monkeypatch.setattr("src.routes.databases.Postgres", FakePostgres)
 
     # Act
     response = await client.get(f"/api/databases/{registry.id}/usage")

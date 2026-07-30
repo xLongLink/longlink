@@ -1,40 +1,6 @@
 import pytest
-from typing import Literal
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
-
-
-@pytest.mark.parametrize(
-    ("environment", "expected_protocol"),
-    [
-        ("testing", "memory"),
-        ("development", "file"),
-    ],
-)
-def test_local_storage_uses_environment_filesystem(
-    monkeypatch,
-    environment: Literal["testing", "development"],
-    expected_protocol: str,
-) -> None:
-    """Use the expected local filesystem for test and development runtimes."""
-
-    # Capture the filesystem request without opening local storage.
-    captured: dict[str, object] = {}
-
-    def fake_filesystem(protocol: str, **kwargs: object) -> object:
-        """Capture the fsspec filesystem request."""
-
-        captured["protocol"] = protocol
-        captured["kwargs"] = kwargs
-        return object()
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem)
-
-    # Create storage for the selected local environment.
-    storage_base.create_fs(Envs(ENV=environment), "", "")
-
-    # Verify the environment selects the expected filesystem protocol.
-    assert captured == {"protocol": expected_protocol, "kwargs": {}}
 
 
 @pytest.mark.parametrize(

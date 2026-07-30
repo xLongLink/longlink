@@ -1,4 +1,5 @@
-from src import adapters
+from src.adapters.postgres import Postgres
+from src.adapters.storage.exoscale import Exoscale
 from src.operations import computes
 from longlink.shared import users as shared_users
 from src.environments import env
@@ -9,7 +10,7 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def sync_users(organization: Organization, db: adapters.Postgres) -> None:
+async def sync_users(organization: Organization, db: Postgres) -> None:
     """Seed the Organization shared schema from Platform-owned users and memberships."""
 
     # Read deleted memberships too so deactivations propagate into the shared schema.
@@ -59,7 +60,7 @@ async def reconcile(claimed: Operation) -> str | None:
     compute_registry = infrastructure.compute
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
-    db = adapters.Postgres(
+    db = Postgres(
         database_registry.host,
         database_registry.port,
         database_registry.username,
@@ -70,7 +71,7 @@ async def reconcile(claimed: Operation) -> str | None:
     await sync_users(organization, db)
 
     # Converge the Organization bucket and shared folder marker in the same reconciliation.
-    object_storage = adapters.Exoscale(
+    object_storage = Exoscale(
         storage_registry.endpoint_url,
         storage_registry.access_key_id,
         storage_registry.secret_access_key,
@@ -107,14 +108,14 @@ async def delete(claimed: Operation) -> str | None:
 
     # Remove every Organization route before terminating any child Application Service.
     gateway_url = await computes.reconcile_gateway(compute_registry, cluster)
-    db = adapters.Postgres(
+    db = Postgres(
         database_registry.host,
         database_registry.port,
         database_registry.username,
         database_registry.password,
         database_registry.sslmode,
     )
-    object_storage = adapters.Exoscale(
+    object_storage = Exoscale(
         storage_registry.endpoint_url,
         storage_registry.access_key_id,
         storage_registry.secret_access_key,

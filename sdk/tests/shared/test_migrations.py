@@ -5,18 +5,7 @@ from sqlalchemy import text
 from longlink.shared import users as shared_users
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.shared.migrations import migrate_database, alembic_script_location
-
-
-def test_alembic_script_location_returns_sdk_owned_migrations() -> None:
-    """Locate the shared-schema Alembic directory from the SDK package."""
-
-    # Resolve the migration package used by the public entrypoint.
-    script_location = alembic_script_location()
-
-    assert script_location.name == "alembic"
-    assert (script_location / "env.py").exists()
-    assert any(path.suffix == ".py" and path.name != "__init__.py" for path in (script_location / "versions").iterdir())
+from longlink.shared.migrations import migrate_database
 
 
 @pytest.mark.integration

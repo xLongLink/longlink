@@ -101,25 +101,6 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert [organization.id for organization in fetched] == [active_organization.id]
 
 
-async def test_membership_role_requires_active_membership(users: tuple[User, User, User]) -> None:
-    """Return organization roles only for active organization members."""
-
-    # Arrange
-    owner, non_member = users[0], users[1]
-    await create_ready_infrastructure()
-    organization = await create_organization(owner)
-
-    # Act
-    owner_role = await organizations.membership_role(organization.id, owner.id)
-    non_member_role = await organizations.membership_role(organization.id, non_member.id)
-    missing_role = await organizations.membership_role(uuid4(), owner.id)
-
-    # Assert
-    assert owner_role == OrganizationRoles.owner
-    assert non_member_role is None
-    assert missing_role is None
-
-
 async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
     """Update an active organization member role."""
 
@@ -152,14 +133,15 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
         OrganizationRoles.read,
         owner,
     )
-    role = await organizations.membership_role(organization.id, member.id)
+    memberships = await organizations.members(organization.id)
+    updated_membership = next(item for item in memberships if item.user_id == member.id)
     reloaded_compute = await compute.get(infrastructure.compute.id)
     open_operations = [item for item in await operations.fetch() if item.finished_at is None]
 
     # Assert
     assert updated is True
     assert missing is False
-    assert role == OrganizationRoles.maintain
+    assert updated_membership.role == OrganizationRoles.maintain
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.running
     assert reloaded_compute.version == env.VERSION
@@ -185,7 +167,8 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     # Assert
     assert exc.value.status_code == 409
     assert exc.value.detail == "Organization must have at least one owner"
-    assert await organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
+    membership = next(item for item in await organizations.members(organization.id) if item.user_id == owner.id)
+    assert membership.role == OrganizationRoles.owner
 
 
 async def test_members_can_include_deleted_memberships(users: tuple[User, User, User]) -> None:
@@ -323,8 +306,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
-    assert await organizations.membership_role(organization.id, owner.id) is None
-    assert await organizations.membership_role(organization.id, member.id) is None
     assert await organizations.invitations(organization.id) == []
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.running

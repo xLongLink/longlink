@@ -1,6 +1,6 @@
 import pytest
-from src import adapters
 from datetime import datetime, timedelta
+from src.adapters.postgres import Postgres
 from factories import create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
 from src.models.roles import OrganizationRoles
@@ -45,7 +45,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     monkeypatch.setattr(organization_operations.shared_users, "sync_url", sync_url)
 
     # Act
-    db = adapters.Postgres(
+    db = Postgres(
         infrastructure.database.host,
         infrastructure.database.port,
         infrastructure.database.username,

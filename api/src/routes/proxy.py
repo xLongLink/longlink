@@ -1,6 +1,6 @@
-from src import adapters
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
+from src.adapters.gateway import GatewayClient, GatewayRequestError
 from src.auth import authuser
 from src.utils import roles
 from collections.abc import AsyncIterator
@@ -72,7 +72,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    gateway = adapters.GatewayClient(
+    gateway = GatewayClient(
         registry.gateway_url,
         registry.gateway_ca_certificate,
         registry.gateway_tls_certificate,
@@ -88,7 +88,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             content_type=request.headers.get("content-type"),
             content=request_content(),
         )
-    except adapters.GatewayRequestError as exc:
+    except GatewayRequestError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
     # Reject active documents before they can execute under the authenticated platform origin.
