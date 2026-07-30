@@ -16,6 +16,7 @@ class Env(BaseSettings):
     # Runtime mode
     VERSION: PlatformVersion = PlatformVersion("v0.0.0")
     DEVELOPMENT: bool = DEVELOPMENT
+    OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
 
     # Authentication
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")

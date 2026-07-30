@@ -35,8 +35,12 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     assert len(routes) == 3
     assert routes[1]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
     assert routes[2]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
-    assert routes[1]["match"]["headers"][0]["name"] == "x-longlink-gateway-secret"
-    assert routes[1]["match"]["headers"][1]["name"] == "x-longlink-application-id"
+    assert routes[1]["match"]["headers"] == [
+        {
+            "name": "x-longlink-application-id",
+            "string_match": {"exact": "20000000-0000-4000-8000-000000000001"},
+        }
+    ]
     assert [cluster["name"] for cluster in clusters] == [
         "acme-20000000-0000-4000-8000-000000000001",
         "beta-20000000-0000-4000-8000-000000000002",
@@ -46,11 +50,11 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
 def test_gateway_manifests_include_config_and_pod_rollout_revision() -> None:
     """Render gateway resources with config and a Pod rollout annotation."""
 
-    # Define gateway TLS and authentication inputs.
-    tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
+    # Define gateway TLS inputs.
+    tls = GatewayTLSMaterial("ca", "certificate", "private-key")
 
     # Render the gateway supporting resources.
-    config_map, deployment, network_policy = render_gateway_manifests("proxy-secret", tls, "envoy-config")
+    config_map, deployment, network_policy = render_gateway_manifests(tls, "envoy-config")
 
     # Verify gateway metadata and rollout configuration.
     assert "labels" not in config_map["metadata"]
@@ -58,12 +62,13 @@ def test_gateway_manifests_include_config_and_pod_rollout_revision() -> None:
     assert deployment["metadata"]["labels"] == {"app": "longlink-gateway"}
     assert deployment["spec"]["replicas"] == 1
     assert "annotations" not in deployment["metadata"]
+    assert "initContainers" not in deployment["spec"]["template"]["spec"]
     assert network_policy["kind"] == "NetworkPolicy"
     runtime_revision = deployment["spec"]["template"]["metadata"]["annotations"]["longlink.io/runtime-revision"]
     assert runtime_revision
     container = deployment["spec"]["template"]["spec"]["containers"][0]
     assert container["startupProbe"] == {
-        "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},
+        "httpGet": {"path": "/ready", "port": "health"},
         "periodSeconds": 2,
         "failureThreshold": 60,
     }

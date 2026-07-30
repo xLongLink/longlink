@@ -25,7 +25,6 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
         compute_registry = ComputeRegistry(
             name="Local compute",
             kubeconfig={"apiVersion": "v1", "clusters": []},
-            proxy_secret="proxy-secret",
         )
         database_registry = DatabaseRegistry(
             name="Local database",
@@ -94,11 +93,10 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
 
             return ipaddress.IPv4Address("192.0.2.1")
 
-        async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> None:
+        async def apply(self, routes: tuple[GatewayRoute, ...], tls: GatewayTLSMaterial) -> None:
             """Capture the desired routes after the fake rollout."""
 
             snapshots.append(routes)
-            assert proxy_secret == "proxy-secret"
             assert tls == GatewayTLSMaterial("ca", "certificate", "private-key")
 
     class FakeKubernetes:

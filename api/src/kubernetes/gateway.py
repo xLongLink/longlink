@@ -10,7 +10,7 @@ from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from importlib.resources import files
-from src.models.gateways import APPLICATION_ID_HEADER, GATEWAY_SECRET_HEADER
+from src.models.gateways import APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from src.kubernetes.client import deployment_is_ready
@@ -36,7 +36,7 @@ class GatewayRoute:
 
 @dataclass(frozen=True, slots=True)
 class GatewayTLSMaterial:
-    """Carry the immutable per-compute CA certificate, server certificate, and private key."""
+    """Carry the immutable per-compute CA certificate, certificate, and private key."""
 
     ca_certificate: str
     certificate: str
@@ -49,10 +49,6 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
     # Every Application gets one authenticated route and one DNS-backed cluster.
     routes: list[EnvoyDocument] = []
     clusters: list[EnvoyDocument] = []
-    gateway_secret_match: EnvoyDocument = {
-        "name": GATEWAY_SECRET_HEADER,
-        "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
-    }
     for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
         application_id = str(route.id)
         cluster_name = f"{route.namespace}-{application_id}"
@@ -64,13 +60,13 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
             {
                 "match": {
                     "prefix": "/",
-                    "headers": [gateway_secret_match, application_id_match],
+                    "headers": [application_id_match],
                 },
                 "route": {
                     "cluster": cluster_name,
                     "timeout": "300s",
                 },
-                "request_headers_to_remove": [GATEWAY_SECRET_HEADER, APPLICATION_ID_HEADER],
+                "request_headers_to_remove": [APPLICATION_ID_HEADER],
             }
         )
         clusters.append(
@@ -165,7 +161,7 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
         .not_valid_after(now + timedelta(days=3650))
         .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
         .add_extension(x509.SubjectAlternativeName([x509.IPAddress(address)]), critical=False)
-        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CLIENT_AUTH, ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
         .add_extension(x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()), critical=False)
         .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
         .add_extension(
@@ -195,11 +191,7 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
 
 
-def render_gateway_manifests(
-    proxy_secret: str,
-    tls: GatewayTLSMaterial,
-    envoy_config: str,
-) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
+def render_gateway_manifests(tls: GatewayTLSMaterial, envoy_config: str) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
     """Render gateway runtime resources under one Pod revision."""
 
     # Roll Pods only when mounted runtime content changes.
@@ -209,7 +201,6 @@ def render_gateway_manifests(
                 "certificate": tls.certificate,
                 "envoy_config": envoy_config,
                 "private_key": tls.private_key,
-                "proxy_secret": proxy_secret,
             },
             sort_keys=True,
             separators=(",", ":"),
@@ -272,29 +263,18 @@ class Gateway:
                 raise ValueError("Gateway LoadBalancer must publish an IP address")
             await asyncio.sleep(5)
 
-    async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> None:
+    async def apply(self, routes: tuple[GatewayRoute, ...], tls: GatewayTLSMaterial) -> None:
         """Apply the desired gateway runtime and wait for its Deployment rollout."""
 
         # Render the complete runtime before changing any gateway dependency.
-        config_map, deployment_manifest, network_policy = render_gateway_manifests(proxy_secret, tls, render_envoy_config(routes))
+        config_map, deployment_manifest, network_policy = render_gateway_manifests(tls, render_envoy_config(routes))
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
         api = await self._client.api()
-        auth_secret = Secret(
-            {
-                "metadata": {"name": "longlink-gateway-auth", "namespace": "longlink-system"},
-                "stringData": {"gateway-secret": proxy_secret},
-            },
-            api=api,
-        )
-        if await auth_secret.exists():
-            await auth_secret.patch({"stringData": {"gateway-secret": proxy_secret}})
-        else:
-            await auth_secret.create()
         tls_secret = Secret(
             {
                 "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-                "stringData": {"tls.crt": tls.certificate, "tls.key": tls.private_key},
+                "stringData": {"ca.crt": tls.ca_certificate, "tls.crt": tls.certificate, "tls.key": tls.private_key},
                 "type": "kubernetes.io/tls",
             },
             api=api,

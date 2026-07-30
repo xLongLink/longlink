@@ -1,4 +1,3 @@
-import secrets
 from uuid import uuid4
 from sqlmodel import col
 from sqlalchemy import update
@@ -38,7 +37,6 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             gateway_ca_certificate="test-ca",
             gateway_tls_certificate="test-certificate",
             gateway_tls_private_key="test-private-key",
-            proxy_secret=secrets.token_urlsafe(32),
             status=Status.running,
             version=env.VERSION,
         )

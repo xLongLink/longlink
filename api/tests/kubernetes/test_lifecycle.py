@@ -1,11 +1,12 @@
 import ssl
 import time
-import base64
 import httpx2
 import pytest
 import asyncio
 import ipaddress
 from uuid import UUID
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from dataclasses import dataclass
 from collections.abc import Iterator
@@ -32,7 +33,6 @@ class KubernetesScenario:
     organization_id: UUID
     application_id: UUID
     stale_application_id: UUID
-    proxy_secret: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,7 +47,6 @@ async def apply_gateway(
     compute: Kubernetes,
     compute_id: UUID,
     routes: tuple[GatewayRoute, ...],
-    proxy_secret: str,
     tls_material: GatewayTLSMaterial | None = None,
 ) -> GatewayState:
     """Apply gateway resources and retain their public endpoint and TLS identity."""
@@ -55,7 +54,7 @@ async def apply_gateway(
     # Kubernetes lifecycle methods wait only on the resources they mutate.
     gateway_ip = await compute.gateway.ip()
     tls = tls_material or generate_gateway_tls(compute_id, gateway_ip)
-    await compute.gateway.apply(routes, proxy_secret, tls)
+    await compute.gateway.apply(routes, tls)
     return GatewayState(gateway_ip, tls)
 
 
@@ -200,7 +199,7 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
     await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
     await scenario.compute.applications.apply(scenario.stale_application_id, "acme", ECHO_SERVER_IMAGE)
 
-    # Replace only user-owned values and wait for the resource-version rollout.
+    # Replace user-owned values before the next explicit workload apply.
     await scenario.compute.applications.stage_envs(
         scenario.application_id,
         "acme",
@@ -213,7 +212,7 @@ async def deploy_scenario(scenario: KubernetesScenario) -> GatewayState:
         GatewayRoute(id=scenario.application_id, namespace="acme"),
         GatewayRoute(id=scenario.stale_application_id, namespace="acme"),
     )
-    result = await apply_gateway(scenario.compute, scenario.compute_id, routes, scenario.proxy_secret)
+    result = await apply_gateway(scenario.compute, scenario.compute_id, routes)
     assert result.ip == ipaddress.ip_address(K3S_HOST)
     return result
 
@@ -261,7 +260,6 @@ async def prune_scenario(
         scenario.compute,
         scenario.compute_id,
         routes,
-        scenario.proxy_secret,
         first.tls,
     )
     await scenario.compute.applications.delete(scenario.stale_application_id, "acme")
@@ -302,7 +300,6 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     system_namespace = await read_resource(scenario.compute, Namespace, "longlink-system")
     organization_namespace = await read_resource(scenario.compute, Namespace, "acme")
     gateway_config_map = await read_resource(scenario.compute, ConfigMap, "longlink-gateway", "longlink-system")
-    gateway_auth_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-auth", "longlink-system")
     gateway_tls_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-tls", "longlink-system")
     gateway_deployment = await read_resource(scenario.compute, Deployment, "longlink-gateway", "longlink-system")
     gateway_service = await read_resource(scenario.compute, Service, "longlink-gateway", "longlink-system")
@@ -320,12 +317,8 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     assert gateway_config != "drift"
     assert str(scenario.application_id) in gateway_config
     assert str(scenario.stale_application_id) not in gateway_config
-    assert "x-longlink-gateway-secret" in gateway_config
-    assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config
-    assert scenario.proxy_secret not in gateway_config
-    assert gateway_auth_secret is not None
-    assert base64.b64decode(gateway_auth_secret.data["gateway-secret"]).decode("utf-8") == scenario.proxy_secret
     assert gateway_tls_secret is not None
+    assert set(gateway_tls_secret.data) == {"ca.crt", "tls.crt", "tls.key"}
     assert gateway_deployment is not None
     assert gateway_deployment.spec.replicas == 1
     assert gateway_service is not None
@@ -335,8 +328,10 @@ async def assert_pruned_scenario(scenario: KubernetesScenario) -> None:
     assert gateway_policy.spec.podSelector.matchLabels == {"app": "longlink-gateway"}
     assert organization_policy is not None
     assert organization_policy.spec.podSelector == {}
+    assert organization_policy.spec.ingress[0].ports[0].port == 8000
     assert application_deployment is not None
     assert application_service is not None
+    assert application_service.spec.type == "ClusterIP"
     assert application_secret is not None
     assert set(application_secret.data) == {"STALE"}
     application_container = application_deployment.raw["spec"]["template"]["spec"]["containers"][0]
@@ -362,8 +357,20 @@ async def assert_gateway_serves(scenario: KubernetesScenario, result: GatewaySta
     # Ensure the retained Application workload is serving before exercising the public gateway.
     await scenario.compute.applications.apply(scenario.application_id, "acme", ECHO_SERVER_IMAGE)
 
-    # Call the gateway with its generated CA until the LoadBalancer path is available.
+    # Confirm a client without LongLink's certificate cannot complete the gateway TLS handshake.
+    unauthenticated_tls = ssl.create_default_context(cadata=result.tls.ca_certificate)
+    async with httpx2.AsyncClient(verify=unauthenticated_tls, timeout=30.0, trust_env=False) as client:
+        with pytest.raises((httpx2.TransportError, ssl.SSLError)):
+            await client.get(f"https://{K3S_HOST}:{scenario.gateway_port}/ready")
+
+    # Call the gateway with LongLink's mTLS identity until the LoadBalancer path is available.
     tls = ssl.create_default_context(cadata=result.tls.ca_certificate)
+    with TemporaryDirectory() as directory:
+        certificate_path = Path(directory, "client.crt")
+        private_key_path = Path(directory, "client.key")
+        certificate_path.write_text(result.tls.certificate, encoding="ascii")
+        private_key_path.write_text(result.tls.private_key, encoding="ascii")
+        tls.load_cert_chain(certificate_path, private_key_path)
     async with httpx2.AsyncClient(verify=tls, timeout=30.0, trust_env=False) as client:
         deadline = time.monotonic() + 60
         while True:
@@ -387,7 +394,6 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
         scenario.compute,
         scenario.compute_id,
         (),
-        scenario.proxy_secret,
         tls,
     )
     await scenario.compute.applications.delete(scenario.application_id, "acme")
@@ -404,7 +410,6 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
         gateway_deployment = await read_resource(scenario.compute, Deployment, "longlink-gateway", "longlink-system")
         gateway_service = await read_resource(scenario.compute, Service, "longlink-gateway", "longlink-system")
         gateway_config_map = await read_resource(scenario.compute, ConfigMap, "longlink-gateway", "longlink-system")
-        gateway_auth_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-auth", "longlink-system")
         gateway_tls_secret = await read_resource(scenario.compute, Secret, "longlink-gateway-tls", "longlink-system")
         gateway_policy = await read_resource(scenario.compute, NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
         organization_namespace = await read_resource(scenario.compute, Namespace, "acme")
@@ -421,7 +426,6 @@ async def cleanup_scenario(scenario: KubernetesScenario, tls: GatewayTLSMaterial
             and gateway_deployment is None
             and gateway_service is None
             and gateway_config_map is None
-            and gateway_auth_secret is None
             and gateway_tls_secret is None
             and gateway_policy is None
             and organization_deleting
@@ -447,7 +451,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         organization_id=UUID("10000000-0000-4000-8000-000000000001"),
         application_id=UUID("20000000-0000-4000-8000-000000000001"),
         stale_application_id=UUID("20000000-0000-4000-8000-000000000002"),
-        proxy_secret="shared-secret",
     )
     cleanup_completed = False
 

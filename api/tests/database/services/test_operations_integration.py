@@ -36,12 +36,10 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             first_compute = ComputeRegistry(
                 name="First",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                proxy_secret="first-secret",
             )
             second_compute = ComputeRegistry(
                 name="Second",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                proxy_secret="second-secret",
             )
             session.add_all([first_compute, second_compute])
             await session.commit()

@@ -34,32 +34,6 @@ spec:
                 fsGroup: 101
                 seccompProfile:
                     type: RuntimeDefault
-            initContainers:
-                - name: render-config
-                  image: busybox:1.37.0@sha256:9532d8c39891ca2ecde4d30d7710e01fb739c87a8b9299685c63704296b16028
-                  command:
-                      - sh
-                      - -c
-                      - >-
-                          sed 's|__LONG_LINK_GATEWAY_SECRET__|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
-                          /etc/envoy-template/envoy.yaml > /etc/envoy/envoy.yaml
-                  env:
-                      - name: LONG_LINK_GATEWAY_SECRET
-                        valueFrom:
-                            secretKeyRef:
-                                name: longlink-gateway-auth
-                                key: gateway-secret
-                  volumeMounts:
-                      - name: template
-                        mountPath: /etc/envoy-template
-                      - name: config
-                        mountPath: /etc/envoy
-                  securityContext:
-                      allowPrivilegeEscalation: false
-                      capabilities:
-                          drop:
-                              - ALL
-                      readOnlyRootFilesystem: true
             containers:
                 - name: longlink-gateway
                   image: envoyproxy/envoy:v1.38.2@sha256:af7c3dfdbe10de65cb2db5839ce1adf8904ee41c9d372076d62acab43af6ec41
@@ -69,27 +43,27 @@ spec:
                   ports:
                       - name: gateway
                         containerPort: 8443
+                      - name: health
+                        containerPort: 8001
                   startupProbe:
                       httpGet:
                           path: /ready
-                          port: gateway
-                          scheme: HTTPS
+                          port: health
                       periodSeconds: 2
                       failureThreshold: 60
                   readinessProbe:
                       httpGet: &health-check
                           path: /ready
-                          port: gateway
-                          scheme: HTTPS
+                          port: health
                       periodSeconds: 5
                   livenessProbe:
                       httpGet: *health-check
                   volumeMounts:
-                      - name: config
-                        mountPath: /etc/envoy
-                        readOnly: true
-                      - name: tls
-                        mountPath: /etc/envoy-tls
+                       - name: config
+                         mountPath: /etc/envoy
+                         readOnly: true
+                       - name: tls
+                         mountPath: /etc/envoy-tls
                   resources:
                       requests:
                           cpu: 100m
@@ -104,11 +78,9 @@ spec:
                               - ALL
                       readOnlyRootFilesystem: true
             volumes:
-                - name: template
+                - name: config
                   configMap:
                       name: longlink-gateway
-                - name: config
-                  emptyDir: {}
                 - name: tls
                   secret:
                       secretName: longlink-gateway-tls

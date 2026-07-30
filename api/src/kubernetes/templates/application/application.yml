@@ -11,6 +11,8 @@ spec:
             $application_id_label: $application_id
     template:
         metadata:
+            annotations:
+                longlink.io/runtime-revision: '$runtime_revision'
             labels:
                 $application_id_label: $application_id
         spec:
@@ -49,6 +51,7 @@ metadata:
     name: app-$application_id
     namespace: $namespace
 spec:
+    type: ClusterIP
     selector:
         $application_id_label: $application_id
     ports:

@@ -25,7 +25,6 @@ async def create_compute(name: str) -> ComputeRegistry:
         compute = ComputeRegistry(
             name=name.title(),
             kubeconfig={"apiVersion": "v1", "clusters": []},
-            proxy_secret="proxy-secret",
             version=env.VERSION,
         )
         session.add(compute)

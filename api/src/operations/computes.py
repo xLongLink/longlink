@@ -15,7 +15,11 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
     gateway_ip = await cluster.gateway.ip()
 
     # Persisted gateway TLS must be either complete or absent for initial provisioning.
-    if registry.gateway_ca_certificate is None and registry.gateway_tls_certificate is None and registry.gateway_tls_private_key is None:
+    if (
+        registry.gateway_ca_certificate is None
+        and registry.gateway_tls_certificate is None
+        and registry.gateway_tls_private_key is None
+    ):
         tls = generate_gateway_tls(registry.id, gateway_ip)
         initialized = await compute.initialize_gateway_tls(
             registry.id,
@@ -46,7 +50,7 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pend
             pending = await applications.get(pending_route.id, include_deleted=True)
             if pending is not None and pending.deleted_at is None and pending.status == Status.creating:
                 routes = (*routes, pending_route)
-        await cluster.gateway.apply(routes, registry.proxy_secret, tls)
+        await cluster.gateway.apply(routes, tls)
 
         # A stable snapshot prevents a concurrent tombstone from leaving a stale published route.
         current_rows = await applications.gateway_routes(registry.id)

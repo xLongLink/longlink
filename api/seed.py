@@ -68,6 +68,44 @@ def local_database_host(settings: SeedSettings) -> str:
     return host
 
 
+def application_database_configuration(settings: SeedSettings) -> DatabaseConfiguration:
+    """Return the validated Application database registry configuration."""
+
+    # Use the isolated Docker PostgreSQL service when no remote database is configured.
+    if settings.APPLICATION_DATABASE_URL is None:
+        return DatabaseConfiguration(
+            host=local_database_host(settings),
+            port=settings.LOCAL_DATABASE_PORT,
+            username="admin",
+            password="admin",
+            sslmode=DatabaseSSLMode.disable,
+        )
+
+    # Parse the configured PostgreSQL administrator URL at the seed boundary.
+    try:
+        database_url = make_url(settings.APPLICATION_DATABASE_URL)
+    except (ArgumentError, ValueError):
+        raise ValueError("Application database URL is invalid") from None
+    if database_url.get_backend_name() != "postgresql":
+        raise ValueError("Application database URL must use PostgreSQL")
+    if set(database_url.query) - {"sslmode"}:
+        raise ValueError("Application database URL only supports the sslmode query option")
+
+    # Validate all connection fields before persisting administrator credentials.
+    try:
+        return DatabaseConfiguration.model_validate(
+            {
+                "host": database_url.host or "",
+                "port": database_url.port or 5432,
+                "username": database_url.username or "",
+                "password": database_url.password or "",
+                "sslmode": database_url.query.get("sslmode", DatabaseSSLMode.require.value),
+            }
+        )
+    except ValueError:
+        raise ValueError("Application database URL has invalid connection settings") from None
+
+
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register development infrastructure from seed settings."""
 
@@ -84,35 +122,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     )
 
     # Resolve either the configured Application database or the local PostgreSQL service.
-    if settings.APPLICATION_DATABASE_URL is None:
-        database_config = DatabaseConfiguration(
-            host=local_database_host(settings),
-            port=settings.LOCAL_DATABASE_PORT,
-            username="admin",
-            password="admin",
-            sslmode=DatabaseSSLMode.disable,
-        )
-    else:
-        try:
-            database_url = make_url(settings.APPLICATION_DATABASE_URL)
-        except (ArgumentError, ValueError):
-            raise ValueError("Application database URL is invalid") from None
-        if database_url.get_backend_name() != "postgresql":
-            raise ValueError("Application database URL must use PostgreSQL")
-        if set(database_url.query) - {"sslmode"}:
-            raise ValueError("Application database URL only supports the sslmode query option")
-        try:
-            database_config = DatabaseConfiguration.model_validate(
-                {
-                    "host": database_url.host or "",
-                    "port": database_url.port or 5432,
-                    "username": database_url.username or "",
-                    "password": database_url.password or "",
-                    "sslmode": database_url.query.get("sslmode", DatabaseSSLMode.require.value),
-                }
-            )
-        except ValueError:
-            raise ValueError("Application database URL has invalid connection settings") from None
+    database_config = application_database_configuration(settings)
 
     # Create or validate the configured compute registry.
     compute_registry = next((item for item in await compute.fetch() if item.name == compute_config.name), None)
@@ -198,6 +208,16 @@ async def seed_local_development(settings: SeedSettings) -> None:
             description="Local SDK development application",
             require_ready=False,
         )
+    elif application.image != metadata.image or application.sdk != metadata.sdk or application.version != metadata.version:
+        application = await applications.replace_image(
+            application.id,
+            metadata.image,
+            administrator,
+            sdk=metadata.sdk,
+            version=metadata.version,
+        )
+        if application is None:
+            raise RuntimeError("Seeded Application disappeared during image replacement")
     await operations.create(
         compute_registry.id,
         kind=OperationKind.application_create,

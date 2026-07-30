@@ -142,6 +142,42 @@ async def create(
         return application
 
 
+async def replace_image(
+    application_id: UUID,
+    image: Image | str,
+    user: User,
+    sdk: str | None = None,
+    version: str | None = None,
+) -> Application | None:
+    """Replace one active Application's resolved image metadata."""
+
+    # Require the replacement image to retain the immutable digest deployment contract.
+    image = Image(image)
+    if "@" not in image:
+        raise ValueError("Application image must be pinned to its resolved digest")
+
+    # Lock and update only active Application desired state.
+    async with session_scope() as session:
+        application = (
+            await session.scalars(
+                select(Application)
+                .where(Application.id == application_id, Application.deleted_at.is_(None))
+                .with_for_update()
+            )
+        ).one_or_none()
+        if application is None:
+            return None
+        if application.image == image and application.sdk == sdk and application.version == version:
+            return application
+        application.image = str(image)
+        application.sdk = sdk
+        application.version = version
+        application.updated_at = utcnow()
+        application.updated_id = user.id
+        await session.commit()
+        return application
+
+
 async def set_status(application_id: UUID, expected_status: Status, status: Status) -> bool:
     """Transition one active Application from the expected lifecycle state."""
 

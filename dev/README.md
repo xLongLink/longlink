@@ -107,6 +107,17 @@ cd api
 uv run --locked python cleanup.py
 ```
 
+To restore a dedicated cluster to its newly provisioned baseline, use the repository reset command:
+
+```bash
+make reset
+```
+
+This removes every namespace except `default`, the Kubernetes system namespaces, and the provider-managed
+`cilium-secrets` namespace. It also removes and verifies all LongLink PostgreSQL databases and roles, Exoscale buckets
+and credentials, and Platform registry state recovered from either the Platform database or Kubernetes runtime Secrets.
+Do not run this command against a cluster that contains non-LongLink workloads.
+
 The command deletes `longlink-system` and all discovered LongLink Organization namespaces, then removes the seeded
 database schemas, databases, storage credentials, and buckets tracked in Platform state.
 

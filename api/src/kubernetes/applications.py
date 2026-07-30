@@ -1,6 +1,7 @@
 import json
 import base64
 import asyncio
+import hashlib
 import binascii
 from uuid import UUID
 from typing import TYPE_CHECKING
@@ -102,6 +103,16 @@ class Applications:
     async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
         """Deploy one Application and wait for its rollout."""
 
+        # Bind the Pod revision to its complete Secret so credential rotation always restarts it.
+        api = await self._client.api()
+        secret = Secret(str(application_id), namespace=namespace, api=api)
+        if not await secret.exists():
+            raise RuntimeError("Kubernetes Application runtime Secret not found")
+        await secret.refresh()
+        runtime_revision = hashlib.sha256(
+            json.dumps(secret_values(secret), sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+
         # Render workload resources before the first cluster mutation.
         deployment, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
@@ -109,10 +120,10 @@ class Applications:
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
+            runtime_revision=runtime_revision,
         )
 
         # Create or update the Service before the Deployment starts Application Pods.
-        api = await self._client.api()
         service_resource = Service(service, api=api)
         if await service_resource.exists():
             await service_resource.patch(service)

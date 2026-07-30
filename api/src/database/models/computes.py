@@ -34,7 +34,6 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)
-    proxy_secret: str = Field(max_length=255)
     gateway_ca_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     gateway_tls_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     gateway_tls_private_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

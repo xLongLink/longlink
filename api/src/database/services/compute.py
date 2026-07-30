@@ -1,4 +1,3 @@
-import secrets
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select, update
@@ -39,7 +38,6 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
         registry = ComputeRegistry(
             name=name,
             kubeconfig=kubeconfig,
-            proxy_secret=secrets.token_urlsafe(32),
         )
         session.add(registry)
 
@@ -109,7 +107,12 @@ async def record_success(
         return True
 
 
-async def initialize_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
+async def initialize_gateway_tls(
+    compute_id: UUID,
+    ca_certificate: str,
+    certificate: str,
+    private_key: str,
+) -> bool:
     """Persist a compute's immutable gateway TLS identity once."""
 
     # Lock the compute so concurrent first reconciliations cannot publish different identities.

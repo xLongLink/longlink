@@ -16,6 +16,7 @@ def deployment_is_ready(deployment: Deployment) -> bool:
         and isinstance(replicas, int)
         and isinstance(status, dict)
         and status.get("observedGeneration") == generation
+        and status.get("replicas") == replicas
         and status.get("updatedReplicas") == replicas
         and status.get("readyReplicas") == replicas
         and status.get("availableReplicas") == replicas

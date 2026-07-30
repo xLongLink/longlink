@@ -270,6 +270,15 @@ class Postgres:
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
+    async def application_role_exists(self, organization: UUID, application: UUID) -> bool:
+        """Return whether one Application runtime role remains in PostgreSQL."""
+
+        # Runtime roles are cluster-global and remain discoverable after their database is removed.
+        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
+        async with self._connection(MAINTENANCE_DATABASE) as conn:
+            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            return result.scalar_one_or_none() is not None
+
     async def database_usage(self, database_name: str) -> DatabaseUsage | None:
         """Return physical size and user table count for one database when it exists."""
 

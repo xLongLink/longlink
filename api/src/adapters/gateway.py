@@ -1,9 +1,11 @@
 import ssl
 import httpx2
 from uuid import UUID
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from dataclasses import dataclass
 from collections.abc import AsyncIterator
-from src.models.gateways import USER_ID_HEADER, APPLICATION_ID_HEADER, GATEWAY_SECRET_HEADER
+from src.models.gateways import USER_ID_HEADER, APPLICATION_ID_HEADER
 
 
 class GatewayRequestError(Exception):
@@ -28,12 +30,13 @@ class GatewayResponse:
 class GatewayClient:
     """Send authenticated Platform requests to one compute gateway."""
 
-    def __init__(self, url: str, ca_certificate: str, secret: str) -> None:
+    def __init__(self, url: str, ca_certificate: str, certificate: str, private_key: str) -> None:
         """Initialize one gateway connection from persisted compute state."""
 
         self._url = url.rstrip("/")
         self._ca_certificate = ca_certificate
-        self._secret = secret
+        self._certificate = certificate
+        self._private_key = private_key
 
     async def request(
         self,
@@ -53,15 +56,20 @@ class GatewayClient:
         if query:
             url = f"{url}?{query}"
         headers = {
-            GATEWAY_SECRET_HEADER: self._secret,
             APPLICATION_ID_HEADER: str(application_id),
             USER_ID_HEADER: str(user_id),
         }
         if content_type is not None:
             headers["content-type"] = content_type
 
-        # Trust only the private CA created for this compute gateway.
+        # Authenticate LongLink with the compute certificate and trust only this compute's gateway CA.
         tls = ssl.create_default_context(cadata=self._ca_certificate)
+        with TemporaryDirectory() as directory:
+            certificate_path = Path(directory, "client.crt")
+            private_key_path = Path(directory, "client.key")
+            certificate_path.write_text(self._certificate, encoding="ascii")
+            private_key_path.write_text(self._private_key, encoding="ascii")
+            tls.load_cert_chain(certificate_path, private_key_path)
         client = httpx2.AsyncClient(follow_redirects=False, timeout=300.0, verify=tls)
         try:
             request = client.build_request(method, url, content=content, headers=headers)
