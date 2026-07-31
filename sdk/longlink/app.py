@@ -2,6 +2,7 @@ import logging
 from typing import Any
 from fastapi import FastAPI, APIRouter
 from pathlib import Path
+from functools import partial
 from longlink.pages import XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
 from longlink.utils import Envs
 from collections.abc import Callable
@@ -224,16 +225,6 @@ class LongLink(FastAPI):
             page.path for page in registered_pages if page.path.startswith(stale_page_prefix)
         }
 
-        def bind_page(page_path: Path) -> Callable[[], str]:
-            """Return a zero-argument handler bound to one trusted page file."""
-
-            def read_page() -> str:
-                """Return XML page content from disk."""
-
-                return page_path.read_text(encoding="utf-8")
-
-            return read_page
-
         # Remove previously registered SDK page routes before replacing the page registry.
         if stale_page_paths:
             self.router.routes = [
@@ -252,7 +243,7 @@ class LongLink(FastAPI):
             page = LonglinkXml(page_file)
             page_root = page.validate()
             page_name, page_icon = extract_longlink_metadata(page_root)
-            page_endpoint = bind_page(page_file)
+            page_endpoint = partial(page_file.read_text, encoding="utf-8")
 
             # Register page metadata and its normalized API route together.
             registered_path = normalize_page_path(route_path)

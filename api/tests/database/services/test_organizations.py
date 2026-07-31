@@ -8,7 +8,6 @@ from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 

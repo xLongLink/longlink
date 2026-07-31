@@ -1,16 +1,18 @@
 from fastapi import Cookie, Depends, HTTPException
+from typing import cast
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import token
 from sqlalchemy import select
 from src.database import session as database
+from sqlalchemy.orm import QueryableAttribute, selectinload
 from collections.abc import AsyncIterator
 from src.environments import env
 from src.models.roles import PlatformRoles
 from longlink.utils.time import utcnow
-from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User, AccessToken
+from src.database.models.association import UserOrganization
 
 
 async def get_auth_session() -> AsyncIterator[AsyncSession]:
@@ -37,6 +39,11 @@ async def current_optional_user_token(
     cutoff = utcnow() - timedelta(seconds=env.AUTH_SESSION_LIFETIME_SECONDS)
     statement = (
         select(User)
+        .options(
+            selectinload(cast(QueryableAttribute[UserOrganization], User.organization_memberships)).selectinload(
+                cast(QueryableAttribute[object], UserOrganization.organization)
+            )
+        )
         .join(AccessToken, col(AccessToken.user_id) == col(User.id))
         .where(
             col(AccessToken.token) == token.access_token_digest(credential),
@@ -50,8 +57,8 @@ async def current_optional_user_token(
     return user, credential
 
 
-async def current_authenticated_user(authentication: tuple[User | None, str | None] = Depends(current_optional_user_token)) -> User:
-    """Require and return one active authenticated LongLink user."""
+async def authuser(authentication: tuple[User | None, str | None] = Depends(current_optional_user_token)) -> User:
+    """Return the authenticated user with current LongLink resource access."""
 
     # Convert missing, expired, and revoked sessions into one stable authentication error.
     user, _ = authentication
@@ -60,17 +67,7 @@ async def current_authenticated_user(authentication: tuple[User | None, str | No
     return user
 
 
-async def authuser(authenticated: User = Depends(current_authenticated_user)) -> User:
-    """Load the authenticated user with current LongLink resource access."""
-
-    # Reject stale or soft-deleted accounts after token authentication.
-    user = await users.get(authenticated.id, include_organizations=True)
-    if user is None:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
-
-
-async def authadmin(user: User = Depends(current_authenticated_user)) -> User:
+async def authadmin(user: User = Depends(authuser)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.

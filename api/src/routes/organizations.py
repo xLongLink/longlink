@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin, current_authenticated_user
+from src.auth import authuser, authadmin
 from src.utils import mail, names, roles
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
@@ -245,7 +245,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary, status_code=202)
-async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
+async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue infrastructure creation."""
 
     # Derive the Organization's runtime namespace from its display name.

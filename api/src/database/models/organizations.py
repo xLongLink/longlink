@@ -9,7 +9,6 @@ from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
-    from src.database.models.users import User
     from src.database.models.applications import Application
 
 

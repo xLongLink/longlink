@@ -116,7 +116,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     if tombstone is not None and tombstone.deleted_at is not None:
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
-        access = None
     else:
         access = await organizations.application_access(user.id, application_id)
         if access is None:

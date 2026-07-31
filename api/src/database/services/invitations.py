@@ -111,22 +111,28 @@ async def accept(user_id: UUID) -> None:
             organization_invitations.setdefault(invitation.organization_id, []).append(invitation)
             organization_computes[invitation.organization_id] = compute_id
 
+        # Lock every existing membership before creating or restoring invitation access.
+        memberships = (
+            await session.scalars(
+                select(UserOrganization)
+                .where(
+                    UserOrganization.user_id == user.id,
+                    UserOrganization.organization_id.in_(organization_invitations),
+                )
+                .with_for_update()
+            )
+        ).all()
+        memberships_by_organization_id = {
+            membership.organization_id: membership for membership in memberships
+        }
+
         now = utcnow()
         changed_organization_ids: set[UUID] = set()
 
         # Create or restore access within each invitation's Organization without changing active roles.
         for organization_id, pending in organization_invitations.items():
             invitation = min(pending, key=lambda item: roles.rank(item.role))
-            membership = (
-                await session.scalars(
-                    select(UserOrganization)
-                    .where(
-                        UserOrganization.user_id == user.id,
-                        UserOrganization.organization_id == organization_id,
-                    )
-                    .with_for_update()
-                )
-            ).one_or_none()
+            membership = memberships_by_organization_id.get(organization_id)
             if membership is None:
                 session.add(
                     UserOrganization(

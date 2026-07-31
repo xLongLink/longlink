@@ -4,7 +4,6 @@ from src.models.statuses import Status
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
-from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 

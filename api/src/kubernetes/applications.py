@@ -8,26 +8,13 @@ from src.utils import templates
 from collections.abc import Mapping
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment
-from src.kubernetes.client import apply_resource, deployment_is_ready
+from src.kubernetes.utils import apply_resource, deployment_is_ready
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 APPLICATION_ID_LABEL = "longlink.io/application-id"
 RUNTIME_ENV_PREFIX = "LONGLINK_"
-
-
-def secret_values(secret: Secret) -> dict[str, str]:
-    """Decode the string values stored in one Kubernetes Secret."""
-
-    return {name: base64.b64decode(value).decode() for name, value in secret.raw["data"].items()}
-
-
-def pod_is_active(pod: Pod) -> bool:
-    """Return whether one Pod can still start or execute Application code."""
-
-    # Unknown and nonterminal provider states remain active for safe credential cleanup.
-    return pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
 
 
 class Applications:
@@ -71,9 +58,7 @@ class Applications:
         secret = Secret(str(application_id), namespace=namespace, api=api)
         if not await secret.exists():
             raise RuntimeError("Kubernetes Application Secret not found")
-        await secret.patch(
-            {"data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in envs.items()}}, type="merge"
-        )
+        await secret.patch({"data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in envs.items()}}, type="merge")
 
     async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
         """Deploy one Application and wait for its rollout."""
@@ -92,7 +77,11 @@ class Applications:
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=hashlib.sha256(
-                json.dumps(secret_values(secret), sort_keys=True, separators=(",", ":")).encode()
+                json.dumps(
+                    {name: base64.b64decode(value).decode() for name, value in secret.raw["data"].items()},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
             ).hexdigest(),
         )
 
@@ -135,7 +124,7 @@ class Applications:
                 async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
                 if isinstance(pod, Pod)
             ]
-            if not remaining and not any(pod_is_active(pod) for pod in pods):
+            if not remaining and not any(pod.raw["status"].get("phase") not in {"Succeeded", "Failed"} for pod in pods):
                 return
             await asyncio.sleep(5)
 
@@ -149,7 +138,7 @@ class Applications:
             async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
             if isinstance(pod, Pod)
         ]
-        active = [pod for pod in pods if pod_is_active(pod)]
+        active = [pod for pod in pods if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}]
         if not active:
             raise ValueError("No Application Pod found")
         pod = min(active, key=lambda item: item.name)
