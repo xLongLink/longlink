@@ -43,6 +43,8 @@
         }
 
         .astryx-table-scroll-wrapper {
+            --container-padding-inline-end: 0px;
+            --container-padding-inline-start: 0px;
             border: var(--border-width) solid var(--color-border-emphasized);
             border-radius: var(--radius-container);
         }

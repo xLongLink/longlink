@@ -15,7 +15,7 @@ async def reconcile(claimed: Operation) -> str | None:
     if registry is None:
         return None
     platform_version = Version(env.VERSION)
-    if registry.version is not None and Version(registry.version) > platform_version:
+    if Version(registry.version) > platform_version:
         return None
 
     cluster = Kubernetes(registry.kubeconfig)
@@ -64,7 +64,7 @@ async def reconcile(claimed: Operation) -> str | None:
         registry.status,
     ):
         current = await compute.get(registry.id)
-        if current is None or (current.version is not None and Version(current.version) > platform_version):
+        if current is None or Version(current.version) > platform_version:
             return None
         if current.status == Status.running and current.version == env.VERSION and current.gateway_url == gateway_url:
             return None

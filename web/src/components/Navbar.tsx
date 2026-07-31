@@ -5,7 +5,6 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { ExternalLink } from 'lucide-react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
@@ -43,34 +42,32 @@ export function Navbar() {
                                 <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
                                     <Link
                                         href="/docs"
-                                        className="transition-colors hover:text-accent hover:no-underline"
+                                        className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
                                         color="secondary"
                                         isStandalone
-                                        weight="normal"
+                                        weight="medium"
                                     >
                                         Documentation
                                     </Link>
                                     <Link
                                         href="/pricing"
-                                        className="transition-colors hover:text-accent hover:no-underline"
+                                        className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
                                         color="secondary"
                                         isStandalone
-                                        weight="normal"
+                                        weight="medium"
                                     >
                                         Pricing
                                     </Link>
                                     <Link
                                         as="a"
-                                        className="inline-flex items-center gap-1 hover:text-accent"
+                                        className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
                                         color="secondary"
                                         href="https://github.com/xLongLink/longlink"
+                                        isExternalLink
                                         isStandalone
-                                        rel="noopener noreferrer"
-                                        target="_blank"
-                                        weight="normal"
+                                        weight="medium"
                                     >
                                         GitHub
-                                        <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                                     </Link>
                                 </Stack>
                             }

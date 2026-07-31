@@ -30,7 +30,7 @@ class ComputeRegistry(SQLModel, table=True):
             nullable=False,
         ),
     )
-    version: PlatformVersion | None = Field(default=None, sa_column=Column(PlatformVersionType(), nullable=True))
+    version: PlatformVersion = Field(sa_column=Column(PlatformVersionType(), nullable=False))
 
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)

@@ -25,6 +25,7 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
         compute_registry = ComputeRegistry(
             name="Local compute",
             kubeconfig={"apiVersion": "v1", "clusters": []},
+            version=env.VERSION,
         )
         database_registry = DatabaseRegistry(
             name="Local database",

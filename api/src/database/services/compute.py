@@ -3,6 +3,7 @@ from sqlalchemy import select, update
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
+from src.environments import env
 from src.models.types import PlatformVersion
 from packaging.version import Version
 from src.models.statuses import Status
@@ -35,6 +36,7 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
         registry = ComputeRegistry(
             name=name,
             kubeconfig=kubeconfig,
+            version=env.VERSION,
         )
         session.add(registry)
 
@@ -79,7 +81,7 @@ async def record_success(
         registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None or registry.status != expected_status:
             return False
-        if registry.version is not None and Version(registry.version) > Version(platform_version):
+        if Version(registry.version) > Version(platform_version):
             return False
 
         registry.gateway_url = gateway_url
