@@ -59,6 +59,7 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert create_response.status_code == 202
     assert created["name"] == "Ephemeral Compute"
     assert created["gateway_url"] is None
+    assert created["version"] is not None
     assert "kubeconfig" not in created
     assert "proxy_secret" not in created
     assert duplicate_response.status_code == 409

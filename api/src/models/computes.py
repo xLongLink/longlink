@@ -63,4 +63,4 @@ class ComputeRegistryResponse(BaseModel):
 
     # State
     status: Status
-    version: PlatformVersion | None
+    version: PlatformVersion

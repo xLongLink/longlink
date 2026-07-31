@@ -66,9 +66,7 @@ async def enqueue(
             .distinct()
         )
     ).all()
-    latest_version = max(
-        Version(version) for version in [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])]
-    )
+    latest_version = max(Version(version) for version in [env.VERSION, *versions, compute.version])
     platform_version = f"v{latest_version}"
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
