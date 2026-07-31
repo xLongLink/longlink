@@ -1,5 +1,5 @@
-from fastapi import Cookie, Depends, HTTPException
 from typing import cast
+from fastapi import Cookie, Depends, HTTPException
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import token

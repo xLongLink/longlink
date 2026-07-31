@@ -1,7 +1,7 @@
 import pytest
-from fsspec.implementations.dirfs import DirFileSystem
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
+from fsspec.implementations.dirfs import DirFileSystem
 
 
 @pytest.mark.parametrize(
