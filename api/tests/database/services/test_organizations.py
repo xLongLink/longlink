@@ -43,7 +43,6 @@ async def test_members_returns_users_from_membership_table(users: tuple[User, Us
 
     # Arrange
     owner, member = users[0], users[1]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
 
     Session = await get_session()
@@ -69,7 +68,6 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure()
     active_organization = await create_organization(owner)
     deleted_organization = await create_organization(owner, name="deleted", slug="deleted")
     await organizations.soft_delete(deleted_organization.id, owner)
@@ -86,7 +84,6 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Arrange
     owner, member, non_member = users
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
     synchronized: list[UUID] = []
 
@@ -138,7 +135,6 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
 
     # Act
@@ -163,7 +159,6 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     # Arrange
     owner, member, deleted_member = users
     deleted_at = utcnow()
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
 
     Session = await get_session()
@@ -226,7 +221,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
     await mark_organization_running(organization)
     application = await applications.create(
