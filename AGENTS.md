@@ -1,8 +1,7 @@
 # LongLink Agent Guide
 
 - When listing improvement suggestions, use numbered lists.
-- Project is in MVP mode - No need for backwards compatibility
-- At the end of each task, list 5 cleanup, refactoring and simplification that would result in removal of code, list the file and a two line explanation
+- Project is in _MVP mode - No need for backwards compatibility_
 
 ## Product Language
 
@@ -152,3 +151,11 @@ docs <topic> color, elevation, icons, illustrations, internationalization, layou
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
 <!-- ASTRYX:END -->
+
+## Commit Message Structure
+
+<commit-message>
+	<type>feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert</type>
+	<scope>api|sdk|web (optional)</scope>
+	<description>A short, imperative summary of the change</description>
+</commit-message>

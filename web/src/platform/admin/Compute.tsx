@@ -16,7 +16,6 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { apiComputeRegistrySchema } from '@/lib/api-schemas';
 import { computesQueryKey } from '@/lib/query-keys';
-import { createStatusLabels } from '@/lib/status';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -42,7 +41,6 @@ export default function AdminCompute() {
         parse: (value) => apiComputeRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(computes);
-    const statusLabels = createStatusLabels(t);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteComputeTitle'),
         mutation: deleteCompute,
@@ -57,19 +55,16 @@ export default function AdminCompute() {
         {
             key: 'compute',
             header: t('admin.computeTitle'),
-            width: proportional(1),
+            width: proportional(2),
             renderCell: (compute) => (
                 <HStack gap={3} align="center">
                     <Wrench className="text-accent" size={20} />
-                    <Text weight="semibold">{compute.name}</Text>
+                    <VStack gap={1}>
+                        <Text weight="semibold">{compute.name}</Text>
+                        <Text type="supporting">{compute.gateway_url}</Text>
+                    </VStack>
                 </HStack>
             ),
-        },
-        {
-            key: 'status',
-            header: t('columns.status'),
-            width: pixel(128),
-            renderCell: (compute) => statusLabels[compute.status],
         },
         {
             key: 'actions',

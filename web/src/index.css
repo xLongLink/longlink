@@ -67,32 +67,6 @@
     }
 }
 
-@keyframes homepage-hands-scroll-swing {
-    0% {
-        transform: rotate(-2.6deg);
-    }
-
-    20% {
-        transform: rotate(2deg);
-    }
-
-    42% {
-        transform: rotate(-1.25deg);
-    }
-
-    64% {
-        transform: rotate(0.65deg);
-    }
-
-    84% {
-        transform: rotate(-0.22deg);
-    }
-
-    100% {
-        transform: rotate(0deg);
-    }
-}
-
 .homepage-hero-globe {
     bottom: clamp(-94rem, -74vw, -58rem);
     width: max(84rem, 112vw);
@@ -172,20 +146,8 @@
     clip-path: inset(0 calc(100% - var(--homepage-before-after-position)) 0 0);
 }
 
-.homepage-hands-scroll-swing {
-    transform-origin: 50% 0.56rem;
-}
-
-.homepage-hands-scroll-swing-active {
-    animation: homepage-hands-scroll-swing 3800ms var(--ease-standard) both;
-}
-
-.homepage-hands-swing {
+.homepage-hands {
     padding-top: clamp(2.35rem, 4.5vw, 3.8rem);
-    transform: rotate(var(--painting-swing, 0deg));
-    transform-origin: 50% 0.56rem;
-    transition: transform 950ms var(--ease-standard);
-    will-change: transform;
 }
 
 .homepage-hands-nail {
@@ -328,20 +290,8 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .homepage-hands-scroll-swing-active {
-        animation: none;
-    }
-
-    .homepage-hands-swing {
-        transform: none;
-        transition: none;
-        will-change: auto;
-    }
-}
-
 @media (max-width: 40rem) {
-    .homepage-hands-swing {
+    .homepage-hands {
         padding-top: 2.6rem;
     }
 

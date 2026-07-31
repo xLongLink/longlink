@@ -1,7 +1,6 @@
 import os
 import pytest
 import pytest_asyncio
-from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from pathlib import Path
@@ -25,7 +24,7 @@ from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
-from src.database.models.users import User, AccessToken
+from src.database.models.users import User
 
 TEST_PASSWORD = "longlink-test-password"
 
@@ -87,12 +86,12 @@ async def reset_db(
         await engine.dispose()
 
 
-def authenticated_cookies(user_id: UUID) -> Cookies:
+def authenticated_cookies(user: User) -> Cookies:
     """Build an authentication cookie for one user."""
 
-    # Match the active browser credential used by authenticated API clients.
+    # Match the signed browser credential used by authenticated API clients.
     cookies = Cookies()
-    cookies.set("longlink_auth", str(user_id), domain="testserver.local", path="/")
+    cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
     return cookies
 
 
@@ -119,16 +118,8 @@ async def users(password_hash: str) -> tuple[User, User, User]:
         regular_user = User(name="Regular User", email="regular-user@example.com", hashed_password=password_hash)
         other_user = User(name="Other User", email="other-user@example.com", hashed_password=password_hash)
 
-        # Persist one matching database token for every authenticated fixture client.
+        # Persist independent Platform users for authenticated fixture clients.
         db_session.add_all([platform_administrator, regular_user, other_user])
-        await db_session.flush()
-        db_session.add_all(
-            [
-                AccessToken(token=token.access_token_digest(str(platform_administrator.id)), user_id=platform_administrator.id),
-                AccessToken(token=token.access_token_digest(str(regular_user.id)), user_id=regular_user.id),
-                AccessToken(token=token.access_token_digest(str(other_user.id)), user_id=other_user.id),
-            ]
-        )
         await db_session.commit()
         return platform_administrator, regular_user, other_user
 
@@ -152,7 +143,7 @@ async def clients(users: tuple[User, User, User]) -> AsyncIterator[tuple[AsyncCl
                 AsyncClient(
                     transport=ASGITransport(app=app),
                     base_url="http://testserver",
-                    cookies=authenticated_cookies(user.id),
+                    cookies=authenticated_cookies(user),
                     follow_redirects=True,
                 )
             )

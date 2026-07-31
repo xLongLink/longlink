@@ -125,6 +125,7 @@ export const apiStorageRegistrySchema = z.object({
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     name: z.string(),
+    gateway_url: z.string().nullable(),
     status: statusSchema,
 });
 

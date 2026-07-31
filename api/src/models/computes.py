@@ -48,7 +48,7 @@ class ComputeRegistryCreate(BaseModel):
 
 
 class ComputeRegistryResponse(BaseModel):
-    """Describe one compute backend without exposing its connection state or secrets."""
+    """Describe one compute backend without exposing its private connection state or secrets."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,6 +57,9 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     name: str
+
+    # Gateway
+    gateway_url: str | None
 
     # State
     status: Status

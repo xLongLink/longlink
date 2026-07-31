@@ -26,7 +26,7 @@ async def cleanup() -> None:
     api = await cluster.api()
 
     # Collect provider resources from Platform state when its schema is available.
-    managed_namespaces = {"longlink-system", settings.LOCAL_ORG}
+    managed_namespaces = {"longlink-system"}
     storage_resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
     database_resources: dict[tuple[str, int, str, str, DatabaseSSLMode, UUID], set[UUID]] = {}
     platform_tables: set[str] = set()

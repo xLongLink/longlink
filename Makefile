@@ -1,7 +1,5 @@
-.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean api\:clean sdk\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
+.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
 
-APPLICATION_IMAGE ?=
-LOCAL_APPLICATION_IMAGE := localhost:15000/longlink-app:dev
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 
@@ -72,28 +70,10 @@ sdk\:build: web\:install
 	cd web && vp run build:sdk:bundle --logLevel warn
 
 
-# Remove generated build and test artifacts for every workspace.
-clean: api\:clean sdk\:clean web\:clean
-	rm -rf .coverage .coverage.* coverage.xml htmlcov .pytest_cache .ruff_cache
-
-
-# Remove generated API build and test artifacts.
-api\:clean:
-	rm -rf api/.coverage api/.coverage.* api/coverage.xml api/htmlcov api/build api/dist api/*.egg-info api/kubeconfig.yaml api/openapi.yml api/src/.static/web
-	find api -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
-	find api -type f -name '*.py[co]' -delete
-
-
-# Remove generated SDK build and test artifacts.
-sdk\:clean:
-	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dev.db sdk/dist sdk/*.egg-info sdk/longlink/.static/web
-	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
-	find sdk -type f -name '*.py[co]' -delete
-
-
-# Remove generated web build artifacts.
-web\:clean:
-	rm -rf web/.coverage web/.pytest_cache web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite web/src/lib/generated
+# Remove tracked remote development resources.
+clean:
+	@printf "Removing tracked remote development resources...\n"
+	cd api && DEVELOPMENT=true uv run --locked python cleanup.py
 
 
 # Start isolated local services and the cluster, then wait for the local registry.
@@ -134,27 +114,15 @@ local: local\:resources
 	$(MAKE) local:image
 
 
-# Remove remote development resources, stop local services, and clean local state.
+# Stop local services and remove local development state.
 down:
-	@printf "Removing tracked remote development resources...\n"
-	cd api && DEVELOPMENT=true uv run --locked python cleanup.py
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
-	@image="$(APPLICATION_IMAGE)"; \
-		if [ -z "$$image" ] && [ -f api/.seed-image ]; then IFS= read -r image < api/.seed-image; fi; \
-		if [ -z "$$image" ]; then image="ghcr.io/xlonglink/longlink-app:v0.0.2"; fi; \
-		for repository in "$${image%@*}" "$(LOCAL_APPLICATION_IMAGE)"; do \
-			repository="$${repository%:*}"; \
-			image_ids="$$(docker image ls --filter "reference=$${repository}:*" --quiet)"; \
-			if [ -n "$$image_ids" ]; then printf "Removing local Application images from %s...\n" "$$repository"; docker image rm $$image_ids; fi; \
-		done
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -rf sdk/dev
-	rm -f api/dev.db api/kubeconfig.yaml api/.seed-image
-	find . -type d -name __pycache__ -prune -exec rm -rf {} +
-	find . -type f -name '*.py[co]' -delete
+	rm -f api/dev.db api/kubeconfig.yaml
 
 
 # Run the local LongLink Platform API server before `make seed`.

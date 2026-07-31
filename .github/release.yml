@@ -1,19 +1,14 @@
 changelog:
     categories:
-        - title: Breaking Changes
+        - title: API
           labels:
-              - breaking-change
-              - Semver-Major
-        - title: Features
+              - api
+        - title: SDK
           labels:
-              - enhancement
-              - feature
-              - feat
-              - Semver-Minor
-        - title: Fixes
+              - sdk
+        - title: Web
           labels:
-              - bug
-              - fix
+              - web
         - title: Other Changes
           labels:
               - '*'

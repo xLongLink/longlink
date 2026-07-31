@@ -2,7 +2,7 @@ import jwt
 from pwdlib import PasswordHash
 from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
-from src.auth import get_auth_session, current_optional_user_token
+from src.auth import get_auth_session
 from src.utils import mail, token
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.post("/api/auth/password/login", status_code=204, tags=["auth"])
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
-    """Authenticate a local account and create one revocable browser session."""
+    """Authenticate a local account and create one signed browser session."""
 
     email = payload.email
 
@@ -34,10 +34,10 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     if not PasswordHash.recommended().verify(payload.password, user.hashed_password) or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
-    # Issue the session and accept email-bound Organization access atomically.
-    credential = token.create_access_token(session, user)
+    # Accept email-bound Organization access before issuing its signed browser session.
     await session.commit()
     await invitations.accept(user.id)
+    credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
     response.headers["Cache-Control"] = "no-store"
@@ -55,17 +55,8 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
 @router.post("/api/auth/logout", status_code=204, include_in_schema=False)
 async def logout(
     response: Response,
-    authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
-    session: AsyncSession = Depends(get_auth_session),
 ):
-    """Revoke the active token and remove its browser credential."""
-
-    _, credential = authentication
-
-    # Revoke the active database token when one is present.
-    if credential is not None:
-        await token.revoke_access_token(session, credential)
-        await session.commit()
+    """Remove the active browser credential."""
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.
     response.delete_cookie(
@@ -154,12 +145,11 @@ async def reset_password(
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
-    # Replace the credential and revoke every existing browser session atomically.
+    # Replace the credential so password-bound browser sessions become invalid.
     user.hashed_password = PasswordHash.recommended().hash(payload.password)
-    await token.revoke_user_access_tokens(session, user.id)
     await session.commit()
 
-    # Remove reset proof only after the password and session revocation both commit.
+    # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
     response.delete_cookie(
         "longlink_password_reset",
@@ -245,7 +235,7 @@ async def complete_registration(
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
 
-    # Build the authenticated account and its first revocable session in one transaction.
+    # Build the authenticated account before issuing its first signed browser session.
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
@@ -257,13 +247,13 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         await session.flush()
-        credential = token.create_access_token(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
 
     await invitations.accept(user.id)
+    credential = token.create_auth_token(user)
 
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"

@@ -55,8 +55,8 @@ longlink dev
 
 ## Principles
 
-- The usage must be intuitive. Anything unclear is considered a bug.
-- Work is done locally, validation is managed on the Cloud.
+- Usage must be intuitive. Anything unclear is a bug.
+- Build on standards. Anything that drift is a bug.
 
 <br />
 
@@ -79,7 +79,8 @@ make sdk
 Cleanup
 
 ```bash
-make down
+make clean  # Remove tracked remote development resources
+make down   # Stop local services, volumes, and the cluster
 ```
 
 <br />

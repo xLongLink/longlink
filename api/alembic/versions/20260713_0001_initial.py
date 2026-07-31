@@ -65,18 +65,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
-    # Store revocable browser-session digests without retaining bearer credentials.
-    op.create_table(
-        "access_tokens",
-        sa.Column("token", sa.String(length=64), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("token"),
-    )
-    op.create_index("ix_access_tokens_created_at", "access_tokens", ["created_at"])
-    op.create_index("ix_access_tokens_user_id", "access_tokens", ["user_id"])
-
     # Create compute registries.
     op.create_table(
         "compute_registries",
@@ -348,7 +336,6 @@ def downgrade() -> None:
     op.drop_table("storage_registries")
     op.drop_table("database_registries")
     op.drop_table("compute_registries")
-    op.drop_table("access_tokens")
     op.drop_table("users")
 
     # Remove the native preference enum type so a fresh upgrade can recreate it.
