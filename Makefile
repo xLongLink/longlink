@@ -1,4 +1,4 @@
-.PHONY: local local\:resources local\:image down build api\:build sdk\:build seed clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
+.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
@@ -82,7 +82,7 @@ local\:resources:
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
 		network_ip="$$(docker inspect "k3d-$(DEV_CLUSTER)-server-0" --format '{{with index .NetworkSettings.Networks "$(DEV_DOCKER_NETWORK)"}}{{.IPAddress}}{{end}}')"; \
 		if [ -z "$$network_ip" ]; then \
-			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make local.\n"; \
+			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make up.\n"; \
 			exit 1; \
 		fi; \
 		printf "k3d cluster $(DEV_CLUSTER) already exists.\n"; \
@@ -110,7 +110,7 @@ local\:resources:
 
 
 # Initialize local infrastructure and build the local sample Application image.
-local: local\:resources
+up: local\:resources
 	$(MAKE) local:image
 
 

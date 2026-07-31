@@ -199,12 +199,11 @@ async def test_get_app_logs_returns_pod_logs(
             self.applications = self
             captured["kubeconfig"] = kubeconfig
 
-        async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: UUID, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
                 "application_id": application_id,
-                "namespace": namespace,
                 "lines": lines,
             }
             return ["line 1", "line 2"]
@@ -221,7 +220,6 @@ async def test_get_app_logs_returns_pod_logs(
     assert captured["kubeconfig"] == registry.kubeconfig
     assert captured["logs"] == {
         "application_id": app.id,
-        "namespace": organization.slug,
         "lines": 200,
     }
 
@@ -273,11 +271,10 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             assert kubeconfig == infrastructure.compute.kubeconfig
             self.applications = self
 
-        async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: UUID, lines: int = 200) -> list[str]:
             """Raise the backend error expected by the test."""
 
             assert application_id == app.id
-            assert namespace == organization.slug
             assert lines == 200
             raise RuntimeError("logs unavailable")
 

@@ -8,7 +8,7 @@ from src.utils import templates
 from collections.abc import Mapping
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment
-from src.kubernetes.utils import apply_resource, deployment_is_ready
+from src.kubernetes.utils import apply, deployment_is_ready
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -86,8 +86,8 @@ class Applications:
         )
 
         # Create or update the Service before the Deployment starts Application Pods.
-        await apply_resource(Service(service, api=api), service)
-        await apply_resource(Deployment(deployment, api=api), deployment)
+        await apply(Service(service, api=api), service)
+        await apply(Deployment(deployment, api=api), deployment)
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
@@ -128,14 +128,14 @@ class Applications:
                 return
             await asyncio.sleep(5)
 
-    async def logs(self, application_id: UUID, namespace: str, lines: int = 200) -> list[str]:
+    async def logs(self, application_id: UUID, lines: int = 200) -> list[str]:
         """Return recent logs for one managed Application Pod."""
 
-        # A missing Pod has no diagnostic log stream.
+        # The globally unique Application ID identifies its Pod across Organization Namespaces.
         api = await self._client.api()
         pods = [
             pod
-            async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+            async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
             if isinstance(pod, Pod)
         ]
         active = [pod for pod in pods if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}]

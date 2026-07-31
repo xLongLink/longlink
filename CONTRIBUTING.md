@@ -41,7 +41,7 @@ make ty             # Run API and SDK type checks
 make api:ty         # Run API type checks
 make sdk:ty         # Run SDK type checks
 
-make local          # Initialize local services, cluster, and Application image
+make up             # Initialize local services, cluster, and Application image
 make web            # Run the Vite web app
 make api            # Run the LongLink Platform API after seeding
 
