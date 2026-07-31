@@ -24,7 +24,17 @@ const createApplicationFormSchema = z.object({
     name: z.string().trim(),
     description: z.string().trim(),
     icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
-    envs: z.record(z.string(), z.string()).default({}),
+    envs: z
+        .record(z.string(), z.string().optional())
+        .default({})
+        .transform((envs) =>
+            Object.entries(envs).reduce<Record<string, string>>((configured, [name, value]) => {
+                if (value !== undefined) {
+                    configured[name] = value;
+                }
+                return configured;
+            }, {})
+        ),
 });
 
 const createApplicationSubmitSchema = createApplicationFormSchema.extend({
