@@ -31,13 +31,13 @@ uv run pytest tests    # Run tests
 
 The build command writes these labels into image metadata when values are available:
 
-| Label                       | Value                          | Description                                          |
-| --------------------------- | ------------------------------ | ---------------------------------------------------- |
-| `longlink.name`             | `<app-name>`                   | Application name.                                    |
-| `longlink.sdk`              | `<installed-longlink-version>` | Installed LongLink SDK version.                      |
-| `longlink.version`          | `<app-pyproject-version>`      | Application version from `pyproject.toml`.           |
-| `longlink.description`      | `<app-description>`            | Optional application description.                    |
-| `longlink.environments`     | `<json-environment-list>`      | App environment variables when `src/envs.py` exists. |
+| Label                   | Value                          | Description                                          |
+| ----------------------- | ------------------------------ | ---------------------------------------------------- |
+| `longlink.name`         | `<app-name>`                   | Application name.                                    |
+| `longlink.sdk`          | `<installed-longlink-version>` | Installed LongLink SDK version.                      |
+| `longlink.version`      | `<app-pyproject-version>`      | Application version from `pyproject.toml`.           |
+| `longlink.description`  | `<app-description>`            | Optional application description.                    |
+| `longlink.environments` | `<json-environment-list>`      | App environment variables when `src/envs.py` exists. |
 
 ## XML
 

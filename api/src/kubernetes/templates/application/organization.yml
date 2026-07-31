@@ -12,9 +12,9 @@ metadata:
     namespace: '$namespace'
 spec:
     hard:
-        limits.cpu: "2"
+        limits.cpu: '2'
         limits.memory: 1Gi
-        pods: "4"
+        pods: '4'
         requests.cpu: 400m
         requests.memory: 512Mi
 ---
