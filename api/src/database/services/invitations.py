@@ -6,8 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
+from src.database.services import organizations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -77,7 +76,7 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
 
 
 async def accept(user_id: UUID) -> None:
-    """Accept pending invitations and schedule their Organization reconciliation."""
+    """Accept pending invitations and synchronize their Organization user projections."""
 
     # Resolve the recipient before changing invitation or membership state.
     async with session_scope() as session:
@@ -90,7 +89,7 @@ async def accept(user_id: UUID) -> None:
         # Lock matching invitations and retain their exact Organization boundaries.
         rows = (
             await session.execute(
-                select(OrganizationInvitation, Organization.compute_id)
+                select(OrganizationInvitation)
                 .join(Organization, Organization.id == OrganizationInvitation.organization_id)
                 .where(
                     OrganizationInvitation.deleted_at.is_(None),
@@ -106,10 +105,8 @@ async def accept(user_id: UUID) -> None:
 
         # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
         organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
-        organization_computes: dict[UUID, UUID] = {}
-        for invitation, compute_id in rows:
+        for (invitation,) in rows:
             organization_invitations.setdefault(invitation.organization_id, []).append(invitation)
-            organization_computes[invitation.organization_id] = compute_id
 
         # Lock every existing membership before creating or restoring invitation access.
         memberships = (
@@ -122,9 +119,7 @@ async def accept(user_id: UUID) -> None:
                 .with_for_update()
             )
         ).all()
-        memberships_by_organization_id = {
-            membership.organization_id: membership for membership in memberships
-        }
+        memberships_by_organization_id = {membership.organization_id: membership for membership in memberships}
 
         now = utcnow()
         changed_organization_ids: set[UUID] = set()
@@ -159,12 +154,8 @@ async def accept(user_id: UUID) -> None:
                 item.deleted_at = now
                 item.deleted_id = user.id
 
-        # Queue user projection with membership and invitation changes in one transaction.
-        for organization_id in sorted(changed_organization_ids, key=str):
-            await operations.enqueue(
-                session,
-                organization_computes[organization_id],
-                kind=OperationKind.organization_users_sync,
-                target_id=organization_id,
-            )
         await session.commit()
+
+    # Project each committed membership change into its Organization database.
+    for organization_id in sorted(changed_organization_ids, key=str):
+        await organizations.sync_users(organization_id)

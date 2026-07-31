@@ -1,10 +1,10 @@
 import pytest
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
-from src.operations import organizations as organization_operations
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.adapters.postgres import Postgres
+from src.database.services import organizations as organization_service
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -42,7 +42,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
 
         calls.append((shared_schema_url, rows))
 
-    monkeypatch.setattr(organization_operations.shared_users, "sync_url", sync_url)
+    monkeypatch.setattr(organization_service.shared_users, "sync_url", sync_url)
 
     # Act
     db = Postgres(
@@ -52,7 +52,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         infrastructure.database.password,
         infrastructure.database.sslmode,
     )
-    await organization_operations.sync_users(organization, db)
+    await organization_service.sync_users(organization.id, db)
 
     # Assert
     assert calls[0][0] == db.shared_schema_url(organization.id)

@@ -49,7 +49,7 @@ async def reconcile(claimed: Operation) -> str | None:
 
     # Apply one authoritative running-Application route snapshot per compute Operation.
     route_rows = await applications.gateway_routes(registry.id)
-    routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
+    routes = tuple(GatewayRoute(id=item[0], namespace=item[1].hex) for item in route_rows)
     await cluster.gateway.apply(routes, tls)
 
     # Format the typed gateway IP for URL authority syntax.

@@ -1,7 +1,7 @@
 from kr8s.asyncio.objects import APIObject, Deployment
 
 
-async def apply_resource(resource: APIObject, manifest: dict[str, object]) -> None:
+async def apply(resource: APIObject, manifest: dict[str, object]) -> None:
     """Create or patch one Kubernetes resource to its desired manifest."""
 
     # Patch existing resources to repair drift without recreating their identities.

@@ -1,6 +1,9 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Column
+from src.environments import env
+from src.database.types import EncryptedType
 
 
 class StorageRegistry(SQLModel, table=True):
@@ -18,5 +21,5 @@ class StorageRegistry(SQLModel, table=True):
     endpoint_url: str = Field(max_length=255)
 
     # Credentials
-    access_key_id: str = Field(max_length=255)
-    secret_access_key: str = Field(max_length=255)
+    access_key_id: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
+    secret_access_key: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))

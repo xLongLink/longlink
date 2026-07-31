@@ -12,7 +12,7 @@ from cryptography import x509
 from importlib.resources import files
 from src.models.gateways import APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.utils import apply_resource, deployment_is_ready
+from src.kubernetes.utils import apply, deployment_is_ready
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -205,9 +205,9 @@ class Gateway:
         namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
         api = await self._client.api()
         namespace_resource = Namespace(namespace, api=api)
-        await apply_resource(namespace_resource, namespace)
+        await apply(namespace_resource, namespace)
         service_resource = Service(service_manifest, api=api)
-        await apply_resource(service_resource, service_manifest)
+        await apply(service_resource, service_manifest)
 
         # Poll provider-owned Service status without repeatedly applying unchanged desired state.
         while True:
@@ -249,10 +249,10 @@ class Gateway:
             },
             "type": "kubernetes.io/tls",
         }
-        await apply_resource(Secret(tls_secret, api=api), tls_secret)
-        await apply_resource(ConfigMap(config_map, api=api), config_map)
-        await apply_resource(NetworkPolicy(network_policy, api=api), network_policy)
-        await apply_resource(Deployment(deployment_manifest, api=api), deployment_manifest)
+        await apply(Secret(tls_secret, api=api), tls_secret)
+        await apply(ConfigMap(config_map, api=api), config_map)
+        await apply(NetworkPolicy(network_policy, api=api), network_policy)
+        await apply(Deployment(deployment_manifest, api=api), deployment_manifest)
 
         # Poll rollout status without repeatedly applying the same Deployment revision.
         while True:

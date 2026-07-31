@@ -93,16 +93,18 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
     # Define stable workload and compute identities.
     compute, gateway_port = kubernetes_compute
     compute_id = UUID("00000000-0000-4000-8000-000000000001")
+    organization_id = UUID("10000000-0000-4000-8000-000000000001")
     application_id = UUID("20000000-0000-4000-8000-000000000001")
+    namespace = organization_id.hex
     api = await compute.api()
 
     try:
         # Apply the tenant boundary and complete Application configuration.
-        await compute.organizations.apply("acme")
-        await compute.applications.stage_envs(application_id, "acme", {"PORT": "8000"})
+        await compute.organizations.apply(namespace)
+        await compute.applications.stage_envs(application_id, namespace, {"PORT": "8000"})
         await compute.applications.stage_runtime_envs(
             application_id,
-            "acme",
+            namespace,
             {
                 "LONGLINK_DATABASE_HOST": "database.internal",
                 "LONGLINK_DATABASE_NAME": "organization-database",
@@ -120,12 +122,12 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
                 "LONGLINK_STORAGE_USERNAME": "storage-user",
             },
         )
-        await compute.applications.apply(application_id, "acme", ECHO_SERVER_IMAGE)
+        await compute.applications.apply(application_id, namespace, ECHO_SERVER_IMAGE)
 
         # Publish the Application through the gateway using the compute's mTLS identity.
         gateway_ip = await compute.gateway.ip()
         tls = generate_gateway_tls(compute_id, gateway_ip)
-        routes = (GatewayRoute(id=application_id, namespace="acme"),)
+        routes = (GatewayRoute(id=application_id, namespace=namespace),)
         await compute.gateway.apply(routes, tls)
         await compute.gateway.apply(routes, tls)
 
@@ -148,8 +150,8 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
                 await asyncio.sleep(2)
 
         # Namespace deletion cascades workload cleanup before provider credentials are revoked.
-        await compute.organizations.delete("acme")
-        assert not await Namespace("acme", api=api).exists()
+        await compute.organizations.delete(namespace)
+        assert not await Namespace(namespace, api=api).exists()
     finally:
         # Remove dedicated gateway resources when an assertion interrupts the smoke test.
         system_namespace = Namespace("longlink-system", api=api)

@@ -27,6 +27,9 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         "/api/organizations",
         json={
             "name": "acme",
+            "compute_id": str(infrastructure.compute.id),
+            "storage_id": str(infrastructure.storage.id),
+            "database_id": str(infrastructure.database.id),
         },
     )
 
@@ -538,6 +541,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
 async def test_update_organization_member_changes_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow organization owners to change member roles."""
 
@@ -545,6 +549,14 @@ async def test_update_organization_member_changes_role(
     owner, member = users[0], users[1]
     await create_ready_infrastructure()
     organization = await create_organization(owner)
+    synchronized: list[UUID] = []
+
+    async def sync_users(organization_id: UUID) -> None:
+        """Record the Organization user projection requested by the route."""
+
+        synchronized.append(organization_id)
+
+    monkeypatch.setattr(organizations, "sync_users", sync_users)
 
     Session = await get_session()
     async with Session() as session:
@@ -570,10 +582,7 @@ async def test_update_organization_member_changes_role(
     updated_members = await organizations.members(organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
-    recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 2
-    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_users_sync)
-    assert projection.target_id == organization.id
+    assert synchronized == [organization.id]
 
 
 async def test_update_organization_member_rejects_owner_escalation_from_admin(

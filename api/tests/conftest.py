@@ -14,6 +14,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 os.environ.setdefault("ADMIN_NAME", "Test Administrator")
 os.environ.setdefault("ADMIN_EMAIL", "test-administrator@example.com")
 os.environ.setdefault("ADMIN_PASSWORD", "longlink-test-password")
+os.environ.setdefault("ENCRYPTION_KEY", "longlink-test-encryption-key-that-is-long-enough")
 
 # Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"

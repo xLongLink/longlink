@@ -51,7 +51,6 @@ async def cleanup() -> None:
                     text(
                         """
                         SELECT organizations.id,
-                               organizations.slug,
                                applications.id,
                                database_registries.host,
                                database_registries.port,
@@ -70,7 +69,6 @@ async def cleanup() -> None:
                 )
                 for (
                     organization_id,
-                    organization_slug,
                     application_id,
                     database_host,
                     database_port,
@@ -82,8 +80,7 @@ async def cleanup() -> None:
                     secret_access_key,
                 ) in result:
                     organization = UUID(str(organization_id))
-                    slug = str(organization_slug)
-                    managed_namespaces.add(slug)
+                    managed_namespaces.add(organization.hex)
 
                     # Group Application credentials and the Organization bucket by storage registry.
                     if endpoint_url is not None and access_key_id is not None and secret_access_key is not None:
@@ -100,9 +97,7 @@ async def cleanup() -> None:
                         and database_password is not None
                         and database_sslmode is not None
                     ):
-                        sslmode_value = (
-                            database_sslmode.value if isinstance(database_sslmode, DatabaseSSLMode) else str(database_sslmode)
-                        )
+                        sslmode_value = database_sslmode.value if isinstance(database_sslmode, DatabaseSSLMode) else str(database_sslmode)
                         database_key = (
                             str(database_host),
                             int(database_port),
@@ -131,11 +126,7 @@ async def cleanup() -> None:
     try:
         async with asyncio.timeout(10 * 60):
             while existing_namespaces:
-                remaining = {
-                    namespace
-                    for namespace in existing_namespaces
-                    if await Namespace(namespace, api=api).exists()
-                }
+                remaining = {namespace for namespace in existing_namespaces if await Namespace(namespace, api=api).exists()}
                 if not remaining:
                     break
                 existing_namespaces = remaining
@@ -152,9 +143,7 @@ async def cleanup() -> None:
         await storage.delete(organization.hex)
 
         # Verify both IAM and object-storage resources are absent before clearing Platform state.
-        remaining_credentials = [
-            application for application in application_ids if await storage.credentials_exist(application.hex)
-        ]
+        remaining_credentials = [application for application in application_ids if await storage.credentials_exist(application.hex)]
         if remaining_credentials:
             names = ", ".join(str(application) for application in sorted(remaining_credentials))
             raise RuntimeError(f"Exoscale Application credentials remain: {names}")

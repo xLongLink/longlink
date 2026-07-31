@@ -36,6 +36,9 @@ class Env(BaseSettings):
     SMTP_USERNAME: str | None = None
     SMTP_START_TLS: bool = True
 
+    # Encryption for infrastructure credentials persisted by the Platform
+    ENCRYPTION_KEY: str = Field(min_length=32)
+
     # Control plane database URL
     DATABASE_URL: str
 

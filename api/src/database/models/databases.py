@@ -2,7 +2,9 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column
+from src.environments import env
 from src.models.types import DatabaseSSLMode
+from src.database.types import EncryptedType
 
 
 class DatabaseRegistry(SQLModel, table=True):
@@ -22,7 +24,7 @@ class DatabaseRegistry(SQLModel, table=True):
     # Connection
     host: str = Field(max_length=255)
     port: int
-    password: str = Field(max_length=255)
+    password: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     sslmode: DatabaseSSLMode = Field(
         default=DatabaseSSLMode.require,
         sa_column=Column(

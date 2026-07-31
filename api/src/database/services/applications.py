@@ -29,13 +29,13 @@ async def fetch() -> Sequence[Application]:
         return (await session.scalars(statement)).all()
 
 
-async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, str]]:
+async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, UUID]]:
     """Return stable Service route identities for running Applications on one compute."""
 
     # Gateway reconciliation needs no provider credentials or Application runtime configuration.
     async with session_scope() as session:
         statement = (
-            select(Application.id, Organization.slug)
+            select(Application.id, Organization.id)
             .join(Organization, Organization.id == Application.organization_id)
             .where(
                 Organization.compute_id == compute_id,
@@ -43,7 +43,7 @@ async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, str]]:
                 Application.deleted_at.is_(None),
                 Application.status == Status.running,
             )
-            .order_by(Organization.slug, Application.id)
+            .order_by(Organization.id, Application.id)
         )
         return (await session.execute(statement)).tuples().all()
 
@@ -160,9 +160,7 @@ async def replace_image(
     async with session_scope() as session:
         application = (
             await session.scalars(
-                select(Application)
-                .where(Application.id == application_id, Application.deleted_at.is_(None))
-                .with_for_update()
+                select(Application).where(Application.id == application_id, Application.deleted_at.is_(None)).with_for_update()
             )
         ).one_or_none()
         if application is None:

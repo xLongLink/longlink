@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
 from kr8s.asyncio.objects import Namespace, NetworkPolicy
-from src.kubernetes.utils import apply_resource
+from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -26,8 +26,8 @@ class Organizations:
             namespace=namespace,
         )
         api = await self._client.api()
-        await apply_resource(Namespace(namespace_manifest, api=api), namespace_manifest)
-        await apply_resource(NetworkPolicy(network_policy, api=api), network_policy)
+        await apply(Namespace(namespace_manifest, api=api), namespace_manifest)
+        await apply(NetworkPolicy(network_policy, api=api), network_policy)
 
     async def delete(self, namespace: str) -> None:
         """Delete one Organization Namespace and wait for completion."""

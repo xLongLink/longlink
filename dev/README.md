@@ -9,15 +9,15 @@ Development tools
 
 ## k3d local cluster
 
-`make local` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, creates the k3d
+`make up` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, creates the k3d
 cluster, and builds the local sample Application image. Host-facing ports bind to loopback, while k3d reaches PostgreSQL
 and the registry through the private bridge gateway. They are not exposed to the local network.
 
 ```bash
-make local
+make up
 ```
 
-If a `compute` cluster predates the isolated network, run `make down` before `make local` so k3d can recreate it safely.
+If a `compute` cluster predates the isolated network, run `make down` before `make up` so k3d can recreate it safely.
 
 The equivalent manual setup is:
 
@@ -70,7 +70,7 @@ The configured role must be able to connect to the `postgres` maintenance databa
 The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not run
 `make clean` against a PostgreSQL server containing production LongLink data; it removes tracked databases and roles.
 
-`make seed` selects its compute from `KUBECONFIG`. Without it, seed uses `api/kubeconfig.yaml` created by `make local`.
+`make seed` selects its compute from `KUBECONFIG`. Without it, seed uses `api/kubeconfig.yaml` created by `make up`.
 To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 
 ```bash

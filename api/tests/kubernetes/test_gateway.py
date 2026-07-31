@@ -10,14 +10,16 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     """Render Envoy routes from desired Applications without cluster discovery."""
 
     # Define unsorted routes for two Applications.
+    first_organization_id = UUID("10000000-0000-4000-8000-000000000001")
+    second_organization_id = UUID("10000000-0000-4000-8000-000000000002")
     routes = (
         GatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000002"),
-            namespace="beta",
+            namespace=second_organization_id.hex,
         ),
         GatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000001"),
-            namespace="acme",
+            namespace=first_organization_id.hex,
         ),
     )
 
@@ -30,8 +32,8 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     clusters = config["static_resources"]["clusters"]
     assert len(listeners) == 1
     assert len(routes) == 2
-    assert routes[0]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
-    assert routes[1]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
+    assert routes[0]["route"]["cluster"] == f"{first_organization_id.hex}-20000000-0000-4000-8000-000000000001"
+    assert routes[1]["route"]["cluster"] == f"{second_organization_id.hex}-20000000-0000-4000-8000-000000000002"
     assert routes[0]["match"]["headers"] == [
         {
             "name": "x-longlink-application-id",
@@ -39,6 +41,6 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
         }
     ]
     assert [cluster["name"] for cluster in clusters] == [
-        "acme-20000000-0000-4000-8000-000000000001",
-        "beta-20000000-0000-4000-8000-000000000002",
+        f"{first_organization_id.hex}-20000000-0000-4000-8000-000000000001",
+        f"{second_organization_id.hex}-20000000-0000-4000-8000-000000000002",
     ]

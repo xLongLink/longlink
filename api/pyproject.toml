@@ -30,6 +30,7 @@ dependencies = [
     'python-slugify>=8.0.4',
     'psycopg[binary]>=3.3.4',
     'sqlalchemy>=2.0.51',
+    'sqlalchemy-utils>=0.42.1',
     'sqlmodel>=0.0.39',
     'kr8s>=0.20.15',
     'longlink',

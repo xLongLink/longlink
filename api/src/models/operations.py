@@ -22,7 +22,6 @@ class OperationKind(StrEnum):
     application_delete = "application.delete"
     organization_create = "organization.create"
     organization_delete = "organization.delete"
-    organization_users_sync = "organization.users.sync"
 
 
 class OperationResponse(BaseModel):

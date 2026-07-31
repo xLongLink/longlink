@@ -7,6 +7,8 @@ import sqlalchemy as sa
 import longlink.database.types
 from alembic import op
 from collections.abc import Sequence
+from src.environments import env
+from src.database.types import EncryptedType
 
 # revision identifiers, used by Alembic.
 revision: str = "20260713_0001"
@@ -70,7 +72,7 @@ def upgrade() -> None:
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("kubeconfig", sa.JSON(), nullable=False),
+        sa.Column("kubeconfig", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "status",
             sa.Enum(
@@ -89,7 +91,7 @@ def upgrade() -> None:
         sa.Column("gateway_url", sa.String(length=512), nullable=True),
         sa.Column("gateway_ca_certificate", sa.Text(), nullable=True),
         sa.Column("gateway_identity_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_identity_private_key", sa.Text(), nullable=True),
+        sa.Column("gateway_identity_private_key", EncryptedType(env.ENCRYPTION_KEY), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -101,7 +103,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),
-        sa.Column("password", sa.String(length=255), nullable=False),
+        sa.Column("password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "sslmode",
             sa.Enum("disable", "allow", "prefer", "require", "verify-ca", "verify-full", name="databasesslmode", native_enum=False),
@@ -118,8 +120,8 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("endpoint_url", sa.String(length=255), nullable=False),
-        sa.Column("access_key_id", sa.String(length=255), nullable=False),
-        sa.Column("secret_access_key", sa.String(length=255), nullable=False),
+        sa.Column("access_key_id", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("secret_access_key", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -303,7 +305,6 @@ def upgrade() -> None:
                 "application.delete",
                 "organization.create",
                 "organization.delete",
-                "organization.users.sync",
                 name="operation_kind_enum",
                 native_enum=False,
             ),
