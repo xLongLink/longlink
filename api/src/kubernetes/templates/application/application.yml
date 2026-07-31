@@ -6,6 +6,9 @@ metadata:
     name: $application_id
     namespace: '$namespace'
 spec:
+    # Stop the running version before its replacement applies schema migrations.
+    strategy:
+        type: Recreate
     selector:
         matchLabels:
             $application_id_label: $application_id

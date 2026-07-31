@@ -142,27 +142,6 @@ async def create(
         return application
 
 
-async def set_status(application_id: UUID, expected_status: Status, status: Status) -> bool:
-    """Transition one active Application from the expected lifecycle state."""
-
-    # Guard lifecycle writes from stale attempts after deletion or another transition.
-    async with session_scope() as session:
-        if (
-            await session.execute(
-                update(Application)
-                .where(
-                    Application.id == application_id,
-                    Application.deleted_at.is_(None),
-                    Application.status == expected_status,
-                )
-                .values(status=status)
-            )
-        ).rowcount != 1:
-            return False
-        await session.commit()
-        return True
-
-
 async def mark_running(application_id: UUID) -> bool:
     """Publish Application readiness."""
 

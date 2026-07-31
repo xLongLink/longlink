@@ -9,6 +9,7 @@ from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
 
 
@@ -200,7 +201,12 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    await compute.set_status(infrastructure.compute.id, Status.running, Status.failed)
+    Session = await get_session()
+    async with Session() as session:
+        registry = await session.get(ComputeRegistry, infrastructure.compute.id)
+        assert registry is not None
+        registry.status = Status.failed
+        await session.commit()
 
     # Act
     with pytest.raises(UnavailableError) as exc:

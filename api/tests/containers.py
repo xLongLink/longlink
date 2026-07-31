@@ -3,10 +3,11 @@ import docker
 import pytest
 import psycopg
 import urllib.parse
-from typing import Any
+from docker.client import DockerClient
 from collections.abc import Sequence
 from docker.constants import DEFAULT_DOCKER_API_VERSION
 from requests.exceptions import Timeout, SSLError, ConnectionError
+from docker.models.containers import Container
 
 
 def require_docker_daemon() -> None:
@@ -41,7 +42,6 @@ class DockerRuntimeContainer:
         ports: Sequence[int] = (),
         volumes: Sequence[tuple[str, str, str]] = (),
         environment: dict[str, str] | None = None,
-        **kwargs: Any,
     ) -> None:
         """Store container configuration without contacting Docker."""
 
@@ -50,9 +50,8 @@ class DockerRuntimeContainer:
         self._command = command
         self._volumes = volumes
         self._environment = environment or {}
-        self._kwargs = kwargs
-        self._client: Any | None = None
-        self._container: Any | None = None
+        self._client: DockerClient | None = None
+        self._container: Container | None = None
 
     def start(self) -> "DockerRuntimeContainer":
         """Create and start the configured Docker container."""
@@ -74,7 +73,6 @@ class DockerRuntimeContainer:
                 ports=port_bindings or None,
                 remove=False,
                 volumes=volume_bindings or None,
-                **self._kwargs,
             )
         finally:
             if self._container is None:

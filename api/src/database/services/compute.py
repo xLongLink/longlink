@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select, update
+from sqlalchemy import select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -118,25 +118,5 @@ async def initialize_gateway_tls(
         registry.gateway_ca_certificate = ca_certificate
         registry.gateway_identity_certificate = certificate
         registry.gateway_identity_private_key = private_key
-        await session.commit()
-        return True
-
-
-async def set_status(compute_id: UUID, expected_status: Status, status: Status) -> bool:
-    """Transition one active compute target from the expected lifecycle state."""
-
-    # Guard reconciliation writes from stale attempts after deletion or another transition.
-    async with session_scope() as session:
-        if (
-            await session.execute(
-                update(ComputeRegistry)
-                .where(
-                    ComputeRegistry.id == compute_id,
-                    ComputeRegistry.status == expected_status,
-                )
-                .values(status=status)
-            )
-        ).rowcount != 1:
-            return False
         await session.commit()
         return True

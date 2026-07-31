@@ -143,19 +143,20 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     assert included_by_id.deleted_id == user.id
 
 
-async def test_set_status_modifies_active_applications() -> None:
-    """Update application status only for active Applications in the expected state."""
+async def test_mark_running_updates_active_applications() -> None:
+    """Publish readiness only for active Applications in the creating state."""
 
     # Arrange
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.set_status(application.id, Status.creating, Status.running)
+    marked_running = await applications.mark_running(application.id)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
-    deleted_status = await applications.set_status(application.id, Status.running, Status.failed)
+    deleted_status = await applications.mark_running(application.id)
 
     # Assert
+    assert marked_running is True
     assert running is not None
     assert running.status == Status.running
     assert deleted_status is False

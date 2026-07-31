@@ -5,7 +5,6 @@ from pathlib import Path
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import proxy as proxy_routes
 from src.models.roles import OrganizationRoles
-from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import applications
 from src.database.models.users import User
@@ -23,9 +22,9 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
     remote_infrastructure = await create_ready_infrastructure(name="Remote testing")
-    organization = await create_organization(user)
+    organization = await create_organization(user, infrastructure=remote_infrastructure)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
+    await applications.mark_running(app.id)
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
 
@@ -166,7 +165,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
+    await applications.mark_running(app.id)
 
     class FakeTLS:
         """Accept a client identity while testing request-size validation."""
@@ -228,7 +227,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
+    await applications.mark_running(app.id)
     Session = await get_session()
     async with Session() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
@@ -287,9 +286,9 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     # Prepare a running Application and a gateway client that fails transport.
     user = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(user)
+    organization = await create_organization(user, infrastructure=infrastructure)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
+    await applications.mark_running(app.id)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
 
@@ -356,7 +355,7 @@ async def test_application_proxy_enforces_method_role(
     await create_ready_infrastructure()
     organization = await create_organization(user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await applications.set_status(app.id, Status.creating, Status.running)
+    await applications.mark_running(app.id)
 
     Session = await get_session()
     async with Session() as session:
