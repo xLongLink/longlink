@@ -1,10 +1,10 @@
 import pytest
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
-from src.database.services import organizations as organization_service
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.adapters.postgres import Postgres
+from src.database.services import organizations as organization_service
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 

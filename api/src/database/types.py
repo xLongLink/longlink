@@ -1,10 +1,10 @@
 from typing import override
-from sqlalchemy import String, Text
-from sqlalchemy_utils import JSONType
-from sqlalchemy.engine import Dialect
+from sqlalchemy import Text, String
 from sqlalchemy.types import TypeDecorator
-from sqlalchemy_utils.types.encrypted.encrypted_type import AesEngine, StringEncryptedType
+from sqlalchemy_utils import JSONType
 from src.models.types import PlatformVersion
+from sqlalchemy.engine import Dialect
+from sqlalchemy_utils.types.encrypted.encrypted_type import AesEngine, StringEncryptedType
 
 
 class PlatformVersionType(TypeDecorator[str]):

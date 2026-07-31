@@ -59,13 +59,22 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
         return Infrastructure(compute=compute, database=database, storage=storage)
 
 
-async def create_organization(owner: User, name: str = "acme", slug: str = "acme", avatar: str | None = None) -> Organization:
-    """Create one Organization with independent ready infrastructure."""
+async def create_organization(
+    owner: User,
+    name: str = "acme",
+    slug: str = "acme",
+    avatar: str | None = None,
+    infrastructure: Infrastructure | None = None,
+) -> Organization:
+    """Create one Organization with the specified or independent ready infrastructure."""
 
     # Import lazily so tests can share this factory without introducing service import cycles.
     from src.database.services import operations, organizations
 
-    infrastructure = await create_ready_infrastructure()
+    # Provision isolated registries unless the test needs to inspect a specific assignment.
+    if infrastructure is None:
+        infrastructure = await create_ready_infrastructure()
+
     organization = await organizations.create(
         name,
         slug,

@@ -3,7 +3,6 @@
 - When listing improvement suggestions, use numbered lists.
 - Project is in _MVP mode - No need for backwards compatibility_
 
-
 At the end of each task, return 5 cleanup and simplfications opportunities related to the task:
 
 1. Exact file path and line range.
@@ -12,7 +11,6 @@ At the end of each task, return 5 cleanup and simplfications opportunities relat
 4. Behavior/invariant checks required before applying it.
 5. Confidence: High, Medium, or Low.
 6. Whether it affects any shared contract or requires updating call sites.
-
 
 ## Product Language
 

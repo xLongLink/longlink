@@ -7,8 +7,8 @@ import sqlalchemy as sa
 import longlink.database.types
 from alembic import op
 from collections.abc import Sequence
-from src.database.types import EncryptedType
 from src.environments import env
+from src.database.types import EncryptedType
 
 # revision identifiers, used by Alembic.
 revision: str = "20260713_0001"

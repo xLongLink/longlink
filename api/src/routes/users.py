@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_auth_session
 from src.models.users import UserUpdate, UserProfile, UserSummary, UserOrganizationMembership
-from src.database.services import organizations, users
+from src.database.services import users, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 

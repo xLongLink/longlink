@@ -20,7 +20,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     infrastructure = await create_ready_infrastructure()
 
     # Act
-    organization = await create_organization(owner)
+    organization = await create_organization(owner, infrastructure=infrastructure)
 
     # Assert
     assert organization.name == "acme"
@@ -209,10 +209,10 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
 
     # Act
     with pytest.raises(UnavailableError) as exc:
-        await create_organization(owner)
+        await create_organization(owner, infrastructure=infrastructure)
 
     # Assert
-    assert str(exc.value) == "No compute registry available"
+    assert str(exc.value) == "No ready compute registry available"
     assert await organizations.fetch() == []
     reloaded_compute = await compute.get(infrastructure.compute.id)
     assert reloaded_compute is not None

@@ -164,7 +164,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     # Prepare a running Application and a client that consumes its request stream.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner)
+    organization = await create_organization(owner, infrastructure=infrastructure)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, Status.creating, Status.running)
 
@@ -226,7 +226,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     # Prepare a running Application with incomplete gateway TLS state.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner)
+    organization = await create_organization(owner, infrastructure=infrastructure)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, Status.creating, Status.running)
     Session = await get_session()
