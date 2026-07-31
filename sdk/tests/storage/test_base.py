@@ -1,4 +1,5 @@
 import pytest
+from fsspec.implementations.dirfs import DirFileSystem
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 
@@ -72,6 +73,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     )
 
     # Verify both path isolation and S3 connection settings.
+    assert isinstance(filesystem, DirFileSystem)
     assert filesystem.path == "acme/applications/dashboard"
     assert captured == {
         "protocol": "s3",
