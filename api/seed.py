@@ -2,23 +2,18 @@ import asyncio
 import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
-from sqlalchemy.exc import ArgumentError
 from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
-from src.models.statuses import Status
-from src.database.services import users, compute, storage, database, operations, organizations
+from src.database.services import compute, storage, database, operations
+from src.errors import ConflictError
 from src.models.operations import OperationKind
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
 
 class SeedSettings(BaseSettings):
     """Define development infrastructure registrations."""
-
-    # Seeded Organization
-    LOCAL_ORG: str = Field(default="test", min_length=1)
-    LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
@@ -78,15 +73,10 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
             sslmode=DatabaseSSLMode.disable,
         )
 
-    # Parse the configured PostgreSQL administrator URL at the seed boundary.
-    try:
-        database_url = make_url(settings.APPLICATION_DATABASE_URL)
-    except (ArgumentError, ValueError):
-        raise ValueError("Application database URL is invalid") from None
-    if database_url.get_backend_name() != "postgresql":
-        raise ValueError("Application database URL must use PostgreSQL")
-    if set(database_url.query) - {"sslmode"}:
-        raise ValueError("Application database URL only supports the sslmode query option")
+    # Parse a PostgreSQL administrator URL with the supported connection option.
+    database_url = make_url(settings.APPLICATION_DATABASE_URL)
+    if database_url.get_backend_name() != "postgresql" or set(database_url.query) - {"sslmode"}:
+        raise ValueError("Application database URL must use PostgreSQL and only supports the sslmode query option")
 
     # Validate all connection fields before persisting administrator credentials.
     try:
@@ -106,11 +96,8 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register development infrastructure from seed settings."""
 
-    # Load relationship targets before the first ORM query configures SQLAlchemy mappers.
-    from src.database.models import users as user_models
-    from src.database.models import computes, storages, databases, association, invitations
-    from src.database.models import applications as application_models
-    from src.database.models import organizations as organization_models
+    # Load the Organization relationship target before the first ORM query configures SQLAlchemy mappers.
+    from src.database.models import applications
 
     # Validate the configured Kubernetes compute before mutating Platform state.
     compute_config = ComputeRegistryCreate(
@@ -121,18 +108,16 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Resolve either the configured Application database or the local PostgreSQL service.
     database_config = application_database_configuration(settings)
 
-    # Create or validate the configured compute registry.
-    compute_registry = next((item for item in await compute.fetch() if item.name == compute_config.name), None)
-    if compute_registry is None:
+    # Register the configured compute and reconcile it only when newly created.
+    try:
         compute_registry = await compute.create(compute_config.name, compute_config.kubeconfig)
-    elif compute_registry.kubeconfig != compute_config.kubeconfig:
-        raise ValueError("Development compute registry uses a different kubeconfig; run make down before changing it")
-    if compute_registry.status != Status.running:
+    except ConflictError:
+        pass
+    else:
         await operations.create(compute_registry.id, kind=OperationKind.compute_reconcile)
 
-    # Create or validate the configured database registry.
-    database_registry = next((item for item in await database.fetch() if item.name == "development database"), None)
-    if database_registry is None:
+    # Register the configured database unless it already exists.
+    try:
         await database.create(
             "development database",
             database_config.host,
@@ -141,50 +126,19 @@ async def seed_local_development(settings: SeedSettings) -> None:
             database_config.password,
             database_config.sslmode,
         )
-    elif (
-        database_registry.host != database_config.host
-        or database_registry.port != database_config.port
-        or database_registry.username != database_config.username
-        or database_registry.password != database_config.password
-        or database_registry.sslmode != database_config.sslmode
-    ):
-        raise ValueError("Development database registry uses different settings; run make down before changing them")
+    except ConflictError:
+        pass
 
-    # Create or validate the configured storage registry.
-    storage_registry = next((item for item in await storage.fetch() if item.name == "local storage"), None)
-    if storage_registry is None:
+    # Register the configured storage unless it already exists.
+    try:
         await storage.create(
             "local storage",
             settings.EXOSCALE_STORAGE_ENDPOINT_URL,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,
         )
-    elif (
-        storage_registry.endpoint_url != settings.EXOSCALE_STORAGE_ENDPOINT_URL
-        or storage_registry.access_key_id != settings.EXOSCALE_API_KEY
-        or storage_registry.secret_access_key != settings.EXOSCALE_API_SECRET
-    ):
-        raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
-
-    # Resolve the Platform administrator before creating desired state.
-    administrator, _ = await users.ensure_administrator()
-
-    # Create the Organization before scheduling its lifecycle after compute reconciliation.
-    organization = next((item for item in await organizations.fetch() if item.slug == settings.LOCAL_ORG), None)
-    if organization is None:
-        organization = await organizations.create(
-            settings.LOCAL_ORG,
-            settings.LOCAL_ORG,
-            administrator,
-            avatar=settings.LOCAL_ORG_AVATAR,
-            compute_id=compute_registry.id,
-            require_running_compute=False,
-        )
-    await operations.create(
-        compute_registry.id,
-        kind=OperationKind.organization_create,
-        target_id=organization.id,
-    )
+    except ConflictError:
+        pass
 
 
 def main() -> None:

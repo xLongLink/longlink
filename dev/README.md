@@ -67,9 +67,8 @@ APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?
 ```
 
 The configured role must be able to connect to the `postgres` maintenance database and create databases and roles.
-The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not point
-the seed at a PostgreSQL server containing production LongLink data. `make down` does not remove databases or roles
-from a configured remote server.
+The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not run
+`make clean` against a PostgreSQL server containing production LongLink data; it removes tracked databases and roles.
 
 `make seed` selects its compute from `KUBECONFIG`. Without it, seed uses `api/kubeconfig.yaml` created by `make local`.
 To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
@@ -78,7 +77,7 @@ To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 KUBECONFIG=../kubeconfig.yml
 ```
 
-If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
+If `api/dev.db` came from an earlier checkout, run `make clean` once before seeding the Exoscale-backed environment.
 
 Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations
 and seed local or remote compute data:
@@ -96,8 +95,7 @@ make seed
 Clean the compute, database, and storage resources configured in `api/.env.seed`:
 
 ```bash
-cd api
-uv run --locked python cleanup.py
+make clean
 ```
 
 To restore a dedicated cluster to its newly provisioned baseline, use the repository reset command:
@@ -115,11 +113,11 @@ The command deletes `longlink-system` and all discovered LongLink Organization n
 database schemas, databases, storage credentials, and buckets tracked in Platform state.
 
 LongLink resolves the pulled tag through the registry and deploys its immutable digest.
-LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove those
+LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make clean` to remove those
 resources before local Platform state is deleted. PostgreSQL remains local by default because it matches the production
 PostgreSQL contract without provisioning a remote database.
 
-`make down` stops on cleanup or infrastructure errors and preserves `api/dev.db` and `api/kubeconfig.yaml` for recovery.
+`make clean` stops on cleanup errors and preserves `api/dev.db` and `api/kubeconfig.yaml` for recovery.
 Retry the command after resolving the reported error.
 
 <br/>

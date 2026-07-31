@@ -30,10 +30,7 @@ make sdk:build      # Build the embedded SDK web bundle
 
 make seed           # Migrate and seed the Platform test Organization
 
-make clean          # Remove generated build and test artifacts
-make api:clean      # Remove API generated artifacts and API web bundle
-make sdk:clean      # Remove SDK generated artifacts, SDK dev app, and SDK web bundle
-make web:clean      # Remove web generated artifacts
+make clean          # Remove tracked remote development resources
 
 make format         # Format the code
 make api:format     # Format API code
@@ -48,7 +45,7 @@ make local          # Initialize local services, cluster, and Application image
 make web            # Run the Vite web app
 make api            # Run the LongLink Platform API after seeding
 
-make down           # Remove remote development resources, local services, volumes, and the cluster
+make down           # Stop local services and remove local volumes and the cluster
 ```
 
 ## Test the SDK in development
