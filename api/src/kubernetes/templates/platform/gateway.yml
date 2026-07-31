@@ -22,7 +22,7 @@ spec:
     template:
         metadata:
             annotations:
-                longlink.io/runtime-revision: '$runtime_revision'
+                longlink.io/config-revision: '$config_revision'
             labels:
                 app: longlink-gateway
         spec:
@@ -40,24 +40,18 @@ spec:
                   args:
                       - -c
                       - /etc/envoy/envoy.yaml
-                  ports:
-                      - name: gateway
-                        containerPort: 8443
-                      - name: health
-                        containerPort: 8001
                   startupProbe:
-                      httpGet:
-                          path: /ready
-                          port: health
+                      tcpSocket:
+                          port: 8443
                       periodSeconds: 2
                       failureThreshold: 60
                   readinessProbe:
-                      httpGet: &health-check
-                          path: /ready
-                          port: health
+                      tcpSocket:
+                          port: 8443
                       periodSeconds: 5
                   livenessProbe:
-                      httpGet: *health-check
+                      tcpSocket:
+                          port: 8443
                   volumeMounts:
                       - name: config
                         mountPath: /etc/envoy

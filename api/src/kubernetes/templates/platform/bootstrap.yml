@@ -17,4 +17,4 @@ spec:
         app: longlink-gateway
     ports:
         - port: 443
-          targetPort: gateway
+          targetPort: 8443

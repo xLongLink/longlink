@@ -95,19 +95,10 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
             }
         )
 
-    # Health checks bypass authentication before the desired Application routes.
+    # Render only authenticated Application routes on the public gateway listener.
     config = templates.readyml_list(
         PLATFORM_TEMPLATES.joinpath("envoy.yml"),
-        routes=json.dumps(
-            [
-                {
-                    "match": {"path": "/ready"},
-                    "direct_response": {"status": 200},
-                },
-                *routes,
-            ],
-            separators=(",", ":"),
-        ),
+        routes=json.dumps(routes, separators=(",", ":")),
         clusters=json.dumps(clusters, separators=(",", ":")),
     )[0]
     return yaml.safe_dump(config, sort_keys=False)
@@ -195,23 +186,12 @@ def render_gateway_manifests(
 ) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
     """Render gateway runtime resources under one Pod revision."""
 
-    # Roll Pods only when mounted runtime content changes.
-    runtime_revision = hashlib.sha256(
-        json.dumps(
-            {
-                "ca_certificate": tls.ca_certificate,
-                "identity_certificate": tls.identity_certificate,
-                "envoy_config": envoy_config,
-                "identity_private_key": tls.identity_private_key,
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode()
-    ).hexdigest()
+    # Envoy watches mounted TLS files, so only route configuration requires a Pod rollout.
+    config_revision = hashlib.sha256(envoy_config.encode()).hexdigest()
     manifests = templates.readyml_list(
         PLATFORM_TEMPLATES.joinpath("gateway.yml"),
         envoy_config=json.dumps(envoy_config),
-        runtime_revision=runtime_revision,
+        config_revision=config_revision,
     )
     return manifests[0], manifests[1], manifests[2]
 

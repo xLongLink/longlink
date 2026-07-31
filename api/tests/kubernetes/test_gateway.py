@@ -25,16 +25,14 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     config = yaml.safe_load(render_envoy_config(routes))
 
     # Verify authenticated routes and clusters have deterministic ordering.
-    routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][
-        0
-    ]["routes"]
+    listeners = config["static_resources"]["listeners"]
+    routes = listeners[0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][0]["routes"]
     clusters = config["static_resources"]["clusters"]
-    assert routes[0]["match"] == {"path": "/ready"}
-    assert routes[0]["direct_response"] == {"status": 200}
-    assert len(routes) == 3
-    assert routes[1]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
-    assert routes[2]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
-    assert routes[1]["match"]["headers"] == [
+    assert len(listeners) == 1
+    assert len(routes) == 2
+    assert routes[0]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
+    assert routes[1]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
+    assert routes[0]["match"]["headers"] == [
         {
             "name": "x-longlink-application-id",
             "string_match": {"exact": "20000000-0000-4000-8000-000000000001"},

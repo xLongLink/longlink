@@ -4,7 +4,6 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.statuses import Status
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
@@ -67,32 +66,14 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
 
-    # Store user environment values before queueing a workload that requires them.
-    try:
-        cluster = Kubernetes(registry.kubeconfig)
-        status = await applications.stage_environment(
-            application.id,
-            Status.creating,
-            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
-        )
-        if status != Status.creating:
-            raise RuntimeError("Application is no longer creating")
-        await operations.create(
-            organization.compute_id,
-            kind=OperationKind.application_create,
-            target_id=application.id,
-        )
-    except Exception as exc:
-        logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
-        deleted = await applications.soft_delete(application.id, user)
-        if deleted is not None:
-            await operations.create(deleted.organization.compute_id)
-            await operations.create(
-                deleted.organization.compute_id,
-                kind=OperationKind.application_delete,
-                target_id=deleted.id,
-            )
-        raise HTTPException(status_code=503, detail="Application environment could not be staged") from exc
+    # Store user environment values before queueing the workload that consumes them.
+    cluster = Kubernetes(registry.kubeconfig)
+    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+    )
 
     return application
 

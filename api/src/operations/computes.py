@@ -8,8 +8,18 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 
-async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> str:
-    """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
+async def reconcile(claimed: Operation) -> str | None:
+    """Reconcile one compute's gateway and cluster-bootstrap resources."""
+
+    # Load the compute root without loading provider or tenant lifecycle relationships.
+    registry = await compute.get(claimed.target_id)
+    if registry is None:
+        return None
+    platform_version = Version(env.VERSION)
+    if registry.version is not None and Version(registry.version) > platform_version:
+        return None
+
+    cluster = Kubernetes(registry.kubeconfig)
 
     # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
     gateway_ip = await cluster.gateway.ip()
@@ -45,24 +55,7 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> s
 
     # Format the typed gateway IP for URL authority syntax.
     gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)
-    return f"https://{gateway_host}"
-
-
-async def reconcile(claimed: Operation) -> str | None:
-    """Reconcile one compute's gateway and cluster-bootstrap resources."""
-
-    # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.target_id)
-    if registry is None:
-        return None
-    platform_version = Version(env.VERSION)
-    if registry.version is not None and Version(registry.version) > platform_version:
-        return None
-
-    cluster = Kubernetes(registry.kubeconfig)
-
-    # Compute reconciliation is structurally unable to deploy or delete tenant resources.
-    gateway_url = await reconcile_gateway(registry, cluster)
+    gateway_url = f"https://{gateway_host}"
 
     # Publish connection material only after the desired gateway Deployment is serving.
     if not await compute.record_success(

@@ -134,14 +134,14 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
         with TemporaryDirectory() as directory:
             certificate_path = Path(directory, "client.crt")
             private_key_path = Path(directory, "client.key")
-            certificate_path.write_text(tls.certificate, encoding="ascii")
-            private_key_path.write_text(tls.private_key, encoding="ascii")
+            certificate_path.write_text(tls.identity_certificate, encoding="ascii")
+            private_key_path.write_text(tls.identity_private_key, encoding="ascii")
             context.load_cert_chain(certificate_path, private_key_path)
         async with httpx2.AsyncClient(verify=context, timeout=30.0, trust_env=False) as client:
             deadline = time.monotonic() + 60
             while True:
-                response = await client.get(f"https://{K3S_HOST}:{gateway_port}/ready")
-                if response.status_code == 200:
+                response = await client.get(f"https://{K3S_HOST}:{gateway_port}/")
+                if response.status_code == 404:
                     break
                 if time.monotonic() >= deadline:
                     pytest.fail(f"k3s gateway did not become reachable over HTTPS: {response.status_code} {response.text}")
