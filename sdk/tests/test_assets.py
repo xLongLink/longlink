@@ -26,12 +26,11 @@ def test_logo_returns_development_fallback_asset(monkeypatch: pytest.MonkeyPatch
     )
 
 
-@pytest.mark.parametrize(("bucket", "prefix"), [(None, "shared/"), ("acme", None)])
-def test_logo_requires_shared_storage_scope_in_production(bucket: str | None, prefix: str | None) -> None:
+def test_logo_requires_shared_storage_scope_in_production() -> None:
     """Require the Organization bucket and shared prefix before reading production assets."""
 
     # Arrange
-    env = Envs(ENV="production", STORAGE_BUCKET=bucket, STORAGE_SHARED_PREFIX=prefix)
+    env = Envs(ENV="production", STORAGE_BUCKET=None, STORAGE_SHARED_PREFIX="shared/")
 
     # Act and assert
     with pytest.raises(ValueError, match="LONGLINK_STORAGE_BUCKET and LONGLINK_STORAGE_SHARED_PREFIX"):

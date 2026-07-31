@@ -1,6 +1,7 @@
 from uuid import UUID
 from src.utils import roles
 from sqlalchemy import func, select
+from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -8,7 +9,6 @@ from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
-from src.database.services.errors import ConflictError, NotFoundError
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
@@ -111,22 +111,28 @@ async def accept(user_id: UUID) -> None:
             organization_invitations.setdefault(invitation.organization_id, []).append(invitation)
             organization_computes[invitation.organization_id] = compute_id
 
+        # Lock every existing membership before creating or restoring invitation access.
+        memberships = (
+            await session.scalars(
+                select(UserOrganization)
+                .where(
+                    UserOrganization.user_id == user.id,
+                    UserOrganization.organization_id.in_(organization_invitations),
+                )
+                .with_for_update()
+            )
+        ).all()
+        memberships_by_organization_id = {
+            membership.organization_id: membership for membership in memberships
+        }
+
         now = utcnow()
         changed_organization_ids: set[UUID] = set()
 
         # Create or restore access within each invitation's Organization without changing active roles.
         for organization_id, pending in organization_invitations.items():
             invitation = min(pending, key=lambda item: roles.rank(item.role))
-            membership = (
-                await session.scalars(
-                    select(UserOrganization)
-                    .where(
-                        UserOrganization.user_id == user.id,
-                        UserOrganization.organization_id == organization_id,
-                    )
-                    .with_for_update()
-                )
-            ).one_or_none()
+            membership = memberships_by_organization_id.get(organization_id)
             if membership is None:
                 session.add(
                     UserOrganization(
@@ -153,12 +159,12 @@ async def accept(user_id: UUID) -> None:
                 item.deleted_at = now
                 item.deleted_id = user.id
 
-        # Queue reconciliation with membership and invitation changes in one transaction.
+        # Queue user projection with membership and invitation changes in one transaction.
         for organization_id in sorted(changed_organization_ids, key=str):
             await operations.enqueue(
                 session,
                 organization_computes[organization_id],
-                kind=OperationKind.organization_create,
+                kind=OperationKind.organization_users_sync,
                 target_id=organization_id,
             )
         await session.commit()

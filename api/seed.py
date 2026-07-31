@@ -190,7 +190,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
         compute_registry.id,
         kind=OperationKind.organization_create,
         target_id=organization.id,
-        delay_seconds=1,
     )
 
     # Create the seeded image state before scheduling deployment after Organization reconciliation.
@@ -222,7 +221,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
         compute_registry.id,
         kind=OperationKind.application_create,
         target_id=application.id,
-        delay_seconds=2,
     )
 
 

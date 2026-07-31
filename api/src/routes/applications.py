@@ -4,13 +4,11 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.statuses import Status
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
-from src.database.services.errors import ConflictError, NotFoundError
 
 router = APIRouter()
 
@@ -53,54 +51,29 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    try:
-        application = await applications.create(
-            organization.id,
-            payload.name,
-            application_slug,
-            image=metadata.image,
-            sdk=metadata.sdk,
-            version=metadata.version,
-            description=payload.description,
-            icon=payload.icon,
-            user=user,
-        )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ConflictError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
-    operation = await operations.create(
-        organization.compute_id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-        delay_seconds=30,
+    application = await applications.create(
+        organization.id,
+        payload.name,
+        application_slug,
+        image=metadata.image,
+        sdk=metadata.sdk,
+        version=metadata.version,
+        description=payload.description,
+        icon=payload.icon,
+        user=user,
     )
     registry = await compute.get(organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
 
-    # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
-    try:
-        cluster = Kubernetes(registry.kubeconfig)
-        status = await applications.stage_environment(
-            application.id,
-            Status.creating,
-            lambda: cluster.applications.stage_envs(application.id, organization.slug, payload.envs),
-        )
-        if status != Status.creating:
-            raise RuntimeError("Application is no longer creating")
-        if not await operations.schedule_now(operation.id):
-            raise RuntimeError("Application create Operation is no longer open")
-    except Exception as exc:
-        logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
-        deleted = await applications.soft_delete(application.id, user)
-        if deleted is not None:
-            await operations.create(
-                deleted.organization.compute_id,
-                kind=OperationKind.application_delete,
-                target_id=deleted.id,
-            )
-        raise HTTPException(status_code=503, detail="Application environment could not be staged") from exc
+    # Store user environment values before queueing the workload that consumes them.
+    cluster = Kubernetes(registry.kubeconfig)
+    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    await operations.create(
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+    )
 
     return application
 
@@ -143,7 +116,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     if tombstone is not None and tombstone.deleted_at is not None:
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
-        access = None
     else:
         access = await organizations.application_access(user.id, application_id)
         if access is None:
@@ -157,6 +129,9 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     result = await applications.soft_delete(application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    # Remove the tombstoned Application from the shared gateway before deleting its workload.
+    await operations.create(result.organization.compute_id)
     await operations.create(
         result.organization.compute_id,
         kind=OperationKind.application_delete,

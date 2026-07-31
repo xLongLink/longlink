@@ -142,7 +142,6 @@ export const apiOperationSchema = z.object({
     platform_version: z.string(),
     created_at: z.string(),
     finished_at: z.string().nullable(),
-    available_at: z.string(),
 });
 
 export const apiOrganizationDatabaseUsageSchema = z.object({

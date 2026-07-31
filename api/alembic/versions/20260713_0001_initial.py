@@ -100,8 +100,8 @@ def upgrade() -> None:
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("gateway_url", sa.String(length=512), nullable=True),
         sa.Column("gateway_ca_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_tls_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_tls_private_key", sa.Text(), nullable=True),
+        sa.Column("gateway_identity_certificate", sa.Text(), nullable=True),
+        sa.Column("gateway_identity_private_key", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -315,6 +315,7 @@ def upgrade() -> None:
                 "application.delete",
                 "organization.create",
                 "organization.delete",
+                "organization.users.sync",
                 name="operation_kind_enum",
                 native_enum=False,
             ),
@@ -326,7 +327,6 @@ def upgrade() -> None:
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("available_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -334,6 +334,7 @@ def upgrade() -> None:
         "operations",
         ["kind", "target_id", "platform_version", "finished_at", "lease_expires_at", "created_at", "id"],
     )
+
 
 def downgrade() -> None:
     """Drop the initial platform schema."""

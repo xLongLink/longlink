@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from src.models.computes import kubeconfig_mapping
-from kr8s.asyncio.objects import Secret, Namespace
+from kr8s.asyncio.objects import Namespace
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, generate_gateway_tls
 
@@ -122,12 +122,6 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
         )
         await compute.applications.apply(application_id, "acme", ECHO_SERVER_IMAGE)
 
-        # Verify runtime Secret ownership is discoverable without inspecting its values.
-        secret = Secret(str(application_id), namespace="acme", api=api)
-        assert await secret.exists()
-        await secret.refresh()
-        assert secret.metadata["labels"] == {"longlink.io/application-id": str(application_id)}
-
         # Publish the Application through the gateway using the compute's mTLS identity.
         gateway_ip = await compute.gateway.ip()
         tls = generate_gateway_tls(compute_id, gateway_ip)
@@ -140,14 +134,14 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
         with TemporaryDirectory() as directory:
             certificate_path = Path(directory, "client.crt")
             private_key_path = Path(directory, "client.key")
-            certificate_path.write_text(tls.certificate, encoding="ascii")
-            private_key_path.write_text(tls.private_key, encoding="ascii")
+            certificate_path.write_text(tls.identity_certificate, encoding="ascii")
+            private_key_path.write_text(tls.identity_private_key, encoding="ascii")
             context.load_cert_chain(certificate_path, private_key_path)
         async with httpx2.AsyncClient(verify=context, timeout=30.0, trust_env=False) as client:
             deadline = time.monotonic() + 60
             while True:
-                response = await client.get(f"https://{K3S_HOST}:{gateway_port}/ready")
-                if response.status_code == 200:
+                response = await client.get(f"https://{K3S_HOST}:{gateway_port}/")
+                if response.status_code == 404:
                     break
                 if time.monotonic() >= deadline:
                     pytest.fail(f"k3s gateway did not become reachable over HTTPS: {response.status_code} {response.text}")

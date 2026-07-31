@@ -22,6 +22,7 @@ class OperationKind(StrEnum):
     application_delete = "application.delete"
     organization_create = "organization.create"
     organization_delete = "organization.delete"
+    organization_users_sync = "organization.users.sync"
 
 
 class OperationResponse(BaseModel):
@@ -43,4 +44,3 @@ class OperationResponse(BaseModel):
     # Timestamps
     created_at: datetime
     finished_at: datetime | None
-    available_at: datetime

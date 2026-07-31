@@ -32,14 +32,14 @@ describe('renderNode', () => {
             setups: {},
             invalidate: async () => {},
             values: {},
-            form: { value: 'Ada', placeholder: 'Enter name' },
+            form: { value: 'Ada' },
         };
         const node: ASTNode = {
             name: 'TextInput',
-            params: { label: 'Name', value: 'form.value', placeholder: 'form.placeholder' },
+            params: { label: 'Name', value: 'form.value' },
         };
         const output = renderXmlToMarkup([node], ctx);
+
         expect(output).toContain('value="Ada"');
-        expect(output).toContain('placeholder="Enter name"');
     });
 });

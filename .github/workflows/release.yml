@@ -33,24 +33,10 @@ jobs:
                   fetch-tags: true
 
             - name: Setup Python
-              uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-              with:
-                  python-version: '3.14.6'
-
-            - name: Setup uv
-              uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-              with:
-                  enable-cache: true
-                  version: '0.11.32'
+              uses: ./.github/actions/setup-python
 
             - name: Setup Vite+
-              uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
-              with:
-                  cache: true
-                  node-version-file: package.json
-                  run-install: |
-                      args: ['--frozen-lockfile']
-                  working-directory: web
+              uses: ./.github/actions/setup-vite
 
             - name: Build web assets for SDK
               working-directory: web

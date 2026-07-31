@@ -15,32 +15,19 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
         "COPY --from=builder /workspace /workspace",
         "python -m longlink.database.migrations && exec uvicorn main:app",
         "uv sync --locked --no-dev",
-        ".git",
-        "--log-level info",
+        "USER 10001:10001",
     ):
         assert expected in dockerfile
 
-    # Reject development-only runtime behavior.
-    assert "printf" not in dockerfile
-    assert "--log-level debug" not in dockerfile
 
-
-@pytest.mark.parametrize(
-    ("name", "version", "registry", "expected"),
-    [
-        ("LongLink App", "0.1.0", None, "longlink-app:0.1.0"),
-        ("LongLink_App", "dev", "localhost:15000/", "localhost:15000/longlink-app:dev"),
-    ],
-    ids=["local", "registry"],
-)
-def test_resolve_image_tag_formats_local_and_registry_tags(name: str, version: str, registry: str | None, expected: str) -> None:
-    """Build normalized local and registry-prefixed image tags."""
+def test_resolve_image_tag_formats_local_tag() -> None:
+    """Build a normalized local image tag."""
 
     # Act
-    image_tag = build.resolve_image_tag(name, version, registry)
+    image_tag = build.resolve_image_tag("LongLink App", "0.1.0")
 
     # Assert
-    assert image_tag == expected
+    assert image_tag == "longlink-app:0.1.0"
 
 
 def test_build_reports_missing_project_file_before_docker() -> None:

@@ -1,15 +1,15 @@
 from uuid import UUID
 from sqlalchemy import delete, select, update
+from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
-from collections.abc import Callable, Sequence, Awaitable
+from collections.abc import Sequence
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.services.errors import ConflictError, NotFoundError
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -197,30 +197,6 @@ async def set_status(application_id: UUID, expected_status: Status, status: Stat
             return False
         await session.commit()
         return True
-
-
-async def stage_environment(application_id: UUID, expected_status: Status, stage: Callable[[], Awaitable[None]]) -> Status | None:
-    """Stage initial cluster environment state while preventing concurrent Application deletion."""
-
-    # Lock the active Application across initial Secret creation so tombstoning cannot race it.
-    async with session_scope() as session:
-        application = (
-            await session.scalars(
-                select(Application)
-                .where(
-                    Application.id == application_id,
-                    Application.deleted_at.is_(None),
-                )
-                .with_for_update()
-            )
-        ).one_or_none()
-        if application is None:
-            return None
-
-        # Create Kubernetes state only while the locked Application remains in the expected lifecycle state.
-        if application.status == expected_status:
-            await stage()
-        return application.status
 
 
 async def mark_running(application_id: UUID) -> bool:

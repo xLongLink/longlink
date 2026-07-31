@@ -55,11 +55,10 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
         justification=justification,
     )
 
-    # Persist the request and refresh its generated fields.
+    # Persist the request before reloading its public response shape.
     async with get_session() as session:
         session.add(request)
         await session.commit()
-        await session.refresh(request)
 
     # Reload through the public reader so create and list responses share one shape.
     created_request = await get_request(int(request.id or 0))

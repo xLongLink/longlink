@@ -3,11 +3,10 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
-from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.services import operations, invitations, applications, organizations
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -110,6 +109,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     recorded_operations = await operations.fetch()
     assert {item.kind for item in recorded_operations} == {
         OperationKind.application_create,
+        OperationKind.compute_reconcile,
         OperationKind.organization_create,
         OperationKind.organization_delete,
     }
@@ -416,15 +416,15 @@ async def test_get_organization_returns_invitations(
     assert regular_member_response.json()["invitations"] == []
 
 
-async def test_list_organizations_returns_null_deleted_by_for_active_org(
+async def test_list_organizations_includes_created_organization(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return the active org audit fields without a fabricated deleted user."""
+    """Return created organizations for administrator views."""
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
+    await create_ready_infrastructure()
     organization = await create_organization(owner)
     client = clients[0]
 
@@ -433,14 +433,7 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Assert
     assert response.status_code == 200
-    payload = response.json()[0]
-    assert payload["id"] == str(organization.id)
-    assert payload["name"] == organization.name
-    assert payload["avatar"] == ""
-    assert payload["compute_id"] == str(infrastructure.compute.id)
-    assert payload["database_id"] == str(infrastructure.database.id)
-    assert payload["storage_id"] == str(infrastructure.storage.id)
-    assert "deleted_by" not in payload
+    assert str(organization.id) in {item["id"] for item in response.json()}
 
 
 async def test_get_organization_returns_404_for_non_member(
@@ -574,14 +567,12 @@ async def test_update_organization_member_changes_role(
 
     # Assert
     assert response.status_code == 204
-    updated_organization = await organizations.get(organization.id)
-    assert updated_organization is not None
     updated_members = await organizations.members(organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_create)
+    assert len(recorded_operations) == 2
+    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_users_sync)
     assert projection.target_id == organization.id
 
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import timedelta
-from sqlalchemy import or_, and_, case, select, update
+from sqlalchemy import case, select, update
 from src.logger import logger
 from collections.abc import Sequence
 from src.environments import env
@@ -27,13 +27,12 @@ async def create(
     *,
     kind: OperationKind = OperationKind.compute_reconcile,
     target_id: UUID | None = None,
-    delay_seconds: float = 0,
 ) -> Operation:
     """Create one registered Platform operation in a dedicated transaction."""
 
     # Commit independently for simple callers that do not compose a larger command.
     async with session_scope() as session:
-        operation = await enqueue(session, compute_id, kind=kind, target_id=target_id, delay_seconds=delay_seconds)
+        operation = await enqueue(session, compute_id, kind=kind, target_id=target_id)
         await session.commit()
         return operation
 
@@ -44,7 +43,6 @@ async def enqueue(
     *,
     kind: OperationKind = OperationKind.compute_reconcile,
     target_id: UUID | None = None,
-    delay_seconds: float = 0,
 ) -> Operation:
     """Add one Platform operation to an existing command transaction."""
 
@@ -73,7 +71,7 @@ async def enqueue(
     )
     platform_version = f"v{latest_version}"
 
-    # Reuse scheduled work and preserve active work as an immutable retry boundary.
+    # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(
         select(Operation)
         .where(
@@ -92,53 +90,24 @@ async def enqueue(
             kind=kind,
             target_id=target,
             platform_version=platform_version,
-            available_at=utcnow() + timedelta(seconds=max(0, delay_seconds)),
         )
         session.add(operation)
     return operation
 
 
-async def schedule_now(operation_id: UUID) -> bool:
-    """Make one open delayed Operation immediately eligible for claiming."""
-
-    # Preserve terminal and lease state while advancing only the availability timestamp.
-    async with session_scope() as session:
-        if (
-            await session.execute(
-                update(Operation)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.finished_at.is_(None),
-                )
-                .values(available_at=utcnow())
-            )
-        ).rowcount != 1:
-            return False
-
-        await session.commit()
-        return True
-
-
 async def claim() -> Operation | None:
-    """Claim the next eligible Operation."""
+    """Claim the next unfinished Operation."""
 
     # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
     while True:
         async with session_scope() as session:
             now = utcnow()
 
-            # Classify the active lease, expired lease, or next due Operation in one locked query.
+            # Classify the active lease, expired lease, or next Operation in one locked query.
             operation = await session.scalar(
                 select(Operation)
                 .where(
                     Operation.finished_at.is_(None),
-                    or_(
-                        Operation.lease_expires_at.is_not(None),
-                        and_(
-                            Operation.lease_expires_at.is_(None),
-                            Operation.available_at <= now,
-                        ),
-                    ),
                 )
                 .order_by(
                     case(
@@ -173,7 +142,6 @@ async def claim() -> Operation | None:
                         Operation.id == operation.id,
                         Operation.finished_at.is_(None),
                         Operation.lease_expires_at.is_(None),
-                        Operation.available_at <= now,
                     )
                     .values(lease_expires_at=now + timedelta(minutes=30))
                 )

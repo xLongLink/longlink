@@ -24,12 +24,10 @@ describe('evaluate', () => {
             setups: {},
             invalidate: async () => {},
             values: {},
-            count: 4,
             index: 0,
             name: 'Hero',
         };
 
-        expect(evaluate('Count: ${count}', ctx)).toBe('Count: 4');
         expect(evaluate('${index + 1}. ${name}', ctx)).toBe('1. Hero');
     });
 

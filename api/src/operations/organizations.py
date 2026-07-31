@@ -1,9 +1,7 @@
-from src.operations import computes
 from longlink.shared import users as shared_users
-from src.environments import env
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
-from src.database.services import compute, applications, organizations
+from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
@@ -48,12 +46,6 @@ async def reconcile(claimed: Operation) -> str | None:
         return None
     organization = infrastructure.organization
 
-    # A new execution makes a previously failed Organization visibly active again.
-    if organization.status == Status.failed:
-        if not await organizations.set_runtime(organization.id, Status.failed, Status.creating):
-            return None
-        organization.status = Status.creating
-
     # Resolve the Organization's immutable provider and compute assignments.
     database_registry = infrastructure.database
     storage_registry = infrastructure.storage
@@ -84,10 +76,33 @@ async def reconcile(claimed: Operation) -> str | None:
     cluster = Kubernetes(compute_registry.kubeconfig)
     await cluster.organizations.apply(organization.slug)
 
-    # Restore running after successful reconciliation of a failed Organization.
+    # Publish the Organization after its provider and Kubernetes boundaries are ready.
     if organization.status == Status.creating:
         if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
             return None
+    return None
+
+
+async def sync(claimed: Operation) -> str | None:
+    """Synchronize Platform-owned Organization users without reconciling infrastructure."""
+
+    # A pending creation must establish the shared schema before user rows can be projected.
+    infrastructure = await organizations.infrastructure(claimed.target_id)
+    if infrastructure is None or infrastructure.organization.deleted_at is not None:
+        return None
+    if infrastructure.organization.status != Status.running:
+        return await reconcile(claimed)
+
+    # Project memberships into the existing Organization database only.
+    database_registry = infrastructure.database
+    db = Postgres(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+        database_registry.sslmode,
+    )
+    await sync_users(infrastructure.organization, db)
     return None
 
 
@@ -106,8 +121,6 @@ async def delete(claimed: Operation) -> str | None:
     storage_registry = infrastructure.storage
     cluster = Kubernetes(compute_registry.kubeconfig)
 
-    # Remove every Organization route before terminating any child Application Service.
-    gateway_url = await computes.reconcile_gateway(compute_registry, cluster)
     db = Postgres(
         database_registry.host,
         database_registry.port,
@@ -127,20 +140,9 @@ async def delete(claimed: Operation) -> str | None:
     for application in application_rows:
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
-        await object_storage.delete_prefix(
-            organization.id.hex,
-            f"applications/{application.id.hex}/",
-        )
         await applications.purge(application.id)
 
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
-    if not await compute.record_success(
-        compute_registry.id,
-        env.VERSION,
-        gateway_url,
-        compute_registry.status,
-    ):
-        return "Organization gateway state was not recorded"
     await organizations.purge(organization.id)
     return None

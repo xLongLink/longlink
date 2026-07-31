@@ -4,67 +4,7 @@ from src.models.statuses import Status
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
-from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
-
-
-async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes, pending_route: GatewayRoute | None = None) -> str:
-    """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
-
-    # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
-    gateway_ip = await cluster.gateway.ip()
-
-    # Persisted gateway TLS must be either complete or absent for initial provisioning.
-    if (
-        registry.gateway_ca_certificate is None
-        and registry.gateway_tls_certificate is None
-        and registry.gateway_tls_private_key is None
-    ):
-        tls = generate_gateway_tls(registry.id, gateway_ip)
-        initialized = await compute.initialize_gateway_tls(
-            registry.id,
-            tls.ca_certificate,
-            tls.certificate,
-            tls.private_key,
-        )
-        if not initialized:
-            raise RuntimeError("Compute registry disappeared while initializing gateway TLS")
-    elif (
-        registry.gateway_ca_certificate is not None
-        and registry.gateway_tls_certificate is not None
-        and registry.gateway_tls_private_key is not None
-    ):
-        tls = GatewayTLSMaterial(
-            ca_certificate=registry.gateway_ca_certificate,
-            certificate=registry.gateway_tls_certificate,
-            private_key=registry.gateway_tls_private_key,
-        )
-    else:
-        raise RuntimeError("Compute registry has incomplete gateway TLS material")
-
-    # Reapply only gateway state until its route snapshot matches current Platform state.
-    while True:
-        route_rows = await applications.gateway_routes(registry.id)
-        routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
-        if pending_route is not None and all(route.id != pending_route.id for route in routes):
-            pending = await applications.get(pending_route.id, include_deleted=True)
-            if pending is not None and pending.deleted_at is None and pending.status == Status.creating:
-                routes = (*routes, pending_route)
-        await cluster.gateway.apply(routes, tls)
-
-        # A stable snapshot prevents a concurrent tombstone from leaving a stale published route.
-        current_rows = await applications.gateway_routes(registry.id)
-        current_routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in current_rows)
-        if pending_route is not None and all(route.id != pending_route.id for route in current_routes):
-            pending = await applications.get(pending_route.id, include_deleted=True)
-            if pending is not None and pending.deleted_at is None and pending.status == Status.creating:
-                current_routes = (*current_routes, pending_route)
-        if current_routes == routes:
-            break
-
-    # Format the typed gateway IP for URL authority syntax.
-    gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)
-    return f"https://{gateway_host}"
 
 
 async def reconcile(claimed: Operation) -> str | None:
@@ -78,18 +18,43 @@ async def reconcile(claimed: Operation) -> str | None:
     if registry.version is not None and Version(registry.version) > platform_version:
         return None
 
-    # A fresh reconciliation execution makes a previously failed target visibly active again.
-    if registry.status == Status.failed:
-        if not await compute.set_status(registry.id, Status.failed, Status.creating):
-            current = await compute.get(registry.id)
-            if current is None or (current.version is not None and Version(current.version) > platform_version):
-                return None
-            return "Compute lifecycle state changed before reconciliation"
-        registry.status = Status.creating
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Compute reconciliation is structurally unable to deploy or delete tenant resources.
-    gateway_url = await reconcile_gateway(registry, cluster)
+    # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
+    gateway_ip = await cluster.gateway.ip()
+
+    # Persisted gateway TLS must be either complete or absent for initial provisioning.
+    current_tls = registry.gateway_tls
+    if current_tls is None:
+        if any(
+            value is not None
+            for value in (
+                registry.gateway_ca_certificate,
+                registry.gateway_identity_certificate,
+                registry.gateway_identity_private_key,
+            )
+        ):
+            raise RuntimeError("Compute registry has incomplete gateway TLS material")
+        tls = generate_gateway_tls(registry.id, gateway_ip)
+        initialized = await compute.initialize_gateway_tls(
+            registry.id,
+            tls.ca_certificate,
+            tls.identity_certificate,
+            tls.identity_private_key,
+        )
+        if not initialized:
+            raise RuntimeError("Compute registry disappeared while initializing gateway TLS")
+    else:
+        tls = GatewayTLSMaterial(*current_tls)
+
+    # Apply one authoritative running-Application route snapshot per compute Operation.
+    route_rows = await applications.gateway_routes(registry.id)
+    routes = tuple(GatewayRoute(id=item[0], namespace=item[1]) for item in route_rows)
+    await cluster.gateway.apply(routes, tls)
+
+    # Format the typed gateway IP for URL authority syntax.
+    gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)
+    gateway_url = f"https://{gateway_host}"
 
     # Publish connection material only after the desired gateway Deployment is serving.
     if not await compute.record_success(

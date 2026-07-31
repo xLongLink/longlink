@@ -54,12 +54,6 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
             id="testing",
         ),
         pytest.param(
-            Envs(ENV="development"),
-            "sqlite+aiosqlite:///./dev.db",
-            {"pool_pre_ping": True, "pool_recycle": 20},
-            id="development",
-        ),
-        pytest.param(
             Envs(
                 ENV="production",
                 DATABASE_HOST="db",

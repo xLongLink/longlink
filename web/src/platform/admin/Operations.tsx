@@ -42,17 +42,8 @@ export default function AdminOperations() {
         {
             key: 'timestamp',
             header: t('columns.timestamp'),
-            width: pixel(288),
-            renderCell: (operation) => (
-                <VStack gap={1}>
-                    <Text>
-                        <Text type="supporting">{t('columns.created')}</Text> {formatDateTime(operation.created_at)}
-                    </Text>
-                    <Text>
-                        <Text type="supporting">{t('columns.available')}</Text> {formatDateTime(operation.available_at)}
-                    </Text>
-                </VStack>
-            ),
+            width: pixel(208),
+            renderCell: (operation) => formatDateTime(operation.created_at),
         },
         {
             key: 'finished_at',

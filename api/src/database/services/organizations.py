@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
+from src.errors import ConflictError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -10,10 +11,11 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.services.errors import ConflictError, ForbiddenError, UnavailableError
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -192,16 +194,16 @@ async def update_member_role(
     member_id: UUID,
     role: OrganizationRoles,
     user: User,
-    *,
-    can_manage_owner_role: bool = True,
+    caller_role: OrganizationRoles,
 ) -> bool:
-    """Change one active Organization membership."""
+    """Change one active Organization membership and schedule its user sync."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
         statement = (
-            select(UserOrganization)
+            select(UserOrganization, Organization.compute_id)
             .join(User, User.id == UserOrganization.user_id)
+            .join(Organization, Organization.id == UserOrganization.organization_id)
             .where(
                 UserOrganization.organization_id == organization_id,
                 UserOrganization.user_id == member_id,
@@ -211,12 +213,13 @@ async def update_member_role(
         )
 
         # Require an active organization membership.
-        membership = (await session.scalars(statement)).one_or_none()
-        if membership is None:
+        row = (await session.execute(statement)).one_or_none()
+        if row is None:
             return False
+        membership, compute_id = row
 
-        # Only owners may change another owner's role.
-        if membership.role == OrganizationRoles.owner and not can_manage_owner_role:
+        # Only owners may grant or change owner access.
+        if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
             raise ForbiddenError("Owner management permissions required")
 
         # Repeated role assignments do not require persistence or reconciliation.
@@ -243,6 +246,14 @@ async def update_member_role(
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
+
+        # Reconcile the changed membership with its assigned compute atomically.
+        await operations.enqueue(
+            session,
+            compute_id,
+            kind=OperationKind.organization_users_sync,
+            target_id=organization_id,
+        )
         await session.commit()
 
     return True

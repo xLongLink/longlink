@@ -473,9 +473,6 @@
     "columns.appRole": {
         "defaultMessage": "App role"
     },
-    "columns.available": {
-        "defaultMessage": "Available"
-    },
     "columns.created": {
         "defaultMessage": "Created"
     },

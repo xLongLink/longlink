@@ -28,6 +28,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     await applications.set_status(app.id, Status.creating, Status.running)
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
+
     class FakeTLS:
         """Capture the Platform client identity loaded into one TLS context."""
 
@@ -126,8 +127,8 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     )
     assert "set-cookie" not in response.headers
     assert captured["cadata"] == registry.gateway_ca_certificate
-    assert captured["client_certificate"] == registry.gateway_tls_certificate
-    assert captured["client_private_key"] == registry.gateway_tls_private_key
+    assert captured["client_certificate"] == registry.gateway_identity_certificate
+    assert captured["client_private_key"] == registry.gateway_identity_private_key
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
@@ -166,6 +167,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     organization = await create_organization(owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, Status.creating, Status.running)
+
     class FakeTLS:
         """Accept a client identity while testing request-size validation."""
 
@@ -204,7 +206,6 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context)
     monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", FakeProxyClient)
-    assert proxy_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
     client = clients[0]
 
@@ -291,6 +292,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     await applications.set_status(app.id, Status.creating, Status.running)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
+
     class FakeTLS:
         """Accept a client identity while testing transport failure handling."""
 

@@ -324,6 +324,7 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     assert {item.kind for item in recorded_operations} == {
         OperationKind.application_create,
         OperationKind.application_delete,
+        OperationKind.compute_reconcile,
         OperationKind.organization_create,
     }
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

@@ -12,8 +12,8 @@ from cryptography import x509
 from importlib.resources import files
 from src.models.gateways import APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from src.kubernetes.utils import apply_resource, deployment_is_ready
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
-from src.kubernetes.client import apply_resource, deployment_is_ready
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -21,9 +21,6 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
-
-KubernetesDocument = dict[str, object]
-EnvoyDocument = dict[str, object]
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,23 +33,23 @@ class GatewayRoute:
 
 @dataclass(frozen=True, slots=True)
 class GatewayTLSMaterial:
-    """Carry the immutable per-compute CA certificate, certificate, and private key."""
+    """Carry the active per-compute gateway TLS files shared by Envoy and the Platform client."""
 
     ca_certificate: str
-    certificate: str
-    private_key: str
+    identity_certificate: str
+    identity_private_key: str
 
 
 def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
     """Render deterministic authenticated Envoy routes from the authoritative route snapshot."""
 
     # Every Application gets one authenticated route and one DNS-backed cluster.
-    routes: list[EnvoyDocument] = []
-    clusters: list[EnvoyDocument] = []
+    routes: list[dict[str, object]] = []
+    clusters: list[dict[str, object]] = []
     for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
         application_id = str(route.id)
         cluster_name = f"{route.namespace}-{application_id}"
-        application_id_match: EnvoyDocument = {
+        application_id_match: dict[str, object] = {
             "name": APPLICATION_ID_HEADER,
             "string_match": {"exact": application_id},
         }
@@ -95,19 +92,10 @@ def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
             }
         )
 
-    # Health checks bypass authentication before the desired Application routes.
+    # Render only authenticated Application routes on the public gateway listener.
     config = templates.readyml_list(
         PLATFORM_TEMPLATES.joinpath("envoy.yml"),
-        routes=json.dumps(
-            [
-                {
-                    "match": {"path": "/ready"},
-                    "direct_response": {"status": 200},
-                },
-                *routes,
-            ],
-            separators=(",", ":"),
-        ),
+        routes=json.dumps(routes, separators=(",", ":")),
         clusters=json.dumps(clusters, separators=(",", ":")),
     )[0]
     return yaml.safe_dump(config, sort_keys=False)
@@ -149,7 +137,6 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
         )
         .sign(ca_key, hashes.SHA256())
     )
-
     # MVP KaaS providers expose an IP address, which HTTPS clients require as an IP SAN.
     server_certificate = (
         x509.CertificateBuilder()
@@ -182,8 +169,8 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
     return GatewayTLSMaterial(
         ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        private_key=server_key.private_bytes(
+        identity_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        identity_private_key=server_key.private_bytes(
             serialization.Encoding.PEM,
             serialization.PrivateFormat.PKCS8,
             serialization.NoEncryption(),
@@ -191,26 +178,14 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
 
 
-def render_gateway_manifests(tls: GatewayTLSMaterial, envoy_config: str) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
+def render_gateway_manifests(envoy_config: str) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
     """Render gateway runtime resources under one Pod revision."""
 
-    # Roll Pods only when mounted runtime content changes.
-    runtime_revision = hashlib.sha256(
-        json.dumps(
-            {
-                "ca_certificate": tls.ca_certificate,
-                "certificate": tls.certificate,
-                "envoy_config": envoy_config,
-                "private_key": tls.private_key,
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode()
-    ).hexdigest()
+    # Envoy watches mounted TLS files, so only route configuration requires a Pod rollout.
     manifests = templates.readyml_list(
         PLATFORM_TEMPLATES.joinpath("gateway.yml"),
         envoy_config=json.dumps(envoy_config),
-        runtime_revision=runtime_revision,
+        config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
     )
     return manifests[0], manifests[1], manifests[2]
 
@@ -242,8 +217,7 @@ class Gateway:
             await service.refresh()
 
             # Parse the provider-owned Service status while endpoint allocation is pending.
-            body = service.raw
-            status = body.get("status", {}) if isinstance(body, dict) else {}
+            status = service.raw.get("status", {}) if isinstance(service.raw, dict) else {}
             load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
             ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
             if not isinstance(ingress, list):
@@ -262,25 +236,23 @@ class Gateway:
         """Apply the desired gateway runtime and wait for its Deployment rollout."""
 
         # Render the complete runtime before changing any gateway dependency.
-        config_map, deployment_manifest, network_policy = render_gateway_manifests(tls, render_envoy_config(routes))
+        config_map, deployment_manifest, network_policy = render_gateway_manifests(render_envoy_config(routes))
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
         api = await self._client.api()
-        tls_secret = Secret(
-            {
-                "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-                "stringData": {"ca.crt": tls.ca_certificate, "tls.crt": tls.certificate, "tls.key": tls.private_key},
-                "type": "kubernetes.io/tls",
+        tls_secret: dict[str, object] = {
+            "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+            "stringData": {
+                "ca.crt": tls.ca_certificate,
+                "tls.crt": tls.identity_certificate,
+                "tls.key": tls.identity_private_key,
             },
-            api=api,
-        )
-        await apply_resource(tls_secret, tls_secret.raw)
-        config = ConfigMap(config_map, api=api)
-        await apply_resource(config, config_map)
-        policy = NetworkPolicy(network_policy, api=api)
-        await apply_resource(policy, network_policy)
-        deployment = Deployment(deployment_manifest, api=api)
-        await apply_resource(deployment, deployment_manifest)
+            "type": "kubernetes.io/tls",
+        }
+        await apply_resource(Secret(tls_secret, api=api), tls_secret)
+        await apply_resource(ConfigMap(config_map, api=api), config_map)
+        await apply_resource(NetworkPolicy(network_policy, api=api), network_policy)
+        await apply_resource(Deployment(deployment_manifest, api=api), deployment_manifest)
 
         # Poll rollout status without repeatedly applying the same Deployment revision.
         while True:

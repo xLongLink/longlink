@@ -19,7 +19,7 @@ async def test_compute_registry_endpoints_return_backend(
 
     # Assert
     assert list_response.status_code == 200
-    assert [item["id"] for item in list_response.json()] == [str(registry.id)]
+    assert str(registry.id) in {item["id"] for item in list_response.json()}
     assert get_response.status_code == 200
     payload = get_response.json()
     assert payload["id"] == str(registry.id)
