@@ -43,11 +43,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
-        newer_row = await session.get(Operation, newer_operation.id)
         assert older_row is not None
-        assert newer_row is not None
         older_row.created_at = utcnow() - timedelta(days=1)
-        newer_row.created_at = utcnow()
         await session.commit()
 
     # Fetch operations through the service boundary.
@@ -216,11 +213,8 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
-        newer_row = await session.get(Operation, newer_operation.id)
         assert older_row is not None
-        assert newer_row is not None
         older_row.created_at = utcnow() - timedelta(days=1)
-        newer_row.created_at = utcnow()
         await session.commit()
 
     # Claim the next globally available operation.

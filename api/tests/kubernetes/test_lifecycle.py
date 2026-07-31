@@ -15,7 +15,7 @@ from src.kubernetes.gateway import GatewayRoute, generate_gateway_tls
 
 pytestmark = [pytest.mark.no_db, pytest.mark.integration]
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
-ECHO_SERVER_IMAGE = "ealen/echo-server:0.9.2"
+ECHO_SERVER_IMAGE = "mendhak/http-https-echo@sha256:59e97f8417530cd88c2a4bb7b488153276e88df8a317a86641c575138ad81829"
 K3S_HOST = "127.0.0.1"
 K3S_PORT = 6443
 K3S_GATEWAY_PORT = 443
@@ -101,7 +101,7 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
     try:
         # Apply the tenant boundary and complete Application configuration.
         await compute.organizations.apply(namespace)
-        await compute.applications.stage_envs(application_id, namespace, {})
+        await compute.applications.stage_envs(application_id, namespace, {"HTTP_PORT": "8000"})
         await compute.applications.stage_runtime_envs(
             application_id,
             namespace,
@@ -122,7 +122,10 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
                 "LONGLINK_STORAGE_USERNAME": "storage-user",
             },
         )
-        await compute.applications.apply(application_id, namespace, ECHO_SERVER_IMAGE)
+        try:
+            await asyncio.wait_for(compute.applications.apply(application_id, namespace, ECHO_SERVER_IMAGE), timeout=120)
+        except TimeoutError:
+            pytest.fail("k3s Application Deployment did not become ready within 120 seconds")
 
         # Publish the Application through the gateway using the compute's mTLS identity.
         gateway_ip = await compute.gateway.ip()

@@ -167,9 +167,8 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
                 password=password,
                 dbname=database,
                 connect_timeout=1,
-            ) as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT 1")
+            ) as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
             return
         except psycopg.OperationalError:
             time.sleep(0.5)
