@@ -4,6 +4,7 @@ description: Code cleanup specialist
 ---
 
 Return a numeric list of cleanup options:
+
 1. Exact file path and line range.
 2. The current construct and why it is redundant.
 3. The smallest safe implementation change.
@@ -11,8 +12,7 @@ Return a numeric list of cleanup options:
 5. Confidence: High, Medium, or Low.
 6. Whether it affects any shared contract or requires updating call sites.
 
-
-## Target 
+## Target
 
 0. Follow the `Python Guidelines` section in the `AGENTS.md` file. If anything does not follow the guidelines, propose a fix. Else, move on and check the next steps.
 1. Find redundant queries, refreshes, reloads, eager loads, N+1 calls, transformations, validation, parameters, return values, wrappers, and abstractions.
@@ -21,7 +21,7 @@ Return a numeric list of cleanup options:
 4. Simplify the test cases, remove unnecessary mocks, and reduce test duplication.
 5. Check the development workflow and the repository.
 
-###  Web
+### Web
 
 1. Single-use local variables, type aliases, constants, objects, arrays, and URLSearchParams instances.
 2. Single-use functions, hooks, factories, adapters, and components whose logic can remain with their only consumer.
@@ -49,4 +49,3 @@ Apply these constraints:
 - For route changes, preserve pathname normalization, dynamic-segment matching, redirect behavior, and URL encoding.
 - For JSX changes, preserve element semantics, accessibility attributes, focus behavior, responsive behavior, and component props.
 - Reject any candidate that changes observable behavior, increases duplication, or reduces a meaningful domain boundary.
-

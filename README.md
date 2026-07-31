@@ -56,7 +56,7 @@ longlink dev
 ## Principles
 
 - Usage must be intuitive. Anything unclear is a bug.
-- Build on standards. Anything that drift is a bug.  
+- Build on standards. Anything that drift is a bug.
 
 <br />
 

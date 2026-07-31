@@ -1,8 +1,7 @@
 # LongLink Agent Guide
 
 - When listing improvement suggestions, use numbered lists.
-- Project is in *MVP mode - No need for backwards compatibility*
-
+- Project is in _MVP mode - No need for backwards compatibility_
 
 ## Product Language
 
@@ -152,7 +151,6 @@ docs <topic> color, elevation, icons, illustrations, internationalization, layou
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
 <!-- ASTRYX:END -->
-
 
 ## Commit Message Structure
 
