@@ -7,7 +7,6 @@
     <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
     <xsd:attribute name="layout" type="TabLayoutType" use="optional" default="hug" />
-    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
     <xsd:attribute name="hasDivider" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>

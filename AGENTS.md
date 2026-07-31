@@ -3,14 +3,6 @@
 - When listing improvement suggestions, use numbered lists.
 - Project is in *MVP mode - No need for backwards compatibility*
 
-At the end of each task, list 5 cleanup, refactoring or simplification that would result in removal of code , provide:
-
-1. Exact file path and line range.
-2. The current construct and why it is redundant.
-3. The smallest safe implementation change.
-4. Behavior/invariant checks required before applying it.
-5. Confidence: High, Medium, or Low.
-6. Whether it affects any shared contract or requires updating call sites.
 
 ## Product Language
 

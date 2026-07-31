@@ -34,7 +34,6 @@ export function TabList({ props, nodes }: Props) {
     const value = binding.bound ? String(binding.currentValue ?? tabs[0].value) : localValue;
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TabList');
     const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'hug', 'TabList');
-    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'TabList');
     const label = resolveXmlString(props, 'label', ctx, 'Tabs');
     const activeTab = tabs.find((tab) => tab.value === value);
 
@@ -51,7 +50,6 @@ export function TabList({ props, nodes }: Props) {
                 hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx, false)}
                 layout={layout}
                 onChange={setValue}
-                orientation={orientation}
                 size={size}
                 value={value}
             >
