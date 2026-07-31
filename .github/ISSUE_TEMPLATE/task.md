@@ -2,7 +2,7 @@
 name: Task
 about: Track technical or operational work
 title: '[Task]: '
-labels: [task]
+labels: []
 assignees: []
 ---
 
