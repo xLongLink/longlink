@@ -78,13 +78,6 @@ To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 KUBECONFIG=../kubeconfig.yml
 ```
 
-Remote compute targets require an `APPLICATION_IMAGE` that they can pull. `make seed` never creates local infrastructure
-or builds Application images; use `make local` before seeding a local cluster. The local registry image is only available
-to the cluster created by `make local`.
-
-The local seed defaults to `localhost:15000/longlink-app:dev`. Set `APPLICATION_IMAGE` to the published sample image,
-`ghcr.io/xlonglink/longlink-app:v0.0.2`, or another pullable Application image before remote seeding.
-
 If `api/dev.db` came from an earlier checkout, run `make down` once before seeding the Exoscale-backed environment.
 
 Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations

@@ -2,14 +2,13 @@ import asyncio
 import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
-from src.utils import names, images
 from sqlalchemy.exc import ArgumentError
-from src.models.types import Image, DatabaseSSLMode
+from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
 from src.models.statuses import Status
-from src.database.services import users, compute, storage, database, operations, applications, organizations
+from src.database.services import users, compute, storage, database, operations, organizations
 from src.models.operations import OperationKind
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
@@ -17,11 +16,9 @@ from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 class SeedSettings(BaseSettings):
     """Define development infrastructure registrations."""
 
-    # Seeded Organization and Application
+    # Seeded Organization
     LOCAL_ORG: str = Field(default="test", min_length=1)
-    LOCAL_APP_NAME: str = Field(default="sample", min_length=1)
     LOCAL_ORG_AVATAR: str = Field(default="https://example.com/organizations/test.png", min_length=1)
-    APPLICATION_IMAGE: str = Field(default="localhost:15000/longlink-app:dev", min_length=1)
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
@@ -169,10 +166,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     ):
         raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
 
-    # Resolve the seeded Application image and Platform administrator before creating desired state.
-    metadata = await images.metadata(Image(settings.APPLICATION_IMAGE))
-    if metadata is None or metadata.digest is None:
-        raise ValueError("Local Application image metadata not found")
+    # Resolve the Platform administrator before creating desired state.
     administrator, _ = await users.ensure_administrator()
 
     # Create the Organization before scheduling its lifecycle after compute reconciliation.
@@ -190,37 +184,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
         compute_registry.id,
         kind=OperationKind.organization_create,
         target_id=organization.id,
-    )
-
-    # Create the seeded image state before scheduling deployment after Organization reconciliation.
-    application_slug = names.slugify(settings.LOCAL_APP_NAME)
-    application = next((item for item in await organizations.applications(organization.id) if item.slug == application_slug), None)
-    if application is None:
-        application = await applications.create(
-            organization.id,
-            settings.LOCAL_APP_NAME,
-            application_slug,
-            metadata.image,
-            administrator,
-            sdk=metadata.sdk,
-            version=metadata.version,
-            description="Local SDK development application",
-            require_ready=False,
-        )
-    elif application.image != metadata.image or application.sdk != metadata.sdk or application.version != metadata.version:
-        application = await applications.replace_image(
-            application.id,
-            metadata.image,
-            administrator,
-            sdk=metadata.sdk,
-            version=metadata.version,
-        )
-        if application is None:
-            raise RuntimeError("Seeded Application disappeared during image replacement")
-    await operations.create(
-        compute_registry.id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
     )
 
 

@@ -54,7 +54,7 @@ export default function AdminDatabase() {
         {
             key: 'database',
             header: t('columns.database'),
-            width: proportional(1),
+            width: proportional(2),
             renderCell: (database) => (
                 <HStack gap={3} align="center">
                     <PostgreSQL height={24} width={24} />
@@ -64,18 +64,6 @@ export default function AdminDatabase() {
                     </VStack>
                 </HStack>
             ),
-        },
-        {
-            key: 'username',
-            header: t('labels.username'),
-            width: proportional(1),
-            renderCell: (database) => database.username,
-        },
-        {
-            key: 'sslmode',
-            header: t('labels.sslMode'),
-            width: pixel(128),
-            renderCell: (database) => database.sslmode,
         },
         {
             key: 'actions',

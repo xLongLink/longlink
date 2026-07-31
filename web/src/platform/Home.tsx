@@ -7,7 +7,7 @@ import { Section } from '@astryxdesign/core/Section';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { ArrowRight } from 'lucide-react';
-import { type PointerEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
 import { Wordmark } from '@/components/Wordmark';
@@ -143,9 +143,7 @@ function IntegrationScale() {
 
 /** Renders the public home page. */
 export default function Home() {
-    const [paintingHasEntered, setPaintingHasEntered] = useState(false);
     const comparisonRef = useRef<HTMLElement>(null);
-    const paintingRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const target = comparisonRef.current;
@@ -181,32 +179,6 @@ export default function Home() {
             window.removeEventListener('scroll', queuePositionUpdate);
         };
     }, []);
-
-    useEffect(() => {
-        const target = paintingRef.current;
-        if (!target) return;
-
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (!entry?.isIntersecting) return;
-
-                setPaintingHasEntered(true);
-                observer.disconnect();
-            },
-            { threshold: 0.35 }
-        );
-
-        observer.observe(target);
-
-        return () => observer.disconnect();
-    }, []);
-
-    function handlePaintingPointerMove(event: PointerEvent<HTMLDivElement>) {
-        const bounds = event.currentTarget.getBoundingClientRect();
-        const horizontalPosition = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
-
-        event.currentTarget.style.setProperty('--painting-swing', `${horizontalPosition * 2.8}deg`);
-    }
 
     return (
         <PublicPage
@@ -401,38 +373,25 @@ export default function Home() {
                             aria-hidden="true"
                             className="homepage-hands-nail absolute top-0 left-1/2 z-4 -translate-x-1/2 rounded-full"
                         />
-                        <div
-                            ref={paintingRef}
-                            className={`homepage-hands-scroll-swing relative ${
-                                paintingHasEntered ? 'homepage-hands-scroll-swing-active' : ''
-                            }`}
-                        >
+                        <div className="homepage-hands relative">
                             <div
-                                className="homepage-hands-swing relative"
-                                onPointerLeave={(event) =>
-                                    event.currentTarget.style.setProperty('--painting-swing', '0deg')
-                                }
-                                onPointerMove={handlePaintingPointerMove}
-                            >
-                                <div
-                                    aria-hidden="true"
-                                    className="homepage-hands-support homepage-hands-support-left absolute left-1/2 z-1 origin-left"
-                                />
-                                <div
-                                    aria-hidden="true"
-                                    className="homepage-hands-support homepage-hands-support-right absolute left-1/2 z-1 origin-left"
-                                />
+                                aria-hidden="true"
+                                className="homepage-hands-support homepage-hands-support-left absolute left-1/2 z-1 origin-left"
+                            />
+                            <div
+                                aria-hidden="true"
+                                className="homepage-hands-support homepage-hands-support-right absolute left-1/2 z-1 origin-left"
+                            />
 
-                                <div className="homepage-hands-frame relative z-2 p-0">
-                                    <div className="homepage-hands-mat relative overflow-hidden border-0 bg-body">
-                                        <img
-                                            alt="Human and robot hands reaching toward each other"
-                                            className="block h-auto w-full object-contain"
-                                            decoding="async"
-                                            loading="lazy"
-                                            src="/human_robot_hands_vector.svg"
-                                        />
-                                    </div>
+                            <div className="homepage-hands-frame relative z-2 p-0">
+                                <div className="homepage-hands-mat relative overflow-hidden border-0 bg-body">
+                                    <img
+                                        alt="Human and robot hands reaching toward each other"
+                                        className="block h-auto w-full object-contain"
+                                        decoding="async"
+                                        loading="lazy"
+                                        src="/human_robot_hands_vector.svg"
+                                    />
                                 </div>
                             </div>
                         </div>
