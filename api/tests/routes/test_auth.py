@@ -5,7 +5,7 @@ from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from urllib.parse import parse_qs, urlparse
 from src.database.session import get_session
-from src.database.models.users import User, AccessToken
+from src.database.models.users import User
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
@@ -132,7 +132,7 @@ async def test_forgot_and_reset_password(
     """Reset a local password with the emailed one-time recovery token."""
 
     user, _, _ = users
-    client.cookies.update(authenticated_cookies(user.id))
+    client.cookies.update(authenticated_cookies(user))
 
     # Missing and existing accounts receive the same response, while only the account gets mail.
     missing_response = await client.post("/api/auth/forgot-password", json={"email": "missing@example.com"})
@@ -157,15 +157,10 @@ async def test_forgot_and_reset_password(
         json={"password": "replacement-password"},
     )
     revoked_session = await client.get("/api/me")
-    Session = await get_session()
-    async with Session() as session:
-        existing_tokens = (await session.execute(select(AccessToken).where(AccessToken.user_id == user.id))).scalars().all()
-
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
     assert reset_response.status_code == 204
     assert revoked_session.status_code == 401
-    assert existing_tokens == []
 
     # Prove only the new password can create a fresh session.
     old_login = await client.post(

@@ -49,14 +49,3 @@ class User(SQLModel, table=True):
             "foreign_keys": "UserOrganization.user_id",
         },
     )
-class AccessToken(SQLModel, table=True):
-    """Store one revocable browser access-token digest."""
-
-    __tablename__: ClassVar[str] = "access_tokens"
-
-    # Token identity
-    token: str = Field(primary_key=True, max_length=64)
-    user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True, ondelete="CASCADE")
-
-    # Audit
-    created_at: datetime = Field(default_factory=utcnow, nullable=False, index=True, sa_type=UTCDateTime)

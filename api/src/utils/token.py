@@ -1,33 +1,26 @@
 import jwt
 import hmac
 import hashlib
-import secrets
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from src.environments import env
 from longlink.utils.time import utcnow
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User, AccessToken
+from src.database.models.users import User
 
 JWT_ALGORITHM = "HS256"
+AUTH_TOKEN_AUDIENCE = "longlink:auth"
 REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
 PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 
 
-def access_token_digest(token: str) -> str:
-    """Return the stored digest for one browser access token."""
-
-    # Keep the database value deterministic while avoiding raw bearer-token storage.
-    return hmac.new(env.SESSION_KEY.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
-
-
 def password_fingerprint(hashed_password: str) -> str:
-    """Return the reset-token fingerprint for one current password hash."""
+    """Return the signed-token fingerprint for one current password hash."""
 
-    # Bind reset proof to the current credential without exposing its reusable hash.
+    # Bind signed proof to the current credential without exposing its reusable hash.
     message = f"password-reset:{hashed_password}".encode()
     return hmac.new(env.SESSION_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
 
@@ -97,26 +90,34 @@ async def password_reset_user(session: AsyncSession, token: str) -> User:
     return user
 
 
-def create_access_token(session: AsyncSession, user: User) -> str:
-    """Stage one revocable browser session and return its opaque credential."""
+def create_auth_token(user: User) -> str:
+    """Create one signed browser session bound to the current password credential."""
 
-    # Keep the raw token client-side and persist only the keyed lookup digest.
-    token = secrets.token_urlsafe()
-    session.add(AccessToken(token=access_token_digest(token), user_id=user.id))
-    return token
+    # Bind browser authentication to the current password so password changes invalidate existing cookies.
+    issued_at = utcnow()
+    return jwt.encode(
+        {
+            "sub": str(user.id),
+            "password_fingerprint": password_fingerprint(user.hashed_password),
+            "aud": AUTH_TOKEN_AUDIENCE,
+            "iat": issued_at,
+            "exp": issued_at + timedelta(seconds=env.AUTH_SESSION_LIFETIME_SECONDS),
+        },
+        env.SESSION_KEY,
+        algorithm=JWT_ALGORITHM,
+    )
 
 
-async def revoke_access_token(session: AsyncSession, token: str) -> None:
-    """Revoke one browser session by its opaque credential."""
+def auth_token_claims(token: str) -> tuple[UUID, str]:
+    """Return the user and password fingerprint carried by one valid browser session."""
 
-    # Delete only the digest matching this browser's active credential.
-    statement = delete(AccessToken).where(col(AccessToken.token) == access_token_digest(token))
-    await session.execute(statement)
-
-
-async def revoke_user_access_tokens(session: AsyncSession, user_id: UUID) -> None:
-    """Revoke every browser session issued to one user."""
-
-    # Password replacement invalidates every previously authenticated browser.
-    statement = delete(AccessToken).where(col(AccessToken.user_id) == user_id)
-    await session.execute(statement)
+    # Validate the signature, lifetime, and token purpose before accepting its identity claims.
+    data = jwt.decode(token, env.SESSION_KEY, audience=AUTH_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
+    raw_user_id = data.get("sub")
+    fingerprint = data.get("password_fingerprint")
+    if not isinstance(raw_user_id, str) or not isinstance(fingerprint, str):
+        raise jwt.InvalidTokenError("Invalid browser session claims")
+    try:
+        return UUID(raw_user_id), fingerprint
+    except ValueError as exc:
+        raise jwt.InvalidTokenError("Invalid browser session user") from exc

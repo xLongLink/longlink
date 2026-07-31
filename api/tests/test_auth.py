@@ -1,17 +1,16 @@
 import pytest
 from src.utils import token
+from src.database.models.users import User
 
 pytestmark = pytest.mark.no_db
 
 
-def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
-    """Hash browser tokens before persistence."""
+def test_auth_token_carries_the_current_user_and_password_fingerprint() -> None:
+    """Sign browser authentication without persisting a server-side session."""
 
-    # Hashing must be stable for lookups without persisting the raw credential.
-    first = token.access_token_digest("browser-token")
-    repeated = token.access_token_digest("browser-token")
-    other = token.access_token_digest("other-token")
+    # Create and validate a signed cookie payload for one local account.
+    user = User(email="user@example.com", hashed_password="hashed-password")
+    user_id, fingerprint = token.auth_token_claims(token.create_auth_token(user))
 
-    assert first == repeated
-    assert first != other
-    assert first != "browser-token"
+    assert user_id == user.id
+    assert fingerprint == token.password_fingerprint(user.hashed_password)
