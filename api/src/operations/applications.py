@@ -44,7 +44,6 @@ async def create(claimed: Operation) -> str | None:
         # Generate fresh credentials for this explicit creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
-        await object_storage.create_prefix(bucket, prefix)
         database_password = secrets.token_urlsafe(24)
         credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
 

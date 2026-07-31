@@ -47,8 +47,7 @@ async def ensure_administrator() -> None:
 
         # Reconcile an existing account, including one created concurrently by another replica.
         if not created:
-            verified = hasher.verify(env.ADMIN_PASSWORD, user.hashed_password)
-            if not verified:
+            if not hasher.verify(env.ADMIN_PASSWORD, user.hashed_password):
                 user.hashed_password = hasher.hash(env.ADMIN_PASSWORD)
             user.name = env.ADMIN_NAME
             user.role = PlatformRoles.administrator

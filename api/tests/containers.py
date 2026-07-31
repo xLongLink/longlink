@@ -20,12 +20,9 @@ def require_docker_daemon() -> None:
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
         try:
             client.ping()
+        except SSLError:
+            raise
         except (ConnectionError, Timeout) as exc:
-
-            # TLS failures indicate invalid client configuration rather than an unavailable daemon.
-            if isinstance(exc, SSLError):
-                raise
-
             pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
         client.close()

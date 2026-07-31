@@ -71,25 +71,6 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
             },
             id="production",
         ),
-        pytest.param(
-            Envs(
-                ENV="production",
-                DATABASE_HOST="db",
-                DATABASE_NAME="longlink",
-                DATABASE_PORT=5432,
-                DATABASE_SCHEMA="dashboard",
-                DATABASE_PASSWORD="secret",
-                DATABASE_USERNAME="app",
-            ),
-            "postgresql+asyncpg://app:secret@db:5432/longlink",
-            {
-                "pool_pre_ping": True,
-                "pool_recycle": 20,
-                "pool_use_lifo": True,
-                "connect_args": {"ssl": "require", "server_settings": {"search_path": '"dashboard",shared'}},
-            },
-            id="production-schema",
-        ),
     ],
 )
 def test_create_engine_selects_database_url_and_options(

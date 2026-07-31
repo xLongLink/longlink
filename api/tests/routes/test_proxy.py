@@ -253,7 +253,6 @@ async def test_application_proxy_allows_organization_read_members(
     # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     Session = await get_session()
@@ -352,7 +351,6 @@ async def test_application_proxy_enforces_method_role(
 
     # Restrict the caller to Organization read access.
     user = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.mark_running(app.id)
@@ -382,7 +380,6 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 
     # Prepare an Application whose reconciliation is still pending.
     owner = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
     app = await create_application(organization, owner)
     client = clients[0]

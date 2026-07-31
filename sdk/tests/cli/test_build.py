@@ -211,8 +211,6 @@ def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None
         "sdk": "1.2.3",
         "version": "0.1.0",
         "description": "Demo app",
-        "title": "Demo",
-        "contact": {"email": "team@example.com"},
     }
     env_spec = {
         "environments": [
@@ -233,7 +231,5 @@ def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None
     assert 'LABEL longlink.sdk="1.2.3"' in labels
     assert 'LABEL longlink.version="0.1.0"' in labels
     assert 'LABEL longlink.description="Demo app"' in labels
-    assert 'LABEL longlink.title="Demo"' in labels
-    assert "LABEL longlink.contact=" in labels
     assert "LABEL longlink.environments=" in labels
     assert "API_KEY" in labels

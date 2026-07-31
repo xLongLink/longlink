@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running
 from src.errors import ConflictError
 from src.models.statuses import Status
 from src.database.session import get_session
@@ -14,7 +14,6 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    await create_ready_infrastructure(name=f"{prefix} compute")
     organization = await create_organization(
         user,
         name=f"{prefix}-org",
@@ -46,7 +45,6 @@ async def test_create_requires_running_organization() -> None:
 
     # Arrange
     user = await create_user("app")
-    await create_ready_infrastructure()
     organization = await create_organization(user)
 
     # Act

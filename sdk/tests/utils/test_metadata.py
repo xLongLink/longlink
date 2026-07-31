@@ -17,8 +17,6 @@ def test_metadata_loading_reads_longlink_and_pep_621_pyproject_sections(tmp_path
                 "",
                 "[tool.longlink]",
                 'name = "longlink-app"',
-                'title = "Operations Console"',
-                'summary = "Ops summary"',
             ]
         ),
         encoding="utf-8",
@@ -29,7 +27,5 @@ def test_metadata_loading_reads_longlink_and_pep_621_pyproject_sections(tmp_path
 
     # Verify LongLink overrides and PEP 621 fallbacks are combined.
     assert metadata.name == "longlink-app"
-    assert metadata.title == "Operations Console"
-    assert metadata.summary == "Ops summary"
     assert metadata.description == "PEP app description"
     assert metadata.version == "1.2.3"

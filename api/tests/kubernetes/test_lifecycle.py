@@ -101,7 +101,7 @@ async def test_kubernetes_deploys_application_through_mtls_gateway(kubernetes_co
     try:
         # Apply the tenant boundary and complete Application configuration.
         await compute.organizations.apply(namespace)
-        await compute.applications.stage_envs(application_id, namespace, {"PORT": "8000"})
+        await compute.applications.stage_envs(application_id, namespace, {})
         await compute.applications.stage_runtime_envs(
             application_id,
             namespace,
