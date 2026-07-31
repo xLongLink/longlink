@@ -178,18 +178,6 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
 
 
-def render_gateway_manifests(envoy_config: str) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
-    """Render gateway runtime resources under one Pod revision."""
-
-    # Envoy watches mounted TLS files, so only route configuration requires a Pod rollout.
-    manifests = templates.readyml_list(
-        PLATFORM_TEMPLATES.joinpath("gateway.yml"),
-        envoy_config=json.dumps(envoy_config),
-        config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
-    )
-    return manifests[0], manifests[1], manifests[2]
-
-
 class Gateway:
     """Manage the compute gateway endpoint and runtime resources."""
 
@@ -236,7 +224,12 @@ class Gateway:
         """Apply the desired gateway runtime and wait for its Deployment rollout."""
 
         # Render the complete runtime before changing any gateway dependency.
-        config_map, deployment_manifest, network_policy = render_gateway_manifests(render_envoy_config(routes))
+        envoy_config = render_envoy_config(routes)
+        config_map, deployment_manifest, network_policy = templates.readyml_list(
+            PLATFORM_TEMPLATES.joinpath("gateway.yml"),
+            envoy_config=json.dumps(envoy_config),
+            config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
+        )
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
         api = await self._client.api()

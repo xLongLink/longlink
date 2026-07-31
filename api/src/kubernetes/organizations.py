@@ -2,7 +2,7 @@ import asyncio
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
-from kr8s.asyncio.objects import Namespace, NetworkPolicy
+from kr8s.asyncio.objects import Namespace, NetworkPolicy, ResourceQuota
 from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
@@ -21,12 +21,13 @@ class Organizations:
         """Create one Organization Namespace boundary for its explicit lifecycle."""
 
         # Render and apply only the requested Organization boundary.
-        namespace_manifest, network_policy = templates.readyml_list(
+        namespace_manifest, resource_quota, network_policy = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "organization.yml"),
             namespace=namespace,
         )
         api = await self._client.api()
         await apply(Namespace(namespace_manifest, api=api), namespace_manifest)
+        await apply(ResourceQuota(resource_quota, api=api), resource_quota)
         await apply(NetworkPolicy(network_policy, api=api), network_policy)
 
     async def delete(self, namespace: str) -> None:

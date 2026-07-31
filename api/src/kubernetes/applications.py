@@ -95,6 +95,19 @@ class Applications:
             if not await deployed.exists():
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
             await deployed.refresh()
+
+            # Surface quota admission failures instead of waiting for an unavailable Pod indefinitely.
+            status = deployed.raw.get("status")
+            conditions = status.get("conditions") if isinstance(status, dict) else []
+            if isinstance(conditions, list) and any(
+                isinstance(condition, dict)
+                and condition.get("type") == "ReplicaFailure"
+                and condition.get("reason") == "FailedCreate"
+                and isinstance(condition.get("message"), str)
+                and "exceeded quota" in condition["message"]
+                for condition in conditions
+            ):
+                raise RuntimeError("Kubernetes Application capacity exhausted")
             if deployment_is_ready(deployed):
                 return
             await asyncio.sleep(5)

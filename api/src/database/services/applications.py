@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager

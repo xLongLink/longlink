@@ -85,7 +85,6 @@ async def create(claimed: Operation) -> str | None:
     if not await applications.mark_running(application.id):
         return None
     await operations.create(organization.compute_id)
-    return None
 
 
 async def delete(claimed: Operation) -> str | None:
@@ -126,4 +125,3 @@ async def delete(claimed: Operation) -> str | None:
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     await applications.purge(application.id)
-    return None

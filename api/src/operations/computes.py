@@ -69,4 +69,3 @@ async def reconcile(claimed: Operation) -> str | None:
         if current.status == Status.running and current.version == env.VERSION and current.gateway_url == gateway_url:
             return None
         return "Compute gateway state was not recorded"
-    return None

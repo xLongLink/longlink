@@ -7,12 +7,8 @@ def slugify(value: str) -> str:
 
     slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
 
-    # Reject values that normalize to an empty slug.
-    if not slug:
-        raise HTTPException(status_code=409, detail="Invalid name")
-
-    # Keep generated slugs within Platform limits.
-    if len(slug) > 63:
+    # Keep generated slugs non-empty and within Platform limits.
+    if not slug or len(slug) > 63:
         raise HTTPException(status_code=409, detail="Invalid name")
 
     return slug

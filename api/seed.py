@@ -8,7 +8,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate
 from src.database.services import compute, storage, database, operations
-from src.models.operations import OperationKind
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
 
@@ -113,7 +112,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     except ConflictError:
         pass
     else:
-        await operations.create(compute_registry.id, kind=OperationKind.compute_reconcile)
+        await operations.create(compute_registry.id)
 
     # Register the configured database unless it already exists.
     try:

@@ -40,7 +40,7 @@ async def reconcile(claimed: Operation) -> str | None:
     bucket = organization.id.hex
     await object_storage.create(bucket)
 
-    # Apply release changes to the Organization Namespace and NetworkPolicy.
+    # Apply release changes to the Organization Namespace, quota, and ingress policy.
     cluster = Kubernetes(compute_registry.kubeconfig)
     await cluster.organizations.apply(organization.id.hex)
 
@@ -90,4 +90,3 @@ async def delete(claimed: Operation) -> str | None:
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     await organizations.purge(organization.id)
-    return None

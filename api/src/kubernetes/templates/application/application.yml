@@ -21,11 +21,19 @@ spec:
         spec:
             automountServiceAccountToken: false
             securityContext:
+                runAsNonRoot: true
                 seccompProfile:
                     type: RuntimeDefault
             containers:
                 - name: application
                   image: $image
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 128Mi
+                      limits:
+                          cpu: 500m
+                          memory: 256Mi
                   readinessProbe:
                       httpGet:
                           path: /health
