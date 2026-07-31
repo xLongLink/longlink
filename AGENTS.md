@@ -160,3 +160,12 @@ docs <topic> color, elevation, icons, illustrations, internationalization, layou
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
 <!-- ASTRYX:END -->
+
+
+## Commit Message Structure
+
+<commit-message>
+	<type>feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert</type>
+	<scope>api|sdk|web (optional)</scope>
+	<description>A short, imperative summary of the change</description>
+</commit-message>
