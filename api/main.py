@@ -1,14 +1,15 @@
 import asyncio
 import contextlib
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pathlib import Path
 from src.utils import jobs
+from src.errors import ServiceError
 from src.routes import auth, icons, image, proxy, users, health, branding, computes, storages, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from collections.abc import AsyncGenerator
 from src.environments import env
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from longlink.middleware import install_frontend_middleware
 from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,6 +40,13 @@ app = FastAPI(
     redoc_url="/redocs",
     openapi_url="/openapi.json",
 )
+
+
+@app.exception_handler(ServiceError)
+async def service_error_response(_request: Request, error: ServiceError):
+    """Return expected service failures as API responses."""
+
+    return JSONResponse(status_code=error.status_code, content={"detail": str(error)})
 
 
 install_frontend_middleware(app)

@@ -1,6 +1,7 @@
 import pytest
 from uuid import uuid4
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from src.errors import ConflictError, UnavailableError
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -9,7 +10,6 @@ from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.services.errors import ConflictError, UnavailableError
 from src.database.models.association import UserOrganization
 
 
@@ -109,12 +109,14 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
         member.id,
         OrganizationRoles.maintain,
         owner,
+        OrganizationRoles.owner,
     )
     missing = await organizations.update_member_role(
         organization.id,
         non_member.id,
         OrganizationRoles.read,
         owner,
+        OrganizationRoles.owner,
     )
     memberships = await organizations.members(organization.id)
     updated_membership = next(item for item in memberships if item.user_id == member.id)
@@ -135,7 +137,13 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Act
     with pytest.raises(ConflictError) as exc:
-        await organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
+        await organizations.update_member_role(
+            organization.id,
+            owner.id,
+            OrganizationRoles.admin,
+            owner,
+            OrganizationRoles.owner,
+        )
 
     # Assert
     assert str(exc.value) == "Organization must have at least one owner"

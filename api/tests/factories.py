@@ -35,8 +35,8 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             gateway_ca_certificate="test-ca",
-            gateway_tls_certificate="test-certificate",
-            gateway_tls_private_key="test-private-key",
+            gateway_identity_certificate="test-certificate",
+            gateway_identity_private_key="test-private-key",
             status=Status.running,
             version=env.VERSION,
         )
@@ -115,6 +115,5 @@ async def create_application(
         organization.compute_id,
         kind=OperationKind.application_create,
         target_id=application.id,
-        delay_seconds=30,
     )
     return application

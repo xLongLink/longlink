@@ -126,8 +126,8 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     assert refreshed.version == env.VERSION
     assert refreshed.gateway_url == "https://192.0.2.1"
     assert refreshed.gateway_ca_certificate == "ca"
-    assert refreshed.gateway_tls_certificate == "certificate"
-    assert refreshed.gateway_tls_private_key == "private-key"
+    assert refreshed.gateway_identity_certificate == "certificate"
+    assert refreshed.gateway_identity_private_key == "private-key"
 
 
 async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:

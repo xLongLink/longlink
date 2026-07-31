@@ -36,11 +36,11 @@ class GatewayRoute:
 
 @dataclass(frozen=True, slots=True)
 class GatewayTLSMaterial:
-    """Carry the immutable per-compute CA certificate, certificate, and private key."""
+    """Carry the active per-compute gateway TLS files shared by Envoy and the Platform client."""
 
     ca_certificate: str
-    certificate: str
-    private_key: str
+    identity_certificate: str
+    identity_private_key: str
 
 
 def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
@@ -149,7 +149,6 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
         )
         .sign(ca_key, hashes.SHA256())
     )
-
     # MVP KaaS providers expose an IP address, which HTTPS clients require as an IP SAN.
     server_certificate = (
         x509.CertificateBuilder()
@@ -182,8 +181,8 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
     return GatewayTLSMaterial(
         ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        private_key=server_key.private_bytes(
+        identity_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        identity_private_key=server_key.private_bytes(
             serialization.Encoding.PEM,
             serialization.PrivateFormat.PKCS8,
             serialization.NoEncryption(),
@@ -191,7 +190,9 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
 
 
-def render_gateway_manifests(tls: GatewayTLSMaterial, envoy_config: str) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
+def render_gateway_manifests(
+    tls: GatewayTLSMaterial, envoy_config: str
+) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
     """Render gateway runtime resources under one Pod revision."""
 
     # Roll Pods only when mounted runtime content changes.
@@ -199,9 +200,9 @@ def render_gateway_manifests(tls: GatewayTLSMaterial, envoy_config: str) -> tupl
         json.dumps(
             {
                 "ca_certificate": tls.ca_certificate,
-                "certificate": tls.certificate,
+                "identity_certificate": tls.identity_certificate,
                 "envoy_config": envoy_config,
-                "private_key": tls.private_key,
+                "identity_private_key": tls.identity_private_key,
             },
             sort_keys=True,
             separators=(",", ":"),
@@ -269,7 +270,11 @@ class Gateway:
         tls_secret = Secret(
             {
                 "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-                "stringData": {"ca.crt": tls.ca_certificate, "tls.crt": tls.certificate, "tls.key": tls.private_key},
+                "stringData": {
+                    "ca.crt": tls.ca_certificate,
+                    "tls.crt": tls.identity_certificate,
+                    "tls.key": tls.identity_private_key,
+                },
                 "type": "kubernetes.io/tls",
             },
             api=api,

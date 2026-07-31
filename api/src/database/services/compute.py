@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlalchemy import select, update
+from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from src.models.types import PlatformVersion
@@ -7,7 +8,6 @@ from packaging.version import Version
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.computes import ComputeRegistry
-from src.database.services.errors import ConflictError
 from src.database.models.organizations import Organization
 
 
@@ -106,16 +106,16 @@ async def initialize_gateway_tls(
         # Accept an idempotent retry but reject any attempt to replace persisted TLS.
         current = (
             registry.gateway_ca_certificate,
-            registry.gateway_tls_certificate,
-            registry.gateway_tls_private_key,
+            registry.gateway_identity_certificate,
+            registry.gateway_identity_private_key,
         )
         if current == (ca_certificate, certificate, private_key):
             return True
         if any(value is not None for value in current):
             raise RuntimeError("Compute registry gateway TLS identity is immutable")
         registry.gateway_ca_certificate = ca_certificate
-        registry.gateway_tls_certificate = certificate
-        registry.gateway_tls_private_key = private_key
+        registry.gateway_identity_certificate = certificate
+        registry.gateway_identity_private_key = private_key
         await session.commit()
         return True
 

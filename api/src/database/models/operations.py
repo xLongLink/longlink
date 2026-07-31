@@ -54,7 +54,6 @@ class Operation(SQLModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
     finished_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    available_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
 
     @property
     def status(self) -> OperationStatus:

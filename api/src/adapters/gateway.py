@@ -30,13 +30,13 @@ class GatewayResponse:
 class GatewayClient:
     """Send authenticated Platform requests to one compute gateway."""
 
-    def __init__(self, url: str, ca_certificate: str, certificate: str, private_key: str) -> None:
+    def __init__(self, url: str, ca_certificate: str, identity_certificate: str, identity_private_key: str) -> None:
         """Initialize one gateway connection from persisted compute state."""
 
         self._url = url.rstrip("/")
         self._ca_certificate = ca_certificate
-        self._certificate = certificate
-        self._private_key = private_key
+        self._identity_certificate = identity_certificate
+        self._identity_private_key = identity_private_key
 
     async def request(
         self,
@@ -67,8 +67,8 @@ class GatewayClient:
         with TemporaryDirectory() as directory:
             certificate_path = Path(directory, "client.crt")
             private_key_path = Path(directory, "client.key")
-            certificate_path.write_text(self._certificate, encoding="ascii")
-            private_key_path.write_text(self._private_key, encoding="ascii")
+            certificate_path.write_text(self._identity_certificate, encoding="ascii")
+            private_key_path.write_text(self._identity_private_key, encoding="ascii")
             tls.load_cert_chain(certificate_path, private_key_path)
         client = httpx2.AsyncClient(follow_redirects=False, timeout=300.0, verify=tls)
         try:

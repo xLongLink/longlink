@@ -1,12 +1,12 @@
 import pytest
 from uuid import uuid4
 from factories import create_organization, create_ready_infrastructure
+from src.errors import ConflictError, NotFoundError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import invitations, organizations
 from src.database.models.users import User
-from src.database.services.errors import ConflictError, NotFoundError
 from src.database.models.invitations import OrganizationInvitation
 
 

@@ -15,32 +15,28 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> s
     gateway_ip = await cluster.gateway.ip()
 
     # Persisted gateway TLS must be either complete or absent for initial provisioning.
-    if (
-        registry.gateway_ca_certificate is None
-        and registry.gateway_tls_certificate is None
-        and registry.gateway_tls_private_key is None
-    ):
+    current_tls = registry.gateway_tls
+    if current_tls is None:
+        if any(
+            value is not None
+            for value in (
+                registry.gateway_ca_certificate,
+                registry.gateway_identity_certificate,
+                registry.gateway_identity_private_key,
+            )
+        ):
+            raise RuntimeError("Compute registry has incomplete gateway TLS material")
         tls = generate_gateway_tls(registry.id, gateway_ip)
         initialized = await compute.initialize_gateway_tls(
             registry.id,
             tls.ca_certificate,
-            tls.certificate,
-            tls.private_key,
+            tls.identity_certificate,
+            tls.identity_private_key,
         )
         if not initialized:
             raise RuntimeError("Compute registry disappeared while initializing gateway TLS")
-    elif (
-        registry.gateway_ca_certificate is not None
-        and registry.gateway_tls_certificate is not None
-        and registry.gateway_tls_private_key is not None
-    ):
-        tls = GatewayTLSMaterial(
-            ca_certificate=registry.gateway_ca_certificate,
-            certificate=registry.gateway_tls_certificate,
-            private_key=registry.gateway_tls_private_key,
-        )
     else:
-        raise RuntimeError("Compute registry has incomplete gateway TLS material")
+        tls = GatewayTLSMaterial(*current_tls)
 
     # Apply one authoritative running-Application route snapshot per compute Operation.
     route_rows = await applications.gateway_routes(registry.id)

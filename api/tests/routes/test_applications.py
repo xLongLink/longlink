@@ -1,6 +1,5 @@
 from uuid import UUID
 from httpx2 import AsyncClient
-from datetime import timedelta
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -137,8 +136,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     }
     queued = await operations.fetch()
     assert len(queued) == 2
-    deployment = next(item for item in queued if item.kind == OperationKind.application_create and item.target_id == persisted.id)
-    assert deployment.available_at - deployment.created_at < timedelta(seconds=1)
+    assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in queued)
 
 
 async def test_create_app_returns_403_for_regular_member(

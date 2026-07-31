@@ -10,7 +10,6 @@ from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
-from src.database.services.errors import ConflictError, NotFoundError
 
 router = APIRouter()
 
@@ -53,22 +52,17 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    try:
-        application = await applications.create(
-            organization.id,
-            payload.name,
-            application_slug,
-            image=metadata.image,
-            sdk=metadata.sdk,
-            version=metadata.version,
-            description=payload.description,
-            icon=payload.icon,
-            user=user,
-        )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ConflictError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    application = await applications.create(
+        organization.id,
+        payload.name,
+        application_slug,
+        image=metadata.image,
+        sdk=metadata.sdk,
+        version=metadata.version,
+        description=payload.description,
+        icon=payload.icon,
+        user=user,
+    )
     registry = await compute.get(organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")

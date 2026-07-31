@@ -1,11 +1,11 @@
 import pytest
 from uuid import uuid4
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
+from src.errors import ConflictError
 from src.models.statuses import Status
 from src.database.session import get_session
 from src.database.services import applications, organizations
 from src.database.models.users import User
-from src.database.services.errors import ConflictError
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
