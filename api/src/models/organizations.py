@@ -14,6 +14,11 @@ class OrganizationCreate(BaseModel):
     # Metadata
     name: str = Field(min_length=1, max_length=128)
 
+    # Infrastructure
+    compute_id: UUID
+    storage_id: UUID
+    database_id: UUID
+
 
 class OrganizationUpdate(BaseModel):
     """Validate mutable organization settings."""

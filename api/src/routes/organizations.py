@@ -248,14 +248,18 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue infrastructure creation."""
 
-    # Derive the Organization's runtime namespace from its display name.
+    # Derive the Organization's URL slug from its display name.
     slug = names.slugify(payload.name)
 
-    # Create through the service so API and direct callers share namespace validation.
-    try:
-        organization = await organizations.create(payload.name, slug, user)
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
+    # Persist the Organization with its requested infrastructure registries.
+    organization = await organizations.create(
+        payload.name,
+        slug,
+        user,
+        compute_id=payload.compute_id,
+        storage_id=payload.storage_id,
+        database_id=payload.database_id,
+    )
 
     await operations.create(
         organization.compute_id,

@@ -14,12 +14,18 @@ import { useToast } from '@/hooks/use-toast';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
+    computeId: z.uuid(),
+    storageId: z.uuid(),
+    databaseId: z.uuid(),
 });
 
 type CreateOrganizationValues = z.infer<typeof createOrganizationSchema>;
 
 const defaultCreateOrganizationValues = {
     name: '',
+    computeId: '',
+    storageId: '',
+    databaseId: '',
 } satisfies CreateOrganizationValues;
 
 /** Renders the create-organization dialog. */
@@ -74,6 +80,9 @@ export default function CreateOrganization() {
                                     try {
                                         await createOrganization.mutateAsync({
                                             name: payload.name,
+                                            computeId: payload.computeId,
+                                            storageId: payload.storageId,
+                                            databaseId: payload.databaseId,
                                         });
                                         setOpen(false);
                                         form.reset(defaultCreateOrganizationValues);
@@ -100,6 +109,54 @@ export default function CreateOrganization() {
                                                 htmlName={field.name}
                                                 isRequired
                                                 placeholder={t('createOrganization.namePlaceholder')}
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="computeId"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label="Compute registry UUID"
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                placeholder="00000000-0000-0000-0000-000000000000"
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="storageId"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label="Storage registry UUID"
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                placeholder="00000000-0000-0000-0000-000000000000"
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="databaseId"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label="Database registry UUID"
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                placeholder="00000000-0000-0000-0000-000000000000"
                                                 onBlur={field.onBlur}
                                                 onChange={field.onChange}
                                             />

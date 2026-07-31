@@ -1,3 +1,5 @@
+import pytest
+from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
 from src.database.services import organizations as organization_service
@@ -104,10 +106,23 @@ async def test_platform_user_cannot_access_admin_routes(
 
 async def test_patch_me_updates_authenticated_user_profile(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Update the authenticated user's mutable profile fields."""
 
     # Arrange
+    user = users[0]
+    await create_ready_infrastructure()
+    organization = await create_organization(user)
+    synchronized: list[UUID] = []
+
+    async def sync_users(organization_id: UUID) -> None:
+        """Record the Organization user projection requested by the profile route."""
+
+        synchronized.append(organization_id)
+
+    monkeypatch.setattr(organization_service, "sync_users", sync_users)
     client = clients[0]
 
     # Act
@@ -117,3 +132,4 @@ async def test_patch_me_updates_authenticated_user_profile(
     assert response.status_code == 200
 
     assert response.json()["name"] == "Updated User"
+    assert synchronized == [organization.id]

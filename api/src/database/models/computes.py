@@ -1,9 +1,10 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
-from sqlalchemy import JSON, Enum, Text, Column
+from sqlalchemy import Enum, Text, Column
+from src.environments import env
 from src.models.types import PlatformVersion
-from src.database.types import PlatformVersionType
+from src.database.types import EncryptedType, PlatformVersionType
 from src.models.statuses import Status
 
 
@@ -20,7 +21,7 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
-    kubeconfig: dict[str, object] = Field(sa_column=Column(JSON, nullable=False))
+    kubeconfig: dict[str, object] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
 
     # Reconciliation
     status: Status = Field(
@@ -36,7 +37,7 @@ class ComputeRegistry(SQLModel, table=True):
     gateway_url: str | None = Field(default=None, max_length=512)
     gateway_ca_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     gateway_identity_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_identity_private_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    gateway_identity_private_key: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
 
     @property
     def gateway_tls(self) -> tuple[str, str, str] | None:

@@ -1,5 +1,4 @@
 from uuid import UUID, uuid4
-from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
@@ -9,10 +8,10 @@ from sqlalchemy.orm import joinedload
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
+from longlink.shared import users as shared_users
 from src.models.statuses import Status
+from src.adapters.postgres import Postgres
 from src.database.session import session_scope
-from src.database.services import operations
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -189,6 +188,43 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> Seque
         return (await session.scalars(statement)).all()
 
 
+async def sync_users(organization_id: UUID, db: Postgres | None = None) -> None:
+    """Project Platform-owned users and memberships into one Organization database."""
+
+    # Ignore removed Organizations that no longer own a shared database projection.
+    assigned = await infrastructure(organization_id)
+    if assigned is None or assigned.organization.deleted_at is not None:
+        return
+    if assigned.organization.status != Status.running and db is None:
+        return
+
+    # Build the shared-schema user snapshot from Platform-authoritative memberships.
+    memberships = await members(organization_id, include_deleted=True)
+    users: list[shared_users.UserRow] = []
+    for membership in memberships:
+        user = membership.user
+        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
+        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
+        users.append(
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "avatar": user.avatar,
+                "role": membership.role.value,
+                "created_at": membership.created_at,
+                "updated_at": updated_at,
+                "deleted_at": deleted_at,
+            }
+        )
+
+    # The Platform is authoritative; reuse the prepared client during Organization creation.
+    if db is None:
+        database = assigned.database
+        db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
+    await shared_users.sync_url(db.shared_schema_url(organization_id), users)
+
+
 async def update_member_role(
     organization_id: UUID,
     member_id: UUID,
@@ -196,12 +232,12 @@ async def update_member_role(
     user: User,
     caller_role: OrganizationRoles,
 ) -> bool:
-    """Change one active Organization membership and schedule its user sync."""
+    """Change one active Organization membership and synchronize its user projection."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
         statement = (
-            select(UserOrganization, Organization.compute_id)
+            select(UserOrganization)
             .join(User, User.id == UserOrganization.user_id)
             .join(Organization, Organization.id == UserOrganization.organization_id)
             .where(
@@ -216,7 +252,7 @@ async def update_member_role(
         row = (await session.execute(statement)).one_or_none()
         if row is None:
             return False
-        membership, compute_id = row
+        membership = row[0]
 
         # Only owners may grant or change owner access.
         if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
@@ -247,15 +283,10 @@ async def update_member_role(
         membership.updated_id = user.id
         membership.role = role
 
-        # Reconcile the changed membership with its assigned compute atomically.
-        await operations.enqueue(
-            session,
-            compute_id,
-            kind=OperationKind.organization_users_sync,
-            target_id=organization_id,
-        )
         await session.commit()
 
+    # Project the committed membership change into the Organization database.
+    await sync_users(organization_id)
     return True
 
 
@@ -265,38 +296,32 @@ async def create(
     user: User,
     avatar: str | None = None,
     *,
-    compute_id: UUID | None = None,
-    require_running_compute: bool = True,
+    compute_id: UUID,
+    storage_id: UUID,
+    database_id: UUID,
 ) -> Organization:
-    """Create an Organization with automatically assigned infrastructure."""
+    """Create an Organization with the specified infrastructure."""
 
-    # Validate the user-derived runtime namespace before creating the row.
     organization_id = uuid4()
-    names.knames(slug)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Lock the requested compute or select the first ready compute for interactive creation.
-        compute_statement = select(ComputeRegistry)
-        if compute_id is not None:
-            compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
-        elif require_running_compute:
-            compute_statement = compute_statement.where(ComputeRegistry.status == Status.running).order_by(ComputeRegistry.id).limit(1)
-        compute_statement = compute_statement.with_for_update()
+        # Lock the requested running compute registry.
+        compute_statement = select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update()
         compute = (await session.scalars(compute_statement)).one_or_none()
         if compute is None:
             raise UnavailableError("No compute registry available")
-        if require_running_compute and compute.status != Status.running:
+        if compute.status != Status.running:
             raise UnavailableError("No ready compute registry available")
 
-        # Lock the first available database registry.
-        database_statement = select(DatabaseRegistry).order_by(DatabaseRegistry.id).limit(1).with_for_update()
+        # Lock the requested database registry.
+        database_statement = select(DatabaseRegistry).where(DatabaseRegistry.id == database_id).with_for_update()
         database_registry = (await session.scalars(database_statement)).one_or_none()
         if database_registry is None:
             raise UnavailableError("No database registry available")
 
-        # Lock the first available storage registry.
-        storage_statement = select(StorageRegistry).order_by(StorageRegistry.id).limit(1).with_for_update()
+        # Lock the requested storage registry.
+        storage_statement = select(StorageRegistry).where(StorageRegistry.id == storage_id).with_for_update()
         storage_registry = (await session.scalars(storage_statement)).one_or_none()
         if storage_registry is None:
             raise UnavailableError("No storage registry available")
@@ -307,9 +332,9 @@ async def create(
             name=name,
             slug=slug,
             avatar=avatar or "",
-            compute_id=compute.id,
-            database_id=database_registry.id,
-            storage_id=storage_registry.id,
+            compute_id=compute_id,
+            database_id=database_id,
+            storage_id=storage_id,
         )
 
         # Attach the creator as the initial owner for every organization.

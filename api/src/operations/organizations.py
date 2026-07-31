@@ -1,40 +1,9 @@
-from longlink.shared import users as shared_users
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
-from src.database.models.organizations import Organization
-
-
-async def sync_users(organization: Organization, db: Postgres) -> None:
-    """Seed the Organization shared schema from Platform-owned users and memberships."""
-
-    # Read deleted memberships too so deactivations propagate into the shared schema.
-    memberships = await organizations.members(organization.id, include_deleted=True)
-    users: list[shared_users.UserRow] = []
-
-    # Convert Platform identities and membership state at the shared-schema boundary.
-    for membership in memberships:
-        user = membership.user
-        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
-        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
-        users.append(
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar,
-                "role": membership.role.value,
-                "created_at": membership.created_at,
-                "updated_at": updated_at,
-                "deleted_at": deleted_at,
-            }
-        )
-
-    # The Platform is authoritative and Applications receive read-only access.
-    await shared_users.sync_url(db.shared_schema_url(organization.id), users)
 
 
 async def reconcile(claimed: Operation) -> str | None:
@@ -60,7 +29,7 @@ async def reconcile(claimed: Operation) -> str | None:
         database_registry.sslmode,
     )
     await db.prepare_organization_database(organization.id)
-    await sync_users(organization, db)
+    await organizations.sync_users(organization.id, db)
 
     # Converge the Organization bucket and shared folder marker in the same reconciliation.
     object_storage = Exoscale(
@@ -74,35 +43,12 @@ async def reconcile(claimed: Operation) -> str | None:
 
     # Apply release changes to the Organization Namespace and NetworkPolicy.
     cluster = Kubernetes(compute_registry.kubeconfig)
-    await cluster.organizations.apply(organization.slug)
+    await cluster.organizations.apply(organization.id.hex)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     if organization.status == Status.creating:
         if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
             return None
-    return None
-
-
-async def sync(claimed: Operation) -> str | None:
-    """Synchronize Platform-owned Organization users without reconciling infrastructure."""
-
-    # A pending creation must establish the shared schema before user rows can be projected.
-    infrastructure = await organizations.infrastructure(claimed.target_id)
-    if infrastructure is None or infrastructure.organization.deleted_at is not None:
-        return None
-    if infrastructure.organization.status != Status.running:
-        return await reconcile(claimed)
-
-    # Project memberships into the existing Organization database only.
-    database_registry = infrastructure.database
-    db = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
-    )
-    await sync_users(infrastructure.organization, db)
     return None
 
 
@@ -136,7 +82,7 @@ async def delete(claimed: Operation) -> str | None:
 
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
     application_rows = await organizations.applications(organization.id, include_deleted=True)
-    await cluster.organizations.delete(organization.slug)
+    await cluster.organizations.delete(organization.id.hex)
     for application in application_rows:
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)

@@ -131,7 +131,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert not hasattr(persisted, "envs")
     assert staged == {
         "application_id": persisted.id,
-        "namespace": organization.slug,
+        "namespace": organization.id.hex,
         "envs": {"API_KEY": "secret-value", "PORT": "8080"},
     }
     queued = await operations.fetch()

@@ -1,5 +1,5 @@
 import pytest
-from uuid import uuid4
+from uuid import UUID, uuid4
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.errors import ConflictError, UnavailableError
 from src.environments import env
@@ -38,7 +38,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
 
 
-async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
+async def test_members_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
     """Return org members loaded through the organization relationship."""
 
     # Arrange
@@ -58,11 +58,9 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    reloaded = await organizations.get(organization.id)
     memberships = await organizations.members(organization.id)
 
     # Assert
-    assert reloaded is not None
     assert {membership.user.id for membership in memberships} == {owner.id, member.id}
 
 
@@ -83,13 +81,21 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert [organization.id for organization in fetched] == [active_organization.id]
 
 
-async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
+async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """Update an active organization member role."""
 
     # Arrange
     owner, member, non_member = users
     await create_ready_infrastructure()
     organization = await create_organization(owner)
+    synchronized: list[UUID] = []
+
+    async def sync_users(organization_id: UUID) -> None:
+        """Record the Organization user projection requested by the service."""
+
+        synchronized.append(organization_id)
+
+    monkeypatch.setattr(organizations, "sync_users", sync_users)
 
     Session = await get_session()
     async with Session() as session:
@@ -124,6 +130,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert updated is True
     assert missing is False
     assert updated_membership.role == OrganizationRoles.maintain
+    assert synchronized == [organization.id]
 
 
 async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
@@ -211,22 +218,6 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
     assert reloaded_compute is not None
     assert reloaded_compute.status == Status.failed
     assert reloaded_compute.version == env.VERSION
-    assert await operations.fetch() == []
-
-
-async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
-    """Reject organizations whose namespace slug exceeds backend limits."""
-
-    # Arrange
-    owner = users[0]
-    await create_ready_infrastructure()
-
-    # Act
-    with pytest.raises(ValueError, match="Value must be at most 63 characters"):
-        await create_organization(owner, name="a" * 64, slug="a" * 64)
-
-    # Assert
-    assert await organizations.fetch() == []
     assert await operations.fetch() == []
 
 

@@ -11,5 +11,4 @@ handlers: dict[OperationKind, OperationHandler] = {
     OperationKind.application_delete: applications.delete,
     OperationKind.organization_create: organizations.reconcile,
     OperationKind.organization_delete: organizations.delete,
-    OperationKind.organization_users_sync: organizations.sync,
 }

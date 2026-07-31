@@ -68,7 +68,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     # Store user environment values before queueing the workload that consumes them.
     cluster = Kubernetes(registry.kubeconfig)
-    await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+    await cluster.applications.stage_envs(application.id, organization.id.hex, payload.envs)
     await operations.create(
         organization.compute_id,
         kind=OperationKind.application_create,

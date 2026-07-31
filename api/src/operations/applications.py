@@ -70,13 +70,13 @@ async def create(claimed: Operation) -> str | None:
         }
 
         # Commit the generated runtime values before creating a workload that can consume them.
-        await cluster.applications.stage_runtime_envs(application.id, organization.slug, runtime_envs)
+        await cluster.applications.stage_runtime_envs(application.id, organization.id.hex, runtime_envs)
 
     elif application.status != Status.running:
         return None
 
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
-    await cluster.applications.apply(application.id, organization.slug, application.image)
+    await cluster.applications.apply(application.id, organization.id.hex, application.image)
 
     # Running Application reconciliation owns only its workload, not shared gateway state.
     if application.status == Status.running:
@@ -108,7 +108,7 @@ async def delete(claimed: Operation) -> str | None:
     cluster = Kubernetes(registry.kubeconfig)
 
     # The route was removed by the compute Operation queued with the tombstone.
-    await cluster.applications.delete(application.id, organization.slug)
+    await cluster.applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(
