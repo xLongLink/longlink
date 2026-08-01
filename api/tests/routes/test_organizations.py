@@ -184,12 +184,8 @@ async def test_organization_database_endpoint_returns_database_usage(
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Store database registry configuration for assertions."""
+            """Validate the selected database TLS configuration."""
 
-            self.host = host
-            self.port = port
-            self.username = username
-            self.password = password
             assert sslmode == registry.sslmode
 
         async def database_usage(self, database_name: str) -> dict[str, int]:

@@ -187,23 +187,3 @@ def start_postgres(username: str, password: str, database: str, port: int = 5432
     container.start()
     wait_for_postgres(container, username, password, database, port)
     return container
-
-
-def wait_for_container_log(container: DockerRuntimeContainer, text: str, timeout: float) -> None:
-    """Wait until a container emits a log line containing text."""
-
-    deadline = time.monotonic() + timeout
-
-    # Poll logs directly to avoid deprecated testcontainers wait helpers.
-    while time.monotonic() < deadline:
-        logs = container.logs()
-        if text in logs:
-            return
-
-        # Stop early when the container has already failed.
-        if container.status() not in {"created", "running"}:
-            raise RuntimeError(f"Container exited before emitting {text!r}: {logs}")
-
-        time.sleep(1)
-
-    raise TimeoutError(f"Container did not emit {text!r} within {timeout} seconds")

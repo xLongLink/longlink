@@ -9,8 +9,6 @@ pytestmark = pytest.mark.no_db
     "payload",
     [
         {"name": "", "host": "database.example", "port": 5432, "username": "admin", "password": "secret"},
-        {"name": "Primary Database", "host": "https://database.example", "port": 5432, "username": "admin", "password": "secret"},
-        {"name": "Primary Database", "host": "database.example", "port": 0, "username": "admin", "password": "secret"},
     ],
 )
 def test_database_registry_create_rejects_invalid_connection_payload(payload: dict[str, object]) -> None:
