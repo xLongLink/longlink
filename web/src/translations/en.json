@@ -170,8 +170,8 @@
     "admin.failedDeleteStorage": {
         "defaultMessage": "Failed to delete storage"
     },
-    "admin.computeReconciliation": {
-        "defaultMessage": "Compute reconciliation"
+    "admin.computeCreation": {
+        "defaultMessage": "Compute creation"
     },
     "admin.operationsTitle": {
         "defaultMessage": "Operations"

@@ -107,9 +107,6 @@ async def create_application(
     name: str = "dashboard",
     slug: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
-    digest: str = "sha256:test",
-    description: str | None = None,
-    icon: str | None = None,
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
@@ -119,14 +116,12 @@ async def create_application(
     # Application creation requires the parent Organization to be running.
     await mark_organization_running(organization)
     parsed_image = Image(image)
-    resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@{digest}"
+    resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test"
     application = await applications.create(
         organization.id,
         name,
         slug=slug,
         image=resolved_image,
-        description=description,
-        icon=icon,
         user=owner,
     )
     await operations.create(

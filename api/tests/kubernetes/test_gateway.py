@@ -2,6 +2,7 @@ import yaml
 import pytest
 import ipaddress
 from uuid import UUID
+from datetime import timedelta
 from cryptography import x509
 from src.kubernetes.gateway import GatewayRoute, render_envoy_config, generate_gateway_tls
 
@@ -62,3 +63,4 @@ def test_gateway_tls_covers_the_compute_address() -> None:
     names = certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
     assert certificate.issuer == ca_certificate.subject
     assert names.get_values_for_type(x509.IPAddress) == [address]
+    assert certificate.not_valid_after_utc - certificate.not_valid_before_utc == timedelta(days=3650, minutes=5)

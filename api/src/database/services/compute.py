@@ -91,30 +91,21 @@ async def record_success(
         return True
 
 
-async def initialize_gateway_tls(
+async def replace_gateway_tls(
     compute_id: UUID,
     ca_certificate: str,
     certificate: str,
     private_key: str,
 ) -> bool:
-    """Persist a compute's immutable gateway TLS identity once."""
+    """Persist one complete gateway TLS identity."""
 
-    # Lock the compute so concurrent first reconciliations cannot publish different identities.
+    # Lock the compute so concurrent creation operations cannot publish partial identities.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
         if registry is None:
             return False
 
-        # Accept an idempotent retry but reject any attempt to replace persisted TLS.
-        current = (
-            registry.gateway_ca_certificate,
-            registry.gateway_identity_certificate,
-            registry.gateway_identity_private_key,
-        )
-        if current == (ca_certificate, certificate, private_key):
-            return True
-        if any(value is not None for value in current):
-            raise RuntimeError("Compute registry gateway TLS identity is immutable")
+        # Replace every dependent value in the same transaction.
         registry.gateway_ca_certificate = ca_certificate
         registry.gateway_identity_certificate = certificate
         registry.gateway_identity_private_key = private_key

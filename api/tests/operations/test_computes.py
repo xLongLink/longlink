@@ -8,7 +8,7 @@ from src.models.types import DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute, operations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus
 from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -46,10 +46,11 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
         return compute_registry, database_registry, storage_registry
 
 
-async def test_execute_compute_reconcile_operation_updates_only_gateway_state(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Build routes from running Applications without exposing tenant resources to reconciliation."""
+async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_platform_release(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Build routes from running Applications and recreate gateway TLS for a Platform release."""
 
     # Arrange
+    monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute_registry, database_registry, storage_registry = await create_compute_infrastructure()
     organization = Organization(
         id=uuid4(),
@@ -77,14 +78,18 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     async with session_scope() as session:
         session.add_all([organization, running, creating])
         await session.commit()
-    snapshots: list[tuple[GatewayRoute, ...]] = []
+    snapshots: list[tuple[tuple[GatewayRoute, ...], GatewayTLSMaterial]] = []
+    generated: list[GatewayTLSMaterial] = []
 
     def generate_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
-        """Return stable generated TLS material."""
+        """Return distinct generated TLS material."""
 
         assert compute_id == compute_registry.id
         assert address == ipaddress.IPv4Address("192.0.2.1")
-        return GatewayTLSMaterial("ca", "certificate", "private-key")
+        generation = len(generated) + 1
+        tls = GatewayTLSMaterial(f"ca-{generation}", f"certificate-{generation}", f"private-key-{generation}")
+        generated.append(tls)
+        return tls
 
     class FakeGateway:
         """Capture gateway resource operations."""
@@ -97,8 +102,7 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
         async def apply(self, routes: tuple[GatewayRoute, ...], tls: GatewayTLSMaterial) -> None:
             """Capture the desired routes after the fake rollout."""
 
-            snapshots.append(routes)
-            assert tls == GatewayTLSMaterial("ca", "certificate", "private-key")
+            snapshots.append((routes, tls))
 
     class FakeKubernetes:
         """Expose the fake gateway abstraction."""
@@ -116,22 +120,34 @@ async def test_execute_compute_reconcile_operation_updates_only_gateway_state(mo
     assert claimed is not None
 
     # Act
-    completed = await execute(claimed, compute_operations.reconcile)
+    completed = await execute(claimed, compute_operations.create)
+
+    # Recreate the Compute for a newer Platform release.
+    monkeypatch.setattr(env, "VERSION", "v1.1.0")
+    await operations.create(compute_registry.id)
+    recreated_claim = await operations.claim()
+    assert recreated_claim is not None
+    assert recreated_claim.kind == OperationKind.compute_create
+    recreated = await execute(recreated_claim, compute_operations.create)
 
     # Assert
     assert completed.status == OperationStatus.completed
-    assert [(route.id, route.namespace) for route in snapshots[0]] == [(running.id, organization.id.hex)]
+    assert recreated.status == OperationStatus.completed
+    assert [(route.id, route.namespace) for route in snapshots[0][0]] == [(running.id, organization.id.hex)]
+    assert [(route.id, route.namespace) for route in snapshots[1][0]] == [(running.id, organization.id.hex)]
+    assert snapshots[0][1] == GatewayTLSMaterial("ca-1", "certificate-1", "private-key-1")
+    assert snapshots[1][1] == GatewayTLSMaterial("ca-2", "certificate-2", "private-key-2")
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
-    assert refreshed.version == env.VERSION
+    assert refreshed.version == "v1.1.0"
     assert refreshed.gateway_url == "https://192.0.2.1"
-    assert refreshed.gateway_ca_certificate == "ca"
-    assert refreshed.gateway_identity_certificate == "certificate"
-    assert refreshed.gateway_identity_private_key == "private-key"
+    assert refreshed.gateway_ca_certificate == "ca-2"
+    assert refreshed.gateway_identity_certificate == "certificate-2"
+    assert refreshed.gateway_identity_private_key == "private-key-2"
 
 
-async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make a compute and its single Operation terminal after a provider error."""
 
     # Arrange
@@ -157,7 +173,7 @@ async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypa
     assert claimed is not None
 
     # Act
-    failed = await execute(claimed, compute_operations.reconcile)
+    failed = await execute(claimed, compute_operations.create)
 
     # Assert
     assert failed.status == OperationStatus.failed

@@ -122,7 +122,6 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
     # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    registry = infrastructure.database
 
     class FakePostgres:
         """Raise a backend usage error."""
@@ -138,7 +137,7 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
     monkeypatch.setattr("src.routes.databases.Postgres", FakePostgres)
 
     # Act
-    response = await client.get(f"/api/databases/{registry.id}/usage")
+    response = await client.get(f"/api/databases/{infrastructure.database.id}/usage")
 
     # Assert
     assert response.status_code == 503

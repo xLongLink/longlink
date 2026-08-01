@@ -6,7 +6,7 @@ import urllib.parse
 from docker.client import DockerClient
 from collections.abc import Sequence
 from docker.constants import DEFAULT_DOCKER_API_VERSION
-from requests.exceptions import Timeout, SSLError, ConnectionError
+from requests.exceptions import Timeout, ConnectionError
 from docker.models.containers import Container
 
 
@@ -19,8 +19,6 @@ def require_docker_daemon() -> None:
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
         try:
             client.ping()
-        except SSLError:
-            raise
         except (ConnectionError, Timeout) as exc:
             pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
@@ -116,7 +114,7 @@ class DockerRuntimeContainer:
         return int(bindings[0]["HostPort"])
 
 
-def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int = 5432) -> None:
+def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int) -> None:
     """Wait until a PostgreSQL container accepts connections."""
 
     deadline = time.monotonic() + 60
@@ -143,7 +141,7 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
     pytest.fail("PostgreSQL container did not become ready")
 
 
-def start_postgres(username: str, password: str, database: str, port: int = 5432) -> DockerRuntimeContainer:
+def start_postgres(username: str, password: str, database: str, port: int) -> DockerRuntimeContainer:
     """Start a ready PostgreSQL container for one integration test."""
 
     # Verify Docker availability before creating the test database container.

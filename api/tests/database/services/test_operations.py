@@ -33,7 +33,7 @@ async def create_compute(name: str) -> ComputeRegistry:
 
 
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:
-    """Return compute reconciliation operations ordered by creation time descending."""
+    """Return compute creation operations ordered by creation time descending."""
 
     # Seed two operations with explicit creation timestamps.
     older_compute = await create_compute("older")
@@ -189,7 +189,7 @@ async def test_operations_service_create_separates_computes_and_reopens_complete
 
 
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
-    """Claim the oldest available compute reconciliation first."""
+    """Claim the oldest available compute creation first."""
 
     # Seed two operations with explicit creation order.
     older_compute = await create_compute("older")
@@ -406,11 +406,10 @@ async def test_operations_service_platform_upgrade_creates_after_locked_work(mon
     upgraded = next(
         item
         for item in await operations.fetch()
-        if item.kind == OperationKind.compute_reconcile and item.target_id == compute.id and item.finished_at is None
+        if item.kind == OperationKind.compute_create and item.target_id == compute.id and item.finished_at is None
     )
     completed = await operations.complete(operation.id)
     replacement = await operations.claim()
-    monkeypatch.setattr(env, "VERSION", "v1.0.0")
 
     # Verify one upgraded replacement waits for the original completion.
     assert upgraded.id != operation.id

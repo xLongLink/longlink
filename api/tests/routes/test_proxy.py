@@ -189,7 +189,7 @@ async def test_application_proxy_rejects_oversized_request_body(
         def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
             """Build one fake streaming request."""
 
-            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+            return SimpleNamespace(content=content)
 
         async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
             """Consume the content so the route enforces the body limit."""
@@ -309,7 +309,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
             """Build one fake streaming request."""
 
-            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+            return SimpleNamespace()
 
         async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
             """Raise a proxy transport error."""

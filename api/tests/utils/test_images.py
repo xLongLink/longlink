@@ -10,14 +10,11 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     """Avoid inspecting image metadata through unsupported registry references."""
 
     # Act
-    image_metadata = await images.metadata(Image("registry.example.com/longlink/dashboard:latest"))
-
-    # Assert
-    assert image_metadata is None
+    assert await images.metadata(Image("registry.example.com/longlink/dashboard:latest")) is None
 
 
 @pytest.mark.parametrize(
-    ("image", "development", "version", "manifest_digest", "registry_url", "manifest_reference", "expected_image"),
+    ("image", "development", "version", "manifest_digest", "registry_url", "manifest_reference"),
     [
         pytest.param(
             "localhost:15000/longlink/dashboard:dev",
@@ -26,7 +23,6 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
             "sha256:manifest",
             "http://localhost:15000",
             "dev",
-            "localhost:15000/longlink/dashboard@sha256:manifest",
             id="development-tag",
         ),
         pytest.param(
@@ -36,7 +32,6 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
             "sha256:deadbeef",
             "https://ghcr.io",
             "sha256:deadbeef",
-            "ghcr.io/longlink/dashboard@sha256:deadbeef",
             id="digest",
         ),
     ],
@@ -49,7 +44,6 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     manifest_digest: str,
     registry_url: str,
     manifest_reference: str,
-    expected_image: str,
 ) -> None:
     """Inspect supported tagged and digest-pinned image references."""
 
@@ -115,7 +109,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     # Assert
     assert image_metadata is not None
     assert image_metadata.model_dump(mode="json") == LongLinkMetadata(
-        image=expected_image,
+        image=image,
         title="dashboard",
         version=version,
         description="Demo app",

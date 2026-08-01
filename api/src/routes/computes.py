@@ -9,7 +9,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 
 @router.post("/api/computes", response_model=ComputeRegistryResponse, status_code=202)
 async def create_compute_registry(payload: ComputeRegistryCreate):
-    """Register a compute target and queue its initial reconciliation."""
+    """Register a compute target and queue its initial creation."""
 
     registry = await compute.create(payload.name, payload.kubeconfig)
     await operations.create(registry.id)

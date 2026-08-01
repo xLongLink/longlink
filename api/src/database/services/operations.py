@@ -25,7 +25,7 @@ async def fetch() -> Sequence[Operation]:
 async def create(
     compute_id: UUID,
     *,
-    kind: OperationKind = OperationKind.compute_reconcile,
+    kind: OperationKind = OperationKind.compute_create,
     target_id: UUID | None = None,
 ) -> Operation:
     """Create one registered Platform operation in a dedicated transaction."""
@@ -41,15 +41,15 @@ async def enqueue(
     session: AsyncSession,
     compute_id: UUID,
     *,
-    kind: OperationKind = OperationKind.compute_reconcile,
+    kind: OperationKind = OperationKind.compute_create,
     target_id: UUID | None = None,
 ) -> Operation:
     """Add one Platform operation to an existing command transaction."""
 
     target = compute_id if target_id is None else target_id
-    if kind == OperationKind.compute_reconcile and target != compute_id:
+    if kind == OperationKind.compute_create and target != compute_id:
         raise ValueError("Compute operations must target their compute registry")
-    if kind != OperationKind.compute_reconcile and target_id is None:
+    if kind != OperationKind.compute_create and target_id is None:
         raise ValueError("Resource operations require an explicit target")
 
     # Lock the compute before resolving its current release target.
