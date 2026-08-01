@@ -39,8 +39,6 @@ class DockerRuntimeContainer:
         ports: Sequence[int] = (),
         volumes: Sequence[tuple[str, str, str]] = (),
         environment: dict[str, str] | None = None,
-        privileged: bool = False,
-        tmpfs: dict[str, str] | None = None,
     ) -> None:
         """Store container configuration without contacting Docker."""
 
@@ -49,8 +47,6 @@ class DockerRuntimeContainer:
         self._command = command
         self._volumes = volumes
         self._environment = environment or {}
-        self._privileged = privileged
-        self._tmpfs = tmpfs
         self._client: DockerClient | None = None
         self._container: Container | None = None
 
@@ -73,8 +69,6 @@ class DockerRuntimeContainer:
                 environment=self._environment,
                 ports=port_bindings or None,
                 remove=False,
-                privileged=self._privileged,
-                tmpfs=self._tmpfs,
                 volumes=volume_bindings or None,
             )
         finally:
