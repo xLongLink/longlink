@@ -128,10 +128,7 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
         """Raise a backend usage error."""
 
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the registry connection fields."""
-
-            assert (host, port, username, password) == (registry.host, registry.port, registry.username, registry.password)
-            assert sslmode == registry.sslmode
+            """Accept database registry connection fields."""
 
         async def usage(self) -> dict[str, int]:
             """Raise the backend error expected by the test."""

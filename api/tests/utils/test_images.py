@@ -79,7 +79,6 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
                 "config": {
                     "Labels": {
                         "org.opencontainers.image.title": "dashboard",
-                        "longlink.sdk": "0.1.0",
                         "org.opencontainers.image.version": version,
                         "org.opencontainers.image.description": "Demo app",
                         "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
@@ -117,7 +116,6 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     assert image_metadata is not None
     assert image_metadata.model_dump(mode="json") == LongLinkMetadata(
         image=expected_image,
-        sdk="0.1.0",
         title="dashboard",
         version=version,
         description="Demo app",

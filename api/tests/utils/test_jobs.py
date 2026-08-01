@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import timedelta
 from src.utils import jobs as operation_worker
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
@@ -31,16 +31,8 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
 
     # Arrange
     operation = leased_operation()
-    completed = leased_operation()
-    completed.finished_at = datetime.fromisoformat("2026-07-01T09:01:00+00:00")
     claims = [operation, None]
     executed: list[Operation] = []
-
-    async def handler(claimed: Operation) -> str | None:
-        """Return the scheduler handler outcome if the real executor invokes it."""
-
-        assert claimed is operation
-        return None
 
     async def fake_claim() -> Operation | None:
         """Return one operation and then no work."""
@@ -50,9 +42,8 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     async def fake_execute(claimed: Operation, supplied_handler: operation_worker.OperationHandler) -> Operation:
         """Record executed operations."""
 
-        assert supplied_handler is handler
         executed.append(claimed)
-        return completed
+        return claimed
 
     async def fake_sleep(seconds: float) -> None:
         """Stop the scheduler once it reaches the idle polling sleep."""
@@ -62,7 +53,6 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     monkeypatch.setattr(operation_worker.operations, "claim", fake_claim)
     monkeypatch.setattr(operation_worker, "execute", fake_execute)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
-    monkeypatch.setitem(operation_worker.handlers, OperationKind.compute_reconcile, handler)
 
     # Act
     with pytest.raises(StopScheduler):

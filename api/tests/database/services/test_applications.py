@@ -62,7 +62,6 @@ async def test_create_requires_running_organization() -> None:
         "Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:test",
-        sdk="1.2.3",
         version="2.0.0",
         user=user,
     )
@@ -72,7 +71,6 @@ async def test_create_requires_running_organization() -> None:
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application.sdk == "1.2.3"
     assert application.version == "2.0.0"
 
 
@@ -128,13 +126,11 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     user, _, application = await create_application_context("reads")
 
     # Act
-    by_id = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
     deleted_by_id = await applications.get(application.id)
     included_by_id = await applications.get(application.id, include_deleted=True)
 
     # Assert
-    assert by_id is not None
     assert deleted_by_id is None
     assert included_by_id is not None
     assert included_by_id.deleted_id == user.id

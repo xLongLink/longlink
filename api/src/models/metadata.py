@@ -18,7 +18,6 @@ class LongLinkMetadata(BaseModel):
     image: str = Field(exclude=True)
 
     # Metadata
-    sdk: str | None = None
     title: str | None = None
     digest: str | None = None
     version: str | None = None

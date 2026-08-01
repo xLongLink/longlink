@@ -5,7 +5,7 @@ import { Links, Meta, Scripts, ScrollRestoration } from 'react-router';
 /** Renders the common LongLink HTML document shell. */
 export function Document({ children, headContent }: { children: ReactNode; headContent?: ReactNode }) {
     return (
-        <html lang="en" data-astryx-theme="longlink-neutral-default" data-theme="dark">
+        <html lang="en" data-astryx-theme="stone" data-theme="dark">
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />

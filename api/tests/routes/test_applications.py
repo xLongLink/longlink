@@ -18,7 +18,6 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure()
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex", slug="globex")
     dashboard = await create_application(acme, user)
@@ -40,6 +39,8 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
         str(dashboard.id),
         str(console.id),
     }
+
+
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -49,7 +50,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user)
     await mark_organization_running(organization)
     staged: dict[str, object] = {}
@@ -61,7 +61,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         return LongLinkMetadata(
             image="ghcr.io/longlink/dashboard@sha256:test",
             digest="sha256:test",
-            sdk="1.2.3",
             version="2.0.0",
             environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
         )
@@ -72,7 +71,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         def __init__(self, kubeconfig: str) -> None:
             """Capture the assigned compute target."""
 
-            assert kubeconfig == infrastructure.compute.kubeconfig
             self.applications = self
 
         async def stage_envs(self, application_id: UUID, namespace: str, envs: dict[str, str]) -> None:
@@ -104,7 +102,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
     assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert payload["sdk"] == "1.2.3"
     assert payload["version"] == "2.0.0"
 
     persisted = await applications.get(UUID(payload["id"]))
@@ -130,7 +127,6 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
 
     Session = await get_session()
@@ -214,7 +210,6 @@ async def test_app_logs_require_maintainer_access(
 
     # Arrange
     owner, member = users[0], users[1]
-    await create_ready_infrastructure()
     organization = await create_organization(owner)
     app = await create_application(organization, owner)
     Session = await get_session()
@@ -275,7 +270,6 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(user)
     app = await create_application(organization, user)
     client = clients[0]

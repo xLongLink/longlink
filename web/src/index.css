@@ -4,7 +4,7 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
-@import './lib/generated/longlink-neutral-default.css';
+@import './lib/generated/stone.css';
 @import '@astryxdesign/core/tailwind-theme.css';
 @import '@fontsource-variable/inter';
 @import 'tailwindcss/utilities.css' layer(utilities);
@@ -21,7 +21,7 @@
 
 @layer astryx-theme {
     /* Astryx compound parts are exposed through stable classes but are not accepted by the theme compiler. */
-    @scope ([data-astryx-theme^='longlink-']) to ([data-astryx-theme]) {
+    @scope (:is([data-astryx-theme^='longlink-'], [data-astryx-theme='stone'])) to ([data-astryx-theme]) {
         .astryx-breadcrumb-item {
             margin-inline-start: var(--spacing-1);
             gap: var(--spacing-2);

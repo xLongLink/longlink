@@ -8,7 +8,7 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
     """Keep editable sources, migrations, and production-safe defaults in built images."""
 
     # Act
-    dockerfile = build.render_dockerfile("/workspace/dev", "LABEL org.opencontainers.image.title=\"test\"", "0.1.0")
+    dockerfile = build.render_dockerfile("/workspace/dev", "", "0.1.0")
 
     # Assert required build and runtime behavior.
     for expected in (
@@ -208,7 +208,6 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     # Arrange
     metadata = {
         "name": "demo",
-        "sdk": "1.2.3",
         "version": "0.1.0",
         "description": "Demo app",
     }
@@ -228,7 +227,6 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
 
     # Assert
     assert 'LABEL org.opencontainers.image.title="demo"' in labels
-    assert 'LABEL longlink.sdk="1.2.3"' in labels
     assert 'LABEL org.opencontainers.image.version="0.1.0"' in labels
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
     assert "LABEL longlink.environments=" in labels

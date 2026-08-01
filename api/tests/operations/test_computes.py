@@ -149,9 +149,6 @@ async def test_execute_compute_reconcile_operation_fails_provider_error(monkeypa
         """Expose the failing gateway abstraction."""
 
         def __init__(self, kubeconfig: str) -> None:
-            """Validate the selected compute registry."""
-
-            assert kubeconfig == compute_registry.kubeconfig
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)

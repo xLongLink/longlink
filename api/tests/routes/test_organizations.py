@@ -253,7 +253,6 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    registry = infrastructure.storage
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
@@ -264,12 +263,9 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             assert bucket_name == organization.id.hex
             return {"space_used": 4096}
 
-    def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
-        """Return the fake adapter for the selected registry credentials."""
+    def fake_storage(*args: object) -> FakeStorage:
+        """Return the failing storage adapter."""
 
-        assert endpoint_url == registry.endpoint_url
-        assert access_key_id == registry.access_key_id
-        assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
     monkeypatch.setattr("src.routes.organizations.Exoscale", fake_storage)

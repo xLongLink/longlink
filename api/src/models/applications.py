@@ -83,7 +83,6 @@ class ApplicationResponse(BaseModel):
     organization: ApplicationOrganizationResponse
 
     # Metadata
-    sdk: str | None
     name: str
     slug: str
     icon: Icon | None

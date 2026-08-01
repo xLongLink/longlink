@@ -32,7 +32,6 @@ class Application(SQLModel, table=True):
     slug: str = Field(max_length=100)
     icon: str | None = Field(default=None, max_length=50)
     image: str = Field(max_length=512)
-    sdk: str | None = Field(default=None, max_length=128)
     version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
 

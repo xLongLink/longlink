@@ -82,7 +82,6 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
-    sdk: str | None = None,
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
@@ -118,7 +117,6 @@ async def create(
             slug=slug,
             description=description,
             image=str(image),
-            sdk=sdk,
             version=version,
             icon=icon,
         )

@@ -29,14 +29,10 @@ uv run pytest tests    # Run tests
 
 ## Docker Labels
 
-The build command writes these labels into image metadata when values are available:
+The build command writes standard OCI image metadata labels using [OCI annotation keys](https://github.com/opencontainers/image-spec/blob/main/annotations.md) when values are available. It also writes this LongLink-specific label:
 
-| Label                                     | Value                          | Description                                          |
-| ----------------------------------------- | ------------------------------ | ---------------------------------------------------- |
-| `org.opencontainers.image.title`       | `<app-name>`                   | Application name.                                    |
-| `longlink.sdk`          | `<installed-longlink-version>` | Installed LongLink SDK version.                      |
-| `org.opencontainers.image.version`     | `<app-pyproject-version>`      | Application version from `pyproject.toml`.           |
-| `org.opencontainers.image.description` | `<app-description>`            | Optional application description.                    |
+| Label                   | Value                          | Description                                          |
+| ----------------------- | ------------------------------ | ---------------------------------------------------- |
 | `longlink.environments` | `<json-environment-list>`      | App environment variables when `src/envs.py` exists. |
 
 ## XML

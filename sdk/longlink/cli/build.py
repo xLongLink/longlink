@@ -306,7 +306,6 @@ def render_image_labels(metadata: Mapping[str, object], env_spec: Mapping[str, S
     # Render standard OCI metadata and LongLink-specific runtime metadata.
     label_items = [
         ("org.opencontainers.image.title", metadata.get("name")),
-        ("longlink.sdk", metadata.get("sdk")),
         ("org.opencontainers.image.version", metadata.get("version")),
         ("org.opencontainers.image.description", metadata.get("description")),
     ]
@@ -412,9 +411,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
-        metadata["sdk"] = package_version("longlink")
+        sdk_version = package_version("longlink")
     except PackageNotFoundError:
-        metadata["sdk"] = "0.0.0"
+        sdk_version = "0.0.0"
 
     # Resolve the image version and render its metadata labels.
     version = tag or project_metadata.version
@@ -460,7 +459,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"
-    dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])), encoding="utf-8")
+    dockerfile_path.write_text(render_dockerfile(workdir, labels, sdk_version), encoding="utf-8")
 
     return dockerfile_path, version, project_metadata.name
 
