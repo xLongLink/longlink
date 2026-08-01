@@ -26,9 +26,9 @@ class Organizations:
             namespace=namespace,
         )
         api = await self._client.api()
-        await apply(Namespace(namespace_manifest, api=api), namespace_manifest)
-        await apply(ResourceQuota(resource_quota, api=api), resource_quota)
-        await apply(NetworkPolicy(network_policy, api=api), network_policy)
+        await apply(Namespace(namespace_manifest, api=api))
+        await apply(ResourceQuota(resource_quota, api=api))
+        await apply(NetworkPolicy(network_policy, api=api))
 
     async def delete(self, namespace: str) -> None:
         """Delete one Organization Namespace and wait for completion."""

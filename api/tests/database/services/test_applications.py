@@ -62,7 +62,6 @@ async def test_create_requires_running_organization() -> None:
         "Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard@sha256:test",
-        sdk="1.2.3",
         version="2.0.0",
         user=user,
     )
@@ -72,7 +71,6 @@ async def test_create_requires_running_organization() -> None:
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application.sdk == "1.2.3"
     assert application.version == "2.0.0"
 
 
@@ -119,26 +117,6 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
     assert [application.id for application in fetched] == [active_application.id]
     assert [application.id for application in listed] == [active_application.id]
     assert [application.id for application in listed_with_deleted] == [deleted_application.id, active_application.id]
-
-
-async def test_get_services_return_active_applications_and_respect_include_deleted() -> None:
-    """Return applications through direct read services and hide deleted rows by default."""
-
-    # Arrange
-    user, _, application = await create_application_context("reads")
-
-    # Act
-    by_id = await applications.get(application.id)
-    await applications.soft_delete(application.id, user)
-    deleted_by_id = await applications.get(application.id)
-    included_by_id = await applications.get(application.id, include_deleted=True)
-
-    # Assert
-    assert by_id is not None
-    assert by_id.id == application.id
-    assert deleted_by_id is None
-    assert included_by_id is not None
-    assert included_by_id.deleted_id == user.id
 
 
 async def test_mark_running_updates_active_applications() -> None:

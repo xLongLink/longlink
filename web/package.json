@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "theme:build": "vp exec astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
+        "theme:build": "vp exec astryx theme build src/themes/stone/stoneTheme.ts --out src/lib/generated/stone.css",
         "build": "vp run theme:build && vp run build:prepared",
         "build:prepared": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
         "check": "vp run theme:build && vp check",
@@ -22,7 +22,6 @@
     },
     "dependencies": {
         "@astryxdesign/core": "0.2.0",
-        "@astryxdesign/theme-neutral": "0.2.0",
         "@fontsource-variable/inter": "^5.3.0",
         "@hookform/resolvers": "^5.5.7",
         "@tailwindcss/vite": "^4.3.3",
@@ -60,9 +59,6 @@
     "overrides": {
         "@babel/core": "7.29.7",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6"
-    },
-    "astryx": {
-        "theme": "@astryxdesign/theme-neutral"
     },
     "devEngines": {
         "packageManager": {

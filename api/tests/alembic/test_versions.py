@@ -7,7 +7,6 @@ from sqlalchemy import inspect, create_engine
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from src.environments import env
-from sqlalchemy.engine import Engine
 from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
 
 pytestmark = pytest.mark.no_db
@@ -35,17 +34,20 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
     encoded_password = "sec%40ret"
     container = start_postgres("longlink", password, "longlink", POSTGRES_PORT)
 
-    engine: Engine | None = None
+    engine = None
     try:
-
         # Run the real Alembic environment to verify ConfigParser and SQLAlchemy preserve the encoded password.
-        database_url = f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
+        database_url = (
+            f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
+        )
         monkeypatch.setattr(env, "DATABASE_URL", database_url)
         config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
         command.upgrade(config, "head")
 
         # Compare every migrated platform table and column with the current model metadata.
-        inspection_url = f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+        inspection_url = (
+            f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+        )
         engine = create_engine(inspection_url)
         model_columns = {table.name: {column.name for column in table.columns} for table in SQLModel.metadata.sorted_tables}
         with engine.connect() as connection:
@@ -66,7 +68,6 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
         assert remaining_tables.isdisjoint(model_columns)
     finally:
-
         # Dispose database and container resources even when migration assertions fail.
         try:
             if engine is not None:

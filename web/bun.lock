@@ -6,7 +6,6 @@
       "name": "web",
       "dependencies": {
         "@astryxdesign/core": "0.2.0",
-        "@astryxdesign/theme-neutral": "0.2.0",
         "@fontsource-variable/inter": "^5.3.0",
         "@hookform/resolvers": "^5.5.7",
         "@tailwindcss/vite": "^4.3.3",

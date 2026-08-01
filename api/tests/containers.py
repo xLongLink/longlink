@@ -6,7 +6,7 @@ import urllib.parse
 from docker.client import DockerClient
 from collections.abc import Sequence
 from docker.constants import DEFAULT_DOCKER_API_VERSION
-from requests.exceptions import Timeout, SSLError, ConnectionError
+from requests.exceptions import Timeout, ConnectionError
 from docker.models.containers import Container
 
 
@@ -16,14 +16,10 @@ def require_docker_daemon() -> None:
     # Use a fixed client API version so construction validates configuration without contacting the daemon.
     client = docker.from_env(version=DEFAULT_DOCKER_API_VERSION)
     try:
-
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
-        try:
-            client.ping()
-        except SSLError:
-            raise
-        except (ConnectionError, Timeout) as exc:
-            pytest.skip(f"Docker daemon is not available: {exc}")
+        client.ping()
+    except (ConnectionError, Timeout) as exc:
+        pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
         client.close()
 
@@ -55,10 +51,7 @@ class DockerRuntimeContainer:
 
         self._client = docker.from_env()
         port_bindings = {f"{port}/tcp": ("127.0.0.1", None) for port in self._ports}
-        volume_bindings = {
-            source: {"bind": target, "mode": mode}
-            for source, target, mode in self._volumes
-        }
+        volume_bindings = {source: {"bind": target, "mode": mode} for source, target, mode in self._volumes}
 
         # Close the Docker client after any failed pull or start while preserving the original error.
         try:
@@ -119,34 +112,8 @@ class DockerRuntimeContainer:
         bindings = self._container.attrs["NetworkSettings"]["Ports"][f"{port}/tcp"]
         return int(bindings[0]["HostPort"])
 
-    def logs(self) -> str:
-        """Return current container logs as text."""
 
-        if self._container is None:
-            raise RuntimeError("Container has not been started")
-
-        return self._container.logs(stdout=True, stderr=True).decode("utf-8", errors="replace")
-
-    def status(self) -> str:
-        """Return the latest Docker container status."""
-
-        if self._container is None:
-            raise RuntimeError("Container has not been started")
-
-        self._container.reload()
-        return self._container.status
-
-    def execute(self, command: Sequence[str]) -> tuple[int, str]:
-        """Run one command inside the container."""
-
-        if self._container is None:
-            raise RuntimeError("Container has not been started")
-
-        result = self._container.exec_run(list(command))
-        return result.exit_code, result.output.decode("utf-8", errors="replace")
-
-
-def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int = 5432) -> None:
+def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int) -> None:
     """Wait until a PostgreSQL container accepts connections."""
 
     deadline = time.monotonic() + 60
@@ -154,14 +121,17 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
     # Poll the actual database connection until PostgreSQL finishes initialization.
     while time.monotonic() < deadline:
         try:
-            with psycopg.connect(
-                host=container.host(),
-                port=container.port(port),
-                user=username,
-                password=password,
-                dbname=database,
-                connect_timeout=1,
-            ) as connection, connection.cursor() as cursor:
+            with (
+                psycopg.connect(
+                    host=container.host(),
+                    port=container.port(port),
+                    user=username,
+                    password=password,
+                    dbname=database,
+                    connect_timeout=1,
+                ) as connection,
+                connection.cursor() as cursor,
+            ):
                 cursor.execute("SELECT 1")
             return
         except psycopg.OperationalError:
@@ -170,7 +140,7 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
     pytest.fail("PostgreSQL container did not become ready")
 
 
-def start_postgres(username: str, password: str, database: str, port: int = 5432) -> DockerRuntimeContainer:
+def start_postgres(username: str, password: str, database: str, port: int) -> DockerRuntimeContainer:
     """Start a ready PostgreSQL container for one integration test."""
 
     # Verify Docker availability before creating the test database container.
@@ -187,23 +157,3 @@ def start_postgres(username: str, password: str, database: str, port: int = 5432
     container.start()
     wait_for_postgres(container, username, password, database, port)
     return container
-
-
-def wait_for_container_log(container: DockerRuntimeContainer, text: str, timeout: float) -> None:
-    """Wait until a container emits a log line containing text."""
-
-    deadline = time.monotonic() + timeout
-
-    # Poll logs directly to avoid deprecated testcontainers wait helpers.
-    while time.monotonic() < deadline:
-        logs = container.logs()
-        if text in logs:
-            return
-
-        # Stop early when the container has already failed.
-        if container.status() not in {"created", "running"}:
-            raise RuntimeError(f"Container exited before emitting {text!r}: {logs}")
-
-        time.sleep(1)
-
-    raise TimeoutError(f"Container did not emit {text!r} within {timeout} seconds")

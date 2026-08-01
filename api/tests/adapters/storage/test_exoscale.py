@@ -120,9 +120,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
         """Provide the Exoscale IAM calls used by credential provisioning."""
 
         def __init__(self, access_key_id: str, secret_access_key: str, url: str) -> None:
-            """Capture client configuration."""
-
-            calls.append(("client", (access_key_id, secret_access_key, url)))
+            """Accept client configuration."""
 
         async def __aenter__(self) -> "Client":
             """Enter the fake API client context."""
@@ -186,7 +184,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act
-    credentials = await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
+    credentials = await storage.credentials("dashboard", "acme", "apps/dashboard/")
 
     # Assert
     role_call = next(value for name, value in calls if name == "create-iam-role")
@@ -259,5 +257,5 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
 
     # Act and assert
     with pytest.raises(RuntimeError, match="key generation failed"):
-        await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
+        await storage.credentials("dashboard", "acme", "apps/dashboard/")
     assert calls == ["list-api-keys", "list-api-keys"]

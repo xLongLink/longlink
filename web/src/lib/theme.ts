@@ -1,5 +1,5 @@
 import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
-import { neutralTheme } from '@astryxdesign/theme-neutral';
+import { stoneTheme } from '@/themes/stone/stoneTheme';
 
 /** Theme mode values supported by the API and UI. */
 export const THEME_VALUES = ['light', 'dark', 'system'] as const;
@@ -81,7 +81,7 @@ export const ACCENT_BOOTSTRAP_VALUES = Object.fromEntries(
     ACCENT_VALUES.map((value) => [
         value,
         value === 'neutral'
-            ? ['light-dark(oklch(0.205 0 0), oklch(0.922 0 0))', 'light-dark(oklch(0.985 0 0), oklch(0.205 0 0))']
+            ? ['light-dark(#25252a, #f3f3f5)', 'light-dark(#ffffff, #25252a)']
             : [ACCENT_TOKENS[value].accent, ACCENT_TOKENS[value].accentForeground],
     ])
 ) as Record<Accent, [string, string]>;
@@ -100,7 +100,11 @@ export const ACCENT_OPTIONS = ACCENT_VALUES.map((value) => ({
 
 /** Returns the Astryx theme for one persisted accent and radius selection. */
 export function getAstryxTheme(accentValue: Accent, radius: number): DefinedTheme {
-    const key = accentValue === 'neutral' && radius === DEFAULT_RADIUS ? 'neutral-default' : `${accentValue}-${radius}`;
+    if (accentValue === 'neutral' && radius === DEFAULT_RADIUS) {
+        return stoneTheme;
+    }
+
+    const key = `${accentValue}-${radius}`;
 
     // Reuse theme objects so Astryx does not reinject equivalent CSS.
     const existing = themes.get(key);
@@ -108,44 +112,21 @@ export function getAstryxTheme(accentValue: Accent, radius: number): DefinedThem
         return existing;
     }
 
-    // Keep surfaces neutral while applying the selected color to accent roles.
+    // Preserve Stone while applying the selected user accent and radius.
     const accent = ACCENT_TOKENS[accentValue];
     const theme = defineTheme({
         name: `longlink-${key}`,
-        extends: neutralTheme,
-        typography: {
-            body: { family: 'Inter Variable', fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-            heading: {
-                family: 'Inter Variable',
-                fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            },
-        },
+        extends: stoneTheme,
         radius: { base: 4, multiplier: radius },
-        components: {
-            breadcrumbs: {
-                base: { marginInlineStart: 'calc(-1 * var(--spacing-1))' },
-            },
-            table: {
-                base: {
-                    borderWidth: '0',
-                },
-            },
-        },
         tokens: {
-            '--color-background-surface': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
-            '--color-background-body': ['oklch(1 0 0)', 'oklch(0.145 0 0)'],
-            '--color-background-card': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
-            '--color-background-popover': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
-            '--color-background-muted': ['oklch(0.97 0 0)', 'oklch(0.235 0 0)'],
-            '--color-accent': accentValue === 'neutral' ? ['oklch(0.205 0 0)', 'oklch(0.922 0 0)'] : accent.accent,
+            '--color-accent': accentValue === 'neutral' ? ['#25252a', '#f3f3f5'] : accent.accent,
             '--color-accent-muted': [
                 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
                 'color-mix(in srgb, var(--color-accent) 25%, transparent)',
             ],
             '--color-text-accent': 'var(--color-accent)',
             '--color-icon-accent': 'var(--color-accent)',
-            '--color-on-accent':
-                accentValue === 'neutral' ? ['oklch(0.985 0 0)', 'oklch(0.205 0 0)'] : accent.accentForeground,
+            '--color-on-accent': accentValue === 'neutral' ? ['#ffffff', '#25252a'] : accent.accentForeground,
         },
     });
 

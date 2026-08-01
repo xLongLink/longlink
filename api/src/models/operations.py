@@ -17,7 +17,7 @@ class OperationStatus(StrEnum):
 class OperationKind(StrEnum):
     """Supported registered operation handlers."""
 
-    compute_reconcile = "compute.reconcile"
+    compute_create = "compute.create"
     application_create = "application.create"
     application_delete = "application.delete"
     organization_create = "organization.create"

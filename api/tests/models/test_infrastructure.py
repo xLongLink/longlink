@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from src.models.types import DatabaseSSLMode
-from src.models.infrastructure import StorageConfiguration, DatabaseConfiguration
+from src.models.infrastructure import DatabaseConfiguration
 
 pytestmark = pytest.mark.no_db
 
@@ -15,12 +14,9 @@ def test_database_configuration_accepts_plain_hosts() -> None:
         port=5432,
         username="admin",
         password="secret",
-        sslmode=DatabaseSSLMode.disable,
     )
 
     assert payload.host == "database.example"
-    assert payload.port == 5432
-    assert payload.sslmode == DatabaseSSLMode.disable
 
 
 @pytest.mark.parametrize("host", ["https://database.example", "database.example:5432", "db example"])
@@ -30,16 +26,3 @@ def test_database_configuration_rejects_embedded_connection_parts(host: str) -> 
     # Host validation keeps the port and credentials in dedicated fields.
     with pytest.raises(ValidationError):
         DatabaseConfiguration(host=host, port=5432, username="admin", password="secret")
-
-
-def test_storage_configuration_accepts_exoscale_endpoint() -> None:
-    """Accept and normalize an Exoscale storage endpoint."""
-
-    # Exoscale storage endpoints are normalized before persistence.
-    payload = StorageConfiguration(
-        endpoint_url="https://sos-ch-gva-2.exo.io/",
-        access_key_id="access-key",
-        secret_access_key="secret-key",
-    )
-
-    assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"

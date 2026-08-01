@@ -21,7 +21,7 @@ export default function AdminOperations() {
         failed: t('admin.operationStatus.failed'),
     };
     const kindLabels: Record<ApiOperation['kind'], string> = {
-        'compute.reconcile': t('admin.computeReconciliation'),
+        'compute.create': t('admin.computeCreation'),
         'application.create': t('admin.applicationCreation'),
         'application.delete': t('admin.applicationDeletion'),
         'organization.create': t('admin.organizationCreation'),

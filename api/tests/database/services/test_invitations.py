@@ -95,7 +95,6 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
         deleted_invitation = await session.get(OrganizationInvitation, invitation.id)
         assert deleted_invitation is not None
         deleted_invitation.deleted_at = utcnow()
-        deleted_invitation.deleted_id = owner.id
         await session.commit()
 
     # Act

@@ -179,7 +179,6 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=100), nullable=False),
         sa.Column("icon", sa.String(length=50), nullable=True),
         sa.Column("image", sa.String(length=512), nullable=False),
-        sa.Column("sdk", sa.String(length=128), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column(
@@ -300,7 +299,7 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "compute.reconcile",
+                "compute.create",
                 "application.create",
                 "application.delete",
                 "organization.create",

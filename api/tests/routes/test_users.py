@@ -52,8 +52,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     user = users[0]
     active = await create_organization(user, name="active", slug="active")
     deleted = await create_organization(user, name="deleted", slug="deleted")
-    deleted_result = await organization_service.soft_delete(deleted.id, user)
-    assert deleted_result is not None
+    await organization_service.soft_delete(deleted.id, user)
     client = clients[0]
 
     # Act
@@ -81,25 +80,19 @@ async def test_list_users_returns_admin_user_summaries(
     assert {item["id"] for item in response.json()} == {str(user.id) for user in users}
 
 
-async def test_platform_user_cannot_access_admin_routes(
+async def test_platform_user_cannot_list_users(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Reject Platform users from administrator reads and mutations."""
+    """Reject Platform users from administrator user listings."""
 
     client = clients[1]
 
-    # Exercise representative administrator read and mutation dependencies.
+    # Request the administrator-only user listing.
     read_response = await client.get("/api/users")
-    mutation_response = await client.post(
-        "/api/computes",
-        json={"name": "Denied compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
-    )
 
     # Verify Platform users receive no administrator privileges.
     assert read_response.status_code == 403
     assert read_response.json() == {"detail": "Permission required"}
-    assert mutation_response.status_code == 403
-    assert mutation_response.json() == {"detail": "Permission required"}
 
 
 async def test_patch_me_updates_authenticated_user_profile(

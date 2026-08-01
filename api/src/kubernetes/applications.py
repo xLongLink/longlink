@@ -86,8 +86,8 @@ class Applications:
         )
 
         # Create or update the Service before the Deployment starts Application Pods.
-        await apply(Service(service, api=api), service)
-        await apply(Deployment(deployment, api=api), deployment)
+        await apply(Service(service, api=api))
+        await apply(Deployment(deployment, api=api))
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
@@ -141,7 +141,7 @@ class Applications:
                 return
             await asyncio.sleep(5)
 
-    async def logs(self, application_id: UUID, lines: int = 200) -> list[str]:
+    async def logs(self, application_id: UUID) -> list[str]:
         """Return recent logs for one managed Application Pod."""
 
         # The globally unique Application ID identifies its Pod across Organization Namespaces.
@@ -155,4 +155,4 @@ class Applications:
         if not active:
             raise ValueError("No Application Pod found")
         pod = min(active, key=lambda item: item.name)
-        return [line async for line in pod.logs(tail_lines=lines)]
+        return [line async for line in pod.logs(tail_lines=200)]

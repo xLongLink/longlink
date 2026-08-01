@@ -40,7 +40,7 @@ async def schedule_migrations() -> None:
         ).all()
 
         # Collect release targets in dependency order.
-        targets = [(OperationKind.compute_reconcile, compute.id, compute.id) for compute in compute_rows]
+        targets = [(OperationKind.compute_create, compute.id, compute.id) for compute in compute_rows]
         targets.extend(
             (OperationKind.organization_create, organization.id, organization.compute_id) for organization in organization_rows
         )

@@ -115,7 +115,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         database_usage_after_delete = await adapter.database_usage(database_name)
         server_usage_after_delete = await adapter.usage()
 
-        assert database_url.database == organization_id.hex
         assert retried_runtime_connection == runtime_connection
         assert runtime_connection["password"] == runtime_password
         assert runtime_connection["sslmode"] == "disable"

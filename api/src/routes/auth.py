@@ -21,10 +21,8 @@ router = APIRouter()
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one signed browser session."""
 
-    email = payload.email
-
     # Load the case-insensitive account identity before verifying its credential.
-    statement = select(User).where(func.lower(col(User.email)) == func.lower(email))
+    statement = select(User).where(func.lower(col(User.email)) == func.lower(payload.email))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         PasswordHash.recommended().hash(payload.password)
@@ -76,10 +74,8 @@ async def request_password_reset(
 ):
     """Queue password reset delivery without disclosing account existence."""
 
-    email = payload.email
-
     # Missing and inactive accounts receive the same response as eligible accounts.
-    statement = select(User).where(func.lower(col(User.email)) == func.lower(email), col(User.deleted_at).is_(None))
+    statement = select(User).where(func.lower(col(User.email)) == func.lower(payload.email), col(User.deleted_at).is_(None))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         return

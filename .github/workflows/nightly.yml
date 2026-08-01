@@ -81,6 +81,8 @@ jobs:
                   labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ steps.platform.outputs.version }}
+                  annotations: |
+                      index:org.opencontainers.image.description=LongLink backend API
                   tags: ${{ env.IMAGE }}
 
             - name: Remove old nightly API image versions

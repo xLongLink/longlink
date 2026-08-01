@@ -45,7 +45,7 @@ async def create(claimed: Operation) -> str | None:
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
         database_password = secrets.token_urlsafe(24)
-        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
+        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
 
         connection = await db.schema(organization.id, application.id, database_password)
 

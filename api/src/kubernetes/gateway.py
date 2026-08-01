@@ -40,6 +40,15 @@ class GatewayTLSMaterial:
     identity_private_key: str
 
 
+@dataclass(frozen=True, slots=True)
+class GatewayManifests:
+    """Carry the rendered Kubernetes resources for one gateway revision."""
+
+    config_map: dict[str, object]
+    deployment: dict[str, object]
+    network_policy: dict[str, object]
+
+
 def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
     """Render deterministic authenticated Envoy routes from the authoritative route snapshot."""
 
@@ -192,10 +201,8 @@ class Gateway:
         # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
         namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
         api = await self._client.api()
-        namespace_resource = Namespace(namespace, api=api)
-        await apply(namespace_resource, namespace)
-        service_resource = Service(service_manifest, api=api)
-        await apply(service_resource, service_manifest)
+        await apply(Namespace(namespace, api=api))
+        await apply(Service(service_manifest, api=api))
 
         # Poll provider-owned Service status without repeatedly applying unchanged desired state.
         while True:
@@ -225,27 +232,33 @@ class Gateway:
 
         # Render the complete runtime before changing any gateway dependency.
         envoy_config = render_envoy_config(routes)
-        config_map, deployment_manifest, network_policy = templates.readyml_list(
-            PLATFORM_TEMPLATES.joinpath("gateway.yml"),
-            envoy_config=json.dumps(envoy_config),
-            config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
+        manifests = GatewayManifests(
+            *templates.readyml_list(
+                PLATFORM_TEMPLATES.joinpath("gateway.yml"),
+                envoy_config=json.dumps(envoy_config),
+                config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
+            )
         )
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
         api = await self._client.api()
-        tls_secret: dict[str, object] = {
-            "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-            "stringData": {
-                "ca.crt": tls.ca_certificate,
-                "tls.crt": tls.identity_certificate,
-                "tls.key": tls.identity_private_key,
-            },
-            "type": "kubernetes.io/tls",
-        }
-        await apply(Secret(tls_secret, api=api), tls_secret)
-        await apply(ConfigMap(config_map, api=api), config_map)
-        await apply(NetworkPolicy(network_policy, api=api), network_policy)
-        await apply(Deployment(deployment_manifest, api=api), deployment_manifest)
+        await apply(
+            Secret(
+                {
+                    "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+                    "stringData": {
+                        "ca.crt": tls.ca_certificate,
+                        "tls.crt": tls.identity_certificate,
+                        "tls.key": tls.identity_private_key,
+                    },
+                    "type": "kubernetes.io/tls",
+                },
+                api=api,
+            )
+        )
+        await apply(ConfigMap(manifests.config_map, api=api))
+        await apply(NetworkPolicy(manifests.network_policy, api=api))
+        await apply(Deployment(manifests.deployment, api=api))
 
         # Poll rollout status without repeatedly applying the same Deployment revision.
         while True:

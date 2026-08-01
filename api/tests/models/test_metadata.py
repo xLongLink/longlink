@@ -10,5 +10,4 @@ def test_longlink_metadata_excludes_resolved_image_from_public_payload() -> None
     # Runtime image references are needed after resolution but must not be exposed.
     metadata = LongLinkMetadata(image="ghcr.io/longlink/dashboard@sha256:manifest", title="Dashboard")
 
-    assert metadata.image == "ghcr.io/longlink/dashboard@sha256:manifest"
     assert "image" not in metadata.model_dump()

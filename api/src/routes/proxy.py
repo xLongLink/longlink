@@ -51,8 +51,11 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     registry = await compute.get(organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
-    connection = registry.gateway_connection
-    if connection is None:
+    gateway_url = registry.gateway_url
+    ca_certificate = registry.gateway_ca_certificate
+    identity_certificate = registry.gateway_identity_certificate
+    identity_private_key = registry.gateway_identity_private_key
+    if gateway_url is None or ca_certificate is None or identity_certificate is None or identity_private_key is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
@@ -67,7 +70,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    gateway = GatewayClient(*connection)
+    gateway = GatewayClient(gateway_url, ca_certificate, identity_certificate, identity_private_key)
     try:
         gateway_response = await gateway.request(
             application_id=application.id,

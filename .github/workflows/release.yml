@@ -86,6 +86,8 @@ jobs:
                   push: true
                   build-args: |
                       VERSION=${{ github.ref_name }}
+                  annotations: |
+                      index:org.opencontainers.image.description=LongLink backend API
                   tags: |
                       ghcr.io/xlonglink/${{ env.PACKAGE_NAME }}:latest
                       ghcr.io/xlonglink/${{ env.PACKAGE_NAME }}:${{ github.ref_name }}
