@@ -6,6 +6,9 @@ metadata:
     name: $application_id
     namespace: '$namespace'
 spec:
+    # Stop the running version before its replacement applies schema migrations.
+    strategy:
+        type: Recreate
     selector:
         matchLabels:
             $application_id_label: $application_id
@@ -18,11 +21,19 @@ spec:
         spec:
             automountServiceAccountToken: false
             securityContext:
+                runAsNonRoot: true
                 seccompProfile:
                     type: RuntimeDefault
             containers:
                 - name: application
                   image: $image
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 128Mi
+                      limits:
+                          cpu: 500m
+                          memory: 256Mi
                   readinessProbe:
                       httpGet:
                           path: /health

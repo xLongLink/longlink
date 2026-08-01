@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from factories import create_organization, create_ready_infrastructure
+from factories import create_organization
 from src.errors import ConflictError, NotFoundError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -17,7 +17,6 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure(name="Primary")
     organization = await create_organization(owner)
 
     # Act
@@ -57,7 +56,6 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure(name="Primary")
     organization = await create_organization(owner)
 
     # Act
@@ -73,7 +71,6 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure(name="Primary")
     organization = await create_organization(owner)
     await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
@@ -90,7 +87,6 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
 
     # Arrange
     owner = users[0]
-    await create_ready_infrastructure(name="Primary")
     organization = await create_organization(owner)
     invitation = await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 

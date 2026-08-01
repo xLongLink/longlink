@@ -44,7 +44,6 @@ async def create(claimed: Operation) -> str | None:
         # Generate fresh credentials for this explicit creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
-        await object_storage.create_prefix(bucket, prefix)
         database_password = secrets.token_urlsafe(24)
         credentials = await object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix)
 
@@ -86,7 +85,6 @@ async def create(claimed: Operation) -> str | None:
     if not await applications.mark_running(application.id):
         return None
     await operations.create(organization.compute_id)
-    return None
 
 
 async def delete(claimed: Operation) -> str | None:
@@ -127,4 +125,3 @@ async def delete(claimed: Operation) -> str | None:
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     await applications.purge(application.id)
-    return None

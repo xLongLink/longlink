@@ -10,7 +10,6 @@ from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
-from longlink.shared.constants import SHARED_SCHEMA
 from longlink.database.registry import Base, database_metadata
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -82,14 +81,7 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     # Preserve the Platform-selected TLS mode for production PostgreSQL connections.
     if dburl.startswith("postgresql+asyncpg"):
-        connect_args: dict[str, object] = {"ssl": env.DATABASE_SSLMODE}
-
-        # Production apps write unqualified tables to their app schema while resolving shared users.
-        if env.DATABASE_SCHEMA:
-            connect_args["server_settings"] = {
-                "search_path": f'"{env.DATABASE_SCHEMA}",{SHARED_SCHEMA}',
-            }
-        engine_kwargs["connect_args"] = connect_args
+        engine_kwargs["connect_args"] = {"ssl": env.DATABASE_SSLMODE}
 
     # Cache the configured engine for subsequent session requests.
     _engine = create_async_engine(dburl, **engine_kwargs)

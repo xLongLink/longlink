@@ -246,7 +246,6 @@ async def complete_registration(
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
-        await session.flush()
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()

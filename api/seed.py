@@ -6,9 +6,8 @@ from src.errors import ConflictError
 from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
-from src.models.computes import ComputeRegistryCreate, kubeconfig_mapping
+from src.models.computes import ComputeRegistryCreate
 from src.database.services import compute, storage, database, operations
-from src.models.operations import OperationKind
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
 
@@ -100,9 +99,8 @@ async def seed_local_development(settings: SeedSettings) -> None:
     from src.database.models import applications
 
     # Validate the configured Kubernetes compute before mutating Platform state.
-    compute_config = ComputeRegistryCreate(
-        name="development compute",
-        kubeconfig=kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8")),
+    compute_config = ComputeRegistryCreate.model_validate(
+        {"name": "development compute", "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8")}
     )
 
     # Resolve either the configured Application database or the local PostgreSQL service.
@@ -114,7 +112,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     except ConflictError:
         pass
     else:
-        await operations.create(compute_registry.id, kind=OperationKind.compute_reconcile)
+        await operations.create(compute_registry.id)
 
     # Register the configured database unless it already exists.
     try:

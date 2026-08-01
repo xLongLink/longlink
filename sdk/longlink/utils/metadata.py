@@ -22,13 +22,8 @@ class Metadata(BaseModel):
 
     # Metadata
     name: str = "longlink-app"
-    title: str | None = None
     version: str = "0.0.0"
-    summary: str | None = None
-    contact: MetadataPayload | None = None
     description: str | None = None
-    license_info: MetadataPayload | None = None
-    terms_of_service: str | None = None
 
     @classmethod
     def from_pyproject(cls, pyproject_data: MetadataPayload, **overrides: object) -> Self:
@@ -41,13 +36,8 @@ class Metadata(BaseModel):
             field: value
             for field, value in {
                 "name": tool_data.get("name") or project_data.get("name"),
-                "title": tool_data.get("title"),
-                "summary": tool_data.get("summary"),
                 "description": tool_data.get("description") or project_data.get("description"),
                 "version": tool_data.get("version") or project_data.get("version"),
-                "terms_of_service": tool_data.get("terms_of_service"),
-                "contact": tool_data.get("contact"),
-                "license_info": tool_data.get("license_info"),
             }.items()
             if value
         }

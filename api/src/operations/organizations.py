@@ -31,7 +31,7 @@ async def reconcile(claimed: Operation) -> str | None:
     await db.prepare_organization_database(organization.id)
     await organizations.sync_users(organization.id, db)
 
-    # Converge the Organization bucket and shared folder marker in the same reconciliation.
+    # Converge the Organization bucket before Applications receive scoped credentials.
     object_storage = Exoscale(
         storage_registry.endpoint_url,
         storage_registry.access_key_id,
@@ -39,9 +39,8 @@ async def reconcile(claimed: Operation) -> str | None:
     )
     bucket = organization.id.hex
     await object_storage.create(bucket)
-    await object_storage.create_prefix(bucket, "shared/")
 
-    # Apply release changes to the Organization Namespace and NetworkPolicy.
+    # Apply release changes to the Organization Namespace, quota, and ingress policy.
     cluster = Kubernetes(compute_registry.kubeconfig)
     await cluster.organizations.apply(organization.id.hex)
 
@@ -91,4 +90,3 @@ async def delete(claimed: Operation) -> str | None:
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     await organizations.purge(organization.id)
-    return None

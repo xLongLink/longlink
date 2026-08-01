@@ -55,8 +55,6 @@ async def reset_db(
     """Create a fresh SQLite database for each test."""
 
     if request.node.get_closest_marker("no_db"):
-        session.Session = None
-        session._engine = None
         try:
             yield
         finally:

@@ -3,7 +3,7 @@
 - When listing improvement suggestions, use numbered lists.
 - Project is in _MVP mode - No need for backwards compatibility_
 
-At the end of each task, return 5 cleanup and simplfications opportunities related to the task:
+At the end of each task, return 5 cleanup and simplfications opportunities related to the task that would result in removing code:
 
 1. Exact file path and line range.
 2. The current construct and why it is redundant.

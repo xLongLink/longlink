@@ -3,10 +3,11 @@ import docker
 import pytest
 import psycopg
 import urllib.parse
-from typing import Any
+from docker.client import DockerClient
 from collections.abc import Sequence
 from docker.constants import DEFAULT_DOCKER_API_VERSION
 from requests.exceptions import Timeout, SSLError, ConnectionError
+from docker.models.containers import Container
 
 
 def require_docker_daemon() -> None:
@@ -19,12 +20,9 @@ def require_docker_daemon() -> None:
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
         try:
             client.ping()
+        except SSLError:
+            raise
         except (ConnectionError, Timeout) as exc:
-
-            # TLS failures indicate invalid client configuration rather than an unavailable daemon.
-            if isinstance(exc, SSLError):
-                raise
-
             pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
         client.close()
@@ -41,7 +39,6 @@ class DockerRuntimeContainer:
         ports: Sequence[int] = (),
         volumes: Sequence[tuple[str, str, str]] = (),
         environment: dict[str, str] | None = None,
-        **kwargs: Any,
     ) -> None:
         """Store container configuration without contacting Docker."""
 
@@ -50,9 +47,8 @@ class DockerRuntimeContainer:
         self._command = command
         self._volumes = volumes
         self._environment = environment or {}
-        self._kwargs = kwargs
-        self._client: Any | None = None
-        self._container: Any | None = None
+        self._client: DockerClient | None = None
+        self._container: Container | None = None
 
     def start(self) -> "DockerRuntimeContainer":
         """Create and start the configured Docker container."""
@@ -74,7 +70,6 @@ class DockerRuntimeContainer:
                 ports=port_bindings or None,
                 remove=False,
                 volumes=volume_bindings or None,
-                **self._kwargs,
             )
         finally:
             if self._container is None:
@@ -166,9 +161,8 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
                 password=password,
                 dbname=database,
                 connect_timeout=1,
-            ) as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT 1")
+            ) as connection, connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
             return
         except psycopg.OperationalError:
             time.sleep(0.5)

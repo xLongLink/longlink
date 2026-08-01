@@ -19,7 +19,7 @@ export const content = (
         <Text as="p">
             Building turns a local SDK application into a container image that the LongLink Platform can inspect,
             register, and deploy. The image carries LongLink metadata labels for application identity, SDK version,
-            application version, display text, and declared environment requirements.
+            application version, and declared environment requirements.
         </Text>
         <Text as="p">
             <Code>longlink build</Code> builds from a temporary Docker context and leaves the application folder
@@ -54,18 +54,8 @@ version = "1.2.0"
 description = "Order workflow service"
 
 [tool.longlink]
-title = "Orders"
 environment = "src.envs:Env"
-summary = "Review, assign, and complete orders"
-description = "Operational order management for warehouse teams"
-terms_of_service = "https://example.com/terms"
-
-[tool.longlink.contact]
-name = "Operations Team"
-email = "ops@example.com"
-
-[tool.longlink.license_info]
-name = "Private"`}</CodeBlock>
+description = "Operational order management for warehouse teams"`}</CodeBlock>
             <List listStyle="disc">
                 <ListItem
                     label={
@@ -85,24 +75,8 @@ name = "Private"`}</CodeBlock>
                 <ListItem
                     label={
                         <Text>
-                            <Code>title</Code> and <Code>summary</Code> provide display text for application views and
-                            registration.
-                        </Text>
-                    }
-                />
-                <ListItem
-                    label={
-                        <Text>
                             <Code>description</Code> falls back to <Code>[project].description</Code> when omitted from{' '}
                             <Code>[tool.longlink]</Code>.
-                        </Text>
-                    }
-                />
-                <ListItem
-                    label={
-                        <Text>
-                            <Code>contact</Code>, <Code>license_info</Code>, and <Code>terms_of_service</Code> are
-                            optional metadata objects or URLs passed through to the runtime and image labels.
                         </Text>
                     }
                 />

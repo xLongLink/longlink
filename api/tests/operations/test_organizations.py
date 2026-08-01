@@ -15,7 +15,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     # Arrange
     owner, member = users[0], users[1]
     infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner)
+    organization = await create_organization(owner, infrastructure=infrastructure)
     base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
     deleted_at = base_time + timedelta(minutes=2)
     calls: list[tuple[str, list[dict[str, object]]]] = []

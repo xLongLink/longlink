@@ -1,9 +1,22 @@
-# Template for one owned organization Namespace and gateway ingress policy.
+# Template for one owned Organization Namespace, quota, and gateway ingress policy.
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
     name: '$namespace'
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+    name: longlink-applications
+    namespace: '$namespace'
+spec:
+    hard:
+        limits.cpu: '2'
+        limits.memory: 1Gi
+        pods: '4'
+        requests.cpu: 400m
+        requests.memory: 512Mi
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

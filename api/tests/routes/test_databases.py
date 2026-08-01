@@ -90,13 +90,11 @@ async def test_database_registry_routes_require_admin(
     """Reject Platform users from database registry administration."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    registry = infrastructure.database
     client = clients[1]
 
     # Act
     read_response = await client.get("/api/databases")
-    usage_response = await client.get(f"/api/databases/{registry.id}/usage")
+    usage_response = await client.get("/api/databases/00000000-0000-4000-8000-000000000000/usage")
     write_response = await client.post(
         "/api/databases",
         json={

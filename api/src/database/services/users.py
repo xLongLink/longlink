@@ -1,15 +1,12 @@
-from uuid import UUID
 from pwdlib import PasswordHash
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
 
 
 async def fetch() -> Sequence[User]:
@@ -20,24 +17,7 @@ async def fetch() -> Sequence[User]:
         return (await session.scalars(select(User))).all()
 
 
-async def get(user_id: UUID, include_organizations: bool = False) -> User | None:
-    """Load a user by local identifier, optionally including organization memberships."""
-
-    # Read the active user through a managed database session.
-    async with session_scope() as session:
-        statement = select(User).where(User.id == user_id, User.deleted_at.is_(None))
-
-        # Eager-load Organization access for detached request authorization.
-        if include_organizations:
-            statement = statement.options(
-                selectinload(User.organization_memberships)
-                .selectinload(UserOrganization.organization)
-            )
-
-        return (await session.scalars(statement)).one_or_none()
-
-
-async def ensure_administrator() -> tuple[User, bool]:
+async def ensure_administrator() -> None:
     """Create or repair the configured initial Platform administrator."""
 
     # Match the configured identity case-insensitively before reconciling its credentials and access.
@@ -66,21 +46,11 @@ async def ensure_administrator() -> tuple[User, bool]:
                 created = False
 
         # Reconcile an existing account, including one created concurrently by another replica.
-        if created:
-            changed = True
-        else:
-            verified = hasher.verify(env.ADMIN_PASSWORD, user.hashed_password)
-            changed = (
-                not verified
-                or user.name != env.ADMIN_NAME
-                or user.role != PlatformRoles.administrator
-                or user.deleted_at is not None
-            )
-            if not verified:
+        if not created:
+            if not hasher.verify(env.ADMIN_PASSWORD, user.hashed_password):
                 user.hashed_password = hasher.hash(env.ADMIN_PASSWORD)
             user.name = env.ADMIN_NAME
             user.role = PlatformRoles.administrator
             user.deleted_at = None
 
         await session.commit()
-        return user, changed

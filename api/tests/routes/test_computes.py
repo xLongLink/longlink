@@ -95,13 +95,11 @@ async def test_compute_registry_routes_require_admin(
     """Reject Platform users from compute registry administration."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    registry = infrastructure.compute
     client = clients[1]
 
     # Act
     read_response = await client.get("/api/computes")
-    get_response = await client.get(f"/api/computes/{registry.id}")
+    get_response = await client.get("/api/computes/00000000-0000-4000-8000-000000000000")
     write_response = await client.post(
         "/api/computes",
         json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},

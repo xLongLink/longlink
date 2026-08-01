@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_organization, create_ready_infrastructure
+from factories import create_organization
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
 
@@ -14,7 +14,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(
         user,
         avatar="https://example.com/organizations/acme.png",
@@ -51,7 +50,6 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure()
     active = await create_organization(user, name="active", slug="active")
     deleted = await create_organization(user, name="deleted", slug="deleted")
     deleted_result = await organization_service.soft_delete(deleted.id, user)
@@ -113,7 +111,6 @@ async def test_patch_me_updates_authenticated_user_profile(
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure()
     organization = await create_organization(user)
     synchronized: list[UUID] = []
 

@@ -1,7 +1,9 @@
 import yaml
 import pytest
+import ipaddress
 from uuid import UUID
-from src.kubernetes.gateway import GatewayRoute, render_envoy_config
+from cryptography import x509
+from src.kubernetes.gateway import GatewayRoute, render_envoy_config, generate_gateway_tls
 
 pytestmark = pytest.mark.no_db
 
@@ -44,3 +46,19 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
         f"{first_organization_id.hex}-20000000-0000-4000-8000-000000000001",
         f"{second_organization_id.hex}-20000000-0000-4000-8000-000000000002",
     ]
+
+
+def test_gateway_tls_covers_the_compute_address() -> None:
+    """Generate a gateway certificate trusted by its private compute CA."""
+
+    # Generate material for one IPv4 compute gateway address.
+    compute_id = UUID("00000000-0000-4000-8000-000000000001")
+    address = ipaddress.ip_address("192.0.2.1")
+    material = generate_gateway_tls(compute_id, address)
+
+    # Verify the server certificate preserves its issuing CA and gateway IP SAN.
+    ca_certificate = x509.load_pem_x509_certificate(material.ca_certificate.encode("ascii"))
+    certificate = x509.load_pem_x509_certificate(material.identity_certificate.encode("ascii"))
+    names = certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+    assert certificate.issuer == ca_certificate.subject
+    assert names.get_values_for_type(x509.IPAddress) == [address]

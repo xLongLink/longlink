@@ -319,20 +319,6 @@ def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str
     if environments:
         rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
 
-    # Append optional presentation and legal metadata in a stable order.
-    rendered_labels.extend(
-        [
-            f"LABEL {key}={encode_label_value(value)}"
-            for key, value in [
-                ("longlink.title", metadata.get("title")),
-                ("longlink.summary", metadata.get("summary")),
-                ("longlink.terms_of_service", metadata.get("terms_of_service")),
-                ("longlink.contact", metadata.get("contact")),
-                ("longlink.license_info", metadata.get("license_info")),
-            ]
-            if value is not None
-        ]
-    )
     return "\n".join(rendered_labels)
 
 
