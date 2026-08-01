@@ -2,8 +2,6 @@ import pytest
 from httpx2 import AsyncClient
 from src.models.types import Image
 
-IMAGE_REFERENCE = "ghcr.io/longlink/dashboard:latest"
-
 
 async def test_inspect_image_returns_404_when_metadata_missing(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
@@ -20,7 +18,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     client = clients[0]
 
     # Act
-    response = await client.get(f"/api/image?image={IMAGE_REFERENCE}")
+    response = await client.get("/api/image?image=ghcr.io/longlink/dashboard:latest")
 
     # Assert
     assert response.status_code == 404

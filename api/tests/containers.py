@@ -17,10 +17,9 @@ def require_docker_daemon() -> None:
     client = docker.from_env(version=DEFAULT_DOCKER_API_VERSION)
     try:
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
-        try:
-            client.ping()
-        except (ConnectionError, Timeout) as exc:
-            pytest.skip(f"Docker daemon is not available: {exc}")
+        client.ping()
+    except (ConnectionError, Timeout) as exc:
+        pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
         client.close()
 

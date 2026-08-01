@@ -253,12 +253,7 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             assert bucket_name == organization.id.hex
             return {"space_used": 4096}
 
-    def fake_storage(*args: object) -> FakeStorage:
-        """Return the failing storage adapter."""
-
-        return FakeStorage()
-
-    monkeypatch.setattr("src.routes.organizations.Exoscale", fake_storage)
+    monkeypatch.setattr("src.routes.organizations.Exoscale", lambda *_args: FakeStorage())
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")

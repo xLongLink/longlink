@@ -113,10 +113,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         "namespace": organization.id.hex,
         "envs": {"API_KEY": "secret-value", "PORT": "8080"},
     }
-    assert any(
-        item.kind == OperationKind.application_create and item.target_id == persisted.id
-        for item in await operations.fetch()
-    )
+    assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch())
 
 
 async def test_create_app_returns_403_for_regular_member(

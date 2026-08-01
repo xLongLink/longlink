@@ -24,17 +24,16 @@ async def create(claimed: Operation) -> str | None:
     gateway_ip = await cluster.gateway.ip()
 
     # Persisted gateway TLS must be either complete or absent.
-    current_tls = registry.gateway_tls
-    if current_tls is None:
-        if any(
-            value is not None
-            for value in (
-                registry.gateway_ca_certificate,
-                registry.gateway_identity_certificate,
-                registry.gateway_identity_private_key,
-            )
-        ):
+    ca_certificate = registry.gateway_ca_certificate
+    identity_certificate = registry.gateway_identity_certificate
+    identity_private_key = registry.gateway_identity_private_key
+    missing_tls = ca_certificate is None or identity_certificate is None or identity_private_key is None
+    if missing_tls:
+        if any(value is not None for value in (ca_certificate, identity_certificate, identity_private_key)):
             raise RuntimeError("Compute registry has incomplete gateway TLS material")
+
+    # Generate a fresh identity for the initial creation and every Platform release.
+    if missing_tls or Version(registry.version) < platform_version:
         tls = generate_gateway_tls(registry.id, gateway_ip)
         replaced = await compute.replace_gateway_tls(
             registry.id,
@@ -43,20 +42,12 @@ async def create(claimed: Operation) -> str | None:
             tls.identity_private_key,
         )
         if not replaced:
-            raise RuntimeError("Compute registry disappeared while creating gateway TLS")
-    elif Version(registry.version) < platform_version:
-        # Recreate the complete gateway identity for every Platform release.
-        tls = generate_gateway_tls(registry.id, gateway_ip)
-        replaced = await compute.replace_gateway_tls(
-            registry.id,
-            tls.ca_certificate,
-            tls.identity_certificate,
-            tls.identity_private_key,
-        )
-        if not replaced:
-            raise RuntimeError("Compute registry disappeared while recreating gateway TLS")
+            raise RuntimeError("Compute registry disappeared while updating gateway TLS")
     else:
-        tls = GatewayTLSMaterial(*current_tls)
+        assert ca_certificate is not None
+        assert identity_certificate is not None
+        assert identity_private_key is not None
+        tls = GatewayTLSMaterial(ca_certificate, identity_certificate, identity_private_key)
 
     # Apply one authoritative running-Application route snapshot per compute Operation.
     route_rows = await applications.gateway_routes(registry.id)

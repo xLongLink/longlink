@@ -39,7 +39,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
 
     # Arrange
     email = "registered@example.com"
-    registration_payload = {"email": email}
     completion_payload = {
         "name": "Registered",
         "email": email,
@@ -48,7 +47,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     }
     login_payload = {"email": email, "password": TEST_PASSWORD}
     # Request a stateless email link without creating a pending user.
-    register_response = await client.post("/api/auth/register", json=registration_payload)
+    register_response = await client.post("/api/auth/register", json={"email": email})
     Session = await get_session()
     async with Session() as session:
         pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()

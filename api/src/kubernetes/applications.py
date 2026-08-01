@@ -86,8 +86,8 @@ class Applications:
         )
 
         # Create or update the Service before the Deployment starts Application Pods.
-        await apply(Service(service, api=api), service)
-        await apply(Deployment(deployment, api=api), deployment)
+        await apply(Service(service, api=api))
+        await apply(Deployment(deployment, api=api))
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:

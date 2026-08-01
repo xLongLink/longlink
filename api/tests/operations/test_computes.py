@@ -79,17 +79,14 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
         session.add_all([organization, running, creating])
         await session.commit()
     snapshots: list[tuple[tuple[GatewayRoute, ...], GatewayTLSMaterial]] = []
-    generated: list[GatewayTLSMaterial] = []
 
     def generate_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
         """Return distinct generated TLS material."""
 
         assert compute_id == compute_registry.id
         assert address == ipaddress.IPv4Address("192.0.2.1")
-        generation = len(generated) + 1
-        tls = GatewayTLSMaterial(f"ca-{generation}", f"certificate-{generation}", f"private-key-{generation}")
-        generated.append(tls)
-        return tls
+        generation = len(snapshots) + 1
+        return GatewayTLSMaterial(f"ca-{generation}", f"certificate-{generation}", f"private-key-{generation}")
 
     class FakeGateway:
         """Capture gateway resource operations."""
