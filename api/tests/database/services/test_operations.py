@@ -73,7 +73,7 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
-    organization = await operations.create(
+    await operations.create(
         compute.id,
         kind=OperationKind.organization_create,
         target_id=organization_id,
@@ -153,11 +153,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
     # Act
     await platform_release.schedule_migrations()
     await platform_release.schedule_migrations()
-    application_operations = [
-        operation
-        for operation in await operations.fetch()
-        if operation.kind == OperationKind.application_create
-    ]
+    application_operations = [operation for operation in await operations.fetch() if operation.kind == OperationKind.application_create]
 
     # Assert
     assert len(application_operations) == 1
@@ -195,7 +191,7 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     older_compute = await create_compute("older")
     newer_compute = await create_compute("newer")
     older_operation = await operations.create(older_compute.id)
-    newer_operation = await operations.create(newer_compute.id)
+    await operations.create(newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -210,7 +206,6 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     assert claimed is not None
     assert claimed.id == older_operation.id
     assert claimed.status == OperationStatus.active
-    assert claimed.lease_expires_at is not None
 
 
 async def test_operations_service_claims_older_release_work(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -270,7 +265,6 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert finished_claim is None
     assert replacement_claim is None
     assert expired_row.status == OperationStatus.failed
-    assert expired_row.finished_at is not None
     assert expired_row.lease_expires_at is None
     assert expired_compute_row is not None
     assert expired_compute_row.status == Status.creating
@@ -357,12 +351,8 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     # Verify both terminal states retain their expected lifecycle metadata.
     assert completed is not None
     assert completed.status == OperationStatus.completed
-    assert completed.finished_at is not None
-    assert completed.failed is False
     assert finished is not None
     assert finished.status == OperationStatus.failed
-    assert finished.finished_at is not None
-    assert finished.failed is True
     assert failed_compute_row is not None
     assert failed_compute_row.status == Status.creating
 

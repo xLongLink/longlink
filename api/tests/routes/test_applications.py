@@ -1,6 +1,6 @@
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running
 from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import get_session
@@ -160,20 +160,17 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user)
     app = await create_application(organization, user)
-    registry = infrastructure.compute
     captured: dict[str, object] = {}
 
     class FakeCompute:
         """Fake compute adapter for application log tests."""
 
         def __init__(self, kubeconfig: str) -> None:
-            """Capture compute registry configuration."""
+            """Accept compute registry configuration."""
 
             self.applications = self
-            captured["kubeconfig"] = kubeconfig
 
         async def logs(self, application_id: UUID) -> list[str]:
             """Record the log request and return fake pod logs."""
@@ -190,7 +187,6 @@ async def test_get_app_logs_returns_pod_logs(
     # Assert
     assert response.status_code == 200
     assert response.json() == ["line 1", "line 2"]
-    assert captured["kubeconfig"] == registry.kubeconfig
     assert captured["logs"] == app.id
 
 

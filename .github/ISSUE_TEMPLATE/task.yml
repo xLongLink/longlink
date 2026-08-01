@@ -2,13 +2,13 @@ name: Task
 description: Track technical or operational work
 type: task
 body:
-  - type: textarea
-    id: description
-    attributes:
-      label: Task description
-      description: Describe the work and why it is needed.
-  - type: textarea
-    id: completion
-    attributes:
-      label: Completion criteria
-      description: Describe what must be true for this task to be complete.
+    - type: textarea
+      id: description
+      attributes:
+          label: Task description
+          description: Describe the work and why it is needed.
+    - type: textarea
+      id: completion
+      attributes:
+          label: Completion criteria
+          description: Describe what must be true for this task to be complete.

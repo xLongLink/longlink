@@ -2,13 +2,13 @@ name: Documentation
 description: Report missing, incorrect, or unclear documentation
 type: documentation
 body:
-  - type: textarea
-    id: issue
-    attributes:
-      label: Documentation issue
-      description: Describe what is missing, incorrect, or unclear.
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected documentation
-      description: Describe what the documentation should explain.
+    - type: textarea
+      id: issue
+      attributes:
+          label: Documentation issue
+          description: Describe what is missing, incorrect, or unclear.
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected documentation
+          description: Describe what the documentation should explain.

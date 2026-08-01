@@ -2,13 +2,13 @@ name: Bug report
 description: Create a report to help us improve
 type: bug
 body:
-  - type: textarea
-    id: description
-    attributes:
-      label: Bug description
-      description: Describe the bug and include steps to reproduce or screenshots.
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
-      description: Describe what you expected to happen.
+    - type: textarea
+      id: description
+      attributes:
+          label: Bug description
+          description: Describe the bug and include steps to reproduce or screenshots.
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected behavior
+          description: Describe what you expected to happen.

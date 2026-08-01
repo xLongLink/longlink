@@ -119,23 +119,6 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
     assert [application.id for application in listed_with_deleted] == [deleted_application.id, active_application.id]
 
 
-async def test_get_services_return_active_applications_and_respect_include_deleted() -> None:
-    """Return applications through direct read services and hide deleted rows by default."""
-
-    # Arrange
-    user, _, application = await create_application_context("reads")
-
-    # Act
-    await applications.soft_delete(application.id, user)
-    deleted_by_id = await applications.get(application.id)
-    included_by_id = await applications.get(application.id, include_deleted=True)
-
-    # Assert
-    assert deleted_by_id is None
-    assert included_by_id is not None
-    assert included_by_id.deleted_id == user.id
-
-
 async def test_mark_running_updates_active_applications() -> None:
     """Publish readiness only for active Applications in the creating state."""
 

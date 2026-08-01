@@ -2,9 +2,9 @@ import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from pathlib import Path
-from collections.abc import Callable
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import proxy as proxy_routes
+from collections.abc import Callable
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.services import applications

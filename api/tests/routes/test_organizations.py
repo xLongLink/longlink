@@ -17,7 +17,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
 

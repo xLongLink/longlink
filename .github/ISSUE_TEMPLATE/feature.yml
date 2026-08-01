@@ -2,13 +2,13 @@ name: Feature request
 description: Suggest an idea for this project
 type: feature
 body:
-  - type: textarea
-    id: problem
-    attributes:
-      label: Problem statement
-      description: Describe the problem this feature would solve.
-  - type: textarea
-    id: solution
-    attributes:
-      label: Proposed solution
-      description: Describe the solution you would like.
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem statement
+          description: Describe the problem this feature would solve.
+    - type: textarea
+      id: solution
+      attributes:
+          label: Proposed solution
+          description: Describe the solution you would like.

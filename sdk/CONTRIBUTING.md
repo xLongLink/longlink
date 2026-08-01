@@ -31,9 +31,9 @@ uv run pytest tests    # Run tests
 
 The build command writes standard OCI image metadata labels using [OCI annotation keys](https://github.com/opencontainers/image-spec/blob/main/annotations.md) when values are available. It also writes this LongLink-specific label:
 
-| Label                   | Value                          | Description                                          |
-| ----------------------- | ------------------------------ | ---------------------------------------------------- |
-| `longlink.environments` | `<json-environment-list>`      | App environment variables when `src/envs.py` exists. |
+| Label                   | Value                     | Description                                          |
+| ----------------------- | ------------------------- | ---------------------------------------------------- |
+| `longlink.environments` | `<json-environment-list>` | App environment variables when `src/envs.py` exists. |
 
 ## XML
 
