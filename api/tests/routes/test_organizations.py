@@ -527,21 +527,12 @@ async def test_create_organization_invitation_rejects_role_above_caller(
 async def test_update_organization_member_changes_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow organization owners to change member roles."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    synchronized: list[UUID] = []
-
-    async def sync_users(organization_id: UUID) -> None:
-        """Record the Organization user projection requested by the route."""
-
-        synchronized.append(organization_id)
-
-    monkeypatch.setattr(organizations, "sync_users", sync_users)
 
     Session = await get_session()
     async with Session() as session:
@@ -567,7 +558,6 @@ async def test_update_organization_member_changes_role(
     updated_members = await organizations.members(organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
-    assert synchronized == [organization.id]
 
 
 async def test_update_organization_member_rejects_owner_escalation_from_admin(

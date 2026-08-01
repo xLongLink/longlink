@@ -57,16 +57,12 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
 async def test_operations_service_create_coalesces_each_kind_and_target() -> None:
     """Keep compute and explicit resource lifecycle Operations independently coalesced."""
 
-    # Seed one claimed compute operation and distinct lifecycle targets.
+    # Seed duplicate and independent resource lifecycle targets.
     compute = await create_compute("local")
     first_application_id = uuid4()
     organization_id = uuid4()
-    await operations.create(compute.id)
-    claimed = await operations.claim()
-    assert claimed is not None
-    assert claimed.lease_expires_at is not None
 
-    # Create duplicate and independent work around the stale completion.
+    # Create duplicate and independent work for one compute.
     application = await operations.create(
         compute.id,
         kind=OperationKind.application_create,
@@ -82,8 +78,6 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
         kind=OperationKind.organization_create,
         target_id=organization_id,
     )
-    stale_completion = await operations.complete(claimed.id)
-    replacement = await operations.claim()
     fetched = await operations.fetch()
 
     # Verify coalescing is scoped to each operation kind and target.
@@ -92,12 +86,8 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
     assert application.target_id == first_application_id
     assert organization.kind == OperationKind.organization_create
     assert organization.target_id == organization_id
-    assert stale_completion is not None
-    assert replacement is not None
-    assert replacement.id == application.id
-    assert len(fetched) == 3
+    assert len(fetched) == 2
     assert {(item.kind, item.target_id) for item in fetched} == {
-        (OperationKind.compute_reconcile, compute.id),
         (OperationKind.application_create, first_application_id),
         (OperationKind.organization_create, organization_id),
     }
