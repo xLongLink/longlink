@@ -58,7 +58,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
     # Fetch registry data with TLS matching the registry URL.
     async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
-        # LongLink labels are stored in the image config blob, reached through the image manifest.
+        # Image metadata labels are stored in the config blob, reached through the image manifest.
         try:
             # Stop when the manifest cannot be resolved.
             manifest_result = await _fetch_manifest(
@@ -100,7 +100,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
             image_config = cast(dict[str, object], image_config)
 
-            # Require Docker labels to map strings to strings when present.
+            # Require image metadata labels to map strings to strings when present.
             raw_labels = image_config.get("Labels")
             if raw_labels is None:
                 labels: dict[str, str] = {}
@@ -112,10 +112,10 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             result = LongLinkMetadata(
                 image=f"{image.registry}/{image.repository}@{digest}",
                 sdk=labels.get("longlink.sdk"),
-                title=labels.get("longlink.name"),
+                title=labels.get("org.opencontainers.image.title"),
                 digest=digest,
-                version=labels.get("longlink.version"),
-                description=labels.get("longlink.description"),
+                version=labels.get("org.opencontainers.image.version"),
+                description=labels.get("org.opencontainers.image.description"),
             )
 
             # Decode environment requirements when present.

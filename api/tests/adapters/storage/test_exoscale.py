@@ -186,7 +186,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act
-    credentials = await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
+    credentials = await storage.credentials("dashboard", "acme", "apps/dashboard/")
 
     # Assert
     role_call = next(value for name, value in calls if name == "create-iam-role")
@@ -259,5 +259,5 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
 
     # Act and assert
     with pytest.raises(RuntimeError, match="key generation failed"):
-        await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
+        await storage.credentials("dashboard", "acme", "apps/dashboard/")
     assert calls == ["list-api-keys", "list-api-keys"]

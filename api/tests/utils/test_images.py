@@ -78,10 +78,10 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
             return {
                 "config": {
                     "Labels": {
-                        "longlink.name": "dashboard",
+                        "org.opencontainers.image.title": "dashboard",
                         "longlink.sdk": "0.1.0",
-                        "longlink.version": version,
-                        "longlink.description": "Demo app",
+                        "org.opencontainers.image.version": version,
+                        "org.opencontainers.image.description": "Demo app",
                         "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
                     }
                 }

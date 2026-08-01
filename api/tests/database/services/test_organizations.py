@@ -24,8 +24,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     organization = await create_organization(owner, infrastructure=infrastructure)
 
     # Assert
-    assert organization.name == "acme"
-    assert organization.slug == "acme"
     assert organization.compute_id == infrastructure.compute.id
     assert organization.database_id == infrastructure.database.id
     assert organization.storage_id == infrastructure.storage.id

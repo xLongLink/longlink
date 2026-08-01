@@ -12,7 +12,7 @@ class EnvironmentMetadata(BaseModel):
 
 
 class LongLinkMetadata(BaseModel):
-    """Structured metadata extracted from a built image's LongLink labels."""
+    """Structured metadata extracted from OCI and LongLink image labels."""
 
     # Runtime
     image: str = Field(exclude=True)

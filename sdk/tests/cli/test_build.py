@@ -8,7 +8,7 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
     """Keep editable sources, migrations, and production-safe defaults in built images."""
 
     # Act
-    dockerfile = build.render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
+    dockerfile = build.render_dockerfile("/workspace/dev", "LABEL org.opencontainers.image.title=\"test\"", "0.1.0")
 
     # Assert required build and runtime behavior.
     for expected in (
@@ -202,8 +202,8 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     assert "- Image ID: sha256:demo" in result.output
 
 
-def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None:
-    """Render LongLink metadata and environment definitions as Docker labels."""
+def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
+    """Render OCI metadata and LongLink environment definitions as Docker labels."""
 
     # Arrange
     metadata = {
@@ -224,12 +224,12 @@ def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None
     }
 
     # Act
-    labels = build.render_longlink_labels(metadata, env_spec)
+    labels = build.render_image_labels(metadata, env_spec)
 
     # Assert
-    assert 'LABEL longlink.name="demo"' in labels
+    assert 'LABEL org.opencontainers.image.title="demo"' in labels
     assert 'LABEL longlink.sdk="1.2.3"' in labels
-    assert 'LABEL longlink.version="0.1.0"' in labels
-    assert 'LABEL longlink.description="Demo app"' in labels
+    assert 'LABEL org.opencontainers.image.version="0.1.0"' in labels
+    assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
     assert "LABEL longlink.environments=" in labels
     assert "API_KEY" in labels

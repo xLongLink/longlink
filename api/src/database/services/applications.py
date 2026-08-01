@@ -86,8 +86,6 @@ async def create(
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
-    *,
-    require_ready: bool = True,
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
@@ -108,12 +106,9 @@ async def create(
         ).one_or_none()
         if compute is None or organization is None:
             raise NotFoundError("Organization not found")
-        if require_ready:
-            if compute.status != Status.running:
-                raise ConflictError("Compute registry is not ready")
-            if organization.deleted_at is not None or organization.status != Status.running:
-                raise ConflictError("Organization is not ready")
-        elif organization.deleted_at is not None:
+        if compute.status != Status.running:
+            raise ConflictError("Compute registry is not ready")
+        if organization.deleted_at is not None or organization.status != Status.running:
             raise ConflictError("Organization is not ready")
 
         # Build the Application row before checking its Organization-scoped uniqueness.

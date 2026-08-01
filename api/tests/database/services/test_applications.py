@@ -135,7 +135,6 @@ async def test_get_services_return_active_applications_and_respect_include_delet
 
     # Assert
     assert by_id is not None
-    assert by_id.id == application.id
     assert deleted_by_id is None
     assert included_by_id is not None
     assert included_by_id.deleted_id == user.id

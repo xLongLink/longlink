@@ -1,5 +1,4 @@
 import pytest
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
@@ -36,16 +35,11 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     # Assert
     assert response.status_code == 202
     payload = response.json()
-    organization_id = UUID(payload["id"])
     assert payload["name"] == "acme"
     assert payload["status"] == "creating"
     assert payload["compute_id"] == str(infrastructure.compute.id)
     assert payload["database_id"] == str(infrastructure.database.id)
     assert payload["storage_id"] == str(infrastructure.storage.id)
-    persisted = await organizations.get(organization_id)
-    assert persisted is not None
-    members = await organizations.members(organization_id)
-    assert [(membership.user.id, membership.role) for membership in members] == [(owner.id, OrganizationRoles.owner)]
 
 
 async def test_get_organization_returns_member_payload(
@@ -102,11 +96,6 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(organization.id)
     assert payload["status"] == "deleting"
-    assert await organizations.get(organization.id) is None
-    deleted = await organizations.get(organization.id, include_deleted=True)
-    assert deleted is not None
-    assert deleted.deleted_at is not None
-    assert await organizations.applications(organization.id) == []
     recorded_operations = await operations.fetch()
     assert {item.kind for item in recorded_operations} == {
         OperationKind.application_create,

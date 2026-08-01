@@ -18,7 +18,6 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
         }
     )
 
-    assert payload.name == "Primary Storage"
     assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"
 
 

@@ -164,7 +164,7 @@ class Exoscale:
             details = ", ".join(f"{item.get('Key', '<unknown>')}: {item.get('Code', 'unknown error')}" for item in errors)
             raise RuntimeError(f"S3 object deletion failed for {details}")
 
-    async def credentials(self, name: str, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str) -> StorageRuntimeCredentials:
+    async def credentials(self, name: str, bucket: str, write_prefix: str) -> StorageRuntimeCredentials:
         """Replace prior IAM material and issue a key scoped to one Application's prefixes.
 
         Cleanup-first provisioning makes retries converge without accumulating active keys or roles.
@@ -193,7 +193,7 @@ class Exoscale:
                     name=credential_name,
                     description=f"LongLink Application storage access for {name}",
                     editable=False,
-                    policy=self._bucket_policy(bucket, read_prefixes, write_prefix, organization_id),
+                    policy=self._bucket_policy(bucket, write_prefix, organization_id),
                 )
                 role_id = await self._wait_operation(api, operation, require_reference=True)
 
@@ -283,13 +283,11 @@ class Exoscale:
         if require_reference:
             raise RuntimeError("Exoscale operation completed without a resource reference")
 
-        return None
-
-    def _bucket_policy(self, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str, organization_id: UUID) -> IamPolicy:
+    def _bucket_policy(self, bucket: str, write_prefix: str, organization_id: UUID) -> IamPolicy:
         """Build one IAM policy for shared reads and private Application writes."""
 
         # Application writes are also readable, while shared prefixes remain read-only.
-        readable_prefixes = (*read_prefixes, write_prefix)
+        readable_prefixes = ("shared/", write_prefix)
         readable_keys = " || ".join(
             f"parameters.key == {prefix.rstrip('/')!r} || parameters.key.startsWith({prefix!r})" for prefix in readable_prefixes
         )

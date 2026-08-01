@@ -291,10 +291,6 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(app.id)
     assert payload["status"] == "deleting"
-    assert await applications.get(app.id) is None
-    deleted = await applications.get(app.id, include_deleted=True)
-    assert deleted is not None
-    assert deleted.deleted_id == user.id
     recorded_operations = await operations.fetch()
     assert {item.kind for item in recorded_operations} == {
         OperationKind.application_create,

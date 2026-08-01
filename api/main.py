@@ -71,7 +71,7 @@ static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
 
     # Serve the prerendered home document before registering the generic SPA fallback.
-    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    @app.get("/", include_in_schema=False)
     async def frontend_root():
         """Return the prerendered LongLink home page."""
 

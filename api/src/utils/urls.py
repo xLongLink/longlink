@@ -12,7 +12,7 @@ class DatabaseConnection:
     connect_args: dict[str, object]
 
 
-def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMode.require) -> DatabaseConnection:
+def database(database_url: str) -> DatabaseConnection:
     """Validate and normalize the Platform database connection."""
 
     parsed_url = sqlalchemy.engine.make_url(database_url)
@@ -86,7 +86,7 @@ def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMo
         raise ValueError("PostgreSQL database URL must use the lowercase ssl parameter")
 
     # Validate an explicit SSL mode or apply the secure deployment default.
-    sslmode = parsed_url.query.get("ssl", default_sslmode.value)
+    sslmode = parsed_url.query.get("ssl", DatabaseSSLMode.require.value)
     if not isinstance(sslmode, str) or sslmode not in DatabaseSSLMode:
         raise ValueError("PostgreSQL database URL has an invalid SSL mode")
 

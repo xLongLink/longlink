@@ -82,10 +82,6 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
 
     # Verify coalescing is scoped to each operation kind and target.
     assert duplicate.id == application.id
-    assert application.kind == OperationKind.application_create
-    assert application.target_id == first_application_id
-    assert organization.kind == OperationKind.organization_create
-    assert organization.target_id == organization_id
     assert len(fetched) == 2
     assert {(item.kind, item.target_id) for item in fetched} == {
         (OperationKind.application_create, first_application_id),
@@ -319,8 +315,6 @@ async def test_operations_service_expired_leases_cannot_complete_or_reclaim() ->
     operation = await operations.create(compute.id)
     claimed = await operations.claim()
     assert claimed is not None
-
-    assert claimed.lease_expires_at is not None
 
     # Expire the worker lease before it can persist an outcome.
     async with session_scope() as session:

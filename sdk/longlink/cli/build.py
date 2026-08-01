@@ -300,15 +300,15 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
-    """Render the LongLink metadata labels for a Dockerfile."""
+def render_image_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
+    """Render OCI and LongLink image labels for a Dockerfile."""
 
-    # Render the core labels in a stable order while omitting missing values.
+    # Render standard OCI metadata and LongLink-specific runtime metadata.
     label_items = [
-        ("longlink.name", metadata.get("name")),
+        ("org.opencontainers.image.title", metadata.get("name")),
         ("longlink.sdk", metadata.get("sdk")),
-        ("longlink.version", metadata.get("version")),
-        ("longlink.description", metadata.get("description")),
+        ("org.opencontainers.image.version", metadata.get("version")),
+        ("org.opencontainers.image.description", metadata.get("description")),
     ]
 
     # Encode the available core metadata as Dockerfile label statements.
@@ -416,9 +416,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     except PackageNotFoundError:
         metadata["sdk"] = "0.0.0"
 
-    # Resolve the image version and render its LongLink metadata labels.
+    # Resolve the image version and render its metadata labels.
     version = tag or project_metadata.version
-    labels = render_longlink_labels(metadata, env_spec)
+    labels = render_image_labels(metadata, env_spec)
 
     # Copy the source tree into a throwaway Docker build context.
     shutil.copytree(

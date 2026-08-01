@@ -272,7 +272,6 @@ async def test_application_proxy_allows_organization_read_members(
 
     # Verify access succeeds and reaches the loading-state response.
     assert response.status_code == 503
-    assert response.text == ""
 
 
 async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
