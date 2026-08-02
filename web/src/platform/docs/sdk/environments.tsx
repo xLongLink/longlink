@@ -7,6 +7,7 @@ import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     toc: [
+        { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
         { id: 'settings', label: 'Settings', level: 2 },
     ],

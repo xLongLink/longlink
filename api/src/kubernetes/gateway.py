@@ -177,19 +177,16 @@ class Gateway:
             addresses = gateway_status.get("addresses", []) if isinstance(gateway_status, dict) else []
             policy_status = policy_resource.raw.get("status")
             ancestors = policy_status.get("ancestors", []) if isinstance(policy_status, dict) else []
-            policy_conditions = [
-                condition
-                for ancestor in ancestors
-                if isinstance(ancestor, dict)
-                for condition in ancestor.get("conditions", [])
-                if isinstance(condition, dict)
-            ]
             programmed = any(
                 isinstance(condition, dict) and condition.get("type") == "Programmed" and condition.get("status") == "True"
                 for condition in gateway_conditions
             )
             authenticated = any(
-                condition.get("type") == "Accepted" and condition.get("status") == "True" for condition in policy_conditions
+                condition.get("type") == "Accepted" and condition.get("status") == "True"
+                for ancestor in ancestors
+                if isinstance(ancestor, dict)
+                for condition in ancestor.get("conditions", [])
+                if isinstance(condition, dict)
             )
             if programmed and authenticated and isinstance(addresses, list):
                 for address in addresses:
@@ -210,7 +207,7 @@ class Gateway:
         while True:
             try:
                 _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
-            except (OSError, ssl.SSLError):
+            except OSError:
                 await asyncio.sleep(5)
                 continue
             writer.close()

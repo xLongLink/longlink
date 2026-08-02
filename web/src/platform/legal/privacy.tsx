@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 
 export const metadata = {
     toc: [
+        { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },
         { id: 'our-roles', label: '2. Our roles', level: 2 },
         { id: 'personal-data-we-process', label: '3. Personal data we process', level: 2 },

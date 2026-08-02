@@ -8,6 +8,7 @@ import { CodeTabs } from '@/components/CodeTabs';
 
 export const metadata = {
     toc: [
+        { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
         { id: 'example', label: 'Example', level: 2 },
     ],

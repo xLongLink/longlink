@@ -6,7 +6,6 @@ from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
 from src.environments import env
-from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.computes import ComputeRegistry

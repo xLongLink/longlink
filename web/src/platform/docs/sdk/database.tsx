@@ -40,6 +40,7 @@ const environments: EnvironmentRow[] = [
 
 export const metadata = {
     toc: [
+        { id: 'database', label: 'Database', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
         { id: 'users', label: 'Users', level: 2 },

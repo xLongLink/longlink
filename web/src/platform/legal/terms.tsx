@@ -6,6 +6,7 @@ import { Text } from '@astryxdesign/core/Text';
 
 export const metadata = {
     toc: [
+        { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
         { id: 'provider-acceptance-and-eligibility', label: '1. Provider, acceptance and eligibility', level: 2 },
         { id: 'definitions-and-contract-documents', label: '2. Definitions and contract documents', level: 2 },
         { id: 'service-and-beta-status', label: '3. Service and beta status', level: 2 },

@@ -49,7 +49,7 @@ class GatewayClient:
         """Start one streamed request through the authenticated application route."""
 
         # Preserve the existing gateway path and query contract.
-        url = f"{self._url}{f'/{path}' if path else '/'}"
+        url = f"{self._url}/{path}"
         if query:
             url = f"{url}?{query}"
         headers = {

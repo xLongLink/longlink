@@ -5,6 +5,7 @@ import { Text } from '@astryxdesign/core/Text';
 
 export const metadata = {
     toc: [
+        { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },
         { id: 'contact', label: 'Contact', level: 2 },
     ],

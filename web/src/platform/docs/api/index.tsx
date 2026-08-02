@@ -143,7 +143,10 @@ function PlatformFlowDiagram() {
 }
 
 export const metadata = {
-    toc: [{ id: 'shared-foundation', label: 'Shared Foundation', level: 2 }],
+    toc: [
+        { id: 'platform', label: 'Platform', level: 1 },
+        { id: 'shared-foundation', label: 'Shared Foundation', level: 2 },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/index.tsx',
 };

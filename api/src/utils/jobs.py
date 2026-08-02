@@ -51,8 +51,6 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
             await _finish_transition(operations.fail(operation.id))
-        except asyncio.CancelledError:
-            raise
         except Exception as exc:
             logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
         raise

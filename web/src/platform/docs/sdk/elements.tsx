@@ -73,6 +73,7 @@ export const pageElementDocPages = pageReferenceDocs.map((element) => ({
     content: <ElementReference element={element} />,
     metadata: {
         toc: [
+            { id: element.slug, label: element.name, level: 1 },
             { id: 'definition', label: 'Definition', level: 2 },
             { id: 'usage', label: 'Usage', level: 2 },
             { id: 'attributes', label: 'Attributes', level: 2 },

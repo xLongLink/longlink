@@ -49,6 +49,7 @@ function LocalRuntimeDiagram() {
 
 export const metadata = {
     toc: [
+        { id: 'application-sdk', label: 'LongLink Applications', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },
         { id: 'local-development', label: 'Local Runtime', level: 2 },
     ],
