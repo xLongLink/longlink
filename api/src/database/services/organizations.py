@@ -89,7 +89,7 @@ async def fetch() -> Sequence[Organization]:
         return (await session.scalars(statement)).all()
 
 
-async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> bool:
+async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> None:
     """Transition one active Organization from the expected lifecycle state."""
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
@@ -105,9 +105,8 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
                 .values(status=status)
             )
         ).rowcount != 1:
-            return False
+            return
         await session.commit()
-        return True
 
 
 async def purge(organization_id: UUID) -> None:

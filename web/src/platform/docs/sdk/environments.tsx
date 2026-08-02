@@ -45,7 +45,6 @@ export const content = (
                 'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'
             }
             language="python"
-            width="100%"
         />
         <Heading id="settings" level={2}>
             Settings
@@ -54,6 +53,6 @@ export const content = (
             Point the <Code>tool.longlink</Code> section in <Code>pyproject.toml</Code> to the environment class so
             LongLink knows which settings your application uses when it is built and deployed.
         </Text>
-        <CodeBlock code={'[tool.longlink]\nenvironment = "src.envs:Env"'} language="toml" width="100%" />
+        <CodeBlock code={'[tool.longlink]\nenvironment = "src.envs:Env"'} language="toml" />
     </Stack>
 );

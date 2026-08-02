@@ -6,6 +6,7 @@ import { TopNav } from '@astryxdesign/core/TopNav';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
+import { ContentFrame } from '@/layout/ContentFrame';
 
 type TopLayoutTab = {
     href: string;
@@ -89,19 +90,22 @@ function TopLayout({
     return (
         <AppShell
             banner={import.meta.env.MODE === 'sdk' ? undefined : <DevelopmentNotice />}
-            contentPadding={6}
+            contentPadding={0}
             height={height}
             mobileNav={false}
             topNav={topNavigation}
-            variant="elevated"
+            variant="wash"
         >
-            {hasTabs && height === 'auto' ? (
-                <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))">
-                    {children}
-                </Stack>
-            ) : (
-                children
-            )}
+            <ContentFrame className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]" />
+            <Stack className="relative z-10" height={height === 'fill' ? '100%' : 'auto'} padding={2}>
+                {hasTabs && height === 'auto' ? (
+                    <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))">
+                        {children}
+                    </Stack>
+                ) : (
+                    children
+                )}
+            </Stack>
         </AppShell>
     );
 }

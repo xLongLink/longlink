@@ -61,7 +61,7 @@ function ElementReference({ element }: { element: ElementDoc }) {
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
-                <CodeBlock code={element.example} language="xml" width="100%" />
+                <CodeBlock code={element.example} language="xml" />
             </Stack>
         </Stack>
     );

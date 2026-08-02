@@ -38,7 +38,7 @@ async def get_compute_registry(registry_id: UUID):
 async def delete_compute_registry(registry_id: UUID):
     """Remove one unused compute registration without changing its cluster."""
 
-    # Remove only a registered compute that is not assigned to an Organization.
+    # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
     deleted = await compute.delete(registry_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Compute registry not found")

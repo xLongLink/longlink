@@ -51,7 +51,6 @@ export const content = (
             code={`uv run longlink test
 uv run longlink test tests/test_app.py -q`}
             language="bash"
-            width="100%"
         />
         <Heading id="example" level={2}>
             Example
@@ -76,7 +75,6 @@ def test_healthcheck() -> None:
 
     assert response.status_code == 200`}
             language="python"
-            width="100%"
         />
     </Stack>
 );

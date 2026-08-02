@@ -21,7 +21,7 @@ export function CodeTabs({ items }: { items: [CodeTabItem, ...CodeTabItem[]] }) 
                     <Tab key={item.value} label={item.label} value={item.value} />
                 ))}
             </TabList>
-            <CodeBlock code={selectedItem.code} language="bash" width="100%" />
+            <CodeBlock code={selectedItem.code} language="bash" />
         </Stack>
     );
 }

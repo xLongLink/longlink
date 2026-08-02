@@ -77,13 +77,8 @@ async def create(claimed: Operation) -> str | None:
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
     await cluster.applications.apply(application.id, organization.id.hex, application.image)
 
-    # Running Application reconciliation reapplies its workload and owned HTTPRoute.
-    if application.status == Status.running:
-        return None
-
     # Publish running after workload readiness.
-    if not await applications.mark_running(application.id):
-        return None
+    await applications.mark_running(application.id)
 
 
 async def delete(claimed: Operation) -> str | None:

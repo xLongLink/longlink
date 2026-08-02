@@ -86,7 +86,6 @@ async def create_project() -> None:
         session.add(Project(name="Launch"))
         await session.commit()`}
             language="python"
-            width="100%"
         />
         <Heading id="migrations" level={2}>
             Migrations
@@ -129,7 +128,6 @@ async def list_project_creators() -> list[User | None]:
         result = await session.exec(select(Project))
         return [project.created_by for project in result.all()]`}
             language="python"
-            width="100%"
         />
     </Stack>
 );

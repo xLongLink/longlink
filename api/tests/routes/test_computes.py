@@ -1,5 +1,6 @@
 from httpx2 import AsyncClient
-from factories import create_organization, create_ready_infrastructure
+from factories import queue_operation, create_organization, create_ready_infrastructure
+from src.database.services import operations
 from src.database.models.users import User
 
 
@@ -32,10 +33,10 @@ async def test_compute_registry_endpoints_return_backend(
     assert "created_at" not in payload
 
 
-async def test_compute_registry_create_duplicate_and_delete(
+async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifecycle_is_pending(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one compute registry, reject a duplicate, and remove the unused registration."""
+    """Create one Compute registry, reject a duplicate, and retain its pending lifecycle target."""
 
     # Arrange
     client = clients[0]
@@ -52,7 +53,6 @@ async def test_compute_registry_create_duplicate_and_delete(
     created = create_response.json()
     registry_id = created["id"]
     delete_response = await client.delete(f"/api/computes/{registry_id}")
-    retry_response = await client.delete(f"/api/computes/{registry_id}")
     get_response = await client.get(f"/api/computes/{registry_id}")
 
     # Assert
@@ -64,9 +64,49 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert "proxy_secret" not in created
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
+    assert delete_response.status_code == 409
+    assert delete_response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
+    assert get_response.status_code == 200
+
+
+async def test_compute_registry_deletes_unused_ready_registration(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Remove a ready Compute registration with no unfinished lifecycle Operation."""
+
+    # Arrange
+    client = clients[0]
+    infrastructure = await create_ready_infrastructure()
+
+    # Act
+    delete_response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+    retry_response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+    get_response = await client.get(f"/api/computes/{infrastructure.compute.id}")
+
+    # Assert
     assert delete_response.status_code == 204
     assert retry_response.status_code == 404
     assert get_response.status_code == 404
+
+
+async def test_compute_registry_deletes_registration_after_completed_lifecycle(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Remove a ready Compute registration after its lifecycle Operation completes."""
+
+    # Arrange
+    client = clients[0]
+    infrastructure = await create_ready_infrastructure()
+    operation = await queue_operation(infrastructure.compute.id, target_id=infrastructure.compute.id)
+    claimed = await operations.claim()
+    assert claimed is not None
+    assert await operations.complete(claimed.id) is not None
+
+    # Act
+    response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+
+    # Assert
+    assert response.status_code == 204
 
 
 async def test_compute_registry_delete_rejects_assigned_registry(

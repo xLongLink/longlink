@@ -11,6 +11,7 @@ from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
+from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
@@ -81,7 +82,22 @@ async def delete(registry_id: UUID) -> bool:
         if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
             raise ConflictError("Compute registry is used by organizations")
 
-        # Operations retain historical state and naturally complete if their compute target no longer exists.
+        # Retain the Compute while its Gateway lifecycle may still use its Kubernetes credentials.
+        if (
+            await session.scalar(
+                select(Operation.id)
+                .where(
+                    Operation.kind == OperationKind.compute_create,
+                    Operation.target_id == registry_id,
+                    Operation.finished_at.is_(None),
+                )
+                .limit(1)
+            )
+            is not None
+        ):
+            raise ConflictError("Compute registry has unfinished lifecycle operation")
+
+        # Delete only after no Organization or active Compute lifecycle depends on the registration.
         await session.delete(registry)
         await session.commit()
         return True

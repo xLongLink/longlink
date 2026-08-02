@@ -126,22 +126,20 @@ async def create(
         return application
 
 
-async def mark_running(application_id: UUID) -> bool:
+async def mark_running(application_id: UUID) -> None:
     """Publish Application readiness."""
 
     # Lock the Application before publishing readiness.
     async with session_scope() as session:
         application = await session.get(Application, application_id, with_for_update=True)
         if application is None or application.deleted_at is not None:
-            return False
+            return
 
         # Publish running after the Application workload is ready.
         if application.status != Status.creating:
-            return False
+            return
         application.status = Status.running
         await session.commit()
-
-    return True
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:

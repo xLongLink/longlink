@@ -77,7 +77,6 @@ fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_PREFIX or "")
 with fs.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}
             language="python"
-            width="100%"
         />
         <Heading id="assets" level={2}>
             Assets
@@ -95,7 +94,6 @@ env = Envs()
 shared_fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_SHARED_PREFIX or "")
 logo = assets.logo(env, shared_fs)`}
             language="python"
-            width="100%"
         />
     </Stack>
 );

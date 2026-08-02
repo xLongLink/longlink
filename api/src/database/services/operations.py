@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlalchemy import case, select, update
+from src.errors import NotFoundError
 from src.logger import logger
 from collections.abc import Sequence
 from src.environments import env
@@ -36,15 +37,13 @@ async def enqueue(
     # Lock the compute before resolving its current release target.
     compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
     if compute is None:
-        raise ValueError("Operation compute registry not found")
+        raise NotFoundError("Operation compute registry not found")
     versions = (
         await session.scalars(
-            select(Operation.platform_version)
-            .where(
+            select(Operation.platform_version).where(
                 Operation.kind == kind,
                 Operation.target_id == target_id,
             )
-            .distinct()
         )
     ).all()
     platform_version = f"v{max(Version(version) for version in [env.VERSION, *versions, compute.version])}"
@@ -84,9 +83,7 @@ async def claim() -> Operation | None:
             # Classify the active lease, expired lease, or next Operation in one locked query.
             operation = await session.scalar(
                 select(Operation)
-                .where(
-                    Operation.finished_at.is_(None),
-                )
+                .where(Operation.finished_at.is_(None))
                 .order_by(
                     case(
                         (Operation.lease_expires_at > now, 0),

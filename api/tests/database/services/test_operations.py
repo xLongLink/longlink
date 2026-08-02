@@ -1,6 +1,6 @@
 import pytest
 from src import release as platform_release
-from uuid import uuid4
+from uuid import UUID, uuid4
 from datetime import timedelta
 from factories import create_compute
 from factories import queue_operation as queue
@@ -11,6 +11,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -143,6 +144,42 @@ async def test_release_schedules_running_application_creation_once() -> None:
     assert len(application_operations) == 1
     assert application_operations[0].target_id == running.id
     assert application_operations[0].platform_version == env.VERSION
+
+
+async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Continue release scheduling when a discovered Compute disappears before enqueueing."""
+
+    # Arrange
+    deleted = await create_compute("deleted")
+    retained = await create_compute("retained")
+    enqueue = operations.enqueue
+
+    async def enqueue_available_compute(
+        session: AsyncSession,
+        compute_id: UUID,
+        *,
+        kind: OperationKind,
+        target_id: UUID,
+    ) -> Operation:
+        """Delete one discovered Compute before exercising the real enqueue lookup."""
+
+        if compute_id == deleted.id:
+            # Commit deletion so the real enqueue service resolves the missing Compute.
+            registry = await session.get(ComputeRegistry, compute_id)
+            assert registry is not None
+            await session.delete(registry)
+            await session.commit()
+        return await enqueue(session, compute_id, kind=kind, target_id=target_id)
+
+    monkeypatch.setattr(operations, "enqueue", enqueue_available_compute)
+
+    # Act
+    await platform_release.schedule_migrations()
+    scheduled = await operations.fetch()
+
+    # Assert
+    assert len(scheduled) == 1
+    assert scheduled[0].target_id == retained.id
 
 
 async def test_operations_service_create_separates_computes_and_reopens_completed_work() -> None:

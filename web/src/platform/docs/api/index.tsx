@@ -52,6 +52,11 @@ const sharedFoundationItems = [
         icon: AppWindow,
     },
     {
+        name: 'Application logic',
+        description: 'Process-specific models, rules, workflows, integrations, interfaces, and business logic.',
+        icon: Code2,
+    },
+    {
         name: 'Databases',
         description: 'Organization databases, shared schemas, and application schemas.',
         icon: Database,
@@ -87,9 +92,11 @@ function PlatformFlowDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <UserRound aria-hidden className="text-accent" size={20} />
-                        <Text weight="semibold">User</Text>
-                        <Text type="supporting">Browser</Text>
-                        <Stack direction="horizontal" gap={3} justify="center">
+                        <Stack gap={0} align="center">
+                            <Text weight="semibold">User</Text>
+                            <Text type="supporting">Browser</Text>
+                        </Stack>
+                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
                             <Palette aria-label="Theming" className="text-secondary" size={16} />
                             <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                         </Stack>
@@ -100,9 +107,11 @@ function PlatformFlowDiagram() {
             <Card padding={6} variant="muted">
                 <Stack gap={3} align="center">
                     <ServerCog aria-hidden className="text-accent" size={20} />
-                    <Wordmark />
-                    <Text type="supporting">Platform</Text>
-                    <Stack gap={3} align="center">
+                    <Stack gap={0} align="center">
+                        <Wordmark />
+                        <Text type="supporting">Platform</Text>
+                    </Stack>
+                    <Stack className="pb-3" gap={3} align="center">
                         <Stack direction="horizontal" gap={3} justify="center">
                             <KeyRound aria-label="Identity" className="text-secondary" size={16} />
                             <Building2 aria-label="Organizations" className="text-secondary" size={16} />
@@ -128,9 +137,11 @@ function PlatformFlowDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <AppWindow aria-hidden className="text-accent" size={20} />
-                        <Text weight="semibold">Application</Text>
-                        <Text type="supporting">Runtime</Text>
-                        <Stack direction="horizontal" gap={3} justify="center">
+                        <Stack gap={0} align="center">
+                            <Text weight="semibold">Application</Text>
+                            <Text type="supporting">Runtime</Text>
+                        </Stack>
+                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
                             <Code2 aria-label="Application logic" className="text-secondary" size={16} />
                             <Database aria-label="Database logic" className="text-secondary" size={16} />
                             <HardDrive aria-label="File storage" className="text-secondary" size={16} />

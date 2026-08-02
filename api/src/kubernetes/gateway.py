@@ -197,8 +197,7 @@ class Gateway:
         """Replace the Gateway server certificate after endpoint allocation."""
 
         # Envoy Gateway watches its listener Secret and reloads the final address-bound identity.
-        api = await self._client.api()
-        await apply(gateway_tls_secret(certificate, private_key, api))
+        await apply(gateway_tls_secret(certificate, private_key, await self._client.api()))
 
         # Do not publish the Compute until Envoy serves the final address-bound certificate.
         context = ssl.create_default_context(cadata=gateway_certificate)

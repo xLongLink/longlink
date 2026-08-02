@@ -62,7 +62,6 @@ export default function Logs({
                                 isWrapped
                                 maxHeight="60vh"
                                 size="sm"
-                                width="100%"
                             />
                         )}
                     </LayoutContent>

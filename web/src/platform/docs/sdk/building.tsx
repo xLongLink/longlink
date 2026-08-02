@@ -29,11 +29,7 @@ export const content = (
             untouched. Push the resulting image to a registry the LongLink Platform can reach before creating the
             application.
         </Text>
-        <CodeBlock
-            code="longlink build [--tag dev] [--registry localhost:15000] [--push]"
-            language="bash"
-            width="100%"
-        />
+        <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
         <Text as="p">
             Use <Code>--tag</Code> to set the image version tag, <Code>--registry</Code> to prefix the image with a
             registry, and <Code>--push</Code> to push the image after the local Docker build completes.
@@ -47,7 +43,6 @@ export const content = (
             code={`[tool.longlink]
 environment = "src.envs:Env"`}
             language="toml"
-            width="100%"
         />
         <Stack gap={2}>
             <Heading id="application-metadata" level={2}>
@@ -69,7 +64,6 @@ description = "Order workflow service"
 environment = "src.envs:Env"
 description = "Operational order management for warehouse teams"`}
                 language="toml"
-                width="100%"
             />
             <List listStyle="disc">
                 <ListItem

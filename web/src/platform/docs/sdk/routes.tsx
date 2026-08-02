@@ -51,7 +51,6 @@ async def sample() -> str:
 app = LongLink()
 app.include_router(router)`}
             language="python"
-            width="100%"
         />
     </Stack>
 );

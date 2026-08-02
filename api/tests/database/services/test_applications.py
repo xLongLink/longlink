@@ -130,16 +130,17 @@ async def test_mark_running_updates_active_applications() -> None:
     user, _, application = await create_application_context("runtime")
 
     # Act
-    marked_running = await applications.mark_running(application.id)
+    await applications.mark_running(application.id)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
-    deleted_status = await applications.mark_running(application.id)
+    await applications.mark_running(application.id)
+    deleted = await applications.get(application.id, include_deleted=True)
 
     # Assert
-    assert marked_running is True
     assert running is not None
     assert running.status == Status.running
-    assert deleted_status is False
+    assert deleted is not None
+    assert deleted.status == Status.deleting
 
 
 async def test_soft_delete_marks_application_deleted() -> None:
