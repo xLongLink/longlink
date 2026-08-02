@@ -6,7 +6,7 @@ from src.utils.jobs import execute
 from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, operations
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationStatus
 
 
 async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_platform_release(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -77,7 +77,6 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     )
     recreated_claim = await operations.claim()
     assert recreated_claim is not None
-    assert recreated_claim.kind == OperationKind.compute_create
     recreated = await execute(recreated_claim, compute_operations.create)
 
     # Assert

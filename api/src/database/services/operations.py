@@ -96,9 +96,7 @@ async def claim() -> Operation | None:
                 .limit(1)
                 .with_for_update()
             )
-            if operation is None:
-                return None
-            if operation.lease_expires_at is not None and operation.lease_expires_at > now:
+            if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
                 return None
             if operation.lease_expires_at is not None:
                 operation_id = operation.id
@@ -121,7 +119,6 @@ async def claim() -> Operation | None:
                     .values(lease_expires_at=now + timedelta(minutes=30))
                 )
             ).rowcount != 1:
-                await session.rollback()
                 continue
             await session.commit()
             return operation

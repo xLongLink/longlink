@@ -108,7 +108,7 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
     )
     if address is not None:
         try:
-            name: x509.GeneralName = x509.IPAddress(ipaddress.ip_address(address))
+            name = x509.IPAddress(ipaddress.ip_address(address))
         except ValueError:
             name = x509.DNSName(address)
         builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
