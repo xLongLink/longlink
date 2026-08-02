@@ -22,35 +22,17 @@ async def fetch() -> Sequence[Operation]:
         return (await session.scalars(statement)).all()
 
 
-async def create(
-    compute_id: UUID,
-    *,
-    kind: OperationKind = OperationKind.compute_create,
-    target_id: UUID | None = None,
-) -> Operation:
-    """Create one registered Platform operation in a dedicated transaction."""
-
-    # Commit independently for simple callers that do not compose a larger command.
-    async with session_scope() as session:
-        operation = await enqueue(session, compute_id, kind=kind, target_id=target_id)
-        await session.commit()
-        return operation
-
-
 async def enqueue(
     session: AsyncSession,
     compute_id: UUID,
     *,
-    kind: OperationKind = OperationKind.compute_create,
-    target_id: UUID | None = None,
+    kind: OperationKind,
+    target_id: UUID,
 ) -> Operation:
     """Add one Platform operation to an existing command transaction."""
 
-    target = compute_id if target_id is None else target_id
-    if kind == OperationKind.compute_create and target != compute_id:
+    if kind == OperationKind.compute_create and target_id != compute_id:
         raise ValueError("Compute operations must target their compute registry")
-    if kind != OperationKind.compute_create and target_id is None:
-        raise ValueError("Resource operations require an explicit target")
 
     # Lock the compute before resolving its current release target.
     compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
@@ -61,7 +43,7 @@ async def enqueue(
             select(Operation.platform_version)
             .where(
                 Operation.kind == kind,
-                Operation.target_id == target,
+                Operation.target_id == target_id,
             )
             .distinct()
         )
@@ -74,7 +56,7 @@ async def enqueue(
         select(Operation)
         .where(
             Operation.kind == kind,
-            Operation.target_id == target,
+            Operation.target_id == target_id,
             Operation.platform_version == platform_version,
             Operation.finished_at.is_(None),
             Operation.lease_expires_at.is_(None),
@@ -86,7 +68,7 @@ async def enqueue(
     if operation is None:
         operation = Operation(
             kind=kind,
-            target_id=target,
+            target_id=target_id,
             platform_version=platform_version,
         )
         session.add(operation)

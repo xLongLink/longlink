@@ -6,13 +6,13 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+from src.database.services import applications, organizations
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,9 +68,6 @@ async def create_organization(
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
 
-    # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import operations, organizations
-
     # Provision isolated registries unless the test needs to inspect a specific assignment.
     if infrastructure is None:
         infrastructure = await create_ready_infrastructure()
@@ -83,11 +80,6 @@ async def create_organization(
         compute_id=infrastructure.compute.id,
         storage_id=infrastructure.storage.id,
         database_id=infrastructure.database.id,
-    )
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.organization_create,
-        target_id=organization.id,
     )
     return organization
 
@@ -110,9 +102,6 @@ async def create_application(
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
-    # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import operations, applications
-
     # Application creation requires the parent Organization to be running.
     await mark_organization_running(organization)
     parsed_image = Image(image)
@@ -123,10 +112,5 @@ async def create_application(
         slug=slug,
         image=resolved_image,
         user=owner,
-    )
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
     )
     return application

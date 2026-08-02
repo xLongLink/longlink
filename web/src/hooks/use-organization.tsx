@@ -193,28 +193,13 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            name,
-            computeId,
-            storageId,
-            databaseId,
-        }: {
-            name: string;
-            computeId: string;
-            storageId: string;
-            databaseId: string;
-        }) =>
+        mutationFn: ({ name }: { name: string }) =>
             fetchApiJson(
                 '/api/organizations',
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        compute_id: computeId,
-                        storage_id: storageId,
-                        database_id: databaseId,
-                    }),
+                    body: JSON.stringify({ name }),
                 },
                 (value) => apiOrganizationSummarySchema.parse(value)
             ),

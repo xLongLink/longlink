@@ -139,7 +139,7 @@ async def test_mark_running_updates_active_applications() -> None:
 
 
 async def test_soft_delete_marks_application_deleted() -> None:
-    """Soft-delete an application without scheduling its cleanup operation."""
+    """Soft-delete an application while scheduling its cleanup operation."""
 
     # Arrange
     user, _, application = await create_application_context("delete")

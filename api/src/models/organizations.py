@@ -1,6 +1,6 @@
-from uuid import UUID
 from typing import Literal
 from datetime import datetime
+from uuid import UUID
 from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
@@ -13,11 +13,6 @@ class OrganizationCreate(BaseModel):
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)
-
-    # Infrastructure
-    compute_id: UUID
-    storage_id: UUID
-    database_id: UUID
 
 
 class OrganizationUpdate(BaseModel):

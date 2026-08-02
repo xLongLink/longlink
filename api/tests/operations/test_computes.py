@@ -1,6 +1,6 @@
 import pytest
 import ipaddress
-from uuid import UUID, uuid4
+from uuid import UUID
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
@@ -46,6 +46,16 @@ async def create_compute_infrastructure() -> tuple[ComputeRegistry, DatabaseRegi
         return compute_registry, database_registry, storage_registry
 
 
+async def queue(compute_id: UUID):
+    """Queue one standalone compute Operation for a handler test."""
+
+    # Handler tests own no resource command transaction, so commit the queued work here.
+    async with session_scope() as session:
+        operation = await operations.enqueue(session, compute_id, kind=OperationKind.compute_create, target_id=compute_id)
+        await session.commit()
+        return operation
+
+
 async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_platform_release(monkeypatch: pytest.MonkeyPatch) -> None:
     """Build routes from running Applications and recreate gateway TLS for a Platform release."""
 
@@ -53,7 +63,6 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute_registry, database_registry, storage_registry = await create_compute_infrastructure()
     organization = Organization(
-        id=uuid4(),
         name="Acme",
         slug="acme",
         compute_id=compute_registry.id,
@@ -112,7 +121,7 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    await operations.create(compute_registry.id)
+    await queue(compute_registry.id)
     claimed = await operations.claim()
     assert claimed is not None
 
@@ -121,7 +130,7 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
 
     # Recreate the Compute for a newer Platform release.
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    await operations.create(compute_registry.id)
+    await queue(compute_registry.id)
     recreated_claim = await operations.claim()
     assert recreated_claim is not None
     assert recreated_claim.kind == OperationKind.compute_create
@@ -165,7 +174,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
-    await operations.create(compute_registry.id)
+    await queue(compute_registry.id)
     claimed = await operations.claim()
     assert claimed is not None
 

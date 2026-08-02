@@ -1,7 +1,7 @@
 import secrets
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
-from src.database.services import operations, applications, organizations
+from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
@@ -84,7 +84,6 @@ async def create(claimed: Operation) -> str | None:
     # Publish running after workload readiness, then queue the shared gateway reconciliation.
     if not await applications.mark_running(application.id):
         return None
-    await operations.create(organization.compute_id)
 
 
 async def delete(claimed: Operation) -> str | None:

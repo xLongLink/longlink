@@ -1,6 +1,6 @@
 import pytest
 from src import release as platform_release
-from uuid import uuid4
+from uuid import UUID, uuid4
 from datetime import timedelta
 from src.environments import env
 from src.models.types import DatabaseSSLMode
@@ -32,14 +32,29 @@ async def create_compute(name: str) -> ComputeRegistry:
         return compute
 
 
+async def queue(
+    compute_id: UUID,
+    *,
+    kind: OperationKind = OperationKind.compute_create,
+    target_id: UUID,
+) -> Operation:
+    """Queue one Operation through its explicit database transaction."""
+
+    # Queue independently when this test is not exercising a resource command transaction.
+    async with session_scope() as session:
+        operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
+        await session.commit()
+        return operation
+
+
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:
     """Return compute creation operations ordered by creation time descending."""
 
     # Seed two operations with explicit creation timestamps.
     older_compute = await create_compute("older")
     newer_compute = await create_compute("newer")
-    older_operation = await operations.create(older_compute.id)
-    newer_operation = await operations.create(newer_compute.id)
+    older_operation = await queue(older_compute.id, target_id=older_compute.id)
+    newer_operation = await queue(newer_compute.id, target_id=newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -63,17 +78,17 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
     organization_id = uuid4()
 
     # Create duplicate and independent work for one compute.
-    application = await operations.create(
+    application = await queue(
         compute.id,
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
-    duplicate = await operations.create(
+    duplicate = await queue(
         compute.id,
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
-    await operations.create(
+    await queue(
         compute.id,
         kind=OperationKind.organization_create,
         target_id=organization_id,
@@ -167,14 +182,14 @@ async def test_operations_service_create_separates_computes_and_reopens_complete
     # Seed independent queues for two computes.
     first_compute = await create_compute("first")
     second_compute = await create_compute("second")
-    first = await operations.create(first_compute.id)
-    second = await operations.create(second_compute.id)
+    first = await queue(first_compute.id, target_id=first_compute.id)
+    second = await queue(second_compute.id, target_id=second_compute.id)
 
     # Complete one claim and create replacement work for its compute.
     claimed = await operations.claim()
     assert claimed is not None
     completed = await operations.complete(claimed.id)
-    replacement = await operations.create(claimed.target_id)
+    replacement = await queue(claimed.target_id, target_id=claimed.target_id)
     open_operations = [operation for operation in await operations.fetch() if operation.finished_at is None]
 
     # Verify completed work reopens without affecting the other compute queue.
@@ -190,8 +205,8 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     # Seed two operations with explicit creation order.
     older_compute = await create_compute("older")
     newer_compute = await create_compute("newer")
-    older_operation = await operations.create(older_compute.id)
-    await operations.create(newer_compute.id)
+    older_operation = await queue(older_compute.id, target_id=older_compute.id)
+    await queue(newer_compute.id, target_id=newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -214,7 +229,7 @@ async def test_operations_service_claims_older_release_work(monkeypatch: pytest.
     # Seed work under the previous Platform release.
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute = await create_compute("older-release")
-    operation = await operations.create(compute.id)
+    operation = await queue(compute.id, target_id=compute.id)
 
     # Claim the existing work after the Platform upgrades.
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
@@ -232,8 +247,8 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     # Seed active and waiting work.
     compute = await create_compute("local")
     waiting_compute = await create_compute("waiting")
-    await operations.create(compute.id)
-    waiting = await operations.create(waiting_compute.id)
+    await queue(compute.id, target_id=compute.id)
+    waiting = await queue(waiting_compute.id, target_id=waiting_compute.id)
 
     # Exercise serialization and terminal states.
     active_claim = await operations.claim()
@@ -246,7 +261,7 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     finished_claim = await operations.claim()
 
     expired_compute = await create_compute("expired")
-    expired = await operations.create(expired_compute.id)
+    expired = await queue(expired_compute.id, target_id=expired_compute.id)
     expired_claim = await operations.claim()
     assert expired_claim is not None
     async with session_scope() as session:
@@ -275,7 +290,7 @@ async def test_operations_service_expiry_preserves_published_compute_success() -
 
     # Claim reconciliation and publish its target before simulating worker loss.
     compute = await create_compute("published")
-    operation = await operations.create(compute.id)
+    operation = await queue(compute.id, target_id=compute.id)
     claimed = await operations.claim()
     assert claimed is not None
     async with session_scope() as session:
@@ -306,7 +321,7 @@ async def test_operations_service_expired_leases_cannot_complete_or_reclaim() ->
 
     # Claim an operation and expire its only lease.
     compute = await create_compute("local")
-    operation = await operations.create(compute.id)
+    operation = await queue(compute.id, target_id=compute.id)
     claimed = await operations.claim()
     assert claimed is not None
 
@@ -335,8 +350,8 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     # Seed separate operations for successful and failed outcomes.
     successful_compute = await create_compute("successful")
     failed_compute = await create_compute("failed")
-    await operations.create(successful_compute.id)
-    await operations.create(failed_compute.id)
+    await queue(successful_compute.id, target_id=successful_compute.id)
+    await queue(failed_compute.id, target_id=failed_compute.id)
 
     # Drive each operation through its terminal transition.
     successful_claim = await operations.claim()
@@ -362,13 +377,13 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
 
     # Seed and claim one operation.
     compute = await create_compute("local")
-    operation = await operations.create(compute.id)
+    operation = await queue(compute.id, target_id=compute.id)
     claimed = await operations.claim()
     assert claimed is not None
 
     # Create duplicate desired state while the claimed Operation remains immutable.
-    follow_up = await operations.create(compute.id)
-    duplicate = await operations.create(compute.id)
+    follow_up = await queue(compute.id, target_id=compute.id)
+    duplicate = await queue(compute.id, target_id=compute.id)
 
     # Verify one separate unclaimed follow-up represents the newer request.
     assert claimed.id == operation.id
@@ -385,7 +400,7 @@ async def test_operations_service_platform_upgrade_creates_after_locked_work(mon
     # Claim compute work at the original Platform version.
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute = await create_compute("local")
-    operation = await operations.create(compute.id)
+    operation = await queue(compute.id, target_id=compute.id)
     claimed = await operations.claim()
     assert claimed is not None
 

@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
-from src.database.services import compute, operations
+from src.database.services import compute
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -12,7 +12,6 @@ async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial creation."""
 
     registry = await compute.create(payload.name, payload.kubeconfig)
-    await operations.create(registry.id)
     return registry
 
 

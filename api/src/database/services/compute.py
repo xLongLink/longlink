@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -8,6 +8,8 @@ from src.models.types import PlatformVersion
 from packaging.version import Version
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.operations import OperationKind
+from src.database.services import operations
 from src.database.models.computes import ComputeRegistry
 from src.database.models.organizations import Organization
 
@@ -18,6 +20,21 @@ async def fetch() -> Sequence[ComputeRegistry]:
     # Return every registered compute target.
     async with session_scope() as session:
         return (await session.scalars(select(ComputeRegistry))).all()
+
+
+async def available() -> ComputeRegistry | None:
+    """Return the least-used ready compute registry."""
+
+    # Order ready compute registries by their active Organization assignment count.
+    async with session_scope() as session:
+        assignments = (
+            select(func.count(Organization.id))
+            .where(Organization.compute_id == ComputeRegistry.id, Organization.deleted_at.is_(None))
+            .scalar_subquery()
+        )
+        return await session.scalar(
+            select(ComputeRegistry).where(ComputeRegistry.status == Status.running).order_by(assignments, ComputeRegistry.name).limit(1)
+        )
 
 
 async def get(registry_id: UUID) -> ComputeRegistry | None:
@@ -31,7 +48,7 @@ async def get(registry_id: UUID) -> ComputeRegistry | None:
 async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
     """Register one compute target."""
 
-    # Persist the target without coupling registry management to lifecycle scheduling.
+    # Persist the target and its initial reconciliation request atomically.
     async with session_scope() as session:
         registry = ComputeRegistry(
             name=name,
@@ -42,6 +59,8 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
 
         # Translate unique registry names to one stable API conflict.
         try:
+            await session.flush()
+            await operations.enqueue(session, registry.id, kind=OperationKind.compute_create, target_id=registry.id)
             await session.commit()
         except IntegrityError as exc:
             raise ConflictError("Compute registry already exists") from exc

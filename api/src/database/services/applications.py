@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from sqlalchemy import delete, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +8,8 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.operations import OperationKind
+from src.database.services import operations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
@@ -82,6 +84,7 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
+    application_id: UUID | None = None,
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
@@ -112,6 +115,7 @@ async def create(
 
         # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
+            id=uuid4() if application_id is None else application_id,
             organization_id=organization_id,
             name=name,
             slug=slug,
@@ -128,6 +132,12 @@ async def create(
         # Let the Organization-scoped database constraint arbitrate slug uniqueness.
         try:
             await session.flush()
+            await operations.enqueue(
+                session,
+                organization.compute_id,
+                kind=OperationKind.application_create,
+                target_id=application.id,
+            )
         except IntegrityError as exc:
             raise ConflictError("Application slug already exists") from exc
 
@@ -138,16 +148,29 @@ async def create(
 async def mark_running(application_id: UUID) -> bool:
     """Publish Application readiness."""
 
-    # Lock the Application before publishing readiness.
+    # Resolve the Compute before locking the Application in aggregate order.
     async with session_scope() as session:
+        current = await session.get(Application, application_id)
+        if current is None:
+            return False
+        organization = await session.get(Organization, current.organization_id)
+        if organization is None:
+            return False
+        await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
         if application is None or application.deleted_at is not None:
             return False
 
-        # Publish running only from active creation state and retain a fallback gateway reconciliation.
+        # Publish running and queue gateway reconciliation in one transaction.
         if application.status != Status.creating:
             return False
         application.status = Status.running
+        await operations.enqueue(
+            session,
+            organization.compute_id,
+            kind=OperationKind.compute_create,
+            target_id=organization.compute_id,
+        )
         await session.commit()
 
     return True
@@ -165,6 +188,7 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         current_organization = await session.get(Organization, current.organization_id)
         if current_organization is None:
             return None
+        await session.get(ComputeRegistry, current_organization.compute_id, with_for_update=True)
 
         # Lock the Organization and Application state before tombstoning.
         organization = (
@@ -185,6 +209,18 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
+        await operations.enqueue(
+            session,
+            organization.compute_id,
+            kind=OperationKind.compute_create,
+            target_id=organization.compute_id,
+        )
+        await operations.enqueue(
+            session,
+            organization.compute_id,
+            kind=OperationKind.application_delete,
+            target_id=application.id,
+        )
         await session.commit()
 
     return application
