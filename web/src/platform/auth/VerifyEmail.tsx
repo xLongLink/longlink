@@ -52,7 +52,7 @@ export default function VerifyEmail() {
         resolver: zodResolver(schema),
     });
     const verification = useMutation({
-        mutationFn: async (registrationToken: string) => {
+        mutationFn: (registrationToken: string) => {
             if (!registrationToken) {
                 return fetchApiJson('/api/auth/register/setup', undefined, (value) =>
                     apiRegistrationVerifiedSchema.parse(value)

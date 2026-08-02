@@ -2,7 +2,6 @@ import json
 import yaml
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.models.types import PlatformVersion
 from src.models.statuses import Status
 
 
@@ -63,4 +62,3 @@ class ComputeRegistryResponse(BaseModel):
 
     # State
     status: Status
-    version: PlatformVersion

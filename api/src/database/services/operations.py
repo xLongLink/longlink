@@ -130,20 +130,19 @@ async def complete(operation_id: UUID) -> Operation | None:
     # Complete only the currently leased operation.
     async with session_scope() as session:
         now = utcnow()
-        if (
-            await session.execute(
-                update(Operation)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.lease_expires_at > now,
-                    Operation.finished_at.is_(None),
-                )
-                .values(finished_at=now, lease_expires_at=None)
+        operation = await session.scalar(
+            update(Operation)
+            .where(
+                Operation.id == operation_id,
+                Operation.lease_expires_at > now,
+                Operation.finished_at.is_(None),
             )
-        ).rowcount != 1:
+            .values(finished_at=now, lease_expires_at=None)
+            .returning(Operation)
+        )
+        if operation is None:
             return None
 
-        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 
@@ -151,25 +150,22 @@ async def complete(operation_id: UUID) -> Operation | None:
 async def fail(operation_id: UUID) -> Operation | None:
     """Fail one leased Operation."""
 
-    # Lock the leased Operation before marking it terminal.
+    # Mark only an unfinished Operation that remains leased terminal.
     async with session_scope() as session:
         operation = await session.scalar(
-            select(Operation)
+            update(Operation)
             .where(
                 Operation.id == operation_id,
                 Operation.lease_expires_at.is_not(None),
                 Operation.finished_at.is_(None),
             )
-            .with_for_update()
+            .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
+            .returning(Operation)
         )
 
         # A missing row means the Operation is no longer leased.
         if operation is None:
             return None
 
-        # Mark the leased Operation terminal.
-        operation.failed = True
-        operation.finished_at = utcnow()
-        operation.lease_expires_at = None
         await session.commit()
         return operation

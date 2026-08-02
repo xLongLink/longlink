@@ -116,9 +116,7 @@ async def record_success(
     # Lock the compute while updating its observed release.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if registry is None or registry.status != expected_status:
-            return False
-        if Version(registry.version) > Version(platform_version):
+        if registry is None or registry.status != expected_status or Version(registry.version) > Version(platform_version):
             return False
 
         registry.gateway_url = gateway_url
