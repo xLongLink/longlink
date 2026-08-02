@@ -47,13 +47,16 @@ async def schedule_migrations() -> None:
         targets.extend(
             (OperationKind.application_create, application_id, compute_id) for application_id, compute_id in application_rows
         )
-    # Create or reuse each current-release operation through its dedicated transaction.
+    # Create or reuse each current-release operation through its own transaction.
     for kind, target_id, compute_id in targets:
-        await operation_service.create(
-            compute_id,
-            kind=kind,
-            target_id=target_id,
-        )
+        async with session_scope() as session:
+            await operation_service.enqueue(
+                session,
+                compute_id,
+                kind=kind,
+                target_id=target_id,
+            )
+            await session.commit()
 
 
 def main() -> None:

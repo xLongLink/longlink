@@ -2,13 +2,13 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
 from src.utils import mail, names, roles
+from src.errors import UnavailableError
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
 from src.adapters.postgres import Postgres
-from src.database.services import storage, database, operations, invitations, organizations
-from src.models.operations import OperationKind
+from src.database.services import compute, storage, database, invitations, organizations
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -229,18 +229,10 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    # Tombstone the Organization before creating its lifecycle cleanup.
+    # Tombstone the Organization and its lifecycle cleanup atomically.
     result = await organizations.soft_delete(organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-
-    # Remove every tombstoned Application route before namespace cascade cleanup.
-    await operations.create(result.compute_id)
-    await operations.create(
-        result.compute_id,
-        kind=OperationKind.organization_delete,
-        target_id=result.id,
-    )
 
     return result
 
@@ -252,20 +244,25 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     # Derive the Organization's URL slug from its display name.
     slug = names.slugify(payload.name)
 
-    # Persist the Organization with its requested infrastructure registries.
+    # Resolve the least-used ready infrastructure registries.
+    compute_registry = await compute.available()
+    if compute_registry is None:
+        raise UnavailableError("No ready compute registry available")
+    database_registry = await database.available()
+    if database_registry is None:
+        raise UnavailableError("No database registry available")
+    storage_registry = await storage.available()
+    if storage_registry is None:
+        raise UnavailableError("No storage registry available")
+
+    # Persist the Organization with its selected infrastructure registries.
     organization = await organizations.create(
         payload.name,
         slug,
         user,
-        compute_id=payload.compute_id,
-        storage_id=payload.storage_id,
-        database_id=payload.database_id,
-    )
-
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.organization_create,
-        target_id=organization.id,
+        compute_id=compute_registry.id,
+        storage_id=storage_registry.id,
+        database_id=database_registry.id,
     )
 
     return organization

@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
@@ -12,6 +12,8 @@ from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
+from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -302,8 +304,6 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    organization_id = uuid4()
-
     # Create the organization and owner membership together.
     async with session_scope() as session:
         # Lock the requested running compute registry.
@@ -328,7 +328,6 @@ async def create(
 
         # Build the Organization with its immutable infrastructure assignments.
         organization = Organization(
-            id=organization_id,
             name=name,
             slug=slug,
             avatar=avatar or "",
@@ -353,6 +352,13 @@ async def create(
 
         # Translate unique conflicts from autoflush or commit.
         try:
+            await session.flush()
+            await operations.enqueue(
+                session,
+                organization.compute_id,
+                kind=OperationKind.organization_create,
+                target_id=organization.id,
+            )
             await session.commit()
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
@@ -389,7 +395,11 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        # Lock the Organization state before tombstoning its nested rows.
+        # Resolve the Compute before taking the Organization lock in aggregate order.
+        current = await session.get(Organization, organization_id)
+        if current is None:
+            return None
+        await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
         organization = await session.get(Organization, organization_id, with_for_update=True)
         if organization is None:
             return None
@@ -435,6 +445,19 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .values(**tombstone)
             )
 
+        # Keep tombstones and all dependent reconciliation work in one transaction.
+        await operations.enqueue(
+            session,
+            organization.compute_id,
+            kind=OperationKind.compute_create,
+            target_id=organization.compute_id,
+        )
+        await operations.enqueue(
+            session,
+            organization.compute_id,
+            kind=OperationKind.organization_delete,
+            target_id=organization.id,
+        )
         await session.commit()
 
     return organization

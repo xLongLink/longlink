@@ -1,13 +1,17 @@
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_application, create_organization, mark_organization_running
+from sqlmodel import col
+from factories import create_application, create_organization
+from sqlalchemy import update
 from src.models.roles import OrganizationRoles
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
-from src.database.session import get_session
+from src.models.statuses import Status
+from src.database.session import get_session, session_scope
 from src.database.services import operations, applications
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -51,7 +55,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    await mark_organization_running(organization)
+    async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        await session.commit()
     staged: dict[str, object] = {}
 
     async def inspect_image(image: str) -> LongLinkMetadata:

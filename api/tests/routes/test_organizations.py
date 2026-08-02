@@ -19,16 +19,13 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
+    await create_organization(users[0], name="Existing", slug="existing", infrastructure=infrastructure)
+    least_used_infrastructure = await create_ready_infrastructure(name="Least used")
 
     # Act
     response = await client.post(
         "/api/organizations",
-        json={
-            "name": "acme",
-            "compute_id": str(infrastructure.compute.id),
-            "storage_id": str(infrastructure.storage.id),
-            "database_id": str(infrastructure.database.id),
-        },
+        json={"name": "acme"},
     )
 
     # Assert
@@ -36,9 +33,9 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     payload = response.json()
     assert payload["name"] == "acme"
     assert payload["status"] == "creating"
-    assert payload["compute_id"] == str(infrastructure.compute.id)
-    assert payload["database_id"] == str(infrastructure.database.id)
-    assert payload["storage_id"] == str(infrastructure.storage.id)
+    assert payload["compute_id"] == str(least_used_infrastructure.compute.id)
+    assert payload["database_id"] == str(least_used_infrastructure.database.id)
+    assert payload["storage_id"] == str(least_used_infrastructure.storage.id)
 
 
 async def test_get_organization_returns_member_payload(

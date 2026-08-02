@@ -18,7 +18,6 @@ def leased_operation() -> Operation:
     """Build one claimed compute creation Operation."""
 
     return Operation(
-        id=UUID("55555555-5555-5555-5555-555555555555"),
         kind=OperationKind.compute_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         platform_version="v1.2.3",

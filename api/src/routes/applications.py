@@ -1,12 +1,11 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.database.services import compute, operations, applications, organizations
+from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
-from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 
@@ -51,29 +50,25 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
+    # Stage user-owned values before committing the Operation that consumes them.
+    application_id = uuid4()
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
+        raise RuntimeError("Application Organization compute registry is missing")
+    cluster = Kubernetes(registry.kubeconfig)
+    await cluster.applications.stage_envs(application_id, organization.id.hex, payload.envs)
+
     application = await applications.create(
         organization.id,
         payload.name,
         application_slug,
         image=metadata.image,
+        application_id=application_id,
         version=metadata.version,
         description=payload.description,
         icon=payload.icon,
         user=user,
     )
-    registry = await compute.get(organization.compute_id)
-    if registry is None:
-        raise RuntimeError("Application Organization compute registry is missing")
-
-    # Store user environment values before queueing the workload that consumes them.
-    cluster = Kubernetes(registry.kubeconfig)
-    await cluster.applications.stage_envs(application.id, organization.id.hex, payload.envs)
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-    )
-
     return application
 
 
@@ -128,13 +123,5 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     result = await applications.soft_delete(application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
-
-    # Remove the tombstoned Application from the shared gateway before deleting its workload.
-    await operations.create(result.organization.compute_id)
-    await operations.create(
-        result.organization.compute_id,
-        kind=OperationKind.application_delete,
-        target_id=result.id,
-    )
 
     return result

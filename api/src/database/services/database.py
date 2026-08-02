@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -15,6 +15,19 @@ async def fetch() -> Sequence[DatabaseRegistry]:
     # Open a session for the registry list query.
     async with session_scope() as session:
         return (await session.scalars(select(DatabaseRegistry))).all()
+
+
+async def available() -> DatabaseRegistry | None:
+    """Return the least-used database registry."""
+
+    # Order database registries by their active Organization assignment count.
+    async with session_scope() as session:
+        assignments = (
+            select(func.count(Organization.id))
+            .where(Organization.database_id == DatabaseRegistry.id, Organization.deleted_at.is_(None))
+            .scalar_subquery()
+        )
+        return await session.scalar(select(DatabaseRegistry).order_by(assignments, DatabaseRegistry.name).limit(1))
 
 
 async def get(registry_id: UUID) -> DatabaseRegistry | None:

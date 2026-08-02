@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -14,6 +14,19 @@ async def fetch() -> Sequence[StorageRegistry]:
     # Open a session for the registry list query.
     async with session_scope() as session:
         return (await session.scalars(select(StorageRegistry))).all()
+
+
+async def available() -> StorageRegistry | None:
+    """Return the least-used storage registry."""
+
+    # Order storage registries by their active Organization assignment count.
+    async with session_scope() as session:
+        assignments = (
+            select(func.count(Organization.id))
+            .where(Organization.storage_id == StorageRegistry.id, Organization.deleted_at.is_(None))
+            .scalar_subquery()
+        )
+        return await session.scalar(select(StorageRegistry).order_by(assignments, StorageRegistry.name).limit(1))
 
 
 async def get(registry_id: UUID) -> StorageRegistry | None:

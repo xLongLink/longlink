@@ -7,7 +7,7 @@ from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate
-from src.database.services import compute, storage, database, operations
+from src.database.services import compute, storage, database
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
 
@@ -106,13 +106,11 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Resolve either the configured Application database or the local PostgreSQL service.
     database_config = application_database_configuration(settings)
 
-    # Register the configured compute and reconcile it only when newly created.
+    # Register the configured compute and queue its reconciliation when newly created.
     try:
-        compute_registry = await compute.create(compute_config.name, compute_config.kubeconfig)
+        await compute.create(compute_config.name, compute_config.kubeconfig)
     except ConflictError:
         pass
-    else:
-        await operations.create(compute_registry.id)
 
     # Register the configured database unless it already exists.
     try:

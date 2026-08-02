@@ -6,7 +6,7 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.models.operations import OperationKind
+from src.database.services import applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -68,14 +68,10 @@ async def create_organization(
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
 
-    # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import operations, organizations
-
-    # Provision isolated registries unless the test needs to inspect a specific assignment.
     if infrastructure is None:
         infrastructure = await create_ready_infrastructure()
 
-    organization = await organizations.create(
+    return await organizations.create(
         name,
         slug,
         owner,
@@ -84,23 +80,6 @@ async def create_organization(
         storage_id=infrastructure.storage.id,
         database_id=infrastructure.database.id,
     )
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.organization_create,
-        target_id=organization.id,
-    )
-    return organization
-
-
-async def mark_organization_running(organization: Organization) -> None:
-    """Mark one service-created Organization ready for Application tests."""
-
-    # Organization Application creation is valid only after runtime reconciliation succeeds.
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
-
-
 async def create_application(
     organization: Organization,
     owner: User,
@@ -110,23 +89,15 @@ async def create_application(
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
-    # Import lazily so tests can share this factory without introducing service import cycles.
-    from src.database.services import operations, applications
-
-    # Application creation requires the parent Organization to be running.
-    await mark_organization_running(organization)
+    async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        await session.commit()
     parsed_image = Image(image)
     resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test"
-    application = await applications.create(
+    return await applications.create(
         organization.id,
         name,
         slug=slug,
         image=resolved_image,
         user=owner,
     )
-    await operations.create(
-        organization.compute_id,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-    )
-    return application

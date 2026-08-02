@@ -1,15 +1,18 @@
 import pytest
 from uuid import UUID, uuid4
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from sqlmodel import col
+from factories import create_organization, create_ready_infrastructure
+from sqlalchemy import update
 from src.errors import ConflictError, UnavailableError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.database.session import get_session
+from src.database.session import get_session, session_scope
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
@@ -224,7 +227,9 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    await mark_organization_running(organization)
+    async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        await session.commit()
     application = await applications.create(
         organization.id,
         "Dashboard",
