@@ -68,11 +68,10 @@ async def create_organization(
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
 
-    # Provision isolated registries unless the test needs to inspect a specific assignment.
     if infrastructure is None:
         infrastructure = await create_ready_infrastructure()
 
-    organization = await organizations.create(
+    return await organizations.create(
         name,
         slug,
         owner,
@@ -81,18 +80,6 @@ async def create_organization(
         storage_id=infrastructure.storage.id,
         database_id=infrastructure.database.id,
     )
-    return organization
-
-
-async def mark_organization_running(organization: Organization) -> None:
-    """Mark one service-created Organization ready for Application tests."""
-
-    # Organization Application creation is valid only after runtime reconciliation succeeds.
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
-
-
 async def create_application(
     organization: Organization,
     owner: User,
@@ -102,15 +89,15 @@ async def create_application(
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
-    # Application creation requires the parent Organization to be running.
-    await mark_organization_running(organization)
+    async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        await session.commit()
     parsed_image = Image(image)
     resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test"
-    application = await applications.create(
+    return await applications.create(
         organization.id,
         name,
         slug=slug,
         image=resolved_image,
         user=owner,
     )
-    return application

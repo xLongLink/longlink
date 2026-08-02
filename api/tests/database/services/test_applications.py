@@ -1,9 +1,11 @@
 import pytest
 from uuid import uuid4
-from factories import create_application, create_organization, mark_organization_running
+from sqlmodel import col
+from factories import create_application, create_organization
+from sqlalchemy import update
 from src.errors import ConflictError
 from src.models.statuses import Status
-from src.database.session import get_session
+from src.database.session import get_session, session_scope
 from src.database.services import applications, organizations
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -56,7 +58,9 @@ async def test_create_requires_running_organization() -> None:
             image="ghcr.io/longlink/dashboard@sha256:test",
             user=user,
         )
-    await mark_organization_running(organization)
+    async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        await session.commit()
     application = await applications.create(
         organization.id,
         "Dashboard",
