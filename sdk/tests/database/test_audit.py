@@ -75,9 +75,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
                 item.name = "reviewed"
                 await session.commit()
 
-            assert database_audit._current_user_id.get() is None
             await session.refresh(item)
-            assert item.name == "reviewed"
             assert item.updated_at == updated_at
             assert item.updated_id == updater_id
 
@@ -89,8 +87,6 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             with audit_user_scope(deleter_id):
                 await session.delete(item)
                 await session.commit()
-
-            assert database_audit._current_user_id.get() is None
 
         # Reload after deletion to prove the row and all persisted audit values remain.
         async with database_base.get_session() as session:

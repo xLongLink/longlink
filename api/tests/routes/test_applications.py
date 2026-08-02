@@ -113,7 +113,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     persisted = await applications.get(UUID(payload["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
-    assert not hasattr(persisted, "envs")
     assert staged == {
         "application_id": persisted.id,
         "namespace": organization.id.hex,

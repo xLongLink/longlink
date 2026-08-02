@@ -10,7 +10,7 @@ describe('Table', () => {
             setups: {},
             invalidate: async () => {},
             values: {
-                items: [{ sku: 'SKU-001', quantity: 10, created_by: { name: 'Ada Lovelace' } }],
+                items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
             },
         };
         const output = renderXmlToMarkup(
@@ -34,7 +34,6 @@ describe('Table', () => {
             translations: {
                 'inventory.item': { defaultMessage: 'Item' },
                 'inventory.name': { defaultMessage: '{name}' },
-                'inventory.sku': { defaultMessage: 'SKU' },
             },
             values: {
                 items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
