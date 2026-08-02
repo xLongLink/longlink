@@ -6,13 +6,13 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.database.services import applications, organizations
 
 
 @dataclass(frozen=True, slots=True)

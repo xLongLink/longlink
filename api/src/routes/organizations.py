@@ -2,8 +2,8 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
 from src.utils import mail, names, roles
-from src.logger import logger
 from src.errors import UnavailableError
+from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse

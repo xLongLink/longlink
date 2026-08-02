@@ -1,6 +1,6 @@
+from uuid import UUID
 from typing import Literal
 from datetime import datetime
-from uuid import UUID
 from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity

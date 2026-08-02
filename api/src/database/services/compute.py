@@ -8,8 +8,8 @@ from src.models.types import PlatformVersion
 from packaging.version import Version
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.models.operations import OperationKind
 from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.organizations import Organization
 
