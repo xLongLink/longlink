@@ -34,11 +34,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
         older_row.created_at = utcnow() - timedelta(days=1)
         await session.commit()
 
-    # Fetch operations through the service boundary.
-    fetched = await operations.fetch()
-
     # Verify operations are returned newest first.
-    assert [operation.id for operation in fetched] == [newer_operation.id, older_operation.id]
+    assert [operation.id for operation in await operations.fetch()] == [newer_operation.id, older_operation.id]
 
 
 async def test_operations_service_create_coalesces_each_kind_and_target() -> None:

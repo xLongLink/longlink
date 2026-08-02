@@ -13,9 +13,8 @@ def test_gateway_tls_covers_the_compute_address() -> None:
     """Generate a gateway certificate trusted by its private compute CA."""
 
     # Generate material for one IPv4 compute gateway address.
-    compute_id = UUID("00000000-0000-4000-8000-000000000001")
     address = "192.0.2.1"
-    gateway_certificate, certificate, _ = generate_gateway_tls(compute_id, address)
+    gateway_certificate, certificate, _ = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), address)
 
     # Verify the server certificate preserves its issuing CA and gateway IP SAN.
     ca_certificate = x509.load_pem_x509_certificate(gateway_certificate.encode("ascii"))

@@ -38,13 +38,12 @@ async def create(claimed: Operation) -> str | None:
         gateway_host = gateway_address
     else:
         gateway_host = f"[{address}]" if address.version == 6 else str(address)
-    gateway_url = f"https://{gateway_host}"
 
     # Publish connection material only after the desired gateway Deployment is serving.
     if not await compute.record_success(
         registry.id,
         claimed.platform_version,
-        gateway_url,
+        f"https://{gateway_host}",
         api_key,
         gateway_certificate,
         registry.status,

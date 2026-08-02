@@ -18,8 +18,7 @@ async def fetch() -> Sequence[Operation]:
 
     # Read operations through a managed database session.
     async with session_scope() as session:
-        statement = select(Operation).order_by(Operation.created_at.desc())
-        return (await session.scalars(statement)).all()
+        return (await session.scalars(select(Operation).order_by(Operation.created_at.desc()))).all()
 
 
 async def enqueue(
@@ -48,8 +47,7 @@ async def enqueue(
             .distinct()
         )
     ).all()
-    latest_version = max(Version(version) for version in [env.VERSION, *versions, compute.version])
-    platform_version = f"v{latest_version}"
+    platform_version = f"v{max(Version(version) for version in [env.VERSION, *versions, compute.version])}"
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(

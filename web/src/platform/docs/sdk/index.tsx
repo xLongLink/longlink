@@ -1,12 +1,12 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { CodeTabs } from '@/components/CodeTabs';
 
 /** Renders the local SDK runtime request flow diagram. */
@@ -99,11 +99,13 @@ export const content = (
             <Code>longlink init</Code> creates an application scaffold with separate directories for routes, schemas,
             database models and services, XML pages, translations, migrations, environment declarations, and tests:
         </Text>
-        <CodeBlock language="plaintext">
-            {
+        <CodeBlock
+            code={
                 '├── src/\n│   ├── database/         # Database models and services\n│   ├── i18n/             # Translation catalogs\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
             }
-        </CodeBlock>
+            language="plaintext"
+            width="100%"
+        />
         <Heading id="local-development" level={2}>
             Local Runtime
         </Heading>

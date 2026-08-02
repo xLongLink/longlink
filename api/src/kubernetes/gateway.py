@@ -51,7 +51,6 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
     ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
-    server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")])
     ca_certificate = (
         x509.CertificateBuilder()
         .subject_name(ca_name)
@@ -83,7 +82,7 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
     # Bind the final certificate to the controller-published IP address or hostname.
     builder = (
         x509.CertificateBuilder()
-        .subject_name(server_name)
+        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")]))
         .issuer_name(ca_name)
         .public_key(server_key.public_key())
         .serial_number(x509.random_serial_number())
@@ -91,7 +90,6 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
         .not_valid_after(now + timedelta(days=3650))
         .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
         .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
-        .add_extension(x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()), critical=False)
         .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
         .add_extension(
             x509.KeyUsage(
@@ -207,7 +205,7 @@ class Gateway:
         while True:
             try:
                 _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
-            except OSError:
+            except (OSError, ssl.SSLError):
                 await asyncio.sleep(5)
                 continue
             writer.close()

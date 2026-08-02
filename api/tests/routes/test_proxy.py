@@ -12,19 +12,15 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
 
 
-class FakeTLS:
-    """Provide a minimal TLS context for Gateway proxy tests."""
-
-
 def fake_ssl_context(
-    tls: FakeTLS,
+    tls: object,
     *,
     expected_ca_certificate: str | None = None,
     captured: dict[str, object] | None = None,
-) -> Callable[..., FakeTLS]:
+) -> Callable[..., object]:
     """Build one fake SSL context factory with optional CA verification and capture."""
 
-    def create(*, cadata: str) -> FakeTLS:
+    def create(*, cadata: str) -> object:
         """Return the supplied TLS context after applying the requested assertions."""
 
         # Verify and capture the per-compute trust anchor when the test needs it.
@@ -63,7 +59,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
 
-    tls = FakeTLS()
+    tls = object()
 
     class FakeProxyResponse:
         """Stream one fake upstream application response."""
@@ -183,7 +179,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.mark_running(app.id)
 
-    tls = FakeTLS()
+    tls = object()
 
     class OversizedProxyClient(FakeProxyClient):
         """Consume the request body through the proxy size guard."""
@@ -289,7 +285,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.mark_running(app.id)
 
-    tls = FakeTLS()
+    tls = object()
 
     class FailingProxyClient(FakeProxyClient):
         """Fake upstream HTTP client that fails application proxy requests."""

@@ -1,8 +1,8 @@
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     toc: [
@@ -38,7 +38,8 @@ export const content = (
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import LongLink, Router
+        <CodeBlock
+            code={`from longlink import LongLink, Router
 
 router = Router()
 
@@ -48,6 +49,9 @@ async def sample() -> str:
     return "ok"
 
 app = LongLink()
-app.include_router(router)`}</CodeBlock>
+app.include_router(router)`}
+            language="python"
+            width="100%"
+        />
     </Stack>
 );

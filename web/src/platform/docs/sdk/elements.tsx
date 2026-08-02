@@ -1,10 +1,10 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { FileCode2 } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { pageElementPage } from '@/platform/docs/pages';
 import { pageReferenceDocs, type ElementDoc } from './references';
 
@@ -61,7 +61,7 @@ function ElementReference({ element }: { element: ElementDoc }) {
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
-                <CodeBlock language="xml">{element.example}</CodeBlock>
+                <CodeBlock code={element.example} language="xml" width="100%" />
             </Stack>
         </Stack>
     );

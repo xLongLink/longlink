@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     toc: [
@@ -29,7 +29,11 @@ export const content = (
             untouched. Push the resulting image to a registry the LongLink Platform can reach before creating the
             application.
         </Text>
-        <CodeBlock language="bash">longlink build [--tag dev] [--registry localhost:15000] [--push]</CodeBlock>
+        <CodeBlock
+            code="longlink build [--tag dev] [--registry localhost:15000] [--push]"
+            language="bash"
+            width="100%"
+        />
         <Text as="p">
             Use <Code>--tag</Code> to set the image version tag, <Code>--registry</Code> to prefix the image with a
             registry, and <Code>--push</Code> to push the image after the local Docker build completes.
@@ -39,8 +43,12 @@ export const content = (
             command parses the class statically for image metadata, without importing application code or requiring real
             secret values.
         </Text>
-        <CodeBlock>{`[tool.longlink]
-environment = "src.envs:Env"`}</CodeBlock>
+        <CodeBlock
+            code={`[tool.longlink]
+environment = "src.envs:Env"`}
+            language="toml"
+            width="100%"
+        />
         <Stack gap={2}>
             <Heading id="application-metadata" level={2}>
                 Application Metadata
@@ -51,14 +59,18 @@ environment = "src.envs:Env"`}</CodeBlock>
                 The same section can also point <Code>longlink build</Code> at the user-defined environment class used
                 for generated image metadata.
             </Text>
-            <CodeBlock>{`[project]
+            <CodeBlock
+                code={`[project]
 name = "orders"
 version = "1.2.0"
 description = "Order workflow service"
 
 [tool.longlink]
 environment = "src.envs:Env"
-description = "Operational order management for warehouse teams"`}</CodeBlock>
+description = "Operational order management for warehouse teams"`}
+                language="toml"
+                width="100%"
+            />
             <List listStyle="disc">
                 <ListItem
                     label={
