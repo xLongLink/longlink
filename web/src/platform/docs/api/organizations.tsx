@@ -38,7 +38,7 @@ const organizationResources = [
 ];
 
 export const metadata = {
-    toc: [{ id: 'roles', label: 'Roles' }],
+    toc: [{ id: 'roles', label: 'Roles', level: 2 }],
     lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/organizations.tsx',
 };

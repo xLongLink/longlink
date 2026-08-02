@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { Link } from '@astryxdesign/core/Link';
 import { Outline } from '@astryxdesign/core/Outline';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
@@ -19,7 +19,7 @@ export function Article({ page }: { page: ArticlePage }) {
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
     const { content, metadata } = page;
-    const pageToc = metadata.toc?.map((item) => ({ id: item.id, label: item.label, level: item.level ?? 2 })) ?? [];
+    const pageToc = metadata.toc ?? [];
     const getStartedHref =
         user && memberships.length === 1 ? `/orgs/${memberships[0].organization.slug}` : '/organizations';
 
@@ -41,7 +41,9 @@ export function Article({ page }: { page: ArticlePage }) {
             <Stack direction="horizontal" height={64} width="100%">
                 <StackItem className="min-w-0" size="fill">
                     <Stack height="100%" paddingInline={6} vAlign="center">
-                        <PageContainer maxWidth={768}>{breadcrumbs}</PageContainer>
+                        <PageContainer className="lg:-translate-x-3" maxWidth={768}>
+                            {breadcrumbs}
+                        </PageContainer>
                     </Stack>
                 </StackItem>
                 <Center className="shrink-0 px-2 lg:w-56 lg:px-5" height={64}>
@@ -60,29 +62,27 @@ export function Article({ page }: { page: ArticlePage }) {
             header={header}
             content={
                 <LayoutContent isScrollable={false} padding={6}>
-                    <PageContainer maxWidth={768}>
-                        <ArticleContent content={content} metadata={metadata} />
-                    </PageContainer>
+                    <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
+                        <PageContainer className="min-w-0" maxWidth={768}>
+                            <ArticleContent content={content} metadata={metadata} />
+                        </PageContainer>
+                        {pageToc.length ? (
+                            <Stack
+                                as="aside"
+                                aria-label={t('common.onThisPage')}
+                                className="sticky top-20 hidden shrink-0 self-start lg:flex"
+                                gap={3}
+                                padding={5}
+                                width={224}
+                            >
+                                <Text type="label" weight="semibold">
+                                    {t('common.onThisPage')}
+                                </Text>
+                                <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+                            </Stack>
+                        ) : null}
+                    </Stack>
                 </LayoutContent>
-            }
-            end={
-                <LayoutPanel
-                    className="sticky top-20 hidden self-start lg:block"
-                    isScrollable={false}
-                    label={pageToc.length ? t('common.onThisPage') : undefined}
-                    padding={5}
-                    role={pageToc.length ? 'complementary' : undefined}
-                    width={224}
-                >
-                    {pageToc.length ? (
-                        <Stack gap={3}>
-                            <Text type="label" weight="semibold">
-                                {t('common.onThisPage')}
-                            </Text>
-                            <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
-                        </Stack>
-                    ) : null}
-                </LayoutPanel>
             }
         />
     );

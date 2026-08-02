@@ -49,8 +49,8 @@ function LocalRuntimeDiagram() {
 
 export const metadata = {
     toc: [
-        { id: 'create-a-project', label: 'Create a Project' },
-        { id: 'local-development', label: 'Local Runtime' },
+        { id: 'create-a-project', label: 'Create a Project', level: 2 },
+        { id: 'local-development', label: 'Local Runtime', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/index.tsx',

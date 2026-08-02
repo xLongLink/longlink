@@ -40,9 +40,9 @@ const environments: EnvironmentRow[] = [
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'migrations', label: 'Migrations' },
-        { id: 'users', label: 'Users' },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'migrations', label: 'Migrations', level: 2 },
+        { id: 'users', label: 'Users', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/database.tsx',

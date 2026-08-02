@@ -73,11 +73,11 @@ export const pageElementDocPages = pageReferenceDocs.map((element) => ({
     content: <ElementReference element={element} />,
     metadata: {
         toc: [
-            { id: 'definition', label: 'Definition' },
-            { id: 'usage', label: 'Usage' },
-            { id: 'attributes', label: 'Attributes' },
-            ...(element.children ? [{ id: 'children', label: 'Children' }] : []),
-            { id: 'example', label: 'Example' },
+            { id: 'definition', label: 'Definition', level: 2 },
+            { id: 'usage', label: 'Usage', level: 2 },
+            { id: 'attributes', label: 'Attributes', level: 2 },
+            ...(element.children ? [{ id: 'children', label: 'Children', level: 2 }] : []),
+            { id: 'example', label: 'Example', level: 2 },
         ],
         lastUpdated: '2026-07-21',
         editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts',

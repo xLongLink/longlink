@@ -8,7 +8,6 @@ from src.database import session as database_session
 from src.environments import env
 from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
 from src.database.services import operations
-from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -49,26 +48,17 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             await session.commit()
 
         # Race duplicate operation creations, then add unrelated work on another compute.
-        creation_tasks = [
-            asyncio.create_task(
-                queue_operation(
-                    first_compute.id,
-                    kind=OperationKind.compute_create,
-                    target_id=first_compute.id,
-                )
-            )
-            for _ in range(2)
-        ]
-        duplicates = await asyncio.gather(*creation_tasks)
+        duplicates = await asyncio.gather(
+            queue_operation(first_compute.id, target_id=first_compute.id),
+            queue_operation(first_compute.id, target_id=first_compute.id),
+        )
         waiting = await queue_operation(
             second_compute.id,
-            kind=OperationKind.compute_create,
             target_id=second_compute.id,
         )
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
-        workers = [asyncio.create_task(operations.claim()) for _ in range(2)]
-        claims = await asyncio.gather(*workers)
+        claims = await asyncio.gather(operations.claim(), operations.claim())
         claimed = [claim for claim in claims if claim is not None]
 
         # Reload the queue independently and verify one global lease while unrelated work waits.

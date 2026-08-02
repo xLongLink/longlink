@@ -24,13 +24,6 @@ GatewayClassResource = new_class(
     namespaced=False,
     plural="gatewayclasses",
 )
-GatewayResource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")
-SecurityPolicyResource = new_class(
-    "SecurityPolicy",
-    "gateway.envoyproxy.io/v1alpha1",
-    asyncio=True,
-    plural="securitypolicies",
-)
 
 
 def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
@@ -50,10 +43,7 @@ def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     )
 
 
-def generate_gateway_tls(
-    compute_id: UUID,
-    address: ipaddress.IPv4Address | ipaddress.IPv6Address | str | None,
-) -> tuple[str, str, str]:
+def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, str, str]:
     """Generate one private CA and its Gateway server certificate."""
 
     # Create a private CA and a server-only identity for this Compute Gateway.
@@ -119,13 +109,10 @@ def generate_gateway_tls(
         )
     )
     if address is not None:
-        if isinstance(address, str):
-            try:
-                name: x509.GeneralName = x509.IPAddress(ipaddress.ip_address(address))
-            except ValueError:
-                name = x509.DNSName(address)
-        else:
-            name = x509.IPAddress(address)
+        try:
+            name: x509.GeneralName = x509.IPAddress(ipaddress.ip_address(address))
+        except ValueError:
+            name = x509.DNSName(address)
         builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
     server_certificate = builder.sign(ca_key, hashes.SHA256())
 
@@ -168,8 +155,13 @@ class Gateway:
                 },
                 api=api,
             ),
-            GatewayResource(gateway, api=api),
-            SecurityPolicyResource(security_policy, api=api),
+            new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api),
+            new_class(
+                "SecurityPolicy",
+                "gateway.envoyproxy.io/v1alpha1",
+                asyncio=True,
+                plural="securitypolicies",
+            )(security_policy, api=api),
         ]
         for resource in resources:
             await apply(resource)

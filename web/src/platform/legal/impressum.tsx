@@ -5,8 +5,8 @@ import { Text } from '@astryxdesign/core/Text';
 
 export const metadata = {
     toc: [
-        { id: 'company', label: 'Company' },
-        { id: 'contact', label: 'Contact' },
+        { id: 'company', label: 'Company', level: 2 },
+        { id: 'contact', label: 'Contact', level: 2 },
     ],
     lastUpdated: '2026-07-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/legal/impressum.tsx',

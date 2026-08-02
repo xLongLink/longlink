@@ -5,7 +5,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
-    toc: [{ id: 'usage', label: 'Usage' }],
+    toc: [{ id: 'usage', label: 'Usage', level: 2 }],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/routes.tsx',
 };

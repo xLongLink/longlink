@@ -36,6 +36,21 @@ async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKi
         return operation
 
 
+async def create_compute(name: str = "Local compute") -> ComputeRegistry:
+    """Create one minimal Compute registry without queueing reconciliation."""
+
+    # Operation tests need a persisted Compute target without registry service side effects.
+    async with session_scope() as session:
+        compute = ComputeRegistry(
+            name=name,
+            kubeconfig={"apiVersion": "v1", "clusters": []},
+            version=env.VERSION,
+        )
+        session.add(compute)
+        await session.commit()
+        return compute
+
+
 async def create_ready_infrastructure(name: str = "Local testing") -> Infrastructure:
     """Create independent registries with a ready compute target and no provider side effects."""
 

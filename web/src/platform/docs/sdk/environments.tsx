@@ -7,8 +7,8 @@ import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'settings', label: 'Settings' },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'settings', label: 'Settings', level: 2 },
     ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/environments.tsx',

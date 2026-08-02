@@ -1,29 +1,12 @@
 import pytest
 from uuid import UUID
-from factories import queue_operation
+from factories import create_compute, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
 from src.models.statuses import Status
-from src.database.session import session_scope
 from src.database.services import compute, operations
 from src.models.operations import OperationKind, OperationStatus
-from src.database.models.computes import ComputeRegistry
-
-
-async def create_compute() -> ComputeRegistry:
-    """Persist one Compute registry without queueing work."""
-
-    # Handler tests need a real Compute row while the Kubernetes boundary remains explicit.
-    async with session_scope() as session:
-        registry = ComputeRegistry(
-            name="Local compute",
-            kubeconfig={"apiVersion": "v1", "clusters": []},
-            version=env.VERSION,
-        )
-        session.add(registry)
-        await session.commit()
-        return registry
 
 
 async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_platform_release(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -78,7 +61,6 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     monkeypatch.setattr(compute_operations.secrets, "token_urlsafe", lambda _length: next(keys))
     await queue_operation(
         compute_registry.id,
-        kind=OperationKind.compute_create,
         target_id=compute_registry.id,
     )
     claimed = await operations.claim()
@@ -91,7 +73,6 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
     await queue_operation(
         compute_registry.id,
-        kind=OperationKind.compute_create,
         target_id=compute_registry.id,
     )
     recreated_claim = await operations.claim()
@@ -143,7 +124,6 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
     await queue_operation(
         compute_registry.id,
-        kind=OperationKind.compute_create,
         target_id=compute_registry.id,
     )
     claimed = await operations.claim()

@@ -2,6 +2,7 @@ import pytest
 from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
+from factories import create_compute
 from factories import queue_operation as queue
 from src.environments import env
 from src.models.types import DatabaseSSLMode
@@ -16,21 +17,6 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-
-
-async def create_compute(name: str) -> ComputeRegistry:
-    """Create one isolated compute row without queueing reconciliation."""
-
-    # Operation service tests need only a minimal compute target at the current Platform version.
-    async with session_scope() as session:
-        compute = ComputeRegistry(
-            name=name.title(),
-            kubeconfig={"apiVersion": "v1", "clusters": []},
-            version=env.VERSION,
-        )
-        session.add(compute)
-        await session.commit()
-        return compute
 
 
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:

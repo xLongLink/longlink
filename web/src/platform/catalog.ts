@@ -7,7 +7,7 @@ type ArticleIcon = ReactElement<LucideProps>;
 type ArticleTocItem = {
     id: string;
     label: string;
-    level?: number;
+    level: number;
 };
 
 /** Metadata shared by article-like public pages. */
