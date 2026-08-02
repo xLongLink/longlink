@@ -57,6 +57,7 @@ async def test_create_requires_running_organization() -> None:
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
             user=user,
+            secrets={},
         )
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
@@ -68,6 +69,7 @@ async def test_create_requires_running_organization() -> None:
         image="ghcr.io/longlink/dashboard@sha256:test",
         version="2.0.0",
         user=user,
+        secrets={},
     )
 
     # Assert
@@ -92,6 +94,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
             user=user,
+            secrets={},
         )
 
     # Assert
@@ -109,6 +112,7 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         slug="reports",
         image="ghcr.io/longlink/reports@sha256:test",
         user=user,
+        secrets={},
     )
     await applications.soft_delete(deleted_application.id, user)
 

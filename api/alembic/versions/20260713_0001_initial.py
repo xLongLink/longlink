@@ -180,6 +180,7 @@ def upgrade() -> None:
         sa.Column("image", sa.String(length=512), nullable=False),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
+        sa.Column("secrets", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "status",
             sa.Enum(

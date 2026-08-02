@@ -111,6 +111,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
             name="Dashboard",
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:resolved",
+            secrets={},
             status=Status.running,
         )
         session.add_all(
@@ -121,6 +122,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
                     name="Pending",
                     slug="pending",
                     image="ghcr.io/longlink/pending@sha256:resolved",
+                    secrets={},
                     status=Status.creating,
                 ),
                 Application(
@@ -128,6 +130,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
                     name="Deleted",
                     slug="deleted",
                     image="ghcr.io/longlink/deleted@sha256:resolved",
+                    secrets={},
                     status=Status.running,
                     deleted_at=utcnow(),
                 ),

@@ -4,7 +4,9 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column, UniqueConstraint
 from longlink.utils.time import utcnow
+from src.environments import env
 from src.models.statuses import Status
+from src.database.types import EncryptedType
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -34,6 +36,9 @@ class Application(SQLModel, table=True):
     image: str = Field(max_length=512)
     version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
+
+    # Secrets
+    secrets: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
 
     # State
     status: Status = Field(

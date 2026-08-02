@@ -114,6 +114,7 @@ async def create_application(
     name: str = "dashboard",
     slug: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
+    secrets: dict[str, str] | None = None,
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
@@ -128,4 +129,5 @@ async def create_application(
         slug=slug,
         image=resolved_image,
         user=owner,
+        secrets={} if secrets is None else secrets,
     )

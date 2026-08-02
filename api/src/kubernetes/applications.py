@@ -5,7 +5,6 @@ import hashlib
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
-from collections.abc import Mapping
 from importlib.resources import files
 from src.models.gateways import API_KEY_HEADER, APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment, new_class
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 APPLICATION_ID_LABEL = "longlink.io/application-id"
-RUNTIME_ENV_PREFIX = "LONGLINK_"
 HTTPRouteResource = new_class("HTTPRoute", "gateway.networking.k8s.io/v1", asyncio=True, plural="httproutes")
 
 
@@ -27,50 +25,25 @@ class Applications:
 
         self._client = client
 
-    async def stage_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Create the user-owned values for an Application deployment."""
-
-        # Keep Platform-owned values outside the user environment supplied at this boundary.
-        if any(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
-            raise ValueError("Application environment cannot include LongLink-managed variables")
-
-        # Create the immutable Application Secret before Platform provisioning completes its values.
-        api = await self._client.api()
-        await Secret(
-            {
-                "metadata": {
-                    "name": str(application_id),
-                    "namespace": namespace,
-                    "labels": {APPLICATION_ID_LABEL: str(application_id)},
-                },
-                "stringData": envs,
-            },
-            api=api,
-        ).create()
-
-    async def stage_runtime_envs(self, application_id: UUID, namespace: str, envs: Mapping[str, str]) -> None:
-        """Add Platform-owned runtime values before creating the Application workload."""
-
-        # Accept only the complete Platform runtime contract.
-        if not envs or not all(name.startswith(RUNTIME_ENV_PREFIX) for name in envs):
-            raise ValueError("Application runtime must contain only LongLink-managed variables")
-
-        # Add generated runtime values to the user Secret before a Pod can consume it.
-        api = await self._client.api()
-        secret = Secret(str(application_id), namespace=namespace, api=api)
-        if not await secret.exists():
-            raise RuntimeError("Kubernetes Application Secret not found")
-        await secret.patch({"data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in envs.items()}}, type="merge")
-
-    async def apply(self, application_id: UUID, namespace: str, image: str) -> None:
+    async def apply(self, application_id: UUID, namespace: str, image: str, secrets: dict[str, str]) -> None:
         """Deploy one Application and wait for its rollout."""
 
-        # Bind the Pod revision to its complete Secret before creating the workload.
+        # Recreate the complete Kubernetes Secret from Platform-authoritative encrypted state.
         api = await self._client.api()
-        secret = Secret(str(application_id), namespace=namespace, api=api)
-        if not await secret.exists():
-            raise RuntimeError("Kubernetes Application runtime Secret not found")
-        await secret.refresh()
+        await apply(
+            Secret(
+                {
+                    "metadata": {
+                        "name": str(application_id),
+                        "namespace": namespace,
+                        "labels": {APPLICATION_ID_LABEL: str(application_id)},
+                    },
+                    "data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in secrets.items()},
+                },
+                api=api,
+            )
+        )
+
         # Render workload resources before the first cluster mutation.
         deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
@@ -80,13 +53,7 @@ class Applications:
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
-            runtime_revision=hashlib.sha256(
-                json.dumps(
-                    {name: base64.b64decode(value).decode() for name, value in secret.raw["data"].items()},
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode()
-            ).hexdigest(),
+            runtime_revision=hashlib.sha256(json.dumps(secrets, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
         )
 
         # Create the Service and its owned HTTPRoute before starting Application Pods.

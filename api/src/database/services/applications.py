@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 from sqlalchemy import delete, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -65,7 +65,7 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
-    application_id: UUID | None = None,
+    secrets: dict[str, str],
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
@@ -96,7 +96,6 @@ async def create(
 
         # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
-            id=uuid4() if application_id is None else application_id,
             organization_id=organization_id,
             name=name,
             slug=slug,
@@ -104,6 +103,7 @@ async def create(
             image=str(image),
             version=version,
             icon=icon,
+            secrets=secrets,
         )
         application.created_id = user.id
         application.updated_id = user.id
@@ -124,6 +124,25 @@ async def create(
 
         await session.commit()
         return application
+
+
+async def add_runtime_secrets(application_id: UUID, secrets: dict[str, str]) -> dict[str, str] | None:
+    """Persist generated runtime secrets unless a previous attempt already did."""
+
+    # Lock the Application so only the first creation attempt writes generated credentials.
+    async with session_scope() as session:
+        application = await session.get(Application, application_id, with_for_update=True)
+        if application is None or application.deleted_at is not None:
+            return None
+
+        # Reuse durable runtime values after an interrupted creation attempt.
+        if any(name.startswith("LONGLINK_") for name in application.secrets):
+            return application.secrets
+
+        # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
+        application.secrets = {**application.secrets, **secrets}
+        await session.commit()
+        return application.secrets
 
 
 async def mark_running(application_id: UUID) -> None:

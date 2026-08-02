@@ -58,7 +58,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         await session.commit()
-    staged: dict[str, object] = {}
 
     async def inspect_image(image: str) -> LongLinkMetadata:
         """Return immutable metadata with one required user environment value."""
@@ -71,20 +70,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
         )
 
-    class FakeCompute:
-        """Capture Application environment Secret staging."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Capture the assigned compute target."""
-
-            self.applications = self
-
-        async def stage_envs(self, application_id: UUID, namespace: str, envs: dict[str, str]) -> None:
-            """Record user values sent to the Kubernetes Secret boundary."""
-
-            staged.update({"application_id": application_id, "namespace": namespace, "envs": envs})
-
-    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
     monkeypatch.setattr("src.routes.applications.images.metadata", inspect_image)
     client = clients[0]
 
@@ -113,11 +98,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     persisted = await applications.get(UUID(payload["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
-    assert staged == {
-        "application_id": persisted.id,
-        "namespace": organization.id.hex,
-        "envs": {"API_KEY": "secret-value", "PORT": "8080"},
-    }
+    assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
     assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch())
 
 

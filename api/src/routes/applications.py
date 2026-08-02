@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin
 from src.utils import names, roles, images
@@ -50,24 +50,16 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    # Stage user-owned values before committing the Operation that consumes them.
-    application_id = uuid4()
-    registry = await compute.get(organization.compute_id)
-    if registry is None:
-        raise RuntimeError("Application Organization compute registry is missing")
-    cluster = Kubernetes(registry.kubeconfig)
-    await cluster.applications.stage_envs(application_id, organization.id.hex, payload.envs)
-
     application = await applications.create(
         organization.id,
         payload.name,
         application_slug,
         image=metadata.image,
-        application_id=application_id,
         version=metadata.version,
         description=payload.description,
         icon=payload.icon,
         user=user,
+        secrets=payload.envs,
     )
     return application
 
