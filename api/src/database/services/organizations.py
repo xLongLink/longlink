@@ -395,11 +395,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        # Resolve the Compute before taking the Organization lock in aggregate order.
-        current = await session.get(Organization, organization_id)
-        if current is None:
-            return None
-        await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
+        # Lock the Organization state before tombstoning its nested rows.
         organization = await session.get(Organization, organization_id, with_for_update=True)
         if organization is None:
             return None
@@ -445,13 +441,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .values(**tombstone)
             )
 
-        # Keep tombstones and all dependent reconciliation work in one transaction.
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
+        # Keep tombstones and Organization cleanup in one transaction.
         await operations.enqueue(
             session,
             organization.compute_id,

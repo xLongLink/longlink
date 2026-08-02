@@ -92,7 +92,6 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert payload["id"] == str(organization.id)
     assert payload["status"] == "deleting"
     recorded_operations = await operations.fetch()
-    assert any(item.kind == OperationKind.compute_create for item in recorded_operations)
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
 

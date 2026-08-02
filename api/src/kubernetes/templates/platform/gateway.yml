@@ -1,97 +1,52 @@
-# Template for the per-compute Envoy gateway runtime.
+# LongLink requires Envoy Gateway v1.8 and owns one authenticated Gateway per Compute.
 apiVersion: v1
-kind: ConfigMap
+kind: Namespace
 metadata:
-    name: longlink-gateway
-    namespace: longlink-system
-data:
-    envoy.yaml: $envoy_config
+    name: longlink-system
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
 metadata:
-    name: longlink-gateway
-    namespace: longlink-system
-    labels:
-        app: longlink-gateway
+    name: longlink-envoy
 spec:
-    replicas: 1
-    selector:
-        matchLabels:
-            app: longlink-gateway
-    template:
-        metadata:
-            annotations:
-                longlink.io/config-revision: '$config_revision'
-            labels:
-                app: longlink-gateway
-        spec:
-            automountServiceAccountToken: false
-            securityContext:
-                runAsNonRoot: true
-                runAsUser: 101
-                runAsGroup: 101
-                fsGroup: 101
-                seccompProfile:
-                    type: RuntimeDefault
-            containers:
-                - name: longlink-gateway
-                  image: envoyproxy/envoy:v1.38.2@sha256:af7c3dfdbe10de65cb2db5839ce1adf8904ee41c9d372076d62acab43af6ec41
-                  args:
-                      - -c
-                      - /etc/envoy/envoy.yaml
-                  startupProbe:
-                      tcpSocket:
-                          port: 8443
-                      periodSeconds: 2
-                      failureThreshold: 60
-                  readinessProbe:
-                      tcpSocket:
-                          port: 8443
-                      periodSeconds: 5
-                  livenessProbe:
-                      tcpSocket:
-                          port: 8443
-                  volumeMounts:
-                      - name: config
-                        mountPath: /etc/envoy
-                        readOnly: true
-                      - name: tls
-                        mountPath: /etc/envoy-tls
-                  resources:
-                      requests:
-                          cpu: 100m
-                          memory: 128Mi
-                      limits:
-                          cpu: 500m
-                          memory: 256Mi
-                  securityContext:
-                      allowPrivilegeEscalation: false
-                      capabilities:
-                          drop:
-                              - ALL
-                      readOnlyRootFilesystem: true
-            volumes:
-                - name: config
-                  configMap:
-                      name: longlink-gateway
-                - name: tls
-                  secret:
-                      secretName: longlink-gateway-tls
+    controllerName: gateway.envoyproxy.io/gatewayclass-controller
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
 metadata:
-    name: longlink-gateway-ingress
+    name: longlink
     namespace: longlink-system
-    labels:
-        app: longlink-gateway
 spec:
-    podSelector:
-        matchLabels:
-            app: longlink-gateway
-    policyTypes:
-        - Ingress
-    ingress:
-        - ports:
-              - port: 8443
+    gatewayClassName: longlink-envoy
+    listeners:
+        - name: https
+          protocol: HTTPS
+          port: 443
+          tls:
+              mode: Terminate
+              certificateRefs:
+                  - group: ''
+                    kind: Secret
+                    name: longlink-gateway-tls
+          allowedRoutes:
+              namespaces:
+                  from: All
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+    name: longlink-api-only
+    namespace: longlink-system
+spec:
+    targetRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: longlink
+    apiKeyAuth:
+        credentialRefs:
+            - group: ''
+              kind: Secret
+              name: longlink-gateway-api-key
+        extractFrom:
+            - headers:
+                  - x-longlink-api-key

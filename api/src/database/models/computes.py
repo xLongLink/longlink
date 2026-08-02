@@ -9,9 +9,9 @@ from src.models.statuses import Status
 
 
 class ComputeRegistry(SQLModel, table=True):
-    """Persist one compute target and its private-gateway reconciliation state.
+    """Persist one Compute target and its authenticated Envoy Gateway state.
 
-    Reconciliation uses its kubeconfig to manage Kubernetes and its gateway state to proxy authenticated Application traffic.
+    The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Application traffic.
     """
 
     __tablename__: ClassVar[str] = "compute_registries"
@@ -35,6 +35,5 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)
-    gateway_ca_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_identity_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_identity_private_key: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
+    gateway_api_key: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
+    gateway_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

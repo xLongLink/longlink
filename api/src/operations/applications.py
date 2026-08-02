@@ -77,11 +77,11 @@ async def create(claimed: Operation) -> str | None:
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
     await cluster.applications.apply(application.id, organization.id.hex, application.image)
 
-    # Running Application reconciliation owns only its workload, not shared gateway state.
+    # Running Application reconciliation reapplies its workload and owned HTTPRoute.
     if application.status == Status.running:
         return None
 
-    # Publish running after workload readiness, then queue the shared gateway reconciliation.
+    # Publish running after workload readiness.
     if not await applications.mark_running(application.id):
         return None
 
@@ -104,7 +104,7 @@ async def delete(claimed: Operation) -> str | None:
     storage_registry = infrastructure.storage
     cluster = Kubernetes(registry.kubeconfig)
 
-    # The route was removed by the compute Operation queued with the tombstone.
+    # Remove Application Kubernetes resources before revoking provider credentials.
     await cluster.applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.

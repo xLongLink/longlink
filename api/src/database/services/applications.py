@@ -31,25 +31,6 @@ async def fetch() -> Sequence[Application]:
         return (await session.scalars(statement)).all()
 
 
-async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, UUID]]:
-    """Return stable Service route identities for running Applications on one compute."""
-
-    # Gateway reconciliation needs no provider credentials or Application runtime configuration.
-    async with session_scope() as session:
-        statement = (
-            select(Application.id, Organization.id)
-            .join(Organization, Organization.id == Application.organization_id)
-            .where(
-                Organization.compute_id == compute_id,
-                Organization.deleted_at.is_(None),
-                Application.deleted_at.is_(None),
-                Application.status == Status.running,
-            )
-            .order_by(Organization.id, Application.id)
-        )
-        return (await session.execute(statement)).tuples().all()
-
-
 async def purge(application_id: UUID) -> None:
     """Hard-delete one application after all external runtime resources are gone."""
 
@@ -148,29 +129,16 @@ async def create(
 async def mark_running(application_id: UUID) -> bool:
     """Publish Application readiness."""
 
-    # Resolve the Compute before locking the Application in aggregate order.
+    # Lock the Application before publishing readiness.
     async with session_scope() as session:
-        current = await session.get(Application, application_id)
-        if current is None:
-            return False
-        organization = await session.get(Organization, current.organization_id)
-        if organization is None:
-            return False
-        await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
         if application is None or application.deleted_at is not None:
             return False
 
-        # Publish running and queue gateway reconciliation in one transaction.
+        # Publish running after the Application workload is ready.
         if application.status != Status.creating:
             return False
         application.status = Status.running
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
         await session.commit()
 
     return True
@@ -185,10 +153,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         current = await session.get(Application, application_id)
         if current is None:
             return None
-        current_organization = await session.get(Organization, current.organization_id)
-        if current_organization is None:
-            return None
-        await session.get(ComputeRegistry, current_organization.compute_id, with_for_update=True)
 
         # Lock the Organization and Application state before tombstoning.
         organization = (
@@ -209,12 +173,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
         await operations.enqueue(
             session,
             organization.compute_id,

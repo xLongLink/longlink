@@ -90,6 +90,7 @@ function ContextLevels({ items }: { items: typeof industryLevels | typeof geogra
 }
 
 export const metadata = {
+    toc: [{ id: 'introduction', label: 'Introduction' }],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/index.tsx',
 };

@@ -1,4 +1,4 @@
-# Template for one owned Organization Namespace, quota, and gateway ingress policy.
+# Template for one owned Organization Namespace, quota, and Envoy Gateway ingress policy.
 ---
 apiVersion: v1
 kind: Namespace
@@ -21,7 +21,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-    name: longlink-gateway-ingress
+    name: longlink-envoy-gateway-ingress
     namespace: '$namespace'
 spec:
     podSelector: {}
@@ -31,10 +31,11 @@ spec:
         - from:
               - namespaceSelector:
                     matchLabels:
-                        kubernetes.io/metadata.name: longlink-system
+                        kubernetes.io/metadata.name: envoy-gateway-system
                 podSelector:
                     matchLabels:
-                        app: longlink-gateway
+                        gateway.envoyproxy.io/owning-gateway-name: longlink
+                        gateway.envoyproxy.io/owning-gateway-namespace: longlink-system
           ports:
               - protocol: TCP
                 port: 8000

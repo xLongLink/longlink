@@ -1,7 +1,5 @@
 from httpx2 import AsyncClient
-from factories import create_ready_infrastructure
-from src.database.session import session_scope
-from src.database.services import operations
+from factories import queue_operation, create_ready_infrastructure
 from src.models.operations import OperationKind
 
 
@@ -13,14 +11,11 @@ async def test_operations_endpoint_returns_targeted_operations(
     # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    async with session_scope() as session:
-        operation = await operations.enqueue(
-            session,
-            infrastructure.compute.id,
-            kind=OperationKind.compute_create,
-            target_id=infrastructure.compute.id,
-        )
-        await session.commit()
+    operation = await queue_operation(
+        infrastructure.compute.id,
+        kind=OperationKind.compute_create,
+        target_id=infrastructure.compute.id,
+    )
 
     # Act
     response = await client.get("/api/operations")

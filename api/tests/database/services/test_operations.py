@@ -1,7 +1,8 @@
 import pytest
 from src import release as platform_release
-from uuid import UUID, uuid4
+from uuid import uuid4
 from datetime import timedelta
+from factories import queue_operation as queue
 from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
@@ -30,21 +31,6 @@ async def create_compute(name: str) -> ComputeRegistry:
         session.add(compute)
         await session.commit()
         return compute
-
-
-async def queue(
-    compute_id: UUID,
-    *,
-    kind: OperationKind = OperationKind.compute_create,
-    target_id: UUID,
-) -> Operation:
-    """Queue one Operation through its explicit database transaction."""
-
-    # Queue independently when this test is not exercising a resource command transaction.
-    async with session_scope() as session:
-        operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
-        await session.commit()
-        return operation
 
 
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:

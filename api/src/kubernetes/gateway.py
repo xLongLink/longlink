@@ -1,18 +1,15 @@
-import json
-import yaml
+import ssl
 import asyncio
-import hashlib
 import ipaddress
 from uuid import UUID
 from typing import TYPE_CHECKING
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
-from dataclasses import dataclass
 from cryptography import x509
+from kr8s.asyncio import Api
 from importlib.resources import files
-from src.models.gateways import APPLICATION_ID_HEADER
-from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.utils import apply, deployment_is_ready
+from kr8s.asyncio.objects import Secret, Namespace, new_class
+from src.kubernetes.utils import apply
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -20,100 +17,46 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
-PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
+GatewayClassResource = new_class(
+    "GatewayClass",
+    "gateway.networking.k8s.io/v1",
+    asyncio=True,
+    namespaced=False,
+    plural="gatewayclasses",
+)
+GatewayResource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")
+SecurityPolicyResource = new_class(
+    "SecurityPolicy",
+    "gateway.envoyproxy.io/v1alpha1",
+    asyncio=True,
+    plural="securitypolicies",
+)
 
 
-@dataclass(frozen=True, slots=True)
-class GatewayRoute:
-    """Describe one Application Service route without carrying workload configuration."""
+def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
+    """Build the Kubernetes Secret for one Gateway server identity."""
 
-    id: UUID
-    namespace: str
-
-
-@dataclass(frozen=True, slots=True)
-class GatewayTLSMaterial:
-    """Carry the active per-compute gateway TLS files shared by Envoy and the Platform client."""
-
-    ca_certificate: str
-    identity_certificate: str
-    identity_private_key: str
-
-
-@dataclass(frozen=True, slots=True)
-class GatewayManifests:
-    """Carry the rendered Kubernetes resources for one gateway revision."""
-
-    config_map: dict[str, object]
-    deployment: dict[str, object]
-    network_policy: dict[str, object]
+    # Keep the private server identity only in the Compute cluster.
+    return Secret(
+        {
+            "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+            "stringData": {
+                "tls.crt": certificate,
+                "tls.key": private_key,
+            },
+            "type": "kubernetes.io/tls",
+        },
+        api=api,
+    )
 
 
-def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
-    """Render deterministic authenticated Envoy routes from the authoritative route snapshot."""
+def generate_gateway_tls(
+    compute_id: UUID,
+    address: ipaddress.IPv4Address | ipaddress.IPv6Address | str | None,
+) -> tuple[str, str, str]:
+    """Generate one private CA and its Gateway server certificate."""
 
-    # Every Application gets one authenticated route and one DNS-backed cluster.
-    routes: list[dict[str, object]] = []
-    clusters: list[dict[str, object]] = []
-    for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
-        application_id = str(route.id)
-        cluster_name = f"{route.namespace}-{application_id}"
-        application_id_match: dict[str, object] = {
-            "name": APPLICATION_ID_HEADER,
-            "string_match": {"exact": application_id},
-        }
-        routes.append(
-            {
-                "match": {
-                    "prefix": "/",
-                    "headers": [application_id_match],
-                },
-                "route": {
-                    "cluster": cluster_name,
-                    "timeout": "300s",
-                },
-                "request_headers_to_remove": [APPLICATION_ID_HEADER],
-            }
-        )
-        clusters.append(
-            {
-                "name": cluster_name,
-                "type": "STRICT_DNS",
-                "load_assignment": {
-                    "cluster_name": cluster_name,
-                    "endpoints": [
-                        {
-                            "lb_endpoints": [
-                                {
-                                    "endpoint": {
-                                        "address": {
-                                            "socket_address": {
-                                                "address": f"app-{application_id}.{route.namespace}.svc",
-                                                "port_value": 8000,
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                },
-            }
-        )
-
-    # Render only authenticated Application routes on the public gateway listener.
-    config = templates.readyml_list(
-        PLATFORM_TEMPLATES.joinpath("envoy.yml"),
-        routes=json.dumps(routes, separators=(",", ":")),
-        clusters=json.dumps(clusters, separators=(",", ":")),
-    )[0]
-    return yaml.safe_dump(config, sort_keys=False)
-
-
-def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> GatewayTLSMaterial:
-    """Generate the immutable TLS identity for a newly provisioned compute gateway."""
-
-    # A new endpoint identity uses a private self-signed CA and a CA-issued server certificate.
+    # Create a private CA and a server-only identity for this Compute Gateway.
     now = datetime.now(UTC)
     ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -146,8 +89,9 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
         )
         .sign(ca_key, hashes.SHA256())
     )
-    # MVP KaaS providers expose an IP address, which HTTPS clients require as an IP SAN.
-    server_certificate = (
+
+    # Bind the final certificate to the controller-published IP address or hostname.
+    builder = (
         x509.CertificateBuilder()
         .subject_name(server_name)
         .issuer_name(ca_name)
@@ -156,8 +100,7 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
         .not_valid_before(now - timedelta(minutes=5))
         .not_valid_after(now + timedelta(days=3650))
         .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(x509.SubjectAlternativeName([x509.IPAddress(address)]), critical=False)
-        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CLIENT_AUTH, ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
         .add_extension(x509.SubjectKeyIdentifier.from_public_key(server_key.public_key()), critical=False)
         .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
         .add_extension(
@@ -174,12 +117,22 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
             ),
             critical=True,
         )
-        .sign(ca_key, hashes.SHA256())
     )
-    return GatewayTLSMaterial(
-        ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        identity_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        identity_private_key=server_key.private_bytes(
+    if address is not None:
+        if isinstance(address, str):
+            try:
+                name: x509.GeneralName = x509.IPAddress(ipaddress.ip_address(address))
+            except ValueError:
+                name = x509.DNSName(address)
+        else:
+            name = x509.IPAddress(address)
+        builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
+    server_certificate = builder.sign(ca_key, hashes.SHA256())
+
+    return (
+        ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_key.private_bytes(
             serialization.Encoding.PEM,
             serialization.PrivateFormat.PKCS8,
             serialization.NoEncryption(),
@@ -188,84 +141,101 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
 
 
 class Gateway:
-    """Manage the compute gateway endpoint and runtime resources."""
+    """Manage the shared Envoy Gateway API resources for one Compute."""
 
     def __init__(self, client: "Kubernetes") -> None:
-        """Initialize gateway lifecycle access through shared cluster resources."""
+        """Initialize Gateway lifecycle access through the Compute Kubernetes API."""
 
         self._client = client
 
-    async def ip(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
-        """Apply gateway endpoint resources and wait for the allocated IP."""
+    async def apply(self, certificate: str, private_key: str, api_key: str) -> str:
+        """Apply the shared Gateway and wait for its authenticated endpoint."""
 
-        # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
-        namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
-        api = await self._client.api()
-        await apply(Namespace(namespace, api=api))
-        await apply(Service(service_manifest, api=api))
-
-        # Poll provider-owned Service status without repeatedly applying unchanged desired state.
-        while True:
-            service = Service("longlink-gateway", namespace="longlink-system", api=api)
-            if not await service.exists():
-                raise RuntimeError("Gateway Service disappeared before IP allocation")
-            await service.refresh()
-
-            # Parse the provider-owned Service status while endpoint allocation is pending.
-            status = service.raw.get("status", {}) if isinstance(service.raw, dict) else {}
-            load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
-            ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
-            if not isinstance(ingress, list):
-                raise TypeError("Gateway LoadBalancer ingress must be a list")
-            for entry in ingress:
-                if not isinstance(entry, dict):
-                    raise TypeError("Gateway LoadBalancer ingress entries must be mappings")
-                value = entry.get("ip")
-                if isinstance(value, str) and value.strip():
-                    return ipaddress.ip_address(value.strip())
-            if ingress:
-                raise ValueError("Gateway LoadBalancer must publish an IP address")
-            await asyncio.sleep(5)
-
-    async def apply(self, routes: tuple[GatewayRoute, ...], tls: GatewayTLSMaterial) -> None:
-        """Apply the desired gateway runtime and wait for its Deployment rollout."""
-
-        # Render the complete runtime before changing any gateway dependency.
-        envoy_config = render_envoy_config(routes)
-        manifests = GatewayManifests(
-            *templates.readyml_list(
-                PLATFORM_TEMPLATES.joinpath("gateway.yml"),
-                envoy_config=json.dumps(envoy_config),
-                config_revision=hashlib.sha256(envoy_config.encode()).hexdigest(),
-            )
+        # Render LongLink resources that target the required Envoy Gateway controller.
+        namespace, gateway_class, gateway, security_policy = templates.readyml_list(
+            files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
-
-        # Install every Pod dependency and its ingress policy before updating the Deployment.
         api = await self._client.api()
-        await apply(
+        resources = [
+            Namespace(namespace, api=api),
+            GatewayClassResource(gateway_class, api=api),
+            gateway_tls_secret(certificate, private_key, api),
             Secret(
                 {
-                    "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-                    "stringData": {
-                        "ca.crt": tls.ca_certificate,
-                        "tls.crt": tls.identity_certificate,
-                        "tls.key": tls.identity_private_key,
-                    },
-                    "type": "kubernetes.io/tls",
+                    "metadata": {"name": "longlink-gateway-api-key", "namespace": "longlink-system"},
+                    "stringData": {"platform": api_key},
+                    "type": "Opaque",
                 },
                 api=api,
-            )
-        )
-        await apply(ConfigMap(manifests.config_map, api=api))
-        await apply(NetworkPolicy(manifests.network_policy, api=api))
-        await apply(Deployment(manifests.deployment, api=api))
+            ),
+            GatewayResource(gateway, api=api),
+            SecurityPolicyResource(security_policy, api=api),
+        ]
+        for resource in resources:
+            await apply(resource)
 
-        # Poll rollout status without repeatedly applying the same Deployment revision.
+        # Require the controller, Gateway, policy, and external address before publishing readiness.
+        gateway_resource = resources[-2]
+        policy_resource = resources[-1]
         while True:
-            deployment = Deployment("longlink-gateway", namespace="longlink-system", api=api)
-            if not await deployment.exists():
-                raise RuntimeError("Gateway Deployment disappeared during rollout")
-            await deployment.refresh()
-            if deployment_is_ready(deployment):
-                return
+            await gateway_resource.refresh()
+            await policy_resource.refresh()
+            gateway_status = gateway_resource.raw.get("status")
+            gateway_conditions = gateway_status.get("conditions", []) if isinstance(gateway_status, dict) else []
+            addresses = gateway_status.get("addresses", []) if isinstance(gateway_status, dict) else []
+            policy_status = policy_resource.raw.get("status")
+            ancestors = policy_status.get("ancestors", []) if isinstance(policy_status, dict) else []
+            policy_conditions = [
+                condition
+                for ancestor in ancestors
+                if isinstance(ancestor, dict)
+                for condition in ancestor.get("conditions", [])
+                if isinstance(condition, dict)
+            ]
+            programmed = any(
+                isinstance(condition, dict) and condition.get("type") == "Programmed" and condition.get("status") == "True"
+                for condition in gateway_conditions
+            )
+            authenticated = any(
+                condition.get("type") == "Accepted" and condition.get("status") == "True" for condition in policy_conditions
+            )
+            if programmed and authenticated and isinstance(addresses, list):
+                for address in addresses:
+                    value = address.get("value") if isinstance(address, dict) else None
+                    if isinstance(value, str) and value:
+                        return value
             await asyncio.sleep(5)
+
+    async def replace_tls(self, certificate: str, private_key: str, gateway_certificate: str, address: str) -> None:
+        """Replace the Gateway server certificate after endpoint allocation."""
+
+        # Envoy Gateway watches its listener Secret and reloads the final address-bound identity.
+        api = await self._client.api()
+        await apply(gateway_tls_secret(certificate, private_key, api))
+
+        # Do not publish the Compute until Envoy serves the final address-bound certificate.
+        context = ssl.create_default_context(cadata=gateway_certificate)
+        while True:
+            try:
+                _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
+            except (OSError, ssl.SSLError):
+                await asyncio.sleep(5)
+                continue
+            writer.close()
+            await writer.wait_closed()
+            return
+
+    async def delete(self) -> None:
+        """Delete the cluster-scoped LongLink GatewayClass and wait for completion."""
+
+        # Issue deletion once and then poll only the GatewayClass state.
+        try:
+            async with asyncio.timeout(10 * 60):
+                gateway_class = GatewayClassResource("longlink-envoy", api=await self._client.api())
+                while await gateway_class.exists():
+                    await gateway_class.refresh()
+                    if gateway_class.metadata.get("deletionTimestamp") is None:
+                        await gateway_class.delete()
+                    await asyncio.sleep(5)
+        except TimeoutError:
+            raise RuntimeError("Kubernetes GatewayClass did not terminate: longlink-envoy") from None

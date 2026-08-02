@@ -1,14 +1,14 @@
-from src.environments import env
+import secrets
+import ipaddress
 from packaging.version import Version
-from src.models.statuses import Status
-from src.database.services import compute, applications
+from src.database.services import compute
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.gateway import GatewayRoute, GatewayTLSMaterial, generate_gateway_tls
+from src.kubernetes.gateway import generate_gateway_tls
 from src.database.models.operations import Operation
 
 
 async def create(claimed: Operation) -> str | None:
-    """Create or recreate one compute's gateway and cluster-bootstrap resources."""
+    """Reconcile one Compute's shared authenticated Envoy Gateway."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
     registry = await compute.get(claimed.target_id)
@@ -20,42 +20,24 @@ async def create(claimed: Operation) -> str | None:
 
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Public IP allocation precedes IP-bound TLS generation and runtime deployment.
-    gateway_ip = await cluster.gateway.ip()
+    # Rotate authenticated Gateway access for every explicit Compute operation.
+    api_key = secrets.token_urlsafe(32)
+    _, server_certificate, server_private_key = generate_gateway_tls(registry.id, None)
 
-    # Persisted gateway TLS must be either complete or absent.
-    ca_certificate = registry.gateway_ca_certificate
-    identity_certificate = registry.gateway_identity_certificate
-    identity_private_key = registry.gateway_identity_private_key
-    missing_tls = ca_certificate is None or identity_certificate is None or identity_private_key is None
-    if missing_tls:
-        if any(value is not None for value in (ca_certificate, identity_certificate, identity_private_key)):
-            raise RuntimeError("Compute registry has incomplete gateway TLS material")
+    # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
+    gateway_address = await cluster.gateway.apply(server_certificate, server_private_key, api_key)
 
-    # Generate a fresh identity for the initial creation and every Platform release.
-    if missing_tls or Version(registry.version) < platform_version:
-        tls = generate_gateway_tls(registry.id, gateway_ip)
-        replaced = await compute.replace_gateway_tls(
-            registry.id,
-            tls.ca_certificate,
-            tls.identity_certificate,
-            tls.identity_private_key,
-        )
-        if not replaced:
-            raise RuntimeError("Compute registry disappeared while updating gateway TLS")
+    # Replace the bootstrap identity with a certificate bound to the published endpoint.
+    gateway_certificate, server_certificate, server_private_key = generate_gateway_tls(registry.id, gateway_address)
+    await cluster.gateway.replace_tls(server_certificate, server_private_key, gateway_certificate, gateway_address)
+
+    # Format IP addresses and controller-published hostnames for URL authority syntax.
+    try:
+        address = ipaddress.ip_address(gateway_address)
+    except ValueError:
+        gateway_host = gateway_address
     else:
-        assert ca_certificate is not None
-        assert identity_certificate is not None
-        assert identity_private_key is not None
-        tls = GatewayTLSMaterial(ca_certificate, identity_certificate, identity_private_key)
-
-    # Apply one authoritative running-Application route snapshot per compute Operation.
-    route_rows = await applications.gateway_routes(registry.id)
-    routes = tuple(GatewayRoute(id=item[0], namespace=item[1].hex) for item in route_rows)
-    await cluster.gateway.apply(routes, tls)
-
-    # Format the typed gateway IP for URL authority syntax.
-    gateway_host = f"[{gateway_ip}]" if gateway_ip.version == 6 else str(gateway_ip)
+        gateway_host = f"[{address}]" if address.version == 6 else str(address)
     gateway_url = f"https://{gateway_host}"
 
     # Publish connection material only after the desired gateway Deployment is serving.
@@ -63,11 +45,11 @@ async def create(claimed: Operation) -> str | None:
         registry.id,
         claimed.platform_version,
         gateway_url,
+        api_key,
+        gateway_certificate,
         registry.status,
     ):
         current = await compute.get(registry.id)
         if current is None or Version(current.version) > platform_version:
-            return None
-        if current.status == Status.running and current.version == claimed.platform_version and current.gateway_url == gateway_url:
             return None
         return "Compute gateway state was not recorded"

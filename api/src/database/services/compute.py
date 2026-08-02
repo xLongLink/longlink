@@ -90,10 +90,12 @@ async def delete(registry_id: UUID) -> bool:
 async def record_success(
     compute_id: UUID,
     platform_version: PlatformVersion,
-    gateway_url: str | None,
+    gateway_url: str,
+    gateway_api_key: str,
+    gateway_certificate: str,
     expected_status: Status,
 ) -> bool:
-    """Persist successful compute state without allowing a Platform release regression."""
+    """Publish successful Compute and Gateway state without allowing a Platform release regression."""
 
     # Lock the compute while updating its observed release.
     async with session_scope() as session:
@@ -104,29 +106,9 @@ async def record_success(
             return False
 
         registry.gateway_url = gateway_url
+        registry.gateway_api_key = gateway_api_key
+        registry.gateway_certificate = gateway_certificate
         registry.version = platform_version
         registry.status = Status.running
-        await session.commit()
-        return True
-
-
-async def replace_gateway_tls(
-    compute_id: UUID,
-    ca_certificate: str,
-    certificate: str,
-    private_key: str,
-) -> bool:
-    """Persist one complete gateway TLS identity."""
-
-    # Lock the compute so concurrent creation operations cannot publish partial identities.
-    async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if registry is None:
-            return False
-
-        # Replace every dependent value in the same transaction.
-        registry.gateway_ca_certificate = ca_certificate
-        registry.gateway_identity_certificate = certificate
-        registry.gateway_identity_private_key = private_key
         await session.commit()
         return True

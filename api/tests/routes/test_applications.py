@@ -280,5 +280,4 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     assert payload["id"] == str(app.id)
     assert payload["status"] == "deleting"
     recorded_operations = await operations.fetch()
-    assert any(item.kind == OperationKind.compute_create for item in recorded_operations)
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)
