@@ -1,4 +1,3 @@
-from pwdlib import PasswordHash
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -18,20 +17,21 @@ async def fetch() -> Sequence[User]:
 
 
 async def ensure_administrator() -> None:
-    """Create or repair the configured initial Platform administrator."""
+    """Reconcile the configured account as the sole Platform administrator."""
 
-    # Match the configured identity case-insensitively before reconciling its credentials and access.
-    hasher = PasswordHash.recommended()
+    # Reconcile the persisted administrator before considering an initial account creation.
     async with session_scope() as session:
-        statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL.casefold())
-        user = (await session.execute(statement)).scalar_one_or_none()
-        created = user is None
+        statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL)
+        user = (await session.execute(select(User).where(col(User.role) == PlatformRoles.administrator))).scalar_one_or_none()
+
+        # Match the configured identity only when no administrator has been created yet.
+        if user is None:
+            user = (await session.execute(statement)).scalar_one_or_none()
         if user is None:
             user = User(
                 name=env.ADMIN_NAME,
                 email=env.ADMIN_EMAIL,
-                hashed_password=hasher.hash(env.ADMIN_PASSWORD),
-                role=PlatformRoles.administrator,
+                password=env.ADMIN_PASSWORD,
             )
             session.add(user)
 
@@ -43,14 +43,12 @@ async def ensure_administrator() -> None:
                 user = (await session.execute(statement)).scalar_one_or_none()
                 if user is None:
                     raise
-                created = False
 
-        # Reconcile an existing account, including one created concurrently by another replica.
-        if not created:
-            if not hasher.verify(env.ADMIN_PASSWORD, user.hashed_password):
-                user.hashed_password = hasher.hash(env.ADMIN_PASSWORD)
-            user.name = env.ADMIN_NAME
-            user.role = PlatformRoles.administrator
-            user.deleted_at = None
+        # Reconcile the configured account, including one created concurrently by another replica.
+        user.password = env.ADMIN_PASSWORD
+        user.name = env.ADMIN_NAME
+        user.email = env.ADMIN_EMAIL
+        user.role = PlatformRoles.administrator
+        user.deleted_at = None
 
         await session.commit()

@@ -10,30 +10,25 @@ import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
 import { stoneIconRegistry } from './icons';
 
 /**
- * Stone syntax palette — light values snap to T40 / T45 stops on the
- * stone categorical ramps (per audit drawer); dark values stay at T70.
- *
- * `string` and `property` both land on Teal T40 — intentional; the audit
- * unified them since green and teal are visually adjacent at T40 and
- * the stone neutral palette doesn't carry a distinct green stop.
+ * VS Code Dark syntax palette keeps code familiar and readable in every mode.
  */
 const stoneSyntax = defineSyntaxTheme({
     name: 'xds-stone',
     tokens: {
-        keyword: ['#645a72', '#b2a7c1'], // Purple T40 / T70
-        string: ['#4e6357', '#9bb19a'], // Teal T40 / Green T70
-        comment: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-        number: ['#755752', '#bea792'], // Red T40 / Orange T70
-        function: ['#506072', '#99adc6'], // Blue T40 / T70
-        type: ['#645a72', '#b2a7c1'], // Purple T40 / T70
-        variable: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-        operator: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-        constant: ['#755752', '#bea792'], // Red T40 / Orange T70
-        tag: ['#775751', '#c7a39d'], // Red T40 / T70
-        attribute: ['#79693f', '#b6aa90'], // Yellow T45 / T70
-        property: ['#4e6357', '#94b2a0'], // Teal T40 / T70
-        punctuation: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-        background: ['#f3f3f5', '#171719'],
+        keyword: ['#569cd6', '#569cd6'],
+        string: ['#ce9178', '#ce9178'],
+        comment: ['#a0a0a0', '#a0a0a0'],
+        number: ['#b5cea8', '#b5cea8'],
+        function: ['#dcdcaa', '#dcdcaa'],
+        type: ['#4ec9b0', '#4ec9b0'],
+        variable: ['#9cdcfe', '#9cdcfe'],
+        operator: ['#d4d4d4', '#d4d4d4'],
+        constant: ['#4fc1ff', '#4fc1ff'],
+        tag: ['#569cd6', '#569cd6'],
+        attribute: ['#9cdcfe', '#9cdcfe'],
+        property: ['#9cdcfe', '#9cdcfe'],
+        punctuation: ['#d4d4d4', '#d4d4d4'],
+        background: ['#1e1e1e', '#1e1e1e'],
     },
 });
 
@@ -228,6 +223,12 @@ export const stoneTheme = defineTheme({
     },
 
     components: {
+        codeblock: {
+            base: {
+                width: '100%',
+            },
+        },
+
         button: {
             base: {
                 borderRadius: 'var(--radius-element)',

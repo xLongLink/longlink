@@ -54,7 +54,7 @@ async def current_optional_user(
         )
     )
     user = (await session.execute(statement)).scalar_one_or_none()
-    if user is None or not hmac.compare_digest(fingerprint, token.password_fingerprint(user.hashed_password)):
+    if user is None or not hmac.compare_digest(fingerprint, token.password_fingerprint(user.password)):
         return None
     return user
 

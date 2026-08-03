@@ -8,7 +8,6 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
-from src.models.roles import PlatformRoles
 from src.models.users import UserProfile
 from src.database.services import invitations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +28,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Verify the supplied password before issuing a session.
-    if not PasswordHash.recommended().verify(payload.password, user.hashed_password) or user.deleted_at is not None:
+    if not PasswordHash.recommended().verify(payload.password, user.password) or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
@@ -142,7 +141,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
-    user.hashed_password = PasswordHash.recommended().hash(payload.password)
+    user.password = PasswordHash.recommended().hash(payload.password)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.
@@ -235,8 +234,7 @@ async def complete_registration(
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
-        hashed_password=PasswordHash.recommended().hash(payload.password),
-        role=PlatformRoles.user,
+        password=PasswordHash.recommended().hash(payload.password),
     )
     session.add(user)
 

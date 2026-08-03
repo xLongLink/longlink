@@ -6,7 +6,7 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { Link } from '@astryxdesign/core/Link';
 import { Outline } from '@astryxdesign/core/Outline';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
@@ -20,51 +20,65 @@ export function Article({ page }: { page: ArticlePage }) {
     const { memberships } = useUserOrganizations();
     const { content, metadata } = page;
     const pageToc = metadata.toc ?? [];
-    const getStartedHref =
-        user && memberships.length === 1 ? `/orgs/${memberships[0].organization.slug}` : '/organizations';
-
-    const breadcrumbs = (
-        <Breadcrumbs className="min-w-0 overflow-hidden" separator=">" variant="supporting">
-            {page.breadcrumbs.map((item, index) => {
-                const isLast = index === page.breadcrumbs.length - 1;
-
-                return (
-                    <BreadcrumbItem key={item.path} href={isLast ? undefined : item.path} isCurrent={isLast}>
-                        {item.title}
-                    </BreadcrumbItem>
-                );
-            })}
-        </Breadcrumbs>
-    );
-    const header = (
-        <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" padding={0}>
-            <Stack direction="horizontal" height={64} width="100%">
-                <StackItem className="min-w-0" size="fill">
-                    <Stack height="100%" paddingInline={6} vAlign="center">
-                        <PageContainer className="lg:-translate-x-3" maxWidth={768}>
-                            {breadcrumbs}
-                        </PageContainer>
-                    </Stack>
-                </StackItem>
-                <Center className="shrink-0 px-2 lg:w-56 lg:px-5" height={64}>
-                    <Button href={getStartedHref} label={t('actions.getStarted')} size="sm" variant="primary" />
-                </Center>
-            </Stack>
-            <Stack paddingInline={4}>
-                <Divider />
-            </Stack>
-        </LayoutHeader>
-    );
 
     return (
         <Layout
             height="auto"
-            header={header}
+            header={
+                <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" hasDivider padding={0}>
+                    <Stack className="relative" height={64} width="100%">
+                        <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
+                            <Breadcrumbs className="min-w-0 overflow-hidden" separator=">" variant="supporting">
+                                {page.breadcrumbs.map((item, index) => {
+                                    const isLast = index === page.breadcrumbs.length - 1;
+
+                                    return (
+                                        <BreadcrumbItem
+                                            key={item.path}
+                                            href={isLast ? undefined : item.path}
+                                            isCurrent={isLast}
+                                        >
+                                            {item.title}
+                                        </BreadcrumbItem>
+                                    );
+                                })}
+                            </Breadcrumbs>
+                        </PageContainer>
+                        <Center className="absolute end-0 top-0 px-4" height={64}>
+                            <Button
+                                href={
+                                    user && memberships.length === 1
+                                        ? `/orgs/${memberships[0].organization.slug}`
+                                        : '/organizations'
+                                }
+                                label={t('actions.getStarted')}
+                                size="sm"
+                                variant="primary"
+                            />
+                        </Center>
+                    </Stack>
+                </LayoutHeader>
+            }
             content={
                 <LayoutContent isScrollable={false} padding={6}>
                     <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
                         <PageContainer className="min-w-0" maxWidth={768}>
-                            <ArticleContent content={content} metadata={metadata} />
+                            <article className="article-content space-y-7 text-justify">
+                                {content}
+                                <Stack as="footer" gap={3}>
+                                    <Divider />
+                                    <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
+                                        <Text type="supporting" color="secondary">
+                                            {t('common.lastUpdated', { date: formatDate(metadata.lastUpdated) })}
+                                        </Text>
+                                        {metadata.editUrl ? (
+                                            <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
+                                                {t('docs.editInGithub')}
+                                            </Link>
+                                        ) : null}
+                                    </Stack>
+                                </Stack>
+                            </article>
                         </PageContainer>
                         {pageToc.length ? (
                             <Stack
@@ -85,30 +99,5 @@ export function Article({ page }: { page: ArticlePage }) {
                 </LayoutContent>
             }
         />
-    );
-}
-
-/** Renders article body content and source metadata. */
-function ArticleContent({ content, metadata }: Pick<ArticlePage, 'content' | 'metadata'>) {
-    const t = useTranslator();
-    const lastUpdated = formatDate(metadata.lastUpdated);
-
-    return (
-        <article className="docs-article space-y-7">
-            {content}
-            <Stack as="footer" gap={3}>
-                <Divider />
-                <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                    <Text type="supporting" color="secondary">
-                        {t('common.lastUpdated', { date: lastUpdated })}
-                    </Text>
-                    {metadata.editUrl ? (
-                        <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
-                            {t('docs.editInGithub')}
-                        </Link>
-                    ) : null}
-                </Stack>
-            </Stack>
-        </article>
     );
 }

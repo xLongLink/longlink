@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("email", sa.String(length=254), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
-        sa.Column("hashed_password", sa.String(length=1024), nullable=False),
+        sa.Column("password", sa.String(length=128), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
