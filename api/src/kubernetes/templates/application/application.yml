@@ -67,3 +67,32 @@ spec:
         $application_id_label: $application_id
     ports:
         - port: 8000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+    name: $application_id
+    namespace: '$namespace'
+spec:
+    parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: longlink
+          namespace: longlink-system
+          sectionName: https
+    rules:
+        - matches:
+              - headers:
+                    - name: $application_id_header
+                      value: $application_id
+          filters:
+              - type: RequestHeaderModifier
+                requestHeaderModifier:
+                    remove:
+                        - $application_id_header
+                        - $api_key_header
+          backendRefs:
+              - group: ''
+                kind: Service
+                name: app-$application_id
+                port: 8000

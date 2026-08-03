@@ -67,7 +67,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"ssl": "require"},
+                "connect_args": {"ssl": "require", "server_settings": {"timezone": "UTC"}},
             },
             id="production",
         ),

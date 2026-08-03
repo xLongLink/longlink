@@ -213,14 +213,12 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     # The initiating owner or a Platform administrator may retry cleanup after memberships are removed.
     tombstone = await organizations.get(organization_id, include_deleted=True)
-    retry = tombstone is not None and tombstone.deleted_at is not None
-    if retry:
-        assert tombstone is not None
+    if tombstone is not None and tombstone.deleted_at is not None:
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
     # Require active Organization ownership for the first deletion request.
-    if not retry and user.role != PlatformRoles.administrator:
+    elif user.role != PlatformRoles.administrator:
         membership = roles.access(user, organization_id)
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")

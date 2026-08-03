@@ -48,14 +48,12 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
 
             return path
 
-    fake_filesystem = FakeFileSystem()
-
     def fake_filesystem_factory(protocol: str, **kwargs: object) -> object:
         """Return the fake filesystem for bucket scoping assertions."""
 
         captured["protocol"] = protocol
         captured["kwargs"] = kwargs
-        return fake_filesystem
+        return FakeFileSystem()
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
 

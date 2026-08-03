@@ -1,19 +1,14 @@
 from datetime import UTC, datetime
 from sqlalchemy import DateTime
-from sqlalchemy.types import TypeEngine, TypeDecorator
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
 
 
 class UTCDateTime(TypeDecorator[datetime]):
     """Store datetimes as timezone-aware UTC values."""
 
-    impl = DateTime
+    impl = DateTime(timezone=True)
     cache_ok = True
-
-    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[datetime]:
-        """Return the dialect datetime type used for UTC timestamps."""
-
-        return dialect.type_descriptor(DateTime(timezone=True))
 
 
     def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:
@@ -23,9 +18,9 @@ class UTCDateTime(TypeDecorator[datetime]):
         if value is None:
             return None
 
-        # Treat naive application timestamps as UTC to match LongLink storage semantics.
+        # Reject ambiguous application timestamps before database storage.
         if value.tzinfo is None or value.utcoffset() is None:
-            return value.replace(tzinfo=UTC)
+            raise ValueError("LongLink timestamps must include a timezone")
 
         return value.astimezone(UTC)
 
@@ -41,4 +36,4 @@ class UTCDateTime(TypeDecorator[datetime]):
         if value.tzinfo is None or value.utcoffset() is None:
             return value.replace(tzinfo=UTC)
 
-        return value.astimezone(UTC)
+        return value

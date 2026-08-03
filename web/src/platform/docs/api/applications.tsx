@@ -12,7 +12,10 @@ const runtimeResources = [
 ];
 
 export const metadata = {
-    toc: [{ id: 'access', label: 'Access' }],
+    toc: [
+        { id: 'applications', label: 'Applications', level: 1 },
+        { id: 'access', label: 'Access', level: 2 },
+    ],
     lastUpdated: '2026-07-27',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/applications.tsx',
 };

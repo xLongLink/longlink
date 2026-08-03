@@ -12,8 +12,6 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     async def fake_metadata(image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
-        return None
-
     monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
     client = clients[0]
 

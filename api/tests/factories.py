@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
@@ -6,11 +6,13 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import applications, organizations
+from src.database.services import operations, applications, organizations
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -24,6 +26,31 @@ class Infrastructure:
     storage: StorageRegistry
 
 
+async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
+    """Queue one standalone Operation through an explicit test transaction."""
+
+    # Tests without a resource command transaction commit their queued work here.
+    async with session_scope() as session:
+        operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
+        await session.commit()
+        return operation
+
+
+async def create_compute(name: str = "Local compute") -> ComputeRegistry:
+    """Create one minimal Compute registry without queueing reconciliation."""
+
+    # Operation tests need a persisted Compute target without registry service side effects.
+    async with session_scope() as session:
+        compute = ComputeRegistry(
+            name=name,
+            kubeconfig={"apiVersion": "v1", "clusters": []},
+            version=env.VERSION,
+        )
+        session.add(compute)
+        await session.commit()
+        return compute
+
+
 async def create_ready_infrastructure(name: str = "Local testing") -> Infrastructure:
     """Create independent registries with a ready compute target and no provider side effects."""
 
@@ -34,9 +61,8 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             name=f"{name} compute {suffix}",
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
-            gateway_ca_certificate="test-ca",
-            gateway_identity_certificate="test-certificate",
-            gateway_identity_private_key="test-private-key",
+            gateway_api_key="test-api-key",
+            gateway_certificate="test-certificate",
             status=Status.running,
             version=env.VERSION,
         )
@@ -80,12 +106,15 @@ async def create_organization(
         storage_id=infrastructure.storage.id,
         database_id=infrastructure.database.id,
     )
+
+
 async def create_application(
     organization: Organization,
     owner: User,
     name: str = "dashboard",
     slug: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
+    secrets: dict[str, str] | None = None,
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
@@ -100,4 +129,5 @@ async def create_application(
         slug=slug,
         image=resolved_image,
         user=owner,
+        secrets={} if secrets is None else secrets,
     )

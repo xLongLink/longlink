@@ -4,6 +4,7 @@ from sqlmodel import Field
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
+from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.utils.time import utcnow
 from longlink.shared.models import User
@@ -79,9 +80,13 @@ def create_engine(env: Envs) -> AsyncEngine:
     if not dburl.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
-    # Preserve the Platform-selected TLS mode for production PostgreSQL connections.
-    if dburl.startswith("postgresql+asyncpg"):
-        engine_kwargs["connect_args"] = {"ssl": env.DATABASE_SSLMODE}
+    # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
+    connect_args = urls.connect_args(
+        dburl,
+        **({"ssl": env.DATABASE_SSLMODE} if dburl.startswith("postgresql+asyncpg") else {}),
+    )
+    if connect_args:
+        engine_kwargs["connect_args"] = connect_args
 
     # Cache the configured engine for subsequent session requests.
     _engine = create_async_engine(dburl, **engine_kwargs)
@@ -100,28 +105,27 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     """Return a SQLModel async sessionmaker instance."""
-    global Session, _engine
+    global Session
 
     # Reuse the cached session factory once initialized.
     if Session is not None:
         return Session
 
     # Initialize the engine lazily when sessions are requested first.
-    if _engine is None:
-        _engine = create_engine(Envs())
+    engine = _engine if _engine is not None else create_engine(Envs())
 
     # Verify connection once before exposing the session factory.
-    async with _engine.connect() as connection:
+    async with engine.connect() as connection:
         await connection.run_sync(lambda _: None)
 
     # Cache the session factory after the engine connection succeeds.
-    Session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
+    Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # Auto-create tables for SQLite only.
-    if str(_engine.url).startswith("sqlite+"):
+    if str(engine.url).startswith("sqlite+"):
 
         # Create tables through a transactional SQLite connection.
-        async with _engine.begin() as conn:
+        async with engine.begin() as conn:
             await conn.run_sync(database_metadata.create_all)
 
     return Session

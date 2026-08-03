@@ -135,6 +135,9 @@ async def cleanup() -> None:
         names = ", ".join(sorted(existing_namespaces))
         raise RuntimeError(f"Kubernetes namespaces did not terminate: {names}") from None
 
+    # Remove the cluster-scoped class after its LongLink Gateway and data plane are gone.
+    await cluster.gateway.delete()
+
     # Revoke Application credentials before emptying and deleting each Organization bucket.
     for (endpoint_url, access_key_id, secret_access_key, organization), application_ids in storage_resources.items():
         storage = Exoscale(endpoint_url, access_key_id, secret_access_key)

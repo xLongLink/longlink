@@ -57,6 +57,7 @@ async def test_create_requires_running_organization() -> None:
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
             user=user,
+            secrets={},
         )
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
@@ -68,6 +69,7 @@ async def test_create_requires_running_organization() -> None:
         image="ghcr.io/longlink/dashboard@sha256:test",
         version="2.0.0",
         user=user,
+        secrets={},
     )
 
     # Assert
@@ -92,6 +94,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
             user=user,
+            secrets={},
         )
 
     # Assert
@@ -109,6 +112,7 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         slug="reports",
         image="ghcr.io/longlink/reports@sha256:test",
         user=user,
+        secrets={},
     )
     await applications.soft_delete(deleted_application.id, user)
 
@@ -130,16 +134,17 @@ async def test_mark_running_updates_active_applications() -> None:
     user, _, application = await create_application_context("runtime")
 
     # Act
-    marked_running = await applications.mark_running(application.id)
+    await applications.mark_running(application.id)
     running = await applications.get(application.id)
     await applications.soft_delete(application.id, user)
-    deleted_status = await applications.mark_running(application.id)
+    await applications.mark_running(application.id)
+    deleted = await applications.get(application.id, include_deleted=True)
 
     # Assert
-    assert marked_running is True
     assert running is not None
     assert running.status == Status.running
-    assert deleted_status is False
+    assert deleted is not None
+    assert deleted.status == Status.deleting
 
 
 async def test_soft_delete_marks_application_deleted() -> None:

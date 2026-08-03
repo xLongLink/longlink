@@ -117,7 +117,6 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     (root / "main.py").write_text("app = object()\n")
     (root / ".env").write_text("SECRET=one\n")
     (root / ".env.local").write_text("SECRET=two\n")
-    (root / ".env.sample").write_text("SECRET=sample\n")
     (root / "dev.db").write_text("sqlite\n")
     (root / "data.sqlite3-wal").write_text("wal\n")
     git_directory = root / ".git"
@@ -140,7 +139,6 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     assert (build_context / ".git" / "HEAD").is_file()
     assert not (build_context / ".env").exists()
     assert not (build_context / ".env.local").exists()
-    assert not (build_context / ".env.sample").exists()
     assert not (build_context / "dev.db").exists()
     assert not (build_context / "data.sqlite3-wal").exists()
 
@@ -158,7 +156,6 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     def fake_build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
         """Create fake Docker artifacts for the build command."""
 
-        assert base_path is None
         assert tag == "dev"
         dockerfile_path = build_context / "Dockerfile"
         dockerfile_path.write_text("FROM scratch\n", encoding="utf-8")

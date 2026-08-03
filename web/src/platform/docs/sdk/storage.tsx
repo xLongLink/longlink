@@ -1,10 +1,10 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { EnvironmentTable, type EnvironmentRow } from '@/platform/docs/sdk/EnvironmentTable';
 
 const environments: EnvironmentRow[] = [
@@ -39,8 +39,9 @@ const environments: EnvironmentRow[] = [
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'assets', label: 'Assets' },
+        { id: 'storage', label: 'Storage', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'assets', label: 'Assets', level: 2 },
     ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/storage.tsx',
@@ -67,13 +68,16 @@ export const content = (
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import Envs, create_fs
+        <CodeBlock
+            code={`from longlink import Envs, create_fs
 
 env = Envs()
 fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_PREFIX or "")
 
 with fs.open("reports/example.txt", "wb") as f:
-    f.write(b"hello")`}</CodeBlock>
+    f.write(b"hello")`}
+            language="python"
+        />
         <Heading id="assets" level={2}>
             Assets
         </Heading>
@@ -82,11 +86,14 @@ with fs.open("reports/example.txt", "wb") as f:
             the organization logo, using a bundled fallback in development and testing and the organization shared
             prefix in production. Pass the runtime environment and shared filesystem explicitly.
         </Text>
-        <CodeBlock language="python">{`import longlink.assets as assets
+        <CodeBlock
+            code={`import longlink.assets as assets
 from longlink import Envs, create_fs
 
 env = Envs()
 shared_fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_SHARED_PREFIX or "")
-logo = assets.logo(env, shared_fs)`}</CodeBlock>
+logo = assets.logo(env, shared_fs)`}
+            language="python"
+        />
     </Stack>
 );

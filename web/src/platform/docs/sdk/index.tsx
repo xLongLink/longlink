@@ -1,56 +1,54 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
-import { Grid } from '@astryxdesign/core/Grid';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { CodeTabs } from '@/components/CodeTabs';
 
 /** Renders the local SDK runtime request flow diagram. */
 function LocalRuntimeDiagram() {
     return (
-        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={6} align="center">
-            <Stack align="end">
-                <Card width="80%" variant="muted">
-                    <Stack gap={3} align="center">
-                        <UserRound aria-hidden className="text-accent" size={20} />
+        <Stack direction="horizontal" gap={1} align="center" justify="center" width="100%">
+            <Card width="40%" variant="muted">
+                <Stack gap={3} align="center">
+                    <UserRound aria-hidden className="text-accent" size={20} />
+                    <Stack gap={0} align="center">
                         <Text weight="semibold">User</Text>
                         <Text type="supporting">Browser</Text>
-                        <Stack direction="horizontal" gap={3} justify="center">
-                            <Palette aria-label="Theming" className="text-secondary" size={16} />
-                            <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
-                        </Stack>
                     </Stack>
-                </Card>
-            </Stack>
-            <Stack align="center">
-                <ArrowLeftRight aria-label="Local runtime request flow" className="text-secondary" size={20} />
-            </Stack>
-            <Stack align="start">
-                <Card width="80%" variant="muted">
-                    <Stack gap={3} align="center">
-                        <AppWindow aria-hidden className="text-accent" size={20} />
+                    <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                        <Palette aria-label="Theming" className="text-secondary" size={16} />
+                        <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
+                    </Stack>
+                </Stack>
+            </Card>
+            <ArrowLeftRight aria-label="Local runtime request flow" className="text-secondary" size={16} />
+            <Card width="40%" variant="muted">
+                <Stack gap={3} align="center">
+                    <AppWindow aria-hidden className="text-accent" size={20} />
+                    <Stack gap={0} align="center">
                         <Text weight="semibold">Application</Text>
-                        <Text type="supporting">Runtime at localhost:1707</Text>
-                        <Stack direction="horizontal" gap={3} justify="center">
-                            <Code2 aria-label="Application logic" className="text-secondary" size={16} />
-                            <Database aria-label="Database logic" className="text-secondary" size={16} />
-                            <HardDrive aria-label="File storage" className="text-secondary" size={16} />
-                        </Stack>
+                        <Text type="supporting">Runtime</Text>
                     </Stack>
-                </Card>
-            </Stack>
-        </Grid>
+                    <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                        <Code2 aria-label="Application logic" className="text-secondary" size={16} />
+                        <Database aria-label="Database logic" className="text-secondary" size={16} />
+                        <HardDrive aria-label="File storage" className="text-secondary" size={16} />
+                    </Stack>
+                </Stack>
+            </Card>
+        </Stack>
     );
 }
 
 export const metadata = {
     toc: [
-        { id: 'create-a-project', label: 'Create a Project' },
-        { id: 'local-development', label: 'Local Runtime' },
+        { id: 'application-sdk', label: 'LongLink Applications', level: 1 },
+        { id: 'create-a-project', label: 'Create a Project', level: 2 },
+        { id: 'local-development', label: 'Local Runtime', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/index.tsx',
@@ -98,11 +96,12 @@ export const content = (
             <Code>longlink init</Code> creates an application scaffold with separate directories for routes, schemas,
             database models and services, XML pages, translations, migrations, environment declarations, and tests:
         </Text>
-        <CodeBlock language="plaintext">
-            {
+        <CodeBlock
+            code={
                 '├── src/\n│   ├── database/         # Database models and services\n│   ├── i18n/             # Translation catalogs\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
             }
-        </CodeBlock>
+            language="plaintext"
+        />
         <Heading id="local-development" level={2}>
             Local Runtime
         </Heading>

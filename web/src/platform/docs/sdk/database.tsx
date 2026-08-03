@@ -1,10 +1,10 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { CodeTabs } from '@/components/CodeTabs';
 import { EnvironmentTable, type EnvironmentRow } from '@/platform/docs/sdk/EnvironmentTable';
 
@@ -40,9 +40,10 @@ const environments: EnvironmentRow[] = [
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'migrations', label: 'Migrations' },
-        { id: 'users', label: 'Users' },
+        { id: 'database', label: 'Database', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'migrations', label: 'Migrations', level: 2 },
+        { id: 'users', label: 'Users', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/database.tsx',
@@ -72,7 +73,8 @@ export const content = (
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import Table, get_session
+        <CodeBlock
+            code={`from longlink import Table, get_session
 from sqlmodel import Field
 
 class Project(Table, table=True):
@@ -82,7 +84,9 @@ class Project(Table, table=True):
 async def create_project() -> None:
     async with get_session() as session:
         session.add(Project(name="Launch"))
-        await session.commit()`}</CodeBlock>
+        await session.commit()`}
+            language="python"
+        />
         <Heading id="migrations" level={2}>
             Migrations
         </Heading>
@@ -115,12 +119,15 @@ async def create_project() -> None:
             Models that inherit from <Code>Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}
             <Code>updated_by</Code>. Keep your own domain fields separate from platform user data.
         </Text>
-        <CodeBlock language="python">{`from longlink import User, get_session
+        <CodeBlock
+            code={`from longlink import User, get_session
 from sqlmodel import select
 
 async def list_project_creators() -> list[User | None]:
     async with get_session() as session:
         result = await session.exec(select(Project))
-        return [project.created_by for project in result.all()]`}</CodeBlock>
+        return [project.created_by for project in result.all()]`}
+            language="python"
+        />
     </Stack>
 );

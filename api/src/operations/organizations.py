@@ -45,10 +45,7 @@ async def reconcile(claimed: Operation) -> str | None:
     await cluster.organizations.apply(organization.id.hex)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
-    if organization.status == Status.creating:
-        if not await organizations.set_runtime(organization.id, Status.creating, Status.running):
-            return None
-    return None
+    await organizations.set_runtime(organization.id, Status.creating, Status.running)
 
 
 async def delete(claimed: Operation) -> str | None:

@@ -1,15 +1,16 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CodeBlock } from '@/components/CodeBlock';
 import { CodeTabs } from '@/components/CodeTabs';
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'example', label: 'Example' },
+        { id: 'testing', label: 'Testing', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'example', label: 'Example', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/testing.tsx',
@@ -46,8 +47,11 @@ export const content = (
             You can execute all tests or target a specific test file using the LongLink test command. Arguments after{' '}
             <Code>longlink test</Code> are forwarded to <Code>pytest</Code>.
         </Text>
-        <CodeBlock language="bash">{`uv run longlink test
-uv run longlink test tests/test_app.py -q`}</CodeBlock>
+        <CodeBlock
+            code={`uv run longlink test
+uv run longlink test tests/test_app.py -q`}
+            language="bash"
+        />
         <Heading id="example" level={2}>
             Example
         </Heading>
@@ -59,7 +63,8 @@ uv run longlink test tests/test_app.py -q`}</CodeBlock>
             </Link>
             . Use async pytest tests for lower-level async services when needed.
         </Text>
-        <CodeBlock language="python">{`from main import app
+        <CodeBlock
+            code={`from main import app
 from longlink.testing import TestClient
 
 client = TestClient(app)
@@ -68,6 +73,8 @@ def test_healthcheck() -> None:
     """Return the LongLink runtime health payload."""
     response = client.get("/health")
 
-    assert response.status_code == 200`}</CodeBlock>
+    assert response.status_code == 200`}
+            language="python"
+        />
     </Stack>
 );

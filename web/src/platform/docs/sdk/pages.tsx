@@ -113,7 +113,10 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
 const noop = () => undefined;
 
 export const metadata = {
-    toc: componentCategories.map((category) => ({ id: category.id, label: category.title })),
+    toc: [
+        { id: 'pages', label: 'Pages', level: 1 },
+        ...componentCategories.map((category) => ({ id: category.id, label: category.title, level: 2 })),
+    ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/pages.tsx',
 };

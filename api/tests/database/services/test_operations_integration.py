@@ -1,29 +1,18 @@
 import pytest
 import asyncio
 from sqlmodel import SQLModel
+from factories import queue_operation
 from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
 from src.environments import env
-from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
 from src.database.services import operations
-from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
 POSTGRES_PORT = 5432
-
-
-async def queue(compute_id):
-    """Queue one standalone Operation with an explicit transaction."""
-
-    # Queue test work through the production transactional outbox primitive.
-    async with database_session.session_scope() as session:
-        operation = await operations.enqueue(session, compute_id, kind=OperationKind.compute_create, target_id=compute_id)
-        await session.commit()
-        return operation
 
 
 async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -58,13 +47,17 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             await session.commit()
 
         # Race duplicate operation creations, then add unrelated work on another compute.
-        creation_tasks = [asyncio.create_task(queue(first_compute.id)) for _ in range(2)]
-        duplicates = await asyncio.gather(*creation_tasks)
-        waiting = await queue(second_compute.id)
+        duplicates = await asyncio.gather(
+            queue_operation(first_compute.id, target_id=first_compute.id),
+            queue_operation(first_compute.id, target_id=first_compute.id),
+        )
+        waiting = await queue_operation(
+            second_compute.id,
+            target_id=second_compute.id,
+        )
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
-        workers = [asyncio.create_task(operations.claim()) for _ in range(2)]
-        claims = await asyncio.gather(*workers)
+        claims = await asyncio.gather(operations.claim(), operations.claim())
         claimed = [claim for claim in claims if claim is not None]
 
         # Reload the queue independently and verify one global lease while unrelated work waits.

@@ -20,7 +20,6 @@ type PlatformLayoutProps = {
     brandOnly?: boolean;
     brandHref?: string;
     fillViewport?: boolean;
-    reserveTabSpace?: boolean;
     children: ReactNode;
 };
 
@@ -30,7 +29,6 @@ export default function PlatformLayout({
     brandOnly = false,
     brandHref = '/organizations',
     fillViewport = false,
-    reserveTabSpace = false,
     children,
 }: PlatformLayoutProps) {
     const t = useTranslator();
@@ -52,6 +50,9 @@ export default function PlatformLayout({
         return best === undefined || tab.value.length > best.length ? tab.value : best;
     }, undefined);
     const { user } = useUserProfile();
+
+    // Keep anonymous screens aligned with authenticated tabbed layouts.
+    const reserveTabSpace = user === null;
 
     return (
         <TopLayout

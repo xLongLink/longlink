@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlalchemy import case, select, update
+from src.errors import NotFoundError
 from src.logger import logger
 from collections.abc import Sequence
 from src.environments import env
@@ -18,8 +19,7 @@ async def fetch() -> Sequence[Operation]:
 
     # Read operations through a managed database session.
     async with session_scope() as session:
-        statement = select(Operation).order_by(Operation.created_at.desc())
-        return (await session.scalars(statement)).all()
+        return (await session.scalars(select(Operation).order_by(Operation.created_at.desc()))).all()
 
 
 async def enqueue(
@@ -37,19 +37,16 @@ async def enqueue(
     # Lock the compute before resolving its current release target.
     compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
     if compute is None:
-        raise ValueError("Operation compute registry not found")
+        raise NotFoundError("Operation compute registry not found")
     versions = (
         await session.scalars(
-            select(Operation.platform_version)
-            .where(
+            select(Operation.platform_version).where(
                 Operation.kind == kind,
                 Operation.target_id == target_id,
             )
-            .distinct()
         )
     ).all()
-    latest_version = max(Version(version) for version in [env.VERSION, *versions, compute.version])
-    platform_version = f"v{latest_version}"
+    platform_version = f"v{max(Version(version) for version in [env.VERSION, *versions, compute.version])}"
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(
@@ -86,9 +83,7 @@ async def claim() -> Operation | None:
             # Classify the active lease, expired lease, or next Operation in one locked query.
             operation = await session.scalar(
                 select(Operation)
-                .where(
-                    Operation.finished_at.is_(None),
-                )
+                .where(Operation.finished_at.is_(None))
                 .order_by(
                     case(
                         (Operation.lease_expires_at > now, 0),
@@ -101,9 +96,7 @@ async def claim() -> Operation | None:
                 .limit(1)
                 .with_for_update()
             )
-            if operation is None:
-                return None
-            if operation.lease_expires_at is not None and operation.lease_expires_at > now:
+            if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
                 return None
             if operation.lease_expires_at is not None:
                 operation_id = operation.id
@@ -126,7 +119,6 @@ async def claim() -> Operation | None:
                     .values(lease_expires_at=now + timedelta(minutes=30))
                 )
             ).rowcount != 1:
-                await session.rollback()
                 continue
             await session.commit()
             return operation
@@ -138,20 +130,19 @@ async def complete(operation_id: UUID) -> Operation | None:
     # Complete only the currently leased operation.
     async with session_scope() as session:
         now = utcnow()
-        if (
-            await session.execute(
-                update(Operation)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.lease_expires_at > now,
-                    Operation.finished_at.is_(None),
-                )
-                .values(finished_at=now, lease_expires_at=None)
+        operation = await session.scalar(
+            update(Operation)
+            .where(
+                Operation.id == operation_id,
+                Operation.lease_expires_at > now,
+                Operation.finished_at.is_(None),
             )
-        ).rowcount != 1:
+            .values(finished_at=now, lease_expires_at=None)
+            .returning(Operation)
+        )
+        if operation is None:
             return None
 
-        operation = await session.get(Operation, operation_id)
         await session.commit()
         return operation
 
@@ -159,25 +150,22 @@ async def complete(operation_id: UUID) -> Operation | None:
 async def fail(operation_id: UUID) -> Operation | None:
     """Fail one leased Operation."""
 
-    # Lock the leased Operation before marking it terminal.
+    # Mark only an unfinished Operation that remains leased terminal.
     async with session_scope() as session:
         operation = await session.scalar(
-            select(Operation)
+            update(Operation)
             .where(
                 Operation.id == operation_id,
                 Operation.lease_expires_at.is_not(None),
                 Operation.finished_at.is_(None),
             )
-            .with_for_update()
+            .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
+            .returning(Operation)
         )
 
         # A missing row means the Operation is no longer leased.
         if operation is None:
             return None
 
-        # Mark the leased Operation terminal.
-        operation.failed = True
-        operation.finished_at = utcnow()
-        operation.lease_expires_at = None
         await session.commit()
         return operation

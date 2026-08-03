@@ -3,6 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 
 export const metadata = {
+    toc: [{ id: 'agents', label: 'Agents', level: 1 }],
     lastUpdated: '2026-07-29',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/agents.tsx',
 };

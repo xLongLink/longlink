@@ -1,7 +1,7 @@
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useState } from 'react';
-import { CodeBlock } from '@/components/CodeBlock';
 
 type CodeTabItem = {
     code: string;
@@ -21,7 +21,7 @@ export function CodeTabs({ items }: { items: [CodeTabItem, ...CodeTabItem[]] }) 
                     <Tab key={item.value} label={item.label} value={item.value} />
                 ))}
             </TabList>
-            <CodeBlock language="bash">{selectedItem.code}</CodeBlock>
+            <CodeBlock code={selectedItem.code} language="bash" />
         </Stack>
     );
 }

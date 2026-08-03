@@ -2,6 +2,8 @@ import pytest
 from src import release as platform_release
 from uuid import UUID, uuid4
 from datetime import timedelta
+from factories import create_compute
+from factories import queue_operation as queue
 from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
@@ -9,42 +11,13 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-
-
-async def create_compute(name: str) -> ComputeRegistry:
-    """Create one isolated compute row without queueing reconciliation."""
-
-    # Operation service tests need only a minimal compute target at the current Platform version.
-    async with session_scope() as session:
-        compute = ComputeRegistry(
-            name=name.title(),
-            kubeconfig={"apiVersion": "v1", "clusters": []},
-            version=env.VERSION,
-        )
-        session.add(compute)
-        await session.commit()
-        return compute
-
-
-async def queue(
-    compute_id: UUID,
-    *,
-    kind: OperationKind = OperationKind.compute_create,
-    target_id: UUID,
-) -> Operation:
-    """Queue one Operation through its explicit database transaction."""
-
-    # Queue independently when this test is not exercising a resource command transaction.
-    async with session_scope() as session:
-        operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
-        await session.commit()
-        return operation
 
 
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:
@@ -62,11 +35,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
         older_row.created_at = utcnow() - timedelta(days=1)
         await session.commit()
 
-    # Fetch operations through the service boundary.
-    fetched = await operations.fetch()
-
     # Verify operations are returned newest first.
-    assert [operation.id for operation in fetched] == [newer_operation.id, older_operation.id]
+    assert [operation.id for operation in await operations.fetch()] == [newer_operation.id, older_operation.id]
 
 
 async def test_operations_service_create_coalesces_each_kind_and_target() -> None:
@@ -141,6 +111,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
             name="Dashboard",
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:resolved",
+            secrets={},
             status=Status.running,
         )
         session.add_all(
@@ -151,6 +122,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
                     name="Pending",
                     slug="pending",
                     image="ghcr.io/longlink/pending@sha256:resolved",
+                    secrets={},
                     status=Status.creating,
                 ),
                 Application(
@@ -158,6 +130,7 @@ async def test_release_schedules_running_application_creation_once() -> None:
                     name="Deleted",
                     slug="deleted",
                     image="ghcr.io/longlink/deleted@sha256:resolved",
+                    secrets={},
                     status=Status.running,
                     deleted_at=utcnow(),
                 ),
@@ -174,6 +147,42 @@ async def test_release_schedules_running_application_creation_once() -> None:
     assert len(application_operations) == 1
     assert application_operations[0].target_id == running.id
     assert application_operations[0].platform_version == env.VERSION
+
+
+async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Continue release scheduling when a discovered Compute disappears before enqueueing."""
+
+    # Arrange
+    deleted = await create_compute("deleted")
+    retained = await create_compute("retained")
+    enqueue = operations.enqueue
+
+    async def enqueue_available_compute(
+        session: AsyncSession,
+        compute_id: UUID,
+        *,
+        kind: OperationKind,
+        target_id: UUID,
+    ) -> Operation:
+        """Delete one discovered Compute before exercising the real enqueue lookup."""
+
+        if compute_id == deleted.id:
+            # Commit deletion so the real enqueue service resolves the missing Compute.
+            registry = await session.get(ComputeRegistry, compute_id)
+            assert registry is not None
+            await session.delete(registry)
+            await session.commit()
+        return await enqueue(session, compute_id, kind=kind, target_id=target_id)
+
+    monkeypatch.setattr(operations, "enqueue", enqueue_available_compute)
+
+    # Act
+    await platform_release.schedule_migrations()
+    scheduled = await operations.fetch()
+
+    # Assert
+    assert len(scheduled) == 1
+    assert scheduled[0].target_id == retained.id
 
 
 async def test_operations_service_create_separates_computes_and_reopens_completed_work() -> None:

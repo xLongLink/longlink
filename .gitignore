@@ -69,7 +69,8 @@ TEMP
 /web/coverage/
 /web/.react-router/
 /web/*.tsbuildinfo
-/web/src/lib/generated/
+/web/src/lib/generated/*.d.ts
+/web/src/lib/generated/*.js
 /web/node_modules/
 /web/*.local
 /web/.vscode/*

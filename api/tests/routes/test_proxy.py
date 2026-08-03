@@ -1,7 +1,6 @@
 import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
-from pathlib import Path
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import proxy as proxy_routes
 from collections.abc import Callable
@@ -13,32 +12,15 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
 
 
-class FakeTLS:
-    """Provide a minimal TLS context that can optionally capture client credentials."""
-
-    def __init__(self, captured: dict[str, object] | None = None) -> None:
-        """Configure optional capture storage for one test."""
-
-        self._captured = captured
-
-    def load_cert_chain(self, certfile: str | Path, keyfile: str | Path) -> None:
-        """Optionally capture the mTLS certificate and private key contents."""
-
-        # Only the forwarding test inspects the loaded client identity.
-        if self._captured is not None:
-            self._captured["client_certificate"] = Path(certfile).read_text(encoding="ascii")
-            self._captured["client_private_key"] = Path(keyfile).read_text(encoding="ascii")
-
-
 def fake_ssl_context(
-    tls: FakeTLS,
+    tls: object,
     *,
     expected_ca_certificate: str | None = None,
     captured: dict[str, object] | None = None,
-) -> Callable[..., FakeTLS]:
+) -> Callable[..., object]:
     """Build one fake SSL context factory with optional CA verification and capture."""
 
-    def create(*, cadata: str) -> FakeTLS:
+    def create(*, cadata: str) -> object:
         """Return the supplied TLS context after applying the requested assertions."""
 
         # Verify and capture the per-compute trust anchor when the test needs it.
@@ -77,7 +59,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
 
-    tls = FakeTLS(captured)
+    tls = object()
 
     class FakeProxyResponse:
         """Stream one fake upstream application response."""
@@ -141,6 +123,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
             "content-type": "text/plain",
             "x-custom-feature": "user-controlled",
             "x-forwarded-for": "203.0.113.10",
+            "x-longlink-api-key": "spoofed",
             "x-user-id": "spoofed",
         },
     )
@@ -155,9 +138,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert captured["cadata"] == registry.gateway_ca_certificate
-    assert captured["client_certificate"] == registry.gateway_identity_certificate
-    assert captured["client_private_key"] == registry.gateway_identity_private_key
+    assert captured["cadata"] == registry.gateway_certificate
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
@@ -166,6 +147,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
     assert isinstance(headers, dict)
+    assert headers["x-longlink-api-key"] == registry.gateway_api_key
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
@@ -197,7 +179,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.mark_running(app.id)
 
-    tls = FakeTLS()
+    tls = object()
 
     class OversizedProxyClient(FakeProxyClient):
         """Consume the request body through the proxy size guard."""
@@ -217,7 +199,7 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     monkeypatch.setattr(
         "src.adapters.gateway.ssl.create_default_context",
-        fake_ssl_context(tls, expected_ca_certificate=infrastructure.compute.gateway_ca_certificate),
+        fake_ssl_context(tls, expected_ca_certificate=infrastructure.compute.gateway_certificate),
     )
     monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", OversizedProxyClient)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
@@ -247,7 +229,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     async with Session() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
-        registry.gateway_ca_certificate = None
+        registry.gateway_certificate = None
         await session.commit()
     client = clients[0]
 
@@ -303,7 +285,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.mark_running(app.id)
 
-    tls = FakeTLS()
+    tls = object()
 
     class FailingProxyClient(FakeProxyClient):
         """Fake upstream HTTP client that fails application proxy requests."""

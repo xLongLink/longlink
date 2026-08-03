@@ -38,11 +38,10 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
 
         return claims.pop(0)
 
-    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.OperationHandler) -> Operation:
+    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.OperationHandler) -> None:
         """Record executed operations."""
 
         executed.append(claimed)
-        return claimed
 
     async def fake_sleep(seconds: float) -> None:
         """Stop the scheduler once it reaches the idle polling sleep."""
@@ -71,13 +70,11 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
         """Complete one claimed compute Operation."""
 
         assert claimed is operation
-        return None
 
     async def fake_complete(operation_id: UUID) -> None:
         """Report that the worker no longer owns the operation lease."""
 
         assert operation_id == operation.id
-        return None
 
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
 
@@ -100,7 +97,6 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
         """Complete one claimed Operation."""
 
         assert claimed is operation
-        return None
 
     async def fake_complete(operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""

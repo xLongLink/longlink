@@ -12,11 +12,6 @@ from src.database.models.users import User
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
-PROXY_RESPONSE_SECURITY_HEADERS = {
-    "cache-control": "no-store",
-    "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
-    "x-content-type-options": "nosniff",
-}
 PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 
 
@@ -52,10 +47,9 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
     gateway_url = registry.gateway_url
-    ca_certificate = registry.gateway_ca_certificate
-    identity_certificate = registry.gateway_identity_certificate
-    identity_private_key = registry.gateway_identity_private_key
-    if gateway_url is None or ca_certificate is None or identity_certificate is None or identity_private_key is None:
+    api_key = registry.gateway_api_key
+    certificate = registry.gateway_certificate
+    if gateway_url is None or api_key is None or certificate is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
@@ -70,9 +64,8 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    gateway = GatewayClient(gateway_url, ca_certificate, identity_certificate, identity_private_key)
     try:
-        gateway_response = await gateway.request(
+        gateway_response = await GatewayClient(gateway_url, certificate, api_key).request(
             application_id=application.id,
             user_id=user.id,
             method=request.method,
@@ -86,15 +79,17 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
-    if response_content_type is not None:
-        response_media_types = {value.partition(";")[0].strip() for value in response_content_type.lower().split(",")}
-        if not response_media_types.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
-            await gateway_response.aclose()
-            raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
+    if response_content_type is not None and not {
+        value.partition(";")[0].strip() for value in response_content_type.lower().split(",")
+    }.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
+        await gateway_response.aclose()
+        raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 
     # Only content type crosses the runtime-to-browser boundary.
     response_headers = {
-        **PROXY_RESPONSE_SECURITY_HEADERS,
+        "cache-control": "no-store",
+        "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
         **({"content-type": response_content_type} if response_content_type is not None else {}),
     }
 

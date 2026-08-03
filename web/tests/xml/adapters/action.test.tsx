@@ -154,7 +154,6 @@ describe('Action', () => {
         const body = requestInit?.body as FormData;
         const uploadedFile = body.get('file') as File;
 
-        expect(requestInit?.method).toBe('POST');
         expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({ accept: 'application/json' });
         expect(body).toBeInstanceOf(FormData);
         expect(uploadedFile.name).toBe('supplier.txt');

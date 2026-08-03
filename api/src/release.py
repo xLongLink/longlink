@@ -7,6 +7,7 @@ async def schedule_migrations() -> None:
     # Load every relationship target before the standalone process configures SQLModel mappers.
     from sqlmodel import col
     from sqlalchemy import select
+    from src.errors import NotFoundError
     from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
     from src.models.statuses import Status
     from src.database.session import session_scope
@@ -41,21 +42,21 @@ async def schedule_migrations() -> None:
 
         # Collect release targets in dependency order.
         targets = [(OperationKind.compute_create, compute.id, compute.id) for compute in compute_rows]
-        targets.extend(
-            (OperationKind.organization_create, organization.id, organization.compute_id) for organization in organization_rows
-        )
-        targets.extend(
-            (OperationKind.application_create, application_id, compute_id) for application_id, compute_id in application_rows
-        )
+        targets.extend((OperationKind.organization_create, organization.id, organization.compute_id) for organization in organization_rows)
+        targets.extend((OperationKind.application_create, application_id, compute_id) for application_id, compute_id in application_rows)
     # Create or reuse each current-release operation through its own transaction.
     for kind, target_id, compute_id in targets:
         async with session_scope() as session:
-            await operation_service.enqueue(
-                session,
-                compute_id,
-                kind=kind,
-                target_id=target_id,
-            )
+            # Skip targets whose Compute was deleted after release discovery.
+            try:
+                await operation_service.enqueue(
+                    session,
+                    compute_id,
+                    kind=kind,
+                    target_id=target_id,
+                )
+            except NotFoundError:
+                continue
             await session.commit()
 
 

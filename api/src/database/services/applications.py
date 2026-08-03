@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 from sqlalchemy import delete, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -29,25 +29,6 @@ async def fetch() -> Sequence[Application]:
             .order_by(Organization.name, Application.name)
         )
         return (await session.scalars(statement)).all()
-
-
-async def gateway_routes(compute_id: UUID) -> Sequence[tuple[UUID, UUID]]:
-    """Return stable Service route identities for running Applications on one compute."""
-
-    # Gateway reconciliation needs no provider credentials or Application runtime configuration.
-    async with session_scope() as session:
-        statement = (
-            select(Application.id, Organization.id)
-            .join(Organization, Organization.id == Application.organization_id)
-            .where(
-                Organization.compute_id == compute_id,
-                Organization.deleted_at.is_(None),
-                Application.deleted_at.is_(None),
-                Application.status == Status.running,
-            )
-            .order_by(Organization.id, Application.id)
-        )
-        return (await session.execute(statement)).tuples().all()
 
 
 async def purge(application_id: UUID) -> None:
@@ -84,7 +65,7 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
-    application_id: UUID | None = None,
+    secrets: dict[str, str],
     version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
@@ -115,7 +96,6 @@ async def create(
 
         # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
-            id=uuid4() if application_id is None else application_id,
             organization_id=organization_id,
             name=name,
             slug=slug,
@@ -123,6 +103,7 @@ async def create(
             image=str(image),
             version=version,
             icon=icon,
+            secrets=secrets,
         )
         application.created_id = user.id
         application.updated_id = user.id
@@ -145,35 +126,39 @@ async def create(
         return application
 
 
-async def mark_running(application_id: UUID) -> bool:
-    """Publish Application readiness."""
+async def add_runtime_secrets(application_id: UUID, secrets: dict[str, str]) -> dict[str, str] | None:
+    """Persist generated runtime secrets unless a previous attempt already did."""
 
-    # Resolve the Compute before locking the Application in aggregate order.
+    # Lock the Application so only the first creation attempt writes generated credentials.
     async with session_scope() as session:
-        current = await session.get(Application, application_id)
-        if current is None:
-            return False
-        organization = await session.get(Organization, current.organization_id)
-        if organization is None:
-            return False
-        await session.get(ComputeRegistry, organization.compute_id, with_for_update=True)
         application = await session.get(Application, application_id, with_for_update=True)
         if application is None or application.deleted_at is not None:
-            return False
+            return None
 
-        # Publish running and queue gateway reconciliation in one transaction.
-        if application.status != Status.creating:
-            return False
-        application.status = Status.running
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
+        # Reuse durable runtime values after an interrupted creation attempt.
+        if any(name.startswith("LONGLINK_") for name in application.secrets):
+            return application.secrets
+
+        # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
+        application.secrets = {**application.secrets, **secrets}
         await session.commit()
+        return application.secrets
 
-    return True
+
+async def mark_running(application_id: UUID) -> None:
+    """Publish Application readiness."""
+
+    # Lock the Application before publishing readiness.
+    async with session_scope() as session:
+        application = await session.get(Application, application_id, with_for_update=True)
+        if application is None or application.deleted_at is not None:
+            return
+
+        # Publish running after the Application workload is ready.
+        if application.status != Status.creating:
+            return
+        application.status = Status.running
+        await session.commit()
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
@@ -185,10 +170,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         current = await session.get(Application, application_id)
         if current is None:
             return None
-        current_organization = await session.get(Organization, current.organization_id)
-        if current_organization is None:
-            return None
-        await session.get(ComputeRegistry, current_organization.compute_id, with_for_update=True)
 
         # Lock the Organization and Application state before tombstoning.
         organization = (
@@ -209,12 +190,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
         # Retain the already locked Organization for detached response serialization.
         application.organization = organization
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
         await operations.enqueue(
             session,
             organization.compute_id,

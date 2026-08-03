@@ -1,10 +1,10 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { FileCode2 } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
 import { pageElementPage } from '@/platform/docs/pages';
 import { pageReferenceDocs, type ElementDoc } from './references';
 
@@ -61,7 +61,7 @@ function ElementReference({ element }: { element: ElementDoc }) {
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
-                <CodeBlock language="xml">{element.example}</CodeBlock>
+                <CodeBlock code={element.example} language="xml" />
             </Stack>
         </Stack>
     );
@@ -73,11 +73,12 @@ export const pageElementDocPages = pageReferenceDocs.map((element) => ({
     content: <ElementReference element={element} />,
     metadata: {
         toc: [
-            { id: 'definition', label: 'Definition' },
-            { id: 'usage', label: 'Usage' },
-            { id: 'attributes', label: 'Attributes' },
-            ...(element.children ? [{ id: 'children', label: 'Children' }] : []),
-            { id: 'example', label: 'Example' },
+            { id: element.slug, label: element.name, level: 1 },
+            { id: 'definition', label: 'Definition', level: 2 },
+            { id: 'usage', label: 'Usage', level: 2 },
+            { id: 'attributes', label: 'Attributes', level: 2 },
+            ...(element.children ? [{ id: 'children', label: 'Children', level: 2 }] : []),
+            { id: 'example', label: 'Example', level: 2 },
         ],
         lastUpdated: '2026-07-21',
         editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts',

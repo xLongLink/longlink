@@ -11,8 +11,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial creation."""
 
-    registry = await compute.create(payload.name, payload.kubeconfig)
-    return registry
+    return await compute.create(payload.name, payload.kubeconfig)
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
@@ -38,7 +37,7 @@ async def get_compute_registry(registry_id: UUID):
 async def delete_compute_registry(registry_id: UUID):
     """Remove one unused compute registration without changing its cluster."""
 
-    # Remove only a registered compute that is not assigned to an Organization.
+    # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
     deleted = await compute.delete(registry_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Compute registry not found")

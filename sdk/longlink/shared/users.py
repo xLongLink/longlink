@@ -1,6 +1,7 @@
 from uuid import UUID
 from typing import TypedDict
 from datetime import datetime
+from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.shared.models import shared_users_table
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -29,7 +30,11 @@ async def sync_url(database_url: str | URL, users: list[UserRow]) -> None:
     """Upsert shared users through a control-plane database URL."""
 
     # Open a short-lived engine because organization databases are selected dynamically.
-    engine = create_async_engine(database_url)
+    connect_args = urls.connect_args(database_url)
+    engine = create_async_engine(
+        database_url,
+        **({"connect_args": connect_args} if connect_args else {}),
+    )
 
     # Dispose the operation-scoped engine after synchronization completes.
     try:

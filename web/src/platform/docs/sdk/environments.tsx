@@ -1,14 +1,15 @@
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     toc: [
-        { id: 'usage', label: 'Usage' },
-        { id: 'settings', label: 'Settings' },
+        { id: 'environments', label: 'Environments', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'settings', label: 'Settings', level: 2 },
     ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/environments.tsx',
@@ -39,11 +40,12 @@ export const content = (
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock language="python">
-            {
+        <CodeBlock
+            code={
                 'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'
             }
-        </CodeBlock>
+            language="python"
+        />
         <Heading id="settings" level={2}>
             Settings
         </Heading>
@@ -51,6 +53,6 @@ export const content = (
             Point the <Code>tool.longlink</Code> section in <Code>pyproject.toml</Code> to the environment class so
             LongLink knows which settings your application uses when it is built and deployed.
         </Text>
-        <CodeBlock language="plaintext">{'[tool.longlink]\nenvironment = "src.envs:Env"'}</CodeBlock>
+        <CodeBlock code={'[tool.longlink]\nenvironment = "src.envs:Env"'} language="toml" />
     </Stack>
 );

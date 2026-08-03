@@ -89,7 +89,7 @@ async def fetch() -> Sequence[Organization]:
         return (await session.scalars(statement)).all()
 
 
-async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> bool:
+async def set_runtime(organization_id: UUID, expected_status: Status, status: Status) -> None:
     """Transition one active Organization from the expected lifecycle state."""
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
@@ -105,9 +105,8 @@ async def set_runtime(organization_id: UUID, expected_status: Status, status: St
                 .values(status=status)
             )
         ).rowcount != 1:
-            return False
+            return
         await session.commit()
-        return True
 
 
 async def purge(organization_id: UUID) -> None:
@@ -395,11 +394,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        # Resolve the Compute before taking the Organization lock in aggregate order.
-        current = await session.get(Organization, organization_id)
-        if current is None:
-            return None
-        await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
+        # Lock the Organization state before tombstoning its nested rows.
         organization = await session.get(Organization, organization_id, with_for_update=True)
         if organization is None:
             return None
@@ -445,13 +440,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .values(**tombstone)
             )
 
-        # Keep tombstones and all dependent reconciliation work in one transaction.
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.compute_create,
-            target_id=organization.compute_id,
-        )
+        # Keep tombstones and Organization cleanup in one transaction.
         await operations.enqueue(
             session,
             organization.compute_id,

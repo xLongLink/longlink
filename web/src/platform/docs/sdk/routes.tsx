@@ -1,11 +1,14 @@
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
-    toc: [{ id: 'usage', label: 'Usage' }],
+    toc: [
+        { id: 'routes', label: 'Routes', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+    ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/routes.tsx',
 };
@@ -35,7 +38,8 @@ export const content = (
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import LongLink, Router
+        <CodeBlock
+            code={`from longlink import LongLink, Router
 
 router = Router()
 
@@ -45,6 +49,8 @@ async def sample() -> str:
     return "ok"
 
 app = LongLink()
-app.include_router(router)`}</CodeBlock>
+app.include_router(router)`}
+            language="python"
+        />
     </Stack>
 );

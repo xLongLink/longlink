@@ -4,7 +4,18 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { ArrowUp, CheckCheck, CheckCircle, Columns, Copy, EyeOff, Info, Wrench } from 'lucide-react';
+import {
+    ArrowUp,
+    Boxes,
+    Building2,
+    CheckCheck,
+    CheckCircle,
+    Database,
+    EyeOff,
+    HardDrive,
+    Info,
+    Wrench,
+} from 'lucide-react';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },
@@ -32,13 +43,20 @@ const organizationRoles = [
 
 const organizationResources = [
     { name: 'Users', description: 'Members and roles', icon: Info },
-    { name: 'Database', description: 'Database schemas', icon: Columns },
-    { name: 'File Storage', description: 'One bucket with scoped prefixes', icon: Copy },
-    { name: 'Applications', description: 'Runtime services', icon: Wrench },
+    { name: 'Database', description: 'Database schemas', icon: Database },
+    { name: 'File Storage', description: 'One bucket with scoped prefixes', icon: HardDrive },
+    { name: 'Compute', description: 'Runtime services', icon: Boxes },
 ];
 
 export const metadata = {
-    toc: [{ id: 'roles', label: 'Roles' }],
+    toc: [
+        { id: 'organizations', label: 'Organizations', level: 1 },
+        { id: 'users', label: 'Users', level: 2 },
+        { id: 'roles', label: 'Roles', level: 3 },
+        { id: 'database', label: 'Database', level: 2 },
+        { id: 'file-storage', label: 'File Storage', level: 2 },
+        { id: 'compute', label: 'Compute', level: 2 },
+    ],
     lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/organizations.tsx',
 };
@@ -59,7 +77,7 @@ export const content = (
         <Stack gap={4}>
             <Card variant="muted">
                 <Stack gap={2} align="center">
-                    <CheckCircle aria-hidden="true" className="text-accent" size={20} />
+                    <Building2 aria-hidden="true" className="text-accent" size={20} />
                     <Text weight="semibold">Organization</Text>
                 </Stack>
             </Card>
@@ -75,7 +93,10 @@ export const content = (
                 ))}
             </Grid>
         </Stack>
-        <Heading id="roles" level={2}>
+        <Heading id="users" level={2}>
+            Users
+        </Heading>
+        <Heading id="roles" level={3}>
             Roles
         </Heading>
         <Table<Record<string, unknown>> density="compact">
@@ -102,5 +123,14 @@ export const content = (
                 ))}
             </TableBody>
         </Table>
+        <Heading id="database" level={2}>
+            Database
+        </Heading>
+        <Heading id="file-storage" level={2}>
+            File Storage
+        </Heading>
+        <Heading id="compute" level={2}>
+            Compute
+        </Heading>
     </Stack>
 );

@@ -12,10 +12,14 @@ describe('For', () => {
             translations: { 'items.name': { defaultMessage: '{name}' } },
             values: { items: [{ name: 'Alpha' }] },
         };
-        const ast = parseXML(
-            '<For each="$items" as="item"><Text i18n="items.name" values="${{ name: item.name }}" /></For>'
-        );
 
-        expect(renderXmlToMarkup(ast, ctx)).toContain('Alpha');
+        expect(
+            renderXmlToMarkup(
+                parseXML(
+                    '<For each="$items" as="item"><Text i18n="items.name" values="${{ name: item.name }}" /></For>'
+                ),
+                ctx
+            )
+        ).toContain('Alpha');
     });
 });

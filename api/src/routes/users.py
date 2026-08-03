@@ -43,8 +43,17 @@ async def patch_me(
         if getattr(user, field) != value
     }
 
-    # Retain active Organization targets before committing the profile change.
-    organization_ids = [membership.organization_id for membership in user.organization_memberships if membership.organization.deleted_at is None]
+    # Retain active Organization targets before committing changed shared identity fields.
+    organization_ids = (
+        [
+            membership.organization_id
+            for membership in user.organization_memberships
+            if membership.organization.deleted_at is None
+        ]
+        if "name" in updates or "avatar" in updates
+        else ()
+    )
+
     for field, value in updates.items():
         setattr(user, field, value)
 

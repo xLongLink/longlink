@@ -19,71 +19,66 @@ async def create(claimed: Operation) -> str | None:
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
-    registry = infrastructure.compute
 
-    cluster = Kubernetes(registry.kubeconfig)
+    cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
     # Converge providers and the workload while the Application remains in creation.
     if application.status == Status.creating:
-        # Resolve the Application's immutable provider assignments.
-        database_registry = infrastructure.database
-        storage_registry = infrastructure.storage
-        db = Postgres(
-            database_registry.host,
-            database_registry.port,
-            database_registry.username,
-            database_registry.password,
-            database_registry.sslmode,
-        )
-        object_storage = Exoscale(
-            storage_registry.endpoint_url,
-            storage_registry.access_key_id,
-            storage_registry.secret_access_key,
-        )
+        # Reuse generated credentials after an interrupted creation attempt.
+        if not any(name.startswith("LONGLINK_") for name in application.secrets):
+            # Resolve the Application's immutable provider assignments.
+            db = Postgres(
+                infrastructure.database.host,
+                infrastructure.database.port,
+                infrastructure.database.username,
+                infrastructure.database.password,
+                infrastructure.database.sslmode,
+            )
+            object_storage = Exoscale(
+                infrastructure.storage.endpoint_url,
+                infrastructure.storage.access_key_id,
+                infrastructure.storage.secret_access_key,
+            )
 
-        # Generate fresh credentials for this explicit creation attempt.
-        bucket = organization.id.hex
-        prefix = f"applications/{application.id.hex}/"
-        database_password = secrets.token_urlsafe(24)
-        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
+            # Generate fresh credentials for the initial creation attempt.
+            bucket = organization.id.hex
+            prefix = f"applications/{application.id.hex}/"
+            database_password = secrets.token_urlsafe(24)
+            credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
 
-        connection = await db.schema(organization.id, application.id, database_password)
+            connection = await db.schema(organization.id, application.id, database_password)
 
-        # Build the complete immutable runtime contract from provider and Application identities.
-        runtime_envs = {
-            "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": connection["host"],
-            "LONGLINK_DATABASE_NAME": connection["database_name"],
-            "LONGLINK_DATABASE_PASSWORD": connection["password"],
-            "LONGLINK_DATABASE_PORT": str(connection["port"]),
-            "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-            "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
-            "LONGLINK_DATABASE_USERNAME": connection["username"],
-            "LONGLINK_STORAGE_BUCKET": bucket,
-            "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.endpoint_url,
-            "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
-            "LONGLINK_STORAGE_PREFIX": prefix,
-            "LONGLINK_STORAGE_REGION": object_storage.region,
-            "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
-            "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
-        }
-
-        # Commit the generated runtime values before creating a workload that can consume them.
-        await cluster.applications.stage_runtime_envs(application.id, organization.id.hex, runtime_envs)
+            # Build and commit the complete runtime contract before creating the workload.
+            runtime_secrets = {
+                "LONGLINK_ENV": "production",
+                "LONGLINK_DATABASE_HOST": connection["host"],
+                "LONGLINK_DATABASE_NAME": connection["database_name"],
+                "LONGLINK_DATABASE_PASSWORD": connection["password"],
+                "LONGLINK_DATABASE_PORT": str(connection["port"]),
+                "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+                "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
+                "LONGLINK_DATABASE_USERNAME": connection["username"],
+                "LONGLINK_STORAGE_BUCKET": bucket,
+                "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
+                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+                "LONGLINK_STORAGE_PREFIX": prefix,
+                "LONGLINK_STORAGE_REGION": object_storage.region,
+                "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
+                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+            }
+            persisted_secrets = await applications.add_runtime_secrets(application.id, runtime_secrets)
+            if persisted_secrets is None:
+                return None
+            application.secrets = persisted_secrets
 
     elif application.status != Status.running:
         return None
 
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
-    await cluster.applications.apply(application.id, organization.id.hex, application.image)
+    await cluster.applications.apply(application.id, organization.id.hex, application.image, application.secrets)
 
-    # Running Application reconciliation owns only its workload, not shared gateway state.
-    if application.status == Status.running:
-        return None
-
-    # Publish running after workload readiness, then queue the shared gateway reconciliation.
-    if not await applications.mark_running(application.id):
-        return None
+    # Publish running after workload readiness.
+    await applications.mark_running(application.id)
 
 
 async def delete(claimed: Operation) -> str | None:
@@ -104,7 +99,7 @@ async def delete(claimed: Operation) -> str | None:
     storage_registry = infrastructure.storage
     cluster = Kubernetes(registry.kubeconfig)
 
-    # The route was removed by the compute Operation queued with the tombstone.
+    # Remove Application Kubernetes resources before revoking provider credentials.
     await cluster.applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
