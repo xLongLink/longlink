@@ -71,29 +71,29 @@ longlink/
 
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
-- Prefer established, well-maintained libraries over handwritten implementations when they reduce complexity.
+- Prefer standard-library or established libraries over handwritten implementations.
 
 ## Python Guidelines
 
 - Avoid renaming imports.
+- Follow the YAGNI principle.
 - Inline single use constants.
+- Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.
 - Keep the code pytonic, prefer readability over efficiency.
 - Use clear domain names, prefer single-word Python filenames.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
-- Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+- Use blank lines in functions, sparingly, to indicate logical sections.
+- Surround top-level function and class definitions with two blank lines.
+- Method definitions inside a class are surrounded by a single blank line.
 - Represent application state with typed models, enums, or structured objects.
-- Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers.
-- Do not introduce private `_...` helper functions just to wrap a short local sequence. Keep simple route/service flows inline.
-- Prefer concise local names when the surrounding scope already provides context; avoid repeating the domain in every variable name.
-- Avoid redundant validation or normalization calls for persisted or already-derived values; validate once at the boundary unless the transformed value is used.
-- Follow existing project conventions for naming, structure, formatting, and architecture.
-- Use two blank lines between function definitions and keep function signatures on one line when they fit within the configured line length.
-- Do not add `__all__` unless the module has a concrete public star-import contract.
 - Prefer namespaced module APIs, over directly importing many related functions.
-- Group Pydantic model fields into clearly commented sections and order fields from shortest name to longest name within each section.
-- Declare `response_model` on FastAPI routes and return raw ORM objects, dictionaries, lists, or primitive values without manually instantiating or validating response models.
-- Omit FastAPI route handler return annotations when the decorator already defines the response contract, such as routes with `response_model` or no-body `status_code=204` responses.
+- Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+  
+### FastAPI & Pydantic
+
+- Declare `response_model` on FastAPI routes, let FastAPI validating response model.
+- Group Pydantic fields into commented sections from shortest name to longest name within each section.
 
 ### Comments
 
