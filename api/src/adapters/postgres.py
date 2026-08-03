@@ -71,11 +71,11 @@ class Postgres:
         )
 
         # Attach PostgreSQL driver options after URL creation so credentials stay structured.
-        query = {"sslmode": self._sslmode.value}
+        query = {"sslmode": self._sslmode.value, "options": "-c timezone=UTC"}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
-            query["options"] = f"-csearch_path={search_path}"
+            query["options"] = f"{query['options']} -c search_path={search_path}"
 
         return url.update_query_dict(query)
 
@@ -200,6 +200,7 @@ class Postgres:
                 GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA {shared_schema} TO {role};
                 ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} GRANT SELECT, REFERENCES ON TABLES TO {role};
                 ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, {shared_schema};
+                ALTER ROLE {role} IN DATABASE {database} SET TIME ZONE 'UTC';
                 """
             )
 

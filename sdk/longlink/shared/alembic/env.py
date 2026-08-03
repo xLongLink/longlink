@@ -59,7 +59,11 @@ async def run_async_migrations(database_url: str) -> None:
     """Run shared-schema migrations through an async SQLAlchemy engine."""
 
     # Use an operation-scoped pool because each organization has its own database.
-    connectable = create_async_engine(database_url, poolclass=pool.NullPool)
+    connectable = create_async_engine(
+        database_url,
+        poolclass=pool.NullPool,
+        **({"connect_args": {"server_settings": {"timezone": "UTC"}}} if make_url(database_url).drivername == "postgresql+asyncpg" else {}),
+    )
     try:
         async with connectable.connect() as connection:
             await connection.run_sync(do_run_migrations)

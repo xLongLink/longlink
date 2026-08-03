@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import TypedDict
 from datetime import datetime
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from longlink.shared.models import shared_users_table
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -29,7 +29,10 @@ async def sync_url(database_url: str | URL, users: list[UserRow]) -> None:
     """Upsert shared users through a control-plane database URL."""
 
     # Open a short-lived engine because organization databases are selected dynamically.
-    engine = create_async_engine(database_url)
+    engine = create_async_engine(
+        database_url,
+        **({"connect_args": {"server_settings": {"timezone": "UTC"}}} if make_url(database_url).drivername == "postgresql+asyncpg" else {}),
+    )
 
     # Dispose the operation-scoped engine after synchronization completes.
     try:
