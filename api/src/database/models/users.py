@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, Enum
+from sqlalchemy import Enum, Column
 from src.models.roles import PlatformRoles
 from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow

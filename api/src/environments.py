@@ -1,7 +1,7 @@
 import os
-from typing import Self
 from pwdlib import PasswordHash
-from pydantic import EmailStr, Field, field_validator, model_validator
+from typing import Self
+from pydantic import Field, EmailStr, field_validator, model_validator
 from src.models.types import PlatformVersion
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

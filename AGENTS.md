@@ -69,37 +69,41 @@ longlink/
 │   └── tests/                    # Web and XML tests
 ```
 
+- Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
+- Prefer simple, maintainable, conventional solutions over clever hacks.
+- Prefer established, well-maintained libraries over handwritten implementations when they reduce complexity.
+
 ## Python Guidelines
 
+- Avoid renaming imports.
+- Inline single use constants.
+- Avoid `Any` and prefer precise type annotations.
+- Keep the code pytonic, prefer readability over efficiency.
+- Use clear domain names, prefer single-word Python filenames.
+- Use `Protocol` for behavioral interfaces and dependency contracts.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
 - Represent application state with typed models, enums, or structured objects.
-- Use `Protocol` for behavioral interfaces and dependency contracts.
-- Avoid `Any` and prefer precise type annotations.
 - Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers.
-- Do not introduce private `_...` helper functions just to wrap a short local sequence, even when that sequence appears in two nearby call sites. Keep simple route/service flows inline unless extraction isolates a complex external boundary or creates reusable domain behavior.
-- Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
+- Do not introduce private `_...` helper functions just to wrap a short local sequence. Keep simple route/service flows inline.
 - Prefer concise local names when the surrounding scope already provides context; avoid repeating the domain in every variable name.
 - Avoid redundant validation or normalization calls for persisted or already-derived values; validate once at the boundary unless the transformed value is used.
 - Follow existing project conventions for naming, structure, formatting, and architecture.
-- Prefer established, well-maintained libraries over handwritten implementations when they reduce complexity.
-- Target Python 3+ and do not use the `__future__` module.
-- Add a docstring to every Python function.
-- Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
-- Keep a lookup and its immediate existence check in the same logic block; place the block comment before the lookup, not between the lookup and `if ... is None` check.
 - Use two blank lines between function definitions and keep function signatures on one line when they fit within the configured line length.
-- Do not start Python files with module-level triple-quoted docstrings unless the file is an Alembic revision.
 - Do not add `__all__` unless the module has a concrete public star-import contract.
-- Use clear domain names, prefer single-word Python filenames, and keep related model module names plural and consistent across API and database layers.
-- Avoid renaming imports unless it materially improves clarity or consistency.
-- Prefer namespaced module APIs, such as `storage_utils.usage(...)`, over directly importing many related functions.
+- Prefer namespaced module APIs, over directly importing many related functions.
 - Group Pydantic model fields into clearly commented sections and order fields from shortest name to longest name within each section.
 - Declare `response_model` on FastAPI routes and return raw ORM objects, dictionaries, lists, or primitive values without manually instantiating or validating response models.
 - Omit FastAPI route handler return annotations when the decorator already defines the response contract, such as routes with `response_model` or no-body `status_code=204` responses.
+
+### Comments
+
+- Add a docstring to every Python function.
+- Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
+
+### Testing
+
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
-- Prefer simple, maintainable, conventional solutions over clever hacks.
-- Inline single use constants.
-- Keep the code pytonic, prefer readability over efficiency.
 
 ## JavaScript / TypeScript Guidelines
 
