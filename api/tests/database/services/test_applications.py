@@ -35,7 +35,7 @@ async def create_user(prefix: str) -> User:
         user = User(
             name=f"{prefix} User",
             email=f"{prefix}@longlink.dev",
-            hashed_password="test-password-hash",
+            password="test-password-hash",
         )
         session.add(user)
         await session.commit()

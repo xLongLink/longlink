@@ -71,12 +71,11 @@ longlink/
 
 ## Python Guidelines
 
-- Validate inputs as early as possible, preferably at system boundaries.
-- Use exceptions for genuine error conditions while avoiding unnecessary `try` and `except` blocks.
-- Represent application state explicitly with typed models, enums, or structured objects.
+- Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+- Represent application state with typed models, enums, or structured objects.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Avoid `Any` and prefer precise type annotations.
-- Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers unless they hide a genuinely complex boundary.
+- Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers.
 - Do not introduce private `_...` helper functions just to wrap a short local sequence, even when that sequence appears in two nearby call sites. Keep simple route/service flows inline unless extraction isolates a complex external boundary or creates reusable domain behavior.
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer concise local names when the surrounding scope already provides context; avoid repeating the domain in every variable name.
@@ -99,8 +98,8 @@ longlink/
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
-- If a constant is used only once, then hardcode the value instead.
-- The code need to be pytonic, where is needed prefer easy to read over efficiency.
+- Inline single use constants.
+- Keep the code pytonic, prefer readability over efficiency.
 
 ## JavaScript / TypeScript Guidelines
 

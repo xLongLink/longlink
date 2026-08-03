@@ -42,10 +42,11 @@ export const metadata = {
     toc: [
         { id: 'database', label: 'Database', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'timezone', label: 'Timezone', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
         { id: 'users', label: 'Users', level: 2 },
     ],
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-08-03',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/database.tsx',
 };
 
@@ -87,6 +88,32 @@ async def create_project() -> None:
         await session.commit()`}
             language="python"
         />
+        <Heading id="timezone" level={2}>
+            Timezone
+        </Heading>
+        <Text as="p">
+            Use LongLink&apos;s <Code>UTCDateTime</Code> type for application-defined datetime fields. It requires a
+            timezone-aware value and stores it in UTC.
+        </Text>
+        <CodeBlock
+            code={`from datetime import UTC, datetime
+from longlink import Table
+from longlink.database.types import UTCDateTime
+from sqlmodel import Field
+
+class Event(Table, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    starts_at: datetime = Field(sa_type=UTCDateTime)
+
+event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
+            language="python"
+        />
+        <Text as="p">
+            LongLink provides this type because SQLite in testing and development can return naive datetimes even for
+            timezone-aware columns, while PostgreSQL production sessions use UTC. <Code>UTCDateTime</Code> rejects
+            ambiguous values before storage, normalizes writes to UTC, and treats SQLite results as UTC so timestamps
+            have the same meaning in every LongLink environment.
+        </Text>
         <Heading id="migrations" level={2}>
             Migrations
         </Heading>

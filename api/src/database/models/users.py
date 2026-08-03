@@ -2,8 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column
+from sqlalchemy import Column, Enum
 from src.models.roles import PlatformRoles
 from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
@@ -25,7 +24,7 @@ class User(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Authentication
-    hashed_password: str = Field(max_length=1024)
+    password: str = Field(max_length=128)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
@@ -35,7 +34,7 @@ class User(SQLModel, table=True):
     # State
     role: PlatformRoles = Field(
         default=PlatformRoles.user,
-        sa_column=Column(SAEnum(PlatformRoles, name="platform_role_enum", native_enum=False), nullable=False),
+        sa_column=Column(Enum(PlatformRoles, name="platform_role_enum", native_enum=False), nullable=False),
     )
     theme: Theme = Field(default=Theme.dark)
     accent: Accent = Field(default=Accent.neutral, max_length=7)

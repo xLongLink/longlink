@@ -17,11 +17,11 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 
 
-def password_fingerprint(hashed_password: str) -> str:
+def password_fingerprint(password: str) -> str:
     """Return the signed-token fingerprint for one current password hash."""
 
     # Bind signed proof to the current credential without exposing its reusable hash.
-    message = f"password-reset:{hashed_password}".encode()
+    message = f"password-reset:{password}".encode()
     return hmac.new(env.SESSION_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
 
 
@@ -59,7 +59,7 @@ def create_password_reset_token(user: User) -> str:
     return jwt.encode(
         {
             "sub": str(user.id),
-            "password_fingerprint": password_fingerprint(user.hashed_password),
+            "password_fingerprint": password_fingerprint(user.password),
             "aud": PASSWORD_RESET_TOKEN_AUDIENCE,
             "exp": utcnow() + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
@@ -85,7 +85,7 @@ async def password_reset_user(session: AsyncSession, token: str) -> User:
     # Require an active account and the exact credential version that received the link.
     statement = select(User).where(col(User.id) == user_id, col(User.deleted_at).is_(None))
     user = (await session.execute(statement)).scalar_one_or_none()
-    if user is None or not hmac.compare_digest(fingerprint, password_fingerprint(user.hashed_password)):
+    if user is None or not hmac.compare_digest(fingerprint, password_fingerprint(user.password)):
         raise jwt.InvalidTokenError("Invalid password reset token")
     return user
 
@@ -98,7 +98,7 @@ def create_auth_token(user: User) -> str:
     return jwt.encode(
         {
             "sub": str(user.id),
-            "password_fingerprint": password_fingerprint(user.hashed_password),
+            "password_fingerprint": password_fingerprint(user.password),
             "aud": AUTH_TOKEN_AUDIENCE,
             "iat": issued_at,
             "exp": issued_at + timedelta(seconds=env.AUTH_SESSION_LIFETIME_SECONDS),

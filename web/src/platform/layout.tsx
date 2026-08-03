@@ -25,7 +25,7 @@ type PlatformLayoutProps = {
 
 /** Renders the Platform shell with either breadcrumbs or brand-only header chrome. */
 export default function PlatformLayout({
-    tabs,
+    tabs = {},
     brandOnly = false,
     brandHref = '/organizations',
     fillViewport = false,
@@ -34,7 +34,7 @@ export default function PlatformLayout({
     const t = useTranslator();
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
-    const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
+    const tabEntries = Object.entries(tabs).map(([label, tab]) => {
         return {
             label,
             icon: tab.icon,
@@ -50,9 +50,6 @@ export default function PlatformLayout({
         return best === undefined || tab.value.length > best.length ? tab.value : best;
     }, undefined);
     const { user } = useUserProfile();
-
-    // Keep anonymous screens aligned with authenticated tabbed layouts.
-    const reserveTabSpace = user === null;
 
     return (
         <TopLayout
@@ -79,7 +76,7 @@ export default function PlatformLayout({
                 )
             }
             height={fillViewport ? 'fill' : 'auto'}
-            reserveTabSpace={reserveTabSpace}
+            reserveTabSpace={user === null}
             tabs={tabEntries}
             topNavClassName="min-h-11 px-7"
         >

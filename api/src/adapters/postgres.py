@@ -200,7 +200,6 @@ class Postgres:
                 GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA {shared_schema} TO {role};
                 ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} GRANT SELECT, REFERENCES ON TABLES TO {role};
                 ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, {shared_schema};
-                ALTER ROLE {role} IN DATABASE {database} SET TIME ZONE 'UTC';
                 """
             )
 

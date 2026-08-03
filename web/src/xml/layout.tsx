@@ -71,6 +71,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
                     <Breadcrumb />
                 )
             }
+            reserveTabSpace={false}
             tabs={resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
             topNavClassName="px-7"
         >

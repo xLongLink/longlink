@@ -21,7 +21,7 @@ type TopLayoutProps = {
     endContent: ReactNode;
     heading: ReactNode;
     height?: 'auto' | 'fill';
-    reserveTabSpace?: boolean;
+    reserveTabSpace: boolean;
     tabs?: TopLayoutTab[];
     topNavClassName: string;
 };
@@ -33,7 +33,7 @@ function TopLayout({
     endContent,
     heading,
     height = 'auto',
-    reserveTabSpace = false,
+    reserveTabSpace,
     tabs = [],
     topNavClassName,
 }: TopLayoutProps) {
@@ -41,51 +41,6 @@ function TopLayout({
 
     // Preserve the existing top navigation and optional tab-strip structure.
     const hasTabs = tabs.length > 0;
-    const topNavigation = (
-        <Stack gap={0}>
-            <TopNav
-                className={topNavClassName}
-                endContent={endContent}
-                heading={heading}
-                label={t('common.mainNavigation')}
-            />
-
-            {hasTabs || reserveTabSpace ? (
-                <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                    {hasTabs ? (
-                        <TabList
-                            aria-label="Section navigation"
-                            hasDivider
-                            onChange={() => undefined}
-                            size="sm"
-                            value={activeTab}
-                        >
-                            {tabs.map((tab) => {
-                                const TabIcon = tab.icon;
-
-                                return (
-                                    <Tab
-                                        key={tab.label}
-                                        href={tab.href}
-                                        icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
-                                        label={tab.label}
-                                        value={tab.value}
-                                    />
-                                );
-                            })}
-                        </TabList>
-                    ) : (
-                        <Stack
-                            aria-hidden="true"
-                            className="border-b border-border"
-                            height="var(--size-element-sm)"
-                            width="100%"
-                        />
-                    )}
-                </Stack>
-            ) : null}
-        </Stack>
-    );
 
     return (
         <AppShell
@@ -93,10 +48,57 @@ function TopLayout({
             contentPadding={0}
             height="auto"
             mobileNav={false}
-            topNav={topNavigation}
+            topNav={
+                <Stack gap={0}>
+                    <TopNav
+                        className={topNavClassName}
+                        endContent={endContent}
+                        heading={heading}
+                        label={t('common.mainNavigation')}
+                    />
+
+                    {hasTabs || reserveTabSpace ? (
+                        <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                            {hasTabs ? (
+                                <TabList
+                                    aria-label="Section navigation"
+                                    hasDivider
+                                    onChange={() => undefined}
+                                    size="sm"
+                                    value={activeTab}
+                                >
+                                    {tabs.map((tab) => {
+                                        const TabIcon = tab.icon;
+
+                                        return (
+                                            <Tab
+                                                key={tab.label}
+                                                href={tab.href}
+                                                icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
+                                                label={tab.label}
+                                                value={tab.value}
+                                            />
+                                        );
+                                    })}
+                                </TabList>
+                            ) : (
+                                <Stack
+                                    aria-hidden="true"
+                                    className="border-b border-border"
+                                    height="var(--size-element-sm)"
+                                    width="100%"
+                                />
+                            )}
+                        </Stack>
+                    ) : null}
+                </Stack>
+            }
             variant="wash"
         >
-            <ContentFrame className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]" />
+            <ContentFrame
+                className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]"
+                isConnectedToHeader
+            />
             <Stack
                 className="relative z-10"
                 height={height === 'fill' ? 'calc(100dvh - var(--appshell-header-height, 0px))' : 'auto'}

@@ -111,11 +111,11 @@ async def users(password_hash: str) -> tuple[User, User, User]:
         platform_administrator = User(
             name="Platform Administrator",
             email="platform-administrator@example.com",
-            hashed_password=password_hash,
+            password=password_hash,
             role=PlatformRoles.administrator,
         )
-        regular_user = User(name="Regular User", email="regular-user@example.com", hashed_password=password_hash)
-        other_user = User(name="Other User", email="other-user@example.com", hashed_password=password_hash)
+        regular_user = User(name="Regular User", email="regular-user@example.com", password=password_hash)
+        other_user = User(name="Other User", email="other-user@example.com", password=password_hash)
 
         # Persist independent Platform users for authenticated fixture clients.
         db_session.add_all([platform_administrator, regular_user, other_user])
