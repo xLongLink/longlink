@@ -16,7 +16,7 @@ export function AuthPage({
     title: ReactNode;
 }) {
     return (
-        <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
+        <PlatformLayout brandOnly brandHref="/" fillViewport>
             <Center height="100%" width="100%">
                 <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
                     <Stack gap={1}>

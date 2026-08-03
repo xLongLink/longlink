@@ -4,6 +4,7 @@ from sqlmodel import Field
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
+from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.utils.time import utcnow
 from longlink.shared.models import User
@@ -79,9 +80,13 @@ def create_engine(env: Envs) -> AsyncEngine:
     if not dburl.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
-    # Preserve the Platform-selected TLS mode for production PostgreSQL connections.
-    if dburl.startswith("postgresql+asyncpg"):
-        engine_kwargs["connect_args"] = {"ssl": env.DATABASE_SSLMODE, "server_settings": {"timezone": "UTC"}}
+    # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
+    connect_args = urls.connect_args(
+        dburl,
+        **({"ssl": env.DATABASE_SSLMODE} if dburl.startswith("postgresql+asyncpg") else {}),
+    )
+    if connect_args:
+        engine_kwargs["connect_args"] = connect_args
 
     # Cache the configured engine for subsequent session requests.
     _engine = create_async_engine(dburl, **engine_kwargs)

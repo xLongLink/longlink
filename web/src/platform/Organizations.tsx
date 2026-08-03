@@ -29,7 +29,7 @@ export default function Organizations() {
     // Show sign-in prompt for anonymous visitors.
     if (!user) {
         return (
-            <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
+            <PlatformLayout brandOnly brandHref="/" fillViewport>
                 <VStack height="100%" justify="center" align="center" width="100%">
                     <SignInCard initialEmail={new URLSearchParams(location.search).get('email') ?? ''} />
                 </VStack>

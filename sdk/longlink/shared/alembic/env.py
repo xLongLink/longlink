@@ -2,6 +2,7 @@ import asyncio
 from typing import Any
 from alembic import context
 from sqlalchemy import pool, text, engine_from_config
+from longlink.database import urls
 from sqlalchemy.engine import Connection, make_url
 from longlink.shared.models import shared_metadata
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -59,10 +60,11 @@ async def run_async_migrations(database_url: str) -> None:
     """Run shared-schema migrations through an async SQLAlchemy engine."""
 
     # Use an operation-scoped pool because each organization has its own database.
+    connect_args = urls.connect_args(database_url)
     connectable = create_async_engine(
         database_url,
         poolclass=pool.NullPool,
-        **({"connect_args": {"server_settings": {"timezone": "UTC"}}} if make_url(database_url).drivername == "postgresql+asyncpg" else {}),
+        **({"connect_args": connect_args} if connect_args else {}),
     )
     try:
         async with connectable.connect() as connection:

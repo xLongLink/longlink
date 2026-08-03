@@ -23,7 +23,7 @@ export function Auth({
     // Show sign-in UI for unauthenticated users.
     if (!user) {
         return (
-            <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
+            <PlatformLayout brandOnly brandHref="/" fillViewport>
                 <Center height="100%" width="100%">
                     <SignInCard />
                 </Center>

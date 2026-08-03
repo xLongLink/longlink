@@ -55,10 +55,13 @@ def database(database_url: str) -> DatabaseConnection:
                 raise ValueError("MySQL ssl_check_hostname conflicts with ssl-mode")
 
         normalized_url = parsed_url.difference_update_query(tls_parameters)
+
+        # Keep MySQL temporal functions and TIMESTAMP conversions in UTC for every connection.
+        connect_args: dict[str, object] = {"init_command": "SET time_zone = '+00:00'"}
         if sslmode == "DISABLED":
             if any(value is not None for value in (ssl_ca, ssl_cert, ssl_key)):
                 raise ValueError("Disabled MySQL TLS cannot include certificates")
-            return DatabaseConnection(normalized_url, {"init_command": "SET time_zone = '+00:00'"})
+            return DatabaseConnection(normalized_url, connect_args)
 
         # REQUIRED encrypts transport without authenticating the server.
         if sslmode == "REQUIRED":
@@ -75,7 +78,8 @@ def database(database_url: str) -> DatabaseConnection:
         if ssl_cert is not None:
             context.load_cert_chain(ssl_cert, keyfile=ssl_key)
 
-        return DatabaseConnection(normalized_url, {"ssl": context, "init_command": "SET time_zone = '+00:00'"})
+        connect_args["ssl"] = context
+        return DatabaseConnection(normalized_url, connect_args)
 
     # PostgreSQL Platform access requires the supported asynchronous driver.
     if parsed_url.drivername != "postgresql+asyncpg":

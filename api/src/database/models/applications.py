@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column, UniqueConstraint
-from longlink.utils.time import utcnow
 from src.environments import env
-from src.models.statuses import Status
 from src.database.types import EncryptedType
+from longlink.utils.time import utcnow
+from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.

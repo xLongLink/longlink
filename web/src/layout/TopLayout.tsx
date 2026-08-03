@@ -91,13 +91,17 @@ function TopLayout({
         <AppShell
             banner={import.meta.env.MODE === 'sdk' ? undefined : <DevelopmentNotice />}
             contentPadding={0}
-            height={height}
+            height="auto"
             mobileNav={false}
             topNav={topNavigation}
             variant="wash"
         >
             <ContentFrame className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]" />
-            <Stack className="relative z-10" height={height === 'fill' ? '100%' : 'auto'} padding={2}>
+            <Stack
+                className="relative z-10"
+                height={height === 'fill' ? 'calc(100dvh - var(--appshell-header-height, 0px))' : 'auto'}
+                padding={2}
+            >
                 {hasTabs && height === 'auto' ? (
                     <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))">
                         {children}
