@@ -143,95 +143,14 @@
 }
 
 .homepage-before-after-primitive {
-    isolation: isolate;
     pointer-events: none;
 }
 
-.homepage-before-after-primitive::before {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-color: var(--color-background-body);
-    content: '';
-    -webkit-mask: var(--homepage-primitive-mask) center bottom / 100% 100% no-repeat;
-    mask: var(--homepage-primitive-mask) center bottom / 100% 100% no-repeat;
-}
-
 .homepage-before-after-primitive-lines {
-    position: relative;
-    z-index: 1;
     display: block;
     width: 100%;
     max-width: none;
     pointer-events: none;
-}
-
-.homepage-before-after-primitive-city-tower-01 {
-    --homepage-primitive-mask: url('/images/city-tower-01-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-02 {
-    --homepage-primitive-mask: url('/images/city-tower-02-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-03 {
-    --homepage-primitive-mask: url('/images/city-tower-03-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-04 {
-    --homepage-primitive-mask: url('/images/city-tower-04-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-05 {
-    --homepage-primitive-mask: url('/images/city-tower-05-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-06 {
-    --homepage-primitive-mask: url('/images/city-tower-06-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-07 {
-    --homepage-primitive-mask: url('/images/city-tower-07-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-08 {
-    --homepage-primitive-mask: url('/images/city-tower-08-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-09 {
-    --homepage-primitive-mask: url('/images/city-tower-09-mask.png');
-}
-
-.homepage-before-after-primitive-city-tower-10 {
-    --homepage-primitive-mask: url('/images/city-tower-10-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-tree-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-tree-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-light-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-light-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-hydrant-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-hydrant-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-bench-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-bench-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-fence-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-fence-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-bus-shelter-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-bus-shelter-01-mask.png');
-}
-
-.homepage-before-after-primitive-infrastructure-traffic-light-01 {
-    --homepage-primitive-mask: url('/images/infrastructure-traffic-light-01-mask.png');
 }
 
 .homepage-before-after-building-edge-left {

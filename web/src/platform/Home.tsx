@@ -143,9 +143,6 @@ function IntegrationScale() {
                 gap={6}
                 hAlign="center"
             >
-                <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
-                    The integration surface
-                </Text>
                 <Stack gap={3} hAlign="center">
                     <Heading
                         ref={countRef}
@@ -440,9 +437,6 @@ export default function Home() {
             </section>
             <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
-                    <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
-                        Next step
-                    </Text>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
                             <Stack key={title} gap={0} width="100%">
