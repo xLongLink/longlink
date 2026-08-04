@@ -6,7 +6,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
-import { DocsCityBanner } from '@/components/DocsCityBanner';
 
 const industryLevels = [
     {
@@ -98,7 +97,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsCityBanner />
         <Heading id="introduction" level={1}>
             Introduction
         </Heading>
