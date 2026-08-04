@@ -15,6 +15,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { apiComputeRegistrySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -26,7 +27,8 @@ export default function AdminCompute() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
-        mutationFn: (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
+        mutationFn: (computeId: string) =>
+            fetchApiVoid(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey });
             toast({ body: t('admin.computeDeleted') });
@@ -36,7 +38,7 @@ export default function AdminCompute() {
         items: computes,
         error,
         isLoading,
-    } = useCollectionQuery<ApiComputeRegistry>('/api/computes', {
+    } = useCollectionQuery<ApiComputeRegistry>(platformApiPath('/computes'), {
         refetchInterval: 5000,
         parse: (value) => apiComputeRegistrySchema.array().parse(value),
     });

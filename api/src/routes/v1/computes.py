@@ -7,21 +7,21 @@ from src.database.services import compute
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
-@router.post("/api/computes", response_model=ComputeRegistryResponse, status_code=202)
+@router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
 async def create_compute_registry(payload: ComputeRegistryCreate):
     """Register a compute target and queue its initial creation."""
 
     return await compute.create(payload.name, payload.kubeconfig)
 
 
-@router.get("/api/computes", response_model=list[ComputeRegistryResponse])
+@router.get("/computes", response_model=list[ComputeRegistryResponse])
 async def list_compute_registries():
     """Return all registered compute backends."""
 
     return await compute.fetch()
 
 
-@router.get("/api/computes/{registry_id}", response_model=ComputeRegistryResponse)
+@router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
 async def get_compute_registry(registry_id: UUID):
     """Return one compute backend registration."""
 
@@ -33,7 +33,7 @@ async def get_compute_registry(registry_id: UUID):
     return registry
 
 
-@router.delete("/api/computes/{registry_id}", status_code=204)
+@router.delete("/computes/{registry_id}", status_code=204)
 async def delete_compute_registry(registry_id: UUID):
     """Remove one unused compute registration without changing its cluster."""
 

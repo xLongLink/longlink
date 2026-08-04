@@ -5,14 +5,14 @@ from src.database.session import session_scope
 router = APIRouter()
 
 
-@router.get("/api/healthz", response_model=dict[str, bool])
+@router.get("/healthz", response_model=dict[str, bool])
 async def healthz():
     """Return a simple liveness response."""
 
     return {"alive": True}
 
 
-@router.get("/api/readyz", response_model=dict[str, bool])
+@router.get("/readyz", response_model=dict[str, bool])
 async def readyz():
     """Return readiness after verifying Platform database connectivity."""
 

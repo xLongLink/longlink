@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { apiOperationSchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -73,7 +74,7 @@ export default function AdminOperations() {
         items: operations,
         error,
         isLoading,
-    } = useCollectionQuery<ApiOperation>('/api/operations', {
+    } = useCollectionQuery<ApiOperation>(platformApiPath('/operations'), {
         refetchInterval: 5000,
         parse: (value) => apiOperationSchema.array().parse(value),
     });

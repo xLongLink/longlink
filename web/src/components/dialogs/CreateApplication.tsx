@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { apiIconsSchema, apiImageMetadataSchema } from '@/lib/api-schemas';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { platformApiPath } from '@/lib/platform-api';
 import type { ApiImageMetadata } from '@/lib/types';
 
 const createApplicationFormSchema = z.object({
@@ -75,7 +76,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasImage = image.trim().length > 0;
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
+    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? platformApiPath('/icons') : null, {
         parse: (value) => apiIconsSchema.parse(value),
         staleTime: Infinity,
     });
@@ -96,7 +97,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
+            const metadata = await fetchApiJson(platformApiPath(`/image?${query.toString()}`), undefined, (value) =>
                 apiImageMetadataSchema.parse(value)
             );
 

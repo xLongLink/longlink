@@ -12,14 +12,14 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.get("/api/applications", response_model=list[ApplicationResponse])
+@router.get("/applications", response_model=list[ApplicationResponse])
 async def list_applications(_user: User = Depends(authadmin)):
     """Return all applications for administrator views."""
 
     return await applications.fetch()
 
 
-@router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
+@router.post("/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
     """Create Application state and queue its explicit deployment lifecycle."""
 
@@ -64,7 +64,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     return application
 
 
-@router.get("/api/applications/{application_id}/logs", response_model=list[str])
+@router.get("/applications/{application_id}/logs", response_model=list[str])
 async def get_application_logs(application_id: UUID, user: User = Depends(authuser)):
     """Return recent pod logs for one managed application."""
 
@@ -93,7 +93,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
 
-@router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
+@router.delete("/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 

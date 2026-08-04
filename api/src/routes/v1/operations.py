@@ -6,7 +6,7 @@ from src.models.operations import OperationResponse
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
-@router.get("/api/operations", response_model=list[OperationResponse])
+@router.get("/operations", response_model=list[OperationResponse])
 async def list_operations():
     """Return Platform reconciliation history for administrators."""
 

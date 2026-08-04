@@ -13,6 +13,7 @@ import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { apiApplicationResponseSchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiApplicationResponse, Status } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
@@ -82,7 +83,7 @@ export default function AdminApplications() {
         items: applications,
         error,
         isLoading,
-    } = useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+    } = useCollectionQuery<ApiApplicationResponse>(platformApiPath('/applications'), {
         refetchInterval: 5000,
         parse: (value) => apiApplicationResponseSchema.array().parse(value),
     });

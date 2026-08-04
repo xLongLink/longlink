@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
 import { apiStorageRegistrySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { storagesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -44,7 +45,7 @@ export default function CreateStorage() {
     const mutation = useMutation({
         mutationFn: (payload: Values) =>
             fetchApiJson(
-                '/api/storages',
+                platformApiPath('/storages'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

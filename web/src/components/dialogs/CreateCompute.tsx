@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
 import { apiComputeRegistrySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { computesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -38,7 +39,7 @@ export default function CreateCompute() {
     const mutation = useMutation({
         mutationFn: (payload: Values) =>
             fetchApiJson(
-                '/api/computes',
+                platformApiPath('/computes'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

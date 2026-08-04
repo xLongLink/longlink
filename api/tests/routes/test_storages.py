@@ -14,8 +14,8 @@ async def test_storage_registry_endpoints_return_backend(
     registry = infrastructure.storage
 
     # Act
-    list_response = await client.get("/api/storages")
-    get_response = await client.get(f"/api/storages/{registry.id}")
+    list_response = await client.get("/api/v1/storages")
+    get_response = await client.get(f"/api/v1/storages/{registry.id}")
 
     # Assert
     assert list_response.status_code == 200
@@ -44,12 +44,12 @@ async def test_storage_registry_create_duplicate_and_delete(
     }
 
     # Act
-    create_response = await client.post("/api/storages", json=payload)
-    duplicate_response = await client.post("/api/storages", json=payload)
+    create_response = await client.post("/api/v1/storages", json=payload)
+    duplicate_response = await client.post("/api/v1/storages", json=payload)
     created = create_response.json()
     registry_id = created["id"]
-    delete_response = await client.delete(f"/api/storages/{registry_id}")
-    get_response = await client.get(f"/api/storages/{registry_id}")
+    delete_response = await client.delete(f"/api/v1/storages/{registry_id}")
+    get_response = await client.get(f"/api/v1/storages/{registry_id}")
 
     # Assert
     assert create_response.status_code == 201
@@ -73,7 +73,7 @@ async def test_storage_registry_delete_rejects_assigned_registry(
     client = clients[0]
 
     # Act
-    response = await client.delete(f"/api/storages/{infrastructure.storage.id}")
+    response = await client.delete(f"/api/v1/storages/{infrastructure.storage.id}")
 
     # Assert
     assert response.status_code == 409
@@ -89,9 +89,9 @@ async def test_storage_registry_routes_require_admin(
     client = clients[1]
 
     # Act
-    read_response = await client.get("/api/storages")
+    read_response = await client.get("/api/v1/storages")
     write_response = await client.post(
-        "/api/storages",
+        "/api/v1/storages",
         json={
             "name": "Denied Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",

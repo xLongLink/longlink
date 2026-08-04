@@ -23,14 +23,14 @@ from src.adapters.storage.exoscale import Exoscale
 router = APIRouter()
 
 
-@router.get("/api/organizations", response_model=list[OrganizationSummary])
+@router.get("/organizations", response_model=list[OrganizationSummary])
 async def list_organizations(_user: User = Depends(authadmin)):
     """Return all organizations for administrator views."""
 
     return await organizations.fetch()
 
 
-@router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
+@router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
 async def get_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Return one organization and its metadata."""
 
@@ -58,7 +58,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     }
 
 
-@router.patch("/api/organizations/{organization_id}", response_model=OrganizationSummary)
+@router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)
 async def update_organization(organization_id: UUID, payload: OrganizationUpdate, user: User = Depends(authuser)):
     """Update mutable organization settings."""
 
@@ -79,7 +79,7 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
 
 
 @router.get(
-    "/api/organizations/{organization_id}/database",
+    "/organizations/{organization_id}/database",
     response_model=OrganizationDatabaseUsageResponse | None,
 )
 async def get_organization_database_usage(organization_id: UUID, user: User = Depends(authuser)):
@@ -114,7 +114,7 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
 
 
 @router.get(
-    "/api/organizations/{organization_id}/storage",
+    "/organizations/{organization_id}/storage",
     response_model=OrganizationStorageUsageResponse | None,
 )
 async def get_organization_storage_usage(organization_id: UUID, user: User = Depends(authuser)):
@@ -156,7 +156,7 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
     return {"bucket_name": bucket_name, **usage}
 
 
-@router.post("/api/organizations/{organization_id}/invitations", status_code=204)
+@router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(organization_id: UUID, payload: OrganizationInvitationCreate, user: User = Depends(authuser)):
     """Create one invitation for an organization member."""
 
@@ -177,7 +177,7 @@ async def create_organization_invitation(organization_id: UUID, payload: Organiz
     await mail.send_organization_invitation_email(invitation.email, membership.organization.name, invitation.role)
 
 
-@router.patch("/api/organizations/{organization_id}/members/{member_id}", status_code=204)
+@router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
     organization_id: UUID,
     member_id: UUID,
@@ -207,7 +207,7 @@ async def update_organization_member(
         raise HTTPException(status_code=404, detail="Organization member not found")
 
 
-@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
+@router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
@@ -235,7 +235,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     return result
 
 
-@router.post("/api/organizations", response_model=OrganizationSummary, status_code=202)
+@router.post("/organizations", response_model=OrganizationSummary, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue infrastructure creation."""
 

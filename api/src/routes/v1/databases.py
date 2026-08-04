@@ -9,7 +9,7 @@ from src.database.services import database
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
-@router.post("/api/databases", response_model=DatabaseRegistryResponse, status_code=201)
+@router.post("/databases", response_model=DatabaseRegistryResponse, status_code=201)
 async def create_database_registry(payload: DatabaseRegistryCreate):
     """Register one database backend."""
 
@@ -23,14 +23,14 @@ async def create_database_registry(payload: DatabaseRegistryCreate):
     )
 
 
-@router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
+@router.get("/databases", response_model=list[DatabaseRegistryResponse])
 async def list_database_registries():
     """Return all registered database backends."""
 
     return await database.fetch()
 
 
-@router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
+@router.get("/databases/{registry_id}", response_model=DatabaseRegistryResponse)
 async def get_database_registry(registry_id: UUID):
     """Return one database backend registration."""
 
@@ -42,7 +42,7 @@ async def get_database_registry(registry_id: UUID):
     return registry
 
 
-@router.delete("/api/databases/{registry_id}", status_code=204)
+@router.delete("/databases/{registry_id}", status_code=204)
 async def delete_database_registry(registry_id: UUID):
     """Delete one unused database backend registration."""
 
@@ -52,7 +52,7 @@ async def delete_database_registry(registry_id: UUID):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
 
-@router.get("/api/databases/{registry_id}/usage", response_model=int)
+@router.get("/databases/{registry_id}/usage", response_model=int)
 async def get_database_usage(registry_id: UUID):
     """Query point-in-time storage usage from the live database backend, not persisted desired state.
 

@@ -14,6 +14,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { apiStorageRegistrySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -26,7 +27,8 @@ export default function AdminStorage() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
-        mutationFn: (storageId: string) => fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' }),
+        mutationFn: (storageId: string) =>
+            fetchApiVoid(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
             toast({ body: t('admin.storageDeleted') });
@@ -36,7 +38,7 @@ export default function AdminStorage() {
         items: storages,
         error,
         isLoading,
-    } = useCollectionQuery<ApiStorageRegistry>('/api/storages', {
+    } = useCollectionQuery<ApiStorageRegistry>(platformApiPath('/storages'), {
         parse: (value) => apiStorageRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(storages);

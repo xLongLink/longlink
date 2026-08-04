@@ -18,6 +18,7 @@ import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { useFragmentToken } from './use-fragment-token';
@@ -54,13 +55,13 @@ export default function VerifyEmail() {
     const verification = useMutation({
         mutationFn: (registrationToken: string) => {
             if (!registrationToken) {
-                return fetchApiJson('/api/auth/register/setup', undefined, (value) =>
+                return fetchApiJson(platformApiPath('/auth/register/setup'), undefined, (value) =>
                     apiRegistrationVerifiedSchema.parse(value)
                 );
             }
 
             return fetchApiJson(
-                '/api/auth/verify',
+                platformApiPath('/auth/verify'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -82,7 +83,7 @@ export default function VerifyEmail() {
     const completion = useMutation({
         mutationFn: (payload: RegistrationCompleteValues) =>
             fetchApiJson(
-                '/api/auth/register/complete',
+                platformApiPath('/auth/register/complete'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

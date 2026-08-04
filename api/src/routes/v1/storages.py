@@ -7,7 +7,7 @@ from src.database.services import storage
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
-@router.post("/api/storages", response_model=StorageRegistryResponse, status_code=201)
+@router.post("/storages", response_model=StorageRegistryResponse, status_code=201)
 async def create_storage_registry(payload: StorageRegistryCreate):
     """Register one Exoscale SOS backend."""
 
@@ -19,14 +19,14 @@ async def create_storage_registry(payload: StorageRegistryCreate):
     )
 
 
-@router.get("/api/storages", response_model=list[StorageRegistryResponse])
+@router.get("/storages", response_model=list[StorageRegistryResponse])
 async def list_storage_registries():
     """Return all registered storage backends."""
 
     return await storage.fetch()
 
 
-@router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
+@router.get("/storages/{registry_id}", response_model=StorageRegistryResponse)
 async def get_storage_registry(registry_id: UUID):
     """Return one storage backend registration."""
 
@@ -38,7 +38,7 @@ async def get_storage_registry(registry_id: UUID):
     return registry
 
 
-@router.delete("/api/storages/{registry_id}", status_code=204)
+@router.delete("/storages/{registry_id}", status_code=204)
 async def delete_storage_registry(registry_id: UUID):
     """Delete one unused Exoscale SOS backend registration."""
 

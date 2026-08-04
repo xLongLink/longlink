@@ -17,6 +17,7 @@ import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, DATABASE_SSL_MODES } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
@@ -47,7 +48,7 @@ export default function CreateDatabase() {
     const mutation = useMutation({
         mutationFn: (payload: Values) =>
             fetchApiJson(
-                '/api/databases',
+                platformApiPath('/databases'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

@@ -11,6 +11,7 @@ import { AuthPage } from '@/components/AuthPage';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiVoid } from '@/lib/api';
+import { platformApiPath } from '@/lib/platform-api';
 import { useFragmentToken } from './use-fragment-token';
 
 type ResetPasswordValues = {
@@ -35,10 +36,10 @@ export default function ResetPassword() {
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                return fetchApiVoid('/api/auth/reset-password/setup');
+                return fetchApiVoid(platformApiPath('/auth/reset-password/setup'));
             }
 
-            return fetchApiVoid('/api/auth/reset-password/verify', {
+            return fetchApiVoid(platformApiPath('/auth/reset-password/verify'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: resetToken }),
@@ -56,7 +57,7 @@ export default function ResetPassword() {
     });
     const resetPassword = useMutation({
         mutationFn: (payload: ResetPasswordValues) =>
-            fetchApiVoid('/api/auth/reset-password', {
+            fetchApiVoid(platformApiPath('/auth/reset-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

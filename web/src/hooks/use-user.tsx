@@ -4,6 +4,7 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { apiUserOrganizationMembershipSchema, apiUserProfileSchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
@@ -47,7 +48,7 @@ function storeThemePreferences({ theme, accent, radius }: UserPreferences): void
 
 /** Hook that fetches the current user. */
 function useUserQuery() {
-    return useApiQuery<User | null>('/api/me', {
+    return useApiQuery<User | null>(platformApiPath('/me'), {
         // Auth state must refresh immediately after login/logout redirects.
         parse: (value) => (value === null ? null : apiUserProfileSchema.parse(value)),
         staleTime: 0,
@@ -96,9 +97,12 @@ export function useUserProfile(): UserProfileState {
 /** Reads organization memberships only when a user is authenticated. */
 export function useUserOrganizations(): UserOrganizationsState {
     const profile = useUserProfile();
-    const query = useCollectionQuery<ApiUserOrganizationMembership>(profile.user ? '/api/me/organizations' : null, {
-        parse: (value) => apiUserOrganizationMembershipSchema.array().parse(value),
-    });
+    const query = useCollectionQuery<ApiUserOrganizationMembership>(
+        profile.user ? platformApiPath('/me/organizations') : null,
+        {
+            parse: (value) => apiUserOrganizationMembershipSchema.array().parse(value),
+        }
+    );
 
     return {
         memberships: query.items,
@@ -113,7 +117,7 @@ export function useUserSessionActions() {
 
     /** Signs the current user out and clears cached session state. */
     const signOut = async () => {
-        await fetchApiVoid('/api/auth/logout', { method: 'POST' });
+        await fetchApiVoid(platformApiPath('/auth/logout'), { method: 'POST' });
         queryClient.clear();
         localStorage.removeItem(THEME_PREFERENCES_KEY);
         window.location.assign('/organizations');
@@ -131,7 +135,7 @@ export function useUpdateUser() {
     return useMutation({
         mutationFn: (payload: UserUpdate) =>
             fetchApiJson(
-                '/api/me',
+                platformApiPath('/me'),
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },

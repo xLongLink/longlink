@@ -2,6 +2,7 @@ import { useParams } from 'react-router';
 import View from '@/application/runtime/View';
 import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
+import { platformApiPath } from '@/lib/platform-api';
 import NotFound from '@/platform/NotFound';
 
 /** Protects and renders one proxy-backed organization application. */
@@ -32,7 +33,7 @@ function OrganizationApplicationView() {
     return (
         <View
             applicationStatus={applicationAccess.status}
-            pages={`/api/applications/${applicationAccess.id}/proxy/pages.json`}
+            pages={platformApiPath(`/applications/${applicationAccess.id}/proxy/pages.json`)}
         />
     );
 }

@@ -35,7 +35,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     client = clients[0]
 
     # Act
-    response = await client.get("/api/applications")
+    response = await client.get("/api/v1/applications")
 
     # Assert
     assert response.status_code == 200
@@ -70,12 +70,12 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
         )
 
-    monkeypatch.setattr("src.routes.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
     client = clients[0]
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/applications",
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
@@ -128,7 +128,7 @@ async def test_create_app_returns_403_for_regular_member(
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/applications",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
@@ -164,11 +164,11 @@ async def test_get_app_logs_returns_pod_logs(
             captured["logs"] = application_id
             return ["line 1", "line 2"]
 
-    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FakeCompute)
     client = clients[0]
 
     # Act
-    response = await client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -193,7 +193,7 @@ async def test_app_logs_require_maintainer_access(
     client = clients[1]
 
     # Act
-    response = await client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 403
@@ -225,11 +225,11 @@ async def test_app_logs_return_unavailable_when_backend_fails(
 
             raise RuntimeError("logs unavailable")
 
-    monkeypatch.setattr("src.routes.applications.Kubernetes", FailingCompute)
+    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FailingCompute)
     client = clients[0]
 
     # Act
-    response = await client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 503
@@ -249,8 +249,8 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     client = clients[0]
 
     # Act
-    response = await client.delete(f"/api/applications/{app.id}")
-    retry_response = await client.delete(f"/api/applications/{app.id}")
+    response = await client.delete(f"/api/v1/applications/{app.id}")
+    retry_response = await client.delete(f"/api/v1/applications/{app.id}")
 
     # Assert
     assert response.status_code == 202

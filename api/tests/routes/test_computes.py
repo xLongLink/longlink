@@ -15,8 +15,8 @@ async def test_compute_registry_endpoints_return_backend(
     registry = infrastructure.compute
 
     # Act
-    list_response = await client.get("/api/computes")
-    get_response = await client.get(f"/api/computes/{registry.id}")
+    list_response = await client.get("/api/v1/computes")
+    get_response = await client.get(f"/api/v1/computes/{registry.id}")
 
     # Assert
     assert list_response.status_code == 200
@@ -42,17 +42,17 @@ async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifec
 
     # Act
     create_response = await client.post(
-        "/api/computes",
+        "/api/v1/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     duplicate_response = await client.post(
-        "/api/computes",
+        "/api/v1/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     created = create_response.json()
     registry_id = created["id"]
-    delete_response = await client.delete(f"/api/computes/{registry_id}")
-    get_response = await client.get(f"/api/computes/{registry_id}")
+    delete_response = await client.delete(f"/api/v1/computes/{registry_id}")
+    get_response = await client.get(f"/api/v1/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
@@ -77,8 +77,8 @@ async def test_compute_registry_deletes_unused_ready_registration(
     infrastructure = await create_ready_infrastructure()
 
     # Act
-    delete_response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
-    retry_response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+    delete_response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
+    retry_response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
 
     # Assert
     assert delete_response.status_code == 204
@@ -99,7 +99,7 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
     await operations.complete(claimed.id)
 
     # Act
-    response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+    response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
 
     # Assert
     assert response.status_code == 204
@@ -118,7 +118,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     client = clients[0]
 
     # Act
-    response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
+    response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
 
     # Assert
     assert response.status_code == 409
@@ -134,10 +134,10 @@ async def test_compute_registry_routes_require_admin(
     client = clients[1]
 
     # Act
-    read_response = await client.get("/api/computes")
-    get_response = await client.get("/api/computes/00000000-0000-4000-8000-000000000000")
+    read_response = await client.get("/api/v1/computes")
+    get_response = await client.get("/api/v1/computes/00000000-0000-4000-8000-000000000000")
     write_response = await client.post(
-        "/api/computes",
+        "/api/v1/computes",
         json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
 

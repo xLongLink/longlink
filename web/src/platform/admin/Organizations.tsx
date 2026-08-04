@@ -16,6 +16,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { apiOrganizationSummarySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -28,7 +29,7 @@ export default function AdminOrganizations() {
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) =>
-            fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' }),
+            fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             toast({ body: t('admin.organizationDeleted') });
@@ -38,7 +39,7 @@ export default function AdminOrganizations() {
         items: organizations,
         error,
         isLoading,
-    } = useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
+    } = useCollectionQuery<ApiOrganizationSummary>(platformApiPath('/organizations'), {
         parse: (value) => apiOrganizationSummarySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(organizations);

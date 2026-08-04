@@ -8,7 +8,7 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.get("/api/image", response_model=LongLinkMetadata)
+@router.get("/image", response_model=LongLinkMetadata)
 async def inspect_image(image: Image, _: User = Depends(authuser)):
     """Inspect a container image and return its LongLink metadata."""
 

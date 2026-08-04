@@ -16,7 +16,7 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.post("/api/auth/password/login", status_code=204, tags=["auth"])
+@router.post("/auth/password/login", status_code=204, tags=["auth"])
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one signed browser session."""
 
@@ -49,7 +49,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     )
 
 
-@router.post("/api/auth/logout", status_code=204, include_in_schema=False)
+@router.post("/auth/logout", status_code=204, include_in_schema=False)
 async def logout(
     response: Response,
 ):
@@ -65,7 +65,7 @@ async def logout(
     )
 
 
-@router.post("/api/auth/forgot-password", status_code=202, tags=["auth"])
+@router.post("/auth/forgot-password", status_code=202, tags=["auth"])
 async def request_password_reset(
     payload: EmailPayload,
     background_tasks: BackgroundTasks,
@@ -88,7 +88,7 @@ async def request_password_reset(
     )
 
 
-@router.post("/api/auth/reset-password/verify", status_code=204, tags=["auth"])
+@router.post("/auth/reset-password/verify", status_code=204, tags=["auth"])
 async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
@@ -102,14 +102,14 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
         "longlink_password_reset",
         payload.token,
         max_age=900,
-        path="/api/auth/reset-password",
+        path="/api/v1/auth/reset-password",
         secure=not env.DEVELOPMENT,
         httponly=True,
         samesite="lax",
     )
 
 
-@router.get("/api/auth/reset-password/setup", status_code=204, tags=["auth"])
+@router.get("/auth/reset-password/setup", status_code=204, tags=["auth"])
 async def get_password_reset_setup(
     response: Response,
     password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
@@ -125,7 +125,7 @@ async def get_password_reset_setup(
     response.headers["Cache-Control"] = "no-store"
 
 
-@router.post("/api/auth/reset-password", status_code=204, tags=["auth"])
+@router.post("/auth/reset-password", status_code=204, tags=["auth"])
 async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
@@ -148,14 +148,14 @@ async def reset_password(
     response.headers["Cache-Control"] = "no-store"
     response.delete_cookie(
         "longlink_password_reset",
-        path="/api/auth/reset-password",
+        path="/api/v1/auth/reset-password",
         secure=not env.DEVELOPMENT,
         httponly=True,
         samesite="lax",
     )
 
 
-@router.post("/api/auth/register", status_code=202, tags=["auth"])
+@router.post("/auth/register", status_code=202, tags=["auth"])
 async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_auth_session)):
     """Send a stateless registration link when the email has no account."""
 
@@ -171,7 +171,7 @@ async def request_registration(payload: EmailPayload, background_tasks: Backgrou
     background_tasks.add_task(mail.send_signup_verification_email, email, credential)
 
 
-@router.post("/api/auth/verify", response_model=EmailPayload, tags=["auth"])
+@router.post("/auth/verify", response_model=EmailPayload, tags=["auth"])
 async def verify_registration_token(payload: TokenPayload, response: Response):
     """Validate an emailed registration token without creating an account."""
 
@@ -185,7 +185,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
         "longlink_registration",
         payload.token,
         max_age=token.EMAIL_TOKEN_LIFETIME_SECONDS,
-        path="/api/auth/register",
+        path="/api/v1/auth/register",
         secure=not env.DEVELOPMENT,
         httponly=True,
         samesite="lax",
@@ -193,7 +193,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     return {"email": email}
 
 
-@router.get("/api/auth/register/setup", response_model=EmailPayload, tags=["auth"])
+@router.get("/auth/register/setup", response_model=EmailPayload, tags=["auth"])
 async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
     """Restore verified registration state from its browser-only cookie."""
 
@@ -206,7 +206,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
     return {"email": email}
 
 
-@router.post("/api/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
+@router.post("/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
 async def complete_registration(
     payload: RegistrationComplete,
     response: Response,
@@ -261,7 +261,7 @@ async def complete_registration(
     )
     response.delete_cookie(
         "longlink_registration",
-        path="/api/auth/register",
+        path="/api/v1/auth/register",
         secure=not env.DEVELOPMENT,
         httponly=True,
         samesite="lax",

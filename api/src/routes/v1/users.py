@@ -8,14 +8,14 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.get("/api/me", response_model=UserProfile)
+@router.get("/me", response_model=UserProfile)
 async def get_me(user: User = Depends(authuser)):
     """Return the authenticated user's details."""
 
     return user
 
 
-@router.get("/api/me/organizations", response_model=list[UserOrganizationMembership])
+@router.get("/me/organizations", response_model=list[UserOrganizationMembership])
 async def get_my_organizations(user: User = Depends(authuser)):
     """Return the authenticated user's organization memberships."""
 
@@ -23,14 +23,14 @@ async def get_my_organizations(user: User = Depends(authuser)):
     return [membership for membership in user.organization_memberships if membership.organization.deleted_at is None]
 
 
-@router.get("/api/users", response_model=list[UserSummary])
+@router.get("/users", response_model=list[UserSummary])
 async def list_users(_: User = Depends(authadmin)):
     """Return all user summaries for administrator views."""
 
     return await users.fetch()
 
 
-@router.patch("/api/me", response_model=UserProfile)
+@router.patch("/me", response_model=UserProfile)
 async def patch_me(
     payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_auth_session)
 ):

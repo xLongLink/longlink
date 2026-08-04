@@ -14,6 +14,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
 import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
+import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -26,7 +27,8 @@ export default function AdminDatabase() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
-        mutationFn: (databaseId: string) => fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' }),
+        mutationFn: (databaseId: string) =>
+            fetchApiVoid(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
             toast({ body: t('admin.databaseDeleted') });
@@ -36,7 +38,7 @@ export default function AdminDatabase() {
         items: databases,
         error,
         isLoading,
-    } = useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
+    } = useCollectionQuery<ApiDatabaseRegistry>(platformApiPath('/databases'), {
         parse: (value) => apiDatabaseRegistrySchema.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);

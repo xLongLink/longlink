@@ -14,8 +14,8 @@ async def test_database_registry_endpoints_return_backend(
     registry = infrastructure.database
 
     # Act
-    list_response = await client.get("/api/databases")
-    get_response = await client.get(f"/api/databases/{registry.id}")
+    list_response = await client.get("/api/v1/databases")
+    get_response = await client.get(f"/api/v1/databases/{registry.id}")
 
     # Assert
     assert list_response.status_code == 200
@@ -47,12 +47,12 @@ async def test_database_registry_create_duplicate_and_delete(
     }
 
     # Act
-    create_response = await client.post("/api/databases", json=payload)
-    duplicate_response = await client.post("/api/databases", json=payload)
+    create_response = await client.post("/api/v1/databases", json=payload)
+    duplicate_response = await client.post("/api/v1/databases", json=payload)
     created = create_response.json()
     registry_id = created["id"]
-    delete_response = await client.delete(f"/api/databases/{registry_id}")
-    get_response = await client.get(f"/api/databases/{registry_id}")
+    delete_response = await client.delete(f"/api/v1/databases/{registry_id}")
+    get_response = await client.get(f"/api/v1/databases/{registry_id}")
 
     # Assert
     assert create_response.status_code == 201
@@ -77,7 +77,7 @@ async def test_database_registry_delete_rejects_assigned_registry(
     client = clients[0]
 
     # Act
-    response = await client.delete(f"/api/databases/{infrastructure.database.id}")
+    response = await client.delete(f"/api/v1/databases/{infrastructure.database.id}")
 
     # Assert
     assert response.status_code == 409
@@ -93,10 +93,10 @@ async def test_database_registry_routes_require_admin(
     client = clients[1]
 
     # Act
-    read_response = await client.get("/api/databases")
-    usage_response = await client.get("/api/databases/00000000-0000-4000-8000-000000000000/usage")
+    read_response = await client.get("/api/v1/databases")
+    usage_response = await client.get("/api/v1/databases/00000000-0000-4000-8000-000000000000/usage")
     write_response = await client.post(
-        "/api/databases",
+        "/api/v1/databases",
         json={
             "name": "Denied Database",
             "host": "database.example",
@@ -134,10 +134,10 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
 
             raise RuntimeError("database offline")
 
-    monkeypatch.setattr("src.routes.databases.Postgres", FakePostgres)
+    monkeypatch.setattr("src.routes.v1.databases.Postgres", FakePostgres)
 
     # Act
-    response = await client.get(f"/api/databases/{infrastructure.database.id}/usage")
+    response = await client.get(f"/api/v1/databases/{infrastructure.database.id}/usage")
 
     # Assert
     assert response.status_code == 503

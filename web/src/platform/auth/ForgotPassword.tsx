@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { platformApiPath } from '@/lib/platform-api';
 
 type ForgotPasswordValues = {
     email: string;
@@ -30,7 +31,7 @@ export default function ForgotPassword() {
     });
     const requestReset = useMutation({
         mutationFn: (payload: ForgotPasswordValues) =>
-            fetchApiVoid('/api/auth/forgot-password', {
+            fetchApiVoid(platformApiPath('/auth/forgot-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

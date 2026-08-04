@@ -16,7 +16,7 @@ async def test_operations_endpoint_returns_targeted_operations(
     )
 
     # Act
-    response = await client.get("/api/operations")
+    response = await client.get("/api/v1/operations")
 
     # Assert
     assert response.status_code == 200
@@ -29,7 +29,7 @@ async def test_operations_endpoint_requires_admin(
     """Reject Platform users from administrator Operation data."""
 
     # Act
-    response = await clients[1].get("/api/operations")
+    response = await clients[1].get("/api/v1/operations")
 
     # Assert
     assert response.status_code == 403
