@@ -47,38 +47,6 @@ const paths = [
 
 const integrationContextCount = 336_000_000;
 
-const cityBuildings = [
-    { name: 'city-tower-01', position: 'edge-left' },
-    { name: 'city-tower-02', position: 'outer-left' },
-    { name: 'city-tower-03', position: 'middle-left' },
-    { name: 'city-tower-07', position: 'inner-left' },
-    { name: 'city-tower-08', position: 'center-left' },
-    { name: 'city-tower-09', position: 'center-right' },
-    { name: 'city-tower-05', position: 'inner-right' },
-    { name: 'city-tower-06', position: 'middle-right' },
-    { name: 'city-tower-10', position: 'outer-right' },
-    { name: 'city-tower-04', position: 'edge-right' },
-] as const;
-
-const infrastructureAssets = [
-    { name: 'infrastructure-fence-01', position: 'park-fence' },
-    { name: 'infrastructure-bench-01', position: 'park-bench' },
-    { name: 'infrastructure-tree-01', position: 'park-tree-small' },
-    { name: 'infrastructure-tree-01', position: 'park-tree-small-secondary' },
-    { name: 'infrastructure-tree-01', position: 'park-tree-large' },
-    { name: 'infrastructure-tree-01', position: 'park-tree-medium-secondary' },
-    { name: 'infrastructure-tree-01', position: 'park-tree-medium' },
-    { name: 'infrastructure-hydrant-01', position: 'hydrant-west' },
-    { name: 'infrastructure-light-01', position: 'light-west' },
-    { name: 'infrastructure-light-01', position: 'light-center-left' },
-    { name: 'infrastructure-light-01', position: 'light-center-right' },
-    { name: 'infrastructure-hydrant-01', position: 'hydrant-east' },
-    { name: 'infrastructure-light-01', position: 'light-transit' },
-    { name: 'infrastructure-bus-shelter-01', position: 'bus-shelter' },
-    { name: 'infrastructure-traffic-light-01', position: 'traffic-light' },
-    { name: 'infrastructure-light-01', position: 'light-east' },
-] as const;
-
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
     const [count, setCount] = useState(0);
@@ -179,13 +147,13 @@ export default function Home() {
 
         let frame: number | undefined;
 
-        // Hold before and after the city reveal for equal physical scroll distances.
+        // Hold before and after the city reveal for 60vh, then reveal the buildings across 80vh.
         const updatePosition = () => {
             frame = undefined;
             const scrollDistance = target.offsetHeight - window.innerHeight;
             const scrollProgress =
                 scrollDistance > 0 ? Math.min(Math.max(-target.getBoundingClientRect().top / scrollDistance, 0), 1) : 0;
-            const revealProgress = Math.min(Math.max((scrollProgress - 0.375) / 0.25, 0), 1);
+            const revealProgress = Math.min(Math.max((scrollProgress - 0.3) / 0.4, 0), 1);
 
             target.style.setProperty('--homepage-before-after-position', `${revealProgress * 100}%`);
         };
@@ -273,44 +241,16 @@ export default function Home() {
                     justify="center"
                     hAlign="center"
                 >
-                    <Stack
-                        aria-label="LongLink infrastructure illustration"
-                        role="img"
-                        className="homepage-before-after-infrastructure absolute inset-0 z-1 overflow-hidden"
-                    >
-                        {infrastructureAssets.map((asset) => (
-                            <Stack
-                                key={asset.position}
-                                aria-hidden="true"
-                                className={`homepage-before-after-primitive homepage-before-after-primitive-${asset.name} homepage-before-after-infrastructure-asset homepage-before-after-infrastructure-${asset.position}`}
-                            >
-                                <img
-                                    alt=""
-                                    className="homepage-before-after-primitive-lines"
-                                    src={`/images/${asset.name}.png`}
-                                />
-                            </Stack>
-                        ))}
-                    </Stack>
-                    <Stack
-                        aria-label="LongLink buildings illustration"
-                        role="img"
-                        className="homepage-before-after-reveal absolute inset-0 overflow-hidden"
-                    >
-                        {cityBuildings.map((building) => (
-                            <Stack
-                                key={building.position}
-                                aria-hidden="true"
-                                className={`homepage-before-after-primitive homepage-before-after-primitive-${building.name} homepage-before-after-building homepage-before-after-building-${building.position}`}
-                            >
-                                <img
-                                    alt=""
-                                    className="homepage-before-after-primitive-lines"
-                                    src={`/images/${building.name}.png`}
-                                />
-                            </Stack>
-                        ))}
-                    </Stack>
+                    <img
+                        alt="LongLink infrastructure before buildings are added"
+                        className="pointer-events-none absolute inset-0 size-full object-cover object-center"
+                        src="/images/before-longlink.png"
+                    />
+                    <img
+                        alt="LongLink infrastructure after buildings are added"
+                        className="homepage-before-after-reveal pointer-events-none absolute inset-0 size-full object-cover object-center"
+                        src="/images/after-longlink.png"
+                    />
                     <Stack
                         aria-hidden="true"
                         className="homepage-before-after-copy pointer-events-none absolute inset-0 z-1"
