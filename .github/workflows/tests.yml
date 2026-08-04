@@ -33,6 +33,10 @@ jobs:
               working-directory: api
               run: uv run --locked ruff check . && uv run --locked isort --check-only .
 
+            - name: Check Platform API client generation
+              working-directory: web
+              run: vp run check:platform-api
+
             - name: Install SDK dependencies
               working-directory: sdk
               run: uv sync --locked --group dev

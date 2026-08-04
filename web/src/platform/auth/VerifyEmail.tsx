@@ -17,7 +17,8 @@ import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
+import { zEmailPayload, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { useFragmentToken } from './use-fragment-token';
@@ -28,7 +29,7 @@ type RegistrationCompleteValues = {
     password: string;
 };
 
-type RegistrationSetup = z.infer<typeof apiRegistrationVerifiedSchema>;
+type RegistrationSetup = z.infer<typeof zEmailPayload>;
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 
@@ -54,19 +55,19 @@ export default function VerifyEmail() {
     const verification = useMutation({
         mutationFn: (registrationToken: string) => {
             if (!registrationToken) {
-                return fetchApiJson('/api/auth/register/setup', undefined, (value) =>
-                    apiRegistrationVerifiedSchema.parse(value)
+                return fetchApiJson(platformApiPath('/auth/register/setup'), undefined, (value) =>
+                    zEmailPayload.parse(value)
                 );
             }
 
             return fetchApiJson(
-                '/api/auth/verify',
+                platformApiPath('/auth/verify'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: registrationToken }),
                 },
-                (value) => apiRegistrationVerifiedSchema.parse(value)
+                (value) => zEmailPayload.parse(value)
             );
         },
         onSuccess: (setup) => {
@@ -82,13 +83,13 @@ export default function VerifyEmail() {
     const completion = useMutation({
         mutationFn: (payload: RegistrationCompleteValues) =>
             fetchApiJson(
-                '/api/auth/register/complete',
+                platformApiPath('/auth/register/complete'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
-                (value) => apiUserProfileSchema.parse(value)
+                (value) => zUserProfile.parse(value)
             ),
     });
     /** Creates the account and publishes only the new authenticated query state. */

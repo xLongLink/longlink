@@ -2,7 +2,7 @@ import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
-from src.routes import proxy as proxy_routes
+from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
@@ -114,7 +114,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Proxy a request carrying trusted and untrusted browser headers.
     response = await client.post(
-        f"/api/applications/{app.id}/proxy/anything?answer=42",
+        f"/api/v1/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
             "accept": "application/json",
@@ -160,7 +160,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Active documents must not cross the authenticated proxy boundary.
     captured["response_content_type"] = "image/svg+xml; charset=utf-8"
-    root_response = await client.get(f"/api/applications/{app.id}/proxy")
+    root_response = await client.get(f"/api/v1/applications/{app.id}/proxy")
     assert root_response.status_code == 502
     assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
 
@@ -206,7 +206,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     client = clients[0]
 
     # Proxy a body one byte beyond the test limit.
-    response = await client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * 1025)
+    response = await client.post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
     # Verify the request is rejected before upstream delivery completes.
     assert response.status_code == 413
@@ -234,7 +234,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     client = clients[0]
 
     # Request an Application resource through the unavailable gateway.
-    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
     # Verify incomplete gateway configuration returns service unavailable.
     assert response.status_code == 503
@@ -265,7 +265,7 @@ async def test_application_proxy_allows_organization_read_members(
     client = clients[1]
 
     # Request the Application through the member's Organization access.
-    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
     # Verify access succeeds and reaches the loading-state response.
     assert response.status_code == 503
@@ -305,7 +305,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     client = clients[0]
 
     # Proxy a request through the failing gateway client.
-    response = await client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/i18n/en.json")
 
     # Verify transport failure is translated without losing the target URL.
     assert response.status_code == 503
@@ -334,7 +334,7 @@ async def test_application_proxy_enforces_method_role(
     client = clients[0]
 
     # Attempt a mutating Application proxy request.
-    response = await client.post(f"/api/applications/{app.id}/proxy/api/tasks")
+    response = await client.post(f"/api/v1/applications/{app.id}/proxy/api/tasks")
 
     # Verify the HTTP method requires Organization write access.
     assert response.status_code == 403
@@ -354,7 +354,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Request runtime content before the Application is ready.
-    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
     # Verify the loading response is empty and cannot be cached.
     assert response.status_code == 503

@@ -13,9 +13,10 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
+import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
-import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { PostgreSQL } from '@/svg/PostgreSQL';
@@ -26,7 +27,8 @@ export default function AdminDatabase() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
-        mutationFn: (databaseId: string) => fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' }),
+        mutationFn: (databaseId: string) =>
+            fetchApiVoid(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
             toast({ body: t('admin.databaseDeleted') });
@@ -36,8 +38,8 @@ export default function AdminDatabase() {
         items: databases,
         error,
         isLoading,
-    } = useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
-        parse: (value) => apiDatabaseRegistrySchema.array().parse(value),
+    } = useCollectionQuery<DatabaseRegistryResponse>(platformApiPath('/databases'), {
+        parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({
@@ -50,7 +52,7 @@ export default function AdminDatabase() {
         fallbackDescription: t('admin.deleteDatabaseFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ApiDatabaseRegistry>[] = [
+    const columns: TableColumn<DatabaseRegistryResponse>[] = [
         {
             key: 'database',
             header: t('columns.database'),

@@ -12,11 +12,11 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     async def fake_metadata(image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
-    monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.v1.image.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
-    response = await client.get("/api/image?image=ghcr.io/longlink/dashboard:latest")
+    response = await client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")
 
     # Assert
     assert response.status_code == 404

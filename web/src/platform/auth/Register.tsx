@@ -13,6 +13,7 @@ import { AuthPage } from '@/components/AuthPage';
 import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { platformApiPath } from '@/lib/platform-api';
 
 type RegisterValues = {
     email: string;
@@ -34,7 +35,7 @@ export default function Register() {
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
         mutationFn: (payload: RegisterValues) =>
-            fetchApiVoid('/api/auth/register', {
+            fetchApiVoid(platformApiPath('/auth/register'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

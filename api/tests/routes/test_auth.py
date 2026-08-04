@@ -14,7 +14,7 @@ async def test_registration_request_does_not_enumerate_existing_accounts(
     """Return accepted without sending registration mail for an existing account."""
 
     # Act
-    response = await client.post("/api/auth/register", json={"email": users[0].email})
+    response = await client.post("/api/v1/auth/register", json={"email": users[0].email})
 
     # Assert
     assert response.status_code == 202
@@ -26,7 +26,7 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     """Reject an invalid verification token without creating a browser session."""
 
     # Act
-    response = await client.post("/api/auth/verify", json={"token": "not-a-valid-token"})
+    response = await client.post("/api/v1/auth/verify", json={"token": "not-a-valid-token"})
 
     # Assert
     assert response.status_code == 400
@@ -47,7 +47,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     }
     login_payload = {"email": email, "password": TEST_PASSWORD}
     # Request a stateless email link without creating a pending user.
-    register_response = await client.post("/api/auth/register", json={"email": email})
+    register_response = await client.post("/api/v1/auth/register", json={"email": email})
     Session = await get_session()
     async with Session() as session:
         pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
@@ -69,7 +69,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert "code=" not in captured_mail[0][3]
 
     # Verify email ownership without creating a user or browser session.
-    verify_response = await client.post("/api/auth/verify", json={"token": verification_token})
+    verify_response = await client.post("/api/v1/auth/verify", json={"token": verification_token})
     async with Session() as session:
         verified_pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
 
@@ -79,17 +79,17 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert client.cookies.get("longlink_auth") is None
 
     # Complete profile and password setup in the same transaction as the first session.
-    unauthenticated_login = await client.post("/api/auth/password/login", json=login_payload)
-    restored_setup = await client.get("/api/auth/register/setup")
+    unauthenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
+    restored_setup = await client.get("/api/v1/auth/register/setup")
     mismatched_setup = await client.post(
-        "/api/auth/register/complete",
+        "/api/v1/auth/register/complete",
         json={**completion_payload, "email": "another@example.com"},
     )
     complete_response = await client.post(
-        "/api/auth/register/complete",
+        "/api/v1/auth/register/complete",
         json=completion_payload,
     )
-    profile_response = await client.get("/api/me")
+    profile_response = await client.get("/api/v1/me")
 
     assert unauthenticated_login.status_code == 400
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
@@ -108,9 +108,9 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
 
     # Reusing a valid token cannot create or authenticate a duplicate account.
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as repeat_client:
-        repeat_verify_response = await repeat_client.post("/api/auth/verify", json={"token": verification_token})
+        repeat_verify_response = await repeat_client.post("/api/v1/auth/verify", json={"token": verification_token})
         repeat_response = await repeat_client.post(
-            "/api/auth/register/complete",
+            "/api/v1/auth/register/complete",
             json=completion_payload,
         )
 
@@ -120,7 +120,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert repeat_client.cookies.get("longlink_auth") is None
 
     # Password login still works after the verification-link login path.
-    login_response = await client.post("/api/auth/password/login", json=login_payload)
+    login_response = await client.post("/api/v1/auth/password/login", json=login_payload)
 
     assert login_response.status_code == 204
 
@@ -134,9 +134,9 @@ async def test_forgot_and_reset_password(
     client.cookies.update(authenticated_cookies(user))
 
     # Missing and existing accounts receive the same response, while only the account gets mail.
-    missing_response = await client.post("/api/auth/forgot-password", json={"email": "missing@example.com"})
+    missing_response = await client.post("/api/v1/auth/forgot-password", json={"email": "missing@example.com"})
     forgot_response = await client.post(
-        "/api/auth/forgot-password",
+        "/api/v1/auth/forgot-password",
         json={"email": user.email.upper()},
     )
 
@@ -149,13 +149,13 @@ async def test_forgot_and_reset_password(
 
     # Exchange fragment proof for an HTTP-only cookie before replacing the credential.
     reset_token = parse_qs(parsed_reset_url.fragment)["token"][0]
-    verify_response = await client.post("/api/auth/reset-password/verify", json={"token": reset_token})
-    setup_response = await client.get("/api/auth/reset-password/setup")
+    verify_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
+    setup_response = await client.get("/api/v1/auth/reset-password/setup")
     reset_response = await client.post(
-        "/api/auth/reset-password",
+        "/api/v1/auth/reset-password",
         json={"password": "replacement-password"},
     )
-    revoked_session = await client.get("/api/me")
+    revoked_session = await client.get("/api/v1/me")
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
     assert reset_response.status_code == 204
@@ -163,11 +163,11 @@ async def test_forgot_and_reset_password(
 
     # Prove only the new password can create a fresh session.
     old_login = await client.post(
-        "/api/auth/password/login",
+        "/api/v1/auth/password/login",
         json={"email": user.email, "password": TEST_PASSWORD},
     )
     new_login = await client.post(
-        "/api/auth/password/login",
+        "/api/v1/auth/password/login",
         json={"email": user.email, "password": "replacement-password"},
     )
 

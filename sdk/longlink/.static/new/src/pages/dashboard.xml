@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink name="Dashboard" icon="layout-dashboard">
+<longlink version="v1" name="Dashboard" icon="layout-dashboard">
     <Query id="requests" path="/api/requests" />
     <State id="limits" monthlyBudget="12000" approvalTarget="2" />
 

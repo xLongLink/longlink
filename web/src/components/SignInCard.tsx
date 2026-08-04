@@ -16,6 +16,7 @@ import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 
 type LoginValues = {
@@ -41,7 +42,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
         mutationFn: (payload: LoginValues) =>
-            fetchApiVoid('/api/auth/password/login', {
+            fetchApiVoid(platformApiPath('/auth/password/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

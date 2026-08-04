@@ -118,21 +118,9 @@
     pointer-events: none;
 }
 
-.homepage-before-after-art {
-    background: var(--homepage-before-after-art) center / cover no-repeat;
-}
-
-.homepage-before-after-art-before {
-    --homepage-before-after-art: url('/images/before-longlink.png');
-}
-
-.homepage-before-after-art-after {
-    --homepage-before-after-art: url('/images/after-longlink.png');
-}
-
 .homepage-before-after-section {
     --homepage-before-after-position: 0%;
-    height: 200svh;
+    height: 300svh;
 }
 
 .homepage-before-after-reveal {

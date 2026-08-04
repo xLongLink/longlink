@@ -13,9 +13,10 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiStorageRegistrySchema } from '@/lib/api-schemas';
+import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { storagesQueryKey } from '@/lib/query-keys';
-import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { S3 } from '@/svg/S3';
@@ -26,7 +27,8 @@ export default function AdminStorage() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
-        mutationFn: (storageId: string) => fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' }),
+        mutationFn: (storageId: string) =>
+            fetchApiVoid(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
             toast({ body: t('admin.storageDeleted') });
@@ -36,8 +38,8 @@ export default function AdminStorage() {
         items: storages,
         error,
         isLoading,
-    } = useCollectionQuery<ApiStorageRegistry>('/api/storages', {
-        parse: (value) => apiStorageRegistrySchema.array().parse(value),
+    } = useCollectionQuery<StorageRegistryResponse>(platformApiPath('/storages'), {
+        parse: (value) => zStorageRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({
@@ -50,7 +52,7 @@ export default function AdminStorage() {
         fallbackDescription: t('admin.deleteStorageFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ApiStorageRegistry>[] = [
+    const columns: TableColumn<StorageRegistryResponse>[] = [
         {
             key: 'storage',
             header: t('admin.storageTitle'),

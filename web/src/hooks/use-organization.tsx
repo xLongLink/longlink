@@ -2,26 +2,27 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type {
+    OrganizationApplicationSummary,
+    OrganizationDetails,
+    OrganizationInvitationResponse,
+    OrganizationMemberAccessResponse,
+    OrganizationSummary,
+} from '@/lib/generated/platform-api-v1/types.gen';
 import {
-    apiApplicationResponseSchema,
-    apiOrganizationDetailsSchema,
-    apiOrganizationSummarySchema,
-} from '@/lib/api-schemas';
+    zApplicationResponse,
+    zOrganizationDetails,
+    zOrganizationSummary,
+} from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
-import type {
-    ApiInvitation,
-    ApiOrganizationApplication,
-    ApiOrganizationDetails,
-    ApiOrganizationMember,
-    ApiOrganizationSummary,
-} from '@/lib/types';
 
 type UseOrganizationResult = {
-    organization: ApiOrganizationSummary | undefined;
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
-    applications: ApiOrganizationApplication[];
+    organization: OrganizationSummary | undefined;
+    members: OrganizationMemberAccessResponse[];
+    invitations: OrganizationInvitationResponse[];
+    applications: OrganizationApplicationSummary[];
     role: Role | null;
     isLoading: boolean;
     error: (Error & { status?: number }) | null;
@@ -32,12 +33,12 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
     const { memberships, isLoading: isUserLoading } = useUserOrganizations();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
-    const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
-        parse: (value) => apiOrganizationDetailsSchema.parse(value),
+    const organizationQuery = useApiQuery<OrganizationDetails>(organizationPath, {
+        parse: (value) => zOrganizationDetails.parse(value),
         refetchInterval: 5000,
         retry: false,
     });
@@ -63,7 +64,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 /** Invites one organization member and refreshes organization data. */
 export function useInviteOrganizationMember(organizationId: string, canInviteMembers: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = `/api/organizations/${organizationId}`;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
@@ -77,7 +78,7 @@ export function useInviteOrganizationMember(organizationId: string, canInviteMem
                 throw new Error('Invitation permissions required');
             }
 
-            return fetchApiVoid(`/api/organizations/${organizationId}/invitations`, {
+            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/invitations`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role }),
@@ -93,7 +94,7 @@ export function useInviteOrganizationMember(organizationId: string, canInviteMem
 /** Creates one application and refreshes organization application data. */
 export function useCreateOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = `/api/organizations/${organizationId}`;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async ({
@@ -115,13 +116,13 @@ export function useCreateOrganizationApplication(organizationId: string) {
             }
 
             return fetchApiJson(
-                `/api/organizations/${organizationId}/applications`,
+                platformApiPath(`/organizations/${organizationId}/applications`),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
                 },
-                (value) => apiApplicationResponseSchema.parse(value)
+                (value) => zApplicationResponse.parse(value)
             );
         },
         onSuccess: async () => {
@@ -134,7 +135,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
 /** Changes one organization member role and refreshes membership data. */
 export function useChangeOrganizationMemberRole(organizationId: string, canManageMembers: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = `/api/organizations/${organizationId}`;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
@@ -148,7 +149,7 @@ export function useChangeOrganizationMemberRole(organizationId: string, canManag
                 throw new Error('Member management permissions required');
             }
 
-            return fetchApiVoid(`/api/organizations/${organizationId}/members/${memberId}`, {
+            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role }),
@@ -165,7 +166,7 @@ export function useChangeOrganizationMemberRole(organizationId: string, canManag
 /** Deletes one application and refreshes organization application data. */
 export function useDeleteOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+    const organizationPath = organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null;
 
     return useMutation({
         mutationFn: async (applicationId: string) => {
@@ -175,11 +176,11 @@ export function useDeleteOrganizationApplication(organizationId: string) {
             }
 
             await fetchApiJson(
-                `/api/applications/${applicationId}`,
+                platformApiPath(`/applications/${applicationId}`),
                 {
                     method: 'DELETE',
                 },
-                (value) => apiApplicationResponseSchema.parse(value)
+                (value) => zApplicationResponse.parse(value)
             );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
@@ -195,13 +196,13 @@ export function useCreateOrganization() {
     return useMutation({
         mutationFn: ({ name }: { name: string }) =>
             fetchApiJson(
-                '/api/organizations',
+                platformApiPath('/organizations'),
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name }),
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
@@ -212,7 +213,7 @@ export function useCreateOrganization() {
 /** Updates mutable organization settings and refreshes organization caches. */
 export function useUpdateOrganization(organizationId: string, canManageOrganization: boolean) {
     const queryClient = useQueryClient();
-    const organizationPath = `/api/organizations/${organizationId}`;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async ({ avatar }: { avatar: string }) => {
@@ -231,7 +232,7 @@ export function useUpdateOrganization(organizationId: string, canManageOrganizat
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar }),
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             );
         },
         onSuccess: async () => {
@@ -258,11 +259,11 @@ export function useDeleteOrganization() {
             }
 
             await fetchApiJson(
-                `/api/organizations/${organizationId}`,
+                platformApiPath(`/organizations/${organizationId}`),
                 {
                     method: 'DELETE',
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             );
         },
         onSuccess: () => {

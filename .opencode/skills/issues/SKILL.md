@@ -9,13 +9,12 @@ Create public GitHub issues in `xLongLink/longlink` only when the user asks to r
 
 ## Workflow
 
-1. Read `.github/ISSUE_TEMPLATE/task.md` and use it as the source of truth for the issue title prefix and body structure. Do not invent or reference templates that are absent from the repository.
-2. Extract the task description and completion criteria from the user's request. Ask one concise question only if either is required but cannot be inferred.
-3. Search open and closed issues for duplicates with `gh issue list --repo xLongLink/longlink --state all --search "<relevant terms>"`. If a likely duplicate exists, give the user its URL and do not create a new issue unless they explicitly request it.
-4. Write a concise, outcome-focused title using the template prefix: `[Task]: <imperative summary>`.
-5. Create a body containing both required template headings. State the motivation and scope under `## Task description`, then list observable, testable outcomes under `## Completion criteria`.
-6. Create the issue with `gh issue create --repo xLongLink/longlink --title "..." --body "..."`. Do not set labels, assignees, milestones, projects, or linked pull requests unless the user provides them.
-7. Return the created issue URL. If GitHub authentication or permissions prevent creation, report the exact blocker and provide the prepared title and body.
+1. Read `.github/ISSUE_TEMPLATE/*.yml` and select the form that best matches the request. Its fields, title, and issue type are authoritative.
+2. Ask one concise question only if the form or a meaningful answer cannot be inferred.
+3. Search all issues for duplicates with `gh issue list --repo xLongLink/longlink --state all --search "<terms>"`. Do not create a duplicate without explicit confirmation.
+4. Draft a concise title and answer each form field in order using plain text without Markdown formatting.
+5. Resolve the repository and issue type IDs, then use `gh api graphql` and `createIssue` with variables for the type, title, and body. Stop if the declared type is unavailable.
+6. Return the issue URL or the exact blocker with the prepared title and body. Add no other metadata unless requested.
 
 ## Safety
 

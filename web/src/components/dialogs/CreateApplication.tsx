@@ -15,9 +15,10 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiIconsSchema, apiImageMetadataSchema } from '@/lib/api-schemas';
+import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
+import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
-import type { ApiImageMetadata } from '@/lib/types';
+import { platformApiPath } from '@/lib/platform-api';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -61,7 +62,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [declaredEnvironments, setDeclaredEnvironments] = useState<ApiImageMetadata['environments']>([]);
+    const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<LongLinkMetadata['environments']>>([]);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({
@@ -75,8 +76,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasImage = image.trim().length > 0;
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
-        parse: (value) => apiIconsSchema.parse(value),
+    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? platformApiPath('/icons') : null, {
+        parse: (value) => zIcon.array().parse(value),
         staleTime: Infinity,
     });
 
@@ -96,11 +97,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
-                apiImageMetadataSchema.parse(value)
+            const metadata = await fetchApiJson(platformApiPath(`/image?${query.toString()}`), undefined, (value) =>
+                zLongLinkMetadata.parse(value)
             );
 
-            setDeclaredEnvironments(metadata.environments);
+            setDeclaredEnvironments(metadata.environments ?? []);
             form.setValue('name', metadata.title ?? '', { shouldValidate: true });
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
             form.setValue('envs', {}, { shouldValidate: true });

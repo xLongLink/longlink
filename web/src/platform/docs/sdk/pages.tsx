@@ -183,7 +183,7 @@ function renderComponentPreview(name: string) {
         case 'Page Files':
             return <Code>{'src/pages/index.xml'}</Code>;
         case 'longlink':
-            return <Code>{'<longlink />'}</Code>;
+            return <Code>{'<longlink version="v1" />'}</Code>;
         case 'State':
             return <Code>{'<State id="form" />'}</Code>;
         case 'Query':

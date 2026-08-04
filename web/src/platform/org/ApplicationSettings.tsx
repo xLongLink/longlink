@@ -14,7 +14,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import Logs from '@/components/dialogs/Logs';
 import { useDeleteOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
-import type { ApiOrganizationApplication } from '@/lib/types';
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useDeleteDialog } from '@/lib/utils';
 
 /** Renders Organization-owned Application management. */
@@ -26,14 +26,14 @@ export default function ApplicationSettings({
     error,
 }: {
     organizationId: string;
-    applications: ApiOrganizationApplication[];
+    applications: OrganizationApplicationSummary[];
     canManageApplications: boolean;
     isLoading: boolean;
     error: Error | null;
 }) {
     const t = useTranslator();
     const toast = useToast();
-    const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
+    const [logsTarget, setLogsTarget] = useState<OrganizationApplicationSummary | null>(null);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
     const deleteDialog = useDeleteDialog({
         title: t('organizationSettings.deleteApplicationTitle'),
@@ -46,7 +46,7 @@ export default function ApplicationSettings({
         fallbackDescription: t('organizationSettings.deleteApplicationFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const appColumns: TableColumn<ApiOrganizationApplication>[] = [
+    const appColumns: TableColumn<OrganizationApplicationSummary>[] = [
         {
             key: 'name',
             header: t('columns.application'),
@@ -61,27 +61,26 @@ export default function ApplicationSettings({
                 </HStack>
             ),
         },
-        ...(canManageApplications
-            ? [
-                  {
-                      key: 'action',
-                      header: t('columns.action'),
-                      width: pixel(96),
-                      align: 'end' as const,
-                      renderCell: (application: ApiOrganizationApplication) => (
-                          <MoreMenu
-                              label={t('common.openActionsFor', { name: application.name })}
-                              size="sm"
-                              items={[
-                                  { label: t('organizationSettings.logs'), onClick: () => setLogsTarget(application) },
-                                  { label: t('actions.delete'), onClick: () => deleteDialog.openFor(application) },
-                              ]}
-                          />
-                      ),
-                  },
-              ]
-            : []),
     ];
+
+    if (canManageApplications) {
+        appColumns.push({
+            key: 'action',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (application) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: application.name })}
+                    size="sm"
+                    items={[
+                        { label: t('organizationSettings.logs'), onClick: () => setLogsTarget(application) },
+                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(application) },
+                    ]}
+                />
+            ),
+        });
+    }
 
     return (
         <>

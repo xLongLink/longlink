@@ -4,9 +4,7 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from src.utils import jobs
 from src.errors import ServiceError
-from src.routes import auth, icons, image, proxy, users, health, branding, computes, storages, databases
-from src.routes import operations as operations_route
-from src.routes import applications, organizations
+from src.routes import v1, branding
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
@@ -37,8 +35,10 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
-    redoc_url="/redocs",
-    openapi_url="/openapi.json",
+    redoc_url="/api/v1/redocs",
+    openapi_url="/api/v1/openapi.json",
+    title="LongLink Platform API",
+    version="1.0.0",
 )
 
 
@@ -51,22 +51,9 @@ async def service_error_response(_request: Request, error: ServiceError):
 
 install_frontend_middleware(app)
 
-# Register API routes after constructing the application.
-app.include_router(auth.router)
-app.include_router(applications.router)
-app.include_router(proxy.router)
+# Register the versioned Platform API after constructing the application.
+app.include_router(v1.router)
 app.include_router(branding.router)
-app.include_router(computes.router)
-app.include_router(databases.router)
-app.include_router(health.router)
-app.include_router(icons.router)
-app.include_router(image.router)
-app.include_router(operations_route.router)
-app.include_router(organizations.router)
-app.include_router(storages.router)
-app.include_router(users.router)
-
-
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
 

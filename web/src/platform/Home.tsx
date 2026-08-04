@@ -4,7 +4,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
 import { Section } from '@astryxdesign/core/Section';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -111,9 +111,6 @@ function IntegrationScale() {
                 gap={6}
                 hAlign="center"
             >
-                <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
-                    The integration surface
-                </Text>
                 <Stack gap={3} hAlign="center">
                     <Heading
                         ref={countRef}
@@ -127,14 +124,13 @@ function IntegrationScale() {
                         {count.toLocaleString('en-US').replaceAll(',', "'")}+
                     </Heading>
                     <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
-                        Unique Industry & Geography Contexts.
+                        Unique Industry x Geography Contexts.
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Every industry and geography brings its own regulations, systems, data models, and workflows.
+                    Each market has different regulations, data, and workflows.
                     <br />
-                    Each combination creates a distinct integration context that rigid, one-size-fits-all software
-                    cannot cover.
+                    Each requires a specific solution.
                 </Text>
             </Stack>
         </Section>
@@ -151,14 +147,15 @@ export default function Home() {
 
         let frame: number | undefined;
 
-        // Map the sticky section's vertical scroll distance to the image reveal position.
+        // Hold before and after the city reveal for 60vh, then reveal the buildings across 80vh.
         const updatePosition = () => {
             frame = undefined;
             const scrollDistance = target.offsetHeight - window.innerHeight;
-            const progress =
+            const scrollProgress =
                 scrollDistance > 0 ? Math.min(Math.max(-target.getBoundingClientRect().top / scrollDistance, 0), 1) : 0;
+            const revealProgress = Math.min(Math.max((scrollProgress - 0.3) / 0.4, 0), 1);
 
-            target.style.setProperty('--homepage-before-after-position', `${progress * 100}%`);
+            target.style.setProperty('--homepage-before-after-position', `${revealProgress * 100}%`);
         };
 
         // Limit image updates to one animation frame while the page is scrolling.
@@ -234,7 +231,7 @@ export default function Home() {
                 className="homepage-before-after-section relative z-20"
             >
                 <Heading id="before-after-heading" level={2} className="sr-only">
-                    LongLink provides the infrastructure. Build with speed. Operate with control.
+                    Build. LongLink provide the blueprint. Operate. LongLink provide the infrastructure.
                 </Heading>
                 <Stack
                     as="figure"
@@ -244,15 +241,15 @@ export default function Home() {
                     justify="center"
                     hAlign="center"
                 >
-                    <Stack
-                        aria-label="Fragmented city illustration"
-                        role="img"
-                        className="homepage-before-after-art homepage-before-after-art-before absolute inset-0 bg-secondary"
+                    <img
+                        alt="LongLink infrastructure before buildings are added"
+                        className="pointer-events-none absolute inset-0 size-full object-cover object-center"
+                        src="/images/before-longlink.png"
                     />
-                    <Stack
-                        aria-label="Unified city illustration"
-                        role="img"
-                        className="homepage-before-after-art homepage-before-after-art-after homepage-before-after-reveal absolute inset-0 bg-secondary"
+                    <img
+                        alt="LongLink infrastructure after buildings are added"
+                        className="homepage-before-after-reveal pointer-events-none absolute inset-0 size-full object-cover object-center"
+                        src="/images/after-longlink.png"
                     />
                     <Stack
                         aria-hidden="true"
@@ -260,107 +257,61 @@ export default function Home() {
                         hAlign="center"
                         vAlign="center"
                     >
-                        <Stack className="-translate-y-24 sm:-translate-y-28" width="100%" gap={2} hAlign="center">
-                            <Text
-                                className="px-6 text-center text-xs font-medium uppercase tracking-widest"
-                                color="secondary"
-                                display="block"
-                                textWrap="balance"
-                            >
-                                <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provides the
-                                infrastructure.
-                            </Text>
+                        <Stack className="-translate-y-28 sm:-translate-y-32" width="100%" hAlign="center">
                             <Stack
-                                className="relative h-16 sm:h-18 lg:h-20"
+                                className="relative h-24 sm:h-28 lg:h-32"
                                 width="100%"
                                 hAlign="center"
                                 vAlign="center"
                             >
                                 <Stack
-                                    className="homepage-before-after-copy-before absolute inset-0 uppercase"
-                                    direction="horizontal"
-                                    gap={3}
+                                    className="homepage-before-after-copy-before absolute inset-0"
+                                    gap={2}
+                                    hAlign="center"
                                     vAlign="center"
                                 >
-                                    <StackItem className="min-w-0 basis-0" size="fill">
-                                        <Text
-                                            className="pr-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                            color="primary"
-                                            display="block"
-                                            justify="end"
-                                            textWrap="nowrap"
-                                            type="display-1"
-                                        >
-                                            Build
-                                        </Text>
-                                    </StackItem>
-                                    <Text
-                                        className="invisible text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                        display="block"
+                                    <Heading
+                                        className="text-6xl tracking-tighter sm:text-7xl"
+                                        level={2}
                                         textWrap="nowrap"
                                         type="display-1"
                                     >
-                                        With
+                                        Build
+                                    </Heading>
+                                    <Text
+                                        className="max-w-2xl px-6 text-center font-medium uppercase tracking-widest"
+                                        color="secondary"
+                                        display="block"
+                                        textWrap="pretty"
+                                    >
+                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
+                                        blueprint.
                                     </Text>
-                                    <StackItem className="min-w-0 basis-0" size="fill">
-                                        <Text
-                                            className="pl-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                            color="primary"
-                                            display="block"
-                                            textWrap="nowrap"
-                                            type="display-1"
-                                        >
-                                            Speed
-                                        </Text>
-                                    </StackItem>
                                 </Stack>
                                 <Stack
-                                    className="homepage-before-after-copy-after absolute inset-0 uppercase"
-                                    direction="horizontal"
-                                    gap={3}
+                                    className="homepage-before-after-copy-after absolute inset-0"
+                                    gap={2}
+                                    hAlign="center"
                                     vAlign="center"
                                 >
-                                    <StackItem className="min-w-0 basis-0" size="fill">
-                                        <Text
-                                            className="pr-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                            color="primary"
-                                            display="block"
-                                            justify="end"
-                                            textWrap="nowrap"
-                                            type="display-1"
-                                        >
-                                            Operate
-                                        </Text>
-                                    </StackItem>
-                                    <Text
-                                        className="invisible text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                        display="block"
+                                    <Heading
+                                        className="text-6xl tracking-tighter sm:text-7xl"
+                                        level={2}
                                         textWrap="nowrap"
                                         type="display-1"
                                     >
-                                        With
+                                        Operate
+                                    </Heading>
+                                    <Text
+                                        className="max-w-2xl px-6 text-center font-medium uppercase tracking-widest"
+                                        color="secondary"
+                                        display="block"
+                                        textWrap="pretty"
+                                    >
+                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
+                                        infrastructure.
                                     </Text>
-                                    <StackItem className="min-w-0 basis-0" size="fill">
-                                        <Text
-                                            className="pl-2 text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                            color="primary"
-                                            display="block"
-                                            textWrap="nowrap"
-                                            type="display-1"
-                                        >
-                                            Control
-                                        </Text>
-                                    </StackItem>
                                 </Stack>
-                                <Text
-                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase text-2xl tracking-normal sm:text-5xl lg:text-6xl"
-                                    color="accent"
-                                    display="block"
-                                    textWrap="nowrap"
-                                    type="display-1"
-                                >
-                                    With
-                                </Text>
                             </Stack>
                         </Stack>
                     </Stack>
@@ -426,9 +377,6 @@ export default function Home() {
             </section>
             <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
-                    <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
-                        Next step
-                    </Text>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
                             <Stack key={title} gap={0} width="100%">

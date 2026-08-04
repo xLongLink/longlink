@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink name="Requests" icon="clipboard-list">
+<longlink version="v1" name="Requests" icon="clipboard-list">
     <Query id="request" path="/api/requests/${params.request}" />
     <Query id="attachments" path="/api/requests/${params.request}/attachments" />
     <State id="attachment" file="${null}" />

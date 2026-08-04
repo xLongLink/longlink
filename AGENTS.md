@@ -20,6 +20,14 @@ Use LongLink terminology consistently.
 - `Platform`: The shared platform layer that owns authentication, infrastructure, ...
 - `Applications`: Process-specific Python applications running on LongLink.
 
+## Assets
+
+- Asset style: minimalist black-and-white digital wireframe, thin luminous vector outlines, simplified geometric construction, sparse circuit traces, glowing connection nodes, subtle data grids, schematic CAD precision, matte-black surfaces, restrained grayscale glow, computational rather than physical, clean and low-detail, no textures, no realism, no color, no text.
+- Building primitives use simple near-future massing with three to six large geometric volumes and a strong silhouette. Avoid dense window grids, repeated floor lines, tiny façade marks, and decorative complexity.
+- Render one reusable primitive per asset in a flat, straight-on 2D elevation with a grounded baseline and compact silhouette.
+- Preserve a transparent exterior and an opaque matte-black interior so foreground primitives conceal elements behind them without separate masks.
+- Keep glow restrained and close to the linework. Avoid atmospheric haze, cast shadows, reflections, scenery, perspective floors, decorative backgrounds, and isolated floating details.
+
 ## Architecture
 
 ```bash
@@ -89,7 +97,7 @@ longlink/
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
-  
+
 ### FastAPI & Pydantic
 
 - Declare `response_model` on FastAPI routes, let FastAPI validating response model.

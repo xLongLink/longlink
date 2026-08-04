@@ -20,9 +20,12 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
+import type {
+    OrganizationInvitationResponse,
+    OrganizationMemberAccessResponse,
+} from '@/lib/generated/platform-api-v1/types.gen';
 import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
-import type { ApiInvitation, ApiOrganizationMember } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
@@ -45,8 +48,8 @@ export default function People({
     error,
 }: {
     organizationId: string;
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
+    members: OrganizationMemberAccessResponse[];
+    invitations: OrganizationInvitationResponse[];
     activeSection: 'members' | 'invitations';
     canInviteMembers: boolean;
     canManageMembers: boolean;
@@ -59,14 +62,14 @@ export default function People({
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
-        member: ApiOrganizationMember;
+        member: OrganizationMemberAccessResponse;
         role: Role;
     } | null>(null);
     const inviteMember = useInviteOrganizationMember(organizationId, canInviteMembers);
     const changeMemberRole = useChangeOrganizationMemberRole(organizationId, canManageMembers);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
-    const memberColumns: TableColumn<ApiOrganizationMember>[] = [
+    const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [
         {
             key: 'member',
             header: t('columns.user'),
@@ -107,7 +110,7 @@ export default function People({
             ),
         },
     ];
-    const invitationColumns: TableColumn<ApiInvitation>[] = [
+    const invitationColumns: TableColumn<OrganizationInvitationResponse>[] = [
         {
             key: 'email',
             header: t('columns.email'),

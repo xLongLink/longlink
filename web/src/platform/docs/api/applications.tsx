@@ -4,6 +4,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Columns, Copy, Wrench } from 'lucide-react';
+import { DocsBanner } from '@/components/DocsBanner';
 
 const runtimeResources = [
     { name: 'Database', icon: Columns, description: ['Dedicated schema', 'Read access from shared'] },
@@ -22,6 +23,7 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
+        <DocsBanner variant="applications" />
         <Heading id="applications" level={1}>
             Applications
         </Heading>

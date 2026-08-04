@@ -24,7 +24,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
 
     # Act
     response = await client.post(
-        "/api/organizations",
+        "/api/v1/organizations",
         json={"name": "acme"},
     )
 
@@ -55,7 +55,7 @@ async def test_get_organization_returns_member_payload(
     client = clients[0]
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -81,8 +81,8 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     organization = await create_organization(owner)
 
     # Act
-    response = await client.delete(f"/api/organizations/{organization.id}")
-    retry_response = await client.delete(f"/api/organizations/{organization.id}")
+    response = await client.delete(f"/api/v1/organizations/{organization.id}")
+    retry_response = await client.delete(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 202
@@ -112,8 +112,8 @@ async def test_delete_organization_requires_owner_or_platform_admin(
         await session.commit()
 
     # Act
-    non_owner_response = await clients[1].delete(f"/api/organizations/{owned_organization.id}")
-    platform_admin_response = await clients[0].delete(f"/api/organizations/{admin_owned_organization.id}")
+    non_owner_response = await clients[1].delete(f"/api/v1/organizations/{owned_organization.id}")
+    platform_admin_response = await clients[0].delete(f"/api/v1/organizations/{admin_owned_organization.id}")
 
     # Assert
     assert non_owner_response.status_code == 403
@@ -137,7 +137,7 @@ async def test_other_organization_user_cannot_delete_application(
     client = clients[1]
 
     # Attempt Application deletion with only another organization's access.
-    delete_response = await client.delete(f"/api/applications/{target_application.id}")
+    delete_response = await client.delete(f"/api/v1/applications/{target_application.id}")
 
     # Verify the denied request leaves the target application and operation queue unchanged.
     assert delete_response.status_code == 403
@@ -173,12 +173,12 @@ async def test_organization_database_endpoint_returns_database_usage(
             return {"space_used": 3584, "table_count": 4}
 
     monkeypatch.setattr(
-        "src.routes.organizations.Postgres",
+        "src.routes.v1.organizations.Postgres",
         FakePostgres,
     )
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}/database")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
 
     # Assert
     assert response.status_code == 200
@@ -214,12 +214,12 @@ async def test_organization_database_endpoint_returns_unavailable_when_backend_f
             raise RuntimeError("database offline")
 
     monkeypatch.setattr(
-        "src.routes.organizations.Postgres",
+        "src.routes.v1.organizations.Postgres",
         FakePostgres,
     )
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}/database")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
 
     # Assert
     assert response.status_code == 503
@@ -248,10 +248,10 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
             assert bucket_name == organization.id.hex
             return {"space_used": 4096}
 
-    monkeypatch.setattr("src.routes.organizations.Exoscale", lambda *_args: FakeStorage())
+    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert response.status_code == 200
@@ -291,10 +291,10 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
         assert secret_access_key == registry.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.Exoscale", fake_storage)
+    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert response.status_code == 503
@@ -325,8 +325,8 @@ async def test_organization_resource_endpoints_require_elevated_role(
     client = clients[1]
 
     # Act
-    database_response = await client.get(f"/api/organizations/{organization.id}/database")
-    storage_response = await client.get(f"/api/organizations/{organization.id}/storage")
+    database_response = await client.get(f"/api/v1/organizations/{organization.id}/database")
+    storage_response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert database_response.status_code == 403
@@ -361,8 +361,8 @@ async def test_get_organization_returns_invitations(
     regular_member_client = clients[2]
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}")
-    regular_member_response = await regular_member_client.get(f"/api/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}")
+    regular_member_response = await regular_member_client.get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -386,7 +386,7 @@ async def test_list_organizations_includes_created_organization(
     client = clients[0]
 
     # Act
-    response = await client.get("/api/organizations")
+    response = await client.get("/api/v1/organizations")
 
     # Assert
     assert response.status_code == 200
@@ -405,7 +405,7 @@ async def test_get_organization_returns_404_for_non_member(
     client = clients[1]
 
     # Act
-    response = await client.get(f"/api/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 403
@@ -449,7 +449,7 @@ async def test_create_organization_invitation_returns_204(
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/invitations",
+        f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )
 
@@ -479,7 +479,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/invitations",
+        f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "admin"},
     )
 
@@ -514,7 +514,7 @@ async def test_update_organization_member_changes_role(
 
     # Act
     response = await client.patch(
-        f"/api/organizations/{organization.id}/members/{member.id}",
+        f"/api/v1/organizations/{organization.id}/members/{member.id}",
         json={"role": "admin"},
     )
 
@@ -542,7 +542,7 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     client = clients[1]
 
     # Act
-    response = await client.patch(f"/api/organizations/{organization.id}/members/{member.id}", json={"role": "owner"})
+    response = await client.patch(f"/api/v1/organizations/{organization.id}/members/{member.id}", json={"role": "owner"})
 
     # Assert
     assert response.status_code == 403
@@ -583,7 +583,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
 
     # Act
     response = await client.patch(
-        f"/api/organizations/{organization.id}/members/{target_member.id}",
+        f"/api/v1/organizations/{organization.id}/members/{target_member.id}",
         json={"role": "admin"},
     )
 
@@ -605,7 +605,7 @@ async def test_create_organization_invitation_returns_404_for_non_member(
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/invitations",
+        f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )
 
@@ -639,7 +639,7 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
 
     # Act
     response = await client.post(
-        f"/api/organizations/{organization.id}/invitations",
+        f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )
 

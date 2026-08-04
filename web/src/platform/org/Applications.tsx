@@ -7,7 +7,7 @@ import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table'
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Wrench } from 'lucide-react';
-import type { ApiOrganizationApplication } from '@/lib/types';
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organization applications table. */
 export default function Applications({
@@ -17,12 +17,12 @@ export default function Applications({
     error,
 }: {
     organization: string;
-    applications: ApiOrganizationApplication[];
+    applications: OrganizationApplicationSummary[];
     isLoading: boolean;
     error: Error | null;
 }) {
     const t = useTranslator();
-    const columns: TableColumn<ApiOrganizationApplication>[] = [
+    const columns: TableColumn<OrganizationApplicationSummary>[] = [
         {
             key: 'name',
             header: t('columns.application'),

@@ -21,8 +21,8 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     client = clients[0]
 
     # Act
-    profile_response = await client.get("/api/me")
-    organizations_response = await client.get("/api/me/organizations")
+    profile_response = await client.get("/api/v1/me")
+    organizations_response = await client.get("/api/v1/me/organizations")
 
     # Assert
     assert profile_response.status_code == 200
@@ -56,7 +56,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     client = clients[0]
 
     # Act
-    response = await client.get("/api/me/organizations")
+    response = await client.get("/api/v1/me/organizations")
 
     # Assert
     assert response.status_code == 200
@@ -72,7 +72,7 @@ async def test_list_users_returns_admin_user_summaries(
     client = clients[0]
 
     # Act
-    response = await client.get("/api/users")
+    response = await client.get("/api/v1/users")
 
     # Assert
     assert response.status_code == 200
@@ -88,7 +88,7 @@ async def test_platform_user_cannot_list_users(
     client = clients[1]
 
     # Request the administrator-only user listing.
-    read_response = await client.get("/api/users")
+    read_response = await client.get("/api/v1/users")
 
     # Verify Platform users receive no administrator privileges.
     assert read_response.status_code == 403
@@ -116,7 +116,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     client = clients[0]
 
     # Act
-    response = await client.patch("/api/me", json={"name": "Updated User"})
+    response = await client.patch("/api/v1/me", json={"name": "Updated User"})
 
     # Assert
     assert response.status_code == 200

@@ -10,18 +10,18 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
 import { fetchApiText } from '@/lib/api';
+import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { getIconComponent } from '@/lib/icons';
-import type { Status } from '@/lib/types';
 import NotFound from '@/platform/NotFound';
 import {
     createContext as createXmlContext,
-    fromXml,
+    parseXML,
     RenderXML,
     resolveRequestUrl,
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
-import XmlLayout from '@/xml/layout';
+import XmlLayout from '@/xml/v1/layout';
 
 type ViewProps = {
     applicationStatus?: Status;
@@ -179,7 +179,7 @@ function createPageState(
 function parsePageContent(content: string): PageParseResult {
     // Parse XML defensively so render can show errors.
     try {
-        return { ast: fromXml(content), parseError: null };
+        return { ast: parseXML(content), parseError: null };
     } catch (unknownError) {
         return {
             ast: null,

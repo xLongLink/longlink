@@ -14,9 +14,10 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiComputeRegistrySchema } from '@/lib/api-schemas';
+import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { computesQueryKey } from '@/lib/query-keys';
-import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -26,7 +27,8 @@ export default function AdminCompute() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
-        mutationFn: (computeId: string) => fetchApiVoid(`/api/computes/${computeId}`, { method: 'DELETE' }),
+        mutationFn: (computeId: string) =>
+            fetchApiVoid(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey });
             toast({ body: t('admin.computeDeleted') });
@@ -36,9 +38,9 @@ export default function AdminCompute() {
         items: computes,
         error,
         isLoading,
-    } = useCollectionQuery<ApiComputeRegistry>('/api/computes', {
+    } = useCollectionQuery<ComputeRegistryResponse>(platformApiPath('/computes'), {
         refetchInterval: 5000,
-        parse: (value) => apiComputeRegistrySchema.array().parse(value),
+        parse: (value) => zComputeRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(computes);
     const deleteDialog = useDeleteDialog({
@@ -51,7 +53,7 @@ export default function AdminCompute() {
         fallbackDescription: t('admin.deleteComputeFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ApiComputeRegistry>[] = [
+    const columns: TableColumn<ComputeRegistryResponse>[] = [
         {
             key: 'compute',
             header: t('admin.computeTitle'),

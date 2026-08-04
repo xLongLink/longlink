@@ -11,14 +11,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
+import { useSignOut, useUserProfile } from '@/hooks/use-user';
 import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function UserProfile() {
     const t = useTranslator();
     const { user } = useUserProfile();
-    const { signOut } = useUserSessionActions();
+    const signOut = useSignOut();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
 
