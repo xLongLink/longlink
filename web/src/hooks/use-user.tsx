@@ -9,57 +9,28 @@ import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 
-type User = UserProfile;
-
-type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>;
-
-type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
-
-type UserQueryResult = UseQueryResult<User | null, Error>;
-
-type UserProfileState = {
-    user: User | null;
-    role: User['role'];
-    theme: User['theme'];
-    accent: User['accent'];
-    radius: User['radius'];
-    isLoading: boolean;
-    error: Error | null;
-};
-
-type UserOrganizationsState = {
-    memberships: UserOrganizationMembership[];
-    isLoading: boolean;
-    error: Error | null;
-};
-
-const UserContext = createContext<UserQueryResult | undefined>(undefined);
+const UserContext = createContext<UseQueryResult<UserProfile | null, Error> | undefined>(undefined);
 
 const DEFAULT_USER_PREFERENCES = {
     theme: 'dark' as Theme,
     accent: 'neutral' as Accent,
     radius: DEFAULT_RADIUS,
-} as const satisfies UserPreferences;
+} as const;
 
 /** Caches non-sensitive theme preferences for the next page's first paint. */
-function storeThemePreferences({ theme, accent, radius }: UserPreferences): void {
+function storeThemePreferences({ theme, accent, radius }: Pick<UserProfile, 'theme' | 'accent' | 'radius'>): void {
     localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ theme, accent, radius }));
 }
 
-/** Hook that fetches the current user. */
-function useUserQuery() {
-    return useApiQuery<User | null>(platformApiPath('/me'), {
+/** Provides the authenticated user query to the app tree. */
+export function UserProvider({ children }: { children: React.ReactNode }) {
+    const user = useApiQuery<UserProfile | null>(platformApiPath('/me'), {
         // Auth state must refresh immediately after login/logout redirects.
         parse: (value) => (value === null ? null : zUserProfile.parse(value)),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
     });
-}
-
-/** Provides the authenticated user query to the app tree. */
-export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useUserQuery();
 
     // Synchronize the browser cache with the server-backed active session.
     useEffect(() => {
@@ -74,7 +45,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 }
 
 /** Reads the current user profile without loading memberships or saved accounts. */
-export function useUserProfile(): UserProfileState {
+export function useUserProfile() {
     // Fail fast when the provider is missing.
     const context = useContext(UserContext);
     if (context === undefined) {
@@ -95,7 +66,7 @@ export function useUserProfile(): UserProfileState {
 }
 
 /** Reads organization memberships only when a user is authenticated. */
-export function useUserOrganizations(): UserOrganizationsState {
+export function useUserOrganizations() {
     const profile = useUserProfile();
     const query = useCollectionQuery<UserOrganizationMembership>(
         profile.user ? platformApiPath('/me/organizations') : null,
@@ -111,8 +82,8 @@ export function useUserOrganizations(): UserOrganizationsState {
     };
 }
 
-/** Provides actions that end the current user session. */
-export function useUserSessionActions() {
+/** Provides an action that ends the current user session. */
+export function useSignOut() {
     const queryClient = useQueryClient();
 
     /** Signs the current user out and clears cached session state. */
@@ -123,9 +94,7 @@ export function useUserSessionActions() {
         window.location.assign('/organizations');
     };
 
-    return {
-        signOut,
-    };
+    return signOut;
 }
 
 /** Updates the current user profile. */
@@ -133,7 +102,7 @@ export function useUpdateUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: UserUpdate) =>
+        mutationFn: (payload: Partial<Pick<UserProfile, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>) =>
             fetchApiJson(
                 platformApiPath('/me'),
                 {

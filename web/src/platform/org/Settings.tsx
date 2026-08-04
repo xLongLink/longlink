@@ -13,7 +13,7 @@ import { Boxes, Building2, Database, HardDrive, Users } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { z } from 'zod';
-import { useOrganizationDatabaseUsage, useOrganizationStorageUsage } from '@/data/organization';
+import { useApiQuery } from '@/hooks/use-api';
 import { useUpdateOrganization } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import type {
@@ -24,6 +24,11 @@ import type {
     OrganizationStorageUsageResponse,
     OrganizationSummary,
 } from '@/lib/generated/platform-api-v1/types.gen';
+import {
+    zOrganizationDatabaseUsageResponse,
+    zOrganizationStorageUsageResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
+import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
 import { formatBytes, formatNumber } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
@@ -39,96 +44,58 @@ const organizationAvatarSchema = z.union([
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
 
-/** Renders common Organization resource usage framing. */
-function UsageSettings({
-    children,
+/** Renders a resource usage table in common Organization settings framing. */
+function ResourceSettings<T extends Record<string, unknown>>({
+    columns,
     description,
-    error,
-    isLoading,
+    emptyState,
+    idKey,
+    isOrganizationLoading,
+    organizationError,
+    organizationId,
+    parse,
+    resource,
     title,
 }: {
-    children: ReactNode;
+    columns: TableColumn<T>[];
     description: string;
-    error: Error | null;
-    isLoading: boolean;
+    emptyState: ReactNode;
+    idKey: keyof T & string;
+    isOrganizationLoading: boolean;
+    organizationError: Error | null;
+    organizationId: string;
+    parse: (value: unknown) => T | null;
+    resource: 'database' | 'storage';
     title: string;
 }) {
+    const { data, error, isLoading } = useApiQuery<T | null>(
+        organizationId ? platformApiPath(`/organizations/${organizationId}/${resource}`) : null,
+        {
+            parse,
+            retry: false,
+        }
+    );
+    const resourceError = organizationError ?? error;
+
     return (
         <VStack gap={4}>
             <VStack gap={1}>
                 <Heading level={2}>{title}</Heading>
                 <Text type="supporting">{description}</Text>
             </VStack>
-            {isLoading ? null : error ? <Banner status="error" title={error.message} /> : children}
+            {isOrganizationLoading || isLoading ? null : resourceError ? (
+                <Banner status="error" title={resourceError.message} />
+            ) : (
+                <Table
+                    columns={columns}
+                    data={data ? [data] : []}
+                    density="compact"
+                    emptyState={emptyState}
+                    hasHover
+                    idKey={idKey}
+                />
+            )}
         </VStack>
-    );
-}
-
-/** Renders database usage while the database settings section is active. */
-function DatabaseSettings({
-    organizationId,
-    columns,
-    isOrganizationLoading,
-    organizationError,
-}: {
-    organizationId: string;
-    columns: TableColumn<OrganizationDatabaseUsageResponse>[];
-    isOrganizationLoading: boolean;
-    organizationError: Error | null;
-}) {
-    const t = useTranslator();
-    const { data, error, isLoading } = useOrganizationDatabaseUsage(organizationId);
-
-    return (
-        <UsageSettings
-            description={t('organizationSettings.reviewDatabase')}
-            error={organizationError ?? error}
-            isLoading={isOrganizationLoading || isLoading}
-            title={t('navigation.database')}
-        >
-            <Table
-                columns={columns}
-                data={data ? [data] : []}
-                density="compact"
-                emptyState={<EmptyState title={t('common.noResults')} isCompact />}
-                hasHover
-                idKey="database_name"
-            />
-        </UsageSettings>
-    );
-}
-
-/** Renders storage usage while the storage settings section is active. */
-function StorageSettings({
-    organizationId,
-    columns,
-    isOrganizationLoading,
-    organizationError,
-}: {
-    organizationId: string;
-    columns: TableColumn<OrganizationStorageUsageResponse>[];
-    isOrganizationLoading: boolean;
-    organizationError: Error | null;
-}) {
-    const t = useTranslator();
-    const { data, error, isLoading } = useOrganizationStorageUsage(organizationId);
-
-    return (
-        <UsageSettings
-            description={t('organizationSettings.reviewStorage')}
-            error={organizationError ?? error}
-            isLoading={isOrganizationLoading || isLoading}
-            title={t('navigation.storage')}
-        >
-            <Table
-                columns={columns}
-                data={data ? [data] : []}
-                density="compact"
-                emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
-                hasHover
-                idKey="bucket_name"
-            />
-        </UsageSettings>
     );
 }
 
@@ -365,20 +332,32 @@ export default function Settings({
                 ) : null}
 
                 {section === 'database' ? (
-                    <DatabaseSettings
-                        organizationId={organizationId}
+                    <ResourceSettings<OrganizationDatabaseUsageResponse>
                         columns={databaseColumns}
+                        description={t('organizationSettings.reviewDatabase')}
+                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                        idKey="database_name"
                         isOrganizationLoading={isLoading}
                         organizationError={error}
+                        organizationId={organizationId}
+                        parse={(value) => zOrganizationDatabaseUsageResponse.nullable().parse(value)}
+                        resource="database"
+                        title={t('navigation.database')}
                     />
                 ) : null}
 
                 {section === 'storage' ? (
-                    <StorageSettings
-                        organizationId={organizationId}
+                    <ResourceSettings<OrganizationStorageUsageResponse>
                         columns={storageColumns}
+                        description={t('organizationSettings.reviewStorage')}
+                        emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
+                        idKey="bucket_name"
                         isOrganizationLoading={isLoading}
                         organizationError={error}
+                        organizationId={organizationId}
+                        parse={(value) => zOrganizationStorageUsageResponse.nullable().parse(value)}
+                        resource="storage"
+                        title={t('navigation.storage')}
                     />
                 ) : null}
             </div>
