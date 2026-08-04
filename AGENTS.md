@@ -97,7 +97,7 @@ longlink/
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
-  
+
 ### FastAPI & Pydantic
 
 - Declare `response_model` on FastAPI routes, let FastAPI validating response model.
