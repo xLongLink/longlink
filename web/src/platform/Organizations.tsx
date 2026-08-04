@@ -14,7 +14,7 @@ import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { PageContainer } from '@/components/PageContainer';
 import { SignInCard } from '@/components/SignInCard';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import type { ApiUserOrganizationMembership } from '@/lib/types';
+import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
@@ -37,7 +37,7 @@ export default function Organizations() {
         );
     }
 
-    const columns: TableColumn<ApiUserOrganizationMembership>[] = [
+    const columns: TableColumn<UserOrganizationMembership>[] = [
         {
             key: 'name',
             header: t('columns.name'),

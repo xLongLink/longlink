@@ -12,10 +12,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { createStatusLabels } from '@/lib/status';
-import type { ApiApplicationResponse, Status } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -30,7 +30,7 @@ const statusVariants = {
 export default function AdminApplications() {
     const t = useTranslator();
     const statusLabels = createStatusLabels(t);
-    const columns: TableColumn<ApiApplicationResponse>[] = [
+    const columns: TableColumn<ApplicationResponse>[] = [
         {
             key: 'name',
             header: t('columns.application'),
@@ -83,7 +83,7 @@ export default function AdminApplications() {
         items: applications,
         error,
         isLoading,
-    } = useCollectionQuery<ApiApplicationResponse>(platformApiPath('/applications'), {
+    } = useCollectionQuery<ApplicationResponse>(platformApiPath('/applications'), {
         refetchInterval: 5000,
         parse: (value) => zApplicationResponse.array().parse(value),
     });

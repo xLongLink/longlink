@@ -3,13 +3,13 @@ import { createContext, useContext, useEffect } from 'react';
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type { UserOrganizationMembership, UserProfile } from '@/lib/generated/platform-api-v1/types.gen';
 import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
-import type { ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 
-type User = ApiUserProfile;
+type User = UserProfile;
 
 type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>;
 
@@ -28,7 +28,7 @@ type UserProfileState = {
 };
 
 type UserOrganizationsState = {
-    memberships: ApiUserOrganizationMembership[];
+    memberships: UserOrganizationMembership[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -97,7 +97,7 @@ export function useUserProfile(): UserProfileState {
 /** Reads organization memberships only when a user is authenticated. */
 export function useUserOrganizations(): UserOrganizationsState {
     const profile = useUserProfile();
-    const query = useCollectionQuery<ApiUserOrganizationMembership>(
+    const query = useCollectionQuery<UserOrganizationMembership>(
         profile.user ? platformApiPath('/me/organizations') : null,
         {
             parse: (value) => zUserOrganizationMembership.array().parse(value),

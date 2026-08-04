@@ -15,10 +15,10 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
-import type { ApiOrganizationSummary } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -39,7 +39,7 @@ export default function AdminOrganizations() {
         items: organizations,
         error,
         isLoading,
-    } = useCollectionQuery<ApiOrganizationSummary>(platformApiPath('/organizations'), {
+    } = useCollectionQuery<OrganizationSummary>(platformApiPath('/organizations'), {
         parse: (value) => zOrganizationSummary.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(organizations);
@@ -53,7 +53,7 @@ export default function AdminOrganizations() {
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ApiOrganizationSummary>[] = [
+    const columns: TableColumn<OrganizationSummary>[] = [
         {
             key: 'name',
             header: t('columns.name'),

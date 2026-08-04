@@ -16,15 +16,15 @@ import { z } from 'zod';
 import { useOrganizationDatabaseUsage, useOrganizationStorageUsage } from '@/data/organization';
 import { useUpdateOrganization } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
-import { hasMinimumRole, type Role } from '@/lib/roles';
 import type {
-    ApiInvitation,
-    ApiOrganizationApplication,
-    ApiOrganizationDatabaseUsage,
-    ApiOrganizationMember,
-    ApiOrganizationStorageUsage,
-    ApiOrganizationSummary,
-} from '@/lib/types';
+    OrganizationApplicationSummary,
+    OrganizationDatabaseUsageResponse,
+    OrganizationInvitationResponse,
+    OrganizationMemberAccessResponse,
+    OrganizationStorageUsageResponse,
+    OrganizationSummary,
+} from '@/lib/generated/platform-api-v1/types.gen';
+import { hasMinimumRole, type Role } from '@/lib/roles';
 import { formatBytes, formatNumber } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
@@ -72,7 +72,7 @@ function DatabaseSettings({
     organizationError,
 }: {
     organizationId: string;
-    columns: TableColumn<ApiOrganizationDatabaseUsage>[];
+    columns: TableColumn<OrganizationDatabaseUsageResponse>[];
     isOrganizationLoading: boolean;
     organizationError: Error | null;
 }) {
@@ -106,7 +106,7 @@ function StorageSettings({
     organizationError,
 }: {
     organizationId: string;
-    columns: TableColumn<ApiOrganizationStorageUsage>[];
+    columns: TableColumn<OrganizationStorageUsageResponse>[];
     isOrganizationLoading: boolean;
     organizationError: Error | null;
 }) {
@@ -145,10 +145,10 @@ export default function Settings({
     error,
 }: {
     organization: string;
-    organizationDetails: ApiOrganizationSummary | undefined;
-    applications: ApiOrganizationApplication[];
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
+    organizationDetails: OrganizationSummary | undefined;
+    applications: OrganizationApplicationSummary[];
+    members: OrganizationMemberAccessResponse[];
+    invitations: OrganizationInvitationResponse[];
     organizationRole: Role | null;
     routeSection: SettingsRouteSection;
     isLoading: boolean;
@@ -177,7 +177,7 @@ export default function Settings({
             </VStack>
         </HStack>
     );
-    const databaseColumns: TableColumn<ApiOrganizationDatabaseUsage>[] = [
+    const databaseColumns: TableColumn<OrganizationDatabaseUsageResponse>[] = [
         {
             key: 'resource',
             header: t('columns.resource'),
@@ -202,7 +202,7 @@ export default function Settings({
             renderCell: () => ownerCell,
         },
     ];
-    const storageColumns: TableColumn<ApiOrganizationStorageUsage>[] = [
+    const storageColumns: TableColumn<OrganizationStorageUsageResponse>[] = [
         {
             key: 'resource',
             header: t('columns.resource'),

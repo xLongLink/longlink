@@ -13,10 +13,10 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
-import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 import { PostgreSQL } from '@/svg/PostgreSQL';
@@ -38,7 +38,7 @@ export default function AdminDatabase() {
         items: databases,
         error,
         isLoading,
-    } = useCollectionQuery<ApiDatabaseRegistry>(platformApiPath('/databases'), {
+    } = useCollectionQuery<DatabaseRegistryResponse>(platformApiPath('/databases'), {
         parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);
@@ -52,7 +52,7 @@ export default function AdminDatabase() {
         fallbackDescription: t('admin.deleteDatabaseFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ApiDatabaseRegistry>[] = [
+    const columns: TableColumn<DatabaseRegistryResponse>[] = [
         {
             key: 'database',
             header: t('columns.database'),

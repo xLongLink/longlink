@@ -10,8 +10,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
 import { fetchApiText } from '@/lib/api';
+import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { getIconComponent } from '@/lib/icons';
-import type { Status } from '@/lib/types';
 import NotFound from '@/platform/NotFound';
 import {
     createContext as createXmlContext,

@@ -15,10 +15,10 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
+import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { platformApiPath } from '@/lib/platform-api';
-import type { ApiImageMetadata } from '@/lib/types';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -62,7 +62,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<ApiImageMetadata['environments']>>([]);
+    const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<LongLinkMetadata['environments']>>([]);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({

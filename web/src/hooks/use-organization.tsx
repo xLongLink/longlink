@@ -2,6 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import type {
+    OrganizationApplicationSummary,
+    OrganizationDetails,
+    OrganizationInvitationResponse,
+    OrganizationMemberAccessResponse,
+    OrganizationSummary,
+} from '@/lib/generated/platform-api-v1/types.gen';
 import {
     zApplicationResponse,
     zOrganizationDetails,
@@ -10,19 +17,12 @@ import {
 import { platformApiPath } from '@/lib/platform-api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
-import type {
-    ApiInvitation,
-    ApiOrganizationApplication,
-    ApiOrganizationDetails,
-    ApiOrganizationMember,
-    ApiOrganizationSummary,
-} from '@/lib/types';
 
 type UseOrganizationResult = {
-    organization: ApiOrganizationSummary | undefined;
-    members: ApiOrganizationMember[];
-    invitations: ApiInvitation[];
-    applications: ApiOrganizationApplication[];
+    organization: OrganizationSummary | undefined;
+    members: OrganizationMemberAccessResponse[];
+    invitations: OrganizationInvitationResponse[];
+    applications: OrganizationApplicationSummary[];
     role: Role | null;
     isLoading: boolean;
     error: (Error & { status?: number }) | null;
@@ -37,7 +37,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
-    const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
+    const organizationQuery = useApiQuery<OrganizationDetails>(organizationPath, {
         parse: (value) => zOrganizationDetails.parse(value),
         refetchInterval: 5000,
         retry: false,

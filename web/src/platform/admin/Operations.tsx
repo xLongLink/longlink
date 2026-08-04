@@ -6,29 +6,29 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
-import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const t = useTranslator();
-    const statusLabels: Record<ApiOperation['status'], string> = {
+    const statusLabels: Record<OperationResponse['status'], string> = {
         scheduled: t('admin.operationStatus.scheduled'),
         active: t('admin.operationStatus.active'),
         completed: t('admin.operationStatus.completed'),
         failed: t('admin.operationStatus.failed'),
     };
-    const kindLabels: Record<ApiOperation['kind'], string> = {
+    const kindLabels: Record<OperationResponse['kind'], string> = {
         'compute.create': t('admin.computeCreation'),
         'application.create': t('admin.applicationCreation'),
         'application.delete': t('admin.applicationDeletion'),
         'organization.create': t('admin.organizationCreation'),
         'organization.delete': t('admin.organizationDeletion'),
     };
-    const columns: TableColumn<ApiOperation>[] = [
+    const columns: TableColumn<OperationResponse>[] = [
         {
             key: 'operation',
             header: t('columns.operation'),
@@ -74,7 +74,7 @@ export default function AdminOperations() {
         items: operations,
         error,
         isLoading,
-    } = useCollectionQuery<ApiOperation>(platformApiPath('/operations'), {
+    } = useCollectionQuery<OperationResponse>(platformApiPath('/operations'), {
         refetchInterval: 5000,
         parse: (value) => zOperationResponse.array().parse(value),
     });
