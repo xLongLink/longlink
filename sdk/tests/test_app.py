@@ -56,25 +56,25 @@ def test_production_health_and_root_are_served_without_sdk_auth() -> None:
     [
         pytest.param(
             "index.xml",
-            '<longlink><Text i18n="home.title" /></longlink>',
+            '<longlink version="v1"><Text i18n="home.title" /></longlink>',
             {"tab": "index", "route": ""},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
-            '<longlink name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
+            '<longlink version="v1" name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
             {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink><Text i18n="users.title" /></longlink>',
+            '<longlink version="v1"><Text i18n="users.title" /></longlink>',
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
-            '<longlink name="Issue"><Text i18n="issues.title" /></longlink>',
+            '<longlink version="v1" name="Issue"><Text i18n="issues.title" /></longlink>',
             {"tab": "issues", "route": "issues/:issue"},
             id="dynamic",
         ),
@@ -94,7 +94,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
     alternate_path = tmp_path / "alternate.xml"
-    alternate_path.write_text("<longlink><Text>Alternate</Text></longlink>", encoding="utf-8")
+    alternate_path.write_text('<longlink version="v1"><Text>Alternate</Text></longlink>', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     # Start LongLink and request the registered page and page catalog.
