@@ -62,7 +62,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [declaredEnvironments, setDeclaredEnvironments] = useState<ApiImageMetadata['environments']>([]);
+    const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<ApiImageMetadata['environments']>>([]);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({
@@ -101,7 +101,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 apiImageMetadataSchema.parse(value)
             );
 
-            setDeclaredEnvironments(metadata.environments);
+            setDeclaredEnvironments(metadata.environments ?? []);
             form.setValue('name', metadata.title ?? '', { shouldValidate: true });
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
             form.setValue('envs', {}, { shouldValidate: true });

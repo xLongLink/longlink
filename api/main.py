@@ -1,10 +1,10 @@
 import asyncio
 import contextlib
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from pathlib import Path
 from src.utils import jobs
 from src.errors import ServiceError
-from src.routes import branding, v1
+from src.routes import v1, branding
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
@@ -54,16 +54,6 @@ install_frontend_middleware(app)
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)
 app.include_router(branding.router)
-
-
-@app.api_route("/api", methods=["DELETE", "GET", "PATCH", "POST", "PUT"], include_in_schema=False)
-@app.api_route("/api/{path:path}", methods=["DELETE", "GET", "PATCH", "POST", "PUT"], include_in_schema=False)
-async def unsupported_api_version(path: str = ""):
-    """Reject unversioned Platform API requests before the frontend fallback handles them."""
-
-    raise HTTPException(status_code=404, detail="Platform API version is required")
-
-
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
 
