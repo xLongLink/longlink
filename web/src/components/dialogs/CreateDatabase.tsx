@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiDatabaseRegistrySchema, DATABASE_SSL_MODES } from '@/lib/api-schemas';
+import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 
@@ -24,12 +24,12 @@ const schema = z.object({
     name: z.string().trim().min(1),
     host: z.string().trim().min(1),
     port: z.number().int().min(1).max(65535),
-    sslmode: z.enum(DATABASE_SSL_MODES),
+    sslmode: zDatabaseSslMode,
     username: z.string().trim().min(1),
     password: z.string().min(1),
 });
 
-const SSL_MODE_OPTIONS = DATABASE_SSL_MODES.map((value) => ({ value, label: value }));
+const SSL_MODE_OPTIONS = zDatabaseSslMode.options.map((value) => ({ value, label: value }));
 
 type Values = z.infer<typeof schema>;
 
@@ -54,7 +54,7 @@ export default function CreateDatabase() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => apiDatabaseRegistrySchema.parse(value)
+                (value) => zDatabaseRegistryResponse.parse(value)
             ),
         onSuccess: async () => {
             setOpen(false);

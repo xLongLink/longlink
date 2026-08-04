@@ -12,7 +12,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiJson } from '@/lib/api';
-import { apiStorageRegistrySchema } from '@/lib/api-schemas';
+import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { storagesQueryKey } from '@/lib/query-keys';
 
@@ -51,7 +51,7 @@ export default function CreateStorage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => apiStorageRegistrySchema.parse(value)
+                (value) => zStorageRegistryResponse.parse(value)
             ),
         onSuccess: async () => {
             setOpen(false);

@@ -6,7 +6,7 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { apiOperationSchema } from '@/lib/api-schemas';
+import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
@@ -76,7 +76,7 @@ export default function AdminOperations() {
         isLoading,
     } = useCollectionQuery<ApiOperation>(platformApiPath('/operations'), {
         refetchInterval: 5000,
-        parse: (value) => apiOperationSchema.array().parse(value),
+        parse: (value) => zOperationResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(operations, 'default');
 

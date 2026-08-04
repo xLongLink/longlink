@@ -13,7 +13,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiStorageRegistrySchema } from '@/lib/api-schemas';
+import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
@@ -39,7 +39,7 @@ export default function AdminStorage() {
         error,
         isLoading,
     } = useCollectionQuery<ApiStorageRegistry>(platformApiPath('/storages'), {
-        parse: (value) => apiStorageRegistrySchema.array().parse(value),
+        parse: (value) => zStorageRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({

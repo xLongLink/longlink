@@ -15,7 +15,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiOrganizationSummarySchema } from '@/lib/api-schemas';
+import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
@@ -40,7 +40,7 @@ export default function AdminOrganizations() {
         error,
         isLoading,
     } = useCollectionQuery<ApiOrganizationSummary>(platformApiPath('/organizations'), {
-        parse: (value) => apiOrganizationSummarySchema.array().parse(value),
+        parse: (value) => zOrganizationSummary.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(organizations);
     const deleteDialog = useDeleteDialog({

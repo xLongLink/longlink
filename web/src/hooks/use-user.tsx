@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect } from 'react';
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
-import { apiUserOrganizationMembershipSchema, apiUserProfileSchema } from '@/lib/api-schemas';
+import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
@@ -50,7 +50,7 @@ function storeThemePreferences({ theme, accent, radius }: UserPreferences): void
 function useUserQuery() {
     return useApiQuery<User | null>(platformApiPath('/me'), {
         // Auth state must refresh immediately after login/logout redirects.
-        parse: (value) => (value === null ? null : apiUserProfileSchema.parse(value)),
+        parse: (value) => (value === null ? null : zUserProfile.parse(value)),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -100,7 +100,7 @@ export function useUserOrganizations(): UserOrganizationsState {
     const query = useCollectionQuery<ApiUserOrganizationMembership>(
         profile.user ? platformApiPath('/me/organizations') : null,
         {
-            parse: (value) => apiUserOrganizationMembershipSchema.array().parse(value),
+            parse: (value) => zUserOrganizationMembership.array().parse(value),
         }
     );
 
@@ -141,7 +141,7 @@ export function useUpdateUser() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => apiUserProfileSchema.parse(value)
+                (value) => zUserProfile.parse(value)
             ),
         onSuccess: (user) => {
             storeThemePreferences(user);

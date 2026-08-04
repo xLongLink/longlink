@@ -15,7 +15,7 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiIconsSchema, apiImageMetadataSchema } from '@/lib/api-schemas';
+import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { platformApiPath } from '@/lib/platform-api';
 import type { ApiImageMetadata } from '@/lib/types';
@@ -77,7 +77,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
     const { data: iconCatalog } = useApiQuery<IconName[]>(open ? platformApiPath('/icons') : null, {
-        parse: (value) => apiIconsSchema.parse(value),
+        parse: (value) => zIcon.array().parse(value),
         staleTime: Infinity,
     });
 
@@ -98,7 +98,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         try {
             const query = new URLSearchParams({ image: payload.image });
             const metadata = await fetchApiJson(platformApiPath(`/image?${query.toString()}`), undefined, (value) =>
-                apiImageMetadataSchema.parse(value)
+                zLongLinkMetadata.parse(value)
             );
 
             setDeclaredEnvironments(metadata.environments ?? []);

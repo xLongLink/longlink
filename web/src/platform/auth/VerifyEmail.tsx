@@ -17,7 +17,7 @@ import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { apiRegistrationVerifiedSchema, apiUserProfileSchema } from '@/lib/api-schemas';
+import { zEmailPayload, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
@@ -29,7 +29,7 @@ type RegistrationCompleteValues = {
     password: string;
 };
 
-type RegistrationSetup = z.infer<typeof apiRegistrationVerifiedSchema>;
+type RegistrationSetup = z.infer<typeof zEmailPayload>;
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 
@@ -56,7 +56,7 @@ export default function VerifyEmail() {
         mutationFn: (registrationToken: string) => {
             if (!registrationToken) {
                 return fetchApiJson(platformApiPath('/auth/register/setup'), undefined, (value) =>
-                    apiRegistrationVerifiedSchema.parse(value)
+                    zEmailPayload.parse(value)
                 );
             }
 
@@ -67,7 +67,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: registrationToken }),
                 },
-                (value) => apiRegistrationVerifiedSchema.parse(value)
+                (value) => zEmailPayload.parse(value)
             );
         },
         onSuccess: (setup) => {
@@ -89,7 +89,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
-                (value) => apiUserProfileSchema.parse(value)
+                (value) => zUserProfile.parse(value)
             ),
     });
     /** Creates the account and publishes only the new authenticated query state. */

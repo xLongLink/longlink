@@ -12,7 +12,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { apiApplicationResponseSchema } from '@/lib/api-schemas';
+import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { createStatusLabels } from '@/lib/status';
 import type { ApiApplicationResponse, Status } from '@/lib/types';
@@ -85,7 +85,7 @@ export default function AdminApplications() {
         isLoading,
     } = useCollectionQuery<ApiApplicationResponse>(platformApiPath('/applications'), {
         refetchInterval: 5000,
-        parse: (value) => apiApplicationResponseSchema.array().parse(value),
+        parse: (value) => zApplicationResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(applications);
 

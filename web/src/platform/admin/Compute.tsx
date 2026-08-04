@@ -14,7 +14,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiComputeRegistrySchema } from '@/lib/api-schemas';
+import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
@@ -40,7 +40,7 @@ export default function AdminCompute() {
         isLoading,
     } = useCollectionQuery<ApiComputeRegistry>(platformApiPath('/computes'), {
         refetchInterval: 5000,
-        parse: (value) => apiComputeRegistrySchema.array().parse(value),
+        parse: (value) => zComputeRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(computes);
     const deleteDialog = useDeleteDialog({

@@ -3,10 +3,10 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
-    apiApplicationResponseSchema,
-    apiOrganizationDetailsSchema,
-    apiOrganizationSummarySchema,
-} from '@/lib/api-schemas';
+    zApplicationResponse,
+    zOrganizationDetails,
+    zOrganizationSummary,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
@@ -38,7 +38,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
     const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
-        parse: (value) => apiOrganizationDetailsSchema.parse(value),
+        parse: (value) => zOrganizationDetails.parse(value),
         refetchInterval: 5000,
         retry: false,
     });
@@ -122,7 +122,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
                 },
-                (value) => apiApplicationResponseSchema.parse(value)
+                (value) => zApplicationResponse.parse(value)
             );
         },
         onSuccess: async () => {
@@ -180,7 +180,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 {
                     method: 'DELETE',
                 },
-                (value) => apiApplicationResponseSchema.parse(value)
+                (value) => zApplicationResponse.parse(value)
             );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
@@ -202,7 +202,7 @@ export function useCreateOrganization() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name }),
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
@@ -232,7 +232,7 @@ export function useUpdateOrganization(organizationId: string, canManageOrganizat
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar }),
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             );
         },
         onSuccess: async () => {
@@ -263,7 +263,7 @@ export function useDeleteOrganization() {
                 {
                     method: 'DELETE',
                 },
-                (value) => apiOrganizationSummarySchema.parse(value)
+                (value) => zOrganizationSummary.parse(value)
             );
         },
         onSuccess: () => {

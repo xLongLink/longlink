@@ -1,5 +1,8 @@
 import { useApiQuery } from '@/hooks/use-api';
-import { apiOrganizationDatabaseUsageSchema, apiOrganizationStorageUsageSchema } from '@/lib/api-schemas';
+import {
+    zOrganizationDatabaseUsageResponse,
+    zOrganizationStorageUsageResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import type { ApiOrganizationDatabaseUsage, ApiOrganizationStorageUsage } from '@/lib/types';
 
@@ -8,7 +11,7 @@ export function useOrganizationDatabaseUsage(organizationId: string) {
     return useApiQuery<ApiOrganizationDatabaseUsage | null>(
         organizationId ? platformApiPath(`/organizations/${organizationId}/database`) : null,
         {
-            parse: (value) => apiOrganizationDatabaseUsageSchema.nullable().parse(value),
+            parse: (value) => zOrganizationDatabaseUsageResponse.nullable().parse(value),
             retry: false,
         }
     );
@@ -19,7 +22,7 @@ export function useOrganizationStorageUsage(organizationId: string) {
     return useApiQuery<ApiOrganizationStorageUsage | null>(
         organizationId ? platformApiPath(`/organizations/${organizationId}/storage`) : null,
         {
-            parse: (value) => apiOrganizationStorageUsageSchema.nullable().parse(value),
+            parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
             retry: false,
         }
     );

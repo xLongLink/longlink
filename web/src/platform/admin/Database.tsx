@@ -13,7 +13,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { apiDatabaseRegistrySchema } from '@/lib/api-schemas';
+import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
@@ -39,7 +39,7 @@ export default function AdminDatabase() {
         error,
         isLoading,
     } = useCollectionQuery<ApiDatabaseRegistry>(platformApiPath('/databases'), {
-        parse: (value) => apiDatabaseRegistrySchema.array().parse(value),
+        parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({
