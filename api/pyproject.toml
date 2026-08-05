@@ -16,7 +16,7 @@ dependencies = [
     'alembic>=1.18.5',
     'asyncpg>=0.31.0',
     'botocore>=1.40.61',
-    'cryptography>=49.0.0',
+    'cryptography>=50.0.0',
     'email-validator>=2.3.0',
     'exoscale>=0.16.3',
     'fastapi>=0.140.13',
@@ -50,7 +50,7 @@ dev = [
     'pytest-asyncio>=1.4.0',
     'docker>=7.2.0',
     'isort>=8.0.1',
-    'types-aiobotocore-s3==3.8.0',
+    'types-aiobotocore-s3==3.9.0',
 ]
 
 [tool.setuptools_scm]
