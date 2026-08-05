@@ -53,7 +53,7 @@ export const content = (
             Storage
         </Heading>
         <Text as="p">
-            The SDK exposes an application-scoped <Code>fs</Code> object backed by{' '}
+            The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
             <Link href="https://filesystem-spec.readthedocs.io/en/latest/" hasUnderline isExternalLink type="inherit">
                 fsspec
             </Link>
@@ -61,38 +61,17 @@ export const content = (
         </Text>
         <EnvironmentTable environments={environments} />
         <Text as="p">
-            The LongLink Platform creates one bucket per Organization and gives each application direct IAM credentials.
-            The credentials allow reads and writes in that application's prefix and read-only access to the shared
-            prefix.
+            The LongLink Platform creates one bucket per Organization and gives each Application direct IAM
+            credentials. Application code can read and write only its own prefix.
         </Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
         <CodeBlock
-            code={`from longlink import Envs, create_fs
+            code={`from longlink import storage
 
-env = Envs()
-fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_PREFIX or "")
-
-with fs.open("reports/example.txt", "wb") as f:
+with storage.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}
-            language="python"
-        />
-        <Heading id="assets" level={2}>
-            Assets
-        </Heading>
-        <Text as="p">
-            Organization-level assets live in shared storage. The SDK exposes <Code>longlink.assets.logo()</Code> for
-            the organization logo, using a bundled fallback in development and testing and the organization shared
-            prefix in production. Pass the runtime environment and shared filesystem explicitly.
-        </Text>
-        <CodeBlock
-            code={`import longlink.assets as assets
-from longlink import Envs, create_fs
-
-env = Envs()
-shared_fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_SHARED_PREFIX or "")
-logo = assets.logo(env, shared_fs)`}
             language="python"
         />
     </Stack>

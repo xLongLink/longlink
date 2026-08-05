@@ -5,8 +5,12 @@ from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
 
-def create_fs(env: Envs, bucket: str, prefix: str) -> AbstractFileSystem:
-    """Create the active runtime filesystem scoped to one bucket prefix."""
+def create_fs() -> AbstractFileSystem:
+    """Create the active Application filesystem from runtime settings."""
+
+    env = Envs()
+    bucket = env.STORAGE_BUCKET or ""
+    prefix = env.STORAGE_PREFIX or ""
 
     # Production must always use a scoped view of the Organization bucket.
     if env.ENV == "production":

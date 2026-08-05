@@ -9,7 +9,6 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
-import { Wordmark } from '@/components/Wordmark';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
 import { HeroGlobe } from '@/platform/HeroGlobe';
@@ -230,7 +229,7 @@ export default function Home() {
                 className="homepage-before-after-section relative z-20"
             >
                 <Heading id="before-after-heading" level={2} className="sr-only">
-                    Build. LongLink provide the blueprint. Operate. LongLink provide the infrastructure.
+                    Build. Follow development standards. Operate. Keep workflows and costs under control.
                 </Heading>
                 <Stack
                     as="figure"
@@ -283,8 +282,7 @@ export default function Home() {
                                         display="block"
                                         textWrap="pretty"
                                     >
-                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
-                                        blueprint.
+                                        Follow development standards.
                                     </Text>
                                 </Stack>
                                 <Stack
@@ -307,8 +305,7 @@ export default function Home() {
                                         display="block"
                                         textWrap="pretty"
                                     >
-                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
-                                        infrastructure.
+                                        Keep workflows and costs under control.
                                     </Text>
                                 </Stack>
                             </Stack>
