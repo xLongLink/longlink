@@ -61,8 +61,8 @@ export const content = (
         </Text>
         <EnvironmentTable environments={environments} />
         <Text as="p">
-            The LongLink Platform creates one bucket per Organization and gives each Application direct IAM
-            credentials. Application code can read and write only its own prefix.
+            The LongLink Platform creates one bucket per Organization and gives each Application direct IAM credentials.
+            Application code can read and write only its own prefix.
         </Text>
         <Heading id="usage" level={2}>
             Usage
