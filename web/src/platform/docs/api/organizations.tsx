@@ -16,7 +16,6 @@ import {
     Info,
     Wrench,
 } from 'lucide-react';
-import { DocsBanner } from '@/components/DocsBanner';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },
@@ -64,7 +63,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsBanner variant="organizations" />
         <Heading id="organizations" level={1}>
             Organizations
         </Heading>

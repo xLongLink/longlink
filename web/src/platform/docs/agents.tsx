@@ -1,7 +1,6 @@
 import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { DocsBanner } from '@/components/DocsBanner';
 
 export const metadata = {
     toc: [{ id: 'agents', label: 'Agents', level: 1 }],
@@ -11,7 +10,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsBanner variant="agents" />
         <Heading id="agents" level={1}>
             Agents
         </Heading>
