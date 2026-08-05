@@ -54,7 +54,7 @@ export const content = (
         </Heading>
         <Text as="p">
             The SDK exposes an application-scoped <Code>fs</Code> object backed by{' '}
-            <Link href="https://filesystem-spec.readthedocs.io/en/latest/" isExternalLink type="inherit">
+            <Link href="https://filesystem-spec.readthedocs.io/en/latest/" hasUnderline isExternalLink type="inherit">
                 fsspec
             </Link>
             . Application code uses the same filesystem interface in local development, tests, and production.

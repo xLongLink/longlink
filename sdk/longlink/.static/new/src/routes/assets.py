@@ -1,10 +1,9 @@
 import longlink.assets as assets
-from fastapi import HTTPException
-from longlink import Router
+from fastapi import APIRouter, HTTPException
 from src.resources import env, shared_fs
 from fastapi.responses import Response
 
-router = Router()
+router = APIRouter(prefix="/api")
 
 
 @router.get("/assets/logo")

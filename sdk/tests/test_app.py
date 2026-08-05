@@ -2,16 +2,17 @@ import json
 import pytest
 from pytest import MonkeyPatch
 from pathlib import Path
+from fastapi import FastAPI
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
-from longlink.utils.settings import Envs
 
 
 def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> None:
     """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
 
     # Initialize the development runtime and its in-process client.
-    app = LongLink(env=Envs(ENV="development"), i18n=None, pages=None)
+    app = FastAPI()
+    LongLink(app, env="development", i18n=None, pages=None)
     client = TestClient(app)
 
     # Exercise runtime metadata, frontend fallback, and development preflight routes.
@@ -39,7 +40,9 @@ def test_production_health_and_root_are_served_without_sdk_auth() -> None:
     """Serve runtime health and the app shell without SDK-owned authorization."""
 
     # Start the production runtime without SDK authentication dependencies.
-    client = TestClient(LongLink(env=Envs(ENV="production"), i18n=None, pages=None))
+    app = FastAPI()
+    LongLink(app, env="production", i18n=None, pages=None)
+    client = TestClient(app)
 
     # Request the public health endpoint and frontend shell.
     health_response = client.get("/health")
@@ -98,7 +101,9 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     monkeypatch.chdir(tmp_path)
 
     # Start LongLink and request the registered page and page catalog.
-    client = TestClient(LongLink())
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app)
     response = client.get(f"/pages/{relative_path}", params={"page_path": str(alternate_path)})
     pages_response = client.get("/pages.json")
 
@@ -122,7 +127,7 @@ def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tm
 
     # Start registration and require schema validation to fail immediately.
     with pytest.raises(ValueError, match="XML is invalid"):
-        LongLink()
+        LongLink(FastAPI())
 
 
 def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -146,7 +151,9 @@ def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path)
     monkeypatch.chdir(tmp_path)
 
     # Request the catalog through the initialized SDK runtime.
-    client = TestClient(LongLink())
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app)
     response = client.get("/i18n/en.json")
 
     # Verify the source catalog is returned unchanged.

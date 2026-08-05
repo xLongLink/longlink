@@ -72,7 +72,12 @@ export function Article({ page }: { page: ArticlePage }) {
                                             {t('common.lastUpdated', { date: formatDate(metadata.lastUpdated) })}
                                         </Text>
                                         {metadata.editUrl ? (
-                                            <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
+                                            <Link
+                                                href={metadata.editUrl}
+                                                hasUnderline
+                                                target="_blank"
+                                                type="supporting"
+                                            >
                                                 {t('docs.editInGithub')}
                                             </Link>
                                         ) : null}

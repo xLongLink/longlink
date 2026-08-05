@@ -1,12 +1,12 @@
 import logging
-from typing import Any
-from fastapi import FastAPI, APIRouter
 from pathlib import Path
 from functools import partial
+from typing import Literal
+from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from longlink.pages import XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
 from longlink.utils import Envs
-from collections.abc import Callable
-from longlink.logger import ApiAccessFilter
+from longlink.logger import ApiAccessFilter, logger
 from longlink.routes import routes
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
@@ -14,9 +14,9 @@ from fastapi.staticfiles import StaticFiles
 from longlink.middleware import install_frontend_middleware
 from fastapi.middleware.cors import CORSMiddleware
 from longlink.database.audit import install_audit_middleware
+from starlette.routing import BaseRoute, Match
 
-API_PREFIX = "/api"
-RouteDecorator = Callable[[Callable[..., Any]], Callable[..., Any]]
+Environment = Literal["development", "testing", "production"]
 
 
 def normalize_mount_path(path: str) -> str:
@@ -48,52 +48,26 @@ def default_source_directory(route_path: str) -> Path:
     return route_directory
 
 
-def user_api_path(path: str) -> str:
-    """Return a user API path under the SDK API prefix."""
+class LongLink:
+    """Install LongLink runtime services into one Application-owned FastAPI app."""
 
-    normalized_path = normalize_mount_path(path)
+    def __init__(self, app: FastAPI, env: Environment | None = None, i18n: str | None = "/i18n", pages: str | None = "/pages") -> None:
+        """Install runtime services, routes, and the frontend fallback into an Application app."""
 
-    # Preserve paths already scoped to the API prefix.
-    if normalized_path == API_PREFIX or normalized_path.startswith(f"{API_PREFIX}/"):
-        return normalized_path
+        # Preserve Application routes so overlapping LongLink content can be reported.
+        application_routes = list(app.router.routes)
+        self.app = app
 
-    # The root API path maps directly to the API prefix.
-    if normalized_path == "/":
-        return API_PREFIX
-
-    return f"{API_PREFIX}{normalized_path}"
-
-
-def user_router_prefix(prefix: str) -> str:
-    """Return the include-router prefix for user-defined API routes."""
-
-    # Empty router prefixes attach at the API root.
-    if not prefix:
-        return API_PREFIX
-
-    return user_api_path(prefix)
-
-
-class LongLink(FastAPI):
-    """FastAPI app that owns SDK service creation and shared request state."""
-
-    def __init__(self, env: Envs | None = None, i18n: str | None = "/i18n", pages: str | None = "/pages", **kwargs: Any) -> None:
-        """Build app, initialize managed services, mount routes, and serve the frontend."""
-
-        # Initialize FastAPI and SDK-managed runtime state.
-        super().__init__(**kwargs)
-
-        # Prepare environment settings and the mutable page registry.
-        environments = env if env is not None else Envs()
+        # Resolve the runtime environment and initialize mutable page state.
+        environment = Envs().ENV if env is None else Envs(ENV=env).ENV
         page_registry: list[PageDefinition] = []
-        self.state.page_registry = page_registry
+        app.state.page_registry = page_registry
 
         # Compress the embedded frontend and apply safe browser cache policies.
-        install_frontend_middleware(self)
+        install_frontend_middleware(app)
 
         # Production containers attach API access filtering here.
-        if environments.ENV == "production":
-
+        if environment == "production":
             # Built app containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
 
@@ -103,10 +77,10 @@ class LongLink(FastAPI):
 
         # Mount SDK-managed routes before user-facing assets.
         for router in routes:
-            super().include_router(router)
+            app.include_router(router)
 
         # Bind audit context across downstream request handling.
-        install_audit_middleware(self)
+        install_audit_middleware(app)
 
         # Resolve the embedded frontend bundle used by the final fallback mount.
         frontend_directory = ROOT / ".static" / "web"
@@ -118,24 +92,19 @@ class LongLink(FastAPI):
             # Resolve the Application translation directory and mount it when present.
             translations_directory = default_source_directory(i18n_path)
             if translations_directory.exists():
-                self.mount(i18n_path, StaticFiles(directory=translations_directory), name="translations")
+                app.mount(i18n_path, StaticFiles(directory=translations_directory), name="translations")
 
         # Optional page discovery can be disabled.
         if pages is not None:
-
             # Resolve the page directory and register it only when it exists.
             pages_path = normalize_mount_path(pages)
             pages_directory = default_source_directory(pages_path)
             if pages_directory.exists():
                 self.register_page_directory(pages_path, pages_directory)
 
-        # Serve the embedded frontend when the bundle is available.
-        if frontend_directory.exists():
-            self.frontend("/", directory=frontend_directory)
-
         # Enable CORS in development for local frontend access to API routes
-        if environments.ENV == "development":
-            self.add_middleware(
+        if environment == "development":
+            app.add_middleware(
                 CORSMiddleware,
                 allow_origins=[
                     "http://localhost:3000",
@@ -146,94 +115,55 @@ class LongLink(FastAPI):
                 allow_headers=["*"],
             )
 
+        # Report Application routes that take precedence over LongLink content.
+        self.warn_overlapping_routes(application_routes)
 
-    def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
-        """Register a user-defined route under `/api`."""
+        # Serve the embedded frontend last so Application routes retain precedence.
+        if frontend_directory.exists():
+            app.frontend("/", directory=frontend_directory)
 
-        super().add_api_route(user_api_path(path), endpoint, **kwargs)
+    def warn_overlapping_routes(self, application_routes: list[BaseRoute]) -> None:
+        """Warn when Application routes take precedence over LongLink runtime content."""
 
+        # Combine LongLink's included routers with dynamically registered page routes.
+        application_route_ids = {id(route) for route in application_routes}
+        longlink_routes = [
+            route for route in self.app.router.routes if isinstance(route, APIRoute) and id(route) not in application_route_ids
+        ]
+        longlink_routes.extend(route for router in routes for route in router.routes if isinstance(route, APIRoute))
+        warned_routes: set[tuple[int, str]] = set()
 
-    def api_route(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined route decorator under `/api`."""
+        for application_route in application_routes:
+            for longlink_route in longlink_routes:
+                for method in longlink_route.methods or set():
+                    scope = {"type": "http", "method": method, "path": longlink_route.path}
+                    match, _ = application_route.matches(scope)
+                    warning_key = (id(application_route), method)
 
-        return super().api_route(user_api_path(path), **kwargs)
-
-
-    def delete(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined DELETE route decorator under `/api`."""
-
-        return super().delete(user_api_path(path), **kwargs)
-
-
-    def get(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined GET route decorator under `/api`."""
-
-        return super().get(user_api_path(path), **kwargs)
-
-
-    def head(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined HEAD route decorator under `/api`."""
-
-        return super().head(user_api_path(path), **kwargs)
-
-
-    def include_router(self, router: APIRouter, *, prefix: str = "", **kwargs: Any) -> None:
-        """Include a user-defined router under `/api`."""
-
-        super().include_router(router, prefix=user_router_prefix(prefix), **kwargs)
-
-
-    def options(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined OPTIONS route decorator under `/api`."""
-
-        return super().options(user_api_path(path), **kwargs)
-
-
-    def patch(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined PATCH route decorator under `/api`."""
-
-        return super().patch(user_api_path(path), **kwargs)
-
-
-    def post(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined POST route decorator under `/api`."""
-
-        return super().post(user_api_path(path), **kwargs)
-
-
-    def put(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined PUT route decorator under `/api`."""
-
-        return super().put(user_api_path(path), **kwargs)
-
-
-    def trace(self, path: str, **kwargs: Any) -> RouteDecorator:
-        """Return a user-defined TRACE route decorator under `/api`."""
-
-        return super().trace(user_api_path(path), **kwargs)
-
+                    # Application routes are registered first and therefore replace matching LongLink routes.
+                    if match is Match.FULL and warning_key not in warned_routes:
+                        logger.warning(
+                            "Application route overlaps LongLink route %s %s. Add the /api prefix to avoid replacing LongLink content.",
+                            method,
+                            longlink_route.path,
+                        )
+                        warned_routes.add(warning_key)
 
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
 
         # Prepare normalized route state for replacing pages under this directory.
         normalized_prefix = normalize_mount_path(route_prefix)
-        registered_pages: list[PageDefinition] = self.state.page_registry
+        registered_pages: list[PageDefinition] = self.app.state.page_registry
         stale_page_prefix = "/" if normalized_prefix == "/" else f"{normalized_prefix}/"
-        stale_page_paths = {
-            page.path for page in registered_pages if page.path.startswith(stale_page_prefix)
-        }
+        stale_page_paths = {page.path for page in registered_pages if page.path.startswith(stale_page_prefix)}
 
         # Remove previously registered SDK page routes before replacing the page registry.
         if stale_page_paths:
-            self.router.routes = [
-                route for route in self.router.routes if getattr(route, "path", None) not in stale_page_paths
-            ]
+            self.app.router.routes = [route for route in self.app.router.routes if getattr(route, "path", None) not in stale_page_paths]
 
         # Remove stale page metadata before discovering replacement files.
-        registered_pages[:] = [
-            page for page in registered_pages if page.path not in stale_page_paths
-        ]
+        registered_pages[:] = [page for page in registered_pages if page.path not in stale_page_paths]
 
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
@@ -255,7 +185,7 @@ class LongLink(FastAPI):
                     icon=page_icon,
                 )
             )
-            super().add_api_route(
+            self.app.add_api_route(
                 registered_path,
                 page_endpoint,
                 methods=["GET"],

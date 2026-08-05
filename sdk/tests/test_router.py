@@ -1,12 +1,13 @@
-from longlink import Router, LongLink
+from fastapi import APIRouter, FastAPI
+from longlink import LongLink
 from fastapi.testclient import TestClient
 
 
-def test_router_prefixes_user_routes_under_api() -> None:
-    """Expose user-defined SDK routes under the API prefix."""
+def test_application_router_preserves_explicit_api_prefix() -> None:
+    """Expose Application routes under their explicit API prefix."""
 
     # Arrange
-    router = Router()
+    router = APIRouter(prefix="/api")
 
     @router.get("/sample")
     async def sample_get_endpoint() -> dict[str, str]:
@@ -14,14 +15,16 @@ def test_router_prefixes_user_routes_under_api() -> None:
 
         return {"message": "ok"}
 
-    app = LongLink()
+    app = FastAPI()
     app.include_router(router)
 
-    @app.get("/direct")
+    @app.get("/api/direct")
     async def direct_get_endpoint() -> dict[str, str]:
         """Return a directly registered sample payload."""
 
         return {"message": "direct"}
+
+    LongLink(app)
 
     client = TestClient(app)
 

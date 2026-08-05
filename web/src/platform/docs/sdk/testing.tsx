@@ -23,11 +23,11 @@ export const content = (
         </Heading>
         <Text as="p">
             Test LongLink applications with standard{' '}
-            <Link href="https://docs.pytest.org/en/stable/" isExternalLink type="inherit">
+            <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
                 pytest
             </Link>{' '}
             and{' '}
-            <Link href="https://pytest-asyncio.readthedocs.io/en/stable/" isExternalLink type="inherit">
+            <Link href="https://pytest-asyncio.readthedocs.io/en/stable/" hasUnderline isExternalLink type="inherit">
                 pytest-asyncio
             </Link>{' '}
             workflows. Generated projects also include the dependencies needed by{' '}
@@ -58,7 +58,7 @@ uv run longlink test tests/test_app.py -q`}
         <Text as="p">
             LongLink applications are FastAPI applications, and <Code>longlink.testing.TestClient</Code> is a compatible
             facade over FastAPI's{' '}
-            <Link href="https://fastapi.tiangolo.com/tutorial/testing/" isExternalLink type="inherit">
+            <Link href="https://fastapi.tiangolo.com/tutorial/testing/" hasUnderline isExternalLink type="inherit">
                 TestClient
             </Link>
             . Use async pytest tests for lower-level async services when needed.

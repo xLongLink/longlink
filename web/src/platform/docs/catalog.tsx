@@ -1,7 +1,6 @@
 import {
     AppWindow,
     BookOpen,
-    Bot,
     Building2,
     Database,
     FileCode2,
@@ -14,7 +13,6 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/platform/catalog';
-import * as agents from '@/platform/docs/agents';
 import * as apiApplications from '@/platform/docs/api/applications';
 import * as apiOverview from '@/platform/docs/api/index';
 import * as apiOrganizations from '@/platform/docs/api/organizations';
@@ -129,11 +127,6 @@ const DOC_SECTIONS = [
             ...documentationPages.applications,
             icon: <AppWindow aria-hidden="true" size={16} />,
             ...apiApplications,
-        },
-        {
-            ...documentationPages.agents,
-            icon: <Bot aria-hidden="true" size={16} />,
-            ...agents,
         },
     ]),
     docSection('Applications', [

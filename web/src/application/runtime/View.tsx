@@ -205,13 +205,12 @@ export default function View({
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
-    const resolvedPages = pages;
-    const resolvedPagesBaseUrl = resolvedPages.replace(/pages\.json(?:[?#].*)?$/i, '');
+    const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const navigationBaseUrl = resolveApplicationHref('', organization, application);
-    const pageCacheKey = `${resolvedPages}\u0000${runtimeKey ?? ''}`;
+    const pageCacheKey = `${pages}\u0000${runtimeKey ?? ''}`;
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
-    const { data: registeredPages, isLoading, error } = usePages(resolvedPages, applicationCanLoad);
+    const { data: registeredPages, isLoading, error } = usePages(pages, applicationCanLoad);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const activeRouteMatch = useMemo(
         () => findPageRouteMatch(registeredPages, normalizedRoutePath),
@@ -221,15 +220,16 @@ export default function View({
     const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? registeredPages?.[0] : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
-    const activeRoutePath = normalizedRoutePath;
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
-    const activePageStateKey = activePage ? `${activePage.path}\u0000${activeRoutePath}\u0000${activePage.tab}` : '';
+    const activePageStateKey = activePage
+        ? `${activePage.path}\u0000${normalizedRoutePath}\u0000${activePage.tab}`
+        : '';
     const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
     const activePageStateIsCurrent =
         activePageState?.cacheKey === pageCacheKey &&
         activePageState.path === activePagePath &&
-        activePageState.routePath === activeRoutePath;
+        activePageState.routePath === normalizedRoutePath;
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
@@ -321,7 +321,7 @@ export default function View({
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
-            existingPageState.routePath === activeRoutePath &&
+            existingPageState.routePath === normalizedRoutePath &&
             !existingPageState.loading
         ) {
             return;
@@ -331,7 +331,7 @@ export default function View({
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
-            existingPageState.routePath === activeRoutePath &&
+            existingPageState.routePath === normalizedRoutePath &&
             inFlightPageKeys.has(pageKey)
         ) {
             return;
@@ -340,7 +340,7 @@ export default function View({
         const loadingPageState = createPageState(
             pageCacheKey,
             pagePath,
-            activeRoutePath,
+            normalizedRoutePath,
             activeRouteParams,
             navigationBaseUrl,
             runtimeContextRef.current
@@ -395,7 +395,7 @@ export default function View({
                         if (
                             currentPageState?.cacheKey !== pageCacheKey ||
                             currentPageState.path !== activePagePath ||
-                            currentPageState.routePath !== activeRoutePath
+                            currentPageState.routePath !== normalizedRoutePath
                         ) {
                             return current;
                         }
@@ -430,7 +430,7 @@ export default function View({
                     if (
                         currentPageState?.cacheKey !== pageCacheKey ||
                         currentPageState.path !== activePagePath ||
-                        currentPageState.routePath !== activeRoutePath
+                        currentPageState.routePath !== normalizedRoutePath
                     ) {
                         return current;
                     }
@@ -462,7 +462,7 @@ export default function View({
         activePagePath,
         activePageStateKey,
         activeRouteParams,
-        activeRoutePath,
+        normalizedRoutePath,
         applicationCanLoad,
         navigationBaseUrl,
         pageCacheKey,

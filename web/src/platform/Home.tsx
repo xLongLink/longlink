@@ -2,7 +2,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Link } from '@astryxdesign/core/Link';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -367,9 +366,7 @@ export default function Home() {
                                 Humans make the decisions. Agents execute the work.
                             </Text>
                             <Stack className="relative z-1 mt-3" hAlign="end">
-                                <Link href="/docs/agents" isStandalone weight="semibold">
-                                    Learn more
-                                </Link>
+                                <Text type="supporting">Coming Soon</Text>
                             </Stack>
                         </div>
                     </div>

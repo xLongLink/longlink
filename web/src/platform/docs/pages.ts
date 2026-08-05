@@ -8,11 +8,6 @@ export const documentationPages = {
         seoTitle: 'Documentation | LongLink',
         description: 'Learn how LongLink helps teams build and run structured business applications.',
     },
-    agents: {
-        path: '/docs/agents',
-        title: 'Agents',
-        description: 'Learn how LongLink supports agent-driven work while people retain decision-making control.',
-    },
     platform: {
         path: '/docs/api',
         title: 'Overview',
