@@ -9,7 +9,6 @@ export const metadata = {
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
-        { id: 'settings', label: 'Settings', level: 2 },
     ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/environments.tsx',
@@ -21,21 +20,21 @@ export const content = (
             Environments
         </Heading>
         <Text as="p">
-            Environment variables are constants provided to an application when it runs. They keep configuration outside
-            the source code, allowing the application to run in different environments without changing its
-            implementation.
+            Environment variables let you configure an application without changing its source code. They are commonly
+            used for values that differ between environments, such as database URLs, API keys, or feature settings.
         </Text>
         <Text as="p">
-            LongLink provides a simple, consistent way to define and manage this configuration, built on top of{' '}
+            LongLink makes this configuration easy to define and manage using{' '}
             <Link
                 href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
-                isExternalLink
+                hasUnderline
+                target="_blank"
                 type="inherit"
             >
                 Pydantic Settings
             </Link>
-            . This gives applications validated and well-documented settings across local development and production.
-            You define the configuration once, and LongLink reuses it wherever the application runs.
+            . Your settings are validated, documented, and reused across <Code>development</Code>,{' '}
+            <Code>production</Code>, and <Code>testing</Code>.
         </Text>
         <Heading id="usage" level={2}>
             Usage
@@ -46,13 +45,5 @@ export const content = (
             }
             language="python"
         />
-        <Heading id="settings" level={2}>
-            Settings
-        </Heading>
-        <Text as="p">
-            Point the <Code>tool.longlink</Code> section in <Code>pyproject.toml</Code> to the environment class so
-            LongLink knows which settings your application uses when it is built and deployed.
-        </Text>
-        <CodeBlock code={'[tool.longlink]\nenvironment = "src.envs:Env"'} language="toml" />
     </Stack>
 );

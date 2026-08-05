@@ -2,7 +2,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Link } from '@astryxdesign/core/Link';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,7 +9,6 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { MetaFunction } from 'react-router';
 import { Footer } from '@/components/Footer';
-import { Wordmark } from '@/components/Wordmark';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
 import { HeroGlobe } from '@/platform/HeroGlobe';
@@ -231,7 +229,7 @@ export default function Home() {
                 className="homepage-before-after-section relative z-20"
             >
                 <Heading id="before-after-heading" level={2} className="sr-only">
-                    Build. LongLink provide the blueprint. Operate. LongLink provide the infrastructure.
+                    Build. Follow development standards. Operate. Keep workflows and costs under control.
                 </Heading>
                 <Stack
                     as="figure"
@@ -284,8 +282,7 @@ export default function Home() {
                                         display="block"
                                         textWrap="pretty"
                                     >
-                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
-                                        blueprint.
+                                        Follow development standards.
                                     </Text>
                                 </Stack>
                                 <Stack
@@ -308,8 +305,7 @@ export default function Home() {
                                         display="block"
                                         textWrap="pretty"
                                     >
-                                        <Wordmark className="mr-1.5 align-baseline" size="inherit" /> provide the
-                                        infrastructure.
+                                        Keep workflows and costs under control.
                                     </Text>
                                 </Stack>
                             </Stack>
@@ -367,9 +363,7 @@ export default function Home() {
                                 Humans make the decisions. Agents execute the work.
                             </Text>
                             <Stack className="relative z-1 mt-3" hAlign="end">
-                                <Link href="/docs/agents" isStandalone weight="semibold">
-                                    Learn more
-                                </Link>
+                                <Text type="supporting">Coming Soon</Text>
                             </Stack>
                         </div>
                     </div>

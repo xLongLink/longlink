@@ -1,16 +1,14 @@
 import urllib.parse
 from uuid import uuid4
-from typing import BinaryIO, cast
-from fastapi import UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
-from longlink import Router
-from src.resources import fs
+from longlink import storage
 from fastapi.responses import Response
 from src.schemas.requests import PurchaseRequestRead, PurchaseRequestCreate, RequestAttachmentRead, PurchaseRequestStatusUpdate
 from src.database.services import requests
 from src.database.models.requests import PurchaseRequest
 
-router = Router()
+router = APIRouter(prefix="/api")
 
 ATTACHMENTS_DIRECTORY = "request-attachments"
 UPLOAD_CHUNK_SIZE = 1024 * 1024
@@ -65,7 +63,7 @@ async def request_attachments_get_endpoint(request_id: int):
     attachments_directory = f"{ATTACHMENTS_DIRECTORY}/{request_id}"
 
     try:
-        entries = fs.ls(attachments_directory, detail=True)
+        entries = storage.ls(attachments_directory, detail=True)
     except FileNotFoundError:
         return []
 
@@ -92,11 +90,11 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
 
     # Create the attachment directory and close the upload after storage completes.
     try:
-        fs.makedirs(f"{ATTACHMENTS_DIRECTORY}/{request_id}", exist_ok=True)
+        storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{request_id}", exist_ok=True)
 
-        with cast(BinaryIO, fs.open(storage_path, "wb")) as stored_file:
+        with storage.open(storage_path, "wb") as stored_file:
 
-            # Stream the upload into fsspec so local, test, and S3 storage all work.
+            # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)
                 uploaded_size += len(chunk)
@@ -120,11 +118,11 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
 
     # Resolve the attachment path and reject files that are not present.
     storage_path = _attachment_path(request_id, file_id)
-    if not fs.exists(storage_path):
+    if not storage.exists(storage_path):
         raise HTTPException(status_code=404, detail="Attachment not found")
 
     # Read the stored attachment for the response body.
-    with fs.open(storage_path, "rb") as stored_file:
+    with storage.open(storage_path, "rb") as stored_file:
         content = stored_file.read()
 
     # Encode the original name for a standards-compliant download header.
@@ -146,8 +144,9 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str):
 
     # Resolve the attachment path and remove the file when it is present.
     storage_path = _attachment_path(request_id, file_id)
-    if fs.exists(storage_path):
-        fs.rm(storage_path)
+    if storage.exists(storage_path):
+        storage.rm(storage_path)
+
 
 async def _require_request(request_id: int, include_audit_users: bool = True) -> PurchaseRequest:
     """Return one purchase request or raise a 404 response."""
@@ -158,6 +157,7 @@ async def _require_request(request_id: int, include_audit_users: bool = True) ->
         raise HTTPException(status_code=404, detail="Purchase request not found")
 
     return request
+
 
 def _attachment_path(request_id: int, file_id: str) -> str:
     """Return the validated storage path for one attachment id."""

@@ -1,8 +1,8 @@
+from fastapi import FastAPI
 from longlink import LongLink
-from src.routes import assets, requests
-from src.resources import env
+from src.routes import requests
 
-# Build the LongLink application and register its API routes.
-app = LongLink(env=env)
-app.include_router(assets.router)
+# Build Application routes before installing LongLink's runtime and frontend.
+app = FastAPI()
 app.include_router(requests.router)
+longlink = LongLink(app)

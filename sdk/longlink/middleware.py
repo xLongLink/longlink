@@ -2,7 +2,7 @@ import re
 from fastapi import FastAPI
 from starlette.types import Send, Scope, ASGIApp, Message, Receive
 from starlette.datastructures import Headers, MutableHeaders
-from starlette.middleware.gzip import GZipResponder
+from starlette.middleware.gzip import GZipMiddleware
 
 HASHED_ASSET_PATH = re.compile(r"^/assets/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
 INCOMPRESSIBLE_SUFFIXES = (".avif", ".gif", ".gz", ".ico", ".jpeg", ".jpg", ".png", ".webp", ".woff2", ".zip")
@@ -102,8 +102,8 @@ class FrontendMiddleware:
 
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
         if use_gzip:
-            responder = GZipResponder(self.app, self.minimum_size, compresslevel=self.compresslevel)
-            await responder(scope, receive, send_with_headers)
+            gzip_middleware = GZipMiddleware(self.app, self.minimum_size, compresslevel=self.compresslevel)
+            await gzip_middleware(scope, receive, send_with_headers)
             return
 
         await self.app(scope, receive, send_with_headers)

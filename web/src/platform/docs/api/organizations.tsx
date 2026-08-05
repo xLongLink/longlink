@@ -1,22 +1,8 @@
-import { Card } from '@astryxdesign/core/Card';
-import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import {
-    ArrowUp,
-    Boxes,
-    Building2,
-    CheckCheck,
-    CheckCircle,
-    Database,
-    EyeOff,
-    HardDrive,
-    Info,
-    Wrench,
-} from 'lucide-react';
-import { DocsBanner } from '@/components/DocsBanner';
+import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },
@@ -42,13 +28,6 @@ const organizationRoles = [
     },
 ];
 
-const organizationResources = [
-    { name: 'Users', description: 'Members and roles', icon: Info },
-    { name: 'Database', description: 'Database schemas', icon: Database },
-    { name: 'File Storage', description: 'One bucket with scoped prefixes', icon: HardDrive },
-    { name: 'Compute', description: 'Runtime services', icon: Boxes },
-];
-
 export const metadata = {
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
@@ -64,7 +43,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsBanner variant="organizations" />
         <Heading id="organizations" level={1}>
             Organizations
         </Heading>
@@ -76,25 +54,6 @@ export const content = (
             Every application belongs to one organization. Organization membership controls who can see the workspace,
             manage people, deploy applications, inspect resources, and open application runtimes.
         </Text>
-        <Stack gap={4}>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <Building2 aria-hidden="true" className="text-accent" size={20} />
-                    <Text weight="semibold">Organization</Text>
-                </Stack>
-            </Card>
-            <Grid columns={{ minWidth: 160, max: 4, repeat: 'fit' }} gap={4}>
-                {organizationResources.map(({ description, icon: ResourceIcon, name }) => (
-                    <Card key={name} variant="muted">
-                        <Stack gap={2} align="center">
-                            <ResourceIcon aria-hidden="true" className="text-accent" size={20} />
-                            <Text weight="semibold">{name}</Text>
-                            <Text type="supporting">{description}</Text>
-                        </Stack>
-                    </Card>
-                ))}
-            </Grid>
-        </Stack>
         <Heading id="users" level={2}>
             Users
         </Heading>

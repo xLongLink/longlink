@@ -77,7 +77,7 @@ function ContextLevels({ items }: { items: typeof industryLevels | typeof geogra
                         {item.value && item.href ? (
                             <>
                                 <Text>-</Text>
-                                <Link href={item.href} isExternalLink type="inherit" weight="semibold">
+                                <Link href={item.href} hasUnderline isExternalLink type="inherit" weight="semibold">
                                     {item.value}
                                 </Link>
                             </>
@@ -177,7 +177,7 @@ export const content = (
         </Text>
         <Text as="p">
             And, of course, is{' '}
-            <Link href="https://github.com/xLongLink/longlink" isExternalLink type="inherit">
+            <Link href="https://github.com/xLongLink/longlink" hasUnderline isExternalLink type="inherit">
                 open source
             </Link>
             .

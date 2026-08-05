@@ -22,7 +22,6 @@ import {
     ShieldCheck,
     UserRound,
 } from 'lucide-react';
-import { DocsBanner } from '@/components/DocsBanner';
 import { Wordmark } from '@/components/Wordmark';
 
 const sharedFoundationItems = [
@@ -165,7 +164,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsBanner variant="overview" />
         <Heading id="platform" level={1}>
             Platform
         </Heading>

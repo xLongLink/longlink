@@ -1,16 +1,6 @@
-import { Card } from '@astryxdesign/core/Card';
-import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { Columns, Copy, Wrench } from 'lucide-react';
-import { DocsBanner } from '@/components/DocsBanner';
-
-const runtimeResources = [
-    { name: 'Database', icon: Columns, description: ['Dedicated schema', 'Read access from shared'] },
-    { name: 'File Storage', icon: Copy, description: ['Application prefix', 'Read access to shared prefix'] },
-    { name: 'Infrastructure', icon: Wrench, description: ['Versioned runtime', 'Managed environment'] },
-];
 
 export const metadata = {
     toc: [
@@ -23,7 +13,6 @@ export const metadata = {
 
 export const content = (
     <Stack gap={5}>
-        <DocsBanner variant="applications" />
         <Heading id="applications" level={1}>
             Applications
         </Heading>
@@ -39,23 +28,6 @@ export const content = (
             Platform stores user-owned and direct application IAM credentials together in a Kubernetes Secret before
             deploying the Application.
         </Text>
-        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={4}>
-            {runtimeResources.map(({ description, icon: ResourceIcon, name }) => (
-                <Card key={name} variant="muted">
-                    <Stack gap={3} align="center">
-                        <ResourceIcon aria-hidden="true" className="text-accent" size={20} />
-                        <Text weight="semibold">{name}</Text>
-                        <Stack gap={1} align="center">
-                            {description.map((line) => (
-                                <Text key={line} type="supporting">
-                                    {line}
-                                </Text>
-                            ))}
-                        </Stack>
-                    </Stack>
-                </Card>
-            ))}
-        </Grid>
         <Heading id="access" level={2}>
             Access
         </Heading>
