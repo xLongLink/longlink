@@ -41,7 +41,8 @@ You are working on a LongLink application.
 
 - Application models and migrations own only the application schema.
 - The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
-- `longlink.User` is a read-only mapping to the platform-owned shared users table.
+- Use plain `SQLModel` for ordinary application tables. Use `longlink.database.UserTable` only when a table needs Platform-user attribution.
+- `longlink.database.User` is a read-only mapping to the Platform-owned shared users table.
 - Do not create, update, delete, or migrate shared tables from application code.
 
 ## Testing

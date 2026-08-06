@@ -16,7 +16,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
     # Define one isolated mapped table for the real SQLite lifecycle.
-    class AuditLifecycleItem(database_base.Table, table=True):
+    class AuditLifecycleItem(database_base.UserTable, table=True):
         """Temporary SDK table used to verify the complete audit lifecycle."""
 
         # Table metadata
@@ -51,7 +51,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     try:
 
         # Insert through AsyncSession so the registered sync before_flush listener runs.
-        async with database_base.get_session() as session:
+        async with database_base.session() as session:
             item = AuditLifecycleItem(name="draft", created_at=None, updated_at=None)
             with audit_user_scope(creator_id):
                 session.add(item)
@@ -67,7 +67,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item_id = item.id
 
         # Reload and update the row in a fresh SDK session.
-        async with database_base.get_session() as session:
+        async with database_base.session() as session:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
@@ -80,7 +80,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             assert item.updated_id == updater_id
 
         # Delete the reloaded row and commit the listener's soft-delete conversion.
-        async with database_base.get_session() as session:
+        async with database_base.session() as session:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
@@ -89,7 +89,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
                 await session.commit()
 
         # Reload after deletion to prove the row and all persisted audit values remain.
-        async with database_base.get_session() as session:
+        async with database_base.session() as session:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
             assert item.name == "reviewed"

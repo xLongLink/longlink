@@ -1,12 +1,12 @@
 from sqlmodel import SQLModel
-from sqlalchemy.orm import registry, declared_attr
+from sqlalchemy.orm import declared_attr
 
-database_registry = registry()
-database_metadata = database_registry.metadata
+# Use SQLModel's standard metadata so ordinary Application models need no LongLink base class.
+database_metadata = SQLModel.metadata
 
 
-class Base(SQLModel, registry=database_registry):
-    """Base SQLModel for application and shared read models."""
+class Base(SQLModel):
+    """Configure SDK models that use SQLAlchemy declared attributes."""
 
     metadata = database_metadata
     model_config = SQLModel.model_config.copy()

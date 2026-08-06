@@ -15,10 +15,9 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
     model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
     model_path.parent.mkdir(parents=True)
     model_path.write_text(
-        "from longlink import Table\n"
-        "from sqlmodel import Field\n"
+        "from sqlmodel import Field, SQLModel\n"
         "\n\n"
-        "class NestedInventoryItem(Table, table=True):\n"
+        "class NestedInventoryItem(SQLModel, table=True):\n"
         "    \"\"\"Nested inventory table.\"\"\"\n"
         "\n"
         f"    __tablename__ = \"{table_name}\"\n"

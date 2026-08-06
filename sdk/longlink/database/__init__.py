@@ -1,1 +1,2 @@
-from .base import User, Table, get_session, create_engine
+from .base import UserTable, session
+from longlink.shared.models import User

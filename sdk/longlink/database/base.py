@@ -15,8 +15,8 @@ from longlink.database.registry import Base, database_metadata
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
-class Table(Base):
-    """Base SQLModel for DB tables with common timestamp and audit fields."""
+class UserTable(Base):
+    """Base SQLModel for Application tables that track Platform users."""
 
     # SQLAlchemy configuration
     __allow_unmapped__ = True
@@ -94,8 +94,8 @@ def create_engine(env: Envs) -> AsyncEngine:
 
 
 @asynccontextmanager
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Yield a SQLModel async session."""
+async def session() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an Application database session."""
 
     # Open one session from the lazily initialized session factory.
     session_maker = await get_session_maker()
