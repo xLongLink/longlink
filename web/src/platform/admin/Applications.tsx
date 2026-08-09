@@ -15,7 +15,6 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
-import { createStatusLabels } from '@/lib/status';
 import { formatDateTime } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
@@ -29,7 +28,12 @@ const statusVariants = {
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const t = useTranslator();
-    const statusLabels = createStatusLabels(t);
+    const statusLabels: Record<Status, string> = {
+        creating: t('status.creating'),
+        running: t('status.running'),
+        failed: t('status.failed'),
+        deleting: t('status.deleting'),
+    };
     const columns: TableColumn<ApplicationResponse>[] = [
         {
             key: 'name',

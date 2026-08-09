@@ -2,8 +2,6 @@ export const ROLE_NAMES = ['read', 'write', 'maintain', 'admin', 'owner'] as con
 
 export type Role = (typeof ROLE_NAMES)[number];
 
-export const PLATFORM_ROLE_NAMES = ['user', 'administrator'] as const;
-
 const ROLE_RANKS = {
     read: 1,
     write: 2,

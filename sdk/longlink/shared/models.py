@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import Uuid, Column, String
 from longlink.database.types import UTCDateTime
-from longlink.database.registry import Base, database_metadata
+from longlink.database.registry import Base
 
 
 class AuditUser(Base, table=True):

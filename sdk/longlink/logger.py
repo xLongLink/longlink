@@ -49,10 +49,7 @@ class ApiAccessFilter(logging.Filter):
             return True
 
         # Hide frontend and asset requests so access logs stay focused on application APIs.
-        if not path.startswith(self._allowed_prefixes):
-            return False
-
-        return True
+        return path.startswith(self._allowed_prefixes)
 
 
 def configure_logger(name: str) -> logging.Logger:

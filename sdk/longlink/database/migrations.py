@@ -62,10 +62,7 @@ def include_object(_object: object, name: str | None, type_: str, _reflected: bo
     """Return whether Alembic should manage one metadata object."""
 
     # The Platform owns the shared audit table represented in SDK metadata for Application reads and relationships.
-    if type_ == "table" and name == "audit":
-        return False
-
-    return True
+    return not (type_ == "table" and name == "audit")
 
 
 def iter_application_model_files() -> list[Path]:

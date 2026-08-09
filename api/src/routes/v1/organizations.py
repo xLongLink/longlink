@@ -254,7 +254,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         raise UnavailableError("No storage registry available")
 
     # Persist the Organization with its selected infrastructure registries.
-    organization = await organizations.create(
+    return await organizations.create(
         payload.name,
         slug,
         user,
@@ -262,5 +262,3 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         storage_id=storage_registry.id,
         database_id=database_registry.id,
     )
-
-    return organization
