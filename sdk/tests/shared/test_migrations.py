@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
 from longlink.shared import audit as shared_audit
+from longlink.shared.models import AuditUser
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.shared.migrations import migrate_database
@@ -55,30 +56,30 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = UUID("00000000-0000-0000-0000-000000000001")
     created_at = datetime(2026, 7, 6, 8, tzinfo=UTC)
-    active_user: shared_audit.AuditRow = {
-        "id": user_id,
-        "name": "Owner User",
-        "email": "owner@example.com",
-        "avatar": "",
-        "role": "owner",
-        "created_at": created_at,
-        "updated_at": created_at,
-        "deleted_at": None,
-    }
+    active_user = AuditUser(
+        id=user_id,
+        name="Owner User",
+        email="owner@example.com",
+        avatar="",
+        role="owner",
+        created_at=created_at,
+        updated_at=created_at,
+    )
     await shared_audit.sync(postgresql_url, [active_user])
 
     # Upsert changed mutable fields and an explicit control-plane deactivation.
     deactivated_at = datetime(2026, 7, 7, 9, tzinfo=UTC)
-    deactivated_user: shared_audit.AuditRow = {
-        **active_user,
-        "name": "Updated User",
-        "email": "updated@example.com",
-        "avatar": "https://example.com/avatar.png",
-        "role": "read",
-        "created_at": datetime(2026, 7, 7, 8, tzinfo=UTC),
-        "updated_at": deactivated_at,
-        "deleted_at": deactivated_at,
-    }
+    deactivated_user = active_user.model_copy(
+        update={
+            "name": "Updated User",
+            "email": "updated@example.com",
+            "avatar": "https://example.com/avatar.png",
+            "role": "read",
+            "created_at": datetime(2026, 7, 7, 8, tzinfo=UTC),
+            "updated_at": deactivated_at,
+            "deleted_at": deactivated_at,
+        }
+    )
     await shared_audit.sync(postgresql_url, [deactivated_user])
 
     # Repeat the same synchronization payload to prove row-level idempotency.

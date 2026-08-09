@@ -7,6 +7,7 @@ from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from longlink.shared.models import AuditUser
 
 
 async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -18,7 +19,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     organization = await create_organization(owner, infrastructure=infrastructure)
     base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
     deleted_at = base_time + timedelta(minutes=2)
-    calls: list[tuple[str, list[dict[str, object]]]] = []
+    calls: list[tuple[str, list[AuditUser]]] = []
 
     # Persist one deleted membership whose deactivation follows its last regular update.
     Session = await get_session()
@@ -37,8 +38,8 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         )
         await session.commit()
 
-    async def sync(shared_schema_url: str, rows: list[dict[str, object]]) -> None:
-        """Capture the shared users payload."""
+    async def sync(shared_schema_url: str, rows: list[AuditUser]) -> None:
+        """Capture the shared audit payload."""
 
         calls.append((shared_schema_url, rows))
 
@@ -56,9 +57,9 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
 
     # Assert
     assert calls[0][0] == db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False)
-    rows = {row["id"]: row for row in calls[0][1]}
-    assert rows[owner.id]["role"] == OrganizationRoles.owner
-    assert rows[owner.id]["deleted_at"] is None
-    assert rows[member.id]["role"] == OrganizationRoles.write
-    assert rows[member.id]["deleted_at"] == deleted_at
-    assert rows[member.id]["updated_at"] == deleted_at
+    rows = {row.id: row for row in calls[0][1]}
+    assert rows[owner.id].role == OrganizationRoles.owner
+    assert rows[owner.id].deleted_at is None
+    assert rows[member.id].role == OrganizationRoles.write
+    assert rows[member.id].deleted_at == deleted_at
+    assert rows[member.id].updated_at == deleted_at
