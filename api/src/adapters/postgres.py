@@ -83,12 +83,6 @@ class Postgres:
 
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
 
-    def shared_schema_url(self, organization: UUID) -> str:
-        """Return the control-plane shared-schema URL for one organization database."""
-
-        # The URL embeds search_path so API orchestration can use unqualified shared table names.
-        return self.url(organization.hex, search_path="shared").render_as_string(hide_password=False)
-
     @contextlib.asynccontextmanager
     async def _connection(
         self,
@@ -139,7 +133,7 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or application schemas rely on it.
-        await shared_migrations.migrate_database(self.shared_schema_url(organization))
+        await shared_migrations.migrate_database(self.url(organization.hex, search_path="shared").render_as_string(hide_password=False))
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:

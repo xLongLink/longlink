@@ -43,7 +43,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             "updated_at": datetime(2026, 7, 1, tzinfo=UTC),
             "deleted_at": None,
         }
-        shared_schema_url = adapter.shared_schema_url(organization_id)
+        shared_schema_url = adapter.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False)
         database_name = organization_id.hex
         await adapter.prepare_organization_database(organization_id)
         await shared_audit.sync(shared_schema_url, [active_user])

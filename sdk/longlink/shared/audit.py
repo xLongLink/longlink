@@ -45,19 +45,17 @@ async def sync(database_url: str | URL, rows: list[AuditRow]) -> None:
         async with engine.begin() as conn:
             # Build one PostgreSQL upsert for the SDK-owned shared audit table.
             statement = postgres_insert(getattr(AuditUser, "__table__"))
-            excluded = statement.excluded
-
             # Preserve creation time while updating the current profile, role, and activation state.
             await conn.execute(
                 statement.on_conflict_do_update(
                     index_elements=[statement.table.c.id],
                     set_={
-                        "name": excluded.name,
-                        "email": excluded.email,
-                        "avatar": excluded.avatar,
-                        "role": excluded.role,
-                        "updated_at": excluded.updated_at,
-                        "deleted_at": excluded.deleted_at,
+                        "name": statement.excluded.name,
+                        "email": statement.excluded.email,
+                        "avatar": statement.excluded.avatar,
+                        "role": statement.excluded.role,
+                        "updated_at": statement.excluded.updated_at,
+                        "deleted_at": statement.excluded.deleted_at,
                     },
                 ),
                 rows,

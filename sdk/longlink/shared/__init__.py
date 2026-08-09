@@ -1,1 +1,0 @@
-"""Shared SDK schema modules."""

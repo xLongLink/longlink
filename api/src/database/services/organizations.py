@@ -223,7 +223,7 @@ async def sync_users(organization_id: UUID, db: Postgres | None = None) -> None:
     if db is None:
         database = assigned.database
         db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
-    await shared_audit.sync(db.shared_schema_url(organization_id), rows)
+    await shared_audit.sync(db.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 
 
 async def update_member_role(

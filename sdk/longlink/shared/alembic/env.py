@@ -8,14 +8,13 @@ from longlink.database.registry import database_metadata
 from sqlalchemy.ext.asyncio import create_async_engine
 
 config = context.config
-target_metadata = database_metadata
 
 
 def context_options() -> dict[str, Any]:
     """Return Alembic options for SDK-owned shared-schema migrations."""
 
     return {
-        "target_metadata": target_metadata,
+        "target_metadata": database_metadata,
         "compare_type": True,
         "version_table_schema": "shared",
     }
