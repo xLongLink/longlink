@@ -1,5 +1,5 @@
-from sqlalchemy import MetaData
 from sqlmodel import SQLModel
+from sqlalchemy import MetaData
 
 
 class PlatformModel(SQLModel):

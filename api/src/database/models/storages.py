@@ -4,8 +4,6 @@ from sqlmodel import Field
 from sqlalchemy import Column
 from src.environments import env
 from src.database.types import EncryptedType
-
-
 from src.database.models.base import PlatformModel
 
 

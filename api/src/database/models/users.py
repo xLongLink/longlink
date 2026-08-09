@@ -7,8 +7,8 @@ from src.models.roles import PlatformRoles
 from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
-from src.database.models.association import UserOrganization
 from src.database.models.base import PlatformModel
+from src.database.models.association import UserOrganization
 
 
 class User(PlatformModel, table=True):

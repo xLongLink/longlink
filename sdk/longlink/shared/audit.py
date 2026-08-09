@@ -4,6 +4,7 @@ from longlink.shared.models import AuditUser
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
+
 async def sync(database_url: str | URL, rows: list[AuditUser]) -> None:
     """Upsert shared audit rows through a control-plane database URL."""
 

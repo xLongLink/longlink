@@ -5,8 +5,6 @@ from sqlalchemy import Enum, Column
 from src.environments import env
 from src.models.types import DatabaseSSLMode
 from src.database.types import EncryptedType
-
-
 from src.database.models.base import PlatformModel
 
 

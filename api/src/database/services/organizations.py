@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
-from longlink.shared.models import AuditUser
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -15,6 +14,7 @@ from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
+from longlink.shared.models import AuditUser
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry

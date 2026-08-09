@@ -6,8 +6,8 @@ from sqlalchemy import pool
 from src.environments import env
 from sqlalchemy.engine import Connection
 from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
-from src.database.models.base import PlatformModel
 from sqlalchemy.ext.asyncio import create_async_engine
+from src.database.models.base import PlatformModel
 
 # Configure Alembic with the current Platform database URL.
 config = context.config

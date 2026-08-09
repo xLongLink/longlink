@@ -3,8 +3,8 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
 from longlink.shared import audit as shared_audit
-from longlink.shared.models import AuditUser
 from sqlalchemy.engine import URL
+from longlink.shared.models import AuditUser
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.shared.migrations import migrate_database
 

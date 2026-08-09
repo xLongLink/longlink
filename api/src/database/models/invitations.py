@@ -6,8 +6,6 @@ from sqlalchemy import Enum, Column
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
-
-
 from src.database.models.base import PlatformModel
 
 

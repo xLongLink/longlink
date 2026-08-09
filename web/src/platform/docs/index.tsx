@@ -27,9 +27,9 @@ export const content = (
         </Text>
         <Text as="p">
             AI has lowered the cost of building software. When a process is well defined and its context is available,
-            teams can now develop tailored solutions more quickly. However, many existing platforms require
-            applications to run within proprietary environments, data models, and deployment systems. This can limit
-            portability, increase dependence on a vendor, and reduce the long-term value of customization.
+            teams can now develop tailored solutions more quickly. However, many existing platforms require applications
+            to run within proprietary environments, data models, and deployment systems. This can limit portability,
+            increase dependence on a vendor, and reduce the long-term value of customization.
         </Text>
         <Text as="p">
             LongLink is an open-source foundation for building, deploying, and operating dedicated business applications

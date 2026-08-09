@@ -73,7 +73,12 @@ const capabilities = {
 };
 
 /** Renders a labeled capability icon. */
-function CapabilityIcon({ className = 'text-secondary', icon: Icon, name, size = 16 }: (typeof capabilities)[keyof typeof capabilities] & { className?: string; size?: number }) {
+function CapabilityIcon({
+    className = 'text-secondary',
+    icon: Icon,
+    name,
+    size = 16,
+}: (typeof capabilities)[keyof typeof capabilities] & { className?: string; size?: number }) {
     return <Icon aria-label={name} className={className} size={size} />;
 }
 

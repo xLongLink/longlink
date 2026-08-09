@@ -5,10 +5,10 @@ from containers import start_postgres
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import audit as shared_audit
-from longlink.shared.models import AuditUser
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
+from longlink.shared.models import AuditUser
 from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db

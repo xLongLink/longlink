@@ -8,8 +8,6 @@ from src.database.types import PlatformVersionType
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
-
-
 from src.database.models.base import PlatformModel
 
 

@@ -5,9 +5,9 @@ from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
+from longlink.shared.models import AuditUser
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
-from longlink.shared.models import AuditUser
 
 
 async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:

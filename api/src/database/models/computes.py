@@ -6,8 +6,6 @@ from src.environments import env
 from src.models.types import PlatformVersion
 from src.database.types import EncryptedType, PlatformVersionType
 from src.models.statuses import Status
-
-
 from src.database.models.base import PlatformModel
 
 

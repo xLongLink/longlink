@@ -4,8 +4,8 @@ from alembic import context
 from sqlalchemy import pool, text, engine_from_config
 from longlink.database import urls
 from sqlalchemy.engine import Connection, make_url
-from longlink.database.registry import database_metadata
 from sqlalchemy.ext.asyncio import create_async_engine
+from longlink.database.registry import database_metadata
 
 config = context.config
 
