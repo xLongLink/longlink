@@ -240,7 +240,6 @@ async def update_member_role(
         statement = (
             select(UserOrganization)
             .join(User, User.id == UserOrganization.user_id)
-            .join(Organization, Organization.id == UserOrganization.organization_id)
             .where(
                 UserOrganization.organization_id == organization_id,
                 UserOrganization.user_id == member_id,

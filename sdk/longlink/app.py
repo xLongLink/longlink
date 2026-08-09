@@ -130,7 +130,6 @@ class LongLink:
         longlink_routes = [
             route for route in self.app.router.routes if isinstance(route, APIRoute) and id(route) not in application_route_ids
         ]
-        longlink_routes.extend(route for router in routes for route in router.routes if isinstance(route, APIRoute))
         warned_routes: set[tuple[int, str]] = set()
 
         for application_route in application_routes:
