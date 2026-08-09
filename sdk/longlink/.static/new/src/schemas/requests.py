@@ -36,8 +36,8 @@ class PurchaseRequestRead(BaseModel):
     justification: str
 
     # Audit fields
-    created_by: database.User | None = None
-    updated_by: database.User | None = None
+    created_by: database.AuditUser | None = None
+    updated_by: database.AuditUser | None = None
 
 
 class RequestAttachmentRead(BaseModel):

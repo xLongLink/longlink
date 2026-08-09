@@ -1,13 +1,13 @@
 import pytest
 from alembic import command
 from pathlib import Path
-from sqlmodel import SQLModel
 from containers import start_postgres
 from sqlalchemy import inspect, create_engine
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from src.environments import env
 from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
+from src.database.models.base import PlatformModel
 
 pytestmark = pytest.mark.no_db
 POSTGRES_PORT = 5432
@@ -49,7 +49,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
             f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
         )
         engine = create_engine(inspection_url)
-        model_columns = {table.name: {column.name for column in table.columns} for table in SQLModel.metadata.sorted_tables}
+        model_columns = {table.name: {column.name for column in table.columns} for table in PlatformModel.metadata.sorted_tables}
         with engine.connect() as connection:
             inspector = inspect(connection)
             migrated_tables = set(inspector.get_table_names())

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from collections.abc import Sequence
-from longlink.shared import users as shared_users
+from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -201,12 +201,12 @@ async def sync_users(organization_id: UUID, db: Postgres | None = None) -> None:
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     memberships = await members(organization_id, include_deleted=True)
-    users: list[shared_users.UserRow] = []
+    rows: list[shared_audit.AuditRow] = []
     for membership in memberships:
         user = membership.user
         deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
         updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
-        users.append(
+        rows.append(
             {
                 "id": user.id,
                 "name": user.name,
@@ -223,7 +223,7 @@ async def sync_users(organization_id: UUID, db: Postgres | None = None) -> None:
     if db is None:
         database = assigned.database
         db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
-    await shared_users.sync_url(db.shared_schema_url(organization_id), users)
+    await shared_audit.sync(db.shared_schema_url(organization_id), rows)
 
 
 async def update_member_role(

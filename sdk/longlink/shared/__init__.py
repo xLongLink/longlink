@@ -1,1 +1,1 @@
-from .models import User
+"""Shared SDK schema modules."""

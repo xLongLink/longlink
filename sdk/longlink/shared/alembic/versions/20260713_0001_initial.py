@@ -12,9 +12,9 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create the initial organization shared schema."""
 
-    # Create the shared user table maintained by the SDK.
+    # Create the shared audit table maintained by the SDK.
     op.create_table(
-        "users",
+        "audit",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("email", sa.String(length=254), nullable=False),
@@ -30,5 +30,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Drop the initial organization shared schema."""
 
-    # Remove the SDK-owned shared user table.
-    op.drop_table("users")
+    # Remove the SDK-owned shared audit table.
+    op.drop_table("audit")

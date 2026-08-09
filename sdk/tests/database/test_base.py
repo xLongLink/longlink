@@ -10,7 +10,7 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
 
     # Define an isolated mapped table with inherited audit fields.
-    class FeatureAuditItem(database_base.UserTable, table=True):
+    class FeatureAuditItem(database_base.AuditTable, table=True):
         """Temporary SDK table used to inspect inherited database fields."""
 
         # Table metadata
@@ -31,9 +31,9 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         # Verify audit fields and user relationships are available to Applications.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
         assert foreign_key_targets == {
-            "created_id": {"users.id"},
-            "updated_id": {"users.id"},
-            "deleted_id": {"users.id"},
+            "created_id": {"audit.id"},
+            "updated_id": {"audit.id"},
+            "deleted_id": {"audit.id"},
         }
         assert hasattr(FeatureAuditItem, "created_by")
         assert hasattr(FeatureAuditItem, "updated_by")

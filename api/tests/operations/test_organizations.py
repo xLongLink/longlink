@@ -37,12 +37,12 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         )
         await session.commit()
 
-    async def sync_url(shared_schema_url: str, rows: list[dict[str, object]]) -> None:
+    async def sync(shared_schema_url: str, rows: list[dict[str, object]]) -> None:
         """Capture the shared users payload."""
 
         calls.append((shared_schema_url, rows))
 
-    monkeypatch.setattr(organization_service.shared_users, "sync_url", sync_url)
+    monkeypatch.setattr(organization_service.shared_audit, "sync", sync)
 
     # Act
     db = Postgres(

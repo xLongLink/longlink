@@ -3,7 +3,7 @@ from longlink import database
 from sqlmodel import Field
 
 
-class PurchaseRequest(database.UserTable, table=True):
+class PurchaseRequest(database.AuditTable, table=True):
     """Purchase request table owned by this application schema."""
 
     # Table metadata

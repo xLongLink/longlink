@@ -19,7 +19,7 @@ uv run longlink dev
 
 ## Migrate
 
-Application models use standard SQLModel. Use `database.UserTable` only when a table needs Platform-user attribution; `database.User` is a read-only mapping to the Platform-managed shared users table.
+Application models use standard SQLModel. Use `database.AuditTable` only when a table needs Platform-user attribution; `database.AuditUser` is a read-only mapping to the Platform-managed shared audit table.
 
 Application migrations manage only this application's schema. The LongLink Platform executes the SDK-owned shared migrations for tables such as `users`; applications can read those tables but cannot write them.
 

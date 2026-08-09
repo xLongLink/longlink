@@ -16,7 +16,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
     # Define one isolated mapped table for the real SQLite lifecycle.
-    class AuditLifecycleItem(database_base.UserTable, table=True):
+    class AuditLifecycleItem(database_base.AuditTable, table=True):
         """Temporary SDK table used to verify the complete audit lifecycle."""
 
         # Table metadata

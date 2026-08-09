@@ -1,2 +1,2 @@
-from .base import UserTable, session
-from longlink.shared.models import User
+from .base import AuditTable, session
+from longlink.shared.models import AuditUser

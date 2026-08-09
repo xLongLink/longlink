@@ -12,7 +12,6 @@ from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
-from longlink.shared.constants import SHARED_SCHEMA
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -88,7 +87,7 @@ class Postgres:
         """Return the control-plane shared-schema URL for one organization database."""
 
         # The URL embeds search_path so API orchestration can use unqualified shared table names.
-        return self.url(organization.hex, search_path=SHARED_SCHEMA).render_as_string(hide_password=False)
+        return self.url(organization.hex, search_path="shared").render_as_string(hide_password=False)
 
     @contextlib.asynccontextmanager
     async def _connection(
@@ -144,7 +143,7 @@ class Postgres:
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:
-            shared_schema = self.quote(conn, SHARED_SCHEMA)
+            shared_schema = self.quote(conn, "shared")
             await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
             await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
@@ -185,7 +184,7 @@ class Postgres:
             # Quote all identifiers before composing role and privilege statements.
             database = self.quote(conn, organization.hex)
             schema = self.quote(conn, application.hex)
-            shared_schema = self.quote(conn, SHARED_SCHEMA)
+            shared_schema = self.quote(conn, "shared")
 
             # App roles write to their own schema and read organization shared tables.
             await conn.exec_driver_sql(
@@ -230,7 +229,7 @@ class Postgres:
             schema = self.quote(conn, application.hex)
             role = self.quote(conn, runtime_username)
             database = self.quote(conn, organization.hex)
-            shared_schema = self.quote(conn, SHARED_SCHEMA)
+            shared_schema = self.quote(conn, "shared")
 
             # Remove every grant and setting assigned during Application provisioning before dropping its role.
             await conn.exec_driver_sql(

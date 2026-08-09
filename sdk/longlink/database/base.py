@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator
 from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.utils.time import utcnow
-from longlink.shared.models import User
+from longlink.shared.models import AuditUser
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
@@ -15,7 +15,7 @@ from longlink.database.registry import Base, database_metadata
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
-class UserTable(Base):
+class AuditTable(Base):
     """Base SQLModel for Application tables that track Platform users."""
 
     # SQLAlchemy configuration
@@ -27,14 +27,14 @@ class UserTable(Base):
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Audit user identifiers
-    created_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
-    updated_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
-    deleted_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
+    created_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
+    updated_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
+    deleted_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
 
     # Audit user relationships
-    created_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.created_id], lazy="selectin"))
-    updated_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.updated_id], lazy="selectin"))
-    deleted_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin"))
+    created_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.created_id], lazy="selectin"))
+    updated_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.updated_id], lazy="selectin"))
+    deleted_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
 _engine: AsyncEngine | None = None

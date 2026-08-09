@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlalchemy import Enum, Index, Column
 from src.models.types import PlatformVersion
 from src.database.types import PlatformVersionType
@@ -10,7 +10,10 @@ from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
 
 
-class Operation(SQLModel, table=True):
+from src.database.models.base import PlatformModel
+
+
+class Operation(PlatformModel, table=True):
     """Persist one durable Platform request and its expiring worker lock."""
 
     __tablename__: ClassVar[str] = "operations"

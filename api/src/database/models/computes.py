@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlalchemy import Enum, Text, Column
 from src.environments import env
 from src.models.types import PlatformVersion
@@ -8,7 +8,10 @@ from src.database.types import EncryptedType, PlatformVersionType
 from src.models.statuses import Status
 
 
-class ComputeRegistry(SQLModel, table=True):
+from src.database.models.base import PlatformModel
+
+
+class ComputeRegistry(PlatformModel, table=True):
     """Persist one Compute target and its authenticated Envoy Gateway state.
 
     The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Application traffic.

@@ -25,9 +25,9 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=32), nullable=False),
         sa.Column("vendor", sa.String(length=255), nullable=False),
         sa.Column("justification", sa.String(length=2000), nullable=False),
-        sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
+        sa.ForeignKeyConstraint(["created_id"], ["audit.id"]),
+        sa.ForeignKeyConstraint(["updated_id"], ["audit.id"]),
+        sa.ForeignKeyConstraint(["deleted_id"], ["audit.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
 

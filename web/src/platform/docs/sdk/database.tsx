@@ -113,11 +113,11 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
             ambiguous values before storage, normalizes writes to UTC, and treats SQLite results as UTC so timestamps
             have the same meaning in every LongLink environment.
         </Text>
-        <Heading id="users-table" level={2}>
-            Users table
+        <Heading id="audit-table" level={2}>
+            Audit table
         </Heading>
         <Text as="p">
-            Use <Code>database.UserTable</Code> only when an Application table needs Platform-user attribution. It adds
+            Use <Code>database.AuditTable</Code> only when an Application table needs Platform-user attribution. It adds
             creation, update, and deletion timestamps; the matching Platform user identifiers; and read-only user
             relationships.
         </Text>
@@ -125,14 +125,14 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
             code={`from longlink import database
 from sqlmodel import Field
 
-class Approval(database.UserTable, table=True):
+class Approval(database.AuditTable, table=True):
     id: int | None = Field(default=None, primary_key=True)
     status: str
 
 approval = Approval(status="pending")
 print(approval.status)  # pending
 
-# approval.created_by and approval.updated_by are database.User values after persistence.`}
+# approval.created_by and approval.updated_by are database.AuditUser values after persistence.`}
             language="python"
         />
         <Heading id="migrations" level={2}>
@@ -153,7 +153,7 @@ print(approval.status)  # pending
         />
         <Text as="p">
             LongLink discovers Application models below <Code>src/database/models</Code> and migrates only
-            Application-owned tables. The LongLink Platform separately manages shared tables such as <Code>users</Code>.
+            Application-owned tables. The LongLink Platform separately manages shared tables such as <Code>audit</Code>.
         </Text>
     </Stack>
 );

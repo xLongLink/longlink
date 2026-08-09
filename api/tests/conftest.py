@@ -6,8 +6,6 @@ from pwdlib import PasswordHash
 from pathlib import Path
 from contextlib import AsyncExitStack
 from collections.abc import AsyncIterator
-from sqlalchemy import MetaData
-from sqlalchemy.orm import clear_mappers
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Seed the required settings before importing the FastAPI app.
@@ -21,18 +19,12 @@ os.environ.setdefault("ENCRYPTION_KEY", "longlink-test-encryption-key-that-is-lo
 # Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
 
-# Isolate Platform models from the SDK's shared Application model metadata.
-import longlink
-from sqlmodel import SQLModel
-
-clear_mappers()
-SQLModel.metadata = MetaData()
-
 from main import app
 from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
+from src.database.models.base import PlatformModel
 from src.database.models.users import User
 
 TEST_PASSWORD = "longlink-test-password"
@@ -80,7 +72,7 @@ async def reset_db(
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(PlatformModel.metadata.create_all)
 
     session._engine = engine
     session.Session = async_sessionmaker(engine, expire_on_commit=False)
