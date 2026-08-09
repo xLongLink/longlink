@@ -1,5 +1,5 @@
 from typing import Literal
-from longlink import User
+from longlink import database
 from pydantic import Field, BaseModel, ConfigDict
 
 RequestStatus = Literal["draft", "submitted", "approved", "rejected"]
@@ -36,8 +36,8 @@ class PurchaseRequestRead(BaseModel):
     justification: str
 
     # Audit fields
-    created_by: User | None = None
-    updated_by: User | None = None
+    created_by: database.AuditUser | None = None
+    updated_by: database.AuditUser | None = None
 
 
 class RequestAttachmentRead(BaseModel):

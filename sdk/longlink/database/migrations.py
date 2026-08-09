@@ -7,7 +7,6 @@ from pathlib import Path
 from alembic.config import Config
 from sqlalchemy.exc import OperationalError
 from alembic.operations.ops import MigrationScript
-from longlink.shared.constants import SHARED_TABLE_INFO_KEY
 
 CURRENT_FILE = Path(__file__).resolve()
 MIGRATIONS_DIRECTORY = "migrations"
@@ -22,27 +21,14 @@ _RETRYABLE_MIGRATION_ERROR_FRAGMENTS = (
 )
 
 
-def iter_exception_chain(exc: BaseException) -> list[BaseException]:
-    """Return an exception with its chained causes and contexts."""
-
-    exceptions: list[BaseException] = []
-    seen: set[int] = set()
-    current: BaseException | None = exc
-
-    # Walk each linked exception once.
-    while current is not None and id(current) not in seen:
-        exceptions.append(current)
-        seen.add(id(current))
-        current = current.__cause__ or current.__context__
-
-    return exceptions
-
-
 def retryable_migration_error(exc: BaseException) -> bool:
     """Return whether a migration failure looks like transient database connectivity."""
 
     # Inspect every linked exception for retryable database failures.
-    for chained_exception in iter_exception_chain(exc):
+    seen: set[int] = set()
+    chained_exception: BaseException | None = exc
+    while chained_exception is not None and id(chained_exception) not in seen:
+        seen.add(id(chained_exception))
 
         # Retry standard transient connection failures.
         if isinstance(chained_exception, (ConnectionError, TimeoutError, socket.gaierror)):
@@ -56,19 +42,16 @@ def retryable_migration_error(exc: BaseException) -> bool:
             if any(fragment in message for fragment in _RETRYABLE_MIGRATION_ERROR_FRAGMENTS):
                 return True
 
+        chained_exception = chained_exception.__cause__ or chained_exception.__context__
+
     return False
 
 
-def include_object(object_: object, _name: str | None, type_: str, _reflected: bool, compare_to: object | None) -> bool:
+def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
     """Return whether Alembic should manage one metadata object."""
 
-    # The platform owns shared tables represented in SDK metadata only for application reads and relationships.
-    object_info = getattr(object_, "info", {})
-    comparison_info = getattr(compare_to, "info", {})
-    if type_ == "table" and (object_info.get(SHARED_TABLE_INFO_KEY) or comparison_info.get(SHARED_TABLE_INFO_KEY)):
-        return False
-
-    return True
+    # The Platform owns the shared audit table represented in SDK metadata for Application reads and relationships.
+    return not (type_ == "table" and name == "audit")
 
 
 def iter_application_model_files() -> list[Path]:

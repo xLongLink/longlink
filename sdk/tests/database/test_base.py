@@ -6,11 +6,11 @@ from longlink.database import base as database_base
 from longlink.utils.settings import Envs
 
 
-def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> None:
+def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
 
     # Define an isolated mapped table with inherited audit fields.
-    class FeatureAuditItem(database_base.Table, table=True):
+    class FeatureAuditItem(database_base.AuditTable, table=True):
         """Temporary SDK table used to inspect inherited database fields."""
 
         # Table metadata
@@ -31,9 +31,9 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
         # Verify audit fields and user relationships are available to Applications.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
         assert foreign_key_targets == {
-            "created_id": {"users.id"},
-            "updated_id": {"users.id"},
-            "deleted_id": {"users.id"},
+            "created_id": {"audit.id"},
+            "updated_id": {"audit.id"},
+            "deleted_id": {"audit.id"},
         }
         assert hasattr(FeatureAuditItem, "created_by")
         assert hasattr(FeatureAuditItem, "updated_by")

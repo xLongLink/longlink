@@ -1,12 +1,13 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlalchemy import Column
 from src.environments import env
 from src.database.types import EncryptedType
+from src.database.models.base import PlatformModel
 
 
-class StorageRegistry(SQLModel, table=True):
+class StorageRegistry(PlatformModel, table=True):
     """Persist one Exoscale SOS backend available to Organizations."""
 
     __tablename__: ClassVar[str] = "storage_registries"

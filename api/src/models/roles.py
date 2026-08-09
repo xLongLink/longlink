@@ -25,4 +25,3 @@ APPLICATION_PROXY_METHOD_ROLES = {
     "POST": OrganizationRoles.write,
     "PUT": OrganizationRoles.write,
 }
-APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_ROLES)

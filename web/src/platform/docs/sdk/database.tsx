@@ -41,12 +41,12 @@ const environments: EnvironmentRow[] = [
 export const metadata = {
     toc: [
         { id: 'database', label: 'Database', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'basic-usage', label: 'Basic usage', level: 2 },
         { id: 'timezone', label: 'Timezone', level: 2 },
+        { id: 'users-table', label: 'Users table', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
-        { id: 'users', label: 'Users', level: 2 },
     ],
-    lastUpdated: '2026-08-03',
+    lastUpdated: '2026-08-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/database.tsx',
 };
 
@@ -56,11 +56,11 @@ export const content = (
             Database
         </Heading>
         <Text as="p">
-            The SDK exposes a small database API for application-owned relational data. Use <Code>Table</Code> to define{' '}
+            Applications use standard{' '}
             <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
                 SQLModel
             </Link>{' '}
-            tables with LongLink audit fields, and use <Code>async with get_session()</Code> to open an async{' '}
+            tables. The SDK adds <Code>database.session()</Code> for an Application-scoped async{' '}
             <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
                 SQLAlchemy
             </Link>{' '}
@@ -71,19 +71,19 @@ export const content = (
             In production, the LongLink Platform provisions the organization database, shared user schema, and
             application schema, then injects the runtime connection settings into the application.
         </Text>
-        <Heading id="usage" level={2}>
-            Usage
+        <Heading id="basic-usage" level={2}>
+            Basic usage
         </Heading>
         <CodeBlock
-            code={`from longlink import Table, get_session
-from sqlmodel import Field
+            code={`from longlink import database
+from sqlmodel import Field, SQLModel
 
-class Project(Table, table=True):
+class Project(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
 
 async def create_project() -> None:
-    async with get_session() as session:
+    async with database.session() as session:
         session.add(Project(name="Launch"))
         await session.commit()`}
             language="python"
@@ -97,11 +97,10 @@ async def create_project() -> None:
         </Text>
         <CodeBlock
             code={`from datetime import UTC, datetime
-from longlink import Table
 from longlink.database.types import UTCDateTime
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 
-class Event(Table, table=True):
+class Event(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     starts_at: datetime = Field(sa_type=UTCDateTime)
 
@@ -114,11 +113,33 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
             ambiguous values before storage, normalizes writes to UTC, and treats SQLite results as UTC so timestamps
             have the same meaning in every LongLink environment.
         </Text>
+        <Heading id="audit-table" level={2}>
+            Audit table
+        </Heading>
+        <Text as="p">
+            Use <Code>database.AuditTable</Code> only when an Application table needs Platform-user attribution. It adds
+            creation, update, and deletion timestamps; the matching Platform user identifiers; and read-only user
+            relationships.
+        </Text>
+        <CodeBlock
+            code={`from longlink import database
+from sqlmodel import Field
+
+class Approval(database.AuditTable, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    status: str
+
+approval = Approval(status="pending")
+print(approval.status)  # pending
+
+# approval.created_by and approval.updated_by are database.AuditUser values after persistence.`}
+            language="python"
+        />
         <Heading id="migrations" level={2}>
             Migrations
         </Heading>
         <Text as="p">
-            After you add or change models, run{' '}
+            After you add or change Application models, run{' '}
             <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
                 Alembic
             </Link>{' '}
@@ -131,30 +152,8 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
             ]}
         />
         <Text as="p">
-            This manages only application-owned tables in the application schema. The LongLink Platform separately
-            executes the SDK-owned migrations for shared tables such as <Code>users</Code>.
+            LongLink discovers Application models below <Code>src/database/models</Code> and migrates only
+            Application-owned tables. The LongLink Platform separately manages shared tables such as <Code>audit</Code>.
         </Text>
-        <Heading id="users" level={2}>
-            Users
-        </Heading>
-        <Text as="p">
-            Users are managed by the LongLink platform and exposed by the SDK. Application code should not create,
-            update, or authenticate users directly; use <Code>User</Code> as read-only display data when you need to
-            show who created or changed a row.
-        </Text>
-        <Text as="p">
-            Models that inherit from <Code>Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}
-            <Code>updated_by</Code>. Keep your own domain fields separate from platform user data.
-        </Text>
-        <CodeBlock
-            code={`from longlink import User, get_session
-from sqlmodel import select
-
-async def list_project_creators() -> list[User | None]:
-    async with get_session() as session:
-        result = await session.exec(select(Project))
-        return [project.created_by for project in result.all()]`}
-            language="python"
-        />
     </Stack>
 );

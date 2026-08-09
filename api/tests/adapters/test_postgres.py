@@ -4,10 +4,11 @@ from datetime import UTC, datetime
 from containers import start_postgres
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from longlink.shared import users as shared_users
+from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
+from longlink.shared.models import AuditUser
 from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db
@@ -33,20 +34,19 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             password="secret",
             sslmode=DatabaseSSLMode.disable,
         )
-        active_user: shared_users.UserRow = {
-            "id": UUID("11111111-1111-1111-1111-111111111111"),
-            "name": "Owner User",
-            "email": "owner@example.com",
-            "avatar": "",
-            "role": "owner",
-            "created_at": datetime(2026, 7, 1, tzinfo=UTC),
-            "updated_at": datetime(2026, 7, 1, tzinfo=UTC),
-            "deleted_at": None,
-        }
-        shared_schema_url = adapter.shared_schema_url(organization_id)
+        active_user = AuditUser(
+            id=UUID("11111111-1111-1111-1111-111111111111"),
+            name="Owner User",
+            email="owner@example.com",
+            avatar="",
+            role="owner",
+            created_at=datetime(2026, 7, 1, tzinfo=UTC),
+            updated_at=datetime(2026, 7, 1, tzinfo=UTC),
+        )
+        shared_schema_url = adapter.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False)
         database_name = organization_id.hex
         await adapter.prepare_organization_database(organization_id)
-        await shared_users.sync_url(shared_schema_url, [active_user])
+        await shared_audit.sync(shared_schema_url, [active_user])
 
         database_url = adapter.url(database_name)
 
@@ -68,8 +68,8 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             shared_user = (
                 (
                     await conn.execute(
-                        text("SELECT email, role FROM shared.users WHERE id = :user_id"),
-                        {"user_id": active_user["id"]},
+                        text("SELECT email, role FROM shared.audit WHERE id = :user_id"),
+                        {"user_id": active_user.id},
                     )
                 )
                 .mappings()
@@ -77,16 +77,16 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             )
 
         inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
-        inactive_user: shared_users.UserRow = {**active_user, "updated_at": inactive_at, "deleted_at": inactive_at}
-        await shared_users.sync_url(shared_schema_url, [inactive_user])
+        inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
+        await shared_audit.sync(shared_schema_url, [inactive_user])
 
         maintenance_engine = create_async_engine(database_url)
         try:
             async with maintenance_engine.begin() as conn:
                 deleted_at = (
                     await conn.execute(
-                        text("SELECT deleted_at FROM shared.users WHERE id = :user_id"),
-                        {"user_id": active_user["id"]},
+                        text("SELECT deleted_at FROM shared.audit WHERE id = :user_id"),
+                        {"user_id": active_user.id},
                     )
                 ).scalar_one()
         finally:
@@ -97,7 +97,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                 await conn.execute(
                     text(
                         """
-                        INSERT INTO shared.users (id, name, email, avatar, role, created_at, updated_at)
+                        INSERT INTO shared.audit (id, name, email, avatar, role, created_at, updated_at)
                         VALUES (:id, 'Bad User', 'bad@example.com', '', 'owner', now(), now())
                         """
                     ),

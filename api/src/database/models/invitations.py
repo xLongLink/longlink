@@ -1,14 +1,15 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlalchemy import Enum, Column
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
+from src.database.models.base import PlatformModel
 
 
-class OrganizationInvitation(SQLModel, table=True):
+class OrganizationInvitation(PlatformModel, table=True):
     """Represent one pending organization invitation."""
 
     __tablename__: ClassVar[str] = "organization_invitations"

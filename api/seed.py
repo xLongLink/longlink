@@ -2,6 +2,7 @@ import asyncio
 import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
+from contextlib import suppress
 from src.errors import ConflictError
 from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -107,13 +108,11 @@ async def seed_local_development(settings: SeedSettings) -> None:
     database_config = application_database_configuration(settings)
 
     # Register the configured compute and queue its reconciliation when newly created.
-    try:
+    with suppress(ConflictError):
         await compute.create(compute_config.name, compute_config.kubeconfig)
-    except ConflictError:
-        pass
 
     # Register the configured database unless it already exists.
-    try:
+    with suppress(ConflictError):
         await database.create(
             "development database",
             database_config.host,
@@ -122,19 +121,15 @@ async def seed_local_development(settings: SeedSettings) -> None:
             database_config.password,
             database_config.sslmode,
         )
-    except ConflictError:
-        pass
 
     # Register the configured storage unless it already exists.
-    try:
+    with suppress(ConflictError):
         await storage.create(
             "local storage",
             settings.EXOSCALE_STORAGE_ENDPOINT_URL,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,
         )
-    except ConflictError:
-        pass
 
 
 def main() -> None:

@@ -50,7 +50,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    application = await applications.create(
+    return await applications.create(
         organization.id,
         payload.name,
         application_slug,
@@ -61,7 +61,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         user=user,
         secrets=payload.envs,
     )
-    return application
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])

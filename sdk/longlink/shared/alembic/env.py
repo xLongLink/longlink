@@ -4,21 +4,19 @@ from alembic import context
 from sqlalchemy import pool, text, engine_from_config
 from longlink.database import urls
 from sqlalchemy.engine import Connection, make_url
-from longlink.shared.models import shared_metadata
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.shared.constants import SHARED_SCHEMA
+from longlink.database.registry import database_metadata
 
 config = context.config
-target_metadata = shared_metadata
 
 
 def context_options() -> dict[str, Any]:
     """Return Alembic options for SDK-owned shared-schema migrations."""
 
     return {
-        "target_metadata": target_metadata,
+        "target_metadata": database_metadata,
         "compare_type": True,
-        "version_table_schema": SHARED_SCHEMA,
+        "version_table_schema": "shared",
     }
 
 
@@ -36,8 +34,8 @@ def run_migrations_offline() -> None:
 
     # Emit the schema bootstrap and scope unqualified shared tables to it.
     with context.begin_transaction():
-        context.execute(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}")
-        context.execute(f"SET search_path TO {SHARED_SCHEMA}")
+        context.execute("CREATE SCHEMA IF NOT EXISTS shared")
+        context.execute("SET search_path TO shared")
         context.run_migrations()
 
 
@@ -45,9 +43,9 @@ def do_run_migrations(connection: Connection) -> None:
     """Run shared-schema migrations on one synchronous connection."""
 
     # Alembic creates its version table before revisions, so create the schema first.
-    connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}"))
+    connection.execute(text("CREATE SCHEMA IF NOT EXISTS shared"))
     connection.commit()
-    connection.execute(text(f"SET search_path TO {SHARED_SCHEMA}"))
+    connection.execute(text("SET search_path TO shared"))
     connection.commit()
     context.configure(connection=connection, **context_options())
 

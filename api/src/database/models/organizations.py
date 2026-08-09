@@ -1,18 +1,19 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
+from src.database.models.base import PlatformModel
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.applications import Application
 
 
-class Organization(SQLModel, table=True):
+class Organization(PlatformModel, table=True):
     """Persist the tenant boundary and its immutable infrastructure assignments.
 
     A deletion tombstone remains until reconciliation removes the Organization's external resources.

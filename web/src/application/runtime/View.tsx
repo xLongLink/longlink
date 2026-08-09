@@ -8,7 +8,8 @@ import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import { usePages, type RuntimePage } from '@/hooks/use-pages';
+import { z } from 'zod';
+import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { getIconComponent } from '@/lib/icons';
@@ -22,6 +23,16 @@ import {
     type ExecutionContext,
 } from '@/xml';
 import XmlLayout from '@/xml/v1/layout';
+
+const pageSchema = z.object({
+    tab: z.string().trim().min(1),
+    path: z.string().trim().min(1),
+    name: z.string().trim().min(1).optional(),
+    icon: z.string().trim().min(1).optional(),
+    route: z.string().trim(),
+});
+
+type RuntimePage = z.infer<typeof pageSchema>;
 
 type ViewProps = {
     applicationStatus?: Status;
@@ -210,7 +221,14 @@ export default function View({
     const pageCacheKey = `${pages}\u0000${runtimeKey ?? ''}`;
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
-    const { data: registeredPages, isLoading, error } = usePages(pages, applicationCanLoad);
+    const {
+        data: registeredPages,
+        isLoading,
+        error,
+    } = useApiQuery<RuntimePage[]>(pages, {
+        enabled: applicationCanLoad,
+        parse: (value) => z.array(pageSchema).parse(value),
+    });
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const activeRouteMatch = useMemo(
         () => findPageRouteMatch(registeredPages, normalizedRoutePath),

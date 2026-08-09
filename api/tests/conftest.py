@@ -20,11 +20,11 @@ os.environ.setdefault("ENCRYPTION_KEY", "longlink-test-encryption-key-that-is-lo
 os.environ["DEVELOPMENT"] = "true"
 
 from main import app
-from sqlmodel import SQLModel
 from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
+from src.database.models.base import PlatformModel
 from src.database.models.users import User
 
 TEST_PASSWORD = "longlink-test-password"
@@ -72,7 +72,7 @@ async def reset_db(
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(PlatformModel.metadata.create_all)
 
     session._engine = engine
     session.Session = async_sessionmaker(engine, expire_on_commit=False)

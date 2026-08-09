@@ -57,13 +57,6 @@ export const stoneTheme = defineTheme({
     syntax: stoneSyntax,
 
     tokens: {
-        // =========================================================================
-        // Colors — warm stone palette
-        // Core: #28282A, #84848B, #D8D8DB, #f3f3f5, #FFFFFF
-        // =========================================================================
-
-        // Core semantic — all neutrals H=291
-        // Stone 900 T=16 C=1.4, Stone 500 T=55 C=4, Stone 300 T=86 C=1.6, Stone 100 T=96 C=1
         '--color-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
         '--color-accent-muted': ['#25252a14', '#f3f3f520'], // light: Stone Neutral T15 · 8% / dark: T96 · 12.5%
         '--color-neutral': ['#25252a0f', '#f3f3f51a'], // light: Stone Neutral T15 · 6% / dark: T96 · 10%
@@ -128,15 +121,6 @@ export const stoneTheme = defineTheme({
         '--text-body-leading': '1.5',
         '--text-supporting-size': 'var(--font-size-base)',
         '--text-supporting-leading': '1.4286',
-
-        // Categorical hues
-        //   Light: T90 solid bg + T30 text (pastel surface, dark text)
-        //   Dark:  T35 solid bg + T90 text — snaps to canonical palette stops
-        //          per theming-infra.mdc §7. T90 dark text is the SAME hex as
-        //          the light-mode bg pastel — clean palette symmetry, ~6–9:1
-        //          contrast on the T35 surface across all hues (passes AA Body).
-        // Borders: light T85 / dark T25 — one step inward from surface in both
-        //          modes, matching the light-mode T90/T85 spacing.
 
         // Categorical — Blue H=265 C=10
         '--color-background-blue': ['#d7e4f5', '#485362'], // light T90 / dark T35
@@ -272,10 +256,6 @@ export const stoneTheme = defineTheme({
             },
         },
 
-        // StyleX paints the banner surface from @layer priority4 (above
-        // @layer astryx-theme), so a direct backgroundColor override loses the
-        // cascade. Redefine the muted token instead so StyleX's var() resolves
-        // to the categorical bg in our scope.
         banner: {
             'status:info': {
                 '--color-accent-muted': 'var(--color-background-blue)',
@@ -303,10 +283,6 @@ export const stoneTheme = defineTheme({
             },
         },
 
-        // Switch off-state track reads --color-background-gray by default.
-        // Redefine it inside the switch scope to --color-skeleton, matching
-        // the ProgressBar track. The on-state reads --color-accent (unaffected);
-        // disabled-off also picks up --color-skeleton for consistency.
         switch: {
             base: {
                 '--color-background-gray': 'var(--color-skeleton)',

@@ -4,12 +4,8 @@ Project-specific guidance for AI coding agents.
 
 <!-- ASTRYX:START -->
 
-Astryx v0.2.0 · 154 components
-CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
-
-SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
-import "@astryxdesign/core/reset.css";
-import "@astryxdesign/core/astryx.css";
+Astryx v0.3.0
+CLI: run every command as `vp exec astryx <cmd>` (shown below as `astryx ...`).
 
 WORKFLOW — discover, don't guess. Before writing UI:
 
@@ -29,7 +25,7 @@ RULES:
 
 MORE CLI:
 search "<query>" find any component / hook / doc / template / block
-component --list 154 components by category
+component --list components by category
 template --list page + block recipes
 docs <topic> color, elevation, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling, theme, tokens, typography
 swizzle <Name> eject component source for deep customization

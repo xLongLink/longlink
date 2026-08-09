@@ -1,19 +1,11 @@
-/**
- * @file icons.tsx
- * @input Uses lucide-react icon components, IconRegistry type
- * @output Exports stoneIconRegistry for the neutral theme
- * @position Icon configuration for the neutral theme; consumed by index.ts
- *
- * Maps semantic icon names to Lucide icon components.
- * These icons are bundled with the theme, not with @astryxdesign/core.
- */
-
 import type { IconRegistry } from '@astryxdesign/core/Icon';
 import {
     X,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
     Check,
     CheckCircle,
     XCircle,
@@ -49,6 +41,8 @@ export const stoneIconRegistry: IconRegistry = {
     chevronDown: <ChevronDown {...iconProps} />,
     chevronLeft: <ChevronLeft {...iconProps} />,
     chevronRight: <ChevronRight {...iconProps} />,
+    chevronsLeft: <ChevronsLeft {...iconProps} />,
+    chevronsRight: <ChevronsRight {...iconProps} />,
     check: <Check {...iconProps} />,
     success: <CheckCircle {...iconProps} />,
     error: <XCircle {...iconProps} />,

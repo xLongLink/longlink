@@ -1,6 +1,6 @@
 import contextlib
 from uuid import UUID
-from .base import Table
+from .base import AuditTable
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
@@ -49,7 +49,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
     for obj in session.new:
 
         # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, Table):
+        if not isinstance(obj, AuditTable):
             continue
 
         # Preserve explicitly assigned creation timestamps.
@@ -72,7 +72,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
     for obj in session.dirty:
 
         # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, Table):
+        if not isinstance(obj, AuditTable):
             continue
 
         # Skip rows without column-level changes.
@@ -90,7 +90,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
     for obj in list(session.deleted):
 
         # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, Table):
+        if not isinstance(obj, AuditTable):
             continue
 
         session.add(obj)

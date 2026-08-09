@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
   "longlink",
   "python-multipart",
+  "sqlmodel",
 ]
 
 [tool.longlink]

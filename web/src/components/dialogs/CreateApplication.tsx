@@ -58,7 +58,6 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const t = useTranslator();
     const toast = useToast();
     const createApplication = useCreateOrganizationApplication(organizationId);
-    const isCreatingApplication = createApplication.isPending;
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
@@ -163,7 +162,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
 
     /** Updates dialog state while protecting image inspection or application creation. */
     function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && (isInspecting || isCreatingApplication)) {
+        if (!nextOpen && (isInspecting || createApplication.isPending)) {
             return;
         }
         setOpen(nextOpen);
@@ -183,7 +182,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             <Dialog
                 isOpen={open}
                 onOpenChange={handleOpenChange}
-                purpose={isInspecting || isCreatingApplication ? 'required' : 'form'}
+                purpose={isInspecting || createApplication.isPending ? 'required' : 'form'}
                 width={step === 'envs' ? 520 : 640}
                 maxHeight="calc(100dvh - 2rem)"
             >
@@ -373,7 +372,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                     <Button
                                         label={t('actions.back')}
                                         variant="ghost"
-                                        isDisabled={isCreatingApplication}
+                                        isDisabled={createApplication.isPending}
                                         clickAction={() => {
                                             setStep('metadata');
                                             setError(null);
@@ -383,16 +382,20 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                         <Button
                                             label={t('actions.cancel')}
                                             variant="ghost"
-                                            isDisabled={isCreatingApplication}
+                                            isDisabled={createApplication.isPending}
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
                                             form={formId}
                                             type="submit"
-                                            label={isCreatingApplication ? t('actions.creating') : t('actions.create')}
+                                            label={
+                                                createApplication.isPending
+                                                    ? t('actions.creating')
+                                                    : t('actions.create')
+                                            }
                                             variant="primary"
                                             isDisabled={!hasRequiredMetadata || !form.formState.isValid}
-                                            isLoading={isCreatingApplication}
+                                            isLoading={createApplication.isPending}
                                         />
                                     </Stack>
                                 </Stack>

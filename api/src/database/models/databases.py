@@ -1,13 +1,14 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from sqlalchemy import Enum, Column
 from src.environments import env
 from src.models.types import DatabaseSSLMode
 from src.database.types import EncryptedType
+from src.database.models.base import PlatformModel
 
 
-class DatabaseRegistry(SQLModel, table=True):
+class DatabaseRegistry(PlatformModel, table=True):
     """Persist one database backend available to Organizations.
 
     Reconciliation creates one database per Organization and one isolated schema and runtime role per LongLink Application.

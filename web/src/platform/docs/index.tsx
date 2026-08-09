@@ -1,93 +1,6 @@
-import { Card } from '@astryxdesign/core/Card';
-import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
-
-const industryLevels = [
-    {
-        label: 'Sector',
-        value: '22',
-        href: 'https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf',
-    },
-    {
-        label: 'Division',
-        value: '87',
-        href: 'https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf',
-    },
-    {
-        label: 'Industry group',
-        value: '258',
-        href: 'https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf',
-    },
-    {
-        label: 'Industry classification',
-        value: '463',
-        href: 'https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf',
-    },
-];
-
-const geographyLevels = [
-    { label: 'International', value: null, href: null },
-    {
-        label: 'National',
-        value: '249',
-        href: 'https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes',
-    },
-    { label: 'Regional', value: '5,046', href: 'https://en.wikipedia.org/wiki/ISO_3166-2' },
-    { label: 'Municipal', value: '400,000+', href: 'https://gadm.org/data.html' },
-];
-
-const approaches = [
-    { name: 'Spreadsheets', description: 'What happens when the person leaves?', icon: Columns },
-    {
-        name: 'Generic SaaS',
-        description: 'Just write to the support, not even AI understand the documentation.',
-        icon: Wrench,
-    },
-    { name: 'Specialized SaaS', description: 'Wait untill you see the invoice.', icon: Copy },
-    {
-        name: 'No-Code / Low-Code',
-        description: 'Not sure, an intern has set this up a few years ago.',
-        icon: MoreHorizontal,
-    },
-    {
-        name: 'Vibecoded Solutions',
-        description: 'Move the button on the top right. Wait ... where did the database go?',
-        icon: AlertTriangle,
-    },
-    {
-        name: 'Custom Build',
-        description: 'Yes we know, someone has opened a Jira ticket a few years ago.',
-        icon: Wrench,
-    },
-];
-
-/** Renders one side of the industry and geography context comparison. */
-function ContextLevels({ items }: { items: typeof industryLevels | typeof geographyLevels }) {
-    return (
-        <Stack gap={2}>
-            {items.map((item) => (
-                <Card key={item.label} padding={2} variant="muted">
-                    <Stack direction="horizontal" gap={1} justify="center" align="center">
-                        <Text weight="semibold">{item.label}</Text>
-                        {item.value && item.href ? (
-                            <>
-                                <Text>-</Text>
-                                <Link href={item.href} hasUnderline isExternalLink type="inherit" weight="semibold">
-                                    {item.value}
-                                </Link>
-                            </>
-                        ) : null}
-                    </Stack>
-                </Card>
-            ))}
-        </Stack>
-    );
-}
 
 export const metadata = {
     toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
@@ -101,86 +14,33 @@ export const content = (
             Introduction
         </Heading>
         <Text as="p">
-            Across industries and geographies, there are hundreds of millions of distinct operational contexts. Each has
-            its own regulations, roles, data requirements, approval paths, integrations, terminology, and exceptions.
-            Even similar businesses rarely operate in exactly the same way, creating a vast number of processes that may
-            require dedicated software.
-        </Text>
-        <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4} align="center">
-            <ContextLevels items={industryLevels} />
-            <Stack gap={1} align="center">
-                <Text type="display-3" hasTabularNumbers>
-                    336'000'000+
-                </Text>
-                <Text type="supporting" weight="semibold" justify="center">
-                    Industry × Geography Contexts
-                </Text>
-            </Stack>
-            <ContextLevels items={geographyLevels} />
-        </Grid>
-        <Text as="p">
-            Today, companies manage these processes through combinations of different SaaS products, spreadsheets,
-            forms, dashboards, email, enterprise platforms, and custom software, resulting in a fragmented and often
-            poorly documented ecosystem.
-        </Text>
-        <Table<Record<string, unknown>> density="compact">
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Approach</TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {approaches.map(({ description, icon: ApproachIcon, name }) => (
-                    <TableRow key={name}>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <ApproachIcon aria-hidden="true" className="text-accent" size={16} />
-                                    <Text weight="semibold">{name}</Text>
-                                </Stack>
-                                <Text type="supporting">{description}</Text>
-                            </Stack>
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-        <Text as="p">
-            AI has changed the economics of software creation. Applications can now be built faster, at a lower cost,
-            and with less engineering effort. This makes it practical to turn a much larger number of specific business
-            processes into dedicated software.
+            Across industries and geographies, businesses operate within distinct regulatory, organizational, and
+            technical contexts. Their processes differ in roles, data requirements, approval paths, integrations,
+            terminology, and exceptions. As a result, even similar organizations often need software that reflects how
+            they actually operate.
         </Text>
         <Text as="p">
-            However, faster development does not automatically produce reliable or maintainable systems. Every
-            application still requires a common foundation: authentication, organizations, permissions, databases,
-            storage, deployment, routing, logs, monitoring, and a consistent operating environment. Rebuilding this
-            layer for every application creates costs that are ultimately reflected in the final price.
+            Most companies manage these needs through a growing mix of SaaS products, spreadsheets, forms, dashboards,
+            email, enterprise systems, scripts, and AI-generated tools. Business logic becomes distributed across these
+            systems, making processes harder to understand, govern, and maintain. Over time, this fragmentation
+            increases operational complexity and technical debt.
         </Text>
         <Text as="p">
-            LongLink provides this foundation, allowing teams to build and operate business-process applications as
-            normal software. It manages the infrastructure common to every application, while each application owns its
-            specific data model, rules, workflows, integrations, interfaces, and business logic.
+            AI has lowered the cost of building software. When a process is well defined and its context is available,
+            teams can now develop tailored solutions more quickly. However, many existing platforms require applications
+            to run within proprietary environments, data models, and deployment systems. This can limit portability,
+            increase dependence on a vendor, and reduce the long-term value of customization.
         </Text>
         <Text as="p">
-            This approach brings the way businesses define their operations closer to software-engineering practices.
-            Processes become explicit models, states, rules, actions, and interfaces, creating systems that are more
-            modular, structured, and less prone to error, as well as easier to test, review, audit, document, extend,
-            and maintain.
+            LongLink is an open-source foundation for building, deploying, and operating dedicated business applications
+            as normal Python software. The Platform provides common infrastructure, while each organization retains
+            control of its application logic, data, workflows, and integrations. This enables teams to adapt their
+            systems as requirements evolve without committing their software to a proprietary runtime.
         </Text>
         <Text as="p">
-            Python is central to this model. It provides a practical bridge between business knowledge, professional
-            software development, and AI-assisted creation. Its syntax keeps process logic understandable, while its
-            ecosystem supports the validation, data modelling, APIs, databases, testing, and engineering practices
-            required for production software. LongLink is built with widely used Python libraries whose deep
-            representation in AI training data and development workflows improves the quality and precision of
-            AI-assisted development.
-        </Text>
-        <Text as="p">
-            And, of course, is{' '}
-            <Link href="https://github.com/xLongLink/longlink" hasUnderline isExternalLink type="inherit">
-                open source
-            </Link>
-            .
+            As AI makes software easier to produce, quality becomes more important, not less. LongLink is designed to
+            help teams build applications that are clear, reliable, adaptable, and maintainable over time, combining
+            AI-assisted development with a consistent Platform foundation.
         </Text>
     </Stack>
 );

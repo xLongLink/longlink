@@ -1,16 +1,17 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column
 from src.models.roles import PlatformRoles
 from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
+from src.database.models.base import PlatformModel
 from src.database.models.association import UserOrganization
 
 
-class User(SQLModel, table=True):
+class User(PlatformModel, table=True):
     """Represent a local LongLink user account."""
 
     __tablename__: ClassVar[str] = "users"

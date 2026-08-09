@@ -61,7 +61,7 @@ Each application has:
 Work that is too long for an API request is queued as a durable, typed Operation:
 
 - `compute.create` creates or recreates one authenticated Envoy Gateway. It never deploys, routes, deletes, or repairs Organization or Application resources.
-- `organization.create` and `organization.delete` own one Organization's provider resources, shared users, and Kubernetes Namespace lifecycle.
+- `organization.create` and `organization.delete` own one Organization's provider resources, shared audit records, and Kubernetes Namespace lifecycle.
 - `application.create` and `application.delete` own one Application's provider resources, Kubernetes workload, Service, and `HTTPRoute` lifecycle.
 - Each API replica claims and executes one Operation at a time. Expiring worker locks and bounded retries recover work across Platform redeployments.
 - Lifecycle retries reuse persisted state and reapply the desired state after an Application or Organization reaches `running`.

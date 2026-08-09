@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from collections.abc import Sequence
-from longlink.shared import users as shared_users
+from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -14,6 +14,7 @@ from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
+from longlink.shared.models import AuditUser
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -201,29 +202,29 @@ async def sync_users(organization_id: UUID, db: Postgres | None = None) -> None:
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     memberships = await members(organization_id, include_deleted=True)
-    users: list[shared_users.UserRow] = []
+    rows: list[AuditUser] = []
     for membership in memberships:
         user = membership.user
         deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
         updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
-        users.append(
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar,
-                "role": membership.role.value,
-                "created_at": membership.created_at,
-                "updated_at": updated_at,
-                "deleted_at": deleted_at,
-            }
+        rows.append(
+            AuditUser(
+                id=user.id,
+                name=user.name,
+                email=user.email,
+                avatar=user.avatar,
+                role=membership.role.value,
+                created_at=membership.created_at,
+                updated_at=updated_at,
+                deleted_at=deleted_at,
+            )
         )
 
     # The Platform is authoritative; reuse the prepared client during Organization creation.
     if db is None:
         database = assigned.database
         db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
-    await shared_users.sync_url(db.shared_schema_url(organization_id), users)
+    await shared_audit.sync(db.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 
 
 async def update_member_role(
@@ -240,7 +241,6 @@ async def update_member_role(
         statement = (
             select(UserOrganization)
             .join(User, User.id == UserOrganization.user_id)
-            .join(Organization, Organization.id == UserOrganization.organization_id)
             .where(
                 UserOrganization.organization_id == organization_id,
                 UserOrganization.user_id == member_id,

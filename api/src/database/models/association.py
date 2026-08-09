@@ -1,7 +1,7 @@
 from uuid import UUID
 from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -13,7 +13,10 @@ if TYPE_CHECKING:
     from src.database.models.organizations import Organization
 
 
-class UserOrganization(SQLModel, table=True):
+from src.database.models.base import PlatformModel
+
+
+class UserOrganization(PlatformModel, table=True):
     """Persist the authoritative Organization role assigned to one LongLink Platform user."""
 
     __tablename__: ClassVar[str] = "user_organizations"

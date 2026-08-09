@@ -1,20 +1,21 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column, UniqueConstraint
 from src.environments import env
 from src.database.types import EncryptedType
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
+from src.database.models.base import PlatformModel
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.organizations import Organization
 
 
-class Application(SQLModel, table=True):
+class Application(PlatformModel, table=True):
     """Persist desired and observed runtime state for one Organization-owned LongLink Application.
 
     A deletion tombstone remains until reconciliation removes the Application's external resources.

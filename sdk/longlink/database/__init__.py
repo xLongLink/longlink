@@ -1,1 +1,2 @@
-from .base import User, Table, get_session, create_engine
+from .base import AuditTable, session
+from longlink.shared.models import AuditUser

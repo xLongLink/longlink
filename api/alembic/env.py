@@ -1,13 +1,13 @@
 import asyncio
 import logging.config
 from alembic import context
-from sqlmodel import SQLModel
 from src.utils import urls
 from sqlalchemy import pool
 from src.environments import env
 from sqlalchemy.engine import Connection
 from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
 from sqlalchemy.ext.asyncio import create_async_engine
+from src.database.models.base import PlatformModel
 
 # Configure Alembic with the current Platform database URL.
 config = context.config
@@ -18,7 +18,7 @@ if config.config_file_name is not None:
     logging.config.fileConfig(config.config_file_name)
 
 # Expose all imported SQLModel tables to migration autogeneration.
-target_metadata = SQLModel.metadata
+target_metadata = PlatformModel.metadata
 
 
 def run_migrations_offline() -> None:

@@ -1,4 +1,4 @@
-from longlink.testing import TestClient
+from fastapi.testclient import TestClient
 
 
 def test_healthcheck_returns_ok_payload() -> None:

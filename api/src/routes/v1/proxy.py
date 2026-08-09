@@ -3,7 +3,7 @@ from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser
 from src.utils import roles
 from collections.abc import AsyncIterator
-from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES
+from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient, GatewayRequestError
@@ -15,8 +15,8 @@ BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/h
 PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 
 
-@router.api_route("/applications/{application_id}/proxy", methods=APPLICATION_PROXY_METHODS, include_in_schema=False)
-@router.api_route("/applications/{application_id}/proxy/{path:path}", methods=APPLICATION_PROXY_METHODS, include_in_schema=False)
+@router.api_route("/applications/{application_id}/proxy", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
+@router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
 async def proxy_application_request(request: Request, application_id: UUID, path: str = "", user: User = Depends(authuser)) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 

@@ -11,12 +11,6 @@ import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '
 
 const UserContext = createContext<UseQueryResult<UserProfile | null, Error> | undefined>(undefined);
 
-const DEFAULT_USER_PREFERENCES = {
-    theme: 'dark' as Theme,
-    accent: 'neutral' as Accent,
-    radius: DEFAULT_RADIUS,
-} as const;
-
 /** Caches non-sensitive theme preferences for the next page's first paint. */
 function storeThemePreferences({ theme, accent, radius }: Pick<UserProfile, 'theme' | 'accent' | 'radius'>): void {
     localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ theme, accent, radius }));
@@ -57,9 +51,9 @@ export function useUserProfile() {
     return {
         user: user ?? null,
         role: user?.role ?? 'user',
-        theme: user?.theme ?? DEFAULT_USER_PREFERENCES.theme,
-        accent: user?.accent ?? DEFAULT_USER_PREFERENCES.accent,
-        radius: user?.radius ?? DEFAULT_USER_PREFERENCES.radius,
+        theme: user?.theme ?? ('dark' as Theme),
+        accent: user?.accent ?? ('neutral' as Accent),
+        radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,
         error: error ?? null,
     };

@@ -1,6 +1,5 @@
 import pytest
 import asyncio
-from sqlmodel import SQLModel
 from factories import queue_operation
 from containers import start_postgres
 from sqlalchemy import select
@@ -8,6 +7,7 @@ from src.database import session as database_session
 from src.environments import env
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from src.database.models.base import PlatformModel
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -26,7 +26,7 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink"
         engine = create_async_engine(database_url)
         async with engine.begin() as connection:
-            await connection.run_sync(SQLModel.metadata.create_all)
+            await connection.run_sync(PlatformModel.metadata.create_all)
 
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
         monkeypatch.setattr(database_session, "Session", session_factory)

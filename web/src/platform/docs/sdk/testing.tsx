@@ -30,8 +30,7 @@ export const content = (
             <Link href="https://pytest-asyncio.readthedocs.io/en/stable/" hasUnderline isExternalLink type="inherit">
                 pytest-asyncio
             </Link>{' '}
-            workflows. Generated projects also include the dependencies needed by{' '}
-            <Code>longlink.testing.TestClient</Code>.
+            workflows. Generated projects also include the dependencies needed by FastAPI's <Code>TestClient</Code>.
         </Text>
         <Text as="p">To install the development dependencies, run:</Text>
         <CodeTabs
@@ -56,8 +55,7 @@ uv run longlink test tests/test_app.py -q`}
             Example
         </Heading>
         <Text as="p">
-            LongLink applications are FastAPI applications, and <Code>longlink.testing.TestClient</Code> is a compatible
-            facade over FastAPI's{' '}
+            LongLink applications are FastAPI applications and can use FastAPI's{' '}
             <Link href="https://fastapi.tiangolo.com/tutorial/testing/" hasUnderline isExternalLink type="inherit">
                 TestClient
             </Link>
@@ -65,7 +63,7 @@ uv run longlink test tests/test_app.py -q`}
         </Text>
         <CodeBlock
             code={`from main import app
-from longlink.testing import TestClient
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
