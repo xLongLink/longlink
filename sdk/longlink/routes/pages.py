@@ -16,7 +16,7 @@ class PageResponse(BaseModel):
 
 
 @router.get("/pages.json", response_model=list[PageResponse], response_model_exclude_unset=True)
-async def get_pages(request: Request):
+def get_pages(request: Request):
     """Return the registered SDK runtime pages."""
 
     pages: list[dict[str, object]] = []

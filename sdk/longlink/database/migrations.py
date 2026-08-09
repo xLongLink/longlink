@@ -21,27 +21,14 @@ _RETRYABLE_MIGRATION_ERROR_FRAGMENTS = (
 )
 
 
-def iter_exception_chain(exc: BaseException) -> list[BaseException]:
-    """Return an exception with its chained causes and contexts."""
-
-    exceptions: list[BaseException] = []
-    seen: set[int] = set()
-    current: BaseException | None = exc
-
-    # Walk each linked exception once.
-    while current is not None and id(current) not in seen:
-        exceptions.append(current)
-        seen.add(id(current))
-        current = current.__cause__ or current.__context__
-
-    return exceptions
-
-
 def retryable_migration_error(exc: BaseException) -> bool:
     """Return whether a migration failure looks like transient database connectivity."""
 
     # Inspect every linked exception for retryable database failures.
-    for chained_exception in iter_exception_chain(exc):
+    seen: set[int] = set()
+    chained_exception: BaseException | None = exc
+    while chained_exception is not None and id(chained_exception) not in seen:
+        seen.add(id(chained_exception))
 
         # Retry standard transient connection failures.
         if isinstance(chained_exception, (ConnectionError, TimeoutError, socket.gaierror)):
@@ -54,6 +41,8 @@ def retryable_migration_error(exc: BaseException) -> bool:
             # Match backend-specific transient connectivity text.
             if any(fragment in message for fragment in _RETRYABLE_MIGRATION_ERROR_FRAGMENTS):
                 return True
+
+        chained_exception = chained_exception.__cause__ or chained_exception.__context__
 
     return False
 

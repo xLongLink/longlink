@@ -5,8 +5,7 @@
     "type": "module",
     "scripts": {
         "theme": "vp exec astryx theme build src/themes/stone/stoneTheme.ts --out src/lib/generated/stone.css",
-        "build": "vp run build:prepared",
-        "build:prepared": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
+        "build": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
         "check": "vp check",
         "typecheck": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b",
         "typecheck:api": "react-router typegen --mode api && tsc -b",

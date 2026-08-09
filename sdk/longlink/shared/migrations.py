@@ -34,13 +34,7 @@ def migration_config(database_url: str | URL, script_location: Path | None = Non
     return config
 
 
-def migrate_database_sync(database_url: str | URL, script_location: Path | None = None) -> None:
-    """Apply shared-schema migrations using a synchronous Alembic runner."""
-
-    command.upgrade(migration_config(database_url, script_location), "head")
-
-
 async def migrate_database(database_url: str | URL, script_location: Path | None = None) -> None:
     """Apply shared-schema migrations without blocking the control-plane event loop."""
 
-    await asyncio.to_thread(migrate_database_sync, database_url, script_location)
+    await asyncio.to_thread(command.upgrade, migration_config(database_url, script_location), "head")
