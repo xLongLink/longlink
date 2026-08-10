@@ -6,13 +6,6 @@ import { resolveXmlValue } from './props';
 
 const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
 
-type BindingResult = {
-    bound: boolean;
-    initialValue: unknown;
-    currentValue: unknown;
-    setValue: (value: unknown) => void;
-};
-
 type BindingTarget = {
     state: Record<string, unknown>;
     key?: string;
@@ -31,7 +24,7 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text'): BindingResult {
+export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text') {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
@@ -44,7 +37,7 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
         bound: !!target,
         initialValue,
         currentValue,
-        setValue: (nextValue) => {
+        setValue: (nextValue: unknown) => {
             // Skip writes when the value is not bound.
             if (!target) return;
 

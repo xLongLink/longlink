@@ -1,8 +1,8 @@
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
+import { proxy } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { evaluate, isSafePropertyName, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
-import { state } from './state';
 import { resolveRequestUrl } from './url';
 
 const Context = createReactContext<ExecutionContext | null>(null);
@@ -74,7 +74,12 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                             }
                         }
 
-                        state(ctx, id, initialValue);
+                        // Keep state values reactive for bound XML controls.
+                        if (!isSafePropertyName(id)) {
+                            throw new Error('State id must be a safe property name');
+                        }
+
+                        ctx.values[id] = proxy(initialValue);
                     }
                 };
                 await setups[id]();

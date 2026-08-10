@@ -384,7 +384,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     }
 
     // Interpolate `${...}` expressions inside mixed text values.
-    if (input.includes('${') && !isReference(input)) {
+    if (input.includes('${')) {
         let output = '';
         let cursor = 0;
 

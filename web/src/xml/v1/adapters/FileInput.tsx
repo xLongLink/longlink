@@ -13,13 +13,11 @@ import {
     resolveXmlString,
 } from './props';
 
-type FileValue = File | File[] | null;
-
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
     const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'file');
-    const [localValue, setLocalValue] = useState<FileValue>(null);
+    const [localValue, setLocalValue] = useState<File | File[] | null>(null);
     const currentValue = binding.currentValue;
     const boundValue =
         currentValue == null ||

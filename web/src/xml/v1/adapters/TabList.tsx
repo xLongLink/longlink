@@ -15,13 +15,6 @@ import {
     resolveXmlString,
 } from './props';
 
-type ResolvedTab = {
-    href?: string;
-    label: string;
-    nodes: ASTNode[];
-    value: string;
-};
-
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {
     const ctx = useXmlContext();
@@ -74,7 +67,7 @@ export function Tab(): never {
 }
 
 /** Resolves a serializable XML tab definition. */
-function resolveTab(node: ASTNode, ctx: ExecutionContext): ResolvedTab {
+function resolveTab(node: ASTNode, ctx: ExecutionContext) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'Tab');
     const label = resolveXmlLabel(props, ctx, 'Tab');

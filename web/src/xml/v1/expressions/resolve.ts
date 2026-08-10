@@ -27,10 +27,10 @@ export function resolveValue(ctx: ExecutionContext | null | undefined, key: stri
         const values = scope.values;
 
         // Prefer values stored in the scope.
-        if (hasSafeProperty(values, key)) return readSafeProperty(values, key);
+        if (hasSafeProperty(values, key)) return values[key];
 
         // Fall back to direct scope properties.
-        if (hasSafeProperty(scope, key)) return readSafeProperty(scope, key);
+        if (hasSafeProperty(scope, key)) return scope[key];
     }
 
     return undefined;

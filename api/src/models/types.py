@@ -4,7 +4,6 @@ from enum import StrEnum
 from typing import Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
-from longlink.models.icons import Icon
 
 IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")

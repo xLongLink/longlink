@@ -7,13 +7,6 @@ import type { ASTNode, ExecutionContext, Props } from '../types';
 import { useBindableValue } from './binding';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
 
-type ResolvedSideNavItem = {
-    icon?: string;
-    label: string;
-    nodes: ASTNode[];
-    value: string;
-};
-
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
     const ctx = useXmlContext();
@@ -69,7 +62,7 @@ export function SideNavItem(): never {
 }
 
 /** Resolves a serializable XML side navigation definition. */
-function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext): ResolvedSideNavItem {
+function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
     const label = resolveXmlLabel(props, ctx, 'SideNavItem');

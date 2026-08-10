@@ -1,11 +1,11 @@
-type GlobalPropertyName = 'document' | 'fetch' | 'window';
+type GlobalPropertyName = 'fetch';
 
 /** Temporarily replaces one test environment global and restores its original descriptor. */
-export async function withGlobalValue<T>(
+export async function withGlobalValue(
     name: GlobalPropertyName,
     value: unknown,
-    callback: () => T | Promise<T>
-): Promise<T> {
+    callback: () => Promise<void>
+): Promise<void> {
     const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
 
     Object.defineProperty(globalThis, name, {
@@ -14,7 +14,7 @@ export async function withGlobalValue<T>(
     });
 
     try {
-        return await callback();
+        await callback();
     } finally {
         if (descriptor) {
             Object.defineProperty(globalThis, name, descriptor);
