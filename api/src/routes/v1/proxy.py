@@ -1,4 +1,5 @@
 from uuid import UUID
+import httpx2
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import ApplicationAccess, authuser, get_session, application_access
 from src.utils import roles
@@ -70,15 +71,18 @@ async def proxy_application_request(
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    gateway_response = await GatewayClient(gateway_url, certificate, api_key).request(
-        application_id=application.id,
-        user_id=user.id,
-        method=request.method,
-        path=path,
-        query=request.url.query,
-        content_type=request.headers.get("content-type"),
-        content=request_content(),
-    )
+    try:
+        gateway_response = await GatewayClient(gateway_url, certificate, api_key).request(
+            application_id=application.id,
+            user_id=user.id,
+            method=request.method,
+            path=path,
+            query=request.url.query,
+            content_type=request.headers.get("content-type"),
+            content=request_content(),
+        )
+    except httpx2.HTTPError as exc:
+        raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
