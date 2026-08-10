@@ -61,9 +61,7 @@ def create_fs() -> AbstractFileSystem:
         )
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
-    if prefix:
+    if prefix or bucket:
         return DirFileSystem(path=(PurePosixPath(bucket) / prefix_path).as_posix(), fs=filesystem)
-    if bucket:
-        return DirFileSystem(path=bucket, fs=filesystem)
 
     return filesystem

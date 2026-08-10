@@ -63,7 +63,7 @@ class DatabaseConfiguration(BaseModel):
             or parsed_port is not None
             or parsed.username
             or parsed.password
-            or parsed.path not in {"", "/"}
+            or parsed.path != ""
             or parsed.query
             or parsed.fragment
             or any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value)

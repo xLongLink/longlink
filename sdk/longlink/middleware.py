@@ -47,8 +47,7 @@ class FrontendMiddleware:
         """Prepare identity and gzip response paths for one application."""
 
         self.app = app
-        self.minimum_size = 1000
-        self.compresslevel = 6
+        self.gzip = GZipMiddleware(app, minimum_size=1000, compresslevel=6)
 
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -102,8 +101,7 @@ class FrontendMiddleware:
 
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
         if use_gzip:
-            gzip_middleware = GZipMiddleware(self.app, self.minimum_size, compresslevel=self.compresslevel)
-            await gzip_middleware(scope, receive, send_with_headers)
+            await self.gzip(scope, receive, send_with_headers)
             return
 
         await self.app(scope, receive, send_with_headers)

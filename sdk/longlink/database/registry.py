@@ -8,6 +8,5 @@ database_metadata = SQLModel.metadata
 class Base(SQLModel):
     """Configure SDK models that use SQLAlchemy declared attributes."""
 
-    metadata = database_metadata
     model_config = SQLModel.model_config.copy()
     model_config["ignored_types"] = (declared_attr,)

@@ -26,4 +26,3 @@ class Envs(BaseSettings):
     STORAGE_PASSWORD: str | None = None
     STORAGE_USERNAME: str | None = None
     STORAGE_ENDPOINT_URL: str | None = None
-    STORAGE_SHARED_PREFIX: str | None = None

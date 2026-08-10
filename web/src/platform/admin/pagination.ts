@@ -11,8 +11,7 @@ export function useAdminPagination<T extends Record<string, unknown>>(
 ) {
     const t = useTranslator();
     const [page, setPage] = useState(1);
-    const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
-    const currentPage = Math.min(page, pageCount);
+    const currentPage = Math.min(page, Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
 
     const pagination = useTablePagination<T>({
         page: currentPage,

@@ -77,8 +77,7 @@ class Element:
         if self._content is None:
 
             # Read XML as text so parse errors can report the original content.
-            with self.path.open("r", encoding="utf-8") as handler:
-                self._content = handler.read()
+            self._content = self.path.read_text(encoding="utf-8")
         return self._content
 
 

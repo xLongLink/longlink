@@ -14,7 +14,7 @@ export function createQueryClient(): QueryClient {
 }
 
 /** Cancels and removes cached API data except for observers that callers will reseed. */
-export async function clearSessionQueries(client: QueryClient, preserve: QueryKey[] = []): Promise<void> {
+export async function clearSessionQueries(client: QueryClient, preserve: QueryKey[]): Promise<void> {
     const preservedHashes = new Set(preserve.map((key) => hashKey(key)));
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === 'api';
 
