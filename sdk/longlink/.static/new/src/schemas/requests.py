@@ -2,9 +2,6 @@ from typing import Literal
 from longlink import database
 from pydantic import Field, BaseModel, ConfigDict
 
-RequestStatus = Literal["draft", "submitted", "approved", "rejected"]
-
-
 class PurchaseRequestCreate(BaseModel):
     """Typed request for creating a purchase request."""
 
@@ -19,7 +16,7 @@ class PurchaseRequestStatusUpdate(BaseModel):
     """Typed request for changing a purchase request status."""
 
     # Workflow fields
-    status: RequestStatus
+    status: Literal["draft", "submitted", "approved", "rejected"]
 
 
 class PurchaseRequestRead(BaseModel):

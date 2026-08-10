@@ -11,6 +11,5 @@ def pytest_configure() -> None:
     if str(sample_root) not in sys.path:
         sys.path.insert(0, str(sample_root))
 
-    # Configure the deterministic environment required by the scaffold application.
+    # Configure deterministic LongLink test mode for the scaffold application.
     os.environ["LONGLINK_ENV"] = "testing"
-    os.environ["REQUIRED"] = "required"

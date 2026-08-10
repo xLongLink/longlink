@@ -121,9 +121,7 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionCon
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
 
-    const value = evaluate(rawValue, ctx);
-
-    return value;
+    return evaluate(rawValue, ctx);
 }
 
 /** Return whether an XML node passes its optional conditional expression. */

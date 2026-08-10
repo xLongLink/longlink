@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/icons", response_model=list[Icon])
-async def list_icons(_user: User = Depends(authuser)):
+def list_icons(_user: User = Depends(authuser)):
     """Return the Lucide icon slugs supported by the web runtime."""
 
     return list(Icon)

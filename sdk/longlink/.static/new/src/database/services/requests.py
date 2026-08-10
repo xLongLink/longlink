@@ -37,9 +37,6 @@ async def get_request(request_id: int, include_audit_users: bool = True) -> Purc
         result = await session.exec(statement)
         request = result.first()
 
-    if request is None:
-        return None
-
     return request
 
 

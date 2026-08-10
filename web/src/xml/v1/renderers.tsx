@@ -149,12 +149,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
         const visibleError = setupValidationError ?? setupError;
 
         return (
-            <XmlErrorBoundary resetKey={`${version}`}>
-                <Banner
-                    status="error"
-                    title={visibleError instanceof Error ? visibleError.message : 'XML setup failed'}
-                />
-            </XmlErrorBoundary>
+            <Banner status="error" title={visibleError instanceof Error ? visibleError.message : 'XML setup failed'} />
         );
     }
 

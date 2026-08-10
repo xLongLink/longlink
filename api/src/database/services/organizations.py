@@ -250,10 +250,9 @@ async def update_member_role(
         )
 
         # Require an active organization membership.
-        row = (await session.execute(statement)).one_or_none()
-        if row is None:
+        membership = (await session.scalars(statement)).one_or_none()
+        if membership is None:
             return False
-        membership = row[0]
 
         # Only owners may grant or change owner access.
         if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
