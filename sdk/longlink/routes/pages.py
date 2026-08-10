@@ -19,25 +19,14 @@ class PageResponse(BaseModel):
 def get_pages(request: Request):
     """Return the registered SDK runtime pages."""
 
-    pages: list[dict[str, object]] = []
-    registered_pages = request.app.state.page_registry
-
     # Page handlers are registered from the SDK pages directory during app startup.
-    for page in registered_pages:
-        entry = {
+    return [
+        {
             "tab": page.tab,
             "path": page.path.lstrip("/"),
             "route": page.route,
+            **({"name": page.name} if page.name else {}),
+            **({"icon": page.icon} if page.icon else {}),
         }
-
-        # Include optional display text only when the page declares it.
-        if page.name:
-            entry["name"] = page.name
-
-        # Include optional icon metadata only when the page declares it.
-        if page.icon:
-            entry["icon"] = page.icon
-
-        pages.append(entry)
-
-    return pages
+        for page in request.app.state.page_registry
+    ]

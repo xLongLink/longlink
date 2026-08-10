@@ -1,9 +1,10 @@
 import pytest
 from uuid import UUID
-from factories import create_compute, queue_operation
+from factories import create_compute, claim_operation, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
+from src.database.session import session_scope
 from src.database.services import compute, operations
 from src.models.operations import OperationStatus
 
@@ -61,7 +62,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
         compute_registry.id,
         target_id=compute_registry.id,
     )
-    claimed = await operations.claim()
+    claimed = await claim_operation()
     assert claimed is not None
 
     # Act
@@ -72,7 +73,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
         compute_registry.id,
         target_id=compute_registry.id,
     )
-    recreated_claim = await operations.claim()
+    recreated_claim = await claim_operation()
     assert recreated_claim is not None
     recreated = await execute(recreated_claim, compute_operations.create)
 
@@ -87,7 +88,8 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert replaced == [
         ("server-certificate-2", "server-private-key-2", "ca-2"),
     ]
-    refreshed = await compute.get(compute_registry.id)
+    async with session_scope() as session:
+        refreshed = await compute.get(session, compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
     assert refreshed.gateway_url == "https://192.0.2.1"
@@ -120,7 +122,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
         compute_registry.id,
         target_id=compute_registry.id,
     )
-    claimed = await operations.claim()
+    claimed = await claim_operation()
     assert claimed is not None
 
     # Act
@@ -128,6 +130,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
 
     # Assert
     assert failed.status == OperationStatus.failed
-    refreshed = await compute.get(compute_registry.id)
+    async with session_scope() as session:
+        refreshed = await compute.get(session, compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.creating

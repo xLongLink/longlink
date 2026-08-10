@@ -3,7 +3,7 @@ import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/T
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { isAppRelativeUrl, resolveUrl } from '../core/url';
+import { resolveNavigationUrl } from '../core/url';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import { useBindableValue } from './binding';
 import {
@@ -69,7 +69,7 @@ function resolveTab(node: ASTNode, ctx: ExecutionContext) {
     const value = requireXmlString(props, 'value', ctx, 'Tab');
     const label = resolveXmlLabel(props, ctx, 'Tab');
     const to = resolveXmlString(props, 'to', ctx);
-    const href = to && isAppRelativeUrl(to) ? resolveUrl(String(ctx.navigationBaseUrl ?? ''), to) : undefined;
+    const href = resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), to) || undefined;
 
     return { href, label, nodes: node.children ?? [], value };
 }

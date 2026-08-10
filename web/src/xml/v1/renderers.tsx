@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { translationCatalogs } from '@/lib/i18n';
-import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
+import { createContext, setupContext, validateSetupNodes, XmlContext } from './core/context';
 import { XmlErrorBoundary } from './core/errors';
 import { validateTranslationCatalog } from './core/i18n';
 import { renderNode } from './core/node';
@@ -49,14 +49,19 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         let mounted = true;
         let unsubscribers: Array<() => void> = [];
 
-        /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
-        function subscribeToStateValues() {
-            // Remove previous subscriptions before rebuilding them.
+        /** Removes every Valtio subscription owned by this renderer. */
+        function unsubscribeAll() {
             for (const unsubscribe of unsubscribers) {
                 unsubscribe();
             }
 
             unsubscribers = [];
+        }
+
+        /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
+        function subscribeToStateValues() {
+            // Remove previous subscriptions before rebuilding them.
+            unsubscribeAll();
 
             // Subscribe to reactive state values in the context.
             for (const value of Object.values(runtimeCtx.values)) {
@@ -117,27 +122,26 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             setVersion((current) => current + 1);
         };
 
-        (async () => {
-            await setupContext(ast, runtimeCtx, baseUrl);
-            subscribeToStateValues();
+        void setupContext(ast, runtimeCtx, baseUrl)
+            .then(() => {
+                subscribeToStateValues();
 
-            // Publish initialized AST only while mounted.
-            if (mounted) {
-                setInitializedAst(ast);
-                setVersion((current) => current + 1);
-            }
-        })().catch((error) => {
-            // Report setup failures only while mounted.
-            if (mounted) setSetupFailure({ ast, baseUrl, error });
-        });
+                // Publish initialized AST only while mounted.
+                if (mounted) {
+                    setInitializedAst(ast);
+                    setVersion((current) => current + 1);
+                }
+            })
+            .catch((error) => {
+                // Report setup failures only while mounted.
+                if (mounted) setSetupFailure({ ast, baseUrl, error });
+            });
 
         return () => {
             mounted = false;
 
             // Remove state subscriptions on unmount.
-            for (const unsubscribe of unsubscribers) {
-                unsubscribe();
-            }
+            unsubscribeAll();
         };
     }, [ast, runtimeCtx, baseUrl, waitsForTranslations]);
 
@@ -179,7 +183,7 @@ function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ct
 
     return (
         <BaseUrlContext.Provider value={baseUrl}>
-            <ContextProvider value={ctx}>{renderNode(ast, ctx)}</ContextProvider>
+            <XmlContext.Provider value={ctx}>{renderNode(ast, ctx)}</XmlContext.Provider>
         </BaseUrlContext.Provider>
     );
 }

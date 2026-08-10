@@ -19,10 +19,8 @@ from src.database.models.organizations import Organization
 async def get_auth_session() -> AsyncIterator[AsyncSession]:
     """Yield one database session for authentication dependencies and routes."""
 
-    Session = await database.get_session()
-
-    # Keep the session alive for the complete dependency request scope.
-    async with Session() as session:
+    # Keep the shared session alive for the complete dependency request scope.
+    async with database.session_scope() as session:
         yield session
 
 

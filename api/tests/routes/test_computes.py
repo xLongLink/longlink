@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
-from factories import queue_operation, create_organization, create_ready_infrastructure
-from src.database.services import operations
+from factories import claim_operation, queue_operation, complete_operation, create_organization, create_ready_infrastructure
 from src.database.models.users import User
 
 
@@ -94,9 +93,9 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     await queue_operation(infrastructure.compute.id, target_id=infrastructure.compute.id)
-    claimed = await operations.claim()
+    claimed = await claim_operation()
     assert claimed is not None
-    await operations.complete(claimed.id)
+    await complete_operation(claimed.id)
 
     # Act
     response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")

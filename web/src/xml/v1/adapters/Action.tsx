@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
+import { BaseUrlContext, resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
 import { resolveXmlString, resolveXmlValue } from './props';
 
@@ -82,15 +82,16 @@ export async function executeAction(
         return;
     }
 
-    const normalizedActionUrl = actionUrl.trim();
+    let requestUrl: string;
 
     // Keep actions scoped to the current application.
-    if (!isAppRelativeUrl(normalizedActionUrl)) {
+    try {
+        requestUrl = resolveRequestUrl(baseUrl, actionUrl);
+    } catch {
         toast({ body: 'Action URL must be app-relative', type: 'error' });
         return;
     }
 
-    const requestUrl = resolveUrl(baseUrl, normalizedActionUrl);
     const init: RequestInit = { method: normalizedMethod };
 
     // Avoid ambiguous payload configuration.

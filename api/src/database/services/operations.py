@@ -1,23 +1,54 @@
 from uuid import UUID
 from datetime import timedelta
+from sqlmodel import col
 from sqlalchemy import case, select, update
 from src.errors import NotFoundError
 from src.logger import logger
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
-from src.database.session import session_scope
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
-async def fetch() -> Sequence[Operation]:
+async def fetch(session: AsyncSession) -> Sequence[Operation]:
     """Return all operations ordered by newest first."""
 
-    # Read operations through a managed database session.
-    async with session_scope() as session:
-        return (await session.scalars(select(Operation).order_by(Operation.created_at.desc()))).all()
+    return (await session.scalars(select(Operation).order_by(Operation.created_at.desc()))).all()
+
+
+async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID, UUID]]:
+    """Discover release reconciliation targets in dependency order."""
+
+    # Reconcile every present resource and clean up every tombstone.
+    compute_rows = (await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)))).all()
+    organization_rows = (await session.scalars(select(Organization).order_by(col(Organization.compute_id), col(Organization.id)))).all()
+    application_rows = (
+        await session.execute(
+            select(col(Application.id), col(Application.deleted_at), col(Organization.compute_id))
+            .join(Organization, col(Organization.id) == col(Application.organization_id))
+            .where(col(Organization.deleted_at).is_(None))
+            .order_by(col(Organization.compute_id), col(Application.id))
+        )
+    ).all()
+
+    targets = [(OperationKind.compute_create, compute.id, compute.id) for compute in compute_rows]
+    targets.extend(
+        (
+            OperationKind.organization_delete if organization.deleted_at is not None else OperationKind.organization_create,
+            organization.id,
+            organization.compute_id,
+        )
+        for organization in organization_rows
+    )
+    targets.extend(
+        (OperationKind.application_delete if deleted_at is not None else OperationKind.application_create, application_id, compute_id)
+        for application_id, deleted_at, compute_id in application_rows
+    )
+    return targets
 
 
 async def enqueue(
@@ -59,97 +90,81 @@ async def enqueue(
     return operation
 
 
-async def claim() -> Operation | None:
+async def claim(session: AsyncSession) -> Operation | None:
     """Claim the next unfinished Operation."""
 
     # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
     while True:
-        async with session_scope() as session:
-            now = utcnow()
+        now = utcnow()
 
-            # Classify the active lease, expired lease, or next Operation in one locked query.
-            operation = await session.scalar(
-                select(Operation)
-                .where(Operation.finished_at.is_(None))
-                .order_by(
-                    case(
-                        (Operation.lease_expires_at > now, 0),
-                        (Operation.lease_expires_at.is_not(None), 1),
-                        else_=2,
-                    ),
-                    Operation.created_at.asc(),
-                    Operation.id.asc(),
-                )
-                .limit(1)
-                .with_for_update()
+        # Classify the active lease, expired lease, or next Operation in one locked query.
+        operation = await session.scalar(
+            select(Operation)
+            .where(Operation.finished_at.is_(None))
+            .order_by(
+                case(
+                    (Operation.lease_expires_at > now, 0),
+                    (Operation.lease_expires_at.is_not(None), 1),
+                    else_=2,
+                ),
+                Operation.created_at.asc(),
+                Operation.id.asc(),
             )
-            if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
-                return None
-            if operation.lease_expires_at is not None:
-                operation_id = operation.id
-                logger.error("Operation %s failed after its worker lease expired", operation_id)
-                await session.rollback()
-                await fail(operation_id)
-                continue
-            # Acquire the lease conditionally because SQLite ignores the row locks above.
-            if (
-                await session.execute(
-                    update(Operation)
-                    .where(
-                        Operation.id == operation.id,
-                        Operation.finished_at.is_(None),
-                        Operation.lease_expires_at.is_(None),
-                    )
-                    .values(lease_expires_at=now + timedelta(minutes=30))
+            .limit(1)
+            .with_for_update()
+        )
+        if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
+            return None
+        if operation.lease_expires_at is not None:
+            logger.error("Operation %s failed after its worker lease expired", operation.id)
+            await fail(session, operation.id)
+            continue
+
+        # Acquire the lease conditionally because SQLite ignores the row locks above.
+        if (
+            await session.execute(
+                update(Operation)
+                .where(
+                    Operation.id == operation.id,
+                    Operation.finished_at.is_(None),
+                    Operation.lease_expires_at.is_(None),
                 )
-            ).rowcount != 1:
-                continue
-            await session.commit()
-            return operation
+                .values(lease_expires_at=now + timedelta(minutes=30))
+            )
+        ).rowcount != 1:
+            continue
+        operation.lease_expires_at = now + timedelta(minutes=30)
+        return operation
 
 
-async def complete(operation_id: UUID) -> Operation | None:
+async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
-    async with session_scope() as session:
-        now = utcnow()
-        operation = await session.scalar(
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.lease_expires_at > now,
-                Operation.finished_at.is_(None),
-            )
-            .values(finished_at=now, lease_expires_at=None)
-            .returning(Operation)
+    now = utcnow()
+    return await session.scalar(
+        update(Operation)
+        .where(
+            Operation.id == operation_id,
+            Operation.lease_expires_at > now,
+            Operation.finished_at.is_(None),
         )
-        if operation is None:
-            return None
-
-        await session.commit()
-        return operation
+        .values(finished_at=now, lease_expires_at=None)
+        .returning(Operation)
+    )
 
 
-async def fail(operation_id: UUID) -> Operation | None:
+async def fail(session: AsyncSession, operation_id: UUID) -> Operation | None:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
-    async with session_scope() as session:
-        operation = await session.scalar(
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.lease_expires_at.is_not(None),
-                Operation.finished_at.is_(None),
-            )
-            .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
-            .returning(Operation)
+    return await session.scalar(
+        update(Operation)
+        .where(
+            Operation.id == operation_id,
+            Operation.lease_expires_at.is_not(None),
+            Operation.finished_at.is_(None),
         )
-
-        # A missing row means the Operation is no longer leased.
-        if operation is None:
-            return None
-
-        await session.commit()
-        return operation
+        .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
+        .returning(Operation)
+    )

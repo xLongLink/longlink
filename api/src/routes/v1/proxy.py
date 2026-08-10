@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.auth import ApplicationAccess, authuser, application_access
+from src.auth import ApplicationAccess, authuser, get_auth_session, application_access
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient, GatewayRequestError
 from src.database.services import compute, organizations
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 router = APIRouter()
@@ -23,6 +24,7 @@ async def proxy_application_request(
     path: str = "",
     user: User = Depends(authuser),
     access: ApplicationAccess = Depends(application_access),
+    session: AsyncSession = Depends(get_auth_session),
 ) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 
@@ -47,7 +49,7 @@ async def proxy_application_request(
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    registry = await compute.get(organization.compute_id)
+    registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
     gateway_url = registry.gateway_url

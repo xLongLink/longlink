@@ -1,4 +1,5 @@
 from src.models.statuses import Status
+from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -10,7 +11,8 @@ async def reconcile(claimed: Operation) -> str | None:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
     # Skip removed Organizations.
-    infrastructure = await organizations.infrastructure(claimed.target_id)
+    async with session_scope() as session:
+        infrastructure = await organizations.infrastructure(session, claimed.target_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return None
     organization = infrastructure.organization
@@ -29,7 +31,8 @@ async def reconcile(claimed: Operation) -> str | None:
         database_registry.sslmode,
     )
     await db.prepare_organization_database(organization.id)
-    await organizations.sync_users(organization.id, db)
+    async with session_scope() as session:
+        await organizations.sync_users(session, organization.id, db)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
     object_storage = Exoscale(
@@ -44,14 +47,17 @@ async def reconcile(claimed: Operation) -> str | None:
     await cluster.organizations.apply(organization.id.hex)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
-    await organizations.set_runtime(organization.id, Status.creating, Status.running)
+    async with session_scope() as session:
+        await organizations.set_runtime(session, organization.id, Status.creating, Status.running)
+        await session.commit()
 
 
 async def delete(claimed: Operation) -> str | None:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
-    infrastructure = await organizations.infrastructure(claimed.target_id)
+    async with session_scope() as session:
+        infrastructure = await organizations.infrastructure(session, claimed.target_id)
     if infrastructure is None:
         return None
     organization = infrastructure.organization
@@ -76,13 +82,18 @@ async def delete(claimed: Operation) -> str | None:
     )
 
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
-    application_rows = await organizations.applications(organization.id, include_deleted=True)
+    async with session_scope() as session:
+        application_rows = await organizations.applications(session, organization.id, include_deleted=True)
     await cluster.organizations.delete(organization.id.hex)
     for application in application_rows:
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
-        await applications.purge(application.id)
+        async with session_scope() as session:
+            await applications.purge(session, application.id)
+            await session.commit()
 
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
-    await organizations.purge(organization.id)
+    async with session_scope() as session:
+        await organizations.purge(session, organization.id)
+        await session.commit()

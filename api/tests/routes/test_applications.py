@@ -95,11 +95,14 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
     assert payload["version"] == "2.0.0"
 
-    persisted = await applications.get(UUID(payload["id"]))
-    assert persisted is not None
-    assert persisted.organization_id == organization.id
-    assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
-    assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch())
+    async with session_scope() as session:
+        persisted = await applications.get(session, UUID(payload["id"]))
+        assert persisted is not None
+        assert persisted.organization_id == organization.id
+        assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
+        assert any(
+            item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch(session)
+        )
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -259,5 +262,6 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(app.id)
     assert payload["status"] == "deleting"
-    recorded_operations = await operations.fetch()
+    async with session_scope() as session:
+        recorded_operations = await operations.fetch(session)
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

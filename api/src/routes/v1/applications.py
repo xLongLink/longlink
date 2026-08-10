@@ -22,10 +22,10 @@ router = APIRouter()
 
 
 @router.get("/applications", response_model=list[ApplicationResponse])
-async def list_applications(_user: User = Depends(authadmin)):
+async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_auth_session)):
     """Return all applications for administrator views."""
 
-    return await applications.fetch()
+    return await applications.fetch(session)
 
 
 @router.post("/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
@@ -64,7 +64,8 @@ async def create_application(
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    return await applications.create(
+    application = await applications.create(
+        session,
         organization.id,
         payload.name,
         application_slug,
@@ -75,10 +76,16 @@ async def create_application(
         user=user,
         secrets=payload.envs,
     )
+    await session.commit()
+    return application
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
-async def get_application_logs(application_id: UUID, access: ApplicationAccess = Depends(application_access)):
+async def get_application_logs(
+    application_id: UUID,
+    access: ApplicationAccess = Depends(application_access),
+    session: AsyncSession = Depends(get_auth_session),
+):
     """Return recent pod logs for one managed application."""
 
     application = access.application
@@ -90,7 +97,7 @@ async def get_application_logs(application_id: UUID, access: ApplicationAccess =
         raise HTTPException(status_code=403, detail="Permission required")
 
     # The Organization's compute registry is the Application's only cluster assignment.
-    registry = await compute.get(organization.compute_id)
+    registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -111,7 +118,7 @@ async def delete_application(
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
     # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
-    tombstone = await applications.get(application_id, include_deleted=True)
+    tombstone = await applications.get(session, application_id, include_deleted=True)
     if tombstone is not None and tombstone.deleted_at is not None:
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
@@ -125,8 +132,9 @@ async def delete_application(
         if not roles.atleast(role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    result = await applications.soft_delete(application_id, user)
+    result = await applications.soft_delete(session, application_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
+    await session.commit()
     return result

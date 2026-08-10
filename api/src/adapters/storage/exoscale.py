@@ -179,7 +179,6 @@ class Exoscale:
         # Keep role and key provisioning in one managed async client session.
         try:
             async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
-
                 # The generated context manager returns itself but types the result as its incomplete base class.
                 api = cast(AsyncClient, client)
 
@@ -205,7 +204,6 @@ class Exoscale:
                     "secret_access_key": self._string(key, "secret"),
                 }
         except Exception:
-
             # Name-scoped compensation removes an incomplete deterministic credential generation.
             with suppress(Exception):
                 await self.revoke(name)
@@ -220,7 +218,6 @@ class Exoscale:
 
         # Keep credential cleanup in one managed async client session.
         async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
-
             # The generated context manager returns itself but types the result as its incomplete base class.
             api = cast(AsyncClient, client)
 

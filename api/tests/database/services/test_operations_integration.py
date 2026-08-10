@@ -54,7 +54,15 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         )
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
-        claims = await asyncio.gather(operations.claim(), operations.claim())
+        async def claim_operation() -> Operation | None:
+            """Claim and commit work with one concurrent worker session."""
+
+            async with session_factory() as session:
+                operation = await operations.claim(session)
+                await session.commit()
+                return operation
+
+        claims = await asyncio.gather(claim_operation(), claim_operation())
         claimed = [claim for claim in claims if claim is not None]
 
         # Reload the queue independently and verify one global lease while unrelated work waits.

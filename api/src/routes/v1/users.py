@@ -16,18 +16,18 @@ async def get_me(user: User = Depends(authuser)):
 
 
 @router.get("/me/organizations", response_model=list[UserOrganizationMembership])
-async def get_my_organizations(user: User = Depends(authuser)):
+async def get_my_organizations(user: User = Depends(authuser), session: AsyncSession = Depends(get_auth_session)):
     """Return the authenticated user's organization memberships."""
 
     # Return active membership response data through the user persistence service.
-    return await users.memberships(user.id)
+    return await users.memberships(session, user.id)
 
 
 @router.get("/users", response_model=list[UserSummary])
-async def list_users(_: User = Depends(authadmin)):
+async def list_users(_: User = Depends(authadmin), session: AsyncSession = Depends(get_auth_session)):
     """Return all user summaries for administrator views."""
 
-    return await users.fetch()
+    return await users.fetch(session)
 
 
 @router.patch("/me", response_model=UserProfile)
@@ -35,20 +35,12 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Apply only supplied values that change the persisted profile.
-    updated = False
-    identity_updated = False
-    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
-        if getattr(user, field) == value:
-            continue
-        setattr(user, field, value)
-        updated = True
-        identity_updated = identity_updated or field in {"name", "avatar"}
-
+    updated, identity_updated = users.update_profile(user, payload)
     if updated:
         await session.commit()
 
     # Project shared identity fields without synchronizing Platform-only preferences.
     if identity_updated:
-        for membership in await users.memberships(user.id):
-            await organizations.sync_users(membership.organization_id)
+        for membership in await users.memberships(session, user.id):
+            await organizations.sync_users(session, membership.organization_id)
     return user

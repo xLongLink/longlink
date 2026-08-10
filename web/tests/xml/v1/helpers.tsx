@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RenderXML } from '@/xml/v1/renderers';
 import type { ASTNode, ExecutionContext } from '@/xml/v1/types';
@@ -9,5 +8,5 @@ export function renderXmlToMarkup(
     ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} },
     baseUrl = ''
 ): string {
-    return renderToStaticMarkup(createElement(RenderXML, { ast, ctx, baseUrl }));
+    return renderToStaticMarkup(<RenderXML ast={ast} baseUrl={baseUrl} ctx={ctx} />);
 }

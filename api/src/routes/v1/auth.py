@@ -1,16 +1,14 @@
 import jwt
 from pwdlib import PasswordHash
 from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, BackgroundTasks
-from sqlmodel import col, select
 from src.auth import get_auth_session
 from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserProfile
-from src.database.services import invitations
+from src.database.services import users, invitations, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User
 
 router = APIRouter()
 
@@ -20,8 +18,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     """Authenticate a local account and create one signed browser session."""
 
     # Load the canonical account identity before verifying its credential.
-    statement = select(User).where(col(User.email) == payload.email)
-    user = (await session.execute(statement)).scalar_one_or_none()
+    user = await users.by_email(session, payload.email)
     if user is None:
         PasswordHash.recommended().hash(payload.password)
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
@@ -31,7 +28,11 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    await invitations.accept(user.id)
+    changed_organization_ids = await invitations.accept(session, user.id)
+    await session.commit()
+
+    for organization_id in changed_organization_ids:
+        await organizations.sync_users(session, organization_id)
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
@@ -72,9 +73,8 @@ async def request_password_reset(
     """Queue password reset delivery without disclosing account existence."""
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    statement = select(User).where(col(User.email) == payload.email, col(User.deleted_at).is_(None))
-    user = (await session.execute(statement)).scalar_one_or_none()
-    if user is None:
+    user = await users.by_email(session, payload.email)
+    if user is None or user.deleted_at is not None:
         return
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
@@ -139,7 +139,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
-    user.password = PasswordHash.recommended().hash(payload.password)
+    users.replace_password(user, payload.password)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.
@@ -160,8 +160,7 @@ async def request_registration(payload: EmailPayload, background_tasks: Backgrou
     email = payload.email
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
-    statement = select(User.id).where(col(User.email) == email)
-    if (await session.execute(statement)).scalar_one_or_none() is not None:
+    if await users.by_email(session, email) is not None:
         return
 
     # Email proof contains no password or pending user identifier.
@@ -224,26 +223,22 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
 
     # Reject token replay and concurrent account creation before expensive password hashing.
-    statement = select(User.id).where(col(User.email) == email)
-    if (await session.execute(statement)).scalar_one_or_none() is not None:
+    if await users.by_email(session, email) is not None:
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
-
-    # Build the authenticated account before issuing its first signed browser session.
-    user = User(
-        name=f"{payload.name} {payload.surname}",
-        email=email,
-        password=PasswordHash.recommended().hash(payload.password),
-    )
-    session.add(user)
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
+        user = await users.register(session, f"{payload.name} {payload.surname}", email, payload.password)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
 
-    await invitations.accept(user.id)
+    changed_organization_ids = await invitations.accept(session, user.id)
+    await session.commit()
+
+    for organization_id in changed_organization_ids:
+        await organizations.sync_users(session, organization_id)
     credential = token.create_auth_token(user)
 
     # Publish browser authentication only after both persistent records commit.

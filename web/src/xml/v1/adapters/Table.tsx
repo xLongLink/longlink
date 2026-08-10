@@ -5,7 +5,7 @@ import {
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { ContextProvider, useXmlContext } from '../core/context';
+import { useXmlContext, XmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import { readSafeProperty } from '../expressions';
@@ -122,7 +122,7 @@ function buildColumn(
                 values: { index: rows.indexOf(row), value, [rowName]: row },
             };
 
-            return <ContextProvider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</ContextProvider>;
+            return <XmlContext.Provider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</XmlContext.Provider>;
         },
     };
 }

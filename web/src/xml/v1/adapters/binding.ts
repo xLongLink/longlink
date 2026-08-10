@@ -14,7 +14,7 @@ type BindingTarget = {
 };
 
 /** Returns whether an XML control value is backed by a Valtio proxy. */
-export function isBindableValue(value: unknown): value is Record<string, unknown> {
+function isBindableValue(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
@@ -43,16 +43,10 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
 
             const normalizedValue = normalizeBindableValue(type, nextValue);
 
-            // Write named state properties directly.
-            if (target.key) {
-                target.state[target.key] = normalizedValue;
-                return;
-            }
+            const key = target.key ?? 'value';
 
-            // Fall back to the default value slot.
-            if ('value' in target.state) {
-                target.state.value = normalizedValue;
-            }
+            // Write named properties or the direct binding value slot.
+            if (target.key || key in target.state) target.state[key] = normalizedValue;
         },
     };
 }

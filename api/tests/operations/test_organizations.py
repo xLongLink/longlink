@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
 from src.models.roles import OrganizationRoles
-from src.database.session import get_session
+from src.database.session import get_session, session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
 from longlink.shared.models import AuditUser
@@ -53,7 +53,8 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         infrastructure.database.password,
         infrastructure.database.sslmode,
     )
-    await organization_service.sync_users(organization.id, db)
+    async with session_scope() as session:
+        await organization_service.sync_users(session, organization.id, db)
 
     # Assert
     assert calls[0][0] == db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False)

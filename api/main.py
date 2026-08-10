@@ -9,6 +9,7 @@ from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
 from longlink.middleware import install_frontend_middleware
+from src.database.session import session_scope
 from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,7 +19,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Run this API replica's registered Operation scheduler."""
 
     # Reconcile the configured Platform administrator before serving authenticated traffic.
-    await user_service.ensure_administrator()
+    async with session_scope() as session:
+        await user_service.ensure_administrator(session)
+        await session.commit()
 
     # Start this replica's scheduler with the explicit registered handlers.
     worker = asyncio.create_task(jobs.run_operation_scheduler())
@@ -56,7 +59,6 @@ app.include_router(v1.router)
 app.include_router(branding.router)
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
-
     # Serve the prerendered home document before registering the generic SPA fallback.
     @app.get("/", include_in_schema=False)
     async def frontend_root():

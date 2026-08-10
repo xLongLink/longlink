@@ -1,6 +1,7 @@
 import secrets
 import ipaddress
 from src.models.statuses import Status
+from src.database.session import session_scope
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls
@@ -11,7 +12,8 @@ async def create(claimed: Operation) -> str | None:
     """Reconcile one Compute's shared authenticated Envoy Gateway."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.target_id)
+    async with session_scope() as session:
+        registry = await compute.get(session, claimed.target_id)
     if registry is None:
         return None
     cluster = Kubernetes(registry.kubeconfig)
@@ -54,11 +56,15 @@ async def create(claimed: Operation) -> str | None:
         gateway_host = f"[{address}]" if address.version == 6 else str(address)
 
     # Publish connection material only after the desired gateway Deployment is serving.
-    if not await compute.record_success(
-        registry.id,
-        f"https://{gateway_host}",
-        api_key,
-        gateway_certificate,
-        registry.status,
-    ):
+    async with session_scope() as session:
+        recorded = await compute.record_success(
+            session,
+            registry.id,
+            f"https://{gateway_host}",
+            api_key,
+            gateway_certificate,
+            registry.status,
+        )
+        await session.commit()
+    if not recorded:
         return "Compute gateway state was not recorded"

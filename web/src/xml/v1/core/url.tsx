@@ -15,8 +15,7 @@ export function resolveUrl(baseUrl: string, path: string): string {
     const base = parseURL(baseUrl);
     const parsedPath = parsePath(path);
     const baseOrigin = base.protocol && base.host ? `${base.protocol}//${base.host}` : '';
-    const basePath = base.pathname;
-    const baseSegments = basePath.split('/').filter(Boolean);
+    const baseSegments = base.pathname.split('/').filter(Boolean);
     const pathSegments = parsedPath.pathname.split('/');
     const resolvedSegments = [...baseSegments];
 
@@ -70,6 +69,11 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
     }
 
     return resolveUrl(baseUrl, value);
+}
+
+/** Resolves an application navigation URL or omits invalid destinations. */
+export function resolveNavigationUrl(baseUrl: string, path: string): string {
+    return path && isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
 }
 
 /** Resolves an XML anchor URL while blocking unsafe browser protocols. */

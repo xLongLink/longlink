@@ -3,7 +3,7 @@ from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
-from src.database.session import get_session
+from src.database.session import get_session, session_scope
 from src.database.services import operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -91,7 +91,8 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(organization.id)
     assert payload["status"] == "deleting"
-    recorded_operations = await operations.fetch()
+    async with session_scope() as session:
+        recorded_operations = await operations.fetch(session)
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
 
@@ -119,7 +120,8 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     assert non_owner_response.status_code == 403
     assert non_owner_response.json() == {"detail": "Permission required"}
     assert platform_admin_response.status_code == 202
-    assert await organizations.get(admin_owned_organization.id) is None
+    async with session_scope() as session:
+        assert await organizations.get(session, admin_owned_organization.id) is None
 
 
 async def test_other_organization_user_cannot_delete_application(
@@ -133,7 +135,8 @@ async def test_other_organization_user_cannot_delete_application(
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex", slug="globex")
     target_application = await create_application(target_organization, target_owner)
-    operation_ids = [operation.id for operation in await operations.fetch()]
+    async with session_scope() as session:
+        operation_ids = [operation.id for operation in await operations.fetch(session)]
     client = clients[1]
 
     # Attempt Application deletion with only another organization's access.
@@ -142,8 +145,9 @@ async def test_other_organization_user_cannot_delete_application(
     # Verify the denied request leaves the target application and operation queue unchanged.
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
-    assert await applications.get(target_application.id) is not None
-    assert [operation.id for operation in await operations.fetch()] == operation_ids
+    async with session_scope() as session:
+        assert await applications.get(session, target_application.id) is not None
+        assert [operation.id for operation in await operations.fetch(session)] == operation_ids
 
 
 async def test_organization_database_endpoint_returns_database_usage(
@@ -344,7 +348,9 @@ async def test_get_organization_returns_invitations(
     # Arrange
     owner, invitee, regular_member = users
     organization = await create_organization(owner)
-    invitation = await invitations.create(organization.id, invitee.email, OrganizationRoles.write)
+    async with session_scope() as session:
+        invitation = await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        await session.commit()
 
     Session = await get_session()
     async with Session() as session:
@@ -455,7 +461,8 @@ async def test_create_organization_invitation_returns_204(
 
     # Assert
     assert response.status_code == 204
-    invitations_list = await organizations.invitations(organization.id)
+    async with session_scope() as session:
+        invitations_list = await organizations.invitations(session, organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
     assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
@@ -486,7 +493,8 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Invitation role permissions required"}
-    assert await organizations.invitations(organization.id) == []
+    async with session_scope() as session:
+        assert await organizations.invitations(session, organization.id) == []
 
 
 async def test_update_organization_member_changes_role(
@@ -520,7 +528,8 @@ async def test_update_organization_member_changes_role(
 
     # Assert
     assert response.status_code == 204
-    updated_members = await organizations.members(organization.id)
+    async with session_scope() as session:
+        updated_members = await organizations.members(session, organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
 
@@ -547,7 +556,8 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Owner management permissions required"}
-    membership = next(item for item in await organizations.members(organization.id) if item.user_id == member.id)
+    async with session_scope() as session:
+        membership = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
     assert membership.role == OrganizationRoles.read
 
 

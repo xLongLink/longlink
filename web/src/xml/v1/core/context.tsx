@@ -1,11 +1,11 @@
-import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
+import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { proxy } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { evaluate, isSafePropertyName, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
 import { resolveRequestUrl } from './url';
 
-const Context = createReactContext<ExecutionContext | null>(null);
+export const XmlContext = createReactContext<ExecutionContext | null>(null);
 
 /** Creates a blank XML runtime context. */
 export function createContext(): ExecutionContext {
@@ -16,15 +16,10 @@ export function createContext(): ExecutionContext {
     };
 }
 
-/** Provides XML runtime scope to a rendered subtree. */
-export function ContextProvider({ value, children }: { value: ExecutionContext; children: ReactNode }) {
-    return <Context.Provider value={value}>{children}</Context.Provider>;
-}
-
 /** Returns the active XML runtime state from the XML context. */
 export function useXmlContext(): ExecutionContext {
     // Fail fast when XML runtime state is unavailable.
-    const runtime = useReactContext(Context);
+    const runtime = useReactContext(XmlContext);
     if (!runtime) {
         throw new Error('useXmlContext must be used inside a rendered XML component');
     }
@@ -34,8 +29,6 @@ export function useXmlContext(): ExecutionContext {
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
 export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<void> {
-    const setups = ctx.setups;
-
     async function walk(nodes: ASTNode[]): Promise<void> {
         // Visit setup declarations in document order.
         for (const node of nodes) {
@@ -49,7 +42,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const entries = Object.entries(params).filter(([key]) => key !== 'id');
 
                 // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
-                setups[id] = () => {
+                ctx.setups[id] = () => {
                     // Only seed state that is not already present.
                     if (!(id in ctx.values)) {
                         // Seed a proxied object from all attributes except `id`.
@@ -82,7 +75,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                         ctx.values[id] = proxy(initialValue);
                     }
                 };
-                await setups[id]();
+                await ctx.setups[id]();
             }
 
             // Seed query data before rendering the component tree.
@@ -92,7 +85,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const rawPath = params.path.trim();
 
                 // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
-                setups[id] = async () => {
+                ctx.setups[id] = async () => {
                     const path = evaluate(rawPath, ctx);
 
                     // Query paths may interpolate route params, but must still resolve to a URL string.
@@ -104,7 +97,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
                     ctx.values[id] = await fetchApiJson<unknown>(url);
                 };
-                await setups[id]();
+                await ctx.setups[id]();
             }
 
             await walk(node.children ?? []);

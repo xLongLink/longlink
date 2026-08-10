@@ -1,19 +1,32 @@
 import asyncio
+from uuid import UUID
 from fastapi import HTTPException
 from src.logger import logger
 from src.operations import OperationHandler, handlers
-from collections.abc import Coroutine
+from collections.abc import Callable, Awaitable
 from src.environments import env
 from longlink.utils.time import utcnow
+from src.database.session import session_scope
 from src.database.services import operations
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
 
-async def _finish_transition(transition: Coroutine[object, object, Operation | None]) -> Operation | None:
+async def _finish_transition(
+    transition: Callable[[AsyncSession, UUID], Awaitable[Operation | None]], operation_id: UUID
+) -> Operation | None:
     """Finish one terminal transition before propagating worker cancellation."""
 
     # Run persistence independently so repeated cancellation cannot interrupt it.
-    task = asyncio.create_task(transition)
+    async def persist() -> Operation | None:
+        """Persist one terminal transition in a fresh transaction."""
+
+        async with session_scope() as session:
+            updated = await transition(session, operation_id)
+            await session.commit()
+            return updated
+
+    task = asyncio.create_task(persist())
     cancelled = False
     while True:
         try:
@@ -50,7 +63,7 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
-            await _finish_transition(operations.fail(operation.id))
+            await _finish_transition(operations.fail, operation.id)
         except Exception as exc:
             logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
         raise
@@ -64,13 +77,13 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
 
     # Persist exactly one transition that releases the claimed operation.
     if reason is None:
-        transition = operations.complete(operation.id)
+        transition = operations.complete
     else:
         logger.error("Operation %s failed: %s", operation.id, reason)
-        transition = operations.fail(operation.id)
+        transition = operations.fail
 
     # Finish the terminal database transition even when shutdown cancels this worker.
-    updated = await _finish_transition(transition)
+    updated = await _finish_transition(transition, operation.id)
 
     # Never return a stale in-memory row when the worker could not finish its leased Operation.
     if updated is None:
@@ -85,7 +98,9 @@ async def run_operation_scheduler() -> None:
     # Keep polling after transient database failures so the worker remains available.
     while True:
         try:
-            operation = await operations.claim()
+            async with session_scope() as session:
+                operation = await operations.claim(session)
+                await session.commit()
         except Exception as exc:
             logger.exception("Operation scheduler polling failed: %r", exc)
             await asyncio.sleep(1)

@@ -105,6 +105,7 @@ Style:
 ```python
 STATUSES = ["listed", "setup", "maintenance"]
 
+
 @pytest.mark.parametrize("status", STATUSES)
 @pytest.mark.parametrize("role", ["admin", "viewer"])
 async def test_property_visibility(client, role, status):
