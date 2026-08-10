@@ -24,7 +24,8 @@ export function Dialog({ props, nodes }: Props) {
     const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;
     const title = resolveXmlLabel(props, ctx, 'Dialog', 'title');
     const subtitle = resolveXmlString(props, 'subtitle', ctx);
-    const triggerLabel = props.triggerLabel == null ? '' : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
+    const triggerLabel =
+        props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const triggerVariant = resolveXmlEnum(
         props,
         'triggerVariant',

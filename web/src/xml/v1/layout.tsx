@@ -39,11 +39,11 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
             value: href,
         };
     });
-    const activeHref = resolvedTabs.find((tab) => tab.isActive)?.href ?? '';
+
     // Keep XML page content aligned within the centered application container.
     return (
         <TopLayout
-            activeTab={activeHref}
+            activeTab={resolvedTabs.find((tab) => tab.isActive)?.href ?? ''}
             endContent={
                 isSdkMode ? (
                     <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>

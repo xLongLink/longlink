@@ -9,7 +9,7 @@ export function For({ items, props, nodes }: Props & { items: unknown[] }) {
     const as = resolveXmlString(props, 'as', ctx);
 
     return items.map((item, index) => {
-        const childCtx: typeof ctx = {
+        const childCtx = {
             ...ctx,
             parent: ctx,
             values: {

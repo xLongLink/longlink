@@ -50,15 +50,17 @@ export function Table({ props, nodes }: Props) {
     const dividers = resolveXmlEnum(props, 'dividers', ctx, ['rows', 'columns', 'grid', 'none'], 'rows', 'Table');
     const verticalAlign = resolveXmlEnum(props, 'verticalAlign', ctx, ['middle', 'top', 'bottom'], 'middle', 'Table');
     const textOverflow = resolveXmlEnum(props, 'textOverflow', ctx, ['wrap', 'truncate'], 'wrap', 'Table');
-    const emptyLabel = props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table');
-
     return (
         <AstryxTable
             columns={columns}
             data={rows}
             density={density}
             dividers={dividers}
-            emptyState={<Text type="supporting">{emptyLabel}</Text>}
+            emptyState={
+                <Text type="supporting">
+                    {props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table')}
+                </Text>
+            }
             hasHover={resolveXmlBoolean(props, 'hasHover', ctx, false)}
             idKey={resolveXmlString(props, 'idKey', ctx) || undefined}
             isStriped={resolveXmlBoolean(props, 'isStriped', ctx, false)}

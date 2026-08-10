@@ -19,16 +19,7 @@ export const content = (
         <Heading id="building" level={1}>
             Building
         </Heading>
-        <Text as="p">
-            Building turns a local SDK application into a container image that the LongLink Platform can inspect,
-            register, and deploy. The image carries LongLink metadata labels for application identity, SDK version,
-            application version, and declared environment requirements.
-        </Text>
-        <Text as="p">
-            <Code>longlink build</Code> builds from a temporary Docker context and leaves the application folder
-            untouched. Push the resulting image to a registry the LongLink Platform can reach before creating the
-            application.
-        </Text>
+        <Text as="p">Applications are packaged into an image and pushed to a registry.</Text>
         <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
         <Stack gap={2}>
             <Heading id="metadata" level={2}>

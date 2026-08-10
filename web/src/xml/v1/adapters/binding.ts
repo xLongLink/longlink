@@ -29,14 +29,12 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
     const target = resolveBindableTarget(rawValue, value, ctx);
-    const state = target?.state ?? EMPTY_BINDING;
-    const snapshot = useSnapshot(state);
-    const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
+    const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
 
     return {
         bound: !!target,
         initialValue,
-        currentValue,
+        currentValue: target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '',
         setValue: (nextValue: unknown) => {
             // Skip writes when the value is not bound.
             if (!target) return;

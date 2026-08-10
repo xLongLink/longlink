@@ -153,10 +153,8 @@ export function resolveXmlStatus(
     props: ASTProps,
     ctx: ExecutionContext
 ): { type: 'warning' | 'error' | 'success'; message?: string } | undefined {
-    const rawStatus = readXmlProp(props, 'status');
-
     // Omit status when the XML attribute is absent.
-    if (rawStatus == null) return undefined;
+    if (readXmlProp(props, 'status') == null) return undefined;
 
     const type = resolveXmlEnum(props, 'status', ctx, ['warning', 'error', 'success'], 'error', 'input');
     const message = resolveXmlString(props, 'statusMessage', ctx);

@@ -26,12 +26,6 @@ export function SideNav({ props, nodes }: Props) {
     const label = resolveXmlString(props, 'label', ctx, 'Navigation');
     const activeItem = items.find((item) => item.value === value);
 
-    /** Writes side navigation selection to bound or local state. */
-    function setValue(nextValue: string) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
-    }
-
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
             <AstryxSideNav className="h-auto w-full">
@@ -45,7 +39,10 @@ export function SideNav({ props, nodes }: Props) {
                                 isSelected={item.value === value}
                                 key={item.value}
                                 label={item.label}
-                                onClick={() => setValue(item.value)}
+                                onClick={() => {
+                                    if (binding.bound) binding.setValue(item.value);
+                                    else setLocalValue(item.value);
+                                }}
                             />
                         );
                     })}

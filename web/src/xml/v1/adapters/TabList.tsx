@@ -36,19 +36,16 @@ export function TabList({ props, nodes }: Props) {
     const label = resolveXmlString(props, 'label', ctx, 'Tabs');
     const activeTab = tabs.find((tab) => tab.value === value);
 
-    /** Writes tab selection to bound or local state. */
-    function setValue(nextValue: string) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
-    }
-
     return (
         <Stack gap={4}>
             <AstryxTabList
                 aria-label={label}
                 hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx, false)}
                 layout={layout}
-                onChange={setValue}
+                onChange={(nextValue) => {
+                    if (binding.bound) binding.setValue(nextValue);
+                    else setLocalValue(nextValue);
+                }}
                 size={size}
                 value={value}
             >

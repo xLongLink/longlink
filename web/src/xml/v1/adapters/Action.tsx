@@ -67,12 +67,11 @@ export async function executeAction(
         return;
     }
 
-    const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
 
     // Allow invalidation-only actions.
     if (!actionUrl) {
-        await invalidateRuntime(invalidate);
+        await ctx.invalidate(invalidate);
 
         return;
     }
@@ -136,7 +135,7 @@ export async function executeAction(
         return;
     }
 
-    await invalidateRuntime(invalidate);
+    await ctx.invalidate(invalidate);
 
     toast({ body: `Request completed with status ${response.status}` });
 }

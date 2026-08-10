@@ -15,9 +15,9 @@ type InterpolationSegment = {
 };
 
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
-    Boolean: (value) => Boolean(value),
-    Number: (value) => Number(value),
-    String: (value) => String(value),
+    Boolean,
+    Number,
+    String,
 };
 
 const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {

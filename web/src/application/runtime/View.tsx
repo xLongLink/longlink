@@ -254,7 +254,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return;
         }
 
-        const pagePath = activePage.path;
         const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
         const inFlightPageKeys = inFlightPageKeysRef.current;
@@ -274,16 +273,17 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
         try {
-            pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, pagePath);
+            pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
         } catch (urlError: unknown) {
-            const errorPageState = {
-                ...loadingPageState,
-                error: urlError instanceof Error ? urlError.message : t('appView.invalidPageUrl'),
-                loading: false,
-            };
-
             setPageStates((current) => {
-                const next = { ...current, [activePageStateKey]: errorPageState };
+                const next = {
+                    ...current,
+                    [activePageStateKey]: {
+                        ...loadingPageState,
+                        error: urlError instanceof Error ? urlError.message : t('appView.invalidPageUrl'),
+                        loading: false,
+                    },
+                };
 
                 pageStatesRef.current = next;
 
@@ -377,7 +377,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activePage,
         activePageStateKey,
         activeRouteParams,
-        normalizedRoutePath,
         applicationCanLoad,
         navigationBaseUrl,
         pageCacheKey,

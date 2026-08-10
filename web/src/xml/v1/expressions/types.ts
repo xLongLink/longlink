@@ -35,9 +35,8 @@ type ObjectExpressionNode = {
               type: 'Property';
               key: ExpressionNode;
               value: ExpressionNode;
-              shorthand: boolean;
           }
-        | { type: 'SpreadElement'; argument: ExpressionNode }
+        | { type: 'SpreadElement' }
     >;
 };
 

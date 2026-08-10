@@ -9,5 +9,5 @@ export function renderXmlToMarkup(
     ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} },
     baseUrl = ''
 ): string {
-    return renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast, ctx, baseUrl })));
+    return renderToStaticMarkup(createElement(RenderXML, { ast, ctx, baseUrl }));
 }

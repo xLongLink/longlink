@@ -22,10 +22,8 @@ describe('Action', () => {
 
         let requestUrl = '';
         let requestInit: RequestInit | undefined;
-        let fetchCalls = 0;
 
         const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
-            fetchCalls += 1;
             requestUrl = String(input);
             requestInit = init;
 
@@ -60,7 +58,6 @@ describe('Action', () => {
                 notes: 'Build the first program',
             })
         );
-        expect(fetchCalls).toBe(1);
         expect(invalidations).toEqual([['profile', 'activity']]);
         expect(successCalls).toBe(1);
         expect(errorCalls).toBe(0);

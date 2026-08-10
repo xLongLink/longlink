@@ -3,7 +3,6 @@ import { hasProtocol, parsePath, parseURL } from 'ufo';
 
 export const BaseUrlContext = createReactContext<string>('');
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
-const URL_VALIDATION_BASE = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
@@ -52,7 +51,7 @@ export function isAppRelativeUrl(path: string): boolean {
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const base = new URL(URL_VALIDATION_BASE);
+        const base = new URL('http://longlink.local');
         const url = new URL(value, base);
 
         return url.origin === base.origin;

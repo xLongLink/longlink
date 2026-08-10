@@ -76,7 +76,5 @@ function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
     const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
-    const disabled = resolveXmlBoolean(props, 'isDisabled', ctx, false);
-
-    return { value, label, disabled };
+    return { value, label, disabled: resolveXmlBoolean(props, 'isDisabled', ctx, false) };
 }
