@@ -82,9 +82,9 @@ async def proxy_application_request(
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
-    if response_content_type is not None and not {
-        value.partition(";")[0].strip() for value in response_content_type.lower().split(",")
-    }.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
+    if response_content_type is not None and any(
+        value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
+    ):
         await gateway_response.aclose()
         raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 

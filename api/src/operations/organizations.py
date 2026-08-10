@@ -88,12 +88,11 @@ async def delete(claimed: Operation) -> str | None:
     for application in application_rows:
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
-        async with session_scope() as session:
-            await applications.purge(session, application.id)
-            await session.commit()
 
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     async with session_scope() as session:
+        for application in application_rows:
+            await applications.purge(session, application.id)
         await organizations.purge(session, organization.id)
         await session.commit()

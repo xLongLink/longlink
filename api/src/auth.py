@@ -88,17 +88,6 @@ async def organization_access(
     return membership
 
 
-async def find_application_access(session: AsyncSession, user_id: UUID, application_id: UUID) -> ApplicationAccess | None:
-    """Return one user's active access to one active Application."""
-
-    # Delegate scoped Application access persistence to the Organization service.
-    access = await organization_service.application_access(session, user_id, application_id)
-    if access is None:
-        return None
-    application, organization, role = access
-    return ApplicationAccess(application=application, organization=organization, role=role)
-
-
 async def application_access(
     application_id: UUID,
     user: User = Depends(authuser),
@@ -107,7 +96,8 @@ async def application_access(
     """Return required active Application access for one authenticated user."""
 
     # Convert absent membership and deleted Application state into the existing access response.
-    access = await find_application_access(session, user.id, application_id)
+    access = await organization_service.application_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    return access
+    application, organization, role = access
+    return ApplicationAccess(application=application, organization=organization, role=role)

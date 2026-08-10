@@ -8,6 +8,19 @@ from src.kubernetes.gateway import generate_gateway_tls
 from src.database.models.operations import Operation
 
 
+def gateway_url(address: str) -> str:
+    """Return a URL-safe HTTPS gateway address."""
+
+    # Bracket IPv6 literals while preserving controller-published hostnames and IPv4 addresses.
+    try:
+        parsed_address = ipaddress.ip_address(address)
+    except ValueError:
+        host = address
+    else:
+        host = f"[{parsed_address}]" if parsed_address.version == 6 else str(parsed_address)
+    return f"https://{host}"
+
+
 async def create(claimed: Operation) -> str | None:
     """Reconcile one Compute's shared authenticated Envoy Gateway."""
 
@@ -26,13 +39,7 @@ async def create(claimed: Operation) -> str | None:
         and registry.gateway_certificate is not None
     ):
         gateway_address = await cluster.gateway.apply()
-        try:
-            address = ipaddress.ip_address(gateway_address)
-        except ValueError:
-            gateway_host = gateway_address
-        else:
-            gateway_host = f"[{address}]" if address.version == 6 else str(address)
-        if registry.gateway_url != f"https://{gateway_host}":
+        if registry.gateway_url != gateway_url(gateway_address):
             return "Gateway endpoint changed and requires explicit credential rotation"
         return None
 
@@ -47,20 +54,12 @@ async def create(claimed: Operation) -> str | None:
     gateway_certificate, server_certificate, server_private_key = generate_gateway_tls(registry.id, gateway_address)
     await cluster.gateway.replace_tls(server_certificate, server_private_key, gateway_certificate, gateway_address)
 
-    # Format IP addresses and controller-published hostnames for URL authority syntax.
-    try:
-        address = ipaddress.ip_address(gateway_address)
-    except ValueError:
-        gateway_host = gateway_address
-    else:
-        gateway_host = f"[{address}]" if address.version == 6 else str(address)
-
     # Publish connection material only after the desired gateway Deployment is serving.
     async with session_scope() as session:
         recorded = await compute.record_success(
             session,
             registry.id,
-            f"https://{gateway_host}",
+            gateway_url(gateway_address),
             api_key,
             gateway_certificate,
             registry.status,

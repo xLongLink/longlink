@@ -7,12 +7,11 @@ from src.auth import (
     get_auth_session,
     application_access,
     organization_access,
-    find_application_access,
 )
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.database.services import compute, applications
+from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationResponse
@@ -121,10 +120,10 @@ async def delete_application(
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
     else:
-        access = await find_application_access(session, user.id, application_id)
+        access = await organizations.application_access(session, user.id, application_id)
         if access is None:
             raise HTTPException(status_code=403, detail="Access required")
-        role = access.role
+        _, _, role = access
 
         # Active Applications require Organization maintenance authority.
         if not roles.atleast(role, OrganizationRoles.maintain):
