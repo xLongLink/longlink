@@ -20,7 +20,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'if',
         slug: 'if',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Conditionally renders an XML node when its expression evaluates to a truthy value.',
         usage: 'Add if to rendered XML nodes and adapter-consumed child nodes that should appear only in one state.',
         attributesTitle: 'Rules',
@@ -45,7 +45,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'i18n',
         slug: 'i18n',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Looks up visible copy from the active XML translation catalog.',
         usage: 'Use i18n on text-bearing elements instead of hardcoding visible copy in page XML.',
         attributesTitle: 'Rules',
@@ -64,7 +64,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'values',
         slug: 'values',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Supplies interpolation values for an ICU message resolved through i18n.',
         usage: 'Use values when a translated message needs runtime data such as names, counts, or status labels.',
         attributesTitle: 'Rules',
@@ -84,7 +84,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'count',
         slug: 'count',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Passes a numeric count into an ICU plural translation.',
         usage: 'Use count with i18n messages that contain plural branches.',
         attributesTitle: 'Rules',
@@ -105,7 +105,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'Expressions',
         slug: 'expressions',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Evaluates a safe JavaScript expression subset against the XML runtime scope.',
         usage: 'Use expressions for conditions, derived values, request payloads, query paths, and bindings.',
         attributesTitle: 'Rules',
@@ -125,7 +125,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'Bindings',
         slug: 'bindings',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Connects writable control values to State objects declared in the XML runtime.',
         usage: 'Use bindings when form controls need to edit local page state before an Action sends data.',
         attributesTitle: 'Rules',
@@ -146,7 +146,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'Translations',
         slug: 'translations',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Defines localized XML page copy in flat catalog files under src/i18n.',
         usage: 'Keep visible copy in translation catalogs and reference it from XML with i18n keys.',
         attributesTitle: 'Rules',
@@ -170,7 +170,7 @@ const runtimeConceptDocs: ElementDoc[] = [
     {
         name: 'Dynamic Pages',
         slug: 'dynamic-pages',
-        category: 'LongLink Runtime Concepts',
+        category: 'Runtime',
         summary: 'Maps bracketed XML page filenames to browser route parameters.',
         usage: 'Use dynamic pages when one XML definition should render many records by route id.',
         attributesTitle: 'Rules',
@@ -213,7 +213,7 @@ const elementDocs: ElementDoc[] = [
     {
         name: 'longlink',
         slug: 'longlink',
-        category: 'LongLink State Elements',
+        category: 'State',
         summary: 'Wraps one XML page and declares optional navigation metadata for the LongLink web runtime.',
         usage: 'Use longlink as the root element in every XML page file.',
         attributes: [
@@ -229,7 +229,7 @@ const elementDocs: ElementDoc[] = [
     {
         name: 'State',
         slug: 'state',
-        category: 'LongLink State Elements',
+        category: 'State',
         summary: 'Declares local reactive page state before the page renders.',
         usage: 'Use State near the top of the page when controls need writable local values.',
         attributes: [
@@ -247,7 +247,7 @@ const elementDocs: ElementDoc[] = [
     {
         name: 'Query',
         slug: 'query',
-        category: 'LongLink State Elements',
+        category: 'State',
         summary: 'Fetches JSON data before rendering and stores it in the XML runtime scope.',
         usage: 'Use Query for page data that descendants read through expressions, loops, and bindings.',
         attributes: [
@@ -264,7 +264,7 @@ const elementDocs: ElementDoc[] = [
     {
         name: 'Action',
         slug: 'action',
-        category: 'LongLink State Elements',
+        category: 'State',
         summary: 'Provides request behavior to child triggers and refreshes selected runtime values.',
         usage: 'Wrap a Button or control that should send an application request when activated.',
         attributes: [
@@ -282,7 +282,7 @@ const elementDocs: ElementDoc[] = [
     {
         name: 'For',
         slug: 'for',
-        category: 'LongLink State Elements',
+        category: 'State',
         summary: 'Repeats child XML for every item in an array.',
         usage: 'Use For when query results or state arrays should render repeated rows, cards, or controls.',
         attributes: [

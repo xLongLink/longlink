@@ -36,7 +36,6 @@ type ComponentSummary = {
 type ComponentCategoryConfiguration = {
     id: string;
     title: string;
-    description: string;
 };
 
 type ComponentCategory = ComponentCategoryConfiguration & {
@@ -46,60 +45,47 @@ type ComponentCategory = ComponentCategoryConfiguration & {
 const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
     {
         id: 'longlink-runtime-concepts',
-        title: 'LongLink Runtime Concepts',
-        description:
-            'Cross-cutting page runtime rules for conditional rendering, translations, expressions, bindings, and file discovery.',
+        title: 'Runtime',
     },
     {
         id: 'longlink-state-elements',
-        title: 'LongLink State Elements',
-        description:
-            'LongLink-specific XML elements prepare page state, data, actions, and repeated scopes before Astryx components render.',
+        title: 'State',
     },
     {
         id: 'action',
         title: 'Action',
-        description: 'Command and navigation elements for starting work or moving users to another destination.',
     },
     {
         id: 'container',
         title: 'Container',
-        description: 'Bounded surfaces for content that should read as one independent item.',
     },
     {
         id: 'content',
         title: 'Content',
-        description: 'Text, identity, and visual primitives for readable page content.',
     },
     {
         id: 'data-input',
         title: 'Data Input',
-        description: 'Controls that collect page data through literal values, expressions, or writable state bindings.',
     },
     {
         id: 'feedback-and-status',
         title: 'Feedback & Status',
-        description: 'Status elements that communicate state, severity, or persistent page feedback.',
     },
     {
         id: 'layout',
         title: 'Layout',
-        description: 'Composition primitives for arranging content without handwritten layout markup.',
     },
     {
         id: 'navigation',
         title: 'Navigation',
-        description: 'Navigation structures for tabs, side navigation, and application page movement.',
     },
     {
         id: 'overlay',
         title: 'Overlay',
-        description: 'Layered surfaces for focused workflows that should appear above the page.',
     },
     {
         id: 'table-and-list',
         title: 'Table & List',
-        description: 'Structured display elements for row-oriented business data.',
     },
 ];
 
@@ -125,14 +111,9 @@ export const metadata = {
 function ComponentCategorySection({ category }: { category: ComponentCategory }) {
     return (
         <Stack gap={3}>
-            <Stack gap={2}>
-                <Heading id={category.id} level={2}>
-                    {category.title}
-                </Heading>
-                <Text as="p" color="secondary">
-                    {category.description}
-                </Text>
-            </Stack>
+            <Heading id={category.id} level={2}>
+                {category.title}
+            </Heading>
             <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                 {category.components.map((component) => (
                     <ComponentSummaryCard key={component.name} component={component} />
@@ -391,15 +372,12 @@ export const content = (
             Pages
         </Heading>
         <Text as="p">
-            Pages define the XML UI returned by SDK page handlers. Use this page as the component map for LongLink
-            Applications: start with LongLink state elements, then compose the screen with supported Astryx-backed XML
-            components.
-        </Text>
-        <Text as="p">
-            XML files live under <Code>src/pages</Code> and are registered by the LongLink SDK. Keep visible copy in{' '}
-            <Code>src/i18n</Code>, bind state with <Code>$state.path</Code>, and use expressions only at XML runtime
-            boundaries. Open a card below for that element&apos;s definition, attributes, child contract, and XML
-            example.
+            Pages define the XML UI returned by SDK page handlers and are based on{' '}
+            <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
+                Astryx
+            </Link>
+            . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
+            compose the screen with supported XML components.
         </Text>
         {componentCategories.map((category) => (
             <ComponentCategorySection key={category.id} category={category} />

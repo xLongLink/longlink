@@ -1,17 +1,19 @@
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
+import { useContext } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
-import { isAppRelativeUrl, resolveUrl, useAnchorUrl } from '../core/url';
+import { BaseUrlContext, isAppRelativeUrl, resolveAnchorUrl, resolveUrl } from '../core/url';
 import type { Props } from '../types';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const baseUrl = useContext(BaseUrlContext);
     const href = resolveXmlString(props, 'href', ctx);
     const to = resolveXmlString(props, 'to', ctx);
-    const resolvedHref = useAnchorUrl(href);
+    const resolvedHref = resolveAnchorUrl(baseUrl, href);
     const resolvedTo = to && isAppRelativeUrl(to) ? resolveUrl(String(ctx.navigationBaseUrl ?? ''), to) : '';
     const content = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const label = resolveXmlString(props, 'label', ctx);

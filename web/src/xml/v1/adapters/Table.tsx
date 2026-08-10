@@ -5,7 +5,6 @@ import {
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { ReactNode } from 'react';
 import { ContextProvider, useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
@@ -109,33 +108,21 @@ function buildColumn(
         header,
         key,
         width,
-        renderCell: (row) => renderCell(cellNodes, row, rows.indexOf(row), field, ctx, rowName),
+        renderCell: (row) => {
+            const value = resolveFieldValue(row, field);
+
+            // Shorthand columns render the resolved field value directly.
+            if (cellNodes.length === 0) return value == null ? '' : String(value);
+
+            const rowCtx: ExecutionContext = {
+                ...ctx,
+                parent: ctx,
+                values: { index: rows.indexOf(row), value, [rowName]: row },
+            };
+
+            return <ContextProvider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</ContextProvider>;
+        },
     };
-}
-
-/** Renders a column cell with row, index, and field value in lexical XML scope. */
-function renderCell(
-    nodes: ASTNode[],
-    row: TableRow,
-    index: number,
-    field: string,
-    ctx: ExecutionContext,
-    rowName: string
-): ReactNode {
-    const value = resolveFieldValue(row, field);
-
-    // Shorthand columns render the resolved field value directly.
-    if (nodes.length === 0) return value == null ? '' : String(value);
-
-    const rowCtx: ExecutionContext = {
-        ...ctx,
-        parent: ctx,
-        values: { index, value, [rowName]: row },
-    };
-
-    return (
-        <ContextProvider value={rowCtx}>{renderNode(nodes, rowCtx)}</ContextProvider>
-    );
 }
 
 /** Resolves a dotted field path against one row without unsafe property access. */

@@ -1,4 +1,4 @@
-import { createContext as createReactContext, useContext as useReactContext } from 'react';
+import { createContext as createReactContext } from 'react';
 import { hasProtocol, parsePath, parseURL } from 'ufo';
 
 export const BaseUrlContext = createReactContext<string>('');
@@ -96,11 +96,4 @@ export function resolveAnchorUrl(baseUrl: string, path: string): string {
     if (!isAppRelativeUrl(value)) return '';
 
     return resolveUrl(baseUrl, value);
-}
-
-/** Resolves an anchor URL against the active base URL. */
-export function useAnchorUrl(path: string): string {
-    const baseUrl = useReactContext(BaseUrlContext);
-
-    return resolveAnchorUrl(baseUrl, path);
 }

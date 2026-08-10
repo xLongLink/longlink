@@ -41,13 +41,11 @@ describe('Action', () => {
             ctx,
             '',
             fetchImpl,
-            {
-                success: () => {
-                    successCalls += 1;
-                },
-                error: () => {
-                    errorCalls += 1;
-                },
+            (options) => {
+                if (options.type === 'error') errorCalls += 1;
+                else successCalls += 1;
+
+                return () => {};
             }
         );
 
@@ -104,11 +102,11 @@ describe('Action', () => {
                 ctx,
                 '',
                 fetchImpl,
-                {
-                    success: () => {
-                        successCalls += 1;
-                    },
-                    error: (message) => (errorMessage = message),
+                (options) => {
+                    if (options.type === 'error') errorMessage = String(options.body);
+                    else successCalls += 1;
+
+                    return () => {};
                 }
             );
 
@@ -148,7 +146,7 @@ describe('Action', () => {
             ctx,
             '',
             fetchImpl,
-            { success: () => {}, error: () => {} }
+            () => () => {}
         );
 
         const body = requestInit?.body as FormData;
@@ -186,7 +184,7 @@ describe('Action', () => {
             ctx,
             '',
             fetchImpl,
-            { success: () => {}, error: () => {} }
+            () => () => {}
         );
 
         expect(invalidateCalls).toBe(1);
@@ -236,9 +234,10 @@ describe('Action', () => {
                 return new Response(null, { status: 204 });
             }) as unknown as typeof fetch;
 
-            await executeAction(testCase.props, ctx, '', fetchImpl, {
-                success: () => {},
-                error: (message) => (errorMessage = message),
+            await executeAction(testCase.props, ctx, '', fetchImpl, (options) => {
+                if (options.type === 'error') errorMessage = String(options.body);
+
+                return () => {};
             });
 
             expect(fetchCalls).toBe(0);
