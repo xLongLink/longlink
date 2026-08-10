@@ -64,7 +64,11 @@ export const content = (
             <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
                 SQLAlchemy
             </Link>{' '}
-            database session.
+            database session. Migrations are based on{' '}
+            <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
+                Alembic
+            </Link>
+            .
         </Text>
         <EnvironmentTable environments={environments} />
         <Heading id="basic-usage" level={2}>
@@ -129,11 +133,7 @@ print(approval.status)  # pending
             Migrations
         </Heading>
         <Text as="p">
-            After you add or change Application models, run{' '}
-            <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
-                Alembic
-            </Link>{' '}
-            migrations to keep the database schema aligned:
+            After you add or change Application models, run migrations to keep the database schema aligned:
         </Text>
         <CodeTabs
             items={[

@@ -16,7 +16,7 @@ type ResolvedSideNavItem = {
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
         .map((node) => resolveSideNavItem(node, ctx));

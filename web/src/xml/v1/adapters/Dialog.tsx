@@ -18,7 +18,7 @@ import {
 
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'isOpen', ctx);
     const [localOpen, setLocalOpen] = useState(toXmlBoolean(binding.initialValue));
     const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;

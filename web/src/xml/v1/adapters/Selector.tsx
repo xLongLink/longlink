@@ -17,7 +17,7 @@ import {
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx);
     const initialValue = binding.initialValue == null ? null : String(binding.initialValue);
     const [localValue, setLocalValue] = useState<string | null>(initialValue);

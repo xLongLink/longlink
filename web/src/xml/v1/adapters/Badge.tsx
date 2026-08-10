@@ -5,7 +5,7 @@ import { resolveXmlEnum, resolveXmlLabel } from './props';
 
 /** Renders an Astryx badge with a serializable label. */
 export function Badge({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const label = resolveXmlLabel(props, ctx, 'Badge');
     const variant = resolveXmlEnum(
         props,

@@ -15,7 +15,7 @@ import {
 
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'number');
     const initialValue = binding.initialValue == null ? null : Number(binding.initialValue);
     const [localValue, setLocalValue] = useState<number | null>(initialValue);

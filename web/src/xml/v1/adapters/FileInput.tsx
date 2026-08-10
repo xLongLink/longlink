@@ -17,7 +17,7 @@ type FileValue = File | File[] | null;
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'file');
     const [localValue, setLocalValue] = useState<FileValue>(null);
     const boundValue = isFileValue(binding.currentValue) ? binding.currentValue : null;

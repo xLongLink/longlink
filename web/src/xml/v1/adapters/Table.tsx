@@ -26,7 +26,7 @@ type TableRow = Record<string, unknown>;
 
 /** Renders XML row data through the Astryx data-driven Table API. */
 export function Table({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
 
     // Require an explicit array data source.
     if (!readXmlProp(props, 'data')?.trim()) {

@@ -7,7 +7,7 @@ import { resolveXmlEnum, resolveXmlValue } from './props';
 
 /** Renders inline Astryx code from a value, translation, or nested XML. */
 export function Code({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const value = resolveXmlValue(props, 'value', ctx);
     const content = props.i18n
         ? resolveTranslation(props, ctx)

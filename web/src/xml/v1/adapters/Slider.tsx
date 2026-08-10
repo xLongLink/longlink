@@ -15,7 +15,7 @@ import {
 
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'number');
     const initialValue = Number(binding.initialValue ?? 0);
     const [localValue, setLocalValue] = useState(initialValue);

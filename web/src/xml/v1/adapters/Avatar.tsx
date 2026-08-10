@@ -6,7 +6,7 @@ import { resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders a data-oriented Astryx avatar with safe image URLs. */
 export function Avatar({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const src = useAnchorUrl(resolveXmlString(props, 'src', ctx));
     const fallbackSrc = useAnchorUrl(resolveXmlString(props, 'fallbackSrc', ctx));
     const name = resolveXmlString(props, 'name', ctx);

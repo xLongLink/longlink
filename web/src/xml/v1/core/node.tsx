@@ -9,11 +9,12 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
         // Reject consumer styling and callbacks so adapters retain control of behavior.
         for (const name of Object.keys(node.params ?? {})) {
-            if (['classname', 'style', 'xstyle'].includes(name.toLowerCase())) {
+            const lowerName = name.toLowerCase();
+            if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
                 throw new Error(`${name} is not supported in XML`);
             }
 
-            if (name.toLowerCase().startsWith('on')) {
+            if (lowerName.startsWith('on')) {
                 throw new Error(`Event handler attribute "${name}" is not supported in XML`);
             }
         }

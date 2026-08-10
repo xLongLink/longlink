@@ -6,7 +6,7 @@ import { resolveXmlEnum, resolveXmlNumber, resolveXmlSizeValue, resolveXmlSpacin
 
 /** Renders a fixed or responsive Astryx grid. */
 export function Grid({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const columnCount = resolveXmlNumber(props, 'columns', ctx);
     const minWidth = resolveXmlNumber(props, 'minColumnWidth', ctx);
     const maxColumns = resolveXmlNumber(props, 'maxColumns', ctx);

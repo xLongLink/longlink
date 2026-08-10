@@ -8,7 +8,7 @@ import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const href = resolveXmlString(props, 'href', ctx);
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = useAnchorUrl(href);

@@ -6,7 +6,7 @@ import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel } from './props';
 
 /** Groups XML buttons with Astryx connected-button semantics. */
 export function ButtonGroup({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const label = resolveXmlLabel(props, ctx, 'ButtonGroup');
     const orientation = resolveXmlEnum(
         props,

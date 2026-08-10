@@ -5,7 +5,7 @@ import { resolveXmlString } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ items, props, nodes }: Props & { items: unknown[] }) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const as = resolveXmlString(props, 'as', ctx);
 
     return items.map((item, index) => {

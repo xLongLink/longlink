@@ -29,8 +29,8 @@ type SetupFailure = {
  */
 export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
-    const requiresSetup = hasSetupNodes(ast);
-    const requiresTranslations = hasTranslationNodes(ast);
+    const requiresSetup = hasMatchingNode(ast, (node) => node.name === 'State' || node.name === 'Query');
+    const requiresTranslations = hasMatchingNode(ast, (node) => Boolean(node.params?.i18n));
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
     const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
@@ -187,29 +187,15 @@ function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ct
     );
 }
 
-/** Returns whether the AST contains localized copy. */
-function hasTranslationNodes(nodes: ASTNode[]): boolean {
-    // Walk the tree until localized copy is found.
+/** Returns whether the AST contains a node matching the supplied predicate. */
+function hasMatchingNode(nodes: ASTNode[], predicate: (node: ASTNode) => boolean): boolean {
+    // Walk the tree until a matching node is found.
     for (const node of nodes) {
-        // Detect localized attributes on this node.
-        if (node.params?.i18n) return true;
+        // Check this node before visiting descendants.
+        if (predicate(node)) return true;
 
-        // Search nested nodes for localized copy.
-        if (hasTranslationNodes(node.children ?? [])) return true;
-    }
-
-    return false;
-}
-
-/** Returns whether the AST contains setup-only runtime declarations. */
-function hasSetupNodes(nodes: ASTNode[]): boolean {
-    // Walk the tree until setup nodes are found.
-    for (const node of nodes) {
-        // Detect state and query setup declarations.
-        if (node.name === 'State' || node.name === 'Query') return true;
-
-        // Search nested nodes for setup declarations.
-        if (hasSetupNodes(node.children ?? [])) return true;
+        // Search nested nodes for a match.
+        if (hasMatchingNode(node.children ?? [], predicate)) return true;
     }
 
     return false;

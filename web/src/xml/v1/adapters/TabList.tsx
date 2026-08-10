@@ -24,7 +24,7 @@ type ResolvedTab = {
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => resolveTab(node, ctx));

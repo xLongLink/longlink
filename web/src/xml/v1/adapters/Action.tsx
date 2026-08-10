@@ -22,7 +22,7 @@ export function useActionHandler() {
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const baseUrl = useContext(BaseUrlContext);
     const showToast = useToast();
     const toastApi: ActionToast = {
@@ -46,7 +46,7 @@ export function Action({ props, nodes }: Props) {
 /** Executes the action request and invalidation flow. */
 export async function executeAction(
     props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>['ctx'],
+    ctx: ReturnType<typeof useXmlContext>,
     baseUrl: string,
     fetchImpl: typeof fetch = fetch,
     toastApi: ActionToast

@@ -14,7 +14,7 @@ import {
 
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(toXmlBoolean(binding.initialValue));
     const value = binding.bound ? toXmlBoolean(binding.currentValue) : localValue;

@@ -6,7 +6,7 @@ import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } 
 
 /** Renders a persistent Astryx status banner. */
 export function Banner({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const title = resolveXmlLabel(props, ctx, 'Banner', 'title');
     const description = resolveXmlString(props, 'description', ctx);
     const status = resolveXmlEnum(props, 'status', ctx, ['info', 'warning', 'error', 'success'], 'info', 'Banner');

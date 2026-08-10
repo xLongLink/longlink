@@ -24,14 +24,11 @@ type XmlLayoutProps = {
 export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
-    const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
     const isSdkMode = import.meta.env.MODE === 'sdk';
 
-    const resolvedTabs = tabEntries.map(([label, tab]) => {
-        const href = typeof tab === 'string' ? tab : tab.href;
-        const active = typeof tab === 'string' ? undefined : tab.active;
-        const icon = typeof tab === 'string' ? undefined : tab.icon;
+    const resolvedTabs = Object.entries(tabs ?? {}).map(([label, tab]) => {
+        const { href, active, icon }: XmlLayoutTab = typeof tab === 'string' ? { href: tab } : tab;
         const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
 
         return {
