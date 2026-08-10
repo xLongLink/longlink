@@ -8,12 +8,7 @@ import { Text } from '@astryxdesign/core/Text';
 const applicationPaths = ['Use', 'Adapt', 'Create'];
 
 export const metadata = {
-    toc: [
-        { id: 'applications', label: 'Applications', level: 1 },
-        { id: 'use', label: 'Use', level: 2 },
-        { id: 'adapt', label: 'Adapt', level: 2 },
-        { id: 'create', label: 'Create', level: 2 },
-    ],
+    toc: [{ id: 'applications', label: 'Applications', level: 1 }],
     lastUpdated: '2026-08-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/applications.tsx',
 };
@@ -24,16 +19,33 @@ export const content = (
             Applications
         </Heading>
         <Text as="p">
-            Applications are containerized LongLink SDK services deployed into an organization. The LongLink Platform
-            reads application metadata from the image, provisions runtime resources, verifies the rollout, and routes
-            authenticated users to the running service.
+            Applications are dedicated tools for running a specific part of an organization’s work. LongLink makes them
+            easy to deploy, access, and operate, so teams can focus on the process the application is designed to
+            support.
         </Text>
         <Text as="p">
-            In production, each application receives database and storage access scoped to organization resources. The
-            runtime can read and write its own application schema and its application prefix in the Organization bucket.
-            It can read the shared schema and the bucket's shared prefix without writing to either. The LongLink
-            Platform stores user-owned and direct application IAM credentials together in a Kubernetes Secret before
-            deploying the Application.
+            <Text color="primary" size="lg" type="label" weight="bold">
+                Use
+            </Text>{' '}
+            an existing application when its process already reflects the way your organization works. LongLink provides
+            a consistent way to deploy and operate it, while giving authorized users access to the application and the
+            resources it needs.
+        </Text>
+        <Text as="p">
+            <Text color="primary" size="lg" type="label" weight="bold">
+                Adapt
+            </Text>{' '}
+            an existing application when the underlying process is familiar but the details differ. Teams can fork its
+            Python code and adjust the workflows, rules, data model, pages, and integrations to match their own
+            requirements.
+        </Text>
+        <Text as="p">
+            <Text color="primary" size="lg" type="label" weight="bold">
+                Create
+            </Text>{' '}
+            a new application when a process needs a dedicated design from the start. Developers build the
+            process-specific software as normal Python code, while LongLink provides the shared foundation for identity,
+            permissions, deployment, data, storage, and operations.
         </Text>
         <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
             {applicationPaths.map((path) => (
@@ -51,14 +63,5 @@ export const content = (
                 </Stack>
             ))}
         </Grid>
-        <Heading id="use" level={2}>
-            Use
-        </Heading>
-        <Heading id="adapt" level={2}>
-            Adapt
-        </Heading>
-        <Heading id="create" level={2}>
-            Create
-        </Heading>
     </Stack>
 );

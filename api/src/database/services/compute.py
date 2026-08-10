@@ -4,8 +4,6 @@ from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from src.environments import env
-from src.models.types import PlatformVersion
-from packaging.version import Version
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
@@ -51,11 +49,7 @@ async def create(name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
 
     # Persist the target and its initial reconciliation request atomically.
     async with session_scope() as session:
-        registry = ComputeRegistry(
-            name=name,
-            kubeconfig=kubeconfig,
-            version=env.VERSION,
-        )
+        registry = ComputeRegistry(name=name, kubeconfig=kubeconfig)
         session.add(registry)
 
         # Translate unique registry names to one stable API conflict.
@@ -105,24 +99,22 @@ async def delete(registry_id: UUID) -> bool:
 
 async def record_success(
     compute_id: UUID,
-    platform_version: PlatformVersion,
     gateway_url: str,
     gateway_api_key: str,
     gateway_certificate: str,
     expected_status: Status,
 ) -> bool:
-    """Publish successful Compute and Gateway state without allowing a Platform release regression."""
+    """Publish successful Compute and Gateway state when its lifecycle state is current."""
 
-    # Lock the compute while updating its observed release.
+    # Lock the compute while publishing its current gateway connection material.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-        if registry is None or registry.status != expected_status or Version(registry.version) > Version(platform_version):
+        if registry is None or registry.status != expected_status:
             return False
 
         registry.gateway_url = gateway_url
         registry.gateway_api_key = gateway_api_key
         registry.gateway_certificate = gateway_certificate
-        registry.version = platform_version
         registry.status = Status.running
         await session.commit()
         return True

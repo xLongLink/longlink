@@ -4,8 +4,6 @@ from sqlalchemy import case, select, update
 from src.errors import NotFoundError
 from src.logger import logger
 from collections.abc import Sequence
-from src.environments import env
-from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.operations import OperationKind
@@ -34,19 +32,10 @@ async def enqueue(
     if kind == OperationKind.compute_create and target_id != compute_id:
         raise ValueError("Compute operations must target their compute registry")
 
-    # Lock the compute before resolving its current release target.
+    # Require the assigned compute before scheduling its resource work.
     compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
     if compute is None:
         raise NotFoundError("Operation compute registry not found")
-    versions = (
-        await session.scalars(
-            select(Operation.platform_version).where(
-                Operation.kind == kind,
-                Operation.target_id == target_id,
-            )
-        )
-    ).all()
-    platform_version = f"v{max(Version(version) for version in [env.VERSION, *versions, compute.version])}"
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(
@@ -54,7 +43,6 @@ async def enqueue(
         .where(
             Operation.kind == kind,
             Operation.target_id == target_id,
-            Operation.platform_version == platform_version,
             Operation.finished_at.is_(None),
             Operation.lease_expires_at.is_(None),
         )
@@ -66,7 +54,6 @@ async def enqueue(
         operation = Operation(
             kind=kind,
             target_id=target_id,
-            platform_version=platform_version,
         )
         session.add(operation)
     return operation
@@ -104,9 +91,6 @@ async def claim() -> Operation | None:
                 await session.rollback()
                 await fail(operation_id)
                 continue
-            if Version(operation.platform_version) > Version(env.VERSION):
-                return None
-
             # Acquire the lease conditionally because SQLite ignores the row locks above.
             if (
                 await session.execute(

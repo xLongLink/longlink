@@ -133,7 +133,7 @@ class Gateway:
 
         self._client = client
 
-    async def apply(self, certificate: str, private_key: str, api_key: str) -> str:
+    async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""
 
         # Render LongLink resources that target the required Envoy Gateway controller.
@@ -144,15 +144,6 @@ class Gateway:
         resources = [
             Namespace(namespace, api=api),
             GatewayClassResource(gateway_class, api=api),
-            gateway_tls_secret(certificate, private_key, api),
-            Secret(
-                {
-                    "metadata": {"name": "longlink-gateway-api-key", "namespace": "longlink-system"},
-                    "stringData": {"platform": api_key},
-                    "type": "Opaque",
-                },
-                api=api,
-            ),
             new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api),
             new_class(
                 "SecurityPolicy",
@@ -161,6 +152,18 @@ class Gateway:
                 plural="securitypolicies",
             )(security_policy, api=api),
         ]
+        if certificate is not None and private_key is not None and api_key is not None:
+            resources[2:2] = [
+                gateway_tls_secret(certificate, private_key, api),
+                Secret(
+                    {
+                        "metadata": {"name": "longlink-gateway-api-key", "namespace": "longlink-system"},
+                        "stringData": {"platform": api_key},
+                        "type": "Opaque",
+                    },
+                    api=api,
+                ),
+            ]
         for resource in resources:
             await apply(resource)
 

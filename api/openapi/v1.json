@@ -348,11 +348,11 @@
         "type": "string"
       },
       "EmailPayload": {
-        "description": "Validate one unchanged email value.",
+        "description": "Validate one canonical email identity.",
         "properties": {
           "email": {
+            "format": "email",
             "maxLength": 254,
-            "minLength": 1,
             "title": "Email",
             "type": "string"
           }
@@ -546,10 +546,6 @@
           "kind": {
             "$ref": "#/components/schemas/OperationKind"
           },
-          "platform_version": {
-            "title": "Platform Version",
-            "type": "string"
-          },
           "status": {
             "$ref": "#/components/schemas/OperationStatus"
           },
@@ -564,7 +560,6 @@
           "kind",
           "target_id",
           "status",
-          "platform_version",
           "created_at",
           "finished_at"
         ],
@@ -929,8 +924,8 @@
         "description": "Validate one local password login request.",
         "properties": {
           "email": {
+            "format": "email",
             "maxLength": 254,
-            "minLength": 1,
             "title": "Email",
             "type": "string"
           },
@@ -977,8 +972,8 @@
         "description": "Validate profile and password setup after email authentication.",
         "properties": {
           "email": {
+            "format": "email",
             "maxLength": 254,
-            "minLength": 1,
             "title": "Email",
             "type": "string"
           },

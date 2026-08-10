@@ -20,7 +20,6 @@ def leased_operation() -> Operation:
     return Operation(
         kind=OperationKind.compute_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
-        platform_version="v1.2.3",
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
 
@@ -145,7 +144,6 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
             kind=operation.kind,
             target_id=operation.target_id,
             failed=True,
-            platform_version=operation.platform_version,
             finished_at=utcnow(),
         )
 

@@ -68,13 +68,13 @@ Work that is too long for an API request is queued as a durable, typed Operation
 
 <br />
 
-## Release
+## Deployment Reconciliation
 
-- Release is triggered with `vX.Y.Z` and a container is created.
-- Alembic migrations run, then `python -m src.release` schedules release migration Operations:
-    - One `compute.create` for every compute.
-    - One `organization.create` for every active Organization.
-    - One `application.create` for every running Application.
+- Every deployment runs Alembic migrations, then `python -m src.release` once before API replicas start. It schedules desired-state reconciliation Operations:
+    - One `compute.create` for every Compute.
+    - One create or delete operation for every Organization according to its tombstone.
+    - One create or delete operation for every Application in an active Organization according to its tombstone.
+- Repeated scheduling coalesces unleased work and creates one successor for active work, so deployment reconciliation safely converges resources after code or infrastructure changes.
 - Each API replica starts (`main.py`).
     - `FastAPI` manage user request.
     - `lifespan` claims and executes Operations.
@@ -95,7 +95,7 @@ Run from `api/`:
 ```bash
 uv sync --extra dev
 uv run alembic upgrade head
-uv run python -m src.release
+uv run python -m src.release             # Schedule deployment reconciliation once
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 # In another terminal:
 DEVELOPMENT=true uv run python seed.py

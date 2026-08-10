@@ -14,7 +14,6 @@ os.environ.setdefault("ADMIN_NAME", "OpenAPI Administrator")
 os.environ.setdefault("ADMIN_EMAIL", "openapi@example.com")
 os.environ.setdefault("ADMIN_PASSWORD", "openapi-password")
 os.environ.setdefault("ENCRYPTION_KEY", "openapi-encryption-key-that-is-long-enough")
-os.environ["VERSION"] = os.getenv("VERSION") or "v0.0.0"
 
 from main import app
 

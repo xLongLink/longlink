@@ -101,10 +101,10 @@ export const zDatabaseRegistryResponse = z.object({
 /**
  * EmailPayload
  *
- * Validate one unchanged email value.
+ * Validate one canonical email identity.
  */
 export const zEmailPayload = z.object({
-    email: z.string().min(1).max(254)
+    email: z.email().max(254)
 });
 
 /**
@@ -218,7 +218,6 @@ export const zOperationResponse = z.object({
     finished_at: z.iso.datetime().nullable(),
     id: z.uuid(),
     kind: zOperationKind,
-    platform_version: z.string(),
     status: zOperationStatus,
     target_id: z.uuid()
 });
@@ -315,7 +314,7 @@ export const zOrganizationUpdate = z.object({
  * Validate one local password login request.
  */
 export const zPasswordLogin = z.object({
-    email: z.string().min(1).max(254),
+    email: z.email().max(254),
     password: z.string().min(1).max(1024)
 });
 
@@ -341,7 +340,7 @@ export const zPlatformRoles = z.enum(['user', 'administrator']);
  * Validate profile and password setup after email authentication.
  */
 export const zRegistrationComplete = z.object({
-    email: z.string().min(1).max(254),
+    email: z.email().max(254),
     name: z.string().min(1).max(127),
     password: z.string().min(1).max(1024),
     surname: z.string().min(1).max(127)

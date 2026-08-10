@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
-from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -44,7 +43,6 @@ async def create_compute(name: str = "Local compute") -> ComputeRegistry:
         compute = ComputeRegistry(
             name=name,
             kubeconfig={"apiVersion": "v1", "clusters": []},
-            version=env.VERSION,
         )
         session.add(compute)
         await session.commit()
@@ -64,7 +62,6 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             gateway_api_key="test-api-key",
             gateway_certificate="test-certificate",
             status=Status.running,
-            version=env.VERSION,
         )
         database = DatabaseRegistry(
             name=f"{name} database {suffix}",

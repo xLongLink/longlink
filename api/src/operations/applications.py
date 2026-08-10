@@ -22,8 +22,8 @@ async def create(claimed: Operation) -> str | None:
 
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
-    # Converge providers and the workload while the Application remains in creation.
-    if application.status == Status.creating:
+    # Converge providers and the workload while the Application is not yet published.
+    if application.status != Status.running:
         # Reuse generated credentials after an interrupted creation attempt.
         if not any(name.startswith("LONGLINK_") for name in application.secrets):
             # Resolve the Application's immutable provider assignments.
@@ -69,9 +69,6 @@ async def create(claimed: Operation) -> str | None:
             if persisted_secrets is None:
                 return None
             application.secrets = persisted_secrets
-
-    elif application.status != Status.running:
-        return None
 
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
     await cluster.applications.apply(application.id, organization.id.hex, application.image, application.secrets)

@@ -8,7 +8,6 @@ from pydantic_core import CoreSchema, core_schema
 IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
-PLATFORM_VERSION_PATTERN = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 
 
 class DatabaseSSLMode(StrEnum):
@@ -55,30 +54,6 @@ class Accent(StrEnum):
     fuchsia = "fuchsia"
     pink = "pink"
     rose = "rose"
-
-
-class PlatformVersion(str):
-    """Represent one canonical LongLink Platform release version."""
-
-    def __new__(cls, version: str) -> Self:
-        """Validate and return one canonical Platform version."""
-
-        # Preserve validated values while rejecting non-canonical persisted versions.
-        if isinstance(version, cls):
-            return version
-        if PLATFORM_VERSION_PATTERN.fullmatch(version) is None:
-            raise ValueError("Platform version must use vMAJOR.MINOR.PATCH")
-        return str.__new__(cls, version)
-
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: GetCoreSchemaHandler) -> CoreSchema:
-        """Expose Platform versions as validated strings in Pydantic and OpenAPI schemas."""
-
-        return core_schema.no_info_after_validator_function(
-            cls,
-            core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
 
 
 class Image(str):

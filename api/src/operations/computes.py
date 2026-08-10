@@ -1,6 +1,6 @@
 import secrets
 import ipaddress
-from packaging.version import Version
+from src.models.statuses import Status
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls
@@ -14,13 +14,27 @@ async def create(claimed: Operation) -> str | None:
     registry = await compute.get(claimed.target_id)
     if registry is None:
         return None
-    platform_version = Version(claimed.platform_version)
-    if Version(registry.version) > platform_version:
-        return None
-
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Rotate authenticated Gateway access for every explicit Compute operation.
+    # Reapply static Gateway resources without rotating published client credentials.
+    if (
+        registry.status == Status.running
+        and registry.gateway_url is not None
+        and registry.gateway_api_key is not None
+        and registry.gateway_certificate is not None
+    ):
+        gateway_address = await cluster.gateway.apply()
+        try:
+            address = ipaddress.ip_address(gateway_address)
+        except ValueError:
+            gateway_host = gateway_address
+        else:
+            gateway_host = f"[{address}]" if address.version == 6 else str(address)
+        if registry.gateway_url != f"https://{gateway_host}":
+            return "Gateway endpoint changed and requires explicit credential rotation"
+        return None
+
+    # Generate Gateway credentials only while bootstrapping an unpublished Compute.
     api_key = secrets.token_urlsafe(32)
     _, server_certificate, server_private_key = generate_gateway_tls(registry.id, None)
 
@@ -42,13 +56,9 @@ async def create(claimed: Operation) -> str | None:
     # Publish connection material only after the desired gateway Deployment is serving.
     if not await compute.record_success(
         registry.id,
-        claimed.platform_version,
         f"https://{gateway_host}",
         api_key,
         gateway_certificate,
         registry.status,
     ):
-        current = await compute.get(registry.id)
-        if current is None or Version(current.version) > platform_version:
-            return None
         return "Compute gateway state was not recorded"

@@ -66,7 +66,6 @@ export default function AdminOperations() {
                         <Text type="supporting">{t('columns.target')}</Text>{' '}
                         <Text type="code">{operation.target_id}</Text>
                     </Text>
-                    <Text type="supporting">Platform {operation.platform_version}</Text>
                 </VStack>
             ),
         },

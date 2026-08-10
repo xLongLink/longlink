@@ -1,20 +1,15 @@
 import os
 from typing import Self
 from pydantic import Field, EmailStr, field_validator, model_validator
-from src.models.types import PlatformVersion
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
 
 class Env(BaseSettings):
-    """Define startup-validated settings for one LongLink Platform API replica.
-
-    VERSION supplies the release affinity used when claiming reconciliation Operations.
-    """
+    """Define startup-validated settings for one LongLink Platform API replica."""
 
     # Runtime mode
-    VERSION: PlatformVersion = PlatformVersion("v0.0.0")
     DEVELOPMENT: bool = DEVELOPMENT
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
 

@@ -3,8 +3,7 @@ from typing import ClassVar
 from sqlmodel import Field
 from sqlalchemy import Enum, Text, Column
 from src.environments import env
-from src.models.types import PlatformVersion
-from src.database.types import EncryptedType, PlatformVersionType
+from src.database.types import EncryptedType
 from src.models.statuses import Status
 from src.database.models.base import PlatformModel
 
@@ -32,8 +31,6 @@ class ComputeRegistry(PlatformModel, table=True):
             nullable=False,
         ),
     )
-    version: PlatformVersion = Field(sa_column=Column(PlatformVersionType(), nullable=False))
-
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)
     gateway_api_key: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))

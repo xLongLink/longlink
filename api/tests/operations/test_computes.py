@@ -3,22 +3,20 @@ from uuid import UUID
 from factories import create_compute, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
-from src.environments import env
 from src.models.statuses import Status
 from src.database.services import compute, operations
 from src.models.operations import OperationStatus
 
 
-async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_platform_release(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Create the shared Envoy Gateway and rotate its access for a Platform release."""
+async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Create the shared Envoy Gateway and preserve published access during reconciliation."""
 
     # Arrange
-    monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute_registry = await create_compute()
     generated: list[str | None] = []
-    applied: list[tuple[str, str, str]] = []
+    applied: list[tuple[str | None, str | None, str | None]] = []
     replaced: list[tuple[str, str, str]] = []
-    keys = iter(["api-key-1", "api-key-2"])
+    keys = iter(["api-key-1"])
 
     def generate_tls(compute_id: UUID, address: str | None) -> tuple[str, str, str]:
         """Return distinct generated TLS material."""
@@ -35,7 +33,7 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     class FakeGateway:
         """Capture gateway resource operations."""
 
-        async def apply(self, certificate: str, private_key: str, api_key: str) -> str:
+        async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
             """Capture shared Gateway application and return its endpoint."""
 
             applied.append((certificate, private_key, api_key))
@@ -69,8 +67,7 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     # Act
     completed = await execute(claimed, compute_operations.create)
 
-    # Recreate the Compute for a newer Platform release.
-    monkeypatch.setattr(env, "VERSION", "v1.1.0")
+    # Reconcile the Compute again after a deployment schedules another pass.
     await queue_operation(
         compute_registry.id,
         target_id=compute_registry.id,
@@ -82,22 +79,20 @@ async def test_execute_compute_create_operation_recreates_gateway_tls_for_a_plat
     # Assert
     assert completed.status == OperationStatus.completed
     assert recreated.status == OperationStatus.completed
-    assert generated == [None, "192.0.2.1", None, "192.0.2.1"]
+    assert generated == [None, "192.0.2.1"]
     assert applied == [
         ("server-certificate-1", "server-private-key-1", "api-key-1"),
-        ("server-certificate-3", "server-private-key-3", "api-key-2"),
+        (None, None, None),
     ]
     assert replaced == [
         ("server-certificate-2", "server-private-key-2", "ca-2"),
-        ("server-certificate-4", "server-private-key-4", "ca-4"),
     ]
     refreshed = await compute.get(compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
-    assert refreshed.version == "v1.1.0"
     assert refreshed.gateway_url == "https://192.0.2.1"
-    assert refreshed.gateway_api_key == "api-key-2"
-    assert refreshed.gateway_certificate == "ca-4"
+    assert refreshed.gateway_api_key == "api-key-1"
+    assert refreshed.gateway_certificate == "ca-2"
 
 
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -109,7 +104,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     class FailingGateway:
         """Raise a transient endpoint provider error."""
 
-        async def apply(self, certificate: str, private_key: str, api_key: str) -> str:
+        async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
             """Fail shared Gateway creation after entering Kubernetes."""
 
             raise RuntimeError("gateway unavailable")

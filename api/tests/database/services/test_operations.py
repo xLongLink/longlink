@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from datetime import timedelta
 from factories import create_compute
 from factories import queue_operation as queue
-from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -74,8 +73,8 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
     }
 
 
-async def test_release_schedules_running_application_creation_once() -> None:
-    """Queue one current-release Application operation for every running Application."""
+async def test_release_schedules_all_active_application_creation_once() -> None:
+    """Queue one reconciliation Operation for every non-deleted Application."""
 
     # Arrange
     compute = await create_compute("local")
@@ -114,39 +113,45 @@ async def test_release_schedules_running_application_creation_once() -> None:
             secrets={},
             status=Status.running,
         )
+        pending = Application(
+            organization_id=organization.id,
+            name="Pending",
+            slug="pending",
+            image="ghcr.io/longlink/pending@sha256:resolved",
+            secrets={},
+            status=Status.creating,
+        )
+        deleted = Application(
+            organization_id=organization.id,
+            name="Deleted",
+            slug="deleted",
+            image="ghcr.io/longlink/deleted@sha256:resolved",
+            secrets={},
+            status=Status.running,
+            deleted_at=utcnow(),
+        )
         session.add_all(
             [
                 running,
-                Application(
-                    organization_id=organization.id,
-                    name="Pending",
-                    slug="pending",
-                    image="ghcr.io/longlink/pending@sha256:resolved",
-                    secrets={},
-                    status=Status.creating,
-                ),
-                Application(
-                    organization_id=organization.id,
-                    name="Deleted",
-                    slug="deleted",
-                    image="ghcr.io/longlink/deleted@sha256:resolved",
-                    secrets={},
-                    status=Status.running,
-                    deleted_at=utcnow(),
-                ),
+                pending,
+                deleted,
             ]
         )
         await session.commit()
 
     # Act
-    await platform_release.schedule_migrations()
-    await platform_release.schedule_migrations()
-    application_operations = [operation for operation in await operations.fetch() if operation.kind == OperationKind.application_create]
+    await platform_release.schedule_reconciliation()
+    await platform_release.schedule_reconciliation()
+    scheduled = {(operation.kind, operation.target_id) for operation in await operations.fetch()}
 
     # Assert
-    assert len(application_operations) == 1
-    assert application_operations[0].target_id == running.id
-    assert application_operations[0].platform_version == env.VERSION
+    assert scheduled == {
+        (OperationKind.compute_create, compute.id),
+        (OperationKind.organization_create, organization.id),
+        (OperationKind.application_create, running.id),
+        (OperationKind.application_create, pending.id),
+        (OperationKind.application_delete, deleted.id),
+    }
 
 
 async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -177,7 +182,7 @@ async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatc
     monkeypatch.setattr(operations, "enqueue", enqueue_available_compute)
 
     # Act
-    await platform_release.schedule_migrations()
+    await platform_release.schedule_reconciliation()
     scheduled = await operations.fetch()
 
     # Assert
@@ -230,24 +235,6 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     assert claimed is not None
     assert claimed.id == older_operation.id
     assert claimed.status == OperationStatus.active
-
-
-async def test_operations_service_claims_older_release_work(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Allow the current worker to finish pending work from an older Platform release."""
-
-    # Seed work under the previous Platform release.
-    monkeypatch.setattr(env, "VERSION", "v1.0.0")
-    compute = await create_compute("older-release")
-    operation = await queue(compute.id, target_id=compute.id)
-
-    # Claim the existing work after the Platform upgrades.
-    monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    claimed = await operations.claim()
-
-    # Verify the current worker owns the pending older-release Operation.
-    assert claimed is not None
-    assert claimed.id == operation.id
-    assert claimed.platform_version == "v1.0.0"
 
 
 async def test_operations_service_claim_serializes_active_and_expires_lost_work() -> None:
@@ -403,21 +390,18 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
     assert follow_up.lease_expires_at is None
 
 
-async def test_operations_service_platform_upgrade_creates_after_locked_work(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Queue a newer Platform release without interrupting locked work."""
+async def test_deployment_reconciliation_creates_successor_after_locked_work() -> None:
+    """Queue one later desired-state pass without interrupting leased work."""
 
-    # Claim compute work at the original Platform version.
-    monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute = await create_compute("local")
     operation = await queue(compute.id, target_id=compute.id)
     claimed = await operations.claim()
     assert claimed is not None
 
-    # Schedule a newer Platform version while the original work remains locked.
-    monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    await platform_release.schedule_migrations()
-    await platform_release.schedule_migrations()
-    upgraded = next(
+    # Schedule deployment reconciliation while the original work remains locked.
+    await platform_release.schedule_reconciliation()
+    await platform_release.schedule_reconciliation()
+    successor = next(
         item
         for item in await operations.fetch()
         if item.kind == OperationKind.compute_create and item.target_id == compute.id and item.finished_at is None
@@ -425,13 +409,11 @@ async def test_operations_service_platform_upgrade_creates_after_locked_work(mon
     completed = await operations.complete(operation.id)
     replacement = await operations.claim()
 
-    # Verify one upgraded replacement waits for the original completion.
-    assert upgraded.id != operation.id
-    assert upgraded.platform_version == "v1.1.0"
-    assert upgraded.lease_expires_at is None
+    # Verify one successor waits for the original completion.
+    assert successor.id != operation.id
+    assert successor.lease_expires_at is None
     assert completed is not None
     assert completed.status == OperationStatus.completed
     assert replacement is not None
-    assert replacement.id == upgraded.id
-    assert replacement.platform_version == "v1.1.0"
+    assert replacement.id == successor.id
     assert replacement.lease_expires_at is not None

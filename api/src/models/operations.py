@@ -2,7 +2,6 @@ from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-from src.models.types import PlatformVersion
 
 
 class OperationStatus(StrEnum):
@@ -38,7 +37,6 @@ class OperationResponse(BaseModel):
 
     # State
     status: OperationStatus
-    platform_version: PlatformVersion
 
     # Timestamps
     created_at: datetime
