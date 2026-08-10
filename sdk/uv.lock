@@ -162,16 +162,16 @@ wheels = [
 
 [[package]]
 name = "alembic"
-version = "1.18.5"
+version = "1.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mako" },
     { name = "sqlalchemy" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/cc/ac0bed8e562e7407fe55c3ba85a4dce86e6dbd8730887bd1e406a6c5c18a/alembic-1.18.5.tar.gz", hash = "sha256:1554982221dd17e9a749b53902407578eb305e453f71999e8c7f0a48389fff8e", size = 2060480, upload-time = "2026-06-25T15:20:54.888Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/01/a48dab7827ac4421272399f7ed9a2ec17edd12c8bcde4417bd7b6821b71a/alembic-1.19.0.tar.gz", hash = "sha256:6487c612fc719dcfa22b17d2dd5b2b458929641e6aa2f0b65b135727f5e6d501", size = 2069906, upload-time = "2026-08-04T18:57:04.599Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/78/5fe6dc3a3a5b2f5a2a4faef8bfe336d5fa049a38884ab3172e0098160c01/alembic-1.18.5-py3-none-any.whl", hash = "sha256:06d8ba9d04558022f5395e9317de03d270f3dced49cee01f89fe7a13c26f14bc", size = 264664, upload-time = "2026-06-25T15:20:56.673Z" },
+    { url = "https://files.pythonhosted.org/packages/34/79/59ab6f1fe72eee229de91aa393225389a85df12a0fbbbfa264efcf6d7872/alembic-1.19.0-py3-none-any.whl", hash = "sha256:cf839d3849116aab3cc047e09c6968b9bd6b2fde61b6bb7c1e97352fe5503580", size = 265738, upload-time = "2026-08-04T18:57:06.219Z" },
 ]
 
 [[package]]
@@ -568,7 +568,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.18.5" },
     { name = "asyncpg", specifier = ">=0.31.0" },
     { name = "click", specifier = ">=8.4.2" },
-    { name = "fastapi", specifier = ">=0.140.13" },
+    { name = "fastapi", specifier = ">=0.141.1" },
     { name = "fsspec", specifier = ">=2026.4.0" },
     { name = "lxml", specifier = ">=6.1.0" },
     { name = "pydantic", specifier = ">=2.13.4" },
@@ -576,7 +576,7 @@ requires-dist = [
     { name = "s3fs", specifier = ">=2026.4.0" },
     { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
-    { name = "uvicorn", specifier = ">=0.51.0" },
+    { name = "uvicorn", specifier = ">=0.52.1" },
     { name = "xmlschema", specifier = ">=4.3.2" },
 ]
 
@@ -586,8 +586,8 @@ dev = [
     { name = "lxml-stubs", specifier = ">=0.5.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
-    { name = "ruff", specifier = ">=0.16.0" },
-    { name = "ty", specifier = ">=0.0.64" },
+    { name = "ruff", specifier = ">=0.16.1" },
+    { name = "ty", specifier = ">=0.0.65" },
 ]
 
 [[package]]
@@ -1057,16 +1057,16 @@ wheels = [
 
 [[package]]
 name = "pydantic-settings"
-version = "2.14.2"
+version = "2.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/b5/8f48e906c3e0205276e8bd8cb7512217a87b2685304d64be27cad5b3019f/pydantic_settings-2.14.2.tar.gz", hash = "sha256:c19dd64b19097f1de80184f0cc7b0272a13ae6e170cbf240a3e27e381ed14a5f", size = 237700, upload-time = "2026-06-19T13:44:56.324Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/ca/31c57507b13119d7d3cfa1576dad2911a4861e3be07b579395f4e9d393f9/pydantic_settings-2.15.0.tar.gz", hash = "sha256:694b793e84f766ba76a90ebdefc01d0a9a045dab0382bee70393da93712ad117", size = 261253, upload-time = "2026-08-07T09:24:57.419Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/77/c1/6e422f34e569cf8e18df68d1939c81c099d2b61e4f7d9621c8a77560799c/pydantic_settings-2.14.2-py3-none-any.whl", hash = "sha256:a20c97b37910b6550d5ea50fbcc2d4187defe58cd57070b73863d069419c9440", size = 61715, upload-time = "2026-06-19T13:44:55.02Z" },
+    { url = "https://files.pythonhosted.org/packages/30/a4/2bffa9f8e804325a09867f0e9d30795c80ea9f8d62560bd1b6ad6220eb2f/pydantic_settings-2.15.0-py3-none-any.whl", hash = "sha256:0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42", size = 69413, upload-time = "2026-08-07T09:24:55.839Z" },
 ]
 
 [[package]]
