@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { toXmlBoolean, useBindableValue } from './binding';
+import { setXmlBinding, toXmlBoolean, useBindableValue } from './binding';
 import {
     requireXmlString,
     resolveXmlEnum,
@@ -23,7 +23,6 @@ export function Dialog({ props, nodes }: Props) {
     const [localOpen, setLocalOpen] = useState(toXmlBoolean(binding.initialValue));
     const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;
     const title = resolveXmlLabel(props, ctx, 'Dialog', 'title');
-    const subtitle = resolveXmlString(props, 'subtitle', ctx);
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const triggerVariant = resolveXmlEnum(
@@ -40,8 +39,7 @@ export function Dialog({ props, nodes }: Props) {
 
     /** Writes open-state changes to bound or local state. */
     function setOpen(nextOpen: boolean) {
-        if (binding.bound) binding.setValue(nextOpen);
-        else setLocalOpen(nextOpen);
+        setXmlBinding(binding, setLocalOpen, nextOpen);
     }
 
     return (
@@ -67,7 +65,7 @@ export function Dialog({ props, nodes }: Props) {
                     header={
                         <DialogHeader
                             onOpenChange={purpose === 'required' ? undefined : setOpen}
-                            subtitle={subtitle || undefined}
+                            subtitle={resolveXmlString(props, 'subtitle', ctx) || undefined}
                             title={title}
                         />
                     }

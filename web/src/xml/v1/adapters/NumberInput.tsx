@@ -2,7 +2,7 @@ import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -16,7 +16,7 @@ import {
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
     const ctx = useXmlContext();
-    const binding = useBindableValue(props, 'value', ctx, 'number');
+    const binding = useBindableValue(props, 'value', ctx);
     const initialValue = binding.initialValue == null ? null : Number(binding.initialValue);
     const [localValue, setLocalValue] = useState<number | null>(initialValue);
     const currentValue = binding.currentValue == null ? null : Number(binding.currentValue);
@@ -47,8 +47,7 @@ export function NumberInput({ props }: Props) {
 
     /** Writes a valid numeric value to bound or local state. */
     function setValue(nextValue: number | null) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
+        setXmlBinding(binding, setLocalValue, nextValue);
     }
 
     // Astryx uses a discriminated callback type for clearable fields.

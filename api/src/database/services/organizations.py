@@ -50,7 +50,8 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
             Organization.deleted_at.is_(None),
         )
     )
-    return (await session.execute(statement)).scalar_one_or_none()
+    result = await session.execute(statement)
+    return result.scalar_one_or_none()
 
 
 async def application_access(
@@ -101,7 +102,8 @@ async def fetch(session: AsyncSession) -> Sequence[Organization]:
 
     # Load active organizations.
     statement = select(Organization).where(Organization.deleted_at.is_(None))
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def set_runtime(session: AsyncSession, organization_id: UUID, expected_status: Status, status: Status) -> None:
@@ -150,7 +152,8 @@ async def applications(session: AsyncSession, organization_id: UUID, include_del
         statement = statement.where(Application.deleted_at.is_(None))
 
     statement = statement.order_by(Application.created_at.asc())
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[OrganizationInvitation]:
@@ -166,7 +169,8 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
         )
         .order_by(OrganizationInvitation.created_at.desc())
     )
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def get(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Organization | None:
@@ -179,7 +183,8 @@ async def get(session: AsyncSession, organization_id: UUID, include_deleted: boo
     if not include_deleted:
         statement = statement.where(Organization.deleted_at.is_(None))
 
-    return (await session.scalars(statement)).one_or_none()
+    result = await session.scalars(statement)
+    return result.one_or_none()
 
 
 async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
@@ -194,7 +199,8 @@ async def members(session: AsyncSession, organization_id: UUID, include_deleted:
     if not include_deleted:
         statement = statement.where(UserOrganization.deleted_at.is_(None))
 
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres | None = None) -> None:

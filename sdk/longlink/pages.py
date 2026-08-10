@@ -26,10 +26,6 @@ class PageDefinition:
 def extract_longlink_metadata(root: etree._Element) -> tuple[str | None, str | None]:
     """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
 
-    # Only LongLink roots expose page metadata.
-    if root.tag != "longlink":
-        return None, None
-
     # Normalize blank and missing metadata values to the same absent state.
     name = root.get("name")
     icon = root.get("icon")
@@ -53,7 +49,6 @@ def page_file_route(relative_path: str) -> str:
 
     # Convert filesystem route conventions into React Router-style route patterns.
     for segment in path_without_suffix.split("/"):
-
         # Index segments map to the current route level.
         if segment == "index":
             continue
@@ -76,49 +71,3 @@ def page_file_route(relative_path: str) -> str:
         route_segments.append(segment)
 
     return "/".join(route_segments)
-
-
-def page_file_tab(relative_path: str) -> str:
-    """Return the navigation tab key for one page file path."""
-
-    route = page_file_route(relative_path)
-    tab_segments: list[str] = []
-
-    # Static pages keep their full route key, while dynamic pages inherit the static prefix.
-    for segment in route.split("/"):
-
-        # Empty route segments do not identify tabs.
-        if not segment:
-            continue
-
-        # Dynamic segments inherit the current static tab.
-        if segment.startswith(":"):
-            break
-
-        tab_segments.append(segment)
-
-    # Static prefixes become stable tab keys.
-    if tab_segments:
-        return "/".join(tab_segments)
-
-    return route.removeprefix(":") or "index"
-
-
-def normalize_page_path(path: str) -> str:
-    """Validate and normalize a page path."""
-
-    normalized_path = path.strip()
-
-    # Blank page paths are invalid.
-    if not normalized_path:
-        raise ValueError("Page path is required")
-
-    # Page paths are stored as absolute routes.
-    if not normalized_path.startswith("/"):
-        normalized_path = f"/{normalized_path}"
-
-    # XML filenames select the parser but are not part of the endpoint URL.
-    if not normalized_path.endswith(".xml"):
-        raise ValueError("Page routes must end with '.xml'")
-
-    return normalized_path.removesuffix(".xml")

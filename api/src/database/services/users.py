@@ -19,7 +19,8 @@ async def fetch(session: AsyncSession) -> Sequence[User]:
     """Return all users in the database."""
 
     # Read users through a managed database session.
-    return (await session.scalars(select(User))).all()
+    result = await session.scalars(select(User))
+    return result.all()
 
 
 async def active(session: AsyncSession, user_id: UUID) -> User | None:
@@ -40,7 +41,8 @@ async def by_email(session: AsyncSession, email: str) -> User | None:
     """Return one user by email, including soft-deleted accounts."""
 
     # Account-existence checks must include deleted rows because email addresses remain unique.
-    return (await session.scalars(select(User).where(col(User.email) == email))).one_or_none()
+    result = await session.scalars(select(User).where(col(User.email) == email))
+    return result.one_or_none()
 
 
 async def register(session: AsyncSession, name: str, email: str, password: str) -> User:
@@ -89,7 +91,8 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
             col(Organization.deleted_at).is_(None),
         )
     )
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def ensure_administrator(session: AsyncSession) -> None:

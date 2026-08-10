@@ -5,7 +5,7 @@ import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveNavigationUrl } from '../core/url';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     isVisibleXmlNode,
     requireXmlString,
@@ -43,8 +43,7 @@ export function TabList({ props, nodes }: Props) {
                 hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx, false)}
                 layout={layout}
                 onChange={(nextValue) => {
-                    if (binding.bound) binding.setValue(nextValue);
-                    else setLocalValue(nextValue);
+                    setXmlBinding(binding, setLocalValue, nextValue);
                 }}
                 size={size}
                 value={value}
@@ -68,8 +67,8 @@ function resolveTab(node: ASTNode, ctx: ExecutionContext) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'Tab');
     const label = resolveXmlLabel(props, ctx, 'Tab');
-    const to = resolveXmlString(props, 'to', ctx);
-    const href = resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), to) || undefined;
+    const href =
+        resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), resolveXmlString(props, 'to', ctx)) || undefined;
 
     return { href, label, nodes: node.children ?? [], value };
 }

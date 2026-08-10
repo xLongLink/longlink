@@ -1,4 +1,5 @@
 import { AppShell } from '@astryxdesign/core/AppShell';
+import { Card } from '@astryxdesign/core/Card';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
@@ -95,23 +96,31 @@ function TopLayout({
             }
             variant="wash"
         >
-            <ContentFrame
-                className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]"
-                isConnectedToHeader
-            />
-            <Stack
-                className="relative z-10"
-                height={height === 'fill' ? 'calc(100dvh - var(--appshell-header-height, 0px))' : 'auto'}
-                padding={2}
-            >
-                {hasTabs && height === 'auto' ? (
-                    <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))">
+            {height === 'auto' && hasTabs ? (
+                <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px))" padding={2}>
+                    <Card
+                        minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-4))"
+                        padding={0}
+                        width="100%"
+                    >
+                        {children}
+                    </Card>
+                </Stack>
+            ) : (
+                <>
+                    <ContentFrame
+                        className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]"
+                        isConnectedToHeader
+                    />
+                    <Stack
+                        className="relative z-10"
+                        height="calc(100dvh - var(--appshell-header-height, 0px))"
+                        padding={2}
+                    >
                         {children}
                     </Stack>
-                ) : (
-                    children
-                )}
-            </Stack>
+                </>
+            )}
         </AppShell>
     );
 }

@@ -4,7 +4,7 @@ import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
 
 /** Renders Astryx side navigation and the selected XML panel. */
@@ -40,8 +40,7 @@ export function SideNav({ props, nodes }: Props) {
                                 key={item.value}
                                 label={item.label}
                                 onClick={() => {
-                                    if (binding.bound) binding.setValue(item.value);
-                                    else setLocalValue(item.value);
+                                    setXmlBinding(binding, setLocalValue, item.value);
                                 }}
                             />
                         );
@@ -63,7 +62,5 @@ function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
     const label = resolveXmlLabel(props, ctx, 'SideNavItem');
-    const icon = resolveXmlString(props, 'icon', ctx) || undefined;
-
-    return { icon, label, nodes: node.children ?? [], value };
+    return { icon: resolveXmlString(props, 'icon', ctx) || undefined, label, nodes: node.children ?? [], value };
 }

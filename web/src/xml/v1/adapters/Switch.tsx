@@ -2,7 +2,7 @@ import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { toXmlBoolean, useBindableValue } from './binding';
+import { setXmlBinding, toXmlBoolean, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -34,8 +34,7 @@ export function Switch({ props }: Props) {
             labelPosition={labelPosition}
             labelSpacing={labelSpacing}
             onChange={(nextValue) => {
-                if (binding.bound) binding.setValue(nextValue);
-                else setLocalValue(nextValue);
+                setXmlBinding(binding, setLocalValue, nextValue);
             }}
             status={resolveXmlStatus(props, ctx)}
             value={value}

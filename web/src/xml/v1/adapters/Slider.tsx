@@ -2,7 +2,7 @@ import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -16,7 +16,7 @@ import {
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
     const ctx = useXmlContext();
-    const binding = useBindableValue(props, 'value', ctx, 'number');
+    const binding = useBindableValue(props, 'value', ctx);
     const initialValue = Number(binding.initialValue ?? 0);
     const [localValue, setLocalValue] = useState(initialValue);
     const currentValue = Number(binding.currentValue ?? initialValue);
@@ -37,8 +37,7 @@ export function Slider({ props }: Props) {
             max={resolveXmlNumber(props, 'max', ctx, 100)}
             min={resolveXmlNumber(props, 'min', ctx, 0)}
             onChange={(nextValue: number) => {
-                if (binding.bound) binding.setValue(nextValue);
-                else setLocalValue(nextValue);
+                setXmlBinding(binding, setLocalValue, nextValue);
             }}
             orientation={orientation}
             status={resolveXmlStatus(props, ctx)}

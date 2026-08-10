@@ -17,7 +17,8 @@ async def fetch(session: AsyncSession) -> Sequence[ComputeRegistry]:
     """Return registered compute backends."""
 
     # Return every registered compute target.
-    return (await session.scalars(select(ComputeRegistry))).all()
+    result = await session.scalars(select(ComputeRegistry))
+    return result.all()
 
 
 async def available(session: AsyncSession) -> ComputeRegistry | None:

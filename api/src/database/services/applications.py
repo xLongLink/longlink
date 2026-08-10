@@ -27,7 +27,8 @@ async def fetch(session: AsyncSession) -> Sequence[Application]:
         .where(Application.deleted_at.is_(None))
         .order_by(Organization.name, Application.name)
     )
-    return (await session.scalars(statement)).all()
+    result = await session.scalars(statement)
+    return result.all()
 
 
 async def purge(session: AsyncSession, application_id: UUID) -> None:
@@ -52,7 +53,8 @@ async def get(session: AsyncSession, application_id: UUID, include_deleted: bool
     if not include_deleted:
         statement = statement.where(Application.deleted_at.is_(None))
 
-    return (await session.scalars(statement)).one_or_none()
+    result = await session.scalars(statement)
+    return result.one_or_none()
 
 
 async def create(

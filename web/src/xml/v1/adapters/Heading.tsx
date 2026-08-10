@@ -1,9 +1,8 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 import { useXmlContext } from '../core/context';
-import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
+import { resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -11,11 +10,7 @@ type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 export function Heading({ props, nodes }: Props) {
     const ctx = useXmlContext();
     const value = resolveXmlValue(props, 'value', ctx);
-    const content = props.i18n
-        ? resolveTranslation(props, ctx)
-        : value != null
-          ? String(value)
-          : renderNode(nodes, ctx);
+    const content = resolveXmlContent(props, ctx, value, () => renderNode(nodes, ctx));
     const level = resolveXmlNumber(props, 'level', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.

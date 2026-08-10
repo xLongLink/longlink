@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
@@ -54,8 +54,7 @@ export function Selector({ props, nodes }: Props) {
 
     /** Writes selection changes to bound or local state. */
     function setValue(nextValue: string | null) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
+        setXmlBinding(binding, setLocalValue, nextValue);
     }
 
     // Astryx uses a discriminated value contract for clearable selectors.

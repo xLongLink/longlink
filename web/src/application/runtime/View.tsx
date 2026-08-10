@@ -161,7 +161,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
     const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? firstTabPage : undefined);
-    const activePageTab = activePage?.tab;
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
     const activePageStateKey = activePage
@@ -211,7 +210,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
             // Keep existing tab groups active when any of their routes is active.
             if (currentGroup) {
-                currentGroup.active = currentGroup.active || page.tab === activePageTab;
+                currentGroup.active = currentGroup.active || page.tab === activePage?.tab;
             }
 
             // Dynamic pages need concrete params, so they cannot be direct navigation targets.
@@ -223,7 +222,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
             // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
             tabGroups.set(page.tab, {
-                active: page.tab === activePageTab,
+                active: page.tab === activePage?.tab,
                 href,
                 icon,
                 label,
@@ -236,7 +235,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 { active: tab.active, href: tab.href, icon: tab.icon },
             ])
         );
-    }, [activePageTab, application, organization, registeredPages]);
+    }, [activePage?.tab, application, organization, registeredPages]);
 
     /* Load each page once for the active route instance. */
     useEffect(() => {
@@ -430,7 +429,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         return <NotFound />;
     }
 
-    const activePageError = activePageState?.error;
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
         if (!pageState.ast.length || pageState.cacheKey !== pageCacheKey || pageState.error) {
@@ -462,9 +460,13 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 title={t('appView.unexpectedApplicationResponse')}
             />
         );
-    } else if (activePageStateIsCurrent && activePageError) {
+    } else if (activePageStateIsCurrent && activePageState?.error) {
         activeFallback = (
-            <ErrorState {...fallbackActionProps} message={activePageError} title={t('appView.unableToLoadPage')} />
+            <ErrorState
+                {...fallbackActionProps}
+                message={activePageState.error}
+                title={t('appView.unableToLoadPage')}
+            />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;

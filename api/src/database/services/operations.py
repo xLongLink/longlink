@@ -17,7 +17,8 @@ from src.database.models.organizations import Organization
 async def fetch(session: AsyncSession) -> Sequence[Operation]:
     """Return all operations ordered by newest first."""
 
-    return (await session.scalars(select(Operation).order_by(Operation.created_at.desc()))).all()
+    result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
+    return result.all()
 
 
 async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID, UUID]]:

@@ -4,9 +4,9 @@ import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext } from '../types';
 import { resolveXmlValue } from './props';
 
-const EMPTY_BINDING = proxy<Record<string, unknown>>({ value: undefined });
+const EMPTY_BINDING = proxy<Record<string, unknown>>({});
 
-type BindingType = 'file' | 'number' | 'text';
+type BindingType = 'file';
 
 type BindingTarget = {
     state: Record<string, unknown>;
@@ -26,7 +26,7 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type: BindingType = 'text') {
+export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type?: BindingType) {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
@@ -43,19 +43,24 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
 
             const normalizedValue = normalizeBindableValue(type, nextValue);
 
-            const key = target.key ?? 'value';
-
             // Write named properties or the direct binding value slot.
-            if (target.key || key in target.state) target.state[key] = normalizedValue;
+            if (target.key || 'value' in target.state) target.state[target.key ?? 'value'] = normalizedValue;
         },
     };
 }
 
-/** Normalizes control values before writing them into XML state. */
-function normalizeBindableValue(type: BindingType, value: unknown): unknown {
-    // Store number inputs as numbers.
-    if (type === 'number') return Number(value);
+/** Writes a control value to bound XML state or local component state. */
+export function setXmlBinding<T>(
+    binding: ReturnType<typeof useBindableValue>,
+    setLocalValue: (value: T) => void,
+    value: T
+): void {
+    if (binding.bound) binding.setValue(value);
+    else setLocalValue(value);
+}
 
+/** Normalizes control values before writing them into XML state. */
+function normalizeBindableValue(type: BindingType | undefined, value: unknown): unknown {
     // Keep file objects outside proxy conversion.
     if (type === 'file' && value !== null && typeof value === 'object') {
         return ref(value);

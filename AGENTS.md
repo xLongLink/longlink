@@ -41,6 +41,7 @@ longlink/
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+- Store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
 
 ### FastAPI & Pydantic
 

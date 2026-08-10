@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { resolveTranslation } from '../core/i18n';
 import { evaluate } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
@@ -21,18 +22,9 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
-    // Evaluated nullish values are treated as missing strings.
+    // Normalize unsupported values to an invalid empty string.
     const value = evaluate(rawValue, ctx);
-    if (value == null) {
-        throw new Error(`${componentName} requires a string ${name}`);
-    }
-
-    // XML string props cannot accept structured values.
-    if (typeof value === 'object' || typeof value === 'function') {
-        throw new Error(`${componentName} requires a string ${name}`);
-    }
-
-    const stringValue = String(value);
+    const stringValue = value == null || typeof value === 'object' || typeof value === 'function' ? '' : String(value);
 
     // Whitespace-only values should fail like missing values.
     if (!stringValue.trim()) {
@@ -51,6 +43,11 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionCo
     const value = evaluate(rawValue, ctx);
 
     return value == null ? defaultValue : String(value);
+}
+
+/** Resolves an optional XML string prop. */
+export function resolveOptionalXmlString(props: ASTProps, name: string, ctx: ExecutionContext): string | undefined {
+    return resolveXmlString(props, name, ctx) || undefined;
 }
 
 /** Resolves a boolean XML prop. */
@@ -102,6 +99,16 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionCon
     if (rawValue == null) return defaultValue;
 
     return evaluate(rawValue, ctx);
+}
+
+/** Resolves text from translation, value, or rendered XML children. */
+export function resolveXmlContent(
+    props: ASTProps,
+    ctx: ExecutionContext,
+    value: unknown,
+    renderChildren: () => ReactNode
+): ReactNode {
+    return props.i18n ? resolveTranslation(props, ctx) : value != null ? String(value) : renderChildren();
 }
 
 /** Return whether an XML node passes its optional conditional expression. */

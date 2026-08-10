@@ -13,7 +13,8 @@ async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
     """Return all registered database backends."""
 
     # Open a session for the registry list query.
-    return (await session.scalars(select(DatabaseRegistry))).all()
+    result = await session.scalars(select(DatabaseRegistry))
+    return result.all()
 
 
 async def ready(session: AsyncSession) -> None:

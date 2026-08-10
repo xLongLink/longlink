@@ -106,13 +106,11 @@ function toNodes(input: unknown): ASTNode[] {
             return toNodes(value);
         }
 
-        const children = toNodes(value);
-
         return [
             {
                 name: key,
                 ...(Object.keys(attributes).length > 0 && { params: attributes }),
-                children,
+                children: toNodes(value),
             },
         ];
     });

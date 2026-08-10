@@ -12,7 +12,8 @@ async def fetch(session: AsyncSession) -> Sequence[StorageRegistry]:
     """Return all registered storage backends."""
 
     # Open a session for the registry list query.
-    return (await session.scalars(select(StorageRegistry))).all()
+    result = await session.scalars(select(StorageRegistry))
+    return result.all()
 
 
 async def available(session: AsyncSession) -> StorageRegistry | None:
