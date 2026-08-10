@@ -13,6 +13,13 @@ dependencies = [
 [tool.longlink]
 environment = "src.envs:Env"
 
+[tool.uv]
+required-environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+  "sys_platform == 'win32'",
+]
+
 [dependency-groups]
 dev = [
   "pytest",

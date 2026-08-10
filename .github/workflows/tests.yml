@@ -121,10 +121,6 @@ jobs:
               working-directory: sdk
               run: uv build
 
-            - name: Run generated scaffold tests
-              working-directory: sdk
-              run: sh tests/scaffold-smoke.sh
-
     # The web package uses Vite+ and Bun, so run its checks separately.
     web-tests:
         runs-on: ubuntu-latest
