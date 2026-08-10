@@ -6,17 +6,6 @@ from pydantic import BaseModel
 type MetadataPayload = dict[str, object]
 
 
-def metadata_section(data: MetadataPayload, name: str) -> MetadataPayload:
-    """Return a string-keyed metadata section from parsed TOML data."""
-
-    # Read the requested section while ignoring malformed TOML shapes.
-    value = data.get(name)
-    if not isinstance(value, dict):
-        return {}
-
-    return {key: entry for key, entry in value.items() if isinstance(key, str)}
-
-
 class Metadata(BaseModel):
     """Project metadata loaded from `pyproject.toml` with sane defaults."""
 
@@ -30,8 +19,11 @@ class Metadata(BaseModel):
         """Build metadata from an already parsed pyproject payload."""
 
         # Read LongLink tool metadata first, then fall back to PEP 621 fields.
-        tool_data = metadata_section(metadata_section(pyproject_data, "tool"), "longlink")
-        project_data = metadata_section(pyproject_data, "project")
+        tool_data = pyproject_data.get("tool")
+        tool_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
+        project_data = pyproject_data.get("project")
+        tool_data = tool_data if isinstance(tool_data, dict) else {}
+        project_data = project_data if isinstance(project_data, dict) else {}
         metadata_data = {
             field: value
             for field, value in {

@@ -99,7 +99,6 @@ class Postgres:
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
         engine = create_async_engine(
             self.url(database, search_path=search_path),
-            pool_pre_ping=True,
             **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
         )
 
