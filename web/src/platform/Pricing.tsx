@@ -17,7 +17,13 @@ const pricingOptions = [
         name: 'Free',
         price: 'CHF 0',
         period: '/user/month',
-        description: 'Designed for small teams getting started with building and running process apps.',
+        description: (
+            <>
+                The basics for individuals
+                <br />
+                and organizations.
+            </>
+        ),
         features: [
             {
                 label: 'Deploy any Application',
@@ -32,15 +38,21 @@ const pricingOptions = [
         name: 'Team',
         price: 'Coming soon',
         period: null,
-        description: 'Run production apps with pricing that scales with the people using the workflow.',
-        features: [{ label: 'Coming soon', description: 'Details will be announced soon.' }],
+        description: (
+            <>
+                Advanced collaboration for
+                <br />
+                individuals and organizations.
+            </>
+        ),
+        features: [],
     },
     {
         name: 'Work',
         price: 'Coming soon',
         period: null,
-        description: 'Use AI-assisted workflows to build, adapt, and operate process apps faster.',
-        features: [{ label: 'Coming soon', description: 'Details will be announced soon.' }],
+        description: 'Advanced controls for organizations.',
+        features: [],
     },
 ];
 
@@ -54,13 +66,13 @@ export default function Pricing() {
                         <Grid className="pt-6" columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={6} width="100%">
                             {pricingOptions.map(({ description, features, name, period, price }) => {
                                 return (
-                                    <Card key={name}>
+                                    <Card key={name} minHeight={640}>
                                         <Stack gap={4}>
                                             <Stack gap={3} align="center">
                                                 <Heading level={2} justify="center">
                                                     {name}
                                                 </Heading>
-                                                <Text as="p" type="supporting" justify="center">
+                                                <Text as="p" className="px-6" type="supporting" justify="center">
                                                     {description}
                                                 </Text>
                                                 <Stack direction="horizontal" gap={2} align="end" justify="center">
@@ -71,25 +83,25 @@ export default function Pricing() {
                                                 </Stack>
                                             </Stack>
 
-                                            {name === 'Team' ? (
-                                                <Text as="p" type="supporting">
-                                                    Everything included in Free, plus...
-                                                </Text>
-                                            ) : null}
                                             {name === 'Work' ? (
                                                 <Text as="p" type="supporting">
                                                     Everything included in Team, plus...
                                                 </Text>
                                             ) : null}
 
-                                            <CollapsibleGroup hasDividers type="multiple" density="compact">
-                                                {features.map((feature) => (
-                                                    <Collapsible
-                                                        key={feature.label}
-                                                        trigger={feature.label}
-                                                        value={feature.label}
-                                                    >
-                                                        {feature.description ? (
+                                            {features.length > 0 ? (
+                                                <CollapsibleGroup
+                                                    className="px-4"
+                                                    hasDividers
+                                                    type="multiple"
+                                                    density="balanced"
+                                                >
+                                                    {features.map((feature) => (
+                                                        <Collapsible
+                                                            key={feature.label}
+                                                            trigger={<Text type="supporting">{feature.label}</Text>}
+                                                            value={feature.label}
+                                                        >
                                                             <Text type="supporting">
                                                                 {feature.description
                                                                     .split('\n\n')
@@ -100,10 +112,10 @@ export default function Pricing() {
                                                                         </Text>
                                                                     ))}
                                                             </Text>
-                                                        ) : null}
-                                                    </Collapsible>
-                                                ))}
-                                            </CollapsibleGroup>
+                                                        </Collapsible>
+                                                    ))}
+                                                </CollapsibleGroup>
+                                            ) : null}
                                         </Stack>
                                     </Card>
                                 );

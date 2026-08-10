@@ -201,18 +201,15 @@ export function useCreateOrganization() {
 }
 
 /** Updates mutable organization settings and refreshes organization caches. */
-export function useUpdateOrganization(organizationId: string, canManageOrganization: boolean) {
+export function useUpdateOrganization(organizationId: string) {
     const queryClient = useQueryClient();
     const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async ({ avatar }: { avatar: string }) => {
-            // Require a resolved organization and local management permission.
+            // Require a resolved organization before updating its settings.
             if (!organizationId) {
                 throw new Error('Organization not found');
-            }
-            if (!canManageOrganization) {
-                throw new Error('Organization management permissions required');
             }
 
             return fetchApiJson(
@@ -248,12 +245,11 @@ export function useDeleteOrganization() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiJson(
+            await fetchApiVoid(
                 platformApiPath(`/organizations/${organizationId}`),
                 {
                     method: 'DELETE',
-                },
-                (value) => zOrganizationSummary.parse(value)
+                }
             );
         },
         onSuccess: () => {

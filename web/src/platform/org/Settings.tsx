@@ -128,7 +128,7 @@ export default function Settings({
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
-    const updateOrganization = useUpdateOrganization(organizationId, canManageOrganization);
+    const updateOrganization = useUpdateOrganization(organizationId);
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
