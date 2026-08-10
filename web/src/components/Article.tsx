@@ -111,12 +111,7 @@ export function Article({
                                             {t('common.lastUpdated', { date: formatDate(metadata.lastUpdated) })}
                                         </Text>
                                         {metadata.editUrl ? (
-                                            <Link
-                                                href={metadata.editUrl}
-                                                hasUnderline
-                                                isExternalLink
-                                                type="supporting"
-                                            >
+                                            <Link href={metadata.editUrl} hasUnderline isExternalLink type="supporting">
                                                 {t('docs.editInGithub')}
                                             </Link>
                                         ) : null}

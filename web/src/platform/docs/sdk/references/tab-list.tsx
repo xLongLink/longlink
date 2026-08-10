@@ -1,32 +1,33 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "TabList",
-    "slug": "tab-list",
-    "category": "Navigation",
-    "summary": "Renders flat tab navigation.",
-    "usage": "Use TabList for switching between related page views.",
-    "attributes": [
+    name: 'TabList',
+    slug: 'tab-list',
+    category: 'Navigation',
+    summary: 'Renders flat tab navigation.',
+    usage: 'Use TabList for switching between related page views.',
+    attributes: [
         {
-            "name": "label or i18n",
-            "description": "Accessible tab list label.",
-            "required": true
+            name: 'label or i18n',
+            description: 'Accessible tab list label.',
+            required: true,
         },
         {
-            "name": "value",
-            "description": "Selected tab value."
+            name: 'value',
+            description: 'Selected tab value.',
         },
         {
-            "name": "size",
-            "description": "sm, md, or lg."
+            name: 'size',
+            description: 'sm, md, or lg.',
         },
         {
-            "name": "hasDivider",
-            "description": "Shows a divider under the tabs."
-        }
+            name: 'hasDivider',
+            description: 'Shows a divider under the tabs.',
+        },
     ],
-    "children": "Tab children.",
-    "example": "<TabList label=\"Order views\" value=\"overview\">\n  <Tab value=\"overview\" label=\"Overview\" />\n  <Tab value=\"activity\" label=\"Activity\" />\n</TabList>"
+    children: 'Tab children.',
+    example:
+        '<TabList label="Order views" value="overview">\n  <Tab value="overview" label="Overview" />\n  <Tab value="activity" label="Activity" />\n</TabList>',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

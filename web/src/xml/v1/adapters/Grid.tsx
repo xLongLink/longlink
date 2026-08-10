@@ -38,9 +38,8 @@ export function Grid({ props, nodes }: Props) {
     }
 
     const repeat = resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'fill', 'Grid');
-    const columns: GridColumns | undefined = minWidth != null
-        ? { minWidth, ...(maxColumns != null && { max: maxColumns }), repeat }
-        : columnCount;
+    const columns: GridColumns | undefined =
+        minWidth != null ? { minWidth, ...(maxColumns != null && { max: maxColumns }), repeat } : columnCount;
     const gap = resolveXmlSpacing(props, 'gap', ctx);
     const rowGap = resolveXmlSpacing(props, 'rowGap', ctx);
     const columnGap = resolveXmlSpacing(props, 'columnGap', ctx);

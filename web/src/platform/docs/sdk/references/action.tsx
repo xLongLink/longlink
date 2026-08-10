@@ -1,35 +1,36 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "Action",
-    "slug": "action",
-    "category": "State",
-    "summary": "Provides request behavior to child triggers and refreshes selected runtime values.",
-    "usage": "Wrap a Button or control that should send an application request when activated.",
-    "attributes": [
+    name: 'Action',
+    slug: 'action',
+    category: 'State',
+    summary: 'Provides request behavior to child triggers and refreshes selected runtime values.',
+    usage: 'Wrap a Button or control that should send an application request when activated.',
+    attributes: [
         {
-            "name": "action",
-            "description": "Application-relative request path."
+            name: 'action',
+            description: 'Application-relative request path.',
         },
         {
-            "name": "method",
-            "description": "HTTP method. Defaults to POST."
+            name: 'method',
+            description: 'HTTP method. Defaults to POST.',
         },
         {
-            "name": "json",
-            "description": "Expression payload sent as JSON."
+            name: 'json',
+            description: 'Expression payload sent as JSON.',
         },
         {
-            "name": "form",
-            "description": "Expression object sent as multipart form data."
+            name: 'form',
+            description: 'Expression object sent as multipart form data.',
         },
         {
-            "name": "invalidate",
-            "description": "Setup ids to refresh after a successful request."
-        }
+            name: 'invalidate',
+            description: 'Setup ids to refresh after a successful request.',
+        },
     ],
-    "children": "Usually contains one Button or ButtonGroup entry.",
-    "example": "<Action action=\"/api/orders/${order.id}/complete\" method=\"PATCH\" invalidate=\"${['orders']}\">\n  <Button label=\"Complete\" />\n</Action>"
+    children: 'Usually contains one Button or ButtonGroup entry.',
+    example:
+        '<Action action="/api/orders/${order.id}/complete" method="PATCH" invalidate="${[\'orders\']}">\n  <Button label="Complete" />\n</Action>',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

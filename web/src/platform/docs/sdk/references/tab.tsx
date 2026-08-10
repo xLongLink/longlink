@@ -1,32 +1,32 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "Tab",
-    "slug": "tab",
-    "category": "Navigation",
-    "summary": "Defines one tab destination inside a TabList.",
-    "usage": "Use Tab only as a child of TabList.",
-    "attributes": [
+    name: 'Tab',
+    slug: 'tab',
+    category: 'Navigation',
+    summary: 'Defines one tab destination inside a TabList.',
+    usage: 'Use Tab only as a child of TabList.',
+    attributes: [
         {
-            "name": "value",
-            "description": "Tab value or destination.",
-            "required": true
+            name: 'value',
+            description: 'Tab value or destination.',
+            required: true,
         },
         {
-            "name": "label or i18n",
-            "description": "Visible tab label.",
-            "required": true
+            name: 'label or i18n',
+            description: 'Visible tab label.',
+            required: true,
         },
         {
-            "name": "icon",
-            "description": "Optional icon name."
+            name: 'icon',
+            description: 'Optional icon name.',
         },
         {
-            "name": "href",
-            "description": "Optional route destination."
-        }
+            name: 'href',
+            description: 'Optional route destination.',
+        },
     ],
-    "example": "<Tab value=\"overview\" label=\"Overview\" />"
+    example: '<Tab value="overview" label="Overview" />',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

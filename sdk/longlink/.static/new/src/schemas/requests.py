@@ -2,6 +2,7 @@ from typing import Literal
 from longlink import database
 from pydantic import Field, BaseModel, ConfigDict
 
+
 class PurchaseRequestCreate(BaseModel):
     """Typed request for creating a purchase request."""
 

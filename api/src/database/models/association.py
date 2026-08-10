@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.organizations import Organization
 
-
 from src.database.models.base import PlatformModel
 
 

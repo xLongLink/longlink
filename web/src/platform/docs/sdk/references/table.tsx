@@ -1,36 +1,37 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "Table",
-    "slug": "table",
-    "category": "Table & List",
-    "summary": "Displays tabular data from an array.",
-    "usage": "Use Table for row-oriented business data with consistent columns.",
-    "attributes": [
+    name: 'Table',
+    slug: 'table',
+    category: 'Table & List',
+    summary: 'Displays tabular data from an array.',
+    usage: 'Use Table for row-oriented business data with consistent columns.',
+    attributes: [
         {
-            "name": "data",
-            "description": "Array expression used as table rows.",
-            "required": true
+            name: 'data',
+            description: 'Array expression used as table rows.',
+            required: true,
         },
         {
-            "name": "rowName",
-            "description": "Local variable name for custom column children."
+            name: 'rowName',
+            description: 'Local variable name for custom column children.',
         },
         {
-            "name": "density",
-            "description": "compact, balanced, or spacious."
+            name: 'density',
+            description: 'compact, balanced, or spacious.',
         },
         {
-            "name": "isStriped",
-            "description": "Shows alternating row backgrounds."
+            name: 'isStriped',
+            description: 'Shows alternating row backgrounds.',
         },
         {
-            "name": "hasHover",
-            "description": "Adds row hover styling."
-        }
+            name: 'hasHover',
+            description: 'Adds row hover styling.',
+        },
     ],
-    "children": "TableColumn children.",
-    "example": "<Table data=\"$orders.items\" rowName=\"order\">\n  <TableColumn key=\"number\" header=\"Number\" field=\"number\" />\n  <TableColumn key=\"status\" header=\"Status\" field=\"status\" />\n</Table>"
+    children: 'TableColumn children.',
+    example:
+        '<Table data="$orders.items" rowName="order">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

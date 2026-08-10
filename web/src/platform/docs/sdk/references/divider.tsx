@@ -1,26 +1,26 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "Divider",
-    "slug": "divider",
-    "category": "Layout",
-    "summary": "Separates related regions with a rule.",
-    "usage": "Use Divider when spacing alone is not enough to show a boundary.",
-    "attributes": [
+    name: 'Divider',
+    slug: 'divider',
+    category: 'Layout',
+    summary: 'Separates related regions with a rule.',
+    usage: 'Use Divider when spacing alone is not enough to show a boundary.',
+    attributes: [
         {
-            "name": "orientation",
-            "description": "horizontal or vertical."
+            name: 'orientation',
+            description: 'horizontal or vertical.',
         },
         {
-            "name": "variant",
-            "description": "subtle or strong."
+            name: 'variant',
+            description: 'subtle or strong.',
         },
         {
-            "name": "label or i18n",
-            "description": "Optional divider label."
-        }
+            name: 'label or i18n',
+            description: 'Optional divider label.',
+        },
     ],
-    "example": "<Divider i18n=\"common.or\" variant=\"strong\" />"
+    example: '<Divider i18n="common.or" variant="strong" />',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

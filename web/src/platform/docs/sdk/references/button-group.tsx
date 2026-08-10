@@ -1,32 +1,33 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "ButtonGroup",
-    "slug": "button-group",
-    "category": "Action",
-    "summary": "Groups related buttons under one accessible label.",
-    "usage": "Use ButtonGroup when several adjacent commands form one connected control.",
-    "attributes": [
+    name: 'ButtonGroup',
+    slug: 'button-group',
+    category: 'Action',
+    summary: 'Groups related buttons under one accessible label.',
+    usage: 'Use ButtonGroup when several adjacent commands form one connected control.',
+    attributes: [
         {
-            "name": "label or i18n",
-            "description": "Accessible group label.",
-            "required": true
+            name: 'label or i18n',
+            description: 'Accessible group label.',
+            required: true,
         },
         {
-            "name": "orientation",
-            "description": "horizontal or vertical."
+            name: 'orientation',
+            description: 'horizontal or vertical.',
         },
         {
-            "name": "size",
-            "description": "sm, md, or lg."
+            name: 'size',
+            description: 'sm, md, or lg.',
         },
         {
-            "name": "isDisabled",
-            "description": "Disables every grouped button."
-        }
+            name: 'isDisabled',
+            description: 'Disables every grouped button.',
+        },
     ],
-    "children": "Button and Action children.",
-    "example": "<ButtonGroup label=\"Order actions\">\n  <Button label=\"Copy\" />\n  <Button label=\"Paste\" />\n</ButtonGroup>"
+    children: 'Button and Action children.',
+    example:
+        '<ButtonGroup label="Order actions">\n  <Button label="Copy" />\n  <Button label="Paste" />\n</ButtonGroup>',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

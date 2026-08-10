@@ -1,36 +1,36 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "TextArea",
-    "slug": "text-area",
-    "category": "Data Input",
-    "summary": "Collects longer text values.",
-    "usage": "Use TextArea for comments, notes, descriptions, and other multi-line text.",
-    "attributes": [
+    name: 'TextArea',
+    slug: 'text-area',
+    category: 'Data Input',
+    summary: 'Collects longer text values.',
+    usage: 'Use TextArea for comments, notes, descriptions, and other multi-line text.',
+    attributes: [
         {
-            "name": "label or i18n",
-            "description": "Accessible field label.",
-            "required": true
+            name: 'label or i18n',
+            description: 'Accessible field label.',
+            required: true,
         },
         {
-            "name": "value",
-            "description": "String value or writable state binding.",
-            "required": true
+            name: 'value',
+            description: 'String value or writable state binding.',
+            required: true,
         },
         {
-            "name": "rows",
-            "description": "Visible text rows."
+            name: 'rows',
+            description: 'Visible text rows.',
         },
         {
-            "name": "maxLength",
-            "description": "Character counter limit."
+            name: 'maxLength',
+            description: 'Character counter limit.',
         },
         {
-            "name": "status",
-            "description": "Validation status."
-        }
+            name: 'status',
+            description: 'Validation status.',
+        },
     ],
-    "example": "<TextArea label=\"Notes\" value=\"$form.notes\" rows=\"4\" />"
+    example: '<TextArea label="Notes" value="$form.notes" rows="4" />',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

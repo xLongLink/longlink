@@ -1,32 +1,32 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "Heading",
-    "slug": "heading",
-    "category": "Content",
-    "summary": "Creates semantic section headings.",
-    "usage": "Use Heading to structure XML pages with explicit document hierarchy.",
-    "attributes": [
+    name: 'Heading',
+    slug: 'heading',
+    category: 'Content',
+    summary: 'Creates semantic section headings.',
+    usage: 'Use Heading to structure XML pages with explicit document hierarchy.',
+    attributes: [
         {
-            "name": "level",
-            "description": "Heading level from 1 to 6.",
-            "required": true
+            name: 'level',
+            description: 'Heading level from 1 to 6.',
+            required: true,
         },
         {
-            "name": "label, value, or i18n",
-            "description": "Heading text."
+            name: 'label, value, or i18n',
+            description: 'Heading text.',
         },
         {
-            "name": "values",
-            "description": "Translation interpolation values."
+            name: 'values',
+            description: 'Translation interpolation values.',
         },
         {
-            "name": "count",
-            "description": "ICU plural count."
-        }
+            name: 'count',
+            description: 'ICU plural count.',
+        },
     ],
-    "children": "Optional heading text content.",
-    "example": "<Heading level=\"1\" i18n=\"orders.title\" />"
+    children: 'Optional heading text content.',
+    example: '<Heading level="1" i18n="orders.title" />',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;

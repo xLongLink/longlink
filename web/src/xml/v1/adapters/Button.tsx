@@ -53,11 +53,7 @@ export function Button({ props, nodes }: Props) {
 }
 
 /** Appends the resolved item to a cart-style array state slot. */
-export function appendButtonItem(
-    props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>,
-    appendTarget?: string
-) {
+export function appendButtonItem(props: Props['props'], ctx: ReturnType<typeof useXmlContext>, appendTarget?: string) {
     // Skip buttons with no append target.
     const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
     if (!targetPath) return;

@@ -1,19 +1,20 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    "name": "FormLayout",
-    "slug": "form-layout",
-    "category": "Layout",
-    "summary": "Arranges controls with consistent form spacing.",
-    "usage": "Use FormLayout around controls that own their labels and validation state.",
-    "attributes": [
+    name: 'FormLayout',
+    slug: 'form-layout',
+    category: 'Layout',
+    summary: 'Arranges controls with consistent form spacing.',
+    usage: 'Use FormLayout around controls that own their labels and validation state.',
+    attributes: [
         {
-            "name": "direction",
-            "description": "vertical, horizontal, or horizontal-labels."
-        }
+            name: 'direction',
+            description: 'vertical, horizontal, or horizontal-labels.',
+        },
     ],
-    "children": "Form controls such as TextInput, TextArea, NumberInput, Selector, CheckboxInput, Switch, and Slider.",
-    "example": "<FormLayout direction=\"vertical\">\n  <TextInput label=\"Title\" value=\"$form.title\" />\n  <TextArea label=\"Notes\" value=\"$form.notes\" />\n</FormLayout>"
+    children: 'Form controls such as TextInput, TextArea, NumberInput, Selector, CheckboxInput, Switch, and Slider.',
+    example:
+        '<FormLayout direction="vertical">\n  <TextInput label="Title" value="$form.title" />\n  <TextArea label="Notes" value="$form.notes" />\n</FormLayout>',
 } satisfies ReferenceDoc;
 
 export const content = <ReferenceArticle reference={reference} />;
