@@ -36,22 +36,6 @@ export function resolveValue(ctx: ExecutionContext | null | undefined, key: stri
     return undefined;
 }
 
-/** Creates a proxy that resolves identifiers through lexical parent contexts. */
-export function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
-    return new Proxy(
-        {},
-        {
-            has(_target, key) {
-                /* Allow `with` lookups to flow through the scope chain instead of falling back to globals. */
-                return typeof key === 'string';
-            },
-            get(_target, key) {
-                return typeof key === 'string' ? resolveValue(ctx, key) : undefined;
-            },
-        }
-    );
-}
-
 /** Resolves a dotted or `$` reference path against the current XML runtime scope chain. */
 export function resolvePath(ctx: ExecutionContext, parts: string[]): unknown {
     // Empty paths do not resolve to a value.

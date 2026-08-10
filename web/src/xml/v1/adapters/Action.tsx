@@ -5,7 +5,7 @@ import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
+import { resolveXmlString, resolveXmlStringArray, resolveXmlValue } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
@@ -51,14 +51,12 @@ export async function executeAction(
     // Resolve action inputs before building the request.
     try {
         invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
-        const form = resolveXmlExpression(props, 'form');
-        const json = resolveXmlExpression(props, 'json');
         method = resolveXmlString(props, 'method', ctx, 'POST');
         actionUrl = resolveXmlString(props, 'action', ctx, '');
 
-        // Resolve the compiled payload at click time so it sees the latest state.
-        formValue = form ? form(ctx) : undefined;
-        jsonValue = json ? json(ctx) : undefined;
+        // Resolve action payloads at click time so they see the latest state.
+        formValue = resolveXmlValue(props, 'form', ctx);
+        jsonValue = resolveXmlValue(props, 'json', ctx);
     } catch (error: unknown) {
         toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         return;

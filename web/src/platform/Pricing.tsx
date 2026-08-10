@@ -1,11 +1,10 @@
 import { Card } from '@astryxdesign/core/Card';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CheckCircle, ChevronRight, Info, Wrench } from 'lucide-react';
 import type { MetaFunction } from 'react-router';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
@@ -16,7 +15,6 @@ export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 const pricingOptions = [
     {
         name: 'Free',
-        icon: CheckCircle,
         price: 'CHF 0',
         period: '/user/month',
         description: 'Designed for small teams getting started with building and running process apps.',
@@ -32,19 +30,17 @@ const pricingOptions = [
     },
     {
         name: 'Team',
-        icon: Info,
         price: 'Coming soon',
         period: null,
         description: 'Run production apps with pricing that scales with the people using the workflow.',
-        features: [{ label: 'Coming soon', description: null }],
+        features: [{ label: 'Coming soon', description: 'Details will be announced soon.' }],
     },
     {
         name: 'Work',
-        icon: Wrench,
         price: 'Coming soon',
         period: null,
         description: 'Use AI-assisted workflows to build, adapt, and operate process apps faster.',
-        features: [{ label: 'Coming soon', description: null }],
+        features: [{ label: 'Coming soon', description: 'Details will be announced soon.' }],
     },
 ];
 
@@ -56,12 +52,11 @@ export default function Pricing() {
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
                         <Grid className="pt-6" columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={6} width="100%">
-                            {pricingOptions.map(({ description, features, icon: OptionIcon, name, period, price }) => {
+                            {pricingOptions.map(({ description, features, name, period, price }) => {
                                 return (
-                                    <Card key={name} minHeight={520}>
-                                        <Stack gap={6}>
+                                    <Card key={name}>
+                                        <Stack gap={4}>
                                             <Stack gap={3} align="center">
-                                                <OptionIcon aria-hidden="true" className="text-accent" size={20} />
                                                 <Heading level={2} justify="center">
                                                     {name}
                                                 </Heading>
@@ -77,41 +72,38 @@ export default function Pricing() {
                                             </Stack>
 
                                             {name === 'Team' ? (
-                                                <Text as="p">Everything included in Free, plus...</Text>
+                                                <Text as="p" type="supporting">
+                                                    Everything included in Free, plus...
+                                                </Text>
                                             ) : null}
                                             {name === 'Work' ? (
-                                                <Text as="p">Everything included in Team, plus...</Text>
+                                                <Text as="p" type="supporting">
+                                                    Everything included in Team, plus...
+                                                </Text>
                                             ) : null}
 
-                                            <List hasDividers>
+                                            <CollapsibleGroup hasDividers type="multiple" density="compact">
                                                 {features.map((feature) => (
-                                                    <ListItem
+                                                    <Collapsible
                                                         key={feature.label}
-                                                        startContent={
-                                                            <ChevronRight
-                                                                aria-hidden="true"
-                                                                className="text-secondary"
-                                                                size={16}
-                                                            />
-                                                        }
-                                                        label={<Text weight="semibold">{feature.label}</Text>}
-                                                        description={
-                                                            feature.description ? (
-                                                                <Text type="supporting">
-                                                                    {feature.description
-                                                                        .split('\n\n')
-                                                                        .map((paragraph, index) => (
-                                                                            <Text key={paragraph} display="block">
-                                                                                {index > 0 ? <br /> : null}
-                                                                                {paragraph}
-                                                                            </Text>
-                                                                        ))}
-                                                                </Text>
-                                                            ) : null
-                                                        }
-                                                    />
+                                                        trigger={feature.label}
+                                                        value={feature.label}
+                                                    >
+                                                        {feature.description ? (
+                                                            <Text type="supporting">
+                                                                {feature.description
+                                                                    .split('\n\n')
+                                                                    .map((paragraph, index) => (
+                                                                        <Text key={paragraph} display="block">
+                                                                            {index > 0 ? <br /> : null}
+                                                                            {paragraph}
+                                                                        </Text>
+                                                                    ))}
+                                                            </Text>
+                                                        ) : null}
+                                                    </Collapsible>
                                                 ))}
-                                            </List>
+                                            </CollapsibleGroup>
                                         </Stack>
                                     </Card>
                                 );

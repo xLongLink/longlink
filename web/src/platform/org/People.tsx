@@ -65,8 +65,8 @@ export default function People({
         member: OrganizationMemberAccessResponse;
         role: Role;
     } | null>(null);
-    const inviteMember = useInviteOrganizationMember(organizationId, canInviteMembers);
-    const changeMemberRole = useChangeOrganizationMemberRole(organizationId, canManageMembers);
+    const inviteMember = useInviteOrganizationMember(organizationId);
+    const changeMemberRole = useChangeOrganizationMemberRole(organizationId);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [

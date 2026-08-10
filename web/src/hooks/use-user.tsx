@@ -9,7 +9,7 @@ import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 
-const UserContext = createContext<UseQueryResult<UserProfile | null, Error> | undefined>(undefined);
+const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
 
 /** Caches non-sensitive theme preferences for the next page's first paint. */
 function storeThemePreferences({ theme, accent, radius }: Pick<UserProfile, 'theme' | 'accent' | 'radius'>): void {
@@ -18,9 +18,9 @@ function storeThemePreferences({ theme, accent, radius }: Pick<UserProfile, 'the
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useApiQuery<UserProfile | null>(platformApiPath('/me'), {
+    const user = useApiQuery<UserProfile>(platformApiPath('/me'), {
         // Auth state must refresh immediately after login/logout redirects.
-        parse: (value) => (value === null ? null : zUserProfile.parse(value)),
+        parse: (value) => zUserProfile.parse(value),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -30,8 +30,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (user.data) {
             storeThemePreferences(user.data);
-        } else if (user.data === null) {
-            localStorage.removeItem(THEME_PREFERENCES_KEY);
         }
     }, [user.data]);
 

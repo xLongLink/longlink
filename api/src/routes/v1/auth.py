@@ -4,7 +4,6 @@ from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, Backgro
 from sqlmodel import col, select
 from src.auth import get_auth_session
 from src.utils import mail, token
-from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
@@ -20,8 +19,8 @@ router = APIRouter()
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one signed browser session."""
 
-    # Load the case-insensitive account identity before verifying its credential.
-    statement = select(User).where(func.lower(col(User.email)) == func.lower(payload.email))
+    # Load the canonical account identity before verifying its credential.
+    statement = select(User).where(col(User.email) == payload.email)
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         PasswordHash.recommended().hash(payload.password)
@@ -73,7 +72,7 @@ async def request_password_reset(
     """Queue password reset delivery without disclosing account existence."""
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    statement = select(User).where(func.lower(col(User.email)) == func.lower(payload.email), col(User.deleted_at).is_(None))
+    statement = select(User).where(col(User.email) == payload.email, col(User.deleted_at).is_(None))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         return
@@ -161,7 +160,7 @@ async def request_registration(payload: EmailPayload, background_tasks: Backgrou
     email = payload.email
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
-    statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
+    statement = select(User.id).where(col(User.email) == email)
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         return
 
@@ -225,7 +224,7 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
 
     # Reject token replay and concurrent account creation before expensive password hashing.
-    statement = select(User.id).where(func.lower(col(User.email)) == func.lower(email))
+    statement = select(User.id).where(col(User.email) == email)
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
 

@@ -13,7 +13,6 @@ import type { ASTNode, ExecutionContext } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];
-    active?: boolean;
     ctx?: ExecutionContext;
     baseUrl?: string;
 };
@@ -27,7 +26,7 @@ type SetupFailure = {
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
+export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
     const requiresSetup = hasMatchingNode(ast, (node) => node.name === 'State' || node.name === 'Query');
     const requiresTranslations = hasMatchingNode(ast, (node) => Boolean(node.params?.i18n));
@@ -36,8 +35,6 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
     const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
     const [version, setVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
-
-    runtimeCtx.hashNavigation = active;
 
     let setupValidationError: Error | null = null;
 

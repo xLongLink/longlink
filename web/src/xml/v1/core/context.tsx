@@ -1,8 +1,9 @@
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
+import { fetchApiJson } from '@/lib/api';
 import { evaluate, isSafePropertyName, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
-import { query } from './query';
 import { state } from './state';
+import { resolveRequestUrl } from './url';
 
 const Context = createReactContext<ExecutionContext | null>(null);
 
@@ -86,7 +87,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 const rawPath = params.path.trim();
 
                 // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
-                setups[id] = () => {
+                setups[id] = async () => {
                     const path = evaluate(rawPath, ctx);
 
                     // Query paths may interpolate route params, but must still resolve to a URL string.
@@ -94,7 +95,9 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                         throw new Error('Query path must resolve to a string');
                     }
 
-                    return query(ctx, id, String(path), baseUrl);
+                    const url = resolveRequestUrl(baseUrl, String(path));
+
+                    ctx.values[id] = await fetchApiJson<unknown>(url);
                 };
                 await setups[id]();
             }

@@ -10,19 +10,12 @@ import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { z } from 'zod';
-import { XMLView } from '@/application/runtime/XMLView';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { getIconComponent } from '@/lib/icons';
 import NotFound from '@/platform/NotFound';
-import {
-    createContext as createXmlContext,
-    parseXML,
-    resolveRequestUrl,
-    type ASTNode,
-    type ExecutionContext,
-} from '@/xml';
+import { createContext as createXmlContext, parseXML, RenderXML, resolveRequestUrl, type ASTNode } from '@/xml';
 import XmlLayout from '@/xml/v1/layout';
 
 const pageSchema = z.object({
@@ -39,8 +32,6 @@ type ViewProps = {
     applicationStatus?: Status;
     isApplicationLoading?: boolean;
     pages: string;
-    runtimeContext?: ExecutionContext;
-    runtimeKey?: string;
 };
 
 type ErrorStateProps = {
@@ -57,12 +48,10 @@ type LoadingStateProps = {
 
 type PageState = {
     cacheKey: string;
-    path: string;
-    routePath: string;
     ast: ASTNode[];
     error: string | null;
     loading: boolean;
-    runtimeContext: ExecutionContext;
+    runtimeContext: ReturnType<typeof createXmlContext>;
 };
 
 type PageRouteMatch = {
@@ -133,73 +122,35 @@ function resolveApplicationHref(routePath: string, organization?: string, applic
     return `${basePath}/${normalizedRoutePath}`;
 }
 
-/** Creates an isolated page runtime context while preserving supplied shared runtime values. */
-function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionContext {
-    const pageRuntimeContext = createXmlContext();
-
-    // Start with an empty context when none is supplied.
-    if (!runtimeContext) {
-        return pageRuntimeContext;
-    }
-
-    // Copy only caller-provided shared context values.
-    for (const [key, value] of Object.entries(runtimeContext)) {
-        // Keep page-owned runtime slots isolated.
-        if (key === 'invalidate' || key === 'setups' || key === 'values') {
-            continue;
-        }
-
-        pageRuntimeContext[key] = value;
-    }
-
-    return pageRuntimeContext;
-}
-
 /** Creates the cached state holder for one browser-rendered page. */
-function createPageState(
-    key: string,
-    path: string,
-    routePath: string,
-    params: Record<string, string>,
-    navigationBaseUrl: string,
-    runtimeContext?: ExecutionContext
-): PageState {
-    const pageRuntimeContext = createPageRuntimeContext(runtimeContext);
+function createPageState(key: string, params: Record<string, string>, navigationBaseUrl: string): PageState {
+    const runtimeContext = createXmlContext();
 
-    pageRuntimeContext.params = params;
-    pageRuntimeContext.navigationBaseUrl = navigationBaseUrl;
+    runtimeContext.params = params;
+    runtimeContext.navigationBaseUrl = navigationBaseUrl;
 
     return {
         cacheKey: key,
-        path,
-        routePath,
         ast: [],
         error: null,
         loading: true,
-        runtimeContext: pageRuntimeContext,
+        runtimeContext,
     };
 }
 
 /**
  * Renders registered XML pages for Platform and Application routes.
  */
-export default function View({
-    applicationStatus,
-    isApplicationLoading = false,
-    pages,
-    runtimeContext,
-    runtimeKey,
-}: ViewProps) {
+export default function View({ applicationStatus, isApplicationLoading = false, pages }: ViewProps) {
     const t = useTranslator();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
-    const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const navigationBaseUrl = resolveApplicationHref('', organization, application);
-    const pageCacheKey = `${pages}\u0000${runtimeKey ?? ''}`;
+    const pageCacheKey = pages;
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const {
@@ -219,7 +170,6 @@ export default function View({
 
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
     const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? firstTabPage : undefined);
-    const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
@@ -227,20 +177,12 @@ export default function View({
         ? `${activePage.path}\u0000${normalizedRoutePath}\u0000${activePage.tab}`
         : '';
     const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
-    const activePageStateIsCurrent =
-        activePageState?.cacheKey === pageCacheKey &&
-        activePageState.path === activePagePath &&
-        activePageState.routePath === normalizedRoutePath;
+    const activePageStateIsCurrent = activePageState?.cacheKey === pageCacheKey;
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
         actionLabel: organization ? t('actions.backToOrganization') : t('actions.backToOrganizations'),
     };
-
-    // Keep future page contexts aligned with the latest caller-supplied values.
-    useEffect(() => {
-        runtimeContextRef.current = runtimeContext;
-    }, [runtimeContext]);
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -318,33 +260,16 @@ export default function View({
         const inFlightPageKeys = inFlightPageKeysRef.current;
 
         // Reuse completed page state for matching route instances.
-        if (
-            existingPageState?.cacheKey === pageCacheKey &&
-            existingPageState.path === activePagePath &&
-            existingPageState.routePath === normalizedRoutePath &&
-            !existingPageState.loading
-        ) {
+        if (existingPageState?.cacheKey === pageCacheKey && !existingPageState.loading) {
             return;
         }
 
         // Avoid duplicate requests for the same page state.
-        if (
-            existingPageState?.cacheKey === pageCacheKey &&
-            existingPageState.path === activePagePath &&
-            existingPageState.routePath === normalizedRoutePath &&
-            inFlightPageKeys.has(pageKey)
-        ) {
+        if (existingPageState?.cacheKey === pageCacheKey && inFlightPageKeys.has(pageKey)) {
             return;
         }
 
-        const loadingPageState = createPageState(
-            pageCacheKey,
-            pagePath,
-            normalizedRoutePath,
-            activeRouteParams,
-            navigationBaseUrl,
-            runtimeContextRef.current
-        );
+        const loadingPageState = createPageState(pageCacheKey, activeRouteParams, navigationBaseUrl);
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -392,11 +317,7 @@ export default function View({
                         const currentPageState = current[activePageStateKey];
 
                         // Keep stale responses from replacing newer page state.
-                        if (
-                            currentPageState?.cacheKey !== pageCacheKey ||
-                            currentPageState.path !== activePagePath ||
-                            currentPageState.routePath !== normalizedRoutePath
-                        ) {
+                        if (currentPageState?.cacheKey !== pageCacheKey) {
                             return current;
                         }
 
@@ -426,11 +347,7 @@ export default function View({
                     const currentPageState = current[activePageStateKey];
 
                     // Keep stale failures from replacing newer page state.
-                    if (
-                        currentPageState?.cacheKey !== pageCacheKey ||
-                        currentPageState.path !== activePagePath ||
-                        currentPageState.routePath !== normalizedRoutePath
-                    ) {
+                    if (currentPageState?.cacheKey !== pageCacheKey) {
                         return current;
                     }
 
@@ -458,7 +375,6 @@ export default function View({
         };
     }, [
         activePage,
-        activePagePath,
         activePageStateKey,
         activeRouteParams,
         normalizedRoutePath,
@@ -535,13 +451,11 @@ export default function View({
 
         return (
             <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
-                <XMLView
-                    active={pageIsActive}
+                <RenderXML
+                    key={pageStateKey}
                     ast={pageState.ast}
                     baseUrl={resolvedPagesBaseUrl}
-                    context={pageState.runtimeContext}
-                    runtimeKey={runtimeKey}
-                    stateKey={pageStateKey}
+                    ctx={pageState.runtimeContext}
                 />
             </Stack>
         );

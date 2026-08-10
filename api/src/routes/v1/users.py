@@ -31,26 +31,24 @@ async def list_users(_: User = Depends(authadmin)):
 
 
 @router.patch("/me", response_model=UserProfile)
-async def patch_me(
-    payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_auth_session)
-):
+async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_auth_session)):
     """Update the authenticated user's details."""
 
     # Apply only supplied values that change the persisted profile.
-    updates = {
-        field: value
-        for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items()
-        if getattr(user, field) != value
-    }
-
-    for field, value in updates.items():
+    updated = False
+    identity_updated = False
+    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
+        if getattr(user, field) == value:
+            continue
         setattr(user, field, value)
+        updated = True
+        identity_updated = identity_updated or field in {"name", "avatar"}
 
-    if updates:
+    if updated:
         await session.commit()
 
     # Project shared identity fields without synchronizing Platform-only preferences.
-    if "name" in updates or "avatar" in updates:
+    if identity_updated:
         for membership in user.organization_memberships:
             if membership.organization.deleted_at is None:
                 await organizations.sync_users(membership.organization_id)
