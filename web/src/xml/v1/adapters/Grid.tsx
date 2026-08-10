@@ -1,4 +1,4 @@
-import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
+import { Grid as AstryxGrid } from '@astryxdesign/core/Grid';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
@@ -38,7 +38,7 @@ export function Grid({ props, nodes }: Props) {
     }
 
     const repeat = resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'fill', 'Grid');
-    const columns: GridColumns | undefined =
+    const columns =
         minWidth != null ? { minWidth, ...(maxColumns != null && { max: maxColumns }), repeat } : columnCount;
     const gap = resolveXmlSpacing(props, 'gap', ctx);
     const rowGap = resolveXmlSpacing(props, 'rowGap', ctx);

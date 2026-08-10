@@ -1,6 +1,13 @@
 from pydantic import Field, EmailStr, BaseModel, field_validator
 
 
+def normalize_email(value: object) -> object:
+    """Normalize one email identity before Pydantic validates its address format."""
+
+    # Preserve Pydantic's type validation for values that are not strings.
+    return value.strip().lower() if isinstance(value, str) else value
+
+
 class EmailPayload(BaseModel):
     """Validate one canonical email identity."""
 
@@ -13,7 +20,7 @@ class EmailPayload(BaseModel):
         """Normalize email identity before validating its address format."""
 
         # Keep identity comparisons and persistence case-insensitive.
-        return value.strip().lower() if isinstance(value, str) else value
+        return normalize_email(value)
 
 
 class TokenPayload(BaseModel):

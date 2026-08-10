@@ -13,14 +13,21 @@ export function Avatar({ props }: Props) {
     const fallbackSrc = resolveAnchorUrl(baseUrl, resolveXmlString(props, 'fallbackSrc', ctx));
     const name = resolveXmlString(props, 'name', ctx);
     const alt = resolveXmlString(props, 'alt', ctx);
-    const size = resolveXmlEnum(props, 'size', ctx, ['xsm', 'sm', 'md', 'lg', 'xl'], 'md', 'Avatar');
+    const size = resolveXmlEnum<Extract<AvatarSize, string>>(
+        props,
+        'size',
+        ctx,
+        ['xsm', 'sm', 'md', 'lg', 'xl'],
+        'md',
+        'Avatar'
+    );
 
     return (
         <AstryxAvatar
             alt={alt || undefined}
             fallbackSrc={fallbackSrc || undefined}
             name={name || undefined}
-            size={size as AvatarSize}
+            size={size}
             src={src || undefined}
         />
     );

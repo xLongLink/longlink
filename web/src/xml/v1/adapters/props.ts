@@ -2,7 +2,9 @@ import { resolveTranslation } from '../core/i18n';
 import { evaluate } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
 
-export type XmlSpacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
+
+export type XmlSpacing = (typeof XML_SPACING)[number];
 
 /** Reads a raw XML prop value without coercion. */
 export function readXmlProp(props: ASTProps, name: string): string | undefined {
@@ -141,11 +143,12 @@ export function resolveXmlEnum<const T extends string>(
     const value = resolveXmlString(props, name, ctx, defaultValue);
 
     // Keep untrusted XML values out of Astryx lookup maps.
-    if (!values.includes(value as T)) {
+    const matchingValue = values.find((candidate) => candidate === value);
+    if (matchingValue == null) {
         throw new Error(`Unsupported ${componentName} ${name} '${value}'`);
     }
 
-    return value as T;
+    return matchingValue;
 }
 
 /** Resolves Astryx input status attributes into the component object shape. */
@@ -170,16 +173,15 @@ export function resolveXmlSpacing(
     defaultValue?: XmlSpacing
 ): XmlSpacing | undefined {
     const value = resolveXmlNumber(props, name, ctx, defaultValue);
-    const allowed: readonly number[] = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10];
-
     // Missing optional spacing attributes stay absent.
     if (value == null) return undefined;
 
-    if (!allowed.includes(value)) {
+    const spacing = XML_SPACING.find((candidate) => candidate === value);
+    if (spacing == null) {
         throw new Error(`Unsupported spacing value '${value}'`);
     }
 
-    return value as XmlSpacing;
+    return spacing;
 }
 
 /** Resolves a serializable Astryx width or height value. */

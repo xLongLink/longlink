@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin
+from src.auth import authuser, authadmin, get_auth_session, organization_access, find_organization_access
 from src.utils import mail, names, roles
 from src.errors import UnavailableError
 from src.logger import logger
@@ -9,6 +9,7 @@ from src.models.storages import OrganizationStorageUsageResponse
 from src.models.databases import OrganizationDatabaseUsageResponse
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
@@ -19,6 +20,7 @@ from src.models.organizations import (
 )
 from src.database.models.users import User
 from src.adapters.storage.exoscale import Exoscale
+from src.database.models.association import UserOrganization
 
 router = APIRouter()
 
@@ -31,13 +33,8 @@ async def list_organizations(_user: User = Depends(authadmin)):
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
-async def get_organization(organization_id: UUID, user: User = Depends(authuser)):
+async def get_organization(organization_id: UUID, membership: UserOrganization = Depends(organization_access)):
     """Return one organization and its metadata."""
-
-    # Load organization access before exposing organization details.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Reuse the active Organization loaded with the authorized membership.
     organization = membership.organization
@@ -59,13 +56,13 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 
 
 @router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)
-async def update_organization(organization_id: UUID, payload: OrganizationUpdate, user: User = Depends(authuser)):
+async def update_organization(
+    organization_id: UUID,
+    payload: OrganizationUpdate,
+    user: User = Depends(authuser),
+    membership: UserOrganization = Depends(organization_access),
+):
     """Update mutable organization settings."""
-
-    # Load organization access before changing its settings.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Require organization administrators to change shared metadata.
     if not roles.atleast(membership.role, OrganizationRoles.admin):
@@ -82,13 +79,8 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
     "/organizations/{organization_id}/database",
     response_model=OrganizationDatabaseUsageResponse | None,
 )
-async def get_organization_database_usage(organization_id: UUID, user: User = Depends(authuser)):
+async def get_organization_database_usage(organization_id: UUID, membership: UserOrganization = Depends(organization_access)):
     """Return maintainer-only live usage for the Organization database."""
-
-    # Load organization access before exposing database resources.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict database inspection to maintainers.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
@@ -118,13 +110,8 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
     "/organizations/{organization_id}/storage",
     response_model=OrganizationStorageUsageResponse | None,
 )
-async def get_organization_storage_usage(organization_id: UUID, user: User = Depends(authuser)):
+async def get_organization_storage_usage(organization_id: UUID, membership: UserOrganization = Depends(organization_access)):
     """Return maintainer-only live usage for the Organization bucket."""
-
-    # Load organization access before exposing storage resources.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict storage inspection to maintainers.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
@@ -158,13 +145,12 @@ async def get_organization_storage_usage(organization_id: UUID, user: User = Dep
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
-async def create_organization_invitation(organization_id: UUID, payload: OrganizationInvitationCreate, user: User = Depends(authuser)):
+async def create_organization_invitation(
+    organization_id: UUID,
+    payload: OrganizationInvitationCreate,
+    membership: UserOrganization = Depends(organization_access),
+):
     """Create one invitation for an organization member."""
-
-    # Load organization access before creating invitations.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Require maintainers to create invitations.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
@@ -184,13 +170,9 @@ async def update_organization_member(
     member_id: UUID,
     payload: OrganizationMemberUpdate,
     user: User = Depends(authuser),
+    membership: UserOrganization = Depends(organization_access),
 ):
     """Update one organization member role."""
-
-    # Load organization access before updating members.
-    membership = roles.access(user, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
 
     # Require organization administrators to manage members.
     if not roles.atleast(membership.role, OrganizationRoles.admin):
@@ -209,7 +191,11 @@ async def update_organization_member(
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
-async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
+async def delete_organization(
+    organization_id: UUID,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_auth_session),
+):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
     # The initiating owner or a Platform administrator may retry cleanup after memberships are removed.
@@ -220,7 +206,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     # Require active Organization ownership for the first deletion request.
     elif user.role != PlatformRoles.administrator:
-        membership = roles.access(user, organization_id)
+        membership = await find_organization_access(session, user.id, organization_id)
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
 

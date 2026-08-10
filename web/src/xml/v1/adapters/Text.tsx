@@ -14,7 +14,7 @@ export function Text({ props, nodes }: Props) {
         : value != null
           ? String(value)
           : renderNode(nodes, ctx);
-    const type = resolveXmlEnum(
+    const type = resolveXmlEnum<Extract<TextProps['type'], string>>(
         props,
         'type',
         ctx,
@@ -49,7 +49,7 @@ export function Text({ props, nodes }: Props) {
             hasTabularNumbers={hasTabularNumbers}
             justify={justify}
             maxLines={maxLines}
-            type={type as TextProps['type']}
+            type={type}
             weight={weight}
         >
             {content}

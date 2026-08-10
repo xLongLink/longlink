@@ -4,7 +4,9 @@ import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext } from '../types';
 import { resolveXmlValue } from './props';
 
-const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
+const EMPTY_BINDING = proxy<Record<string, unknown>>({ value: undefined });
+
+type BindingType = 'file' | 'number' | 'text';
 
 type BindingTarget = {
     state: Record<string, unknown>;
@@ -24,7 +26,7 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text') {
+export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type: BindingType = 'text') {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
@@ -56,7 +58,7 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
 }
 
 /** Normalizes control values before writing them into XML state. */
-function normalizeBindableValue(type: string, value: unknown): unknown {
+function normalizeBindableValue(type: BindingType, value: unknown): unknown {
     // Store number inputs as numbers.
     if (type === 'number') return Number(value);
 
@@ -100,10 +102,10 @@ function resolveBindableTarget(
     const parent = resolvePath(ctx, parts.slice(0, -1));
 
     // Nested bindings require a reactive parent.
-    if (!parent || typeof parent !== 'object' || getVersion(parent as object) === undefined) return undefined;
+    if (!isBindableValue(parent)) return undefined;
 
     return {
         key: parts[parts.length - 1],
-        state: parent as Record<string, unknown>,
+        state: parent,
     };
 }

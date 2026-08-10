@@ -1,6 +1,7 @@
 import os
 from typing import Self
 from pydantic import Field, EmailStr, field_validator, model_validator
+from src.models.auth import normalize_email
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -48,8 +49,8 @@ class Env(BaseSettings):
     def normalize_administrator_email(cls, value: object) -> object:
         """Normalize administrator email identity before validation."""
 
-        # Preserve Pydantic's type validation for values that are not strings.
-        return value.strip().lower() if isinstance(value, str) else value
+        # Share the API boundary's canonical identity representation.
+        return normalize_email(value)
 
     @model_validator(mode="after")
     def validate_authentication(self) -> Self:

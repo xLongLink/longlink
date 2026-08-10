@@ -60,7 +60,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     if (callee.type === 'Identifier') {
         const value = readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
 
-        return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+        return value;
     }
 
     // Allow selected static helper namespaces.
@@ -79,7 +79,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
         if (callee.object.name === 'Math') {
             const value = readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
 
-            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+            return value;
         }
     }
 
@@ -155,7 +155,7 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
             return node.value;
 
         case 'Identifier':
-            return resolveValue(ctx, node.name as string);
+            return resolveValue(ctx, node.name);
 
         case 'ChainExpression':
             return evaluateNode(node.expression, ctx);
@@ -306,25 +306,20 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
             return node.elements.map((element) => (element ? evaluateNode(element, ctx) : null));
 
         case 'ObjectExpression':
-            return node.properties.reduce<Record<string, unknown>>(
-                (result, property) => {
-                    // Ignore entries that are not plain properties.
-                    if (property.type !== 'Property') return result;
+            return node.properties.reduce<Record<string, unknown>>((result, property) => {
+                // Ignore entries that are not plain properties.
+                if (property.type !== 'Property') return result;
 
-                    const key =
-                        property.key.type === 'Identifier'
-                            ? property.key.name
-                            : String(evaluateNode(property.key, ctx));
+                const key =
+                    property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
 
-                    // Skip prototype-related keys so XML object literals cannot mutate prototypes.
-                    if (!isSafePropertyName(key)) return result;
+                // Skip prototype-related keys so XML object literals cannot mutate prototypes.
+                if (!isSafePropertyName(key)) return result;
 
-                    result[key] = evaluateNode(property.value, ctx);
+                result[key] = evaluateNode(property.value, ctx);
 
-                    return result;
-                },
-                Object.create(null) as Record<string, unknown>
-            );
+                return result;
+            }, Object.create(null));
 
         case 'TemplateLiteral': {
             let output = '';

@@ -19,8 +19,8 @@ async def get_me(user: User = Depends(authuser)):
 async def get_my_organizations(user: User = Depends(authuser)):
     """Return the authenticated user's organization memberships."""
 
-    # Exclude memberships whose related Organization has been soft-deleted.
-    return [membership for membership in user.organization_memberships if membership.organization.deleted_at is None]
+    # Return active membership response data through the user persistence service.
+    return await users.memberships(user.id)
 
 
 @router.get("/users", response_model=list[UserSummary])
@@ -49,7 +49,6 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
 
     # Project shared identity fields without synchronizing Platform-only preferences.
     if identity_updated:
-        for membership in user.organization_memberships:
-            if membership.organization.deleted_at is None:
-                await organizations.sync_users(membership.organization_id)
+        for membership in await users.memberships(user.id):
+            await organizations.sync_users(membership.organization_id)
     return user

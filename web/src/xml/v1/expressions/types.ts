@@ -30,19 +30,19 @@ type CallExpressionNode = {
 
 type ObjectExpressionNode = {
     type: 'ObjectExpression';
-    properties: Array<
+    properties: (
         | {
               type: 'Property';
               key: ExpressionNode;
               value: ExpressionNode;
           }
         | { type: 'SpreadElement' }
-    >;
+    )[];
 };
 
 type TemplateLiteralNode = {
     type: 'TemplateLiteral';
-    quasis: Array<{ value: { cooked: string } }>;
+    quasis: { value: { cooked: string } }[];
     expressions: ExpressionNode[];
 };
 
@@ -75,7 +75,7 @@ type ConditionalExpressionNode = {
 
 type ArrayExpressionNode = {
     type: 'ArrayExpression';
-    elements: Array<ExpressionNode | null>;
+    elements: (ExpressionNode | null)[];
 };
 
 export type ExpressionNode =

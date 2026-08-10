@@ -1,11 +1,20 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin
+from src.auth import (
+    ApplicationAccess,
+    authuser,
+    authadmin,
+    get_auth_session,
+    application_access,
+    find_application_access,
+    find_organization_access,
+)
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 
@@ -20,11 +29,16 @@ async def list_applications(_user: User = Depends(authadmin)):
 
 
 @router.post("/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
-async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
+async def create_application(
+    organization_id: UUID,
+    payload: ApplicationCreate,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_auth_session),
+):
     """Create Application state and queue its explicit deployment lifecycle."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
-    membership = roles.access(user, organization_id)
+    membership = await find_organization_access(session, user.id, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
@@ -64,14 +78,12 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
-async def get_application_logs(application_id: UUID, user: User = Depends(authuser)):
+async def get_application_logs(application_id: UUID, access: ApplicationAccess = Depends(application_access)):
     """Return recent pod logs for one managed application."""
 
-    # Load application access before exposing logs.
-    access = await organizations.application_access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application = access.application
+    organization = access.organization
+    role = access.role
 
     # Application logs require Organization maintenance authority.
     if not roles.atleast(role, OrganizationRoles.maintain):
@@ -91,7 +103,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
 
 @router.delete("/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
-async def delete_application(application_id: UUID, user: User = Depends(authuser)):
+async def delete_application(
+    application_id: UUID,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_auth_session),
+):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
     # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
@@ -100,10 +116,10 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
     else:
-        access = await organizations.application_access(user.id, application_id)
+        access = await find_application_access(session, user.id, application_id)
         if access is None:
             raise HTTPException(status_code=403, detail="Access required")
-        _, _, role = access
+        role = access.role
 
         # Active Applications require Organization maintenance authority.
         if not roles.atleast(role, OrganizationRoles.maintain):

@@ -15,6 +15,7 @@ from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
 from longlink.shared.models import AuditUser
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -35,6 +36,50 @@ class Infrastructure:
     storage: StorageRegistry
 
 
+async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
+    """Return one user's active membership for an active Organization."""
+
+    # Load only the requested Organization membership and its response-ready Organization.
+    statement = (
+        select(UserOrganization)
+        .join(Organization, Organization.id == UserOrganization.organization_id)
+        .options(joinedload(UserOrganization.organization))
+        .where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.organization_id == organization_id,
+            UserOrganization.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+        )
+    )
+    return (await session.execute(statement)).scalar_one_or_none()
+
+
+async def application_access(
+    session: AsyncSession, user_id: UUID, application_id: UUID
+) -> tuple[Application, Organization, OrganizationRoles] | None:
+    """Return one user's active access to one active Application."""
+
+    # Resolve the requested Application and its active Organization membership in one scoped query.
+    row = (
+        await session.execute(
+            select(Application, Organization, UserOrganization.role)
+            .join(Organization, Organization.id == Application.organization_id)
+            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+            .where(
+                Application.id == application_id,
+                Application.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+                UserOrganization.user_id == user_id,
+                UserOrganization.deleted_at.is_(None),
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        return None
+    application, organization, role = row
+    return application, organization, role
+
+
 async def infrastructure(organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
@@ -52,33 +97,6 @@ async def infrastructure(organization_id: UUID) -> Infrastructure | None:
             return None
         organization, compute, database, storage = row
         return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
-
-
-async def application_access(user_id: UUID, application_id: UUID) -> tuple[Application, Organization, OrganizationRoles] | None:
-    """Return one Application, its Organization, and a user's active Organization role."""
-
-    # Resolve only the requested Application and active Organization membership.
-    async with session_scope() as session:
-        statement = (
-            select(Application, Organization, UserOrganization.role)
-            .join(Organization, Organization.id == Application.organization_id)
-            .join(
-                UserOrganization,
-                UserOrganization.organization_id == Organization.id,
-            )
-            .where(
-                Application.id == application_id,
-                Application.deleted_at.is_(None),
-                Organization.deleted_at.is_(None),
-                UserOrganization.user_id == user_id,
-                UserOrganization.deleted_at.is_(None),
-            )
-        )
-        row = (await session.execute(statement)).one_or_none()
-        if row is None:
-            return None
-        application, organization, role = row
-        return application, organization, role
 
 
 async def fetch() -> Sequence[Organization]:

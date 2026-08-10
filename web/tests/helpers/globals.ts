@@ -19,7 +19,7 @@ export async function withGlobalValue(
         if (descriptor) {
             Object.defineProperty(globalThis, name, descriptor);
         } else {
-            delete (globalThis as Record<GlobalPropertyName, unknown>)[name];
+            Reflect.deleteProperty(globalThis, name);
         }
     }
 }

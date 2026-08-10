@@ -5,6 +5,8 @@ import { renderNode } from '../core/node';
 import type { Props } from '../types';
 import { resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
 /** Renders an Astryx heading with explicit semantic level. */
 export function Heading({ props, nodes }: Props) {
     const ctx = useXmlContext();
@@ -17,7 +19,7 @@ export function Heading({ props, nodes }: Props) {
     const level = resolveXmlNumber(props, 'level', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.
-    if (level == null || !Number.isInteger(level) || level < 1 || level > 6) {
+    if (level == null || !isHeadingLevel(level)) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
@@ -36,14 +38,13 @@ export function Heading({ props, nodes }: Props) {
     const maxLines = resolveXmlNumber(props, 'maxLines', ctx, 0);
 
     return (
-        <AstryxHeading
-            color={color}
-            justify={justify}
-            level={level as 1 | 2 | 3 | 4 | 5 | 6}
-            maxLines={maxLines}
-            type={type}
-        >
+        <AstryxHeading color={color} justify={justify} level={level} maxLines={maxLines} type={type}>
             {content}
         </AstryxHeading>
     );
+}
+
+/** Returns whether a number is a supported semantic heading level. */
+function isHeadingLevel(value: number): value is HeadingLevel {
+    return Number.isInteger(value) && value >= 1 && value <= 6;
 }

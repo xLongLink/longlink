@@ -42,21 +42,12 @@ type ErrorStateProps = {
     title: string;
 };
 
-type LoadingStateProps = {
-    status: 'creating' | 'loading';
-};
-
 type PageState = {
     cacheKey: string;
     ast: ASTNode[];
     error: string | null;
     loading: boolean;
     runtimeContext: ReturnType<typeof createXmlContext>;
-};
-
-type PageRouteMatch = {
-    page: RuntimePage;
-    params: Record<string, string>;
 };
 
 type RuntimeRoute = RouteObject & {
@@ -85,7 +76,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 }
 
 /** Finds the best runtime page for the current app-relative browser path. */
-function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
+function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
     const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
         path: pageRoutePattern(page) || '/',
         page,
@@ -500,7 +491,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 }
 
 /** Renders the in-shell loading page while an application is being created. */
-function LoadingState({ status }: LoadingStateProps) {
+function LoadingState({ status }: { status: 'creating' | 'loading' }) {
     const t = useTranslator();
 
     // Keep the shell visible while the page manifest or active page is loading.

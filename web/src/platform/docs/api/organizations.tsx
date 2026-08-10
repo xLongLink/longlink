@@ -32,7 +32,6 @@ export const metadata = {
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },
-        { id: 'roles', label: 'Roles', level: 3 },
         { id: 'database', label: 'Database', level: 2 },
         { id: 'file-storage', label: 'File Storage', level: 2 },
         { id: 'compute', label: 'Compute', level: 2 },
@@ -57,13 +56,10 @@ export const content = (
         <Heading id="users" level={2}>
             Users
         </Heading>
-        <Heading id="roles" level={3}>
-            Roles
-        </Heading>
         <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
-                    <TableHeaderCell>Role</TableHeaderCell>
+                    <TableHeaderCell>Roles</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,12 +1,18 @@
+from uuid import UUID
 from pwdlib import PasswordHash
+from typing import cast
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import QueryableAttribute, joinedload
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.session import session_scope
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
+from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 async def fetch() -> Sequence[User]:
@@ -15,6 +21,38 @@ async def fetch() -> Sequence[User]:
     # Read users through a managed database session.
     async with session_scope() as session:
         return (await session.scalars(select(User))).all()
+
+
+async def active(session: AsyncSession, user_id: UUID) -> User | None:
+    """Return one active user through an existing request session."""
+
+    # Resolve only the authenticated identity; resource access remains scoped to its target.
+    return (
+        await session.scalars(
+            select(User).where(
+                col(User.id) == user_id,
+                col(User.deleted_at).is_(None),
+            )
+        )
+    ).one_or_none()
+
+
+async def memberships(user_id: UUID) -> Sequence[UserOrganization]:
+    """Return one user's active memberships with their active Organizations."""
+
+    # Load membership response data without relying on async ORM lazy loading.
+    async with session_scope() as session:
+        statement = (
+            select(UserOrganization)
+            .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
+            .options(joinedload(cast(QueryableAttribute[Organization], UserOrganization.organization)))
+            .where(
+                col(UserOrganization.user_id) == user_id,
+                col(UserOrganization.deleted_at).is_(None),
+                col(Organization.deleted_at).is_(None),
+            )
+        )
+        return (await session.scalars(statement)).all()
 
 
 async def ensure_administrator() -> None:

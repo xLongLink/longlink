@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.auth import authuser
+from src.auth import ApplicationAccess, authuser, application_access
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
@@ -17,17 +17,21 @@ PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 
 @router.api_route("/applications/{application_id}/proxy", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
 @router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
-async def proxy_application_request(request: Request, application_id: UUID, path: str = "", user: User = Depends(authuser)) -> Response:
+async def proxy_application_request(
+    request: Request,
+    application_id: UUID,
+    path: str = "",
+    user: User = Depends(authuser),
+    access: ApplicationAccess = Depends(application_access),
+) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    # Load application access before proxying runtime traffic.
-    access = await organizations.application_access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application = access.application
+    organization = access.organization
+    role = access.role
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 

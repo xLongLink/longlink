@@ -7,7 +7,7 @@ const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
 /** Validates and returns a native Astryx catalog loaded from an application boundary. */
 export function validateTranslationCatalog(input: unknown): Catalog {
     // Require a flat object at the catalog root.
-    if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+    if (!isRecord(input)) {
         throw new Error('Translation catalog must be an object');
     }
 
@@ -19,27 +19,26 @@ export function validateTranslationCatalog(input: unknown): Catalog {
             throw new Error(`Invalid translation key "${key}"`);
         }
 
-        if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+        if (!isRecord(value)) {
             throw new Error(`Translation entry "${key}" must be an object`);
         }
 
-        const entry = value as Record<string, unknown>;
-        const unsupported = Object.keys(entry).filter((field) => field !== 'defaultMessage' && field !== 'description');
+        const unsupported = Object.keys(value).filter((field) => field !== 'defaultMessage' && field !== 'description');
         if (unsupported.length > 0) {
             throw new Error(`Translation entry "${key}" has unsupported fields: ${unsupported.join(', ')}`);
         }
 
-        if (typeof entry.defaultMessage !== 'string') {
+        if (typeof value.defaultMessage !== 'string') {
             throw new Error(`Translation entry "${key}" must define a string defaultMessage`);
         }
 
-        if (entry.description !== undefined && typeof entry.description !== 'string') {
+        if (value.description !== undefined && typeof value.description !== 'string') {
             throw new Error(`Translation entry "${key}" must define a string description`);
         }
 
         catalog[key] = {
-            defaultMessage: entry.defaultMessage,
-            ...(typeof entry.description === 'string' && { description: entry.description }),
+            defaultMessage: value.defaultMessage,
+            ...(typeof value.description === 'string' && { description: value.description }),
         };
     }
 
@@ -86,6 +85,11 @@ function isTranslationKey(value: string): boolean {
     return translationKeyPattern.test(value);
 }
 
+/** Returns whether a value is a non-array object record. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
 /** Resolves the active numeric count used for plural selection. */
 function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
     // Count stays optional so plain localized strings do not need plural data.
@@ -110,9 +114,9 @@ function resolveInterpolationValues(props: ASTProps, ctx: ExecutionContext): Rec
     const values = evaluate(rawValues, ctx);
 
     // Keep interpolation input data-oriented and reject arrays or scalar values.
-    if (values == null || typeof values !== 'object' || Array.isArray(values)) {
+    if (!isRecord(values)) {
         throw new Error('values must evaluate to an object');
     }
 
-    return values as Record<string, unknown>;
+    return values;
 }
