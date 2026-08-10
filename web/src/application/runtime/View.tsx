@@ -1,14 +1,17 @@
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Spinner } from '@astryxdesign/core/Spinner';
+import { Stack } from '@astryxdesign/core/Stack';
 import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
-import * as React from 'react';
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import * as UI from '@astryxdesign/core';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { z } from 'zod';
+import { compileJSXView, JSXView } from '@/application/runtime/JSXView';
+import { XMLView } from '@/application/runtime/XMLView';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
@@ -17,7 +20,6 @@ import NotFound from '@/platform/NotFound';
 import {
     createContext as createXmlContext,
     parseXML,
-    RenderXML,
     resolveRequestUrl,
     type ASTNode,
     type ExecutionContext,
@@ -61,15 +63,9 @@ type PageState = {
     routePath: string;
     ast: ASTNode[] | null;
     component: ComponentType | null;
-    parseError: string | null;
     error: string | null;
     loading: boolean;
     runtimeContext: ExecutionContext;
-};
-
-type PageParseResult = {
-    ast: ASTNode[] | null;
-    parseError: string | null;
 };
 
 type PageRouteMatch = {
@@ -82,7 +78,6 @@ type RuntimeRoute = RouteObject & {
 };
 
 const emptyRouteParams: Record<string, string> = {};
-const { Button, Card, Stack } = UI;
 
 /**
  * Removes leading and trailing slashes from a route path.
@@ -185,55 +180,8 @@ function createPageState(
         component: null,
         error: null,
         loading: true,
-        parseError: null,
         runtimeContext: pageRuntimeContext,
     };
-}
-
-/** Compile a JSX page into a component using the LongLink-provided React and `@ui` globals. */
-async function compileJSXPage(content: string): Promise<ComponentType> {
-    const defaultExport = content.match(/export\s+default\s+function\s+([A-Za-z_$][\w$]*)\s*\(/);
-    const componentName = defaultExport?.[1] ?? 'App';
-    const source = content
-        .replace(
-            /^\s*import\s*\{([^}]+)\}\s*from\s*['"]@ui['"]\s*;?\s*$/gm,
-            (_, imports: string) => `const { ${imports.replace(/\s+as\s+/g, ': ')} } = UI;`
-        )
-        .replace(/export\s+default\s+function\s+([A-Za-z_$][\w$]*)/g, 'function $1');
-
-    // JSX pages may depend only on the LongLink-provided Astryx surface.
-    if (/^\s*import\s/m.test(source)) {
-        throw new Error("JSX pages may import only from '@ui'");
-    }
-
-    // Load Babel only for JSX pages so ordinary XML Applications avoid its compiler-sized chunk.
-    const babel = await import('@babel/standalone');
-    const compiled = babel.transform(source, { filename: 'page.jsx', presets: ['react'] }).code;
-    const component = new Function('React', 'UI', `${compiled}\nreturn ${componentName};`)(React, UI) as unknown;
-
-    if (typeof component !== 'function') {
-        throw new Error(`JSX pages must declare a '${componentName}' component`);
-    }
-
-    return component as ComponentType;
-}
-
-/** Parses page XML once so route rendering does not throw on malformed application XML. */
-function parsePageContent(content: string): PageParseResult {
-    // Parse XML defensively so render can show errors.
-    try {
-        return { ast: parseXML(content), parseError: null };
-    } catch (unknownError) {
-        return {
-            ast: null,
-            parseError: unknownError instanceof Error ? unknownError.message : 'Failed to parse page XML',
-        };
-    }
-}
-
-/** Renders one browser-transpiled Application component through React's normal component boundary. */
-function JSXPage({ component: Page }: { component: ComponentType }) {
-    return <Page />;
 }
 
 /**
@@ -443,8 +391,8 @@ export default function View({
                 if (!controller.signal.aborted) {
                     const result =
                         activePage.kind === 'xml'
-                            ? parsePageContent(content)
-                            : { ast: null, component: await compileJSXPage(content), parseError: null };
+                            ? { ast: parseXML(content), component: null }
+                            : { ast: null, component: await compileJSXView(content) };
 
                     // Babel loading can outlive a route change, so check the signal again before committing state.
                     if (controller.signal.aborted) {
@@ -468,10 +416,9 @@ export default function View({
                             [activePageStateKey]: {
                                 ...currentPageState,
                                 ast: result.ast,
-                                component: 'component' in result ? result.component : null,
+                                component: result.component,
                                 error: null,
                                 loading: false,
-                                parseError: result.parseError,
                             },
                         };
 
@@ -589,15 +536,10 @@ export default function View({
         return <NotFound />;
     }
 
-    const activePageError = activePageState?.error || activePageState?.parseError;
+    const activePageError = activePageState?.error;
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (
-            (!pageState.ast && !pageState.component) ||
-            pageState.cacheKey !== pageCacheKey ||
-            pageState.error ||
-            pageState.parseError
-        ) {
+        if ((!pageState.ast && !pageState.component) || pageState.cacheKey !== pageCacheKey || pageState.error) {
             return null;
         }
 
@@ -606,15 +548,16 @@ export default function View({
         return (
             <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
                 {pageState.ast ? (
-                    <RenderXML
-                        key={`${runtimeKey ?? 'runtime'}-${pageStateKey}`}
+                    <XMLView
                         active={pageIsActive}
                         ast={pageState.ast}
                         baseUrl={resolvedPagesBaseUrl}
-                        ctx={pageState.runtimeContext}
+                        context={pageState.runtimeContext}
+                        runtimeKey={runtimeKey}
+                        stateKey={pageStateKey}
                     />
                 ) : pageState.component ? (
-                    <JSXPage component={pageState.component} />
+                    <JSXView component={pageState.component} />
                 ) : null}
             </Stack>
         );

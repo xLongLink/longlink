@@ -126,8 +126,8 @@ def normalize_page_path(path: str) -> str:
     if not normalized_path.startswith("/"):
         normalized_path = f"/{normalized_path}"
 
-    # Only browser-rendered XML and JSX pages can be registered.
+    # Page filenames select the browser parser but are not part of the endpoint URL.
     if not normalized_path.endswith((".jsx", ".xml")):
         raise ValueError("Page routes must end with '.xml' or '.jsx'")
 
-    return normalized_path
+    return normalized_path.removesuffix(".xml").removesuffix(".jsx")

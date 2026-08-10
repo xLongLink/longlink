@@ -104,14 +104,15 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     app = FastAPI()
     LongLink(app)
     client = TestClient(app)
-    response = client.get(f"/pages/{relative_path}", params={"page_path": str(alternate_path)})
+    page_path_without_suffix = relative_path.removesuffix(".xml")
+    response = client.get(f"/pages/{page_path_without_suffix}", params={"page_path": str(alternate_path)})
     pages_response = client.get("/pages.json")
 
     # Verify content and metadata came from the default page tree.
     assert response.status_code == 200
     assert response.text == content
     pages = pages_response.json()
-    page = next(item for item in pages if item["path"] == f"pages/{relative_path}")
+    page = next(item for item in pages if item["path"] == f"pages/{page_path_without_suffix}")
     assert {key: page[key] for key in expected_metadata} == expected_metadata
     assert all("content" not in item for item in pages)
 

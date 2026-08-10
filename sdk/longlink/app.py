@@ -159,6 +159,7 @@ class LongLink:
 
         # Remove stale page metadata before discovering replacement files.
         registered_pages[:] = [page for page in registered_pages if page.path not in stale_page_paths]
+        registered_page_paths = {page.path for page in registered_pages}
 
         # Discover browser-rendered page files in deterministic order.
         for page_file in sorted(path for path in pages_directory.rglob("*") if path.suffix in {".jsx", ".xml"}):
@@ -180,6 +181,11 @@ class LongLink:
 
             # Register page metadata and its normalized API route together.
             registered_path = normalize_page_path(route_path)
+
+            # Extension-free endpoints cannot distinguish matching XML and JSX filenames.
+            if registered_path in registered_page_paths:
+                raise ValueError(f"Page endpoint '{registered_path}' is already registered")
+
             registered_pages.append(
                 PageDefinition(
                     kind=page_kind,
@@ -190,6 +196,7 @@ class LongLink:
                     icon=page_icon,
                 )
             )
+            registered_page_paths.add(registered_path)
             self.app.add_api_route(
                 registered_path,
                 page_endpoint,
