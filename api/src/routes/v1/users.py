@@ -43,17 +43,6 @@ async def patch_me(
         if getattr(user, field) != value
     }
 
-    # Retain active Organization targets before committing changed shared identity fields.
-    organization_ids = (
-        [
-            membership.organization_id
-            for membership in user.organization_memberships
-            if membership.organization.deleted_at is None
-        ]
-        if "name" in updates or "avatar" in updates
-        else ()
-    )
-
     for field, value in updates.items():
         setattr(user, field, value)
 
@@ -62,6 +51,7 @@ async def patch_me(
 
     # Project shared identity fields without synchronizing Platform-only preferences.
     if "name" in updates or "avatar" in updates:
-        for organization_id in organization_ids:
-            await organizations.sync_users(organization_id)
+        for membership in user.organization_memberships:
+            if membership.organization.deleted_at is None:
+                await organizations.sync_users(membership.organization_id)
     return user

@@ -2,11 +2,11 @@ import { Selector as AstryxSelector, type SelectorOptionType } from '@astryxdesi
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
-import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import { useBindableValue } from './binding';
 import {
     requireXmlString,
+    isVisibleXmlNode,
     resolveXmlBoolean,
     resolveXmlEnum,
     resolveXmlLabel,
@@ -24,7 +24,7 @@ export function Selector({ props, nodes }: Props) {
     const currentValue = binding.currentValue == null ? null : String(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
     const options = nodes
-        .filter((node) => node.name === 'SelectorOption' && isVisibleNode(node, ctx))
+        .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => resolveOption(node, ctx));
 
     // Selectors require at least one serializable option.
@@ -79,11 +79,4 @@ function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType
     const disabled = resolveXmlBoolean(props, 'isDisabled', ctx, false);
 
     return { value, label, disabled };
-}
-
-/** Evaluates conditional rendering for an adapter-consumed option node. */
-function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
-    if (node.params?.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
 }

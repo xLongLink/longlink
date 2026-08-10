@@ -1,7 +1,7 @@
 import { resolveTranslation } from '../core/i18n';
 import { compile, evaluate } from '../expressions';
 import type { ExpressionResolver } from '../expressions/types';
-import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+import type { ASTNode, ASTProps, ExecutionContext } from '../types';
 
 export type XmlSpacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
@@ -116,19 +116,21 @@ export function resolveXmlStringArray(
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */
-export function resolveXmlValue(
-    props: ASTProps,
-    name: string,
-    ctx: ExecutionContext,
-    defaultValue?: XmlBindableValue
-): XmlBindableValue | undefined {
+export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): unknown {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
 
-    return value as XmlBindableValue | undefined;
+    return value;
+}
+
+/** Return whether an XML node passes its optional conditional expression. */
+export function isVisibleXmlNode(node: ASTNode, ctx: ExecutionContext): boolean {
+    if (node.params?.if == null) return true;
+
+    return Boolean(evaluate(node.params.if, ctx));
 }
 
 /** Compiles an XML expression prop for deferred execution. */

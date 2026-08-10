@@ -32,7 +32,6 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    await session.commit()
     await invitations.accept(user.id)
     credential = token.create_auth_token(user)
 

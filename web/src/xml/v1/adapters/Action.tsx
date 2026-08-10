@@ -75,7 +75,6 @@ export async function executeAction(
 
     const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
-    const headers = new Headers();
 
     // Allow invalidation-only actions.
     if (!actionUrl) {
@@ -120,10 +119,8 @@ export async function executeAction(
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
             init.body = JSON.stringify(jsonValue);
-            headers.set('content-type', 'application/json');
+            init.headers = { 'content-type': 'application/json' };
         }
-
-        init.headers = headers;
     } catch (error: unknown) {
         toastApi.error(error instanceof Error ? error.message : 'Action failed');
         return;

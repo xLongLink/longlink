@@ -19,9 +19,6 @@ export interface Props {
     nodes: ASTNode[];
 }
 
-/** Value shape accepted by XML form controls. */
-export type XmlBindableValue = unknown;
-
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     translate?: TranslatorFn;

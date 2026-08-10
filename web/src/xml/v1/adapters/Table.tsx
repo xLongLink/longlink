@@ -10,10 +10,11 @@ import { ContextProvider, useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import { BaseUrlContext, useUrl } from '../core/url';
-import { evaluate, readSafeProperty } from '../expressions';
+import { readSafeProperty } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import {
     readXmlProp,
+    isVisibleXmlNode,
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -40,7 +41,7 @@ export function Table({ props, nodes }: Props) {
         : [];
     const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
-        .filter((node) => node.name === 'TableColumn' && isVisibleNode(node, ctx))
+        .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
         .map((node) => buildColumn(node, ctx, rowName, rows, baseUrl));
 
     // Astryx tables need at least one visible column definition.
@@ -150,11 +151,4 @@ function resolveFieldValue(row: TableRow, field: string): unknown {
 
         return readSafeProperty(current, segment);
     }, row);
-}
-
-/** Evaluates conditional rendering for an adapter-consumed column node. */
-function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
-    if (node.params?.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
 }

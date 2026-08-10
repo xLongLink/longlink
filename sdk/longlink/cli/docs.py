@@ -39,16 +39,17 @@ def resolve_component_schema(component: str) -> Path:
 
     adapters = ROOT / ".static" / "xsd" / "adapters"
     normalized = component.casefold()
+    schema_paths = tuple(adapters.glob("*.xsd"))
 
     # Prefer direct schema filename matches.
-    for schema_path in adapters.glob("*.xsd"):
+    for schema_path in schema_paths:
 
         # Compare filenames without case sensitivity.
         if schema_path.stem.casefold() == normalized:
             return schema_path
 
     # Fall back to component element declarations.
-    for schema_path in adapters.glob("*.xsd"):
+    for schema_path in schema_paths:
         schema = load_schema(schema_path)
         if any(name.casefold() == normalized for name in schema.elements):
             return schema_path
@@ -88,10 +89,6 @@ def summarize_component_schema(schema_path: Path, component: str) -> ComponentDe
                 "required": attribute.use == "required",
             }
         )
-
-    # Document State's dynamic field support.
-    if normalized == "state":
-        props.append({"name": "any", "required": False, "default": None, "values": [], "type": "any"})
 
     # Any declared or wildcard element content requires paired component tags.
     content = complex_type.content

@@ -60,8 +60,7 @@ class LongLink:
 
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
-        page_registry: list[PageDefinition] = []
-        app.state.page_registry = page_registry
+        app.state.page_registry = []
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -81,9 +80,6 @@ class LongLink:
 
         # Bind audit context across downstream request handling.
         install_audit_middleware(app)
-
-        # Resolve the embedded frontend bundle used by the final fallback mount.
-        frontend_directory = ROOT / ".static" / "web"
 
         # Optional translation mounts can be disabled.
         if i18n is not None:
@@ -119,8 +115,8 @@ class LongLink:
         self.warn_overlapping_routes(application_routes)
 
         # Serve the embedded frontend last so Application routes retain precedence.
-        if frontend_directory.exists():
-            app.frontend("/", directory=frontend_directory)
+        if (ROOT / ".static" / "web").exists():
+            app.frontend("/", directory=ROOT / ".static" / "web")
 
     def warn_overlapping_routes(self, application_routes: list[BaseRoute]) -> None:
         """Warn when Application routes take precedence over LongLink runtime content."""
@@ -154,7 +150,7 @@ class LongLink:
         # Prepare normalized route state for replacing pages under this directory.
         normalized_prefix = normalize_mount_path(route_prefix)
         registered_pages: list[PageDefinition] = self.app.state.page_registry
-        stale_page_prefix = "/" if normalized_prefix == "/" else f"{normalized_prefix}/"
+        stale_page_prefix = f"{normalized_prefix.rstrip('/')}/"
         stale_page_paths = {page.path for page in registered_pages if page.path.startswith(stale_page_prefix)}
 
         # Remove previously registered SDK page routes before replacing the page registry.

@@ -39,6 +39,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
             icon,
             label,
             isActive: active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath,
+            value: href,
         };
     });
     const activeHref = resolvedTabs.find((tab) => tab.isActive)?.href ?? '';
@@ -72,7 +73,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
                 )
             }
             reserveTabSpace={false}
-            tabs={resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
+            tabs={resolvedTabs}
             topNavClassName="px-7"
         >
             <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>
