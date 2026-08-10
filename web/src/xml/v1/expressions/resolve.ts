@@ -13,6 +13,10 @@ export function hasSafeProperty(value: unknown, key: string): boolean {
 }
 
 /** Reads one own property without traversing prototypes. */
+export function readSafeProperty<T>(
+    value: T,
+    key: string
+): T extends Record<string, infer Value> ? Value | undefined : unknown;
 export function readSafeProperty(value: unknown, key: string): unknown {
     return hasSafeProperty(value, key) ? (value as Record<string, unknown>)[key] : undefined;
 }
@@ -27,29 +31,13 @@ export function resolveValue(ctx: ExecutionContext | null | undefined, key: stri
         const values = scope.values;
 
         // Prefer values stored in the scope.
-        if (hasSafeProperty(values, key)) return readSafeProperty(values, key);
+        if (hasSafeProperty(values, key)) return values[key];
 
         // Fall back to direct scope properties.
-        if (hasSafeProperty(scope, key)) return readSafeProperty(scope, key);
+        if (hasSafeProperty(scope, key)) return scope[key];
     }
 
     return undefined;
-}
-
-/** Creates a proxy that resolves identifiers through lexical parent contexts. */
-export function createScopeProxy(ctx: ExecutionContext): Record<string, unknown> {
-    return new Proxy(
-        {},
-        {
-            has(_target, key) {
-                /* Allow `with` lookups to flow through the scope chain instead of falling back to globals. */
-                return typeof key === 'string';
-            },
-            get(_target, key) {
-                return typeof key === 'string' ? resolveValue(ctx, key) : undefined;
-            },
-        }
-    );
 }
 
 /** Resolves a dotted or `$` reference path against the current XML runtime scope chain. */

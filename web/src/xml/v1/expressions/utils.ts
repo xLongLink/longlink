@@ -1,10 +1,3 @@
-/** Returns true when the input is wrapped in `${...}`. */
-export function isExpression(expr: string): boolean {
-    const input = expr.trim();
-
-    return input.startsWith('${') && input.endsWith('}');
-}
-
 /** Returns true when the input is a `$`-prefixed reference path. */
 export function isReference(expr: string): boolean {
     const input = expr.trim();
@@ -16,5 +9,5 @@ export function isReference(expr: string): boolean {
 export function isText(expr: string): boolean {
     const input = expr.trim();
 
-    return input === '' || (!isExpression(input) && !isReference(input));
+    return input === '' || (!(input.startsWith('${') && input.endsWith('}')) && !isReference(input));
 }

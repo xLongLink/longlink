@@ -15,7 +15,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
-import { formatDateTime } from '@/lib/utils';
+import { dateTimeFormatter } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 const statusVariants = {
@@ -80,7 +80,7 @@ export default function AdminApplications() {
             key: 'created_at',
             header: t('columns.created'),
             width: pixel(208),
-            renderCell: (app) => formatDateTime(app.created_at),
+            renderCell: (app) => dateTimeFormatter.format(new Date(app.created_at)),
         },
     ];
     const {

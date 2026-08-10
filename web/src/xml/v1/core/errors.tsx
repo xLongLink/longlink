@@ -3,7 +3,7 @@ import { Component, type ReactNode } from 'react';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
-    resetKey?: string | number | object | null;
+    resetKey: number;
 };
 
 type XmlErrorBoundaryState = {

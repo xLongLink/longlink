@@ -2,7 +2,7 @@ import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -35,8 +35,7 @@ export function TextArea({ props }: Props) {
             label={resolveXmlLabel(props, ctx, 'TextArea')}
             maxLength={resolveXmlNumber(props, 'maxLength', ctx)}
             onChange={(nextValue) => {
-                if (binding.bound) binding.setValue(nextValue);
-                else setLocalValue(nextValue);
+                setXmlBinding(binding, setLocalValue, nextValue);
             }}
             placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
             rows={resolveXmlNumber(props, 'rows', ctx, 3)}

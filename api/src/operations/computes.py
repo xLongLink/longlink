@@ -1,26 +1,49 @@
 import secrets
 import ipaddress
-from packaging.version import Version
+from src.models.statuses import Status
+from src.database.session import session_scope
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls
 from src.database.models.operations import Operation
 
 
+def gateway_url(address: str) -> str:
+    """Return a URL-safe HTTPS gateway address."""
+
+    # Bracket IPv6 literals while preserving controller-published hostnames and IPv4 addresses.
+    try:
+        parsed_address = ipaddress.ip_address(address)
+    except ValueError:
+        host = address
+    else:
+        host = f"[{parsed_address}]" if parsed_address.version == 6 else str(parsed_address)
+    return f"https://{host}"
+
+
 async def create(claimed: Operation) -> str | None:
     """Reconcile one Compute's shared authenticated Envoy Gateway."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.target_id)
+    async with session_scope() as session:
+        registry = await compute.get(session, claimed.target_id)
     if registry is None:
         return None
-    platform_version = Version(claimed.platform_version)
-    if Version(registry.version) > platform_version:
-        return None
-
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Rotate authenticated Gateway access for every explicit Compute operation.
+    # Reapply static Gateway resources without rotating published client credentials.
+    if (
+        registry.status == Status.running
+        and registry.gateway_url is not None
+        and registry.gateway_api_key is not None
+        and registry.gateway_certificate is not None
+    ):
+        gateway_address = await cluster.gateway.apply()
+        if registry.gateway_url != gateway_url(gateway_address):
+            return "Gateway endpoint changed and requires explicit credential rotation"
+        return None
+
+    # Generate Gateway credentials only while bootstrapping an unpublished Compute.
     api_key = secrets.token_urlsafe(32)
     _, server_certificate, server_private_key = generate_gateway_tls(registry.id, None)
 
@@ -31,24 +54,16 @@ async def create(claimed: Operation) -> str | None:
     gateway_certificate, server_certificate, server_private_key = generate_gateway_tls(registry.id, gateway_address)
     await cluster.gateway.replace_tls(server_certificate, server_private_key, gateway_certificate, gateway_address)
 
-    # Format IP addresses and controller-published hostnames for URL authority syntax.
-    try:
-        address = ipaddress.ip_address(gateway_address)
-    except ValueError:
-        gateway_host = gateway_address
-    else:
-        gateway_host = f"[{address}]" if address.version == 6 else str(address)
-
     # Publish connection material only after the desired gateway Deployment is serving.
-    if not await compute.record_success(
-        registry.id,
-        claimed.platform_version,
-        f"https://{gateway_host}",
-        api_key,
-        gateway_certificate,
-        registry.status,
-    ):
-        current = await compute.get(registry.id)
-        if current is None or Version(current.version) > platform_version:
-            return None
+    async with session_scope() as session:
+        recorded = await compute.record_success(
+            session,
+            registry.id,
+            gateway_url(gateway_address),
+            api_key,
+            gateway_certificate,
+            registry.status,
+        )
+        await session.commit()
+    if not recorded:
         return "Compute gateway state was not recorded"

@@ -1,5 +1,6 @@
 import secrets
 from src.models.statuses import Status
+from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -11,19 +12,19 @@ async def create(claimed: Operation) -> str | None:
     """Converge one Application lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
-    application = await applications.get(claimed.target_id, include_deleted=True)
-    if application is None or application.deleted_at is not None:
-        return None
-
-    infrastructure = await organizations.infrastructure(application.organization_id)
+    async with session_scope() as session:
+        application = await applications.get(session, claimed.target_id, include_deleted=True)
+        if application is None or application.deleted_at is not None:
+            return None
+        infrastructure = await organizations.infrastructure(session, application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
 
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
-    # Converge providers and the workload while the Application remains in creation.
-    if application.status == Status.creating:
+    # Converge providers and the workload while the Application is not yet published.
+    if application.status != Status.running:
         # Reuse generated credentials after an interrupted creation attempt.
         if not any(name.startswith("LONGLINK_") for name in application.secrets):
             # Resolve the Application's immutable provider assignments.
@@ -65,31 +66,33 @@ async def create(claimed: Operation) -> str | None:
                 "LONGLINK_STORAGE_REGION": object_storage.region,
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
-            persisted_secrets = await applications.add_runtime_secrets(application.id, runtime_secrets)
+            async with session_scope() as session:
+                persisted_secrets = await applications.add_runtime_secrets(session, application.id, runtime_secrets)
+                await session.commit()
             if persisted_secrets is None:
                 return None
             application.secrets = persisted_secrets
-
-    elif application.status != Status.running:
-        return None
 
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
     await cluster.applications.apply(application.id, organization.id.hex, application.image, application.secrets)
 
     # Publish running after workload readiness.
-    await applications.mark_running(application.id)
+    async with session_scope() as session:
+        await applications.mark_running(session, application.id)
+        await session.commit()
 
 
 async def delete(claimed: Operation) -> str | None:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
-    application = await applications.get(claimed.target_id, include_deleted=True)
-    if application is None:
-        return None
-    if application.deleted_at is None:
-        return "Active Applications cannot be deleted by lifecycle cleanup"
-    infrastructure = await organizations.infrastructure(application.organization_id)
+    async with session_scope() as session:
+        application = await applications.get(session, claimed.target_id, include_deleted=True)
+        if application is None:
+            return None
+        if application.deleted_at is None:
+            return "Active Applications cannot be deleted by lifecycle cleanup"
+        infrastructure = await organizations.infrastructure(session, application.organization_id)
     if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization
@@ -117,4 +120,6 @@ async def delete(claimed: Operation) -> str | None:
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
-    await applications.purge(application.id)
+    async with session_scope() as session:
+        await applications.purge(session, application.id)
+        await session.commit()

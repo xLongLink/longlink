@@ -4,7 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { ContentFrame } from '@/layout/ContentFrame';
 
@@ -41,10 +41,27 @@ function TopLayout({
 
     // Preserve the existing top navigation and optional tab-strip structure.
     const hasTabs = tabs.length > 0;
+    const [isTabFrameExpanded, setIsTabFrameExpanded] = useState(false);
+
+    useEffect(() => {
+        if (!hasTabs) {
+            return;
+        }
+
+        // Expand the fixed frame over tabs once the document starts scrolling.
+        function updateTabFrame() {
+            setIsTabFrameExpanded(window.scrollY > 0);
+        }
+
+        updateTabFrame();
+        window.addEventListener('scroll', updateTabFrame, { passive: true });
+        return () => window.removeEventListener('scroll', updateTabFrame);
+    }, [hasTabs]);
 
     return (
         <AppShell
             banner={import.meta.env.MODE === 'sdk' ? undefined : <DevelopmentNotice />}
+            className="platform-top-layout"
             contentPadding={0}
             height="auto"
             mobileNav={false}
@@ -96,8 +113,8 @@ function TopLayout({
             variant="wash"
         >
             <ContentFrame
-                className="end-0 bottom-0 start-0 top-[var(--appshell-header-height,0px)]"
-                isConnectedToHeader
+                className={`end-0 bottom-0 start-0 ${isTabFrameExpanded && hasTabs ? 'top-0' : 'top-[var(--appshell-header-height,0px)]'}`}
+                isConnectedToHeader={!isTabFrameExpanded || !hasTabs}
             />
             <Stack
                 className="relative z-10"

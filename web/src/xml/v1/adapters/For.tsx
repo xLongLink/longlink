@@ -1,4 +1,4 @@
-import { ContextProvider, useXmlContext } from '../core/context';
+import { useXmlContext, XmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
 import { resolveXmlString } from './props';
@@ -9,7 +9,7 @@ export function For({ items, props, nodes }: Props & { items: unknown[] }) {
     const as = resolveXmlString(props, 'as', ctx);
 
     return items.map((item, index) => {
-        const childCtx: typeof ctx = {
+        const childCtx = {
             ...ctx,
             parent: ctx,
             values: {
@@ -19,9 +19,9 @@ export function For({ items, props, nodes }: Props & { items: unknown[] }) {
         };
 
         return (
-            <ContextProvider key={index} value={childCtx}>
+            <XmlContext.Provider key={index} value={childCtx}>
                 {renderNode(nodes, childCtx)}
-            </ContextProvider>
+            </XmlContext.Provider>
         );
     });
 }

@@ -3,11 +3,12 @@ from typing import Literal
 from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
-from longlink.pages import XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
+from longlink.pages import XMLResponse, PageDefinition, page_file_route, extract_longlink_metadata
 from longlink.utils import Envs
 from fastapi.routing import APIRoute
 from longlink.logger import ApiAccessFilter, logger
 from longlink.routes import routes
+from fastapi.responses import RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
@@ -98,6 +99,9 @@ class LongLink:
             if pages_directory.exists():
                 self.register_page_directory(pages_path, pages_directory)
 
+        # Start applications on their first static page instead of an unselected shell.
+        self.install_root_redirect()
+
         # Enable CORS in development for local frontend access to API routes
         if environment == "development":
             app.add_middleware(
@@ -144,6 +148,22 @@ class LongLink:
                         )
                         warned_routes.add(warning_key)
 
+    def install_root_redirect(self) -> None:
+        """Redirect the application root to its first static page."""
+
+        # Dynamic pages need parameters and cannot be startup destinations.
+        first_page = next((page for page in self.app.state.page_registry if page.route and ":" not in page.route), None)
+
+        # Let the frontend render applications without a static startup page.
+        if first_page is None:
+            return
+
+        @self.app.get("/", include_in_schema=False)
+        def redirect_to_first_page() -> RedirectResponse:
+            """Send root requests to the first registered static page."""
+
+            return RedirectResponse(url=f"/{first_page.route}", status_code=307)
+
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
 
@@ -164,7 +184,7 @@ class LongLink:
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
-            route_path = f"{normalized_prefix}/{relative_path}"
+            registered_path = f"{normalized_prefix}/{relative_path.removesuffix('.xml')}"
             page_endpoint = partial(page_file.read_text, encoding="utf-8")
 
             # Validate XML pages and extract optional display metadata.
@@ -172,8 +192,8 @@ class LongLink:
             page_root = page.validate()
             page_name, page_icon = extract_longlink_metadata(page_root)
 
-            # Register page metadata and its normalized API route together.
-            registered_path = normalize_page_path(route_path)
+            page_route = page_file_route(relative_path)
+            tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 
             # Page endpoints must remain unique across registered directories.
             if registered_path in registered_page_paths:
@@ -182,8 +202,8 @@ class LongLink:
             registered_pages.append(
                 PageDefinition(
                     path=registered_path,
-                    route=page_file_route(relative_path),
-                    tab=page_file_tab(relative_path),
+                    route=page_route,
+                    tab=tab,
                     name=page_name,
                     icon=page_icon,
                 )

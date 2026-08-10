@@ -87,7 +87,6 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("version", sa.String(length=64), nullable=False),
         sa.Column("gateway_url", sa.String(length=512), nullable=True),
         sa.Column("gateway_api_key", EncryptedType(env.ENCRYPTION_KEY), nullable=True),
         sa.Column("gateway_certificate", sa.Text(), nullable=True),
@@ -231,28 +230,12 @@ def upgrade() -> None:
             "role", sa.Enum("read", "write", "maintain", "admin", "owner", name="organization_role_enum", native_enum=False), nullable=False
         ),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
         ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("organization_id", "email"),
     )
 
     # Create organization memberships after organizations and users.
@@ -311,7 +294,6 @@ def upgrade() -> None:
         ),
         sa.Column("target_id", sa.Uuid(), nullable=False),
         sa.Column("failed", sa.Boolean(), nullable=False),
-        sa.Column("platform_version", sa.String(length=64), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),
@@ -320,7 +302,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_operations_queue",
         "operations",
-        ["kind", "target_id", "platform_version", "finished_at", "lease_expires_at", "created_at", "id"],
+        ["kind", "target_id", "finished_at", "lease_expires_at", "created_at", "id"],
     )
 
 

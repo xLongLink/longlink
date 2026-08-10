@@ -8,6 +8,7 @@ from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate
+from src.database.session import session_scope
 from src.database.services import compute, storage, database
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 
@@ -109,27 +110,35 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
-        await compute.create(compute_config.name, compute_config.kubeconfig)
+        async with session_scope() as session:
+            await compute.create(session, compute_config.name, compute_config.kubeconfig)
+            await session.commit()
 
     # Register the configured database unless it already exists.
     with suppress(ConflictError):
-        await database.create(
-            "development database",
-            database_config.host,
-            database_config.port,
-            database_config.username,
-            database_config.password,
-            database_config.sslmode,
-        )
+        async with session_scope() as session:
+            await database.create(
+                session,
+                "development database",
+                database_config.host,
+                database_config.port,
+                database_config.username,
+                database_config.password,
+                database_config.sslmode,
+            )
+            await session.commit()
 
     # Register the configured storage unless it already exists.
     with suppress(ConflictError):
-        await storage.create(
-            "local storage",
-            settings.EXOSCALE_STORAGE_ENDPOINT_URL,
-            settings.EXOSCALE_API_KEY,
-            settings.EXOSCALE_API_SECRET,
-        )
+        async with session_scope() as session:
+            await storage.create(
+                session,
+                "local storage",
+                settings.EXOSCALE_STORAGE_ENDPOINT_URL,
+                settings.EXOSCALE_API_KEY,
+                settings.EXOSCALE_API_SECRET,
+            )
+            await session.commit()
 
 
 def main() -> None:

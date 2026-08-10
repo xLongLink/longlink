@@ -30,7 +30,7 @@ import {
 } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
-import { formatBytes, formatNumber } from '@/lib/utils';
+import { formatBytes, numberFormatter } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';
@@ -128,7 +128,7 @@ export default function Settings({
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
-    const updateOrganization = useUpdateOrganization(organizationId, canManageOrganization);
+    const updateOrganization = useUpdateOrganization(organizationId);
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
@@ -156,7 +156,7 @@ export default function Settings({
                         <Text weight="semibold">{resource.database_name}</Text>
                         <Text type="supporting">
                             {formatBytes(resource.space_used)} ·{' '}
-                            {t('resources.tableCount', { count: formatNumber(resource.table_count) })}
+                            {t('resources.tableCount', { count: numberFormatter.format(resource.table_count) })}
                         </Text>
                     </VStack>
                 </HStack>

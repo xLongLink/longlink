@@ -1,21 +1,16 @@
 import os
-from pwdlib import PasswordHash
 from typing import Self
 from pydantic import Field, EmailStr, field_validator, model_validator
-from src.models.types import PlatformVersion
+from src.models.auth import normalize_email
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
 
 class Env(BaseSettings):
-    """Define startup-validated settings for one LongLink Platform API replica.
-
-    VERSION supplies the release affinity used when claiming reconciliation Operations.
-    """
+    """Define startup-validated settings for one LongLink Platform API replica."""
 
     # Runtime mode
-    VERSION: PlatformVersion = PlatformVersion("v0.0.0")
     DEVELOPMENT: bool = DEVELOPMENT
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
 
@@ -54,16 +49,8 @@ class Env(BaseSettings):
     def normalize_administrator_email(cls, value: object) -> object:
         """Normalize administrator email identity before validation."""
 
-        # Preserve Pydantic's type validation for values that are not strings.
-        return value.strip().casefold() if isinstance(value, str) else value
-
-    @field_validator("ADMIN_PASSWORD")
-    @classmethod
-    def hash_administrator_password(cls, value: str) -> str:
-        """Hash the validated administrator password for startup reconciliation."""
-
-        # Prepare the configured credential before the API opens a database session.
-        return PasswordHash.recommended().hash(value)
+        # Share the API boundary's canonical identity representation.
+        return normalize_email(value)
 
     @model_validator(mode="after")
     def validate_authentication(self) -> Self:

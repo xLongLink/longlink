@@ -3,9 +3,9 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
+import { BaseUrlContext, resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
+import { resolveXmlString, resolveXmlValue } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
@@ -50,26 +50,28 @@ export async function executeAction(
 
     // Resolve action inputs before building the request.
     try {
-        invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
-        const form = resolveXmlExpression(props, 'form');
-        const json = resolveXmlExpression(props, 'json');
+        const invalidationValue = resolveXmlValue(props, 'invalidate', ctx, []);
+        if (!Array.isArray(invalidationValue)) {
+            throw new Error('invalidate must evaluate to an array');
+        }
+
+        invalidate = invalidationValue.map((value) => String(value));
         method = resolveXmlString(props, 'method', ctx, 'POST');
         actionUrl = resolveXmlString(props, 'action', ctx, '');
 
-        // Resolve the compiled payload at click time so it sees the latest state.
-        formValue = form ? form(ctx) : undefined;
-        jsonValue = json ? json(ctx) : undefined;
+        // Resolve action payloads at click time so they see the latest state.
+        formValue = resolveXmlValue(props, 'form', ctx);
+        jsonValue = resolveXmlValue(props, 'json', ctx);
     } catch (error: unknown) {
         toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         return;
     }
 
-    const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
 
     // Allow invalidation-only actions.
     if (!actionUrl) {
-        await invalidateRuntime(invalidate);
+        await ctx.invalidate(invalidate);
 
         return;
     }
@@ -80,15 +82,16 @@ export async function executeAction(
         return;
     }
 
-    const normalizedActionUrl = actionUrl.trim();
+    let requestUrl: string;
 
     // Keep actions scoped to the current application.
-    if (!isAppRelativeUrl(normalizedActionUrl)) {
+    try {
+        requestUrl = resolveRequestUrl(baseUrl, actionUrl);
+    } catch {
         toast({ body: 'Action URL must be app-relative', type: 'error' });
         return;
     }
 
-    const requestUrl = resolveUrl(baseUrl, normalizedActionUrl);
     const init: RequestInit = { method: normalizedMethod };
 
     // Avoid ambiguous payload configuration.
@@ -133,7 +136,7 @@ export async function executeAction(
         return;
     }
 
-    await invalidateRuntime(invalidate);
+    await ctx.invalidate(invalidate);
 
     toast({ body: `Request completed with status ${response.status}` });
 }

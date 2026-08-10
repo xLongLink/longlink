@@ -21,25 +21,28 @@ type XmlLayoutProps = {
 };
 
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
+export default function XmlLayout({ tabs = {}, children }: XmlLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
     const currentPath = `${location.pathname}${location.search}`;
     const isSdkMode = import.meta.env.MODE === 'sdk';
 
-    const resolvedTabs = Object.entries(tabs ?? {}).map(([label, tab]) => {
+    let activeHref = '';
+    const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
         const { href, active, icon }: XmlLayoutTab = typeof tab === 'string' ? { href: tab } : tab;
         const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
+        const isActive = active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath;
+
+        if (!activeHref && isActive) activeHref = href;
 
         return {
             href,
             icon,
             label,
-            isActive: active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath,
             value: href,
         };
     });
-    const activeHref = resolvedTabs.find((tab) => tab.isActive)?.href ?? '';
+
     // Keep XML page content aligned within the centered application container.
     return (
         <TopLayout

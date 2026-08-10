@@ -3,10 +3,9 @@ import hmac
 import hashlib
 from uuid import UUID
 from datetime import timedelta
-from sqlmodel import col
-from sqlalchemy import select
 from src.environments import env
 from longlink.utils.time import utcnow
+from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -82,8 +81,7 @@ async def password_reset_user(session: AsyncSession, token: str) -> User:
         raise jwt.InvalidTokenError("Invalid password reset user") from exc
 
     # Require an active account and the exact credential version that received the link.
-    statement = select(User).where(col(User.id) == user_id, col(User.deleted_at).is_(None))
-    user = (await session.execute(statement)).scalar_one_or_none()
+    user = await users.active(session, user_id)
     if user is None or not hmac.compare_digest(fingerprint, password_fingerprint(user.password)):
         raise jwt.InvalidTokenError("Invalid password reset token")
     return user

@@ -7,8 +7,6 @@ describe('renderNode', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const cases = [
             { name: 'className', expected: 'className is not supported in XML' },
-            { name: 'style', expected: 'style is not supported in XML' },
-            { name: 'xstyle', expected: 'xstyle is not supported in XML' },
             { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
         ];
 

@@ -2,40 +2,38 @@ import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
     resolveXmlLabel,
     resolveXmlNumber,
+    resolveOptionalXmlString,
     resolveXmlSizeValue,
     resolveXmlStatus,
-    resolveXmlString,
 } from './props';
-
-type FileValue = File | File[] | null;
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
     const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'file');
-    const [localValue, setLocalValue] = useState<FileValue>(null);
-    const currentValue = binding.currentValue;
+    const [localValue, setLocalValue] = useState<File | File[] | null>(null);
     const boundValue =
-        currentValue == null ||
-        (typeof File !== 'undefined' &&
-            (currentValue instanceof File ||
-                (Array.isArray(currentValue) && currentValue.every((entry) => entry instanceof File))))
-            ? (currentValue ?? null)
-            : null;
+        binding.currentValue == null
+            ? null
+            : typeof File !== 'undefined' &&
+                (binding.currentValue instanceof File ||
+                    (Array.isArray(binding.currentValue) &&
+                        binding.currentValue.every((entry) => entry instanceof File)))
+              ? binding.currentValue
+              : null;
     const value = binding.bound ? boundValue : localValue;
-    const mode = resolveXmlEnum(props, 'mode', ctx, ['dropzone', 'input'], 'input', 'FileInput');
 
     return (
         <AstryxFileInput
-            accept={resolveXmlString(props, 'accept', ctx) || undefined}
-            description={resolveXmlString(props, 'description', ctx) || undefined}
-            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
+            accept={resolveOptionalXmlString(props, 'accept', ctx)}
+            description={resolveOptionalXmlString(props, 'description', ctx)}
+            disabledMessage={resolveOptionalXmlString(props, 'disabledMessage', ctx)}
             isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isLoading={resolveXmlBoolean(props, 'isLoading', ctx, false)}
@@ -45,12 +43,11 @@ export function FileInput({ props }: Props) {
             label={resolveXmlLabel(props, ctx, 'FileInput')}
             maxFiles={resolveXmlNumber(props, 'maxFiles', ctx)}
             maxSize={resolveXmlNumber(props, 'maxSize', ctx)}
-            mode={mode}
+            mode={resolveXmlEnum(props, 'mode', ctx, ['dropzone', 'input'], 'input', 'FileInput')}
             onChange={(nextValue) => {
-                if (binding.bound) binding.setValue(nextValue);
-                else setLocalValue(nextValue);
+                setXmlBinding(binding, setLocalValue, nextValue);
             }}
-            placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
+            placeholder={resolveOptionalXmlString(props, 'placeholder', ctx)}
             status={resolveXmlStatus(props, ctx)}
             value={value}
             width={resolveXmlSizeValue(props, 'width', ctx)}

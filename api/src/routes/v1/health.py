@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from sqlalchemy import text
 from src.database.session import session_scope
+from src.database.services import database
 
 router = APIRouter()
 
@@ -18,6 +18,6 @@ async def readyz():
 
     # Require a live database connection before routing requests to this replica.
     async with session_scope() as session:
-        await session.execute(text("SELECT 1"))
+        await database.ready(session)
 
     return {"ready": True}

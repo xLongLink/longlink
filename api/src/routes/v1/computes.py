@@ -1,32 +1,35 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin
+from src.auth import authadmin, get_session
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate):
+async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register a compute target and queue its initial creation."""
 
-    return await compute.create(payload.name, payload.kubeconfig)
+    registry = await compute.create(session, payload.name, payload.kubeconfig)
+    await session.commit()
+    return registry
 
 
 @router.get("/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries():
+async def list_compute_registries(session: AsyncSession = Depends(get_session)):
     """Return all registered compute backends."""
 
-    return await compute.fetch()
+    return await compute.fetch(session)
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID):
+async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
-    registry = await compute.get(registry_id)
+    registry = await compute.get(session, registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 
@@ -34,9 +37,10 @@ async def get_compute_registry(registry_id: UUID):
 
 
 @router.delete("/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: UUID):
+async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
-    if not await compute.delete(registry_id):
+    if not await compute.delete(session, registry_id):
         raise HTTPException(status_code=404, detail="Compute registry not found")
+    await session.commit()

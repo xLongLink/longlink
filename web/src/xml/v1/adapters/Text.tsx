@@ -1,20 +1,15 @@
 import { Text as AstryxText, type TextProps } from '@astryxdesign/core/Text';
 import { useXmlContext } from '../core/context';
-import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
 /** Renders semantic Astryx text from a value, translation, or nested XML. */
 export function Text({ props, nodes }: Props) {
     const ctx = useXmlContext();
     const value = resolveXmlValue(props, 'value', ctx);
-    const content = props.i18n
-        ? resolveTranslation(props, ctx)
-        : value != null
-          ? String(value)
-          : renderNode(nodes, ctx);
-    const type = resolveXmlEnum(
+    const content = resolveXmlContent(props, ctx, value, () => renderNode(nodes, ctx));
+    const type = resolveXmlEnum<Extract<TextProps['type'], string>>(
         props,
         'type',
         ctx,
@@ -49,7 +44,7 @@ export function Text({ props, nodes }: Props) {
             hasTabularNumbers={hasTabularNumbers}
             justify={justify}
             maxLines={maxLines}
-            type={type as TextProps['type']}
+            type={type}
             weight={weight}
         >
             {content}

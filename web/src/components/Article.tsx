@@ -11,7 +11,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import { formatDate } from '@/lib/utils';
+import { dateFormatter } from '@/lib/utils';
 import type { ArticlePage } from '@/platform/catalog';
 
 /** Renders shared documentation and legal article content. */
@@ -108,7 +108,9 @@ export function Article({
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">
-                                            {t('common.lastUpdated', { date: formatDate(metadata.lastUpdated) })}
+                                            {t('common.lastUpdated', {
+                                                date: dateFormatter.format(new Date(metadata.lastUpdated)),
+                                            })}
                                         </Text>
                                         {metadata.editUrl ? (
                                             <Link href={metadata.editUrl} hasUnderline isExternalLink type="supporting">

@@ -16,7 +16,9 @@ def test_image_parses_registry_repository_and_tag() -> None:
     assert image == "ghcr.io/longlink/dashboard:latest"
 
 
-@pytest.mark.parametrize("reference", ["longlink/dashboard", "https://ghcr.io/longlink/dashboard:latest", "ghcr.io/LongLink/dashboard:latest"])
+@pytest.mark.parametrize(
+    "reference", ["longlink/dashboard", "https://ghcr.io/longlink/dashboard:latest", "ghcr.io/LongLink/dashboard:latest"]
+)
 def test_image_rejects_invalid_references(reference: str) -> None:
     """Reject image references that are ambiguous or not OCI-shaped."""
 

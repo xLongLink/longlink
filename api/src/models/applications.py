@@ -2,12 +2,19 @@ import re
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.models.types import Icon, Image
+from src.models.types import Image
 from src.models.statuses import Status
+from longlink.models.icons import Icon
 
 
-class ApplicationEnvironment(BaseModel):
-    """Validate user-owned Application environment values."""
+class ApplicationCreate(BaseModel):
+    """Validate application creation payloads."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=100)
+    icon: Icon | None = None
+    image: Image
+    description: str | None = Field(default=None, max_length=255)
 
     # Configuration
     envs: dict[str, str] = Field(default_factory=dict)
@@ -45,16 +52,6 @@ class ApplicationEnvironment(BaseModel):
             raise ValueError("Application environment is too large")
 
         return envs
-
-
-class ApplicationCreate(ApplicationEnvironment):
-    """Validate application creation payloads."""
-
-    # Metadata
-    name: str = Field(min_length=1, max_length=100)
-    icon: Icon | None = None
-    image: Image
-    description: str | None = Field(default=None, max_length=255)
 
 
 class ApplicationOrganizationResponse(BaseModel):

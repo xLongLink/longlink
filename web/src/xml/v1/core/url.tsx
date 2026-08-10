@@ -3,7 +3,6 @@ import { hasProtocol, parsePath, parseURL } from 'ufo';
 
 export const BaseUrlContext = createReactContext<string>('');
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
-const URL_VALIDATION_BASE = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
@@ -16,8 +15,7 @@ export function resolveUrl(baseUrl: string, path: string): string {
     const base = parseURL(baseUrl);
     const parsedPath = parsePath(path);
     const baseOrigin = base.protocol && base.host ? `${base.protocol}//${base.host}` : '';
-    const basePath = base.pathname;
-    const baseSegments = basePath.split('/').filter(Boolean);
+    const baseSegments = base.pathname.split('/').filter(Boolean);
     const pathSegments = parsedPath.pathname.split('/');
     const resolvedSegments = [...baseSegments];
 
@@ -52,7 +50,7 @@ export function isAppRelativeUrl(path: string): boolean {
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const base = new URL(URL_VALIDATION_BASE);
+        const base = new URL('http://longlink.local');
         const url = new URL(value, base);
 
         return url.origin === base.origin;
@@ -71,6 +69,11 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
     }
 
     return resolveUrl(baseUrl, value);
+}
+
+/** Resolves an application navigation URL or omits invalid destinations. */
+export function resolveNavigationUrl(baseUrl: string, path: string): string {
+    return path && isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
 }
 
 /** Resolves an XML anchor URL while blocking unsafe browser protocols. */

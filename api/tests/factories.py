@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
-from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -36,6 +35,40 @@ async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKi
         return operation
 
 
+async def claim_operation() -> Operation | None:
+    """Claim one queued Operation in a committed test transaction."""
+
+    async with session_scope() as session:
+        operation = await operations.claim(session)
+        await session.commit()
+        return operation
+
+
+async def complete_operation(operation_id: UUID) -> Operation | None:
+    """Complete one queued Operation in a committed test transaction."""
+
+    async with session_scope() as session:
+        operation = await operations.complete(session, operation_id)
+        await session.commit()
+        return operation
+
+
+async def fail_operation(operation_id: UUID) -> Operation | None:
+    """Fail one queued Operation in a committed test transaction."""
+
+    async with session_scope() as session:
+        operation = await operations.fail(session, operation_id)
+        await session.commit()
+        return operation
+
+
+async def fetch_operations() -> list[Operation]:
+    """Fetch queued Operations through an explicit test session."""
+
+    async with session_scope() as session:
+        return list(await operations.fetch(session))
+
+
 async def create_compute(name: str = "Local compute") -> ComputeRegistry:
     """Create one minimal Compute registry without queueing reconciliation."""
 
@@ -44,7 +77,6 @@ async def create_compute(name: str = "Local compute") -> ComputeRegistry:
         compute = ComputeRegistry(
             name=name,
             kubeconfig={"apiVersion": "v1", "clusters": []},
-            version=env.VERSION,
         )
         session.add(compute)
         await session.commit()
@@ -64,7 +96,6 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             gateway_api_key="test-api-key",
             gateway_certificate="test-certificate",
             status=Status.running,
-            version=env.VERSION,
         )
         database = DatabaseRegistry(
             name=f"{name} database {suffix}",
@@ -97,15 +128,19 @@ async def create_organization(
     if infrastructure is None:
         infrastructure = await create_ready_infrastructure()
 
-    return await organizations.create(
-        name,
-        slug,
-        owner,
-        avatar=avatar,
-        compute_id=infrastructure.compute.id,
-        storage_id=infrastructure.storage.id,
-        database_id=infrastructure.database.id,
-    )
+    async with session_scope() as session:
+        organization = await organizations.create(
+            session,
+            name,
+            slug,
+            owner,
+            avatar=avatar,
+            compute_id=infrastructure.compute.id,
+            storage_id=infrastructure.storage.id,
+            database_id=infrastructure.database.id,
+        )
+        await session.commit()
+        return organization
 
 
 async def create_application(
@@ -123,11 +158,15 @@ async def create_application(
         await session.commit()
     parsed_image = Image(image)
     resolved_image = image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test"
-    return await applications.create(
-        organization.id,
-        name,
-        slug=slug,
-        image=resolved_image,
-        user=owner,
-        secrets={} if secrets is None else secrets,
-    )
+    async with session_scope() as session:
+        application = await applications.create(
+            session,
+            organization.id,
+            name,
+            slug=slug,
+            image=resolved_image,
+            user=owner,
+            secrets={} if secrets is None else secrets,
+        )
+        await session.commit()
+        return application

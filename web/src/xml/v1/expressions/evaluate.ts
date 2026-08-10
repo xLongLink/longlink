@@ -1,6 +1,6 @@
 import { parse, parseExpressionAt } from 'acorn';
 import type { ExecutionContext } from '../types';
-import { createScopeProxy, hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath } from './resolve';
+import { hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 import type { ExpressionNode } from './types';
 import { isReference } from './utils';
 
@@ -15,13 +15,9 @@ type InterpolationSegment = {
 };
 
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
-    Boolean: (value) => Boolean(value),
-    Number: (value) => Number(value),
-    String: (value) => String(value),
-};
-
-const SAFE_ARRAY_CALLS: Record<string, SafeExpressionCall> = {
-    isArray: (value) => Array.isArray(value),
+    Boolean,
+    Number,
+    String,
 };
 
 const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
@@ -64,7 +60,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     if (callee.type === 'Identifier') {
         const value = readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
 
-        return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+        return value;
     }
 
     // Allow selected static helper namespaces.
@@ -76,16 +72,14 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     ) {
         // Resolve safe Array helpers.
         if (callee.object.name === 'Array') {
-            const value = readSafeProperty(SAFE_ARRAY_CALLS, callee.property.name);
-
-            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+            return callee.property.name === 'isArray' ? Array.isArray : undefined;
         }
 
         // Resolve safe Math helpers.
         if (callee.object.name === 'Math') {
             const value = readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
 
-            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+            return value;
         }
     }
 
@@ -153,47 +147,27 @@ function readInterpolationSegments(input: string): InterpolationSegment[] {
     return segments;
 }
 
-/** Parses expressions ahead of first runtime evaluation when possible. */
-export function prepareEvaluation(expr: string): void {
-    const input = expr.trim();
-    const standaloneExpression = readStandaloneExpression(input);
-
-    // Parse standalone expressions immediately.
-    if (standaloneExpression != null) {
-        parseExpression(standaloneExpression);
-        return;
-    }
-
-    // Pre-parse mixed interpolation expressions.
-    if (input.includes('${') && !isReference(input)) {
-        // Cache each interpolation expression.
-        for (const segment of readInterpolationSegments(input)) {
-            parseExpression(segment.expression);
-        }
-    }
-}
-
 /** Evaluates a supported AST node against the current scope. */
-function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {}): unknown {
+function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
     // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
             return node.value;
 
         case 'Identifier':
-            return isSafePropertyName(node.name as string) ? scope[node.name as string] : undefined;
+            return resolveValue(ctx, node.name);
 
         case 'ChainExpression':
-            return evaluateNode(node.expression, scope);
+            return evaluateNode(node.expression, ctx);
 
         case 'MemberExpression': {
             // Stop property reads on nullish objects.
-            const object = evaluateNode(node.object, scope);
+            const object = evaluateNode(node.object, ctx);
             if (object == null) return undefined;
 
             // Resolve computed property keys through the evaluator.
             if (node.computed) {
-                const key = evaluateNode(node.property, scope);
+                const key = evaluateNode(node.property, ctx);
 
                 return key == null ? undefined : readSafeProperty(object, String(key));
             }
@@ -207,8 +181,8 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         }
 
         case 'BinaryExpression': {
-            const left = evaluateNode(node.left, scope);
-            const right = evaluateNode(node.right, scope);
+            const left = evaluateNode(node.left, ctx);
+            const right = evaluateNode(node.right, ctx);
 
             // Apply only allowed binary operators.
             switch (node.operator) {
@@ -281,22 +255,22 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         }
 
         case 'LogicalExpression': {
-            const left = evaluateNode(node.left, scope);
+            const left = evaluateNode(node.left, ctx);
 
             // Evaluate logical AND lazily.
-            if (node.operator === '&&') return left ? evaluateNode(node.right, scope) : left;
+            if (node.operator === '&&') return left ? evaluateNode(node.right, ctx) : left;
 
             // Evaluate logical OR lazily.
-            if (node.operator === '||') return left ? left : evaluateNode(node.right, scope);
+            if (node.operator === '||') return left ? left : evaluateNode(node.right, ctx);
 
             // Evaluate nullish coalescing lazily.
-            if (node.operator === '??') return left ?? evaluateNode(node.right, scope);
+            if (node.operator === '??') return left ?? evaluateNode(node.right, ctx);
 
             throw new Error('Operator not allowed');
         }
 
         case 'UnaryExpression': {
-            const value = evaluateNode(node.argument, scope);
+            const value = evaluateNode(node.argument, ctx);
 
             // Negate truthiness for bang expressions.
             if (node.operator === '!') return !value;
@@ -311,9 +285,9 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         }
 
         case 'ConditionalExpression':
-            return evaluateNode(node.test, scope)
-                ? evaluateNode(node.consequent, scope)
-                : evaluateNode(node.alternate, scope);
+            return evaluateNode(node.test, ctx)
+                ? evaluateNode(node.consequent, ctx)
+                : evaluateNode(node.alternate, ctx);
 
         case 'CallExpression': {
             // Reject calls outside the allowlist.
@@ -325,32 +299,27 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                 throw new Error('Function call not allowed');
             }
 
-            return callback(...node.arguments.map((argument) => evaluateNode(argument, scope)));
+            return callback(...node.arguments.map((argument) => evaluateNode(argument, ctx)));
         }
 
         case 'ArrayExpression':
-            return node.elements.map((element) => (element ? evaluateNode(element, scope) : null));
+            return node.elements.map((element) => (element ? evaluateNode(element, ctx) : null));
 
         case 'ObjectExpression':
-            return node.properties.reduce<Record<string, unknown>>(
-                (result, property) => {
-                    // Ignore entries that are not plain properties.
-                    if (property.type !== 'Property') return result;
+            return node.properties.reduce<Record<string, unknown>>((result, property) => {
+                // Ignore entries that are not plain properties.
+                if (property.type !== 'Property') return result;
 
-                    const key =
-                        property.key.type === 'Identifier'
-                            ? property.key.name
-                            : String(evaluateNode(property.key, scope));
+                const key =
+                    property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
 
-                    // Skip prototype-related keys so XML object literals cannot mutate prototypes.
-                    if (!isSafePropertyName(key)) return result;
+                // Skip prototype-related keys so XML object literals cannot mutate prototypes.
+                if (!isSafePropertyName(key)) return result;
 
-                    result[key] = evaluateNode(property.value, scope);
+                result[key] = evaluateNode(property.value, ctx);
 
-                    return result;
-                },
-                Object.create(null) as Record<string, unknown>
-            );
+                return result;
+            }, Object.create(null));
 
         case 'TemplateLiteral': {
             let output = '';
@@ -363,7 +332,7 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                 if (index < node.expressions.length) {
                     const expression = node.expressions[index];
 
-                    output += String(evaluateNode(expression, scope) ?? '');
+                    output += String(evaluateNode(expression, ctx) ?? '');
                 }
             }
 
@@ -378,12 +347,11 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
 /** Evaluates an XML attribute value against the current XML runtime scope. */
 export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     const input = expr.trim();
-    const values = createScopeProxy(ctx);
     const standaloneExpression = readStandaloneExpression(input);
 
     /** Runs an expression with XML values exposed as local variables. */
-    function run(expression: string, currentValues: Record<string, unknown>): unknown {
-        return evaluateNode(parseExpression(expression), currentValues);
+    function run(expression: string): unknown {
+        return evaluateNode(parseExpression(expression), ctx);
     }
 
     // Preserve empty attribute values.
@@ -391,7 +359,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     // Treat values that are fully wrapped in `${...}` as typed expressions.
     if (standaloneExpression != null) {
-        return run(standaloneExpression, values);
+        return run(standaloneExpression);
     }
 
     // Resolve `$` references directly through the runtime scope.
@@ -405,14 +373,14 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
     }
 
     // Interpolate `${...}` expressions inside mixed text values.
-    if (input.includes('${') && !isReference(input)) {
+    if (input.includes('${')) {
         let output = '';
         let cursor = 0;
 
         // Append each literal chunk and evaluated segment.
         for (const segment of readInterpolationSegments(expr)) {
             output += expr.slice(cursor, segment.start);
-            output += String(run(segment.expression, values) ?? '');
+            output += String(run(segment.expression) ?? '');
             cursor = segment.end + 1;
         }
 

@@ -210,7 +210,7 @@ export type DatabaseSslMode = 'disable' | 'allow' | 'prefer' | 'require' | 'veri
 /**
  * EmailPayload
  *
- * Validate one unchanged email value.
+ * Validate one canonical email identity.
  */
 export type EmailPayload = {
     /**
@@ -314,10 +314,6 @@ export type OperationResponse = {
      */
     id: string;
     kind: OperationKind;
-    /**
-     * Platform Version
-     */
-    platform_version: string;
     status: OperationStatus;
     /**
      * Target Id

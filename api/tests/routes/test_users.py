@@ -2,6 +2,7 @@ import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization
+from src.database.session import session_scope
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
 
@@ -52,7 +53,9 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     user = users[0]
     active = await create_organization(user, name="active", slug="active")
     deleted = await create_organization(user, name="deleted", slug="deleted")
-    await organization_service.soft_delete(deleted.id, user)
+    async with session_scope() as session:
+        await organization_service.soft_delete(session, deleted.id, user)
+        await session.commit()
     client = clients[0]
 
     # Act
@@ -107,7 +110,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     organization = await create_organization(user)
     synchronized: list[UUID] = []
 
-    async def sync_users(organization_id: UUID) -> None:
+    async def sync_users(session, organization_id: UUID) -> None:
         """Record the Organization user projection requested by the profile route."""
 
         synchronized.append(organization_id)

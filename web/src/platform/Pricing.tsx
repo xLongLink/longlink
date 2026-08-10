@@ -1,53 +1,17 @@
-import { Badge } from '@astryxdesign/core/Badge';
 import { Card } from '@astryxdesign/core/Card';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Section } from '@astryxdesign/core/Section';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { CheckCircle, ChevronRight, Info, Wrench } from 'lucide-react';
+import { Building2, UserRound, UsersRound } from 'lucide-react';
 import type { MetaFunction } from 'react-router';
 import { PublicPage } from '@/layout/PublicPage';
 import { publicSeoMeta } from '@/lib/seo';
 import { pricingPage } from '@/platform/public';
 
 export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
-
-const pricingOptions = [
-    {
-        name: 'Free',
-        icon: CheckCircle,
-        price: 'CHF 0',
-        period: '/user/month',
-        description: 'Designed for small teams getting started with building and running process apps.',
-        features: [
-            {
-                label: 'Deploy any Application',
-                description:
-                    'Deploy your application or find free open-source applications to start from.\n\nApplications sleep automatically when inactive, and abuse-prevention safeguards help keep the shared platform reliable.',
-            },
-            { label: '100MB Database Space', description: 'Shared across all apps in the workspace.' },
-            { label: '2GB Object Storage Space', description: 'Shared across all apps in the workspace.' },
-        ],
-    },
-    {
-        name: 'Team',
-        icon: Info,
-        price: 'Coming soon',
-        period: null,
-        description: 'Run production apps with pricing that scales with the people using the workflow.',
-        features: [{ label: 'Coming soon', description: null }],
-    },
-    {
-        name: 'Work',
-        icon: Wrench,
-        price: 'Coming soon',
-        period: null,
-        description: 'Use AI-assisted workflows to build, adapt, and operate process apps faster.',
-        features: [{ label: 'Coming soon', description: null }],
-    },
-];
 
 /** Renders the public pricing page. */
 export default function Pricing() {
@@ -56,73 +20,130 @@ export default function Pricing() {
             <main>
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
-                        <Stack gap={3} align="center" maxWidth={640}>
-                            <Badge label="Pricing" variant="teal" />
-                            <Heading level={1} type="display-2" justify="center" textWrap="balance">
-                                Simple workflow, Simple plans
-                            </Heading>
-                            <Text as="p" type="large" color="secondary" justify="center">
-                                Designed to be extended.
-                            </Text>
-                        </Stack>
-
-                        <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
-                            {pricingOptions.map(({ description, features, icon: OptionIcon, name, period, price }) => {
+                        <Grid className="pt-8" columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={6} width="100%">
+                            {[
+                                {
+                                    name: 'Free',
+                                    icon: UserRound,
+                                    price: 'CHF 0',
+                                    period: '/user/month',
+                                    description: (
+                                        <>
+                                            The basics for individuals
+                                            <br />
+                                            and organizations.
+                                        </>
+                                    ),
+                                    features: [
+                                        {
+                                            label: 'Deploy any Application',
+                                            description:
+                                                'Deploy your application or find free open-source applications to start from.\n\nApplications sleep automatically when inactive, and abuse-prevention safeguards help keep the shared platform reliable.',
+                                        },
+                                        {
+                                            label: '100MB Database Space',
+                                            description: 'Shared across all apps in the workspace.',
+                                        },
+                                        {
+                                            label: '2GB Object Storage Space',
+                                            description: 'Shared across all apps in the workspace.',
+                                        },
+                                    ],
+                                },
+                                {
+                                    name: 'Team',
+                                    icon: UsersRound,
+                                    price: 'Coming soon',
+                                    period: null,
+                                    description: (
+                                        <>
+                                            Advanced collaboration for
+                                            <br />
+                                            individuals and organizations.
+                                        </>
+                                    ),
+                                    features: [],
+                                },
+                                {
+                                    name: 'Work',
+                                    icon: Building2,
+                                    price: 'Coming soon',
+                                    period: null,
+                                    description: (
+                                        <>
+                                            Advanced controls
+                                            <br />
+                                            for organizations.
+                                        </>
+                                    ),
+                                    features: [],
+                                },
+                            ].map(({ description, features, icon: Icon, name, period, price }) => {
                                 return (
-                                    <Card key={name} minHeight={520}>
-                                        <Stack gap={6}>
-                                            <Stack gap={3} align="center">
-                                                <OptionIcon aria-hidden="true" className="text-accent" size={20} />
-                                                <Heading level={2} justify="center">
-                                                    {name}
-                                                </Heading>
-                                                <Text as="p" type="supporting" justify="center">
-                                                    {description}
-                                                </Text>
-                                                <Stack direction="horizontal" gap={2} align="end" justify="center">
-                                                    <Text type="display-3" weight="semibold">
-                                                        {price}
+                                    <Card key={name} minHeight={640}>
+                                        <Stack gap={4}>
+                                            <Stack className="pt-12" gap={2} align="center">
+                                                <Icon aria-hidden="true" className="text-accent" size={20} />
+                                                <Stack gap={2} align="center">
+                                                    <Heading level={2} justify="center">
+                                                        {name}
+                                                    </Heading>
+                                                    <Text as="p" className="px-6" type="supporting" justify="center">
+                                                        {description}
                                                     </Text>
-                                                    {period ? <Text type="supporting">{period}</Text> : null}
                                                 </Stack>
                                             </Stack>
 
-                                            {name === 'Team' ? (
-                                                <Text as="p">Everything included in Free, plus...</Text>
-                                            ) : null}
-                                            {name === 'Work' ? (
-                                                <Text as="p">Everything included in Team, plus...</Text>
-                                            ) : null}
+                                            <Stack className="px-4 pt-12" direction="horizontal" gap={2} align="end">
+                                                <Text hasCapsize type="display-3" weight="semibold">
+                                                    {price}
+                                                </Text>
+                                                {period ? (
+                                                    <Text hasCapsize type="supporting">
+                                                        {period}
+                                                    </Text>
+                                                ) : null}
+                                            </Stack>
 
-                                            <List hasDividers>
-                                                {features.map((feature) => (
-                                                    <ListItem
-                                                        key={feature.label}
-                                                        startContent={
-                                                            <ChevronRight
-                                                                aria-hidden="true"
-                                                                className="text-secondary"
-                                                                size={16}
-                                                            />
-                                                        }
-                                                        label={<Text weight="semibold">{feature.label}</Text>}
-                                                        description={
-                                                            feature.description ? (
-                                                                <Text type="supporting">
-                                                                    {feature.description
-                                                                        .split('\n\n')
-                                                                        .map((paragraph, index) => (
-                                                                            <Text key={paragraph} display="block">
-                                                                                {index > 0 ? <br /> : null}
-                                                                                {paragraph}
-                                                                            </Text>
-                                                                        ))}
+                                            {features.length > 0 ? (
+                                                <CollapsibleGroup
+                                                    className="px-4"
+                                                    hasDividers
+                                                    type="multiple"
+                                                    density="balanced"
+                                                >
+                                                    {features.map((feature) => (
+                                                        <Collapsible
+                                                            key={feature.label}
+                                                            trigger={
+                                                                <Text
+                                                                    className="text-secondary"
+                                                                    color="secondary"
+                                                                    type="supporting"
+                                                                >
+                                                                    {feature.label}
                                                                 </Text>
-                                                            ) : null
-                                                        }
-                                                    />
-                                                ))}
-                                            </List>
+                                                            }
+                                                            value={feature.label}
+                                                        >
+                                                            <Text
+                                                                className="text-secondary"
+                                                                color="secondary"
+                                                                type="supporting"
+                                                            >
+                                                                {feature.description
+                                                                    .split('\n\n')
+                                                                    .map((paragraph, index) => (
+                                                                        <Text key={paragraph} display="block">
+                                                                            {index > 0 ? <br /> : null}
+                                                                            {paragraph}
+                                                                        </Text>
+                                                                    ))}
+                                                            </Text>
+                                                        </Collapsible>
+                                                    ))}
+                                                </CollapsibleGroup>
+                                            ) : null}
                                         </Stack>
                                     </Card>
                                 );

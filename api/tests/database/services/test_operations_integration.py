@@ -4,7 +4,6 @@ from factories import queue_operation
 from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
-from src.environments import env
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.base import PlatformModel
@@ -36,12 +35,10 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             first_compute = ComputeRegistry(
                 name="First",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                version=env.VERSION,
             )
             second_compute = ComputeRegistry(
                 name="Second",
                 kubeconfig={"apiVersion": "v1", "clusters": []},
-                version=env.VERSION,
             )
             session.add_all([first_compute, second_compute])
             await session.commit()
@@ -57,7 +54,15 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         )
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
-        claims = await asyncio.gather(operations.claim(), operations.claim())
+        async def claim_operation() -> Operation | None:
+            """Claim and commit work with one concurrent worker session."""
+
+            async with session_factory() as session:
+                operation = await operations.claim(session)
+                await session.commit()
+                return operation
+
+        claims = await asyncio.gather(claim_operation(), claim_operation())
         claimed = [claim for claim in claims if claim is not None]
 
         # Reload the queue independently and verify one global lease while unrelated work waits.
@@ -72,7 +77,6 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         persisted_by_id = {operation.id: operation for operation in persisted}
         active = persisted_by_id[claimed[0].id]
         queued = persisted_by_id[waiting.id]
-        assert active.platform_version == env.VERSION
         assert active.lease_expires_at == claimed[0].lease_expires_at
         assert queued.lease_expires_at is None
     finally:

@@ -12,69 +12,13 @@ At the end of each task, return 5 cleanup and simplfications opportunities relat
 5. Confidence: High, Medium, or Low.
 6. Whether it affects any shared contract or requires updating call sites.
 
-## Product Language
-
-Use LongLink terminology consistently.
-
-- `LongLink`: The product as a whole.
-- `Platform`: The shared platform layer that owns authentication, infrastructure, ...
-- `Applications`: Process-specific Python applications running on LongLink.
-
-## Assets
-
-- Asset style: minimalist black-and-white digital wireframe, thin luminous vector outlines, simplified geometric construction, sparse circuit traces, glowing connection nodes, subtle data grids, schematic CAD precision, matte-black surfaces, restrained grayscale glow, computational rather than physical, clean and low-detail, no textures, no realism, no color, no text.
-- Building primitives use simple near-future massing with three to six large geometric volumes and a strong silhouette. Avoid dense window grids, repeated floor lines, tiny façade marks, and decorative complexity.
-- Render one reusable primitive per asset in a flat, straight-on 2D elevation with a grounded baseline and compact silhouette.
-- Preserve a transparent exterior and an opaque matte-black interior so foreground primitives conceal elements behind them without separate masks.
-- Keep glow restrained and close to the linework. Avoid atmospheric haze, cast shadows, reflections, scenery, perspective floors, decorative backgrounds, and isolated floating details.
-
 ## Architecture
 
 ```bash
 longlink/
 ├── api/                          # Platform API: auth, organizations, applications, registries, orchestration
-│   ├── main.py                   # FastAPI entrypoint
-│   ├── seed.py                   # Local development seed data
-│   ├── alembic/                  # Database migrations
-│   ├── src/
-│   │   ├── .static/web/          # Built API-mode web bundle
-│   │   ├── adapters/             # Infrastructure adapters
-│   │   ├── database/             # Database session, models, services
-│   │   ├── kubernetes/           # Kubernetes client and templates
-│   │   ├── models/               # FastAPI and domain schemas
-│   │   ├── operations/           # Operation orchestration
-│   │   ├── routes/               # FastAPI routes
-│   │   ├── utils/                # Shared utilities
-│   │   ├── auth.py               # Authentication helpers
-│   │   ├── environments.py       # Environment configuration
-│   │   └── logger.py             # Logging setup
-│   └── tests/                    # API tests
 ├── sdk/                          # Python SDK: application runtime, CLI, scaffolding
-│   ├── longlink/
-│   │   ├── .static/
-│   │   │   ├── web/              # Built SDK-mode web bundle
-│   │   │   └── xsd/              # XML schema definitions
-│   │   ├── cli/                  # CLI commands
-│   │   ├── database/             # Database helpers and migrations
-│   │   ├── models/               # Shared runtime enums and value models
-│   │   ├── routes/               # Runtime routes
-│   │   ├── shared/               # Shared-schema models, migrations, and synchronization
-│   │   ├── storage/              # Storage abstractions and organization assets
-│   │   ├── utils/                # Helpers and settings
-│   │   ├── app.py                # FastAPI application factory
-│   │   ├── pages.py              # Page metadata helpers
-│   │   └── router.py             # Route registration
-│   └── tests/                    # SDK tests
-├── web/                          # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
-│   ├── src/
-│   │   ├── application/          # Embedded Application routes and runtime page rendering
-│   │   ├── components/           # Shared UI and dialogs
-│   │   ├── hooks/                # React hooks
-│   │   ├── layout/               # Layout shells
-│   │   ├── lib/                  # API clients, theme, shared types
-│   │   ├── platform/             # Platform routes, pages, docs, and legal content
-│   │   └── xml/                  # XML parser, adapters, renderer, translations
-│   └── tests/                    # Web and XML tests
+└── web/                          # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
 ```
 
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
@@ -97,6 +41,7 @@ longlink/
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
+- Store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
 
 ### FastAPI & Pydantic
 
@@ -139,13 +84,7 @@ longlink/
 
 ## Astryx Guidelines
 
-<!-- ASTRYX:START -->
-
 CLI: run every command from `web/` as `vp exec astryx <cmd>` (shown below as `astryx ...`).
-
-SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
-import "@astryxdesign/core/reset.css";
-import "@astryxdesign/core/astryx.css";
 
 WORKFLOW — discover, don't guess. Before writing UI:
 
@@ -165,12 +104,11 @@ RULES:
 
 MORE CLI:
 search "<query>" find any component / hook / doc / template / block
-component --list 150 components by category
+component --list components by category
 template --list page + block recipes
 docs <topic> color, elevation, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling, theme, tokens, typography
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
-<!-- ASTRYX:END -->
 
 ## Commit Message Structure
 

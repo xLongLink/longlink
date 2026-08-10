@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     requireXmlString,
     resolveXmlBoolean,
@@ -34,8 +34,7 @@ export function RadioList({ props, nodes }: Props) {
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
             label={resolveXmlLabel(props, ctx, 'RadioList')}
             onChange={(nextValue) => {
-                if (binding.bound) binding.setValue(nextValue);
-                else setLocalValue(nextValue);
+                setXmlBinding(binding, setLocalValue, nextValue);
             }}
             orientation={orientation}
             size={size}

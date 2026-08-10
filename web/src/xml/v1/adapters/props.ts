@@ -1,8 +1,11 @@
+import type { ReactNode } from 'react';
 import { resolveTranslation } from '../core/i18n';
-import { evaluate, prepareEvaluation } from '../expressions';
+import { evaluate } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
 
-export type XmlSpacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
+const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
+
+export type XmlSpacing = (typeof XML_SPACING)[number];
 
 /** Reads a raw XML prop value without coercion. */
 export function readXmlProp(props: ASTProps, name: string): string | undefined {
@@ -19,18 +22,9 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
-    // Evaluated nullish values are treated as missing strings.
+    // Normalize unsupported values to an invalid empty string.
     const value = evaluate(rawValue, ctx);
-    if (value == null) {
-        throw new Error(`${componentName} requires a string ${name}`);
-    }
-
-    // XML string props cannot accept structured values.
-    if (typeof value === 'object' || typeof value === 'function') {
-        throw new Error(`${componentName} requires a string ${name}`);
-    }
-
-    const stringValue = String(value);
+    const stringValue = value == null || typeof value === 'object' || typeof value === 'function' ? '' : String(value);
 
     // Whitespace-only values should fail like missing values.
     if (!stringValue.trim()) {
@@ -49,6 +43,11 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionCo
     const value = evaluate(rawValue, ctx);
 
     return value == null ? defaultValue : String(value);
+}
+
+/** Resolves an optional XML string prop. */
+export function resolveOptionalXmlString(props: ASTProps, name: string, ctx: ExecutionContext): string | undefined {
+    return resolveXmlString(props, name, ctx) || undefined;
 }
 
 /** Resolves a boolean XML prop. */
@@ -93,27 +92,6 @@ export function resolveXmlNumber(
     return Number.isNaN(numberValue) ? defaultValue : numberValue;
 }
 
-/** Resolves a string-array XML prop. */
-export function resolveXmlStringArray(
-    props: ASTProps,
-    name: string,
-    ctx: ExecutionContext,
-    defaultValue: string[] = []
-): string[] {
-    // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
-
-    const value = evaluate(rawValue, ctx);
-
-    // Array props must stay arrays so callers can rely on list semantics.
-    if (!Array.isArray(value)) {
-        throw new Error(`${name} must evaluate to an array`);
-    }
-
-    return value.map((entry) => String(entry));
-}
-
 /** Resolves a raw value XML prop for bindings and object literals. */
 export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): unknown {
     // Missing attributes keep the caller-provided default.
@@ -123,22 +101,21 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionCon
     return evaluate(rawValue, ctx);
 }
 
+/** Resolves text from translation, value, or rendered XML children. */
+export function resolveXmlContent(
+    props: ASTProps,
+    ctx: ExecutionContext,
+    value: unknown,
+    renderChildren: () => ReactNode
+): ReactNode {
+    return props.i18n ? resolveTranslation(props, ctx) : value != null ? String(value) : renderChildren();
+}
+
 /** Return whether an XML node passes its optional conditional expression. */
 export function isVisibleXmlNode(node: ASTNode, ctx: ExecutionContext): boolean {
     if (node.params?.if == null) return true;
 
     return Boolean(evaluate(node.params.if, ctx));
-}
-
-/** Compiles an XML expression prop for deferred execution. */
-export function resolveXmlExpression(props: ASTProps, name: string): ((ctx: ExecutionContext) => unknown) | undefined {
-    // Missing expression props do not produce deferred evaluators.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return undefined;
-
-    prepareEvaluation(rawValue);
-
-    return (ctx) => evaluate(rawValue, ctx);
 }
 
 /** Resolves an accessible XML label from a translation key or label attribute. */
@@ -173,11 +150,12 @@ export function resolveXmlEnum<const T extends string>(
     const value = resolveXmlString(props, name, ctx, defaultValue);
 
     // Keep untrusted XML values out of Astryx lookup maps.
-    if (!values.includes(value as T)) {
+    const matchingValue = values.find((candidate) => candidate === value);
+    if (matchingValue == null) {
         throw new Error(`Unsupported ${componentName} ${name} '${value}'`);
     }
 
-    return value as T;
+    return matchingValue;
 }
 
 /** Resolves Astryx input status attributes into the component object shape. */
@@ -185,10 +163,8 @@ export function resolveXmlStatus(
     props: ASTProps,
     ctx: ExecutionContext
 ): { type: 'warning' | 'error' | 'success'; message?: string } | undefined {
-    const rawStatus = readXmlProp(props, 'status');
-
     // Omit status when the XML attribute is absent.
-    if (rawStatus == null) return undefined;
+    if (readXmlProp(props, 'status') == null) return undefined;
 
     const type = resolveXmlEnum(props, 'status', ctx, ['warning', 'error', 'success'], 'error', 'input');
     const message = resolveXmlString(props, 'statusMessage', ctx);
@@ -204,16 +180,15 @@ export function resolveXmlSpacing(
     defaultValue?: XmlSpacing
 ): XmlSpacing | undefined {
     const value = resolveXmlNumber(props, name, ctx, defaultValue);
-    const allowed: readonly number[] = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10];
-
     // Missing optional spacing attributes stay absent.
     if (value == null) return undefined;
 
-    if (!allowed.includes(value)) {
+    const spacing = XML_SPACING.find((candidate) => candidate === value);
+    if (spacing == null) {
         throw new Error(`Unsupported spacing value '${value}'`);
     }
 
-    return value as XmlSpacing;
+    return spacing;
 }
 
 /** Resolves a serializable Astryx width or height value. */

@@ -4,15 +4,8 @@ import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
-
-type ResolvedSideNavItem = {
-    icon?: string;
-    label: string;
-    nodes: ASTNode[];
-    value: string;
-};
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
@@ -33,12 +26,6 @@ export function SideNav({ props, nodes }: Props) {
     const label = resolveXmlString(props, 'label', ctx, 'Navigation');
     const activeItem = items.find((item) => item.value === value);
 
-    /** Writes side navigation selection to bound or local state. */
-    function setValue(nextValue: string) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
-    }
-
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
             <AstryxSideNav className="h-auto w-full">
@@ -52,7 +39,9 @@ export function SideNav({ props, nodes }: Props) {
                                 isSelected={item.value === value}
                                 key={item.value}
                                 label={item.label}
-                                onClick={() => setValue(item.value)}
+                                onClick={() => {
+                                    setXmlBinding(binding, setLocalValue, item.value);
+                                }}
                             />
                         );
                     })}
@@ -69,11 +58,9 @@ export function SideNavItem(): never {
 }
 
 /** Resolves a serializable XML side navigation definition. */
-function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext): ResolvedSideNavItem {
+function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
     const label = resolveXmlLabel(props, ctx, 'SideNavItem');
-    const icon = resolveXmlString(props, 'icon', ctx) || undefined;
-
-    return { icon, label, nodes: node.children ?? [], value };
+    return { icon: resolveXmlString(props, 'icon', ctx) || undefined, label, nodes: node.children ?? [], value };
 }

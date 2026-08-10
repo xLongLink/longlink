@@ -1,32 +1,32 @@
 import jwt
 import hmac
-from typing import cast
+from uuid import UUID
 from fastapi import Cookie, Depends, HTTPException
-from sqlmodel import col
 from src.utils import token
-from sqlalchemy import select
+from dataclasses import dataclass
 from src.database import session as database
-from sqlalchemy.orm import QueryableAttribute, selectinload
 from collections.abc import AsyncIterator
-from src.models.roles import PlatformRoles
+from src.models.roles import PlatformRoles, OrganizationRoles
+from src.database.services import users as user_service
+from src.database.services import organizations as organization_service
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
-async def get_auth_session() -> AsyncIterator[AsyncSession]:
+async def get_session() -> AsyncIterator[AsyncSession]:
     """Yield one database session for authentication dependencies and routes."""
 
-    Session = await database.get_session()
-
-    # Keep the session alive for the complete dependency request scope.
-    async with Session() as session:
+    # Keep the shared session alive for the complete dependency request scope.
+    async with database.session_scope() as session:
         yield session
 
 
 async def current_optional_user(
     credential: str | None = Cookie(default=None, alias="longlink_auth"),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ) -> User | None:
     """Return the active user for one valid optional browser session."""
 
@@ -40,20 +40,8 @@ async def current_optional_user(
     except jwt.PyJWTError:
         return None
 
-    # Resolve active local accounts with their current Organization access.
-    statement = (
-        select(User)
-        .options(
-            selectinload(cast(QueryableAttribute[UserOrganization], User.organization_memberships)).selectinload(
-                cast(QueryableAttribute[object], UserOrganization.organization)
-            )
-        )
-        .where(
-            col(User.id) == user_id,
-            col(User.deleted_at).is_(None),
-        )
-    )
-    user = (await session.execute(statement)).scalar_one_or_none()
+    # Resolve only the active local identity; scoped dependencies load resource access on demand.
+    user = await user_service.active(session, user_id)
     if user is None or not hmac.compare_digest(fingerprint, token.password_fingerprint(user.password)):
         return None
     return user
@@ -75,3 +63,41 @@ async def authadmin(user: User = Depends(authuser)) -> User:
     if user.role != PlatformRoles.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user
+
+
+@dataclass(frozen=True, slots=True)
+class ApplicationAccess:
+    """Hold one authorized Application, Organization, and Organization role."""
+
+    application: Application
+    organization: Organization
+    role: OrganizationRoles
+
+
+async def organization_access(
+    organization_id: UUID,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_session),
+) -> UserOrganization:
+    """Return required active Organization access for one authenticated user."""
+
+    # Convert absent membership and deleted Organizations into the existing access response.
+    membership = await organization_service.membership(session, user.id, organization_id)
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    return membership
+
+
+async def application_access(
+    application_id: UUID,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationAccess:
+    """Return required active Application access for one authenticated user."""
+
+    # Convert absent membership and deleted Application state into the existing access response.
+    access = await organization_service.application_access(session, user.id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role = access
+    return ApplicationAccess(application=application, organization=organization, role=role)

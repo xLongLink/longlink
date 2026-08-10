@@ -1,13 +1,5 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
-import type { ASTNode } from '../types';
-
-type XMLValidationFailure = {
-    err?: {
-        col?: number;
-        line?: number;
-        msg?: string;
-    };
-};
+import type { ASTNode, ASTProps } from '../types';
 
 const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
 
@@ -44,7 +36,9 @@ export function parseXML(xml: string): ASTNode[] {
     }
 
     // Validate first because the preserve-order parser can otherwise recover from malformed tags.
-    const validationResult = XMLValidator.validate(xml) as true | XMLValidationFailure;
+    const validationResult = XMLValidator.validate(xml) as
+        | true
+        | { err?: { col?: number; line?: number; msg?: string } };
 
     // Surface parser validation errors with location details.
     if (validationResult !== true) {
@@ -112,20 +106,18 @@ function toNodes(input: unknown): ASTNode[] {
             return toNodes(value);
         }
 
-        const children = toNodes(value);
-
         return [
             {
                 name: key,
                 ...(Object.keys(attributes).length > 0 && { params: attributes }),
-                children,
+                children: toNodes(value),
             },
         ];
     });
 }
 
 /** Collects parser attributes into plain XML params. */
-function collectParams(input: unknown): Record<string, string> {
+function collectParams(input: unknown): ASTProps {
     // Ignore malformed attribute containers.
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
         return {};
@@ -133,12 +125,7 @@ function collectParams(input: unknown): Record<string, string> {
 
     const record = input as Record<string, unknown>;
 
-    // Unwrap parser attribute metadata.
-    if (':@' in record) {
-        return collectParams(record[':@']);
-    }
-
-    const params: Record<string, string> = {};
+    const params: ASTProps = {};
 
     // Copy string attributes without parser prefixes.
     for (const [key, entry] of Object.entries(record)) {

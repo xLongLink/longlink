@@ -243,7 +243,6 @@ async def _registry_get(client: httpx2.AsyncClient, url: str, headers: dict[str,
     registry_host = urllib.parse.urlsplit(url).hostname
     response = await client.get(url, headers=headers)
     if not response.is_success and response.status_code == 401:
-
         # Require a standard HTTPS bearer challenge from the selected registry's known token service.
         challenge = response.headers.get("www-authenticate", "")
         scheme, _, value = challenge.partition(" ")

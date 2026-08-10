@@ -20,7 +20,6 @@ def leased_operation() -> Operation:
     return Operation(
         kind=OperationKind.compute_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
-        platform_version="v1.2.3",
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
 
@@ -33,7 +32,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     claims = [operation, None]
     executed: list[Operation] = []
 
-    async def fake_claim() -> Operation | None:
+    async def fake_claim(session) -> Operation | None:
         """Return one operation and then no work."""
 
         return claims.pop(0)
@@ -71,7 +70,7 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
 
         assert claimed is operation
 
-    async def fake_complete(operation_id: UUID) -> None:
+    async def fake_complete(session, operation_id: UUID) -> None:
         """Report that the worker no longer owns the operation lease."""
 
         assert operation_id == operation.id
@@ -98,7 +97,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
         assert claimed is operation
 
-    async def fake_complete(operation_id: UUID) -> Operation:
+    async def fake_complete(session, operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""
 
         assert operation_id == operation.id
@@ -136,7 +135,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         assert claimed is operation
         return "workload deployment failed"
 
-    async def fake_fail(operation_id: UUID) -> Operation:
+    async def fake_fail(session, operation_id: UUID) -> Operation:
         """Record the terminal failure transition."""
 
         transitions.append(operation_id)
@@ -145,7 +144,6 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
             kind=operation.kind,
             target_id=operation.target_id,
             failed=True,
-            platform_version=operation.platform_version,
             finished_at=utcnow(),
         )
 

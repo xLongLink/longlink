@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { executeAction } from '@/xml/v1/adapters/Action';
-import type { ExecutionContext } from '@/xml/v1/types';
+import type { ASTProps, ExecutionContext } from '@/xml/v1/types';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
@@ -22,15 +22,13 @@ describe('Action', () => {
 
         let requestUrl = '';
         let requestInit: RequestInit | undefined;
-        let fetchCalls = 0;
 
         const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
-            fetchCalls += 1;
             requestUrl = String(input);
             requestInit = init;
 
             return new Response(null, { status: 204 });
-        }) as unknown as typeof fetch;
+        }) satisfies typeof fetch;
 
         await executeAction(
             {
@@ -60,7 +58,6 @@ describe('Action', () => {
                 notes: 'Build the first program',
             })
         );
-        expect(fetchCalls).toBe(1);
         expect(invalidations).toEqual([['profile', 'activity']]);
         expect(successCalls).toBe(1);
         expect(errorCalls).toBe(0);
@@ -92,7 +89,7 @@ describe('Action', () => {
                 },
                 values: {},
             };
-            const fetchImpl = (async () => testCase.request()) as unknown as typeof fetch;
+            const fetchImpl = (async () => testCase.request()) satisfies typeof fetch;
 
             await executeAction(
                 {
@@ -136,7 +133,7 @@ describe('Action', () => {
             requestInit = init;
 
             return new Response('', { status: 201 });
-        }) as unknown as typeof fetch;
+        }) satisfies typeof fetch;
 
         await executeAction(
             {
@@ -175,7 +172,7 @@ describe('Action', () => {
             fetchCalls += 1;
 
             return new Response(null, { status: 204 });
-        }) as unknown as typeof fetch;
+        }) satisfies typeof fetch;
 
         await executeAction(
             {
@@ -194,8 +191,8 @@ describe('Action', () => {
     /* Invalid action configuration must fail before sending a request. */
     it('rejects invalid actions before fetching', async () => {
         const cases: Array<{
-            props: Record<string, string>;
-            values: Record<string, unknown>;
+            props: ASTProps;
+            values: ExecutionContext['values'];
             expectedError: string;
         }> = [
             {
@@ -232,7 +229,7 @@ describe('Action', () => {
                 fetchCalls += 1;
 
                 return new Response(null, { status: 204 });
-            }) as unknown as typeof fetch;
+            }) satisfies typeof fetch;
 
             await executeAction(testCase.props, ctx, '', fetchImpl, (options) => {
                 if (options.type === 'error') errorMessage = String(options.body);

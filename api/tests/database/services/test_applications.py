@@ -50,27 +50,29 @@ async def test_create_requires_running_organization() -> None:
     organization = await create_organization(user)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
-        await applications.create(
+    async with session_scope() as session:
+        with pytest.raises(ConflictError) as exc:
+            await applications.create(
+                session,
+                organization.id,
+                "Dashboard",
+                slug="dashboard",
+                image="ghcr.io/longlink/dashboard@sha256:test",
+                user=user,
+                secrets={},
+            )
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
+        application = await applications.create(
+            session,
             organization.id,
             "Dashboard",
             slug="dashboard",
             image="ghcr.io/longlink/dashboard@sha256:test",
+            version="2.0.0",
             user=user,
             secrets={},
         )
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         await session.commit()
-    application = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard@sha256:test",
-        version="2.0.0",
-        user=user,
-        secrets={},
-    )
 
     # Assert
     assert str(exc.value) == "Organization is not ready"
@@ -87,15 +89,17 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     user, organization, _ = await create_application_context("duplicate")
 
     # Act
-    with pytest.raises(ConflictError) as exc:
-        await applications.create(
-            organization.id,
-            "Duplicate dashboard",
-            slug="dashboard",
-            image="ghcr.io/longlink/dashboard@sha256:test",
-            user=user,
-            secrets={},
-        )
+    async with session_scope() as session:
+        with pytest.raises(ConflictError) as exc:
+            await applications.create(
+                session,
+                organization.id,
+                "Duplicate dashboard",
+                slug="dashboard",
+                image="ghcr.io/longlink/dashboard@sha256:test",
+                user=user,
+                secrets={},
+            )
 
     # Assert
     assert str(exc.value) == "Application slug already exists"
@@ -106,20 +110,23 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
 
     # Arrange
     user, organization, deleted_application = await create_application_context("collections")
-    active_application = await applications.create(
-        organization.id,
-        "Reports",
-        slug="reports",
-        image="ghcr.io/longlink/reports@sha256:test",
-        user=user,
-        secrets={},
-    )
-    await applications.soft_delete(deleted_application.id, user)
+    async with session_scope() as session:
+        active_application = await applications.create(
+            session,
+            organization.id,
+            "Reports",
+            slug="reports",
+            image="ghcr.io/longlink/reports@sha256:test",
+            user=user,
+            secrets={},
+        )
+        await applications.soft_delete(session, deleted_application.id, user)
+        await session.commit()
 
-    # Act
-    fetched = await applications.fetch()
-    listed = await organizations.applications(organization.id)
-    listed_with_deleted = await organizations.applications(organization.id, include_deleted=True)
+        # Act
+        fetched = await applications.fetch(session)
+        listed = await organizations.applications(session, organization.id)
+        listed_with_deleted = await organizations.applications(session, organization.id, include_deleted=True)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
@@ -134,11 +141,16 @@ async def test_mark_running_updates_active_applications() -> None:
     user, _, application = await create_application_context("runtime")
 
     # Act
-    await applications.mark_running(application.id)
-    running = await applications.get(application.id)
-    await applications.soft_delete(application.id, user)
-    await applications.mark_running(application.id)
-    deleted = await applications.get(application.id, include_deleted=True)
+    async with session_scope() as session:
+        await applications.mark_running(session, application.id)
+        await session.commit()
+        running = await applications.get(session, application.id)
+
+    async with session_scope() as session:
+        await applications.soft_delete(session, application.id, user)
+        await session.commit()
+        await applications.mark_running(session, application.id)
+        deleted = await applications.get(session, application.id, include_deleted=True)
 
     # Assert
     assert running is not None
@@ -154,11 +166,14 @@ async def test_soft_delete_marks_application_deleted() -> None:
     user, _, application = await create_application_context("delete")
 
     # Act
-    result = await applications.soft_delete(application.id, user)
-    active_application = await applications.get(application.id)
-    deleted_application = await applications.get(application.id, include_deleted=True)
-    second_delete = await applications.soft_delete(application.id, user)
-    missing_delete = await applications.soft_delete(uuid4(), user)
+    async with session_scope() as session:
+        result = await applications.soft_delete(session, application.id, user)
+        await session.commit()
+        active_application = await applications.get(session, application.id)
+        deleted_application = await applications.get(session, application.id, include_deleted=True)
+        second_delete = await applications.soft_delete(session, application.id, user)
+        missing_delete = await applications.soft_delete(session, uuid4(), user)
+        await session.commit()
 
     # Assert
     assert result is not None

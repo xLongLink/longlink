@@ -31,9 +31,10 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.storage_id == infrastructure.storage.id
     assert organization.status == Status.creating
 
-    reloaded = await organizations.get(organization.id)
-    assert reloaded is not None
-    memberships = await organizations.members(organization.id)
+    async with session_scope() as session:
+        reloaded = await organizations.get(session, organization.id)
+        assert reloaded is not None
+        memberships = await organizations.members(session, organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert [(membership.user.id, membership.role) for membership in memberships] == [(owner.id, OrganizationRoles.owner)]
@@ -58,7 +59,8 @@ async def test_members_returns_users_from_membership_table(users: tuple[User, Us
         await session.commit()
 
     # Act
-    memberships = await organizations.members(organization.id)
+    async with session_scope() as session:
+        memberships = await organizations.members(session, organization.id)
 
     # Assert
     assert {membership.user.id for membership in memberships} == {owner.id, member.id}
@@ -71,10 +73,12 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     owner = users[0]
     active_organization = await create_organization(owner)
     deleted_organization = await create_organization(owner, name="deleted", slug="deleted")
-    await organizations.soft_delete(deleted_organization.id, owner)
+    async with session_scope() as session:
+        await organizations.soft_delete(session, deleted_organization.id, owner)
+        await session.commit()
 
-    # Act
-    fetched = await organizations.fetch()
+        # Act
+        fetched = await organizations.fetch(session)
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
@@ -88,7 +92,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     organization = await create_organization(owner)
     synchronized: list[UUID] = []
 
-    async def sync_users(organization_id: UUID) -> None:
+    async def sync_users(session, organization_id: UUID) -> None:
         """Record the Organization user projection requested by the service."""
 
         synchronized.append(organization_id)
@@ -107,22 +111,16 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
         await session.commit()
 
     # Act
-    updated = await organizations.update_member_role(
-        organization.id,
-        member.id,
-        OrganizationRoles.maintain,
-        owner,
-        OrganizationRoles.owner,
-    )
-    missing = await organizations.update_member_role(
-        organization.id,
-        non_member.id,
-        OrganizationRoles.read,
-        owner,
-        OrganizationRoles.owner,
-    )
-    memberships = await organizations.members(organization.id)
-    updated_membership = next(item for item in memberships if item.user_id == member.id)
+    async with session_scope() as session:
+        updated = await organizations.update_member_role(
+            session, organization.id, member.id, OrganizationRoles.maintain, owner, OrganizationRoles.owner
+        )
+        await session.commit()
+        missing = await organizations.update_member_role(
+            session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
+        )
+        memberships = await organizations.members(session, organization.id)
+        updated_membership = next(item for item in memberships if item.user_id == member.id)
 
     # Assert
     assert updated is True
@@ -139,18 +137,16 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     organization = await create_organization(owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
-        await organizations.update_member_role(
-            organization.id,
-            owner.id,
-            OrganizationRoles.admin,
-            owner,
-            OrganizationRoles.owner,
-        )
+    async with session_scope() as session:
+        with pytest.raises(ConflictError) as exc:
+            await organizations.update_member_role(
+                session, organization.id, owner.id, OrganizationRoles.admin, owner, OrganizationRoles.owner
+            )
 
     # Assert
     assert str(exc.value) == "Organization must have at least one owner"
-    membership = next(item for item in await organizations.members(organization.id) if item.user_id == owner.id)
+    async with session_scope() as session:
+        membership = next(item for item in await organizations.members(session, organization.id) if item.user_id == owner.id)
     assert membership.role == OrganizationRoles.owner
 
 
@@ -182,7 +178,8 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    members = await organizations.members(organization.id, include_deleted=True)
+    async with session_scope() as session:
+        members = await organizations.members(session, organization.id, include_deleted=True)
 
     # Assert
     memberships = {membership.user.email: membership for membership in members}
@@ -214,11 +211,12 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
 
     # Assert
     assert str(exc.value) == "No ready compute registry available"
-    assert await organizations.fetch() == []
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == Status.failed
-    assert await operations.fetch() == []
+    async with session_scope() as session:
+        assert await organizations.fetch(session) == []
+        reloaded_compute = await compute.get(session, infrastructure.compute.id)
+        assert reloaded_compute is not None
+        assert reloaded_compute.status == Status.failed
+        assert await operations.fetch(session) == []
 
 
 async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:
@@ -230,15 +228,18 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         await session.commit()
-    application = await applications.create(
-        organization.id,
-        "Dashboard",
-        "dashboard",
-        "ghcr.io/longlink/dashboard@sha256:test",
-        owner,
-        {},
-    )
-    await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
+    async with session_scope() as session:
+        application = await applications.create(
+            session,
+            organization.id,
+            "Dashboard",
+            "dashboard",
+            "ghcr.io/longlink/dashboard@sha256:test",
+            owner,
+            {},
+        )
+        await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
+        await session.commit()
 
     Session = await get_session()
     async with Session() as session:
@@ -252,13 +253,16 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await session.commit()
 
     # Act
-    result = await organizations.soft_delete(organization.id, owner)
-    active_organization = await organizations.get(organization.id)
-    deleted_organization = await organizations.get(organization.id, include_deleted=True)
-    active_application = await applications.get(application.id)
-    deleted_application = await applications.get(application.id, include_deleted=True)
-    second_delete = await organizations.soft_delete(organization.id, owner)
-    missing_delete = await organizations.soft_delete(uuid4(), owner)
+    async with session_scope() as session:
+        result = await organizations.soft_delete(session, organization.id, owner)
+        await session.commit()
+        active_organization = await organizations.get(session, organization.id)
+        deleted_organization = await organizations.get(session, organization.id, include_deleted=True)
+        active_application = await applications.get(session, application.id)
+        deleted_application = await applications.get(session, application.id, include_deleted=True)
+        second_delete = await organizations.soft_delete(session, organization.id, owner)
+        missing_delete = await organizations.soft_delete(session, uuid4(), owner)
+        await session.commit()
 
     # Assert
     assert result is not None
@@ -266,9 +270,10 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert active_organization is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_id == owner.id
-    assert await organizations.members(organization.id) == []
-    assert await organizations.invitations(organization.id) == []
-    assert await organizations.applications(organization.id) == []
+    async with session_scope() as session:
+        assert await organizations.members(session, organization.id) == []
+        assert await organizations.invitations(session, organization.id) == []
+        assert await organizations.applications(session, organization.id) == []
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id

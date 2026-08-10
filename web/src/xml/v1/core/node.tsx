@@ -7,8 +7,10 @@ import { xmlComponentRegistry } from './registry';
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
+        const props = node.params ?? {};
+
         // Reject consumer styling and callbacks so adapters retain control of behavior.
-        for (const name of Object.keys(node.params ?? {})) {
+        for (const name of Object.keys(props)) {
             const lowerName = name.toLowerCase();
             if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
                 throw new Error(`${name} is not supported in XML`);
@@ -20,9 +22,9 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         // Handle conditional rendering with "if" parameter.
-        if (node.params?.if != null) {
+        if (props.if != null) {
             // Skip nodes when their XML condition is false.
-            if (!evaluate(node.params.if, ctx)) {
+            if (!evaluate(props.if, ctx)) {
                 return null;
             }
         }
@@ -36,22 +38,22 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
         // Render registered XML components directly.
         if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={node.params ?? {}} nodes={node.children ?? []} />;
+            return <RegisteredComponent key={index} props={props} nodes={node.children ?? []} />;
         }
 
         // Delegate loop nodes to the scoped For adapter.
         if (node.name === 'For') {
             // Require a loop item alias.
-            if (!node.params?.as) throw new Error(`For requires an "as" parameter`);
+            if (!props.as) throw new Error(`For requires an "as" parameter`);
 
             // Require a loop source expression.
-            if (!node.params?.each) throw new Error(`For requires an "each" parameter`);
+            if (!props.each) throw new Error(`For requires an "each" parameter`);
 
-            const each = evaluate(node.params.each, ctx);
+            const each = evaluate(props.each, ctx);
 
             // Skip loop rendering when the source is not an array.
             if (!Array.isArray(each)) return null;
-            return <For key={index} items={each} props={node.params} nodes={node.children ?? []} />;
+            return <For key={index} items={each} props={props} nodes={node.children ?? []} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

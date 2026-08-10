@@ -163,19 +163,17 @@ export const content = (
             Platform
         </Heading>
         <Text as="p">
-            The LongLink Platform owns the shared operating model. It stores users, organizations, memberships,
-            applications, infrastructure registries, reconciliation Operations, and deployment state, then exposes the
-            API and web shell used to manage them.
+            The LongLink Platform provides the shared foundation for running applications across an organization. It
+            manages users, organizations, access, applications, deployments, and the infrastructure they depend on.
         </Text>
         <Text as="p">
-            It does not replace application code. Applications still run as separate SDK services; the LongLink Platform
-            provides the governed layer around them: identity, access decisions, resource provisioning, routing, rollout
-            verification, logs, and status.
+            Applications remain separate services with their own code and purpose. LongLink provides the layer around
+            them: it controls access, prepares the resources each application needs, makes applications available to the
+            right users, and provides visibility into deployments, logs, and status.
         </Text>
         <Text as="p">
-            Production runtime traffic is mediated by the API proxy and the per-compute TLS gateway. The API authorizes
-            the user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
-            proxy traffic and routes it to the internal application service.
+            This gives teams a consistent and governed way to operate many dedicated applications without rebuilding the
+            same operational foundation for each one.
         </Text>
         <PlatformFlowDiagram />
     </Stack>

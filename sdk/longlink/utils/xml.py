@@ -17,12 +17,18 @@ class XmlErrorEntry(Protocol):
     message: str
 
 
+def create_xml_parser() -> etree.XMLParser:
+    """Create an XML parser with external entity resolution disabled."""
+
+    return etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+
+
 @cache
 def known_xml_tags() -> frozenset[str]:
     """Return XML tag names declared by bundled adapter schemas."""
 
     tags: set[str] = set()
-    parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+    parser = create_xml_parser()
 
     # Adapter schemas define the complete XML component surface used by the runtime.
     for schema_path in sorted((ROOT / ".static" / "xsd" / "adapters").glob("*.xsd")):
@@ -42,7 +48,7 @@ def load_xml_schema(schema_path: Path) -> etree.XMLSchema:
     """Compile and cache one trusted XSD schema by its resolved path."""
 
     # Load bundled schemas with external entities and network access disabled.
-    parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+    parser = create_xml_parser()
     schema_doc = etree.parse(str(schema_path), parser)
     return etree.XMLSchema(schema_doc)
 
@@ -89,7 +95,7 @@ class Element:
             raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
-        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        parser = create_xml_parser()
         schema_path = self.schema_path
         if schema_path is None:
             raise ValueError("No XSD schema path configured")

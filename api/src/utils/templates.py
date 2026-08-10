@@ -1,21 +1,15 @@
 import yaml
 from string import Template
-from pathlib import Path
 from importlib.resources.abc import Traversable
 
 
-def readyml_list(template_path: str | Path | Traversable, **context: object) -> list[dict[str, object]]:
+def readyml_list(template_path: Traversable, **context: object) -> list[dict[str, object]]:
     """Render one YAML template file into a manifest list."""
 
     docs: list[dict[str, object]] = []
 
     # Parse each rendered YAML document separately.
-    for document in yaml.safe_load_all(
-        Template((Path(template_path) if isinstance(template_path, str) else template_path).read_text(encoding="utf-8")).substitute(
-            **context
-        )
-    ):
-
+    for document in yaml.safe_load_all(Template(template_path.read_text(encoding="utf-8")).substitute(**context)):
         # Ignore empty YAML documents from separators.
         if document is None:
             continue

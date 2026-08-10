@@ -17,14 +17,12 @@ describe('renderNode', () => {
     });
 
     it('skips nodes when if condition is false', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
-        expect(renderXmlToMarkup([node], ctx)).not.toContain('<button');
+        expect(renderXmlToMarkup([node])).not.toContain('<button');
     });
 
     it('throws on unknown component', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        expect(() => renderXmlToMarkup([{ name: 'Unknown' }], ctx)).toThrow('Unknown component "Unknown"');
+        expect(() => renderXmlToMarkup([{ name: 'Unknown' }])).toThrow('Unknown component "Unknown"');
     });
 
     it('resolves input props from expressions', () => {

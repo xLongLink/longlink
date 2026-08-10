@@ -1,13 +1,15 @@
+import httpx2
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.auth import authuser
+from src.auth import ApplicationAccess, authuser, get_session, application_access
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
-from src.adapters.gateway import GatewayClient, GatewayRequestError
-from src.database.services import compute, organizations
+from src.adapters.gateway import GatewayClient
+from src.database.services import compute
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 router = APIRouter()
@@ -17,17 +19,22 @@ PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 
 @router.api_route("/applications/{application_id}/proxy", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
 @router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
-async def proxy_application_request(request: Request, application_id: UUID, path: str = "", user: User = Depends(authuser)) -> Response:
+async def proxy_application_request(
+    request: Request,
+    application_id: UUID,
+    path: str = "",
+    user: User = Depends(authuser),
+    access: ApplicationAccess = Depends(application_access),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    # Load application access before proxying runtime traffic.
-    access = await organizations.application_access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application = access.application
+    organization = access.organization
+    role = access.role
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
@@ -43,7 +50,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    registry = await compute.get(organization.compute_id)
+    registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
     gateway_url = registry.gateway_url
@@ -74,14 +81,14 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             content_type=request.headers.get("content-type"),
             content=request_content(),
         )
-    except GatewayRequestError as exc:
+    except httpx2.HTTPError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
-    if response_content_type is not None and not {
-        value.partition(";")[0].strip() for value in response_content_type.lower().split(",")
-    }.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
+    if response_content_type is not None and any(
+        value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
+    ):
         await gateway_response.aclose()
         raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 

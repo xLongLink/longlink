@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from './binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
@@ -54,8 +54,7 @@ export function Selector({ props, nodes }: Props) {
 
     /** Writes selection changes to bound or local state. */
     function setValue(nextValue: string | null) {
-        if (binding.bound) binding.setValue(nextValue);
-        else setLocalValue(nextValue);
+        setXmlBinding(binding, setLocalValue, nextValue);
     }
 
     // Astryx uses a discriminated value contract for clearable selectors.
@@ -76,7 +75,5 @@ function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
     const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
-    const disabled = resolveXmlBoolean(props, 'isDisabled', ctx, false);
-
-    return { value, label, disabled };
+    return { value, label, disabled: resolveXmlBoolean(props, 'isDisabled', ctx, false) };
 }

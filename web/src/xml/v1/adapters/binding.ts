@@ -4,14 +4,9 @@ import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext } from '../types';
 import { resolveXmlValue } from './props';
 
-const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
+const EMPTY_BINDING = proxy<Record<string, unknown>>({});
 
-type BindingResult = {
-    bound: boolean;
-    initialValue: unknown;
-    currentValue: unknown;
-    setValue: (value: unknown) => void;
-};
+type BindingType = 'file';
 
 type BindingTarget = {
     state: Record<string, unknown>;
@@ -19,7 +14,7 @@ type BindingTarget = {
 };
 
 /** Returns whether an XML control value is backed by a Valtio proxy. */
-export function isBindableValue(value: unknown): value is Record<string, unknown> {
+function isBindableValue(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
@@ -31,44 +26,41 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text'): BindingResult {
+export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type?: BindingType) {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
     const target = resolveBindableTarget(rawValue, value, ctx);
-    const state = target?.state ?? EMPTY_BINDING;
-    const snapshot = useSnapshot(state);
-    const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
+    const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
 
     return {
         bound: !!target,
         initialValue,
-        currentValue,
-        setValue: (nextValue) => {
+        currentValue: target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '',
+        setValue: (nextValue: unknown) => {
             // Skip writes when the value is not bound.
             if (!target) return;
 
             const normalizedValue = normalizeBindableValue(type, nextValue);
 
-            // Write named state properties directly.
-            if (target.key) {
-                target.state[target.key] = normalizedValue;
-                return;
-            }
-
-            // Fall back to the default value slot.
-            if ('value' in target.state) {
-                target.state.value = normalizedValue;
-            }
+            // Write named properties or the direct binding value slot.
+            if (target.key || 'value' in target.state) target.state[target.key ?? 'value'] = normalizedValue;
         },
     };
 }
 
-/** Normalizes control values before writing them into XML state. */
-function normalizeBindableValue(type: string, value: unknown): unknown {
-    // Store number inputs as numbers.
-    if (type === 'number') return Number(value);
+/** Writes a control value to bound XML state or local component state. */
+export function setXmlBinding<T>(
+    binding: ReturnType<typeof useBindableValue>,
+    setLocalValue: (value: T) => void,
+    value: T
+): void {
+    if (binding.bound) binding.setValue(value);
+    else setLocalValue(value);
+}
 
+/** Normalizes control values before writing them into XML state. */
+function normalizeBindableValue(type: BindingType | undefined, value: unknown): unknown {
     // Keep file objects outside proxy conversion.
     if (type === 'file' && value !== null && typeof value === 'object') {
         return ref(value);
@@ -109,10 +101,10 @@ function resolveBindableTarget(
     const parent = resolvePath(ctx, parts.slice(0, -1));
 
     // Nested bindings require a reactive parent.
-    if (!parent || typeof parent !== 'object' || getVersion(parent as object) === undefined) return undefined;
+    if (!isBindableValue(parent)) return undefined;
 
     return {
         key: parts[parts.length - 1],
-        state: parent as Record<string, unknown>,
+        state: parent,
     };
 }
