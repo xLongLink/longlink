@@ -26,7 +26,6 @@ select = ["I"]
 
 [tool.ruff.lint.isort]
 no-sections = true
-lines-between-types = 0
 length-sort = true
 
 [tool.pytest.ini_options]

@@ -43,7 +43,7 @@ jobs:
 
             - name: Check SDK formatting
               working-directory: sdk
-              run: uv run --locked isort --check-only .
+              run: uv run --locked ruff check --select I .
 
             - name: Check web formatting
               working-directory: web

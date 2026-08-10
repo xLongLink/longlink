@@ -80,7 +80,6 @@ select = ["UP", "D300", "I"]
 
 [tool.ruff.lint.isort]
 no-sections = true
-lines-between-types = 0
 length-sort = true
 
 [tool.ty.environment]

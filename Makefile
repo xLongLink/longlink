@@ -1,7 +1,8 @@
-.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
+.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
+PYTHON_IMPORT_FORMAT := uv run --locked ruff check --select I --fix .
 
 # Install all API, SDK, and web dependencies.
 install: api\:install sdk\:install web\:install
@@ -23,17 +24,21 @@ web\:install:
 
 
 # Format API, SDK, and web/docs code.
-format: api\:format sdk\:format web\:format
+format: python\:format web\:format
+
+
+# Format API and SDK imports.
+python\:format: api\:format sdk\:format
 
 
 # Format API imports.
 api\:format: api\:install
-	cd api && uv run --locked ruff check --select I --fix .
+	cd api && $(PYTHON_IMPORT_FORMAT)
 
 
 # Format SDK imports.
 sdk\:format: sdk\:install
-	cd sdk && uv run --locked ruff check --select I --fix .
+	cd sdk && $(PYTHON_IMPORT_FORMAT)
 
 
 # Format web code and repository docs.

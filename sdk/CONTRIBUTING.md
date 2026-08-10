@@ -23,7 +23,7 @@ Before working locally:
 
 ```bash
 uv sync --group dev    # Create the development environment
-uv run isort .         # Format imports
+uv run ruff check --select I --fix .  # Format imports
 uv run pytest tests    # Run tests
 ```
 
