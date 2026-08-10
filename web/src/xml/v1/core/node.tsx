@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { For } from '../adapters';
 import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
@@ -22,13 +22,13 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         if (node.params?.if != null) {
             // Skip nodes when their XML condition is false.
             if (!evaluate(node.params.if, ctx)) {
-                return <Fragment key={index} />;
+                return null;
             }
         }
 
         // Suppress setup-only nodes during render.
         if (node.name === 'State' || node.name === 'Query') {
-            return <Fragment key={index} />;
+            return null;
         }
 
         const RegisteredComponent = xmlComponentRegistry[node.name];
@@ -49,7 +49,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             const each = evaluate(node.params.each, ctx);
 
             // Skip loop rendering when the source is not an array.
-            if (!Array.isArray(each)) return <Fragment key={index} />;
+            if (!Array.isArray(each)) return null;
             return <For key={index} items={each} props={node.params} nodes={node.children ?? []} />;
         }
 
