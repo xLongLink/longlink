@@ -129,17 +129,12 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {
-    // LongLink v1 accepts its required syntax version and optional metadata-only root attributes.
+    // LongLink roots accept optional metadata-only attributes.
     if (node.name === 'longlink') {
         const params = node.params ?? {};
         const unsupported = Object.keys(params).filter(
             (name) => name !== 'name' && name !== 'icon' && name !== 'version'
         );
-
-        // Keep root syntax aligned with this versioned runtime implementation.
-        if (params.version !== 'v1') {
-            throw new Error('LongLink XML v1 requires version="v1"');
-        }
 
         // Reject unknown root metadata.
         if (unsupported.length) {

@@ -32,9 +32,6 @@ export const metadata = {
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },
-        { id: 'database', label: 'Database', level: 2 },
-        { id: 'file-storage', label: 'File Storage', level: 2 },
-        { id: 'compute', label: 'Compute', level: 2 },
     ],
     lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/organizations.tsx',
@@ -46,16 +43,22 @@ export const content = (
             Organizations
         </Heading>
         <Text as="p">
-            Organizations are the tenant boundary in LongLink. They group members, invitations, Applications, and their
-            automatically assigned, immutable compute, database, and storage registries.
+            Organizations are the workspace boundary in LongLink. They bring together the people, applications, and
+            shared resources needed to run an organization’s work, while membership determines who can access the
+            workspace, manage users, deploy applications, and use the applications within it.
         </Text>
         <Text as="p">
-            Every application belongs to one organization. Organization membership controls who can see the workspace,
-            manage people, deploy applications, inspect resources, and open application runtimes.
+            Each organization receives its own dedicated database, storage, and compute space. This keeps its
+            applications and operational data separate, giving teams a clear and reliable environment in which to
+            deploy, run, and evolve their applications.
         </Text>
         <Heading id="users" level={2}>
             Users
         </Heading>
+        <Text as="p">
+            LongLink manages users and their access across the organization. Applications can access the users
+            authorized to use them.
+        </Text>
         <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
@@ -80,14 +83,5 @@ export const content = (
                 ))}
             </TableBody>
         </Table>
-        <Heading id="database" level={2}>
-            Database
-        </Heading>
-        <Heading id="file-storage" level={2}>
-            File Storage
-        </Heading>
-        <Heading id="compute" level={2}>
-            Compute
-        </Heading>
     </Stack>
 );
