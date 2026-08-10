@@ -9,7 +9,6 @@ import type { ReactNode } from 'react';
 import { ContextProvider, useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
-import { BaseUrlContext, useUrl } from '../core/url';
 import { readSafeProperty } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import {
@@ -28,7 +27,6 @@ type TableRow = Record<string, unknown>;
 /** Renders XML row data through the Astryx data-driven Table API. */
 export function Table({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const baseUrl = useUrl('');
 
     // Require an explicit array data source.
     if (!readXmlProp(props, 'data')?.trim()) {
@@ -42,7 +40,7 @@ export function Table({ props, nodes }: Props) {
     const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node) => buildColumn(node, ctx, rowName, rows, baseUrl));
+        .map((node) => buildColumn(node, ctx, rowName, rows));
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {
@@ -81,8 +79,7 @@ function buildColumn(
     node: ASTNode,
     ctx: ExecutionContext,
     rowName: string,
-    rows: TableRow[],
-    baseUrl: string
+    rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
     const props = node.params ?? {};
     const key = readXmlProp(props, 'key');
@@ -112,7 +109,7 @@ function buildColumn(
         header,
         key,
         width,
-        renderCell: (row) => renderCell(cellNodes, row, rows.indexOf(row), field, ctx, rowName, baseUrl),
+        renderCell: (row) => renderCell(cellNodes, row, rows.indexOf(row), field, ctx, rowName),
     };
 }
 
@@ -123,8 +120,7 @@ function renderCell(
     index: number,
     field: string,
     ctx: ExecutionContext,
-    rowName: string,
-    baseUrl: string
+    rowName: string
 ): ReactNode {
     const value = resolveFieldValue(row, field);
 
@@ -138,9 +134,7 @@ function renderCell(
     };
 
     return (
-        <ContextProvider value={rowCtx}>
-            <BaseUrlContext.Provider value={baseUrl}>{renderNode(nodes, rowCtx)}</BaseUrlContext.Provider>
-        </ContextProvider>
+        <ContextProvider value={rowCtx}>{renderNode(nodes, rowCtx)}</ContextProvider>
     );
 }
 

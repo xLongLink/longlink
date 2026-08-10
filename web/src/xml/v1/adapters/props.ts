@@ -1,6 +1,5 @@
 import { resolveTranslation } from '../core/i18n';
-import { compile, evaluate } from '../expressions';
-import type { ExpressionResolver } from '../expressions/types';
+import { evaluate, prepareEvaluation } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
 
 export type XmlSpacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
@@ -132,12 +131,14 @@ export function isVisibleXmlNode(node: ASTNode, ctx: ExecutionContext): boolean 
 }
 
 /** Compiles an XML expression prop for deferred execution. */
-export function resolveXmlExpression(props: ASTProps, name: string): ExpressionResolver | undefined {
+export function resolveXmlExpression(props: ASTProps, name: string): ((ctx: ExecutionContext) => unknown) | undefined {
     // Missing expression props do not produce deferred evaluators.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return undefined;
 
-    return compile(rawValue);
+    prepareEvaluation(rawValue);
+
+    return (ctx) => evaluate(rawValue, ctx);
 }
 
 /** Resolves an accessible XML label from a translation key or label attribute. */

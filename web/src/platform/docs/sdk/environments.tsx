@@ -20,11 +20,7 @@ export const content = (
             Environments
         </Heading>
         <Text as="p">
-            Environment variables let you configure an application without changing its source code. They are commonly
-            used for values that differ between environments, such as database URLs, API keys, or feature settings.
-        </Text>
-        <Text as="p">
-            LongLink makes this configuration easy to define and manage using{' '}
+            LongLink uses{' '}
             <Link
                 href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
                 hasUnderline
@@ -32,9 +28,8 @@ export const content = (
                 type="inherit"
             >
                 Pydantic Settings
-            </Link>
-            . Your settings are validated, documented, and reused across <Code>development</Code>,{' '}
-            <Code>production</Code>, and <Code>testing</Code>.
+            </Link>{' '}
+            to define and manage Application configuration.
         </Text>
         <Heading id="usage" level={2}>
             Usage

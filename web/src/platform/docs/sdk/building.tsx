@@ -30,10 +30,6 @@ export const content = (
             application.
         </Text>
         <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
-        <Text as="p">
-            Use <Code>--tag</Code> to set the image version tag, <Code>--registry</Code> to prefix the image with a
-            registry, and <Code>--push</Code> to push the image after the local Docker build completes.
-        </Text>
         <Stack gap={2}>
             <Heading id="metadata" level={2}>
                 Metadata

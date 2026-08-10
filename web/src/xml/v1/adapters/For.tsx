@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { ContextProvider, useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
@@ -20,9 +19,9 @@ export function For({ items, props, nodes }: Props & { items: unknown[] }) {
         };
 
         return (
-            <Fragment key={index}>
-                <ContextProvider value={childCtx}>{renderNode(nodes, childCtx)}</ContextProvider>
-            </Fragment>
+            <ContextProvider key={index} value={childCtx}>
+                {renderNode(nodes, childCtx)}
+            </ContextProvider>
         );
     });
 }

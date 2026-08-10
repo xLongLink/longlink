@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { isAppRelativeUrl, resolveUrl, useUrl } from '../core/url';
+import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
 import type { Props } from '../types';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
@@ -23,7 +23,7 @@ export function useActionHandler() {
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const baseUrl = useUrl('');
+    const baseUrl = useContext(BaseUrlContext);
     const showToast = useToast();
     const toastApi: ActionToast = {
         success: (message) => showToast({ body: message }),

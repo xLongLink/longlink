@@ -168,7 +168,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
     };
 
     return (
-        <XmlErrorBoundary resetKey={`${version}`}>
+        <XmlErrorBoundary resetKey={version}>
             <InternationalizationProvider locale="en" messages={messages}>
                 <XmlContent ast={ast} baseUrl={baseUrl} ctx={runtimeCtx} />
             </InternationalizationProvider>

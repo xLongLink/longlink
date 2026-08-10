@@ -98,13 +98,6 @@ export function resolveAnchorUrl(baseUrl: string, path: string): string {
     return resolveUrl(baseUrl, value);
 }
 
-/** Resolves a request URL against the active base URL. */
-export function useUrl(path: string): string {
-    const baseUrl = useReactContext(BaseUrlContext);
-
-    return resolveUrl(baseUrl, path);
-}
-
 /** Resolves an anchor URL against the active base URL. */
 export function useAnchorUrl(path: string): string {
     const baseUrl = useReactContext(BaseUrlContext);
