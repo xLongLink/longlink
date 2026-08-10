@@ -1,4 +1,3 @@
-import { Code } from '@astryxdesign/core/Code';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
