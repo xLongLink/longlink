@@ -1,5 +1,5 @@
 import type { PublicPage } from '../public';
-import { pageReferenceDocs, type ElementDoc } from './sdk/references';
+import { pageReferenceDocs } from './sdk/references';
 
 export const documentationPages = {
     introduction: {
@@ -70,16 +70,11 @@ export const documentationPages = {
     },
 } satisfies Record<string, PublicPage>;
 
-/** Builds public page metadata for one XML reference definition. */
-export function pageElementPage(page: ElementDoc): PublicPage {
-    return {
-        path: `/docs/sdk/pages/${page.slug}`,
-        title: page.name,
-        description: page.summary,
-    };
-}
-
 export const documentationPublicPages = [
     ...Object.values(documentationPages),
-    ...pageReferenceDocs.map(pageElementPage),
+    ...pageReferenceDocs.map((reference) => ({
+        path: `/docs/sdk/pages/${reference.slug}`,
+        title: reference.name,
+        description: reference.summary,
+    })),
 ];

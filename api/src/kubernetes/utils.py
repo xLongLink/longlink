@@ -5,12 +5,9 @@ from kr8s.asyncio.objects import APIObject, Deployment
 async def apply(resource: APIObject) -> None:
     """Create or patch one Kubernetes resource to its desired manifest."""
 
-    # Preserve the desired manifest before inspecting an existing resource.
-    manifest = deepcopy(resource.raw)
-
     # Patch existing resources to repair drift without recreating their identities.
     if await resource.exists():
-        await resource.patch(manifest)
+        await resource.patch(deepcopy(resource.raw))
     else:
         await resource.create()
 

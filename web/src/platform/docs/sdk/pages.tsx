@@ -26,8 +26,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Info } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
-import { pageElementHrefByName } from '@/platform/docs/sdk/elements';
-import { pageReferenceDocs } from '@/platform/docs/sdk/references';
+import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/references';
 
 type ComponentSummary = {
     name: string;
@@ -136,7 +135,7 @@ function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
             <RouterLink
                 aria-label={`Open ${component.name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={pageElementHrefByName[component.name]}
+                to={pageReferenceHrefByName[component.name]}
             />
         </Stack>
     );
@@ -190,7 +189,7 @@ function renderComponentPreview(name: string) {
             );
         case 'Link':
             return (
-                <Link href={pageElementHrefByName.Link} type="inherit" hasUnderline>
+                <Link href={pageReferenceHrefByName.Link} type="inherit" hasUnderline>
                     Docs
                 </Link>
             );

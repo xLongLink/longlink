@@ -4,38 +4,65 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { FileCode2 } from 'lucide-react';
-import { pageElementPage } from '@/platform/docs/pages';
-import { pageReferenceDocs, type ElementDoc } from './references';
 
-/** Renders one XML element documentation article. */
-function ElementReference({ element }: { element: ElementDoc }) {
+type ReferenceAttribute = {
+    name: string;
+    description: string;
+    required?: boolean;
+};
+
+export type ReferenceDoc = {
+    name: string;
+    slug: string;
+    category: string;
+    summary: string;
+    usage: string;
+    example: string;
+    attributes: ReferenceAttribute[];
+    attributesTitle?: string;
+    children?: string;
+};
+
+/** Builds the table of contents for one SDK reference article. */
+export function referenceToc(reference: ReferenceDoc) {
+    return [
+        { id: reference.slug, label: reference.name, level: 1 },
+        { id: 'definition', label: 'Definition', level: 2 },
+        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'attributes', label: 'Attributes', level: 2 },
+        ...(reference.children ? [{ id: 'children', label: 'Children', level: 2 }] : []),
+        { id: 'example', label: 'Example', level: 2 },
+    ];
+}
+
+/** Renders the shared layout for one SDK reference article. */
+export function ReferenceArticle({ reference }: { reference: ReferenceDoc }) {
     return (
         <Stack gap={5}>
             <Stack gap={2}>
-                <Text type="supporting">{element.category}</Text>
-                <Heading id={element.slug} level={1}>
-                    {element.name}
+                <Text type="supporting">{reference.category}</Text>
+                <Heading id={reference.slug} level={1}>
+                    {reference.name}
                 </Heading>
             </Stack>
             <Stack gap={3}>
                 <Heading id="definition" level={2}>
                     Definition
                 </Heading>
-                <Text as="p">{element.summary}</Text>
+                <Text as="p">{reference.summary}</Text>
             </Stack>
             <Stack gap={3}>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <Text as="p">{element.usage}</Text>
+                <Text as="p">{reference.usage}</Text>
             </Stack>
             <Stack gap={3}>
                 <Heading id="attributes" level={2}>
-                    {element.attributesTitle ?? 'Attributes'}
+                    {reference.attributesTitle ?? 'Attributes'}
                 </Heading>
                 <List listStyle="disc">
-                    {element.attributes.map((attribute) => (
+                    {reference.attributes.map((attribute) => (
                         <ListItem
                             key={attribute.name}
                             label={
@@ -49,40 +76,20 @@ function ElementReference({ element }: { element: ElementDoc }) {
                     ))}
                 </List>
             </Stack>
-            {element.children ? (
+            {reference.children ? (
                 <Stack gap={3}>
                     <Heading id="children" level={2}>
                         Children
                     </Heading>
-                    <Text as="p">{element.children}</Text>
+                    <Text as="p">{reference.children}</Text>
                 </Stack>
             ) : null}
             <Stack gap={3}>
                 <Heading id="example" level={2}>
                     Example
                 </Heading>
-                <CodeBlock code={element.example} language="xml" />
+                <CodeBlock code={reference.example} language="xml" />
             </Stack>
         </Stack>
     );
 }
-
-export const pageElementDocPages = pageReferenceDocs.map((element) => ({
-    ...pageElementPage(element),
-    icon: <FileCode2 aria-hidden="true" size={16} />,
-    content: <ElementReference element={element} />,
-    metadata: {
-        toc: [
-            { id: element.slug, label: element.name, level: 1 },
-            { id: 'definition', label: 'Definition', level: 2 },
-            { id: 'usage', label: 'Usage', level: 2 },
-            { id: 'attributes', label: 'Attributes', level: 2 },
-            ...(element.children ? [{ id: 'children', label: 'Children', level: 2 }] : []),
-            { id: 'example', label: 'Example', level: 2 },
-        ],
-        lastUpdated: '2026-07-21',
-        editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/references.ts',
-    },
-}));
-
-export const pageElementHrefByName = Object.fromEntries(pageElementDocPages.map(({ title, path }) => [title, path]));

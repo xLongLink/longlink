@@ -19,6 +19,6 @@
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
   <xsd:element name="Grid" type="GridType">
-    <xsd:annotation><xsd:documentation>Arranges XML children in an Astryx grid.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Arranges XML children in an Astryx grid. Use columns for a fixed grid, or minColumnWidth with optional maxColumns and repeat for a responsive grid.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

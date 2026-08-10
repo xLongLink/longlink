@@ -31,7 +31,7 @@ jobs:
 
             - name: Check API formatting
               working-directory: api
-              run: uv run --locked ruff check . && uv run --locked isort --check-only .
+              run: uv run --locked ruff check .
 
             - name: Check Platform API client generation
               working-directory: web

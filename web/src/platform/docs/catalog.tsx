@@ -20,7 +20,7 @@ import * as overview from '@/platform/docs/index';
 import { documentationPages } from '@/platform/docs/pages';
 import * as building from '@/platform/docs/sdk/building';
 import * as database from '@/platform/docs/sdk/database';
-import { pageElementDocPages } from '@/platform/docs/sdk/elements';
+import { pageReferenceDocPages } from '@/platform/docs/sdk/references';
 import * as environments from '@/platform/docs/sdk/environments';
 import * as applicationsOverview from '@/platform/docs/sdk/index';
 import * as pages from '@/platform/docs/sdk/pages';
@@ -159,7 +159,7 @@ const DOC_SECTIONS = [
             ...documentationPages.pages,
             icon: <FileCode2 aria-hidden="true" size={16} />,
             ...pages,
-            hiddenPages: pageElementDocPages,
+            hiddenPages: pageReferenceDocPages,
         },
         {
             ...documentationPages.testing,

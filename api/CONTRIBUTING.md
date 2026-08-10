@@ -10,7 +10,7 @@ uv run alembic upgrade head        # Apply database migrations
 uv run python -m src.release       # Schedule release migration operations
 uv run python seed.py              # Seed the database
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-uv run isort .                     # Format imports
+uv run ruff check --fix .           # Format imports and apply safe lint fixes
 ```
 
 Production images start the Platform API without applying schema changes. Before rolling out API replicas, the deployment pipeline must run `alembic upgrade head` and then `python -m src.release` once with the target image and shared database.
