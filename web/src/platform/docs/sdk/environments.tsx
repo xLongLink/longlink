@@ -28,7 +28,7 @@ export const content = (
             <Link
                 href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
                 hasUnderline
-                target="_blank"
+                isExternalLink
                 type="inherit"
             >
                 Pydantic Settings

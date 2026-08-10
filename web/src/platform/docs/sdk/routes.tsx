@@ -25,7 +25,7 @@ export const content = (
         </Text>
         <Text as="p">
             LongLink Applications use a pure{' '}
-            <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline target="_blank" type="inherit">
+            <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
                 FastAPI
             </Link>{' '}
             implementation. Define routes with <Code>APIRouter</Code> and add them to the application as you would in

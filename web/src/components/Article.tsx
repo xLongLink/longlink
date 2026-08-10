@@ -114,7 +114,7 @@ export function Article({
                                             <Link
                                                 href={metadata.editUrl}
                                                 hasUnderline
-                                                target="_blank"
+                                                isExternalLink
                                                 type="supporting"
                                             >
                                                 {t('docs.editInGithub')}
