@@ -16,7 +16,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def get_auth_session() -> AsyncIterator[AsyncSession]:
+async def get_session() -> AsyncIterator[AsyncSession]:
     """Yield one database session for authentication dependencies and routes."""
 
     # Keep the shared session alive for the complete dependency request scope.
@@ -26,7 +26,7 @@ async def get_auth_session() -> AsyncIterator[AsyncSession]:
 
 async def current_optional_user(
     credential: str | None = Cookie(default=None, alias="longlink_auth"),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ) -> User | None:
     """Return the active user for one valid optional browser session."""
 
@@ -77,7 +77,7 @@ class ApplicationAccess:
 async def organization_access(
     organization_id: UUID,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ) -> UserOrganization:
     """Return required active Organization access for one authenticated user."""
 
@@ -91,7 +91,7 @@ async def organization_access(
 async def application_access(
     application_id: UUID,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationAccess:
     """Return required active Application access for one authenticated user."""
 

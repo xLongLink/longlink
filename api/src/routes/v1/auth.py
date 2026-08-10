@@ -1,7 +1,7 @@
 import jwt
 from pwdlib import PasswordHash
 from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, BackgroundTasks
-from src.auth import get_auth_session
+from src.auth import get_session
 from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/auth/password/login", status_code=204, tags=["auth"])
-async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_auth_session)):
+async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
 
     # Load the canonical account identity before verifying its credential.
@@ -68,7 +68,7 @@ async def logout(
 async def request_password_reset(
     payload: EmailPayload,
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Queue password reset delivery without disclosing account existence."""
 
@@ -87,7 +87,7 @@ async def request_password_reset(
 
 
 @router.post("/auth/reset-password/verify", status_code=204, tags=["auth"])
-async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_auth_session)):
+async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_session)):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
@@ -111,7 +111,7 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
 async def get_password_reset_setup(
     response: Response,
     password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Restore password reset state from browser-only proof."""
 
@@ -128,7 +128,7 @@ async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
     password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Replace a password using browser-only reset proof."""
 
@@ -154,7 +154,7 @@ async def reset_password(
 
 
 @router.post("/auth/register", status_code=202, tags=["auth"])
-async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_auth_session)):
+async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     """Send a stateless registration link when the email has no account."""
 
     email = payload.email
@@ -208,7 +208,7 @@ async def complete_registration(
     payload: RegistrationComplete,
     response: Response,
     registration_token: str | None = Cookie(default=None, alias="longlink_registration"),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Create and authenticate an account after stateless email verification."""
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.auth import ApplicationAccess, authuser, get_auth_session, application_access
+from src.auth import ApplicationAccess, authuser, get_session, application_access
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
@@ -24,7 +24,7 @@ async def proxy_application_request(
     path: str = "",
     user: User = Depends(authuser),
     access: ApplicationAccess = Depends(application_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, get_auth_session
+from src.auth import authadmin, get_session
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +9,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_auth_session)):
+async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register a compute target and queue its initial creation."""
 
     registry = await compute.create(session, payload.name, payload.kubeconfig)
@@ -18,14 +18,14 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
 
 
 @router.get("/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(session: AsyncSession = Depends(get_auth_session)):
+async def list_compute_registries(session: AsyncSession = Depends(get_session)):
     """Return all registered compute backends."""
 
     return await compute.fetch(session)
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_auth_session)):
+async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
@@ -37,7 +37,7 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
 
 
 @router.delete("/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_auth_session)):
+async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.

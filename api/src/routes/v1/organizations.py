@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin, get_auth_session, organization_access
+from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, names, roles
 from src.errors import UnavailableError
 from src.logger import logger
@@ -26,7 +26,7 @@ router = APIRouter()
 
 
 @router.get("/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_auth_session)):
+async def list_organizations(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
     """Return all organizations for administrator views."""
 
     return await organizations.fetch(session)
@@ -36,7 +36,7 @@ async def list_organizations(_user: User = Depends(authadmin), session: AsyncSes
 async def get_organization(
     organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Return one organization and its metadata."""
 
@@ -65,7 +65,7 @@ async def update_organization(
     payload: OrganizationUpdate,
     user: User = Depends(authuser),
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Update mutable organization settings."""
 
@@ -88,7 +88,7 @@ async def update_organization(
 async def get_organization_database_usage(
     organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Return maintainer-only live usage for the Organization database."""
 
@@ -123,7 +123,7 @@ async def get_organization_database_usage(
 async def get_organization_storage_usage(
     organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Return maintainer-only live usage for the Organization bucket."""
 
@@ -163,7 +163,7 @@ async def create_organization_invitation(
     organization_id: UUID,
     payload: OrganizationInvitationCreate,
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Create one invitation for an organization member."""
 
@@ -187,7 +187,7 @@ async def update_organization_member(
     payload: OrganizationMemberUpdate,
     user: User = Depends(authuser),
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Update one organization member role."""
 
@@ -213,7 +213,7 @@ async def update_organization_member(
 async def delete_organization(
     organization_id: UUID,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
@@ -246,7 +246,7 @@ async def delete_organization(
 async def create_organization(
     payload: OrganizationCreate,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Create Organization desired state and queue infrastructure creation."""
 

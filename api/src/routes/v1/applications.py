@@ -4,7 +4,7 @@ from src.auth import (
     ApplicationAccess,
     authuser,
     authadmin,
-    get_auth_session,
+    get_session,
     application_access,
     organization_access,
 )
@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/applications", response_model=list[ApplicationResponse])
-async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_auth_session)):
+async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
     """Return all applications for administrator views."""
 
     return await applications.fetch(session)
@@ -32,7 +32,7 @@ async def create_application(
     organization_id: UUID,
     payload: ApplicationCreate,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Create Application state and queue its explicit deployment lifecycle."""
 
@@ -81,7 +81,7 @@ async def create_application(
 async def get_application_logs(
     application_id: UUID,
     access: ApplicationAccess = Depends(application_access),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Return recent pod logs for one managed application."""
 
@@ -110,7 +110,7 @@ async def get_application_logs(
 async def delete_application(
     application_id: UUID,
     user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_auth_session),
+    session: AsyncSession = Depends(get_session),
 ):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
