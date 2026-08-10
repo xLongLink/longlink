@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
-from longlink.pages import JSXResponse, XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
+from longlink.pages import XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
 from longlink.utils import Envs
 from fastapi.routing import APIRoute
 from longlink.logger import ApiAccessFilter, logger
@@ -145,7 +145,7 @@ class LongLink:
                         warned_routes.add(warning_key)
 
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
-        """Register XML and JSX files from a directory as SDK pages."""
+        """Register XML files from a directory as SDK pages."""
 
         # Prepare normalized route state for replacing pages under this directory.
         normalized_prefix = normalize_mount_path(route_prefix)
@@ -161,34 +161,26 @@ class LongLink:
         registered_pages[:] = [page for page in registered_pages if page.path not in stale_page_paths]
         registered_page_paths = {page.path for page in registered_pages}
 
-        # Discover browser-rendered page files in deterministic order.
-        for page_file in sorted(path for path in pages_directory.rglob("*") if path.suffix in {".jsx", ".xml"}):
+        # Discover XML page files in deterministic order.
+        for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"
             page_endpoint = partial(page_file.read_text, encoding="utf-8")
 
-            # XML pages retain schema validation and optional display metadata.
-            if page_file.suffix == ".xml":
-                page = LonglinkXml(page_file)
-                page_root = page.validate()
-                page_name, page_icon = extract_longlink_metadata(page_root)
-                response_class = XMLResponse
-                page_kind = "xml"
-            else:
-                page_name, page_icon = None, None
-                response_class = JSXResponse
-                page_kind = "jsx"
+            # Validate XML pages and extract optional display metadata.
+            page = LonglinkXml(page_file)
+            page_root = page.validate()
+            page_name, page_icon = extract_longlink_metadata(page_root)
 
             # Register page metadata and its normalized API route together.
             registered_path = normalize_page_path(route_path)
 
-            # Extension-free endpoints cannot distinguish matching XML and JSX filenames.
+            # Page endpoints must remain unique across registered directories.
             if registered_path in registered_page_paths:
                 raise ValueError(f"Page endpoint '{registered_path}' is already registered")
 
             registered_pages.append(
                 PageDefinition(
-                    kind=page_kind,
                     path=registered_path,
                     route=page_file_route(relative_path),
                     tab=page_file_tab(relative_path),
@@ -201,6 +193,6 @@ class LongLink:
                 registered_path,
                 page_endpoint,
                 methods=["GET"],
-                response_class=response_class,
+                response_class=XMLResponse,
                 include_in_schema=False,
             )

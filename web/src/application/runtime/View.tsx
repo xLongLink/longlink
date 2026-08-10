@@ -7,10 +7,9 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { Stack } from '@astryxdesign/core/Stack';
 import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { z } from 'zod';
-import { compileJSXView, JSXView } from '@/application/runtime/JSXView';
 import { XMLView } from '@/application/runtime/XMLView';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiText } from '@/lib/api';
@@ -27,7 +26,6 @@ import {
 import XmlLayout from '@/xml/v1/layout';
 
 const pageSchema = z.object({
-    kind: z.enum(['jsx', 'xml']),
     tab: z.string().trim().min(1),
     path: z.string().trim().min(1),
     name: z.string().trim().min(1).optional(),
@@ -61,8 +59,7 @@ type PageState = {
     cacheKey: string;
     path: string;
     routePath: string;
-    ast: ASTNode[] | null;
-    component: ComponentType | null;
+    ast: ASTNode[];
     error: string | null;
     loading: boolean;
     runtimeContext: ExecutionContext;
@@ -176,8 +173,7 @@ function createPageState(
         cacheKey: key,
         path,
         routePath,
-        ast: null,
-        component: null,
+        ast: [],
         error: null,
         loading: true,
         runtimeContext: pageRuntimeContext,
@@ -185,7 +181,7 @@ function createPageState(
 }
 
 /**
- * Renders registered XML and JSX pages for Platform and Application routes.
+ * Renders registered XML pages for Platform and Application routes.
  */
 export default function View({
     applicationStatus,
@@ -383,21 +379,13 @@ export default function View({
         });
 
         void fetchApiText(pageUrl, {
-            headers: { Accept: activePage.kind === 'xml' ? 'application/xml' : 'text/plain' },
+            headers: { Accept: 'application/xml' },
             signal: controller.signal,
         })
-            .then(async (content) => {
+            .then((content) => {
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
-                    const result =
-                        activePage.kind === 'xml'
-                            ? { ast: parseXML(content), component: null }
-                            : { ast: null, component: await compileJSXView(content) };
-
-                    // Babel loading can outlive a route change, so check the signal again before committing state.
-                    if (controller.signal.aborted) {
-                        return;
-                    }
+                    const ast = parseXML(content);
 
                     setPageStates((current) => {
                         const currentPageState = current[activePageStateKey];
@@ -415,8 +403,7 @@ export default function View({
                             ...current,
                             [activePageStateKey]: {
                                 ...currentPageState,
-                                ast: result.ast,
-                                component: result.component,
+                                ast,
                                 error: null,
                                 loading: false,
                             },
@@ -539,7 +526,7 @@ export default function View({
     const activePageError = activePageState?.error;
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if ((!pageState.ast && !pageState.component) || pageState.cacheKey !== pageCacheKey || pageState.error) {
+        if (!pageState.ast.length || pageState.cacheKey !== pageCacheKey || pageState.error) {
             return null;
         }
 
@@ -547,18 +534,14 @@ export default function View({
 
         return (
             <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
-                {pageState.ast ? (
-                    <XMLView
-                        active={pageIsActive}
-                        ast={pageState.ast}
-                        baseUrl={resolvedPagesBaseUrl}
-                        context={pageState.runtimeContext}
-                        runtimeKey={runtimeKey}
-                        stateKey={pageStateKey}
-                    />
-                ) : pageState.component ? (
-                    <JSXView component={pageState.component} />
-                ) : null}
+                <XMLView
+                    active={pageIsActive}
+                    ast={pageState.ast}
+                    baseUrl={resolvedPagesBaseUrl}
+                    context={pageState.runtimeContext}
+                    runtimeKey={runtimeKey}
+                    stateKey={pageStateKey}
+                />
             </Stack>
         );
     });
@@ -580,7 +563,7 @@ export default function View({
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;
-    } else if (!activePageState.ast && !activePageState.component) {
+    } else if (!activePageState.ast.length) {
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}

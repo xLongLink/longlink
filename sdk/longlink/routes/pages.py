@@ -1,6 +1,5 @@
 from fastapi import Request, APIRouter
 from pydantic import BaseModel
-from typing import Literal
 
 router = APIRouter()
 
@@ -9,7 +8,6 @@ class PageResponse(BaseModel):
     """Represent one SDK runtime page."""
 
     # Metadata
-    kind: Literal["jsx", "xml"]
     tab: str
     icon: str | None = None
     name: str | None = None
@@ -27,7 +25,6 @@ def get_pages(request: Request):
     # Page handlers are registered from the SDK pages directory during app startup.
     for page in registered_pages:
         entry = {
-            "kind": page.kind,
             "tab": page.tab,
             "path": page.path.lstrip("/"),
             "route": page.route,
