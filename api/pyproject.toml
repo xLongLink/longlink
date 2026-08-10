@@ -49,7 +49,6 @@ dev = [
     'pytest>=9.0.3',
     'pytest-asyncio>=1.4.0',
     'docker>=7.2.0',
-    'isort>=8.0.1',
     'types-aiobotocore-s3==3.9.0',
 ]
 
@@ -73,20 +72,16 @@ line-length = 140
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["UP", "D300"]
+select = ["UP", "D300", "I"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D300"]
 "src/database/models/*.py" = ["UP037", "UP045"]
 
-[tool.isort]
-from_first = false
-line_length = 140
-no_sections = true
-multi_line_output = 3
-include_trailing_comma = true
-lines_between_types = 0
-length_sort = true
+[tool.ruff.lint.isort]
+no-sections = true
+lines-between-types = 0
+length-sort = true
 
 [tool.ty.environment]
 extra-paths = ["../sdk"]

@@ -28,12 +28,12 @@ format: api\:format sdk\:format web\:format
 
 # Format API imports.
 api\:format: api\:install
-	cd api && uv run --locked isort .
+	cd api && uv run --locked ruff check --select I --fix .
 
 
 # Format SDK imports.
 sdk\:format: sdk\:install
-	cd sdk && uv run --locked isort .
+	cd sdk && uv run --locked ruff check --select I --fix .
 
 
 # Format web code and repository docs.
