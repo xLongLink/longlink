@@ -28,7 +28,7 @@ const ICON_COLOR_CLASSES = {
 
 /** Renders a supported Lucide icon in an XML page. */
 export function Icon({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const icon = requireXmlString(props, 'icon', ctx, 'Icon');
     const size = resolveXmlEnum(props, 'size', ctx, ['xsm', 'sm', 'md', 'lg'], 'md', 'Icon');
     const color = resolveXmlEnum(
@@ -61,7 +61,7 @@ export function Icon({ props }: Props) {
     );
     const renderedIcon = renderIcon(icon, {
         'aria-hidden': true,
-        className: ICON_COLOR_CLASSES[color] || undefined,
+        className: ICON_COLOR_CLASSES[color],
         size: ICON_SIZES[size],
     });
 

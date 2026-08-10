@@ -3,10 +3,9 @@ import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import { useBindableValue } from './binding';
-import { requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
+import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
 
 type ResolvedSideNavItem = {
     icon?: string;
@@ -17,9 +16,9 @@ type ResolvedSideNavItem = {
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const items = nodes
-        .filter((node) => node.name === 'SideNavItem' && isVisibleNode(node, ctx))
+        .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
         .map((node) => resolveSideNavItem(node, ctx));
 
     // Side navigation without destinations is not meaningful or accessible.
@@ -77,11 +76,4 @@ function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext): ResolvedSideN
     const icon = resolveXmlString(props, 'icon', ctx) || undefined;
 
     return { icon, label, nodes: node.children ?? [], value };
-}
-
-/** Evaluates conditional rendering for an adapter-consumed side navigation item. */
-function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
-    if (node.params?.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
 }

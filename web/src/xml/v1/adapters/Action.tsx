@@ -3,17 +3,12 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { isAppRelativeUrl, resolveUrl, useUrl } from '../core/url';
+import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
 import type { Props } from '../types';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
-
-type ActionToast = {
-    success(message: string): void;
-    error(message: string): void;
-};
 
 /** Returns the action handler provided by the nearest XML Action wrapper. */
 export function useActionHandler() {
@@ -22,21 +17,17 @@ export function useActionHandler() {
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const baseUrl = useUrl('');
-    const showToast = useToast();
-    const toastApi: ActionToast = {
-        success: (message) => showToast({ body: message }),
-        error: (message) => showToast({ body: message, type: 'error' }),
-    };
+    const ctx = useXmlContext();
+    const baseUrl = useContext(BaseUrlContext);
+    const toast = useToast();
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
         // Surface action failures through the UI.
         try {
-            await executeAction(props, ctx, baseUrl, fetch, toastApi);
+            await executeAction(props, ctx, baseUrl, fetch, toast);
         } catch (error: unknown) {
-            toastApi.error(error instanceof Error ? error.message : 'Action failed');
+            toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         }
     }
 
@@ -46,10 +37,10 @@ export function Action({ props, nodes }: Props) {
 /** Executes the action request and invalidation flow. */
 export async function executeAction(
     props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>['ctx'],
+    ctx: ReturnType<typeof useXmlContext>,
     baseUrl: string,
     fetchImpl: typeof fetch = fetch,
-    toastApi: ActionToast
+    toast: ReturnType<typeof useToast>
 ): Promise<void> {
     let actionUrl: string;
     let formValue: unknown;
@@ -69,13 +60,12 @@ export async function executeAction(
         formValue = form ? form(ctx) : undefined;
         jsonValue = json ? json(ctx) : undefined;
     } catch (error: unknown) {
-        toastApi.error(error instanceof Error ? error.message : 'Action failed');
+        toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         return;
     }
 
     const invalidateRuntime = ctx.invalidate;
     const normalizedMethod = method.trim().toUpperCase();
-    const headers = new Headers();
 
     // Allow invalidation-only actions.
     if (!actionUrl) {
@@ -86,7 +76,7 @@ export async function executeAction(
 
     // Reject methods outside the supported action set.
     if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
-        toastApi.error(`Unsupported action method ${normalizedMethod}`);
+        toast({ body: `Unsupported action method ${normalizedMethod}`, type: 'error' });
         return;
     }
 
@@ -94,7 +84,7 @@ export async function executeAction(
 
     // Keep actions scoped to the current application.
     if (!isAppRelativeUrl(normalizedActionUrl)) {
-        toastApi.error('Action URL must be app-relative');
+        toast({ body: 'Action URL must be app-relative', type: 'error' });
         return;
     }
 
@@ -103,13 +93,13 @@ export async function executeAction(
 
     // Avoid ambiguous payload configuration.
     if (formValue !== undefined && jsonValue !== undefined) {
-        toastApi.error('Action cannot send both form and json payloads');
+        toast({ body: 'Action cannot send both form and json payloads', type: 'error' });
         return;
     }
 
     // Disallow request bodies for GET actions.
     if (normalizedMethod === 'GET' && (formValue !== undefined || jsonValue !== undefined)) {
-        toastApi.error('GET actions cannot send payloads');
+        toast({ body: 'GET actions cannot send payloads', type: 'error' });
         return;
     }
 
@@ -120,12 +110,10 @@ export async function executeAction(
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
             init.body = JSON.stringify(jsonValue);
-            headers.set('content-type', 'application/json');
+            init.headers = { 'content-type': 'application/json' };
         }
-
-        init.headers = headers;
     } catch (error: unknown) {
-        toastApi.error(error instanceof Error ? error.message : 'Action failed');
+        toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         return;
     }
 
@@ -135,19 +123,19 @@ export async function executeAction(
     try {
         response = await fetchApiResponse(requestUrl, init, fetchImpl);
     } catch (error: unknown) {
-        toastApi.error(error instanceof Error ? error.message : 'Request failed');
+        toast({ body: error instanceof Error ? error.message : 'Request failed', type: 'error' });
         return;
     }
 
     // Treat non-2xx responses as action failures.
     if (!response.ok) {
-        toastApi.error(`Request failed with status ${response.status}`);
+        toast({ body: `Request failed with status ${response.status}`, type: 'error' });
         return;
     }
 
     await invalidateRuntime(invalidate);
 
-    toastApi.success(`Request completed with status ${response.status}`);
+    toast({ body: `Request completed with status ${response.status}` });
 }
 
 /** Builds multipart form data from an XML action form expression. */

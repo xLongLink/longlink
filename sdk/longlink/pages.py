@@ -44,7 +44,7 @@ def page_file_route(relative_path: str) -> str:
 
     normalized_path = relative_path.strip("/")
 
-    # Page routes must be backed by XML files.
+    # Page routes are backed by XML files.
     if not normalized_path.endswith(".xml"):
         raise ValueError("Page file routes must end with '.xml'")
 
@@ -117,8 +117,8 @@ def normalize_page_path(path: str) -> str:
     if not normalized_path.startswith("/"):
         normalized_path = f"/{normalized_path}"
 
-    # Only XML pages can be registered.
+    # XML filenames select the parser but are not part of the endpoint URL.
     if not normalized_path.endswith(".xml"):
         raise ValueError("Page routes must end with '.xml'")
 
-    return normalized_path
+    return normalized_path.removesuffix(".xml")

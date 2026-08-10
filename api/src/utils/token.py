@@ -21,8 +21,7 @@ def password_fingerprint(password: str) -> str:
     """Return the signed-token fingerprint for one current password hash."""
 
     # Bind signed proof to the current credential without exposing its reusable hash.
-    message = f"password-reset:{password}".encode()
-    return hmac.new(env.SESSION_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
+    return hmac.new(env.SESSION_KEY.encode("utf-8"), f"password-reset:{password}".encode(), hashlib.sha256).hexdigest()
 
 
 def create_registration_token(email: str) -> str:

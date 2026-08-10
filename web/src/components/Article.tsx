@@ -8,13 +8,22 @@ import { Link } from '@astryxdesign/core/Link';
 import { Outline } from '@astryxdesign/core/Outline';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import { formatDate } from '@/lib/utils';
 import type { ArticlePage } from '@/platform/catalog';
 
 /** Renders shared documentation and legal article content. */
-export function Article({ page }: { page: ArticlePage }) {
+export function Article({
+    page,
+    previousPage,
+    nextPage,
+}: {
+    page: ArticlePage;
+    previousPage?: ArticlePage;
+    nextPage?: ArticlePage;
+}) {
     const t = useTranslator();
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
@@ -66,18 +75,43 @@ export function Article({ page }: { page: ArticlePage }) {
                             <article className="article-content space-y-7 text-justify">
                                 {content}
                                 <Stack as="footer" gap={3}>
+                                    {previousPage || nextPage ? (
+                                        <Stack
+                                            as="nav"
+                                            direction="horizontal"
+                                            gap={3}
+                                            hAlign="between"
+                                            aria-label="Documentation navigation"
+                                        >
+                                            {previousPage ? (
+                                                <Button
+                                                    className="bg-muted"
+                                                    href={previousPage.path}
+                                                    icon={<ArrowLeft aria-hidden="true" size={16} />}
+                                                    label={previousPage.title}
+                                                    size="sm"
+                                                    variant="secondary"
+                                                />
+                                            ) : null}
+                                            {nextPage ? (
+                                                <Button
+                                                    className="ms-auto bg-muted"
+                                                    endContent={<ArrowRight aria-hidden="true" size={16} />}
+                                                    href={nextPage.path}
+                                                    label={nextPage.title}
+                                                    size="sm"
+                                                    variant="secondary"
+                                                />
+                                            ) : null}
+                                        </Stack>
+                                    ) : null}
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">
                                             {t('common.lastUpdated', { date: formatDate(metadata.lastUpdated) })}
                                         </Text>
                                         {metadata.editUrl ? (
-                                            <Link
-                                                href={metadata.editUrl}
-                                                hasUnderline
-                                                target="_blank"
-                                                type="supporting"
-                                            >
+                                            <Link href={metadata.editUrl} hasUnderline isExternalLink type="supporting">
                                                 {t('docs.editInGithub')}
                                             </Link>
                                         ) : null}

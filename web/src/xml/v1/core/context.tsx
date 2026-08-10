@@ -21,14 +21,14 @@ export function ContextProvider({ value, children }: { value: ExecutionContext; 
 }
 
 /** Returns the active XML runtime state from the XML context. */
-export function useXmlContext(): { ctx: ExecutionContext } {
+export function useXmlContext(): ExecutionContext {
     // Fail fast when XML runtime state is unavailable.
     const runtime = useReactContext(Context);
     if (!runtime) {
         throw new Error('useXmlContext must be used inside a rendered XML component');
     }
 
-    return { ctx: runtime };
+    return runtime;
 }
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */

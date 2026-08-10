@@ -14,8 +14,6 @@ export function Navbar() {
     const t = useTranslator();
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
-    const getStartedHref =
-        user && memberships.length === 1 ? `/orgs/${memberships[0].organization.slug}` : '/organizations';
 
     return (
         <>
@@ -26,7 +24,11 @@ export function Navbar() {
                         <TopNav
                             endContent={
                                 <Button
-                                    href={getStartedHref}
+                                    href={
+                                        user && memberships.length === 1
+                                            ? `/orgs/${memberships[0].organization.slug}`
+                                            : '/organizations'
+                                    }
                                     label={t('actions.getStarted')}
                                     size="sm"
                                     variant="primary"

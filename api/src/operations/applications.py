@@ -63,7 +63,6 @@ async def create(claimed: Operation) -> str | None:
                 "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
                 "LONGLINK_STORAGE_PREFIX": prefix,
                 "LONGLINK_STORAGE_REGION": object_storage.region,
-                "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
             persisted_secrets = await applications.add_runtime_secrets(application.id, runtime_secrets)

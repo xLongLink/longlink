@@ -7,7 +7,7 @@ import { resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
 /** Renders an Astryx heading with explicit semantic level. */
 export function Heading({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const value = resolveXmlValue(props, 'value', ctx);
     const content = props.i18n
         ? resolveTranslation(props, ctx)

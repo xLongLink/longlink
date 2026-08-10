@@ -58,7 +58,7 @@ export default function ForgotPassword() {
                         name="email"
                         render={({ field, fieldState }) => (
                             <TextInput
-                                {...{ autoComplete: 'email' as const }}
+                                {...{ autoComplete: 'email' }}
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired

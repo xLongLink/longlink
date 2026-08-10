@@ -1,7 +1,3 @@
-import type { ExecutionContext } from '../types';
-
-export type ExpressionResolver<T = unknown> = (ctx: ExecutionContext) => T;
-
 type LiteralNode = {
     type: 'Literal';
     value: unknown;

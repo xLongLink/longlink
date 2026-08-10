@@ -30,4 +30,4 @@ jobs:
               run: uv sync --locked --all-groups
 
             - name: Run tests
-              run: uv run --locked longlink test
+              run: uv run --locked pytest

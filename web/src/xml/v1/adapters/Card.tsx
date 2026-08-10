@@ -6,7 +6,7 @@ import { resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from './props'
 
 /** Renders an Astryx card container. */
 export function Card({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const variant = resolveXmlEnum(
         props,
         'variant',

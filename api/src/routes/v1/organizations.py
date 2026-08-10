@@ -101,9 +101,10 @@ async def get_organization_database_usage(organization_id: UUID, user: User = De
 
     # Inspect the exact Organization database while distinguishing absent provisioning from backend failures.
     database_name = membership.organization.id.hex
-    db = Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
-        usage = await db.database_usage(database_name)
+        usage = await Postgres(
+            registry.host, registry.port, registry.username, registry.password, registry.sslmode
+        ).database_usage(database_name)
     except Exception as exc:
         logger.exception("Failed to inspect database usage for organization '%s': %r", membership.organization.slug, exc)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc

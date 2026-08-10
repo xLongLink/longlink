@@ -6,5 +6,5 @@ export const meta = createArticleMeta(DOC_PAGES);
 
 /** Resolves and renders the documentation article matched by the current URL. */
 export default function DocumentationRoute() {
-    return <ArticleRoute groups={DOC_GROUPS} pages={DOC_PAGES} />;
+    return <ArticleRoute groups={DOC_GROUPS} hasPageNavigation pages={DOC_PAGES} />;
 }

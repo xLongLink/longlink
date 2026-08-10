@@ -5,15 +5,14 @@ import {
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import type { ReactNode } from 'react';
 import { ContextProvider, useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
-import { BaseUrlContext, useUrl } from '../core/url';
-import { evaluate, readSafeProperty } from '../expressions';
+import { readSafeProperty } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import {
     readXmlProp,
+    isVisibleXmlNode,
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -26,8 +25,7 @@ type TableRow = Record<string, unknown>;
 
 /** Renders XML row data through the Astryx data-driven Table API. */
 export function Table({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const baseUrl = useUrl('');
+    const ctx = useXmlContext();
 
     // Require an explicit array data source.
     if (!readXmlProp(props, 'data')?.trim()) {
@@ -40,8 +38,8 @@ export function Table({ props, nodes }: Props) {
         : [];
     const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
-        .filter((node) => node.name === 'TableColumn' && isVisibleNode(node, ctx))
-        .map((node) => buildColumn(node, ctx, rowName, rows, baseUrl));
+        .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
+        .map((node) => buildColumn(node, ctx, rowName, rows));
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {
@@ -80,8 +78,7 @@ function buildColumn(
     node: ASTNode,
     ctx: ExecutionContext,
     rowName: string,
-    rows: TableRow[],
-    baseUrl: string
+    rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
     const props = node.params ?? {};
     const key = readXmlProp(props, 'key');
@@ -111,36 +108,21 @@ function buildColumn(
         header,
         key,
         width,
-        renderCell: (row) => renderCell(cellNodes, row, rows.indexOf(row), field, ctx, rowName, baseUrl),
+        renderCell: (row) => {
+            const value = resolveFieldValue(row, field);
+
+            // Shorthand columns render the resolved field value directly.
+            if (cellNodes.length === 0) return value == null ? '' : String(value);
+
+            const rowCtx: ExecutionContext = {
+                ...ctx,
+                parent: ctx,
+                values: { index: rows.indexOf(row), value, [rowName]: row },
+            };
+
+            return <ContextProvider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</ContextProvider>;
+        },
     };
-}
-
-/** Renders a column cell with row, index, and field value in lexical XML scope. */
-function renderCell(
-    nodes: ASTNode[],
-    row: TableRow,
-    index: number,
-    field: string,
-    ctx: ExecutionContext,
-    rowName: string,
-    baseUrl: string
-): ReactNode {
-    const value = resolveFieldValue(row, field);
-
-    // Shorthand columns render the resolved field value directly.
-    if (nodes.length === 0) return value == null ? '' : String(value);
-
-    const rowCtx: ExecutionContext = {
-        ...ctx,
-        parent: ctx,
-        values: { index, value, [rowName]: row },
-    };
-
-    return (
-        <ContextProvider value={rowCtx}>
-            <BaseUrlContext.Provider value={baseUrl}>{renderNode(nodes, rowCtx)}</BaseUrlContext.Provider>
-        </ContextProvider>
-    );
 }
 
 /** Resolves a dotted field path against one row without unsafe property access. */
@@ -150,11 +132,4 @@ function resolveFieldValue(row: TableRow, field: string): unknown {
 
         return readSafeProperty(current, segment);
     }, row);
-}
-
-/** Evaluates conditional rendering for an adapter-consumed column node. */
-function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
-    if (node.params?.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
 }

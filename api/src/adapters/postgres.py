@@ -10,7 +10,7 @@ from src.models.types import DatabaseSSLMode
 MAINTENANCE_DATABASE = "postgres"
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 
 
@@ -97,9 +97,8 @@ class Postgres:
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        engine: AsyncEngine = create_async_engine(
+        engine = create_async_engine(
             self.url(database, search_path=search_path),
-            pool_pre_ping=True,
             **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
         )
 

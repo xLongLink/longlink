@@ -34,7 +34,7 @@ jobs:
               run: uv sync --locked --all-groups
 
             - name: Run tests
-              run: uv run --locked longlink test
+              run: uv run --locked pytest
 
             - name: Log in to GHCR
               uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2

@@ -47,8 +47,7 @@ async def delete_database_registry(registry_id: UUID):
     """Delete one unused database backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.
-    deleted = await database.delete(registry_id)
-    if not deleted:
+    if not await database.delete(registry_id):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
 
@@ -65,9 +64,8 @@ async def get_database_usage(registry_id: UUID):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
     # Inspect backend usage through the adapter.
-    db = Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
-        return await db.usage()
+        return await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).usage()
     except Exception as exc:
         logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc

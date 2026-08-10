@@ -45,7 +45,6 @@ dev = [
     "ty>=0.0.64",
     "ruff>=0.16.0",
     "lxml-stubs>=0.5.1",
-    "isort>=8.0.1",
     "httpx2>=2.9.1",
 ]
 
@@ -81,14 +80,11 @@ line-length = 140
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["UP", "D300"]
+select = ["UP", "D300", "I"]
 
-[tool.isort]
-from_first = false
-line_length = 140
-no_sections = true
-lines_between_types = 0
-length_sort = true
+[tool.ruff.lint.isort]
+no-sections = true
+length-sort = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

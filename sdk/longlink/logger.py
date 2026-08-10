@@ -44,12 +44,8 @@ class ApiAccessFilter(logging.Filter):
         method = str(record.args[1]).upper()
         path = str(record.args[2]).split("?", 1)[0]
 
-        # Always show mutating requests because they are operationally important.
-        if method in self._allowed_methods:
-            return True
-
-        # Hide frontend and asset requests so access logs stay focused on application APIs.
-        return path.startswith(self._allowed_prefixes)
+        # Always show mutating and API requests while hiding frontend and asset requests.
+        return method in self._allowed_methods or path.startswith(self._allowed_prefixes)
 
 
 def configure_logger(name: str) -> logging.Logger:

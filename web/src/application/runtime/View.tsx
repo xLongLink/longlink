@@ -3,12 +3,14 @@ import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Spinner } from '@astryxdesign/core/Spinner';
 import { Stack } from '@astryxdesign/core/Stack';
 import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { z } from 'zod';
+import { XMLView } from '@/application/runtime/XMLView';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
@@ -17,7 +19,6 @@ import NotFound from '@/platform/NotFound';
 import {
     createContext as createXmlContext,
     parseXML,
-    RenderXML,
     resolveRequestUrl,
     type ASTNode,
     type ExecutionContext,
@@ -58,16 +59,10 @@ type PageState = {
     cacheKey: string;
     path: string;
     routePath: string;
-    ast: ASTNode[] | null;
-    parseError: string | null;
+    ast: ASTNode[];
     error: string | null;
     loading: boolean;
     runtimeContext: ExecutionContext;
-};
-
-type PageParseResult = {
-    ast: ASTNode[] | null;
-    parseError: string | null;
 };
 
 type PageRouteMatch = {
@@ -160,7 +155,7 @@ function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionC
     return pageRuntimeContext;
 }
 
-/** Creates the cached state holder for one XML page. */
+/** Creates the cached state holder for one browser-rendered page. */
 function createPageState(
     key: string,
     path: string,
@@ -178,29 +173,15 @@ function createPageState(
         cacheKey: key,
         path,
         routePath,
-        ast: null,
+        ast: [],
         error: null,
         loading: true,
-        parseError: null,
         runtimeContext: pageRuntimeContext,
     };
 }
 
-/** Parses page XML once so route rendering does not throw on malformed application XML. */
-function parsePageContent(content: string): PageParseResult {
-    // Parse XML defensively so render can show errors.
-    try {
-        return { ast: parseXML(content), parseError: null };
-    } catch (unknownError) {
-        return {
-            ast: null,
-            parseError: unknownError instanceof Error ? unknownError.message : 'Failed to parse page XML',
-        };
-    }
-}
-
 /**
- * Renders registered XML pages for platform and application routes.
+ * Renders registered XML pages for Platform and Application routes.
  */
 export default function View({
     applicationStatus,
@@ -323,9 +304,9 @@ export default function View({
         );
     }, [activePageTab, application, organization, registeredPages]);
 
-    /* Load each XML page once for the active route instance. */
+    /* Load each page once for the active route instance. */
     useEffect(() => {
-        // Skip page loading until an XML page can render.
+        // Skip page loading until an active page can render.
         if (!applicationCanLoad || !activePage) {
             return;
         }
@@ -404,7 +385,7 @@ export default function View({
             .then((content) => {
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
-                    const { ast, parseError } = parsePageContent(content);
+                    const ast = parseXML(content);
 
                     setPageStates((current) => {
                         const currentPageState = current[activePageStateKey];
@@ -425,7 +406,6 @@ export default function View({
                                 ast,
                                 error: null,
                                 loading: false,
-                                parseError,
                             },
                         };
 
@@ -543,10 +523,10 @@ export default function View({
         return <NotFound />;
     }
 
-    const activePageError = activePageState?.error || activePageState?.parseError;
+    const activePageError = activePageState?.error;
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (!pageState.ast || pageState.cacheKey !== pageCacheKey || pageState.error || pageState.parseError) {
+        if (!pageState.ast.length || pageState.cacheKey !== pageCacheKey || pageState.error) {
             return null;
         }
 
@@ -554,12 +534,13 @@ export default function View({
 
         return (
             <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
-                <RenderXML
-                    key={`${runtimeKey ?? 'runtime'}-${pageStateKey}`}
+                <XMLView
                     active={pageIsActive}
                     ast={pageState.ast}
                     baseUrl={resolvedPagesBaseUrl}
-                    ctx={pageState.runtimeContext}
+                    context={pageState.runtimeContext}
+                    runtimeKey={runtimeKey}
+                    stateKey={pageStateKey}
                 />
             </Stack>
         );
@@ -582,7 +563,7 @@ export default function View({
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;
-    } else if (!activePageState.ast) {
+    } else if (!activePageState.ast.length) {
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}
@@ -608,8 +589,8 @@ export default function View({
 function LoadingState({ status }: LoadingStateProps) {
     const t = useTranslator();
 
-    // Hide the loading shell when status is unresolved.
-    if (status === 'loading') return null;
+    // Keep the shell visible while the page manifest or active page is loading.
+    if (status === 'loading') return <Spinner label="Loading" />;
 
     return (
         <Card maxWidth={576} padding={6} width="100%">

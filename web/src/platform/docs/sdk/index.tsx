@@ -110,7 +110,7 @@ export const content = (
         />
         <Text as="p">
             Navigate to{' '}
-            <Link href="http://127.0.0.1:1707" hasUnderline>
+            <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
                 http://127.0.0.1:1707
             </Link>{' '}
             to preview your Application.

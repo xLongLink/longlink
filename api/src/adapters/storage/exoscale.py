@@ -1,7 +1,7 @@
 import aioboto3
 from uuid import UUID
 from typing import TYPE_CHECKING, TypedDict, cast
-from contextlib import AbstractAsyncContextManager, suppress
+from contextlib import suppress
 from collections.abc import Mapping
 from exoscale.api.v2 import AsyncClient
 from botocore.exceptions import ClientError
@@ -11,6 +11,7 @@ from exoscale.api.v2_response_types import IamPolicy, Operation
 
 # Import typing-only S3 stubs without adding runtime dependencies.
 if TYPE_CHECKING:
+    from contextlib import AbstractAsyncContextManager
     from types_aiobotocore_s3.client import S3Client
     from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
 

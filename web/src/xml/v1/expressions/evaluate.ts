@@ -53,13 +53,6 @@ function parseExpression(expression: string): ExpressionNode {
     return node;
 }
 
-/** Reads one safe function call from an allowlist. */
-function readSafeFunction(calls: Record<string, SafeExpressionCall>, key: string): SafeExpressionCall | undefined {
-    const value = readSafeProperty(calls, key);
-
-    return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
-}
-
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
     // Unwrap optional chains before resolving the callee.
@@ -69,7 +62,9 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
 
     // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
-        return readSafeFunction(SAFE_IDENTIFIER_CALLS, callee.name);
+        const value = readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
+
+        return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
     }
 
     // Allow selected static helper namespaces.
@@ -81,12 +76,16 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     ) {
         // Resolve safe Array helpers.
         if (callee.object.name === 'Array') {
-            return readSafeFunction(SAFE_ARRAY_CALLS, callee.property.name);
+            const value = readSafeProperty(SAFE_ARRAY_CALLS, callee.property.name);
+
+            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
         }
 
         // Resolve safe Math helpers.
         if (callee.object.name === 'Math') {
-            return readSafeFunction(SAFE_MATH_CALLS, callee.property.name);
+            const value = readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
+
+            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
         }
     }
 

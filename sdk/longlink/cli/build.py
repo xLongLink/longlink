@@ -407,7 +407,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
     env_spec = read_env_spec(root, pyproject_data)
     project_metadata = Metadata.from_pyproject(pyproject_data)
-    metadata: dict[str, object] = project_metadata.model_dump()
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -417,7 +416,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Resolve the image version and render its metadata labels.
     version = tag or project_metadata.version
-    labels = render_image_labels(metadata, env_spec)
+    labels = render_image_labels(project_metadata.model_dump(), env_spec)
 
     # Copy the source tree into a throwaway Docker build context.
     shutil.copytree(

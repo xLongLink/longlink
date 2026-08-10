@@ -4,10 +4,16 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { isAppRelativeUrl, resolveUrl } from '../core/url';
-import { evaluate } from '../expressions';
 import type { ASTNode, ExecutionContext, Props } from '../types';
 import { useBindableValue } from './binding';
-import { requireXmlString, resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from './props';
+import {
+    isVisibleXmlNode,
+    requireXmlString,
+    resolveXmlBoolean,
+    resolveXmlEnum,
+    resolveXmlLabel,
+    resolveXmlString,
+} from './props';
 
 type ResolvedTab = {
     href?: string;
@@ -18,9 +24,9 @@ type ResolvedTab = {
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const tabs = nodes
-        .filter((node) => node.name === 'Tab' && isVisibleNode(node, ctx))
+        .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => resolveTab(node, ctx));
 
     // Tab navigation without options is not meaningful or accessible.
@@ -76,11 +82,4 @@ function resolveTab(node: ASTNode, ctx: ExecutionContext): ResolvedTab {
     const href = to && isAppRelativeUrl(to) ? resolveUrl(String(ctx.navigationBaseUrl ?? ''), to) : undefined;
 
     return { href, label, nodes: node.children ?? [], value };
-}
-
-/** Evaluates conditional rendering for an adapter-consumed tab node. */
-function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
-    if (node.params?.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
 }

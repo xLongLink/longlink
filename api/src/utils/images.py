@@ -72,11 +72,10 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
             manifest, digest = manifest_result
 
-            # Require the manifest config lookup to yield a string-keyed object.
-            manifest_config = manifest.get("config", {})
-            if not isinstance(manifest_config, dict) or not all(isinstance(key, str) for key in manifest_config):
+            # Require the manifest config lookup to yield an object.
+            manifest_config = manifest.get("config")
+            if not isinstance(manifest_config, dict):
                 return None
-            manifest_config = cast(dict[str, object], manifest_config)
 
             # Require a valid config blob digest.
             config_digest = manifest_config.get("digest")
@@ -90,15 +89,14 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
             # Require a JSON object config blob.
             raw_config_blob: object = blob_response.json()
-            if not isinstance(raw_config_blob, dict) or not all(isinstance(key, str) for key in raw_config_blob):
+            if not isinstance(raw_config_blob, dict):
                 return None
-            config_blob = cast(dict[str, object], raw_config_blob)
+            config_blob = raw_config_blob
 
             # Require a config object inside the blob.
-            image_config = config_blob.get("config", {})
-            if not isinstance(image_config, dict) or not all(isinstance(key, str) for key in image_config):
+            image_config = config_blob.get("config")
+            if not isinstance(image_config, dict):
                 return None
-            image_config = cast(dict[str, object], image_config)
 
             # Require image metadata labels to map strings to strings when present.
             raw_labels = image_config.get("Labels")
@@ -173,7 +171,7 @@ async def _fetch_manifest(
 
     # Require JSON manifest objects.
     raw_data: object = manifest_response.json()
-    if not isinstance(raw_data, dict) or not all(isinstance(key, str) for key in raw_data):
+    if not isinstance(raw_data, dict):
         return None
     data = cast(dict[str, object], raw_data)
 
@@ -222,7 +220,7 @@ async def _fetch_manifest(
 
         # Require JSON platform manifest objects.
         raw_data = manifest_response.json()
-        if not isinstance(raw_data, dict) or not all(isinstance(key, str) for key in raw_data):
+        if not isinstance(raw_data, dict):
             return None
         data = cast(dict[str, object], raw_data)
 

@@ -20,7 +20,7 @@ def atleast(value: OrganizationRoles | None, required_role: OrganizationRoles) -
     """Return whether one Organization role satisfies the required role."""
 
     # Enforce the minimum privilege rank.
-    return rank(value) >= rank(required_role)
+    return rank(value) >= ROLE_RANKS[required_role]
 
 
 def access(user: User, organization_id: UUID) -> UserOrganization | None:

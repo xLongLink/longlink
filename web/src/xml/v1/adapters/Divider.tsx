@@ -6,7 +6,7 @@ import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders an Astryx content divider. */
 export function Divider({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
     const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Divider');
     const variant = resolveXmlEnum(props, 'variant', ctx, ['subtle', 'strong'], 'subtle', 'Divider');

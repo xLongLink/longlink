@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
 import { isReference, isSafePropertyName, resolvePath } from '../expressions';
-import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+import type { ASTProps, ExecutionContext } from '../types';
 import { resolveXmlValue } from './props';
 
 const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
@@ -19,7 +19,7 @@ type BindingTarget = {
 };
 
 /** Returns whether an XML control value is backed by a Valtio proxy. */
-export function isBindableValue(value: XmlBindableValue | undefined): value is Record<string, unknown> {
+export function isBindableValue(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
@@ -80,7 +80,7 @@ function normalizeBindableValue(type: string, value: unknown): unknown {
 /** Resolves a writable state target from a raw XML binding expression. */
 function resolveBindableTarget(
     rawValue: string | undefined,
-    value: XmlBindableValue | undefined,
+    value: unknown,
     ctx: ExecutionContext
 ): BindingTarget | undefined {
     // Use resolved proxy values directly.
@@ -103,9 +103,7 @@ function resolveBindableTarget(
     if (parts.length === 1) {
         const state = resolvePath(ctx, parts);
 
-        return isBindableValue(state as XmlBindableValue | undefined)
-            ? { state: state as Record<string, unknown> }
-            : undefined;
+        return isBindableValue(state) ? { state } : undefined;
     }
 
     const parent = resolvePath(ctx, parts.slice(0, -1));

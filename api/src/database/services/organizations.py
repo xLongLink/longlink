@@ -250,10 +250,9 @@ async def update_member_role(
         )
 
         # Require an active organization membership.
-        row = (await session.execute(statement)).one_or_none()
-        if row is None:
+        membership = (await session.scalars(statement)).one_or_none()
+        if membership is None:
             return False
-        membership = row[0]
 
         # Only owners may grant or change owner access.
         if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
@@ -314,15 +313,13 @@ async def create(
             raise UnavailableError("No ready compute registry available")
 
         # Lock the requested database registry.
-        database_statement = select(DatabaseRegistry).where(DatabaseRegistry.id == database_id).with_for_update()
-        database_registry = (await session.scalars(database_statement)).one_or_none()
-        if database_registry is None:
+        database_statement = select(DatabaseRegistry.id).where(DatabaseRegistry.id == database_id).with_for_update()
+        if await session.scalar(database_statement) is None:
             raise UnavailableError("No database registry available")
 
         # Lock the requested storage registry.
-        storage_statement = select(StorageRegistry).where(StorageRegistry.id == storage_id).with_for_update()
-        storage_registry = (await session.scalars(storage_statement)).one_or_none()
-        if storage_registry is None:
+        storage_statement = select(StorageRegistry.id).where(StorageRegistry.id == storage_id).with_for_update()
+        if await session.scalar(storage_statement) is None:
             raise UnavailableError("No storage registry available")
 
         # Build the Organization with its immutable infrastructure assignments.

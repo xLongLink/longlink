@@ -37,8 +37,7 @@ async def reconcile(claimed: Operation) -> str | None:
         storage_registry.access_key_id,
         storage_registry.secret_access_key,
     )
-    bucket = organization.id.hex
-    await object_storage.create(bucket)
+    await object_storage.create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and ingress policy.
     cluster = Kubernetes(compute_registry.kubeconfig)

@@ -39,7 +39,7 @@ THEME_STYLES = {
 
 
 @router.get("/logo.svg", include_in_schema=False)
-async def get_logo(theme: Literal["dark", "light", "system"] = "system") -> Response:
+def get_logo(theme: Literal["dark", "light", "system"] = "system") -> Response:
     """Return a randomized LongLink logo SVG."""
 
     # The accent side varies by request, while the LINK side follows the viewer theme.

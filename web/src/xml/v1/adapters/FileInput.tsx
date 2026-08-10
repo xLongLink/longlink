@@ -17,10 +17,17 @@ type FileValue = File | File[] | null;
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const binding = useBindableValue(props, 'value', ctx, 'file');
     const [localValue, setLocalValue] = useState<FileValue>(null);
-    const boundValue = isFileValue(binding.currentValue) ? binding.currentValue : null;
+    const currentValue = binding.currentValue;
+    const boundValue =
+        currentValue == null ||
+        (typeof File !== 'undefined' &&
+            (currentValue instanceof File ||
+                (Array.isArray(currentValue) && currentValue.every((entry) => entry instanceof File))))
+            ? (currentValue ?? null)
+            : null;
     const value = binding.bound ? boundValue : localValue;
     const mode = resolveXmlEnum(props, 'mode', ctx, ['dropzone', 'input'], 'input', 'FileInput');
 
@@ -49,13 +56,4 @@ export function FileInput({ props }: Props) {
             width={resolveXmlSizeValue(props, 'width', ctx)}
         />
     );
-}
-
-/** Returns whether an evaluated XML value is valid for Astryx FileInput. */
-function isFileValue(value: unknown): value is FileValue {
-    if (value == null) return true;
-    if (typeof File === 'undefined') return false;
-    if (value instanceof File) return true;
-
-    return Array.isArray(value) && value.every((entry) => entry instanceof File);
 }

@@ -6,7 +6,7 @@ import { resolveXmlEnum } from './props';
 
 /** Arranges Astryx fields with consistent form spacing. */
 export function FormLayout({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const direction = resolveXmlEnum(
         props,
         'direction',

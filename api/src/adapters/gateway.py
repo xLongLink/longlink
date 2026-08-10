@@ -64,8 +64,10 @@ class GatewayClient:
         tls = ssl.create_default_context(cadata=self._ca_certificate)
         client = httpx2.AsyncClient(follow_redirects=False, timeout=300.0, verify=tls)
         try:
-            request = client.build_request(method, url, content=content, headers=headers)
-            response = await client.send(request, stream=True)
+            response = await client.send(
+                client.build_request(method, url, content=content, headers=headers),
+                stream=True,
+            )
         except Exception as exc:
             await client.aclose()
             if isinstance(exc, httpx2.HTTPError):

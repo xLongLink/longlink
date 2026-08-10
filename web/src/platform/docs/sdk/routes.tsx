@@ -20,12 +20,8 @@ export const content = (
             Routes
         </Heading>
         <Text as="p">
-            Routes define how an Application receives HTTP requests and returns responses. This is where
-            process-specific code logic takes place, including validation, workflows, and integrations.
-        </Text>
-        <Text as="p">
             LongLink Applications use a pure{' '}
-            <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline target="_blank" type="inherit">
+            <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
                 FastAPI
             </Link>{' '}
             implementation. Define routes with <Code>APIRouter</Code> and add them to the application as you would in

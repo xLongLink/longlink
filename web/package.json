@@ -31,7 +31,6 @@
         "acorn": "^8.17.0",
         "d3-geo": "^3.1.1",
         "fast-xml-parser": "^5.10.1",
-        "isbot": "^5.2.1",
         "lodash": "^4.18.1",
         "lucide-react": "^1.28.0",
         "react": "^19.2.8",
@@ -43,7 +42,8 @@
         "ufo": "^1.6.4",
         "valtio": "^2.3.2",
         "world-atlas": "^2.0.2",
-        "zod": "^4.4.3"
+        "zod": "^4.4.3",
+        "isbot": "^5"
     },
     "devDependencies": {
         "@astryxdesign/cli": "0.3.0",

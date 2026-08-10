@@ -64,13 +64,13 @@ export const content = (
             <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
                 SQLAlchemy
             </Link>{' '}
-            database session.
+            database session. Migrations are based on{' '}
+            <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
+                Alembic
+            </Link>
+            .
         </Text>
         <EnvironmentTable environments={environments} />
-        <Text as="p">
-            In production, the LongLink Platform provisions the organization database, shared user schema, and
-            application schema, then injects the runtime connection settings into the application.
-        </Text>
         <Heading id="basic-usage" level={2}>
             Basic usage
         </Heading>
@@ -107,12 +107,6 @@ class Event(SQLModel, table=True):
 event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
             language="python"
         />
-        <Text as="p">
-            LongLink provides this type because SQLite in testing and development can return naive datetimes even for
-            timezone-aware columns, while PostgreSQL production sessions use UTC. <Code>UTCDateTime</Code> rejects
-            ambiguous values before storage, normalizes writes to UTC, and treats SQLite results as UTC so timestamps
-            have the same meaning in every LongLink environment.
-        </Text>
         <Heading id="audit-table" level={2}>
             Audit table
         </Heading>
@@ -139,11 +133,7 @@ print(approval.status)  # pending
             Migrations
         </Heading>
         <Text as="p">
-            After you add or change Application models, run{' '}
-            <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
-                Alembic
-            </Link>{' '}
-            migrations to keep the database schema aligned:
+            After you add or change Application models, run migrations to keep the database schema aligned:
         </Text>
         <CodeTabs
             items={[
@@ -151,9 +141,5 @@ print(approval.status)  # pending
                 { code: 'uv run longlink migrate', label: 'uv', value: 'uv' },
             ]}
         />
-        <Text as="p">
-            LongLink discovers Application models below <Code>src/database/models</Code> and migrates only
-            Application-owned tables. The LongLink Platform separately manages shared tables such as <Code>audit</Code>.
-        </Text>
     </Stack>
 );

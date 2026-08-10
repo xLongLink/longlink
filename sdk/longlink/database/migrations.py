@@ -57,11 +57,7 @@ def include_object(_object: object, name: str | None, type_: str, _reflected: bo
 def iter_application_model_files() -> list[Path]:
     """Return application model files that should be loaded for metadata."""
 
-    # Resolve the application model directory and return early when it is absent.
-    root = Path.cwd()
-    model_path = root / "src" / "database" / "models"
-    if not model_path.exists():
-        return []
+    model_path = Path.cwd() / "src" / "database" / "models"
 
     return [py_file for py_file in sorted(model_path.rglob("*.py")) if not py_file.name.startswith("__")]
 

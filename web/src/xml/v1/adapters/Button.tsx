@@ -8,7 +8,7 @@ import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, r
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
+    const ctx = useXmlContext();
     const label = resolveXmlLabel(props, ctx, 'Button');
     const variant = resolveXmlEnum(
         props,
@@ -53,11 +53,7 @@ export function Button({ props, nodes }: Props) {
 }
 
 /** Appends the resolved item to a cart-style array state slot. */
-export function appendButtonItem(
-    props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>['ctx'],
-    appendTarget?: string
-) {
+export function appendButtonItem(props: Props['props'], ctx: ReturnType<typeof useXmlContext>, appendTarget?: string) {
     // Skip buttons with no append target.
     const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
     if (!targetPath) return;

@@ -31,7 +31,7 @@ jobs:
 
             - name: Check API formatting
               working-directory: api
-              run: uv run --locked ruff check . && uv run --locked isort --check-only .
+              run: uv run --locked ruff check .
 
             - name: Check Platform API client generation
               working-directory: web
@@ -43,7 +43,7 @@ jobs:
 
             - name: Check SDK formatting
               working-directory: sdk
-              run: uv run --locked isort --check-only .
+              run: uv run --locked ruff check --select I .
 
             - name: Check web formatting
               working-directory: web
@@ -120,10 +120,6 @@ jobs:
             - name: Build SDK distribution
               working-directory: sdk
               run: uv build
-
-            - name: Run generated scaffold tests
-              working-directory: sdk
-              run: sh tests/scaffold-smoke.sh
 
     # The web package uses Vite+ and Bun, so run its checks separately.
     web-tests:

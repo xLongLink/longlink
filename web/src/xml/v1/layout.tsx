@@ -24,14 +24,11 @@ type XmlLayoutProps = {
 export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
-    const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
     const isSdkMode = import.meta.env.MODE === 'sdk';
 
-    const resolvedTabs = tabEntries.map(([label, tab]) => {
-        const href = typeof tab === 'string' ? tab : tab.href;
-        const active = typeof tab === 'string' ? undefined : tab.active;
-        const icon = typeof tab === 'string' ? undefined : tab.icon;
+    const resolvedTabs = Object.entries(tabs ?? {}).map(([label, tab]) => {
+        const { href, active, icon }: XmlLayoutTab = typeof tab === 'string' ? { href: tab } : tab;
         const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
 
         return {
@@ -39,6 +36,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
             icon,
             label,
             isActive: active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath,
+            value: href,
         };
     });
     const activeHref = resolvedTabs.find((tab) => tab.isActive)?.href ?? '';
@@ -72,7 +70,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
                 )
             }
             reserveTabSpace={false}
-            tabs={resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
+            tabs={resolvedTabs}
             topNavClassName="px-7"
         >
             <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>

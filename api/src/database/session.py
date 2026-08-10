@@ -58,10 +58,6 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if connection.url.drivername.startswith("sqlite+"):
         enable_sqlite_foreign_keys(_engine)
 
-    # Verify connection once before exposing the session factory.
-    async with _engine.connect() as connection:
-        await connection.run_sync(lambda _: None)
-
     Session = async_sessionmaker(_engine, expire_on_commit=False)
 
     return Session

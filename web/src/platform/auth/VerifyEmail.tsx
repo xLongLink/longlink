@@ -201,7 +201,7 @@ export default function VerifyEmail() {
                             name="name"
                             render={({ field, fieldState }) => (
                                 <TextInput
-                                    {...{ autoComplete: 'given-name' as const }}
+                                    {...{ autoComplete: 'given-name' }}
                                     ref={field.ref}
                                     hasAutoFocus
                                     htmlName={field.name}
@@ -224,7 +224,7 @@ export default function VerifyEmail() {
                             name="surname"
                             render={({ field, fieldState }) => (
                                 <TextInput
-                                    {...{ autoComplete: 'family-name' as const }}
+                                    {...{ autoComplete: 'family-name' }}
                                     ref={field.ref}
                                     htmlName={field.name}
                                     isRequired
