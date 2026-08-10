@@ -15,7 +15,6 @@ class User(PlatformModel, table=True):
     """Represent a local LongLink user account."""
 
     __tablename__: ClassVar[str] = "users"
-
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 

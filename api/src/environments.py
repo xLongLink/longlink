@@ -1,5 +1,4 @@
 import os
-from pwdlib import PasswordHash
 from typing import Self
 from pydantic import Field, EmailStr, field_validator, model_validator
 from src.models.types import PlatformVersion
@@ -55,15 +54,7 @@ class Env(BaseSettings):
         """Normalize administrator email identity before validation."""
 
         # Preserve Pydantic's type validation for values that are not strings.
-        return value.strip().casefold() if isinstance(value, str) else value
-
-    @field_validator("ADMIN_PASSWORD")
-    @classmethod
-    def hash_administrator_password(cls, value: str) -> str:
-        """Hash the validated administrator password for startup reconciliation."""
-
-        # Prepare the configured credential before the API opens a database session.
-        return PasswordHash.recommended().hash(value)
+        return value.strip().lower() if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def validate_authentication(self) -> Self:

@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from 'react';
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
+export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
     month: 'numeric',
     year: 'numeric',
 });
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
@@ -13,7 +13,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     second: 'numeric',
     year: 'numeric',
 });
-const numberFormatter = new Intl.NumberFormat();
+export const numberFormatter = new Intl.NumberFormat();
 
 export type DeleteConfirmationProps = {
     open: boolean;
@@ -40,21 +40,6 @@ type UseDeleteDialogOptions<TItem> = {
     onError: (message: string) => void;
 };
 
-/** Formats a date-like value with the shared LongLink date style. */
-export function formatDate(value: string | number | Date): string {
-    return dateFormatter.format(new Date(value));
-}
-
-/** Formats a date-like value with the shared LongLink date/time style. */
-export function formatDateTime(value: string | number | Date): string {
-    return dateTimeFormatter.format(new Date(value));
-}
-
-/** Formats a number with the shared LongLink locale-aware style. */
-export function formatNumber(value: number): string {
-    return numberFormatter.format(value);
-}
-
 /** Formats bytes using binary units for admin resource tables. */
 export function formatBytes(bytes: number): string {
     const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
@@ -67,7 +52,7 @@ export function formatBytes(bytes: number): string {
         unit++;
     }
 
-    return `${formatNumber(Math.round(value))} ${units[unit]}`;
+    return `${numberFormatter.format(Math.round(value))} ${units[unit]}`;
 }
 
 /** Manages the shared delete confirmation dialog state and confirm action. */

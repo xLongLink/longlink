@@ -8,6 +8,7 @@ from longlink.utils import Envs
 from fastapi.routing import APIRoute
 from longlink.logger import ApiAccessFilter, logger
 from longlink.routes import routes
+from fastapi.responses import RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
@@ -98,6 +99,9 @@ class LongLink:
             if pages_directory.exists():
                 self.register_page_directory(pages_path, pages_directory)
 
+        # Start applications on their first static page instead of an unselected shell.
+        self.install_root_redirect()
+
         # Enable CORS in development for local frontend access to API routes
         if environment == "development":
             app.add_middleware(
@@ -143,6 +147,22 @@ class LongLink:
                             longlink_route.path,
                         )
                         warned_routes.add(warning_key)
+
+    def install_root_redirect(self) -> None:
+        """Redirect the application root to its first static page."""
+
+        # Dynamic pages need parameters and cannot be startup destinations.
+        first_page = next((page for page in self.app.state.page_registry if page.route and ":" not in page.route), None)
+
+        # Let the frontend render applications without a static startup page.
+        if first_page is None:
+            return
+
+        @self.app.get("/", include_in_schema=False)
+        def redirect_to_first_page() -> RedirectResponse:
+            """Send root requests to the first registered static page."""
+
+            return RedirectResponse(url=f"/{first_page.route}", status_code=307)
 
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""

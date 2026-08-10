@@ -26,7 +26,7 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
-import { formatDate } from '@/lib/utils';
+import { dateFormatter } from '@/lib/utils';
 
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     read: 'read',
@@ -127,7 +127,7 @@ export default function People({
             key: 'created_at',
             header: t('columns.created'),
             width: pixel(144),
-            renderCell: (invitation) => formatDate(invitation.created_at),
+            renderCell: (invitation) => dateFormatter.format(new Date(invitation.created_at)),
         },
     ];
     return (

@@ -1,3 +1,4 @@
+from pwdlib import PasswordHash
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -23,6 +24,7 @@ async def ensure_administrator() -> None:
     async with session_scope() as session:
         statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL)
         user = (await session.execute(select(User).where(col(User.role) == PlatformRoles.administrator))).scalar_one_or_none()
+        password_hash = PasswordHash.recommended()
 
         # Match the configured identity only when no administrator has been created yet.
         if user is None:
@@ -31,7 +33,7 @@ async def ensure_administrator() -> None:
             user = User(
                 name=env.ADMIN_NAME,
                 email=env.ADMIN_EMAIL,
-                password=env.ADMIN_PASSWORD,
+                password=password_hash.hash(env.ADMIN_PASSWORD),
             )
             session.add(user)
 
@@ -45,7 +47,8 @@ async def ensure_administrator() -> None:
                     raise
 
         # Reconcile the configured account, including one created concurrently by another replica.
-        user.password = env.ADMIN_PASSWORD
+        if not password_hash.verify(env.ADMIN_PASSWORD, user.password):
+            user.password = password_hash.hash(env.ADMIN_PASSWORD)
         user.name = env.ADMIN_NAME
         user.email = env.ADMIN_EMAIL
         user.role = PlatformRoles.administrator

@@ -215,8 +215,10 @@ export default function View({
         () => findPageRouteMatch(registeredPages, normalizedRoutePath),
         [registeredPages, normalizedRoutePath]
     );
+    const firstTabPage = registeredPages?.find((page) => !pageRouteIsDynamic(page));
+
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
-    const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? registeredPages?.[0] : undefined);
+    const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? firstTabPage : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
@@ -240,21 +242,20 @@ export default function View({
         runtimeContextRef.current = runtimeContext;
     }, [runtimeContext]);
 
-    // Make the first page explicit in the URL when the app loads without a selected view.
+    // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
         // Skip redirects when the view is already selected.
-        if (!registeredPages?.length || normalizedRoutePath) {
+        if (!firstTabPage || normalizedRoutePath) {
             return;
         }
 
-        const firstPage = registeredPages[0];
-        const firstPageRoute = pageRoutePattern(firstPage);
+        const firstPageRoute = pageRoutePattern(firstTabPage);
 
-        // Prefer route navigation for static page routes.
-        if (firstPageRoute && !pageRouteIsDynamic(firstPage)) {
+        // Keep root-routed tabs at the application root.
+        if (firstPageRoute) {
             navigate(resolveApplicationHref(firstPageRoute, organization, application), { replace: true });
         }
-    }, [application, navigate, normalizedRoutePath, organization, registeredPages]);
+    }, [application, firstTabPage, navigate, normalizedRoutePath, organization]);
 
     const tabs = useMemo(() => {
         const tabGroups = new Map<

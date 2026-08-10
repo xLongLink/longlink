@@ -9,7 +9,7 @@ import { useCollectionQuery } from '@/hooks/use-collection-query';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
-import { formatDateTime } from '@/lib/utils';
+import { dateTimeFormatter } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin operations page. */
@@ -44,13 +44,14 @@ export default function AdminOperations() {
             key: 'timestamp',
             header: t('columns.timestamp'),
             width: pixel(208),
-            renderCell: (operation) => formatDateTime(operation.created_at),
+            renderCell: (operation) => dateTimeFormatter.format(new Date(operation.created_at)),
         },
         {
             key: 'finished_at',
             header: t('columns.finished'),
             width: pixel(208),
-            renderCell: (operation) => (operation.finished_at ? formatDateTime(operation.finished_at) : '-'),
+            renderCell: (operation) =>
+                operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-',
         },
         {
             key: 'metadata',

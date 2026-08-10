@@ -1,4 +1,3 @@
-import { Badge } from '@astryxdesign/core/Badge';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -56,17 +55,7 @@ export default function Pricing() {
             <main>
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
-                        <Stack gap={3} align="center" maxWidth={640}>
-                            <Badge label="Pricing" variant="teal" />
-                            <Heading level={1} type="display-2" justify="center" textWrap="balance">
-                                Simple workflow, Simple plans
-                            </Heading>
-                            <Text as="p" type="large" color="secondary" justify="center">
-                                Designed to be extended.
-                            </Text>
-                        </Stack>
-
-                        <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
+                        <Grid className="pt-6" columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={6} width="100%">
                             {pricingOptions.map(({ description, features, icon: OptionIcon, name, period, price }) => {
                                 return (
                                     <Card key={name} minHeight={520}>

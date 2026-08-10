@@ -1,11 +1,19 @@
-from pydantic import Field, BaseModel
+from pydantic import Field, EmailStr, BaseModel, field_validator
 
 
 class EmailPayload(BaseModel):
-    """Validate one unchanged email value."""
+    """Validate one canonical email identity."""
 
     # Identity
-    email: str = Field(min_length=1, max_length=254)
+    email: EmailStr = Field(max_length=254)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        """Normalize email identity before validating its address format."""
+
+        # Keep identity comparisons and persistence case-insensitive.
+        return value.strip().lower() if isinstance(value, str) else value
 
 
 class TokenPayload(BaseModel):
