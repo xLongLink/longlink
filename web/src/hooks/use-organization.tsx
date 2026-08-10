@@ -245,12 +245,9 @@ export function useDeleteOrganization() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(
-                platformApiPath(`/organizations/${organizationId}`),
-                {
-                    method: 'DELETE',
-                }
-            );
+            await fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), {
+                method: 'DELETE',
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
