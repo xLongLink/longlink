@@ -74,13 +74,6 @@ class ApplicationAccess:
     role: OrganizationRoles
 
 
-async def find_organization_access(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
-    """Return one user's active membership for an active Organization."""
-
-    # Delegate scoped membership persistence to the Organization service.
-    return await organization_service.membership(session, user_id, organization_id)
-
-
 async def organization_access(
     organization_id: UUID,
     user: User = Depends(authuser),
@@ -89,7 +82,7 @@ async def organization_access(
     """Return required active Organization access for one authenticated user."""
 
     # Convert absent membership and deleted Organizations into the existing access response.
-    membership = await find_organization_access(session, user.id, organization_id)
+    membership = await organization_service.membership(session, user.id, organization_id)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
     return membership

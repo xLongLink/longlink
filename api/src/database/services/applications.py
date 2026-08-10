@@ -175,7 +175,6 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
         application.status = Status.deleting
         application.deleted_at = now
         application.deleted_id = user.id
-        application.updated_at = now
         application.updated_id = user.id
 
     # Retain the already locked Organization for detached response serialization.

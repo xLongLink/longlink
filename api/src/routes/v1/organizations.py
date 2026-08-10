@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authadmin, get_auth_session, organization_access, find_organization_access
+from src.auth import authuser, authadmin, get_auth_session, organization_access
 from src.utils import mail, names, roles
 from src.errors import UnavailableError
 from src.logger import logger
@@ -225,7 +225,7 @@ async def delete_organization(
 
     # Require active Organization ownership for the first deletion request.
     elif user.role != PlatformRoles.administrator:
-        membership = await find_organization_access(session, user.id, organization_id)
+        membership = await organizations.membership(session, user.id, organization_id)
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
 

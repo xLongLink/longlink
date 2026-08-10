@@ -33,7 +33,6 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
     """Reject invitations for organizations that do not exist."""
 
     # Arrange
-    owner = users[0]
     organization_id = uuid4()
 
     # Act

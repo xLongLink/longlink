@@ -5,7 +5,7 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute, operations
+from src.database.services import compute
 from src.models.operations import OperationStatus
 
 

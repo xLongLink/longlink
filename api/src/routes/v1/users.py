@@ -35,12 +35,10 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Apply only supplied values that change the persisted profile.
-    updated, identity_updated = users.update_profile(user, payload)
-    if updated:
-        await session.commit()
+    users.update_profile(user, payload)
+    await session.commit()
 
-    # Project shared identity fields without synchronizing Platform-only preferences.
-    if identity_updated:
-        for membership in await users.memberships(session, user.id):
-            await organizations.sync_users(session, membership.organization_id)
+    # Keep every organization database synchronized after profile update requests.
+    for membership in await users.memberships(session, user.id):
+        await organizations.sync_users(session, membership.organization_id)
     return user

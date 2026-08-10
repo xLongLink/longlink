@@ -6,13 +6,13 @@ from src.auth import (
     authadmin,
     get_auth_session,
     application_access,
+    organization_access,
     find_application_access,
-    find_organization_access,
 )
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.database.services import compute, applications, organizations
+from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationResponse
@@ -38,9 +38,7 @@ async def create_application(
     """Create Application state and queue its explicit deployment lifecycle."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
-    membership = await find_organization_access(session, user.id, organization_id)
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
+    membership = await organization_access(organization_id, user, session)
 
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):

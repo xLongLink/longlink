@@ -3,7 +3,6 @@ from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
-from src.environments import env
 from src.models.statuses import Status
 from src.database.services import operations
 from src.models.operations import OperationKind

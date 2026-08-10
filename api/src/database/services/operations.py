@@ -95,47 +95,44 @@ async def claim(session: AsyncSession) -> Operation | None:
     """Claim the next unfinished Operation."""
 
     # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
-    while True:
-        now = utcnow()
+    now = utcnow()
 
-        # Classify the active lease, expired lease, or next Operation in one locked query.
-        operation = await session.scalar(
-            select(Operation)
-            .where(Operation.finished_at.is_(None))
-            .order_by(
-                case(
-                    (Operation.lease_expires_at > now, 0),
-                    (Operation.lease_expires_at.is_not(None), 1),
-                    else_=2,
-                ),
-                Operation.created_at.asc(),
-                Operation.id.asc(),
-            )
-            .limit(1)
-            .with_for_update()
+    # Classify the active lease, expired lease, or next Operation in one locked query.
+    operation = await session.scalar(
+        select(Operation)
+        .where(Operation.finished_at.is_(None))
+        .order_by(
+            case(
+                (Operation.lease_expires_at > now, 0),
+                (Operation.lease_expires_at.is_not(None), 1),
+                else_=2,
+            ),
+            Operation.created_at.asc(),
+            Operation.id.asc(),
         )
-        if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
-            return None
-        if operation.lease_expires_at is not None:
-            logger.error("Operation %s failed after its worker lease expired", operation.id)
-            await fail(session, operation.id)
-            continue
+        .limit(1)
+        .with_for_update()
+    )
+    if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
+        return None
+    if operation.lease_expires_at is not None:
+        logger.error("Operation %s failed after its worker lease expired", operation.id)
+        await fail(session, operation.id)
+        return None
 
-        # Acquire the lease conditionally because SQLite ignores the row locks above.
-        if (
-            await session.execute(
-                update(Operation)
-                .where(
-                    Operation.id == operation.id,
-                    Operation.finished_at.is_(None),
-                    Operation.lease_expires_at.is_(None),
-                )
-                .values(lease_expires_at=now + timedelta(minutes=30))
-            )
-        ).rowcount != 1:
-            continue
-        operation.lease_expires_at = now + timedelta(minutes=30)
-        return operation
+    # Acquire the lease conditionally because SQLite ignores the row locks above.
+    result = await session.execute(
+        update(Operation)
+        .where(
+            Operation.id == operation.id,
+            Operation.finished_at.is_(None),
+            Operation.lease_expires_at.is_(None),
+        )
+        .values(lease_expires_at=now + timedelta(minutes=30))
+    )
+    if result.rowcount != 1:
+        return None
+    return operation
 
 
 async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:

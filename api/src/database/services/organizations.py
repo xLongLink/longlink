@@ -292,7 +292,6 @@ async def update_member_role(
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
-    membership.updated_at = utcnow()
     membership.updated_id = user.id
     membership.role = role
 
@@ -382,7 +381,6 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
     if organization.avatar == avatar:
         return organization
     organization.avatar = avatar
-    organization.updated_at = utcnow()
     organization.updated_id = user.id
 
     return organization

@@ -61,20 +61,14 @@ def replace_password(user: User, password: str) -> None:
     user.password = PasswordHash.recommended().hash(password)
 
 
-def update_profile(user: User, payload: UserUpdate) -> tuple[bool, bool]:
-    """Apply changed profile fields and report whether state and identity changed."""
-
-    updated = False
-    identity_updated = False
+def update_profile(user: User, payload: UserUpdate) -> None:
+    """Apply changed profile fields."""
 
     # Apply only supplied profile values that differ from their persisted counterparts.
     for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
         if getattr(user, field) == value:
             continue
         setattr(user, field, value)
-        updated = True
-        identity_updated = identity_updated or field in {"name", "avatar"}
-    return updated, identity_updated
 
 
 async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:

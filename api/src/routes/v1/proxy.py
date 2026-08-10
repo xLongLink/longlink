@@ -6,8 +6,8 @@ from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
-from src.adapters.gateway import GatewayClient, GatewayRequestError
-from src.database.services import compute, organizations
+from src.adapters.gateway import GatewayClient
+from src.database.services import compute
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -70,18 +70,15 @@ async def proxy_application_request(
             yield chunk
 
     # Proxy only authenticated API requests through the compute gateway boundary.
-    try:
-        gateway_response = await GatewayClient(gateway_url, certificate, api_key).request(
-            application_id=application.id,
-            user_id=user.id,
-            method=request.method,
-            path=path,
-            query=request.url.query,
-            content_type=request.headers.get("content-type"),
-            content=request_content(),
-        )
-    except GatewayRequestError as exc:
-        raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
+    gateway_response = await GatewayClient(gateway_url, certificate, api_key).request(
+        application_id=application.id,
+        user_id=user.id,
+        method=request.method,
+        path=path,
+        query=request.url.query,
+        content_type=request.headers.get("content-type"),
+        content=request_content(),
+    )
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")

@@ -6,10 +6,6 @@ from collections.abc import AsyncIterator
 from src.models.gateways import API_KEY_HEADER, USER_ID_HEADER, APPLICATION_ID_HEADER
 
 
-class GatewayRequestError(Exception):
-    """Report an HTTP transport failure while contacting a compute gateway."""
-
-
 @dataclass(slots=True)
 class GatewayResponse:
     """Keep one streamed gateway response and its owning HTTP client together."""
@@ -68,9 +64,7 @@ class GatewayClient:
                 client.build_request(method, url, content=content, headers=headers),
                 stream=True,
             )
-        except Exception as exc:
+        except Exception:
             await client.aclose()
-            if isinstance(exc, httpx2.HTTPError):
-                raise GatewayRequestError from exc
             raise
         return GatewayResponse(client, response)
