@@ -1,5 +1,4 @@
 from uuid import UUID
-from src.utils import roles
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -13,8 +12,8 @@ from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
-async def create(organization_id: UUID, email: str, role: OrganizationRoles, user: User) -> OrganizationInvitation:
-    """Create one invitation after checking for duplicates and memberships."""
+async def create(organization_id: UUID, email: str, role: OrganizationRoles) -> OrganizationInvitation:
+    """Create or replace one active email grant for an organization."""
 
     normalized_email = email.strip().lower()
 
@@ -45,38 +44,48 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
         ).one_or_none() is not None:
             raise ConflictError("User is already a member")
 
-        # Keep one pending invitation per email address.
-        if (
-            await session.scalars(
-                select(OrganizationInvitation.id).where(
-                    OrganizationInvitation.organization_id == organization_id,
-                    OrganizationInvitation.deleted_at.is_(None),
-                    func.lower(OrganizationInvitation.email) == normalized_email,
-                )
+        # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
+        invitation = await session.scalar(
+            select(OrganizationInvitation)
+            .where(
+                OrganizationInvitation.organization_id == organization_id,
+                OrganizationInvitation.email == normalized_email,
             )
-        ).one_or_none() is not None:
-            raise ConflictError("Invitation already exists")
-
-        invitation = OrganizationInvitation(
-            organization_id=organization_id,
-            email=normalized_email,
-            role=role,
+            .with_for_update()
         )
-        invitation.created_id = user.id
-        invitation.updated_id = user.id
+        if invitation is not None:
+            invitation.role = role
+            invitation.created_at = utcnow()
+            await session.commit()
+            return invitation
+
+        invitation = OrganizationInvitation(organization_id=organization_id, email=normalized_email, role=role)
         session.add(invitation)
 
-        # Commit so uniqueness violations surface consistently.
+        # Resolve concurrent re-invites to the one database-enforced active grant.
         try:
             await session.commit()
         except IntegrityError as exc:
-            raise ConflictError("Invitation already exists") from exc
+            await session.rollback()
+            invitation = await session.scalar(
+                select(OrganizationInvitation)
+                .where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.email == normalized_email,
+                )
+                .with_for_update()
+            )
+            if invitation is None:
+                raise ConflictError("Invitation could not be created") from exc
+            invitation.role = role
+            invitation.created_at = utcnow()
+            await session.commit()
 
         return invitation
 
 
 async def accept(user_id: UUID) -> None:
-    """Accept pending invitations and synchronize their Organization user projections."""
+    """Accept active email grants and synchronize their Organization user projections."""
 
     # Resolve the recipient before changing invitation or membership state.
     async with session_scope() as session:
@@ -86,27 +95,20 @@ async def accept(user_id: UUID) -> None:
 
         normalized_email = user.email.strip().lower()
 
-        # Lock matching invitations and retain their exact Organization boundaries.
-        rows = (
-            await session.execute(
+        # Lock the recipient's active grants before creating or restoring memberships.
+        invitations = (
+            await session.scalars(
                 select(OrganizationInvitation)
                 .join(Organization, Organization.id == OrganizationInvitation.organization_id)
                 .where(
-                    OrganizationInvitation.deleted_at.is_(None),
                     Organization.deleted_at.is_(None),
-                    func.lower(OrganizationInvitation.email) == normalized_email,
+                    OrganizationInvitation.email == normalized_email,
                 )
-                .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
                 .with_for_update()
             )
         ).all()
-        if not rows:
+        if not invitations:
             return
-
-        # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
-        organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
-        for (invitation,) in rows:
-            organization_invitations.setdefault(invitation.organization_id, []).append(invitation)
 
         # Lock every existing membership before creating or restoring invitation access.
         memberships = (
@@ -114,7 +116,7 @@ async def accept(user_id: UUID) -> None:
                 select(UserOrganization)
                 .where(
                     UserOrganization.user_id == user.id,
-                    UserOrganization.organization_id.in_(organization_invitations),
+                    UserOrganization.organization_id.in_([invitation.organization_id for invitation in invitations]),
                 )
                 .with_for_update()
             )
@@ -124,35 +126,30 @@ async def accept(user_id: UUID) -> None:
         now = utcnow()
         changed_organization_ids: set[UUID] = set()
 
-        # Create or restore access within each invitation's Organization without changing active roles.
-        for organization_id, pending in organization_invitations.items():
-            invitation = min(pending, key=lambda item: roles.rank(item.role))
-            membership = memberships_by_organization_id.get(organization_id)
+        # Create or restore access without changing active membership roles.
+        for invitation in invitations:
+            membership = memberships_by_organization_id.get(invitation.organization_id)
             if membership is None:
                 session.add(
                     UserOrganization(
                         user_id=user.id,
-                        organization_id=organization_id,
+                        organization_id=invitation.organization_id,
                         role=invitation.role,
-                        created_id=invitation.created_id,
+                        created_id=user.id,
                         updated_id=user.id,
                     )
                 )
-                changed_organization_ids.add(organization_id)
+                changed_organization_ids.add(invitation.organization_id)
             elif membership.deleted_at is not None:
                 membership.role = invitation.role
                 membership.updated_at = now
                 membership.updated_id = user.id
                 membership.deleted_at = None
                 membership.deleted_id = None
-                changed_organization_ids.add(organization_id)
+                changed_organization_ids.add(invitation.organization_id)
 
-            # Consume every matching invitation, including safe duplicate rows.
-            for item in pending:
-                item.updated_at = now
-                item.updated_id = user.id
-                item.deleted_at = now
-                item.deleted_id = user.id
+            # Consumed grants no longer need an active or audit record.
+            await session.delete(invitation)
 
         await session.commit()
 

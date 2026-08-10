@@ -133,11 +133,6 @@ function collectParams(input: unknown): Record<string, string> {
 
     const record = input as Record<string, unknown>;
 
-    // Unwrap parser attribute metadata.
-    if (':@' in record) {
-        return collectParams(record[':@']);
-    }
-
     const params: Record<string, string> = {};
 
     // Copy string attributes without parser prefixes.

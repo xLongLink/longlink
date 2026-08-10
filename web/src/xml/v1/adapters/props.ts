@@ -93,27 +93,6 @@ export function resolveXmlNumber(
     return Number.isNaN(numberValue) ? defaultValue : numberValue;
 }
 
-/** Resolves a string-array XML prop. */
-export function resolveXmlStringArray(
-    props: ASTProps,
-    name: string,
-    ctx: ExecutionContext,
-    defaultValue: string[] = []
-): string[] {
-    // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
-
-    const value = evaluate(rawValue, ctx);
-
-    // Array props must stay arrays so callers can rely on list semantics.
-    if (!Array.isArray(value)) {
-        throw new Error(`${name} must evaluate to an array`);
-    }
-
-    return value.map((entry) => String(entry));
-}
-
 /** Resolves a raw value XML prop for bindings and object literals. */
 export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): unknown {
     // Missing attributes keep the caller-provided default.

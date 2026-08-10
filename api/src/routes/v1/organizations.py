@@ -174,7 +174,7 @@ async def create_organization_invitation(organization_id: UUID, payload: Organiz
     if roles.rank(payload.role) > roles.rank(membership.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    invitation = await invitations.create(membership.organization_id, payload.email, payload.role, user)
+    invitation = await invitations.create(membership.organization_id, payload.email, payload.role)
     await mail.send_organization_invitation_email(invitation.email, membership.organization.name, invitation.role)
 
 

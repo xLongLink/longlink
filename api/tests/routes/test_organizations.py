@@ -344,7 +344,7 @@ async def test_get_organization_returns_invitations(
     # Arrange
     owner, invitee, regular_member = users
     organization = await create_organization(owner)
-    invitation = await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+    invitation = await invitations.create(organization.id, invitee.email, OrganizationRoles.write)
 
     Session = await get_session()
     async with Session() as session:

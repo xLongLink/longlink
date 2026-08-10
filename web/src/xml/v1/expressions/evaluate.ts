@@ -20,10 +20,6 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     String: (value) => String(value),
 };
 
-const SAFE_ARRAY_CALLS: Record<string, SafeExpressionCall> = {
-    isArray: (value) => Array.isArray(value),
-};
-
 const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
     abs: (value) => Math.abs(Number(value)),
     ceil: (value) => Math.ceil(Number(value)),
@@ -76,9 +72,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     ) {
         // Resolve safe Array helpers.
         if (callee.object.name === 'Array') {
-            const value = readSafeProperty(SAFE_ARRAY_CALLS, callee.property.name);
-
-            return typeof value === 'function' ? (value as SafeExpressionCall) : undefined;
+            return callee.property.name === 'isArray' ? Array.isArray : undefined;
         }
 
         // Resolve safe Math helpers.

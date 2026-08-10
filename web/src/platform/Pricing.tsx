@@ -84,7 +84,7 @@ export default function Pricing() {
                                         <Stack gap={4}>
                                             <Stack className="pt-12" gap={2} align="center">
                                                 <Icon aria-hidden="true" className="text-accent" size={20} />
-                                                <Stack gap={name === 'Work' ? 0 : 2} align="center">
+                                                <Stack gap={2} align="center">
                                                     <Heading level={2} justify="center">
                                                         {name}
                                                     </Heading>
@@ -115,10 +115,22 @@ export default function Pricing() {
                                                     {features.map((feature) => (
                                                         <Collapsible
                                                             key={feature.label}
-                                                            trigger={<Text type="supporting">{feature.label}</Text>}
+                                                            trigger={
+                                                                <Text
+                                                                    className="text-secondary"
+                                                                    color="secondary"
+                                                                    type="supporting"
+                                                                >
+                                                                    {feature.label}
+                                                                </Text>
+                                                            }
                                                             value={feature.label}
                                                         >
-                                                            <Text type="supporting">
+                                                            <Text
+                                                                className="text-secondary"
+                                                                color="secondary"
+                                                                type="supporting"
+                                                            >
                                                                 {feature.description
                                                                     .split('\n\n')
                                                                     .map((paragraph, index) => (

@@ -145,15 +145,16 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
 
 
 async def invitations(organization_id: UUID) -> Sequence[OrganizationInvitation]:
-    """Return active invitations for one organization."""
+    """Return active email grants for one organization."""
 
     # Query organization invitations in one session.
     async with session_scope() as session:
         statement = (
             select(OrganizationInvitation)
+            .join(Organization, Organization.id == OrganizationInvitation.organization_id)
             .where(
                 OrganizationInvitation.organization_id == organization_id,
-                OrganizationInvitation.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
             )
             .order_by(OrganizationInvitation.created_at.desc())
         )
@@ -425,14 +426,6 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 .where(
                     UserOrganization.organization_id == organization_id,
                     UserOrganization.deleted_at.is_(None),
-                )
-                .values(**tombstone)
-            )
-            await session.execute(
-                sql_update(OrganizationInvitation)
-                .where(
-                    OrganizationInvitation.organization_id == organization_id,
-                    OrganizationInvitation.deleted_at.is_(None),
                 )
                 .values(**tombstone)
             )

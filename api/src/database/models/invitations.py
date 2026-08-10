@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Column
+from sqlalchemy import Enum, Column, UniqueConstraint
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
@@ -10,9 +10,10 @@ from src.database.models.base import PlatformModel
 
 
 class OrganizationInvitation(PlatformModel, table=True):
-    """Represent one pending organization invitation."""
+    """Represent one active organization email grant."""
 
     __tablename__: ClassVar[str] = "organization_invitations"
+    __table_args__ = (UniqueConstraint("organization_id", "email"),)
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -28,10 +29,5 @@ class OrganizationInvitation(PlatformModel, table=True):
         sa_column=Column(Enum(OrganizationRoles, name="organization_role_enum", native_enum=False), nullable=False)
     )
 
-    # Audit
+    # Timing
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
-    created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
-    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    deleted_id: UUID | None = Field(default=None, foreign_key="users.id")

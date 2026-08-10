@@ -5,7 +5,7 @@ import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { BaseUrlContext, isAppRelativeUrl, resolveUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlString, resolveXmlStringArray, resolveXmlValue } from './props';
+import { resolveXmlString, resolveXmlValue } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
@@ -50,7 +50,12 @@ export async function executeAction(
 
     // Resolve action inputs before building the request.
     try {
-        invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
+        const invalidationValue = resolveXmlValue(props, 'invalidate', ctx, []);
+        if (!Array.isArray(invalidationValue)) {
+            throw new Error('invalidate must evaluate to an array');
+        }
+
+        invalidate = invalidationValue.map((value) => String(value));
         method = resolveXmlString(props, 'method', ctx, 'POST');
         actionUrl = resolveXmlString(props, 'action', ctx, '');
 

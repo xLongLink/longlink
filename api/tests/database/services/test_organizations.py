@@ -238,7 +238,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         owner,
         {},
     )
-    await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
+    await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write)
 
     Session = await get_session()
     async with Session() as session:

@@ -1,16 +1,17 @@
+import type { Catalog } from '@astryxdesign/core/i18n';
 import { evaluate } from '../expressions';
-import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
+import type { ASTProps, ExecutionContext } from '../types';
 
 const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
 
 /** Validates and returns a native Astryx catalog loaded from an application boundary. */
-export function validateTranslationCatalog(input: unknown): XmlTranslations {
+export function validateTranslationCatalog(input: unknown): Catalog {
     // Require a flat object at the catalog root.
     if (input == null || typeof input !== 'object' || Array.isArray(input)) {
         throw new Error('Translation catalog must be an object');
     }
 
-    const catalog: XmlTranslations = {};
+    const catalog: Catalog = {};
 
     // Validate every key and message entry before the catalog reaches the renderer.
     for (const [key, value] of Object.entries(input)) {
