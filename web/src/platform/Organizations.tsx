@@ -23,7 +23,6 @@ export default function Organizations() {
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
-    const error = profileError ?? organizationsError;
 
     // Show sign-in prompt for anonymous visitors.
     if (!user) {
@@ -72,7 +71,8 @@ export default function Organizations() {
                     </VStack>
                     <CreateOrganization />
                 </HStack>
-                {(isProfileLoading || areOrganizationsLoading) && memberships.length === 0 ? null : error &&
+                {(isProfileLoading || areOrganizationsLoading) && memberships.length === 0 ? null : (profileError ??
+                      organizationsError) &&
                   memberships.length === 0 ? (
                     <Banner status="error" title={t('errors.loadOrganizations')} />
                 ) : (

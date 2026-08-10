@@ -1,8 +1,8 @@
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
-import { publicPagePaths } from './src/platform/prerender';
-import { publicRoutePath, SITE_URL } from './src/platform/public';
+import { documentationPublicPages } from './src/platform/docs/pages';
+import { homePage, legalPages, pricingPage, publicRoutePath, SITE_URL } from './src/platform/public';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -12,6 +12,9 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isApplication = process.env.LONGLINK_WEB_TARGET === 'sdk';
+const publicPagePaths = [homePage, pricingPage, ...documentationPublicPages, ...Object.values(legalPages)].map(
+    ({ path }) => path
+);
 const outputDirectory = path.resolve(
     import.meta.dirname,
     isApplication ? '../sdk/longlink/.static/web' : '../api/src/.static/web'
