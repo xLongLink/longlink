@@ -1,9 +1,11 @@
 import re
+from typing import Literal
 from lxml import etree
 from dataclasses import dataclass
 from fastapi.responses import Response
 
 PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+PageKind = Literal["jsx", "xml"]
 
 
 class XMLResponse(Response):
@@ -12,10 +14,17 @@ class XMLResponse(Response):
     media_type = "application/xml"
 
 
+class JSXResponse(Response):
+    """Render JSX source as inert text for the LongLink browser runtime."""
+
+    media_type = "text/plain"
+
+
 @dataclass(slots=True)
 class PageDefinition:
-    """Describe a registered XML page."""
+    """Describe a registered LongLink page."""
 
+    kind: PageKind
     path: str
     route: str
     tab: str
@@ -44,11 +53,11 @@ def page_file_route(relative_path: str) -> str:
 
     normalized_path = relative_path.strip("/")
 
-    # Page routes must be backed by XML files.
-    if not normalized_path.endswith(".xml"):
-        raise ValueError("Page file routes must end with '.xml'")
+    # Page routes are backed by XML or browser-transpiled JSX files.
+    if not normalized_path.endswith((".jsx", ".xml")):
+        raise ValueError("Page file routes must end with '.xml' or '.jsx'")
 
-    path_without_suffix = normalized_path.removesuffix(".xml")
+    path_without_suffix = normalized_path.removesuffix(".xml").removesuffix(".jsx")
     route_segments: list[str] = []
 
     # Convert filesystem route conventions into React Router-style route patterns.
@@ -117,8 +126,8 @@ def normalize_page_path(path: str) -> str:
     if not normalized_path.startswith("/"):
         normalized_path = f"/{normalized_path}"
 
-    # Only XML pages can be registered.
-    if not normalized_path.endswith(".xml"):
-        raise ValueError("Page routes must end with '.xml'")
+    # Only browser-rendered XML and JSX pages can be registered.
+    if not normalized_path.endswith((".jsx", ".xml")):
+        raise ValueError("Page routes must end with '.xml' or '.jsx'")
 
     return normalized_path

@@ -10,6 +10,26 @@
 - Approval actions update request workflow status through typed FastAPI endpoints.
 - Settings demonstrates local XML state, menus, text, avatar, and form controls.
 
+## JSX Pages
+
+Add `.jsx` files under `src/pages` to render ordinary React components in the LongLink Application shell. LongLink transpiles the source in the browser and provides active Astryx components through `@ui`.
+
+```jsx
+import { Button, Heading, Stack, Text } from "@ui";
+
+export default function Reports() {
+  return (
+    <Stack gap={4}>
+      <Heading level={1}>Reports</Heading>
+      <Text>Render Application-specific React logic here.</Text>
+      <Button>Refresh</Button>
+    </Stack>
+  );
+}
+```
+
+JSX pages may import only from `@ui`. Declare a named default function, or an `App` function, as the page component.
+
 ## Start
 
 ```bash
