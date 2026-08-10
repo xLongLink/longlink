@@ -76,7 +76,6 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             manifest_config = manifest.get("config")
             if not isinstance(manifest_config, dict):
                 return None
-            manifest_config = cast(dict[str, object], manifest_config)
 
             # Require a valid config blob digest.
             config_digest = manifest_config.get("digest")
@@ -92,13 +91,12 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             raw_config_blob: object = blob_response.json()
             if not isinstance(raw_config_blob, dict):
                 return None
-            config_blob = cast(dict[str, object], raw_config_blob)
+            config_blob = raw_config_blob
 
             # Require a config object inside the blob.
             image_config = config_blob.get("config")
             if not isinstance(image_config, dict):
                 return None
-            image_config = cast(dict[str, object], image_config)
 
             # Require image metadata labels to map strings to strings when present.
             raw_labels = image_config.get("Labels")

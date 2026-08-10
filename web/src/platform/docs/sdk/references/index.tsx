@@ -6,8 +6,6 @@ import * as countReference from './count';
 import * as expressionsReference from './expressions';
 import * as bindingsReference from './bindings';
 import * as translationsReference from './translations';
-import * as dynamicPagesReference from './dynamic-pages';
-import * as pageFilesReference from './page-files';
 import * as longlinkReference from './longlink';
 import * as stateReference from './state';
 import * as queryReference from './query';
@@ -55,8 +53,6 @@ const referenceModules = [
     expressionsReference,
     bindingsReference,
     translationsReference,
-    dynamicPagesReference,
-    pageFilesReference,
     longlinkReference,
     stateReference,
     queryReference,

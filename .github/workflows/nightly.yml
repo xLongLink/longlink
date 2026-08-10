@@ -23,7 +23,6 @@ jobs:
 
         env:
             IMAGE: ghcr.io/xlonglink/longlink:nightly
-            PACKAGE_NAME: longlink
 
         permissions:
             contents: read
@@ -88,7 +87,7 @@ jobs:
             - name: Remove old nightly API image versions
               uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
               with:
-                  package-name: ${{ env.PACKAGE_NAME }}
+                  package-name: longlink
                   package-type: container
                   min-versions-to-keep: 3
                   delete-only-untagged-versions: true

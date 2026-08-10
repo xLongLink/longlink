@@ -158,10 +158,6 @@ function renderComponentPreview(name: string) {
             return <Code>{'value="$form.name"'}</Code>;
         case 'Translations':
             return <Code>{'orders.title'}</Code>;
-        case 'Dynamic Pages':
-            return <Code>{'[issue].xml'}</Code>;
-        case 'Page Files':
-            return <Code>{'src/pages/index.xml'}</Code>;
         case 'longlink':
             return <Code>{'<longlink version="v1" />'}</Code>;
         case 'State':

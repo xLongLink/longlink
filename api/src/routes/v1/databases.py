@@ -47,8 +47,7 @@ async def delete_database_registry(registry_id: UUID):
     """Delete one unused database backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.
-    deleted = await database.delete(registry_id)
-    if not deleted:
+    if not await database.delete(registry_id):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
 
