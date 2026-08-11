@@ -1,5 +1,5 @@
 import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
-import { stoneTheme } from '@/themes/stone/stoneTheme';
+import { stoneTheme } from '@/theme';
 
 /** Theme mode values supported by the API and UI. */
 export const THEME_VALUES = ['light', 'dark', 'system'] as const;
