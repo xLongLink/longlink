@@ -14,34 +14,8 @@
         <Card>
             <Stack gap="3">
                 <Heading level="2" i18n="requests.detail.summary" />
-                <Stack direction="horizontal" justify="between" gap="3">
-                    <Text i18n="requests.detail.requestTitle" values="${{ title: request.title }}" />
-                    <Badge label="$request.status" variant="info" />
-                </Stack>
-                <Text i18n="requests.detail.vendorAmount" values="${{ vendor: request.vendor, amount: request.amount }}" />
-                <Text as="p" i18n="requests.detail.justification" values="${{ justification: request.justification }}" />
-                <Text color="secondary" i18n="requests.detail.createdBy" values="${{ name: request.created_by.name }}" />
-                <Banner if="${request.status in ['approved']}" status="success" i18n="requests.detail.approvedNote" />
-                <Banner if="${request.status in ['rejected']}" status="error" i18n="requests.detail.rejectedNote" />
-
-                <ButtonGroup i18n="requests.actions.decision">
-                    <Action
-                        action="/api/requests/${params.request}/status"
-                        method="PATCH"
-                        invalidate='${["request"]}'
-                        json='${{ status: "approved" }}'
-                    >
-                        <Button variant="primary" i18n="requests.actions.approve" />
-                    </Action>
-                    <Action
-                        action="/api/requests/${params.request}/status"
-                        method="PATCH"
-                        invalidate='${["request"]}'
-                        json='${{ status: "rejected" }}'
-                    >
-                        <Button variant="destructive" i18n="requests.actions.reject" />
-                    </Action>
-                </ButtonGroup>
+                <Text value="$request.text" />
+                <Text color="secondary" value="${`CHF ${request.amount}`}" />
             </Stack>
         </Card>
 

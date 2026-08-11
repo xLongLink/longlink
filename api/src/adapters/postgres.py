@@ -23,13 +23,6 @@ class DatabaseRuntimeConnection(TypedDict):
     database_name: str
 
 
-class DatabaseUsage(TypedDict):
-    """Describe physical usage for one database."""
-
-    space_used: int
-    table_count: int
-
-
 class Postgres:
     """Implement the database tenant topology on PostgreSQL using registry credentials for control-plane provisioning.
 
@@ -269,41 +262,17 @@ class Postgres:
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             return result.scalar_one_or_none() is not None
 
-    async def database_usage(self, database_name: str) -> DatabaseUsage | None:
-        """Return physical size and user table count for one database when it exists."""
+    async def database_usage(self, database_name: str) -> int | None:
+        """Return physical size for one database when it exists."""
 
-        # Read both metrics from the exact Organization database and normalize an absent database to no usage.
+        # Read the exact Organization database size and normalize connection failures to no usage.
         try:
             async with self._connection(database_name) as conn:
-                result = await conn.execute(
-                    text(
-                        """
-                        SELECT
-                            pg_database_size(current_database()) AS space_used,
-                            (
-                                SELECT COUNT(c.oid)
-                                FROM pg_namespace n
-                                JOIN pg_class c ON c.relnamespace = n.oid
-                                WHERE n.nspname != 'information_schema'
-                                AND n.nspname !~ '^pg_'
-                                AND c.relkind IN ('r', 'p')
-                            ) AS table_count
-                        """
-                    )
-                )
+                space_used = await conn.scalar(text("SELECT pg_database_size(current_database())"))
         except OperationalError:
-            # Distinguish an unprovisioned database from connectivity and permission failures.
-            async with self._connection("postgres") as conn:
-                database_exists = await conn.scalar(
-                    text("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = :database_name)"),
-                    {"database_name": database_name},
-                )
-            if not database_exists:
-                return None
-            raise
+            return None
 
-        usage = result.mappings().one()
-        return {"space_used": int(usage["space_used"]), "table_count": int(usage["table_count"])}
+        return int(space_used)
 
     async def usage(self) -> int:
         """Return the total non-system database size in bytes."""

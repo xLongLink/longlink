@@ -209,8 +209,8 @@
     "requests.fields.justification": {
         "defaultMessage": "Justification"
     },
-    "requests.fields.title": {
-        "defaultMessage": "Title"
+    "requests.fields.text": {
+        "defaultMessage": "Text"
     },
     "requests.fields.titleHelp": {
         "defaultMessage": "Use a short, searchable name."
@@ -233,8 +233,8 @@
     "requests.table.status": {
         "defaultMessage": "Status"
     },
-    "requests.table.title": {
-        "defaultMessage": "{title}"
+    "requests.table.text": {
+        "defaultMessage": "{text}"
     },
     "requests.table.vendor": {
         "defaultMessage": "Vendor"

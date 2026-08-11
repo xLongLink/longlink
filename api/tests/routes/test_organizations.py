@@ -170,11 +170,11 @@ async def test_organization_database_endpoint_returns_database_usage(
 
             assert sslmode == registry.sslmode
 
-        async def database_usage(self, database_name: str) -> dict[str, int]:
+        async def database_usage(self, database_name: str) -> int:
             """Return fake physical usage for the Organization database."""
 
             assert database_name == organization.id.hex
-            return {"space_used": 3584, "table_count": 4}
+            return 3584
 
     monkeypatch.setattr(
         "src.routes.v1.organizations.Postgres",
@@ -186,11 +186,7 @@ async def test_organization_database_endpoint_returns_database_usage(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {
-        "database_name": organization.id.hex,
-        "space_used": 3584,
-        "table_count": 4,
-    }
+    assert response.json() == 3584
 
 
 async def test_organization_database_endpoint_returns_unavailable_when_backend_fails(
@@ -212,7 +208,7 @@ async def test_organization_database_endpoint_returns_unavailable_when_backend_f
 
             assert sslmode == infrastructure.database.sslmode
 
-        async def database_usage(self, database_name: str) -> dict[str, int]:
+        async def database_usage(self, database_name: str) -> int:
             """Raise the backend error expected by the test."""
 
             raise RuntimeError("database offline")

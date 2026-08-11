@@ -1,18 +1,10 @@
-from typing import ClassVar
-from longlink import database
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 
 
-class PurchaseRequest(database.AuditTable, table=True):
+class PurchaseRequest(SQLModel, table=True):
     """Purchase request table owned by this application schema."""
-
-    # Table metadata
-    __tablename__: ClassVar[str] = "purchase_requests"
 
     # Request fields
     id: int | None = Field(default=None, primary_key=True)
-    title: str = Field(max_length=255)
+    text: str = Field(max_length=255)
     amount: float = Field(default=0, ge=0)
-    status: str = Field(default="draft", max_length=32)
-    vendor: str = Field(max_length=255)
-    justification: str = Field(default="", max_length=2000)

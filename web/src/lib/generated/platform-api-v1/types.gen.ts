@@ -367,26 +367,6 @@ export type OrganizationCreate = {
 };
 
 /**
- * OrganizationDatabaseUsageResponse
- *
- * Represent live usage for one Organization database.
- */
-export type OrganizationDatabaseUsageResponse = {
-    /**
-     * Database Name
-     */
-    database_name: string;
-    /**
-     * Space Used
-     */
-    space_used: number;
-    /**
-     * Table Count
-     */
-    table_count: number;
-};
-
-/**
  * OrganizationDetails
  *
  * Represent an Organization with its members and Application access.
@@ -1726,7 +1706,7 @@ export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabase
      *
      * Successful Response
      */
-    200: OrganizationDatabaseUsageResponse | null;
+    200: number | null;
 };
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses[keyof GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses];

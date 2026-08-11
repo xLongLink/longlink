@@ -6,7 +6,6 @@ from src.errors import UnavailableError
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
-from src.models.databases import OrganizationDatabaseUsageResponse
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -83,7 +82,7 @@ async def update_organization(
 
 @router.get(
     "/organizations/{organization_id}/database",
-    response_model=OrganizationDatabaseUsageResponse | None,
+    response_model=int | None,
 )
 async def get_organization_database_usage(
     organization_id: UUID,
@@ -101,11 +100,10 @@ async def get_organization_database_usage(
     if registry is None:
         raise RuntimeError("Organization database registry is missing")
 
-    # Inspect the exact Organization database while distinguishing absent provisioning from backend failures.
-    database_name = membership.organization.id.hex
+    # Inspect the exact Organization database and return its physical size when available.
     try:
         usage = await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).database_usage(
-            database_name
+            membership.organization.id.hex
         )
     except Exception as exc:
         logger.exception("Failed to inspect database usage for organization '%s': %r", membership.organization.slug, exc)
@@ -113,7 +111,7 @@ async def get_organization_database_usage(
     if usage is None:
         return None
 
-    return {"database_name": database_name, **usage}
+    return usage
 
 
 @router.get(

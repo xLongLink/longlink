@@ -232,17 +232,6 @@ export const zOrganizationCreate = z.object({
 });
 
 /**
- * OrganizationDatabaseUsageResponse
- *
- * Represent live usage for one Organization database.
- */
-export const zOrganizationDatabaseUsageResponse = z.object({
-    database_name: z.string(),
-    space_used: z.int().gte(0),
-    table_count: z.int().gte(0)
-});
-
-/**
  * OrganizationRoles
  *
  * Supported organization membership roles.
@@ -831,7 +820,7 @@ export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDataba
  *
  * Successful Response
  */
-export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = zOrganizationDatabaseUsageResponse.nullable();
+export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = z.int().nullable();
 
 export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
     organization_id: z.uuid()

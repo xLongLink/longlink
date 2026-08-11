@@ -41,8 +41,8 @@
                         <Card variant="muted">
                             <Stack gap="2">
                                 <Link to="/requests/${request.id}" i18n="dashboard.recent.open" />
-                                <Text i18n="dashboard.recent.summary" values="${{ vendor: request.vendor, amount: request.amount }}" />
-                                <Text color="secondary" i18n="dashboard.recent.status" values="${{ status: request.status }}" />
+                                <Text value="$request.text" />
+                                <Text color="secondary" value="${`CHF ${request.amount}`}" />
                             </Stack>
                         </Card>
                     </For>

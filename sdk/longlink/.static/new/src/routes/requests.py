@@ -8,7 +8,6 @@ from src.schemas.requests import (
     PurchaseRequestRead,
     PurchaseRequestCreate,
     RequestAttachmentRead,
-    PurchaseRequestStatusUpdate,
 )
 from src.database.services import requests
 from src.database.models.requests import PurchaseRequest
@@ -21,21 +20,16 @@ UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 @router.get("/requests", response_model=list[PurchaseRequestRead])
 async def requests_get_endpoint():
-    """Return purchase requests with their platform-managed audit users."""
+    """Return purchase requests."""
 
     return await requests.list_requests()
 
 
 @router.post("/requests", response_model=PurchaseRequestRead)
 async def requests_post_endpoint(payload: PurchaseRequestCreate):
-    """Create a purchase request and return its audit data."""
+    """Create a purchase request."""
 
-    return await requests.create_request(
-        title=payload.title,
-        amount=payload.amount,
-        vendor=payload.vendor,
-        justification=payload.justification,
-    )
+    return await requests.create_request(text=payload.text, amount=payload.amount)
 
 
 @router.get("/requests/{request_id}", response_model=PurchaseRequestRead)
@@ -45,19 +39,9 @@ async def request_get_endpoint(request_id: int):
     return await _require_request(request_id)
 
 
-@router.patch("/requests/{request_id}/status", response_model=PurchaseRequestRead)
-async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate):
-    """Update one purchase request workflow status."""
-
-    # Update the request and reject ids that are not present.
-    request = await requests.update_request_status(request_id, payload.status)
-    if request is None:
-        raise HTTPException(status_code=404, detail="Purchase request not found")
-
-    return request
-
-
-@router.get("/requests/{request_id}/attachments", response_model=list[RequestAttachmentRead])
+@router.get(
+    "/requests/{request_id}/attachments", response_model=list[RequestAttachmentRead]
+)
 async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
@@ -98,7 +82,6 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
         storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{request_id}", exist_ok=True)
 
         with storage.open(storage_path, "wb") as stored_file:
-
             # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)
@@ -115,7 +98,9 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
 
 
 @router.get("/requests/{request_id}/attachments/{file_id}")
-async def request_attachment_download_endpoint(request_id: int, file_id: str) -> Response:
+async def request_attachment_download_endpoint(
+    request_id: int, file_id: str
+) -> Response:
     """Download one purchase request attachment."""
 
     # Validate the request before accessing its attachment storage.
@@ -136,7 +121,9 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
     return Response(
         content=content,
         media_type="application/octet-stream",
-        headers={"content-disposition": f"attachment; filename*=UTF-8''{download_name}"},
+        headers={
+            "content-disposition": f"attachment; filename*=UTF-8''{download_name}"
+        },
     )
 
 
@@ -188,7 +175,9 @@ def _safe_file_name(file_name: str | None) -> str:
     return normalized_name.strip(".-") or "attachment.bin"
 
 
-def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> dict[str, object]:
+def _attachment_from_entry(
+    request_id: int, entry: dict[str, object]
+) -> dict[str, object]:
     """Return API metadata for one fsspec attachment listing entry."""
 
     # Extract the stored attachment id from the external listing path.

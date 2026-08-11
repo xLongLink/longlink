@@ -123,11 +123,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
         assert database_usage is not None
-        assert database_usage["space_used"] > 0
-        assert database_usage["table_count"] >= 2
+        assert database_usage > 0
         assert server_usage > 0
         assert database_usage_after_schema_delete is not None
-        assert database_usage_after_schema_delete["table_count"] < database_usage["table_count"]
         assert database_usage_after_delete is None
         assert server_usage_after_delete == 0
     finally:
