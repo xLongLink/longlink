@@ -17,10 +17,8 @@ def test_static_web_bundle_serves_root() -> None:
 def test_versioned_openapi_describes_only_v1_paths() -> None:
     """Expose the v1 API document with only v1 paths."""
 
-    client = TestClient(main.app)
-
     # Read the versioned contract document.
-    openapi_response = client.get("/api/v1/openapi.json")
+    openapi_response = TestClient(main.app).get("/api/v1/openapi.json")
 
     assert openapi_response.status_code == 200
     openapi = openapi_response.json()

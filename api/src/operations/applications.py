@@ -24,54 +24,53 @@ async def create(claimed: Operation) -> str | None:
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
     # Converge providers and the workload while the Application is not yet published.
-    if application.status != Status.running:
-        # Reuse generated credentials after an interrupted creation attempt.
-        if not any(name.startswith("LONGLINK_") for name in application.secrets):
-            # Resolve the Application's immutable provider assignments.
-            db = Postgres(
-                infrastructure.database.host,
-                infrastructure.database.port,
-                infrastructure.database.username,
-                infrastructure.database.password,
-                infrastructure.database.sslmode,
-            )
-            object_storage = Exoscale(
-                infrastructure.storage.endpoint_url,
-                infrastructure.storage.access_key_id,
-                infrastructure.storage.secret_access_key,
-            )
+    # Reuse generated credentials after an interrupted creation attempt.
+    if application.status != Status.running and not any(name.startswith("LONGLINK_") for name in application.secrets):
+        # Resolve the Application's immutable provider assignments.
+        db = Postgres(
+            infrastructure.database.host,
+            infrastructure.database.port,
+            infrastructure.database.username,
+            infrastructure.database.password,
+            infrastructure.database.sslmode,
+        )
+        object_storage = Exoscale(
+            infrastructure.storage.endpoint_url,
+            infrastructure.storage.access_key_id,
+            infrastructure.storage.secret_access_key,
+        )
 
-            # Generate fresh credentials for the initial creation attempt.
-            bucket = organization.id.hex
-            prefix = f"applications/{application.id.hex}/"
-            database_password = secrets.token_urlsafe(24)
-            credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
+        # Generate fresh credentials for the initial creation attempt.
+        bucket = organization.id.hex
+        prefix = f"applications/{application.id.hex}/"
+        database_password = secrets.token_urlsafe(24)
+        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
 
-            connection = await db.schema(organization.id, application.id, database_password)
+        connection = await db.schema(organization.id, application.id, database_password)
 
-            # Build and commit the complete runtime contract before creating the workload.
-            runtime_secrets = {
-                "LONGLINK_ENV": "production",
-                "LONGLINK_DATABASE_HOST": connection["host"],
-                "LONGLINK_DATABASE_NAME": connection["database_name"],
-                "LONGLINK_DATABASE_PASSWORD": connection["password"],
-                "LONGLINK_DATABASE_PORT": str(connection["port"]),
-                "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-                "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
-                "LONGLINK_DATABASE_USERNAME": connection["username"],
-                "LONGLINK_STORAGE_BUCKET": bucket,
-                "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
-                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
-                "LONGLINK_STORAGE_PREFIX": prefix,
-                "LONGLINK_STORAGE_REGION": object_storage.region,
-                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
-            }
-            async with session_scope() as session:
-                persisted_secrets = await applications.add_runtime_secrets(session, application.id, runtime_secrets)
-                await session.commit()
-            if persisted_secrets is None:
-                return None
-            application.secrets = persisted_secrets
+        # Build and commit the complete runtime contract before creating the workload.
+        runtime_secrets = {
+            "LONGLINK_ENV": "production",
+            "LONGLINK_DATABASE_HOST": connection["host"],
+            "LONGLINK_DATABASE_NAME": connection["database_name"],
+            "LONGLINK_DATABASE_PASSWORD": connection["password"],
+            "LONGLINK_DATABASE_PORT": str(connection["port"]),
+            "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+            "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
+            "LONGLINK_DATABASE_USERNAME": connection["username"],
+            "LONGLINK_STORAGE_BUCKET": bucket,
+            "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
+            "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+            "LONGLINK_STORAGE_PREFIX": prefix,
+            "LONGLINK_STORAGE_REGION": object_storage.region,
+            "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+        }
+        async with session_scope() as session:
+            persisted_secrets = await applications.add_runtime_secrets(session, application.id, runtime_secrets)
+            await session.commit()
+        if persisted_secrets is None:
+            return None
+        application.secrets = persisted_secrets
 
     # Reapply the workload so creation retries and release reconciliation repair deployment drift.
     await cluster.applications.apply(application.id, organization.id.hex, application.image, application.secrets)

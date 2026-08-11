@@ -80,11 +80,11 @@ async def test_exoscale_usage_aggregates_bucket(monkeypatch: pytest.MonkeyPatch)
             """Return pages for the requested bucket."""
 
             assert Bucket == "acme"
-            yield {"Contents": [{"Key": "shared/a.txt", "Size": 5}]}
+            yield {"Contents": [{"Size": 5}]}
             yield {
                 "Contents": [
-                    {"Key": "applications/app/b.txt", "Size": 7},
-                    {"Key": "shared/empty.txt", "Size": 0},
+                    {"Size": 7},
+                    {"Size": 0},
                 ]
             }
 

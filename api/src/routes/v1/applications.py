@@ -79,7 +79,6 @@ async def create_application(
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
 async def get_application_logs(
-    application_id: UUID,
     access: ApplicationAccess = Depends(application_access),
     session: AsyncSession = Depends(get_session),
 ):

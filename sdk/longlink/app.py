@@ -4,18 +4,19 @@ from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
+from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
 from longlink.utils import Envs
 from longlink.logger import ApiAccessFilter
 from longlink.routes import routes
+from longlink.context import install_context_middleware
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 from fastapi.staticfiles import StaticFiles
 from longlink.middleware import install_frontend_middleware
-from fastapi.middleware.cors import CORSMiddleware
-from longlink.database.audit import install_audit_middleware
+from longlink.storage.base import create_fs
 
 Environment = Literal["development", "testing", "production"]
 
@@ -26,6 +27,14 @@ class DiscoveredPage:
 
     definition: PageDefinition
     content: str
+
+
+@dataclass(slots=True)
+class RuntimeState:
+    """Hold mutable SDK state for one FastAPI application."""
+
+    pages: list[PageDefinition]
+    storage: AbstractFileSystem
 
 
 class LongLink:
@@ -40,7 +49,7 @@ class LongLink:
 
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
-        app.state.page_registry = []
+        app.state.longlink = RuntimeState(pages=[], storage=create_fs())
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -58,8 +67,8 @@ class LongLink:
         for router in routes:
             app.include_router(router)
 
-        # Bind audit context across downstream request handling.
-        install_audit_middleware(app)
+        # Bind Platform request identity across downstream request handling.
+        install_context_middleware(app)
 
         # Applications always provide translations and pages in the generated source layout.
         source_directory = Path.cwd() / "src"
@@ -74,19 +83,6 @@ class LongLink:
         # Start applications on their first static page instead of an unselected shell.
         self.install_root_redirect()
 
-        # Enable CORS in development for local frontend access to API routes
-        if environment == "development":
-            app.add_middleware(
-                CORSMiddleware,
-                allow_origins=[
-                    "http://localhost:3000",
-                    "http://localhost:5173",
-                ],
-                allow_credentials=True,
-                allow_methods=["*"],
-                allow_headers=["*"],
-            )
-
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
@@ -95,7 +91,7 @@ class LongLink:
         """Redirect the application root to its first static page."""
 
         # Dynamic pages need parameters and cannot be startup destinations.
-        first_page = next((page for page in self.app.state.page_registry if page.route and ":" not in page.route), None)
+        first_page = next((page for page in self.app.state.longlink.pages if page.route and ":" not in page.route), None)
 
         # Let the frontend render applications without a static startup page.
         if first_page is None:
@@ -124,7 +120,7 @@ class LongLink:
 
         # Pages are registered once before the frontend mount is installed.
         self.app.router.routes.extend(page_routes)
-        self.app.state.page_registry.extend(page.definition for page in discovered_pages)
+        self.app.state.longlink.pages.extend(page.definition for page in discovered_pages)
 
     def _discover_pages(self, pages_directory: Path) -> list[DiscoveredPage]:
         """Discover and validate all XML pages before registering any route."""

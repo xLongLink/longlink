@@ -1,0 +1,31 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink version="v1" name="Items" icon="package">
+    <Query id="item" path="/api/items/${params.item}" />
+    <Query id="attachments" path="/api/items/${params.item}/attachments" />
+    <State id="attachment" file="${null}" />
+
+    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
+        <Stack>
+            <Heading level="3" value="$item.name" />
+            <Text color="secondary" value="${`CHF ${item.price}`}" />
+        </Stack>
+        <Dialog i18n="items.attachments.title" triggerLabel="Upload attachment" purpose="form">
+            <Stack gap="3">
+                <FileInput i18n="items.attachments.file" value="$attachment.file" isRequired="true" />
+                <Action
+                    action="/api/items/${params.item}/attachments"
+                    method="POST"
+                    invalidate='${["attachments"]}'
+                    closeDialog="true"
+                    form="${{ file: attachment.file }}"
+                >
+                    <Button isDisabled="${attachment.file === null}" variant="primary" label="Upload attachment" />
+                </Action>
+            </Stack>
+        </Dialog>
+    </Stack>
+
+    <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
+        <TableColumn key="name" field="name" header="File" />
+    </Table>
+</longlink>

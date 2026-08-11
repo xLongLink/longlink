@@ -1,5 +1,4 @@
 import httpx2
-from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import ApplicationAccess, authuser, get_session, application_access
 from src.utils import roles
@@ -21,7 +20,6 @@ PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 @router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
 async def proxy_application_request(
     request: Request,
-    application_id: UUID,
     path: str = "",
     user: User = Depends(authuser),
     access: ApplicationAccess = Depends(application_access),

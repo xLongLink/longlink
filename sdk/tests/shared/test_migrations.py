@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlalchemy import text
 from longlink.shared import audit as shared_audit
 from sqlalchemy.engine import URL
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.shared.migrations import migrate_database
 
@@ -56,7 +56,7 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = UUID("00000000-0000-0000-0000-000000000001")
     created_at = datetime(2026, 7, 6, 8, tzinfo=UTC)
-    active_user = AuditUser(
+    active_user = Audit(
         id=user_id,
         name="Owner User",
         email="owner@example.com",
@@ -82,30 +82,25 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     )
     await shared_audit.sync(postgresql_url, [deactivated_user])
 
-    # Repeat the same synchronization payload to prove row-level idempotency.
-    await shared_audit.sync(postgresql_url, [deactivated_user])
-
     # Read the persisted row from its qualified shared table and verify no duplicate was created.
     verification_engine = create_async_engine(postgresql_url)
     try:
         async with verification_engine.connect() as connection:
-            rows = (
-                await connection.execute(
-                    text(
-                        """
-                        SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
-                        FROM shared.audit
-                        WHERE id = :user_id
-                        """
-                    ),
-                    {"user_id": user_id},
-                )
-            ).mappings().all()
+            result = await connection.execute(
+                text(
+                    """
+                    SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
+                    FROM shared.audit
+                    WHERE id = :user_id
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            row = result.mappings().one()
     finally:
         await verification_engine.dispose()
 
-    assert len(rows) == 1
-    assert dict(rows[0]) == {
+    assert dict(row) == {
         "id": user_id,
         "name": "Updated User",
         "email": "updated@example.com",

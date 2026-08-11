@@ -7,7 +7,7 @@ import type { UserOrganizationMembership, UserProfile } from '@/lib/generated/pl
 import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
+import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY } from '@/lib/theme';
 
 const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
 
@@ -48,9 +48,8 @@ export function useUserProfile() {
 
     return {
         user: user ?? null,
-        role: user?.role ?? 'user',
-        theme: user?.theme ?? ('dark' as Theme),
-        accent: user?.accent ?? ('neutral' as Accent),
+        theme: user?.theme ?? 'dark',
+        accent: user?.accent ?? 'neutral',
         radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,
         error: error ?? null,

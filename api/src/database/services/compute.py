@@ -20,8 +20,8 @@ async def fetch(session: AsyncSession) -> Sequence[ComputeRegistry]:
     return result.all()
 
 
-async def available(session: AsyncSession) -> ComputeRegistry | None:
-    """Return the least-used ready compute registry."""
+async def available(session: AsyncSession) -> UUID | None:
+    """Return the ID of the least-used ready compute registry."""
 
     # Order ready compute registries by their active Organization assignment count.
     assignments = (
@@ -30,7 +30,7 @@ async def available(session: AsyncSession) -> ComputeRegistry | None:
         .scalar_subquery()
     )
     return await session.scalar(
-        select(ComputeRegistry).where(ComputeRegistry.status == Status.running).order_by(assignments, ComputeRegistry.name).limit(1)
+        select(ComputeRegistry.id).where(ComputeRegistry.status == Status.running).order_by(assignments, ComputeRegistry.name).limit(1)
     )
 
 

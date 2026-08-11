@@ -25,11 +25,7 @@ def init_command(folder: str, ci_provider: str | None) -> None:
         raise click.ClickException(f"Target already exists: {target}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
-    shutil.copytree(
-        source,
-        target,
-        ignore=shutil.ignore_patterns(".pytest_cache", ".ruff_cache", ".venv", "__pycache__"),
-    )
+    shutil.copytree(source, target)
 
     # Add provider-specific automation files only when explicitly requested.
     if ci_provider == "github":

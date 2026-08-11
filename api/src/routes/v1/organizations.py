@@ -33,7 +33,6 @@ async def list_organizations(_user: User = Depends(authadmin), session: AsyncSes
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
 async def get_organization(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -85,7 +84,6 @@ async def update_organization(
     response_model=int | None,
 )
 async def get_organization_database_usage(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -108,9 +106,6 @@ async def get_organization_database_usage(
     except Exception as exc:
         logger.exception("Failed to inspect database usage for organization '%s': %r", membership.organization.slug, exc)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
-    if usage is None:
-        return None
-
     return usage
 
 
@@ -119,7 +114,6 @@ async def get_organization_database_usage(
     response_model=OrganizationStorageUsageResponse | None,
 )
 async def get_organization_storage_usage(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -158,7 +152,6 @@ async def get_organization_storage_usage(
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
-    organization_id: UUID,
     payload: OrganizationInvitationCreate,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
@@ -196,7 +189,7 @@ async def update_organization_member(
     # Persist the requested role only for an active Organization member.
     updated = await organizations.update_member_role(
         session,
-        membership.organization_id,
+        organization_id,
         member_id,
         payload.role,
         user,
@@ -252,14 +245,14 @@ async def create_organization(
     slug = names.slugify(payload.name)
 
     # Resolve the least-used ready infrastructure registries.
-    compute_registry = await compute.available(session)
-    if compute_registry is None:
+    compute_id = await compute.available(session)
+    if compute_id is None:
         raise UnavailableError("No ready compute registry available")
-    database_registry = await database.available(session)
-    if database_registry is None:
+    database_id = await database.available(session)
+    if database_id is None:
         raise UnavailableError("No database registry available")
-    storage_registry = await storage.available(session)
-    if storage_registry is None:
+    storage_id = await storage.available(session)
+    if storage_id is None:
         raise UnavailableError("No storage registry available")
 
     # Persist the Organization with its selected infrastructure registries.
@@ -268,9 +261,9 @@ async def create_organization(
         payload.name,
         slug,
         user,
-        compute_id=compute_registry.id,
-        storage_id=storage_registry.id,
-        database_id=database_registry.id,
+        compute_id=compute_id,
+        storage_id=storage_id,
+        database_id=database_id,
     )
     await session.commit()
     return organization

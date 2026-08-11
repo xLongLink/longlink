@@ -12,6 +12,11 @@ def create_fs() -> AbstractFileSystem:
     bucket = env.STORAGE_BUCKET or ""
     prefix = env.STORAGE_PREFIX or ""
 
+    # Reject bucket paths that could alter or escape the configured storage scope.
+    bucket_path = PurePosixPath(bucket)
+    if bucket and (bucket_path.is_absolute() or not bucket_path.parts or ".." in bucket_path.parts):
+        raise ValueError("Storage buckets must be bucket names")
+
     # Normalize only safe relative prefixes so a scoped view cannot escape its bucket.
     prefix_path = PurePosixPath(prefix)
     if prefix and (prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts):

@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, lazyPlugins, loadEnv } from 'vite-plus';
@@ -60,9 +59,6 @@ export default defineConfig(({ mode }) => {
 
         resolve: {
             tsconfigPaths: true,
-            alias: {
-                '@': path.resolve(__dirname, './src'),
-            },
         },
 
         server: {

@@ -1,6 +1,6 @@
 import jwt
 from pwdlib import PasswordHash
-from fastapi import Cookie, Depends, Response, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
 from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
@@ -51,8 +51,13 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
 async def logout(
     response: Response,
+    origin: str | None = Header(default=None),
 ):
     """Remove the active browser credential."""
+
+    # Block cross-origin requests from clearing an authenticated browser session.
+    if origin is not None and origin != env.PUBLIC_URL.rstrip("/"):
+        raise HTTPException(status_code=403, detail="Origin required")
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.
     response.delete_cookie(

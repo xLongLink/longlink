@@ -25,14 +25,14 @@ export default function XmlLayout({
 }) {
     const t = useTranslator();
     const location = useLocation();
-    const currentPath = `${location.pathname}${location.search}`;
     const isSdkMode = import.meta.env.MODE === 'sdk';
 
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
         const { href, active, icon } = typeof tab === 'string' ? { href: tab } : tab;
         const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
-        const isActive = active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath;
+        const isActive =
+            active ?? `${targetUrl.pathname}${targetUrl.search}` === `${location.pathname}${location.search}`;
 
         if (!activeHref && isActive) activeHref = href;
 
@@ -73,7 +73,6 @@ export default function XmlLayout({
                     <Breadcrumb />
                 )
             }
-            reserveTabSpace={false}
             tabs={resolvedTabs}
             topNavClassName="px-7"
         >

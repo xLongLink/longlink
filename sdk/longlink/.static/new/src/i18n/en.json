@@ -1,33 +1,30 @@
 {
-    "requests.amount": {
-        "defaultMessage": "Amount"
-    },
-    "requests.attachments.file": {
+    "items.attachments.file": {
         "defaultMessage": "Attachment"
     },
-    "requests.attachments.title": {
+    "items.attachments.title": {
         "defaultMessage": "Attachments"
     },
-    "requests.attachments.uploadedBy": {
-        "defaultMessage": "Uploaded by"
+    "items.description": {
+        "defaultMessage": "Track catalog items and their supporting files."
     },
-    "requests.description": {
-        "defaultMessage": "Track purchase requests and supporting files."
+    "items.fields.name": {
+        "defaultMessage": "Name"
     },
-    "requests.fields.text": {
-        "defaultMessage": "Text"
+    "items.price": {
+        "defaultMessage": "Price"
     },
-    "requests.table.request": {
-        "defaultMessage": "Request"
+    "items.table.item": {
+        "defaultMessage": "Item"
     },
-    "requests.title": {
-        "defaultMessage": "Purchase requests"
+    "items.title": {
+        "defaultMessage": "Items"
     },
     "settings.application.bold": {
         "defaultMessage": "Finance owns budget checks. "
     },
     "settings.application.code": {
-        "defaultMessage": "PATCH /requests/'{id}'/status"
+        "defaultMessage": "PATCH /items/'{id}'/status"
     },
     "settings.application.costCenter": {
         "defaultMessage": "Cost center"
@@ -38,29 +35,11 @@
     "settings.application.initials": {
         "defaultMessage": "{initials}"
     },
-    "settings.application.legend": {
-        "defaultMessage": "Application profile"
-    },
-    "settings.application.lookup": {
-        "defaultMessage": "Lookup"
-    },
     "settings.application.note": {
         "defaultMessage": "Approval note"
     },
-    "settings.application.noteHelp": {
-        "defaultMessage": "Visible to reviewers"
-    },
-    "settings.application.outdated": {
-        "defaultMessage": "Old email approvals are retired."
-    },
     "settings.application.owner": {
         "defaultMessage": "Workflow owner"
-    },
-    "settings.application.ownerHelp": {
-        "defaultMessage": "This is local state bound directly from XML."
-    },
-    "settings.application.profileTip": {
-        "defaultMessage": "Use a subsection when one settings area needs a secondary view."
     },
     "settings.application.reviewer": {
         "defaultMessage": "Default reviewer"
@@ -68,47 +47,14 @@
     "settings.application.runbook": {
         "defaultMessage": "Reviewer note"
     },
-    "settings.application.sub": {
-        "defaultMessage": " local"
-    },
-    "settings.application.sup": {
-        "defaultMessage": " v1"
-    },
-    "settings.application.underlined": {
-        "defaultMessage": "Attach evidence before approval. "
-    },
     "settings.description": {
         "defaultMessage": "Configure application defaults with local XML state and Astryx form controls."
-    },
-    "settings.links.add": {
-        "defaultMessage": "Add"
-    },
-    "settings.links.description": {
-        "defaultMessage": "Use actions, loops, and badges for small configurable collections."
-    },
-    "settings.links.empty": {
-        "defaultMessage": "No quick links added yet."
-    },
-    "settings.links.label": {
-        "defaultMessage": "Quick link label"
-    },
-    "settings.links.legend": {
-        "defaultMessage": "Local quick links"
-    },
-    "settings.links.reset": {
-        "defaultMessage": "Reset"
     },
     "settings.preferences.description": {
         "defaultMessage": "Toggle notification controls and adjust a slider-backed approval threshold."
     },
     "settings.preferences.email": {
         "defaultMessage": "Email updates"
-    },
-    "settings.preferences.emailHelp": {
-        "defaultMessage": "Send a digest when request status changes."
-    },
-    "settings.preferences.legend": {
-        "defaultMessage": "Preferences"
     },
     "settings.preferences.limit": {
         "defaultMessage": "Auto-approval limit"
@@ -119,23 +65,11 @@
     "settings.preferences.notifications": {
         "defaultMessage": "In-app notifications"
     },
-    "settings.preferences.notificationsHelp": {
-        "defaultMessage": "Show reminders for stale requests."
-    },
-    "settings.preferences.pin": {
-        "defaultMessage": "Pin policy"
-    },
     "settings.sections.application": {
         "defaultMessage": "Application"
     },
-    "settings.sections.links": {
-        "defaultMessage": "Links"
-    },
     "settings.sections.preferences": {
         "defaultMessage": "Preferences"
-    },
-    "settings.sections.profile": {
-        "defaultMessage": "Profile"
     },
     "settings.sections.workflow": {
         "defaultMessage": "Workflow"
@@ -160,15 +94,6 @@
     },
     "settings.workflow.risk": {
         "defaultMessage": "Risk level"
-    },
-    "settings.workflow.riskGroup": {
-        "defaultMessage": "Risk"
-    },
-    "settings.workflow.riskPlaceholder": {
-        "defaultMessage": "Select risk"
-    },
-    "settings.workflow.tags": {
-        "defaultMessage": "Review tags"
     },
     "workflow.finance": {
         "defaultMessage": "Finance"

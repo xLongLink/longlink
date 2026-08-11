@@ -94,6 +94,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert payload["description"] == "Dashboard app"
     assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
     assert payload["version"] == "2.0.0"
+    assert "envs" not in payload
+    assert "secret-value" not in response.text
 
     async with session_scope() as session:
         persisted = await applications.get(session, UUID(payload["id"]))
@@ -103,6 +105,68 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert any(
             item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch(session)
         )
+
+
+async def test_application_responses_do_not_expose_environment_secrets(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Redact persisted Application environment values from every response surface."""
+
+    # Persist one Application with a value that must remain runtime-only.
+    owner = users[0]
+    organization = await create_organization(owner)
+    application = await create_application(organization, owner, secrets={"API_KEY": "runtime-secret"})
+
+    # Read the administrator list and Organization detail response surfaces.
+    list_response = await clients[0].get("/api/v1/applications")
+    organization_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+
+    # Response models must omit both the secret field and its raw value.
+    assert list_response.status_code == 200
+    assert organization_response.status_code == 200
+    for response_applications in (list_response.json(), organization_response.json()["applications"]):
+        assert all("secrets" not in item and "envs" not in item for item in response_applications)
+    assert "runtime-secret" not in list_response.text
+    assert "runtime-secret" not in organization_response.text
+    assert str(application.id) in {item["id"] for item in list_response.json()}
+
+
+async def test_invalid_application_payload_makes_no_metadata_or_persistence_calls(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject malformed Application input before image inspection or durable side effects."""
+
+    # Capture durable state before submitting an invalid reserved environment variable.
+    owner = users[0]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        operation_ids = [operation.id for operation in await operations.fetch(session)]
+
+    async def unexpected_metadata(_image: object) -> LongLinkMetadata:
+        """Fail if invalid input reaches remote image metadata inspection."""
+
+        raise AssertionError("invalid Application input inspected remote image metadata")
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
+
+    # Submit a model-invalid configuration through the public route.
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={
+            "name": "dashboard",
+            "image": "ghcr.io/longlink/dashboard:latest",
+            "envs": {"LONGLINK_MANAGED": "user-controlled"},
+        },
+    )
+
+    # Validation fails before metadata, Application creation, or Operation enqueueing.
+    assert response.status_code == 422
+    async with session_scope() as session:
+        assert await applications.fetch(session) == []
+        assert [operation.id for operation in await operations.fetch(session)] == operation_ids
 
 
 async def test_create_app_returns_403_for_regular_member(

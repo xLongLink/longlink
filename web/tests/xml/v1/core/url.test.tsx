@@ -23,6 +23,10 @@ describe('resolveUrl', () => {
 describe('resolveRequestUrl', () => {
     it('resolves app-relative request paths', () => {
         expect(resolveRequestUrl('/api/applications/123/proxy', '/items')).toBe('/api/applications/123/proxy/items');
+        expect(resolveRequestUrl('/api/applications/123/proxy', './items')).toBe('/api/applications/123/proxy/items');
+        expect(resolveRequestUrl('https://apps.example/api/applications/123/proxy', '/items')).toBe(
+            'https://apps.example/api/applications/123/proxy/items'
+        );
     });
 
     it('rejects external request URLs', () => {
@@ -33,6 +37,38 @@ describe('resolveRequestUrl', () => {
         expect(isAppRelativeUrl('/\\example.com/items')).toBe(false);
         expect(() => resolveRequestUrl('/api', 'https://example.com/items')).toThrow(
             'XML request URL must be app-relative'
+        );
+    });
+
+    it.each([
+        'https://evil.example/items',
+        'http://evil.example/items',
+        '//evil.example/items',
+        '///evil.example/items',
+        '/\\evil.example/items',
+        '\\evil.example/items',
+        'javascript:alert(1)',
+        'data:text/html,payload',
+    ])('rejects request URL evasion paths: %s', (path) => {
+        expect(() => resolveRequestUrl('/api/applications/123/proxy', path)).toThrow(
+            'XML request URL must be app-relative'
+        );
+    });
+
+    it('rejects encoded paths that could escape the application proxy', () => {
+        const baseUrl = '/api/applications/123/proxy';
+        const traversalPaths = ['/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'];
+
+        for (const path of traversalPaths) {
+            expect(() => resolveRequestUrl(baseUrl, path)).toThrow(
+                'XML request URL must remain within the application'
+            );
+        }
+    });
+
+    it('preserves encoded query values within the application proxy', () => {
+        expect(resolveRequestUrl('/api/applications/123/proxy', '/items?filter=%2Factive')).toBe(
+            '/api/applications/123/proxy/items?filter=%2Factive'
         );
     });
 });

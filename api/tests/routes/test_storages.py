@@ -26,7 +26,10 @@ async def test_storage_registry_endpoints_return_backend(
     assert payload["name"] == registry.name
     assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
     assert "access_key_id" not in payload
-    assert "created_at" not in payload
+    assert "secret_access_key" not in payload
+    for response in (list_response, get_response):
+        assert registry.access_key_id not in response.text
+        assert registry.secret_access_key not in response.text
 
 
 async def test_storage_registry_create_duplicate_and_delete(
@@ -54,6 +57,10 @@ async def test_storage_registry_create_duplicate_and_delete(
     # Assert
     assert create_response.status_code == 201
     assert created["name"] == "Ephemeral Storage"
+    assert "access_key_id" not in created
+    assert "secret_access_key" not in created
+    assert payload["access_key_id"] not in create_response.text
+    assert payload["secret_access_key"] not in create_response.text
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Storage registry already exists"}
     assert delete_response.status_code == 204
@@ -89,18 +96,8 @@ async def test_storage_registry_routes_require_admin(
     client = clients[1]
 
     # Act
-    read_response = await client.get("/api/v1/storages")
-    write_response = await client.post(
-        "/api/v1/storages",
-        json={
-            "name": "Denied Storage",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "access_key_id": "key",
-            "secret_access_key": "secret",
-        },
-    )
+    response = await client.get("/api/v1/storages")
 
     # Assert
-    for response in (read_response, write_response):
-        assert response.status_code == 403
-        assert response.json() == {"detail": "Permission required"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}

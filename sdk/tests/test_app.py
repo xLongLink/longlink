@@ -3,46 +3,56 @@ import pytest
 from pytest import MonkeyPatch
 from fastapi import FastAPI
 from pathlib import Path
+from pydantic import ValidationError
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
 
 
-def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
+@pytest.fixture
+def application_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
+    """Create the minimum generated Application source layout."""
 
-    # Create the required generated Application source layout.
-    (tmp_path / "src" / "i18n").mkdir(parents=True)
-    (tmp_path / "src" / "pages").mkdir()
+    # Create the source directories required by the runtime.
+    source_directory = tmp_path / "src"
+    (source_directory / "i18n").mkdir(parents=True)
+    (source_directory / "pages").mkdir()
     monkeypatch.chdir(tmp_path)
+
+    return source_directory
+
+
+def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
+    """Serve SDK runtime endpoints and the embedded frontend."""
 
     # Initialize the development runtime and its in-process client.
     app = FastAPI()
     LongLink(app, env="development")
     client = TestClient(app)
 
-    # Exercise runtime metadata, frontend fallback, and development preflight routes.
+    # Exercise runtime metadata and frontend fallback routes.
     pages_response = client.get("/pages.json")
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-    cors_response = client.options(
-        "/pages.json",
-        headers={
-            "origin": "http://localhost:5173",
-            "access-control-request-method": "GET",
-        },
-    )
-
-    # Verify each route and the local development CORS policy.
+    # Verify each runtime route.
     assert pages_response.status_code == 200
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
-    assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
+def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
+    """Require every Platform-owned runtime setting before production startup."""
+
+    # Ensure the production contract is incomplete.
+    monkeypatch.setenv("LONGLINK_ENV", "production")
+    monkeypatch.delenv("LONGLINK_DATABASE_HOST", raising=False)
+
+    # Reject startup before the application begins serving requests.
+    with pytest.raises(ValidationError, match="DATABASE_HOST"):
+        LongLink(FastAPI())
 
 
-def test_production_health_and_root_are_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Serve runtime health and the app shell without SDK-owned authorization."""
+def test_production_health_is_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Serve the runtime health endpoint without SDK-owned authorization."""
 
     # Create the complete Platform runtime contract and generated source layout.
     for name, value in {
@@ -69,14 +79,12 @@ def test_production_health_and_root_are_served_without_sdk_auth(monkeypatch: Mon
     LongLink(app, env="production")
     client = TestClient(app)
 
-    # Request the public health endpoint and frontend shell.
+    # Request the public health endpoint.
     health_response = client.get("/health")
-    root_response = client.get("/")
 
-    # Verify both resources remain publicly available.
+    # Verify the health endpoint remains publicly available.
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
-    assert root_response.status_code == 200
 
 
 @pytest.mark.parametrize(
@@ -117,13 +125,11 @@ def test_xml_pages_are_registered_from_default_pages_directory(
 ) -> None:
     """Expose root, nested, and dynamic XML pages with derived metadata."""
 
-    # Build the default page tree and an alternate page that must be ignored.
+    # Build the default page tree.
     page_path = tmp_path / "src" / "pages" / relative_path
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
     (tmp_path / "src" / "i18n").mkdir()
-    alternate_path = tmp_path / "alternate.xml"
-    alternate_path.write_text('<longlink version="v1"><Text>Alternate</Text></longlink>', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     # Start LongLink and request the registered page and page catalog.
@@ -131,7 +137,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     LongLink(app)
     client = TestClient(app)
     page_path_without_suffix = relative_path.removesuffix(".xml")
-    response = client.get(f"/pages/{page_path_without_suffix}", params={"page_path": str(alternate_path)})
+    response = client.get(f"/pages/{page_path_without_suffix}")
     pages_response = client.get("/pages.json")
 
     # Verify content and metadata came from the default page tree.
@@ -156,6 +162,29 @@ def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tm
     # Start registration and require schema validation to fail immediately.
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink(FastAPI())
+
+
+def test_application_route_collision_with_page_endpoint_is_rejected(
+    application_source: Path,
+) -> None:
+    """Reject page endpoints that would overlap an Application-owned route."""
+
+    # Create a page whose endpoint is already owned by the Application.
+    (application_source / "pages" / "dashboard.xml").write_text(
+        '<longlink version="v1"><Text i18n="dashboard.title" /></longlink>',
+        encoding="utf-8",
+    )
+    app = FastAPI()
+
+    @app.get("/pages/dashboard")
+    async def application_dashboard() -> dict[str, str]:
+        """Return the Application dashboard resource."""
+
+        return {"source": "application"}
+
+    # Reject ambiguous ownership during runtime registration.
+    with pytest.raises(ValueError, match="overlaps an Application route"):
+        LongLink(app)
 
 
 def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:

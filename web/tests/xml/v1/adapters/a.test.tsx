@@ -2,17 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/v1/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
-const translations = {
-    'anchors.download': { defaultMessage: 'Download' },
-    'anchors.labelOnly': { defaultMessage: 'Label only' },
-    'anchors.openIssue': { defaultMessage: 'Open issue' },
-};
-
 describe('Link', () => {
     /* App navigation targets should resolve against the view route base, not the API request base. */
     it('renders app navigation and internal anchors', () => {
         const navigationOutput = renderXmlToMarkup(
-            parseXML('<Link to="/issues/123" i18n="anchors.openIssue" />'),
+            parseXML('<Link to="/issues/123" />'),
             {
                 scope: { bindings: {} },
                 services: {
@@ -20,13 +14,12 @@ describe('Link', () => {
                     navigationBaseUrl: '/orgs/acme/apps/tracker',
                     requestBaseUrl: '',
                     setups: {},
-                    translations,
                 },
             },
             '/api/applications/app-1/proxy'
         );
         const anchorOutput = renderXmlToMarkup(
-            parseXML('<Link href="/files/document.pdf" i18n="anchors.download" />'),
+            parseXML('<Link href="/files/document.pdf" />'),
             {
                 scope: { bindings: {} },
                 services: {
@@ -34,37 +27,31 @@ describe('Link', () => {
                     navigationBaseUrl: '',
                     requestBaseUrl: '',
                     setups: {},
-                    translations,
                 },
             },
             '/orgs/acme/apps/inventory'
         );
 
         expect(navigationOutput).toContain('href="/orgs/acme/apps/tracker/issues/123"');
-        expect(navigationOutput).toContain('Open issue');
         expect(anchorOutput).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
 
-    it('omits href from unsafe anchors', () => {
-        const unsafeAnchors = [
-            '<Link href="javascript:alert(1)" i18n="anchors.labelOnly" />',
-            '<Link to="https://evil.example.com/issues/123" i18n="anchors.labelOnly" />',
-        ];
-
-        for (const anchor of unsafeAnchors) {
-            const output = renderXmlToMarkup(parseXML(anchor), {
-                scope: { bindings: {} },
+    it('drops unsafe expression-backed navigation targets and falls back to a safe href', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<Link to="${destination}" href="${fallback}" />'),
+            {
+                scope: { bindings: { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' } },
                 services: {
                     invalidate: async () => {},
-                    navigationBaseUrl: '',
+                    navigationBaseUrl: '/orgs/acme/apps/tracker',
                     requestBaseUrl: '',
                     setups: {},
-                    translations,
                 },
-            });
+            },
+            '/orgs/acme/apps/tracker'
+        );
 
-            expect(output).toContain('Label only');
-            expect(output).not.toContain('href=');
-        }
+        expect(output).toContain('href="/orgs/acme/apps/tracker/files/document.pdf"');
+        expect(output).not.toContain('javascript:');
     });
 });

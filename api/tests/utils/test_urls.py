@@ -22,9 +22,7 @@ pytestmark = pytest.mark.no_db
 def test_database_url_normalization(source: str, expected: str) -> None:
     """Normalize database URLs for async SQLAlchemy usage."""
 
-    normalized = urls.database(source)
-
-    assert normalized.url.render_as_string(hide_password=False) == expected
+    assert urls.database(source).url.render_as_string(hide_password=False) == expected
 
 
 @pytest.mark.parametrize(

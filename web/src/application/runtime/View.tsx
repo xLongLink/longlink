@@ -63,14 +63,9 @@ function normalizePath(path: string): string {
     return path.replace(/^\/+|\/+$/g, '');
 }
 
-/** Returns the route pattern exposed by a runtime page. */
-function pageRoutePattern(page: RuntimePage): string {
-    return normalizePath(page.route);
-}
-
 /** Returns true when a page route contains dynamic path segments. */
 function pageRouteIsDynamic(page: RuntimePage): boolean {
-    return pageRoutePattern(page)
+    return normalizePath(page.route)
         .split('/')
         .some((segment) => segment.startsWith(':'));
 }
@@ -78,7 +73,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
     const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
-        path: pageRoutePattern(page) || '/',
+        path: normalizePath(page.route) || '/',
         page,
     }));
     const routePath = normalizePath(path);
@@ -181,7 +176,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return;
         }
 
-        const firstPageRoute = pageRoutePattern(firstTabPage);
+        const firstPageRoute = normalizePath(firstTabPage.route);
 
         // Keep root-routed tabs at the application root.
         if (firstPageRoute) {
@@ -204,7 +199,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         for (const page of registeredPages ?? []) {
             const label = page.name || startCase(page.tab);
             const icon = page.icon ? getIconComponent(page.icon) : undefined;
-            const routePattern = pageRoutePattern(page);
+            const routePattern = normalizePath(page.route);
             const dynamic = pageRouteIsDynamic(page);
             const currentGroup = tabGroups.get(page.tab);
 

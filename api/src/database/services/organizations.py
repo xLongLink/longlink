@@ -13,7 +13,7 @@ from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -60,20 +60,19 @@ async def application_access(
     """Return one user's active access to one active Application."""
 
     # Resolve the requested Application and its active Organization membership in one scoped query.
-    row = (
-        await session.execute(
-            select(Application, Organization, UserOrganization.role)
-            .join(Organization, Organization.id == Application.organization_id)
-            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-            .where(
-                Application.id == application_id,
-                Application.deleted_at.is_(None),
-                Organization.deleted_at.is_(None),
-                UserOrganization.user_id == user_id,
-                UserOrganization.deleted_at.is_(None),
-            )
+    result = await session.execute(
+        select(Application, Organization, UserOrganization.role)
+        .join(Organization, Organization.id == Application.organization_id)
+        .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+            UserOrganization.user_id == user_id,
+            UserOrganization.deleted_at.is_(None),
         )
-    ).one_or_none()
+    )
+    row = result.one_or_none()
     if row is None:
         return None
     application, organization, role = row
@@ -90,7 +89,8 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
         .join(StorageRegistry, StorageRegistry.id == Organization.storage_id)
         .where(Organization.id == organization_id)
     )
-    row = (await session.execute(statement)).tuples().one_or_none()
+    result = await session.execute(statement)
+    row = result.tuples().one_or_none()
     if row is None:
         return None
     organization, compute, database, storage = row
@@ -110,18 +110,15 @@ async def set_runtime(session: AsyncSession, organization_id: UUID, expected_sta
     """Transition one active Organization from the expected lifecycle state."""
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
-    if (
-        await session.execute(
-            sql_update(Organization)
-            .where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-                Organization.status == expected_status,
-            )
-            .values(status=status)
+    await session.execute(
+        sql_update(Organization)
+        .where(
+            Organization.id == organization_id,
+            Organization.deleted_at.is_(None),
+            Organization.status == expected_status,
         )
-    ).rowcount != 1:
-        return
+        .values(status=status)
+    )
 
 
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
@@ -215,13 +212,13 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     memberships = await members(session, organization_id, include_deleted=True)
-    rows: list[AuditUser] = []
+    rows: list[Audit] = []
     for membership in memberships:
         user = membership.user
         deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
         updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
         rows.append(
-            AuditUser(
+            Audit(
                 id=user.id,
                 name=user.name,
                 email=user.email,
@@ -263,7 +260,8 @@ async def update_member_role(
     )
 
     # Require an active organization membership.
-    membership = (await session.scalars(statement)).one_or_none()
+    result = await session.scalars(statement)
+    membership = result.one_or_none()
     if membership is None:
         return False
 
@@ -287,7 +285,8 @@ async def update_member_role(
             )
             .with_for_update()
         )
-        owner_ids = (await session.scalars(owner_statement)).all()
+        result = await session.scalars(owner_statement)
+        owner_ids = result.all()
         if len(owner_ids) <= 1:
             raise ConflictError("Organization must have at least one owner")
 
@@ -315,7 +314,8 @@ async def create(
 
     # Lock the requested running compute registry.
     compute_statement = select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update()
-    compute = (await session.scalars(compute_statement)).one_or_none()
+    result = await session.scalars(compute_statement)
+    compute = result.one_or_none()
     if compute is None:
         raise UnavailableError("No compute registry available")
     if compute.status != Status.running:
@@ -371,11 +371,10 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
     """Update mutable Organization metadata."""
 
     # Lock and update the active Organization row.
-    organization = (
-        await session.scalars(
-            select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)).with_for_update()
-        )
-    ).one_or_none()
+    result = await session.scalars(
+        select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)).with_for_update()
+    )
+    organization = result.one_or_none()
     if organization is None:
         return None
     if organization.avatar == avatar:

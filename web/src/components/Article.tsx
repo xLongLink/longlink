@@ -28,7 +28,6 @@ export function Article({
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
     const { content, metadata } = page;
-    const pageToc = metadata.toc ?? [];
 
     return (
         <Layout
@@ -121,7 +120,7 @@ export function Article({
                                 </Stack>
                             </article>
                         </PageContainer>
-                        {pageToc.length ? (
+                        {metadata.toc?.length ? (
                             <Stack
                                 as="aside"
                                 aria-label={t('common.onThisPage')}
@@ -133,7 +132,7 @@ export function Article({
                                 <Text type="label" weight="semibold">
                                     {t('common.onThisPage')}
                                 </Text>
-                                <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+                                <Outline items={metadata.toc} density="compact" label={t('common.onThisPage')} />
                             </Stack>
                         ) : null}
                     </Stack>

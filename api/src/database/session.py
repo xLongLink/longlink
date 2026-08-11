@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 from src.environments import env
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-_engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
 
 
@@ -30,7 +29,7 @@ def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
 
 async def get_session() -> async_sessionmaker[AsyncSession]:
     """Return a SQLAlchemy sessionmaker instance."""
-    global Session, _engine
+    global Session
 
     # Reuse the initialized session factory.
     if Session is not None:
@@ -52,13 +51,13 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if not connection.url.drivername.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
-    _engine = create_async_engine(connection.url, **engine_kwargs)
+    engine = create_async_engine(connection.url, **engine_kwargs)
 
     # Match production referential integrity for SQLite development databases.
     if connection.url.drivername.startswith("sqlite+"):
-        enable_sqlite_foreign_keys(_engine)
+        enable_sqlite_foreign_keys(engine)
 
-    Session = async_sessionmaker(_engine, expire_on_commit=False)
+    Session = async_sessionmaker(engine, expire_on_commit=False)
 
     return Session
 

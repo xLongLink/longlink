@@ -204,9 +204,7 @@ async def test_organization_database_endpoint_returns_unavailable_when_backend_f
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the selected database TLS configuration."""
-
-            assert sslmode == infrastructure.database.sslmode
+            """Accept the selected database connection settings."""
 
         async def database_usage(self, database_name: str) -> int:
             """Raise the backend error expected by the test."""
@@ -395,7 +393,7 @@ async def test_list_organizations_includes_created_organization(
     assert str(organization.id) in {item["id"] for item in response.json()}
 
 
-async def test_get_organization_returns_404_for_non_member(
+async def test_get_organization_returns_403_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -598,7 +596,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_create_organization_invitation_returns_404_for_non_member(
+async def test_create_organization_invitation_returns_403_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:

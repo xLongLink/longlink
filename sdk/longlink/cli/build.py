@@ -361,12 +361,26 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         env_spec,
     )
 
+    # Exclude ignored paths and symlinks whose targets escape the build context.
+    ignored_paths = shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS)
+
+    def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
+        """Return ignored paths and symlinks that resolve outside the source root."""
+
+        ignored = ignored_paths(directory, contents)
+        for name in contents:
+            path = Path(directory, name)
+            if path.is_symlink() and not path.resolve().is_relative_to(source_root):
+                ignored.add(name)
+
+        return ignored
+
     # Copy the source tree into a throwaway Docker build context.
     shutil.copytree(
         source_root,
         build_context,
         dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS),
+        ignore=ignore_out_of_tree_symlinks,
     )
 
     # Copy safe Git metadata when the project is inside a repository.

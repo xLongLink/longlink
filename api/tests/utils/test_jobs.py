@@ -45,7 +45,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     async def fake_sleep(seconds: float) -> None:
         """Stop the scheduler once it reaches the idle polling sleep."""
 
-        raise StopScheduler()
+        raise StopScheduler
 
     monkeypatch.setattr(operation_worker.operations, "claim", fake_claim)
     monkeypatch.setattr(operation_worker, "execute", fake_execute)

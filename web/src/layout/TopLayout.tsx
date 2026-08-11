@@ -21,7 +21,7 @@ type TopLayoutProps = {
     endContent: ReactNode;
     heading: ReactNode;
     height?: 'auto' | 'fill';
-    reserveTabSpace: boolean;
+    reserveTabSpace?: boolean;
     tabs?: TopLayoutTab[];
     topNavClassName: string;
 };
@@ -33,7 +33,7 @@ function TopLayout({
     endContent,
     heading,
     height = 'auto',
-    reserveTabSpace,
+    reserveTabSpace = false,
     tabs = [],
     topNavClassName,
 }: TopLayoutProps) {

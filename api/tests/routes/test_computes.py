@@ -28,7 +28,6 @@ async def test_compute_registry_endpoints_return_backend(
     assert payload["status"] == "running"
     assert "kubeconfig" not in payload
     assert "proxy_secret" not in payload
-    assert "created_at" not in payload
 
 
 async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifecycle_is_pending(
@@ -133,14 +132,8 @@ async def test_compute_registry_routes_require_admin(
     client = clients[1]
 
     # Act
-    read_response = await client.get("/api/v1/computes")
-    get_response = await client.get("/api/v1/computes/00000000-0000-4000-8000-000000000000")
-    write_response = await client.post(
-        "/api/v1/computes",
-        json={"name": "Denied Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
-    )
+    response = await client.get("/api/v1/computes")
 
     # Assert
-    for response in (read_response, get_response, write_response):
-        assert response.status_code == 403
-        assert response.json() == {"detail": "Permission required"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}

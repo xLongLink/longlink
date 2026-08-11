@@ -92,7 +92,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     organization = await create_organization(owner)
     synchronized: list[UUID] = []
 
-    async def sync_users(session, organization_id: UUID) -> None:
+    async def sync_users(_session, organization_id: UUID) -> None:
         """Record the Organization user projection requested by the service."""
 
         synchronized.append(organization_id)
