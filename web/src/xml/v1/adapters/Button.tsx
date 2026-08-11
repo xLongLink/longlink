@@ -4,7 +4,7 @@ import { renderNode } from '../core/node';
 import { resolvePath } from '../expressions';
 import type { Props } from '../types';
 import { useActionHandler } from './Action';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, resolveXmlValue } from '../core/props';
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {

@@ -24,33 +24,21 @@ async def test_metadata_fetches_digest_image_references(
     manifest_digest = "sha256:deadbeef"
     captured: dict[str, object] = {}
 
-    async def fake_fetch_manifest(_client: object, repository: str, reference: str) -> tuple[dict[str, object], str]:
-        """Capture the manifest request and return a minimal OCI manifest."""
-
-        captured["manifest"] = {
-            "repository": repository,
-            "reference": reference,
-        }
-        return {"config": {"digest": "sha256:config"}}, manifest_digest
-
-    class FakeConfigResponse:
+    class FakeResponse:
         """Return a successful image config response."""
 
         is_success = True
 
+        def __init__(self, payload: dict[str, object], headers: dict[str, str] | None = None) -> None:
+            """Store the response payload and headers."""
+
+            self._payload = payload
+            self.headers = {} if headers is None else headers
+
         def json(self) -> dict[str, object]:
             """Return LongLink labels from the image config blob."""
 
-            return {
-                "config": {
-                    "Labels": {
-                        "org.opencontainers.image.title": "dashboard",
-                        "org.opencontainers.image.version": version,
-                        "org.opencontainers.image.description": "Demo app",
-                        "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
-                    }
-                }
-            }
+            return self._payload
 
     class FakeAsyncClient:
         """Capture config blob requests from the image metadata reader."""
@@ -66,13 +54,29 @@ async def test_metadata_fetches_digest_image_references(
         async def __aexit__(self, *_args: object) -> None:
             """Close the fake registry client."""
 
-        async def get(self, url: str, headers: dict[str, str] | None = None) -> FakeConfigResponse:
+        async def get(self, url: str, headers: dict[str, str] | None = None) -> FakeResponse:
             """Capture the config blob request and return image labels."""
 
+            if "/manifests/" in url:
+                captured["manifest"] = {"url": url, "headers": headers}
+                return FakeResponse(
+                    {"config": {"digest": "sha256:config"}},
+                    {"Docker-Content-Digest": manifest_digest},
+                )
             captured["blob"] = {"url": url, "headers": headers}
-            return FakeConfigResponse()
+            return FakeResponse(
+                {
+                    "config": {
+                        "Labels": {
+                            "org.opencontainers.image.title": "dashboard",
+                            "org.opencontainers.image.version": version,
+                            "org.opencontainers.image.description": "Demo app",
+                            "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
+                        }
+                    }
+                }
+            )
 
-    monkeypatch.setattr(images, "_fetch_manifest", fake_fetch_manifest)
     monkeypatch.setattr(images.httpx2, "AsyncClient", FakeAsyncClient)
 
     # Act
@@ -93,8 +97,8 @@ async def test_metadata_fetches_digest_image_references(
     assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
         "manifest": {
-            "repository": "longlink/dashboard",
-            "reference": "sha256:deadbeef",
+            "url": "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
+            "headers": {"Accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json"},
         },
         "blob": {
             "url": "https://ghcr.io/v2/longlink/dashboard/blobs/sha256:config",

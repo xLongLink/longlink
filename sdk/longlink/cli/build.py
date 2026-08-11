@@ -86,47 +86,6 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def _validate_registry_prefix(registry_prefix: str) -> None:
-    """Validate a Docker registry prefix before composing the final image tag."""
-
-    # Reject URL-style registry prefixes.
-    if registry_prefix.startswith("//") or "://" in registry_prefix:
-        raise ValueError("Docker registry prefix must not be a URL")
-
-    # Reject whitespace and control characters.
-    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
-        raise ValueError("Docker registry prefix contains invalid characters")
-
-    registry_host = registry_prefix.split("/", 1)[0]
-    parsed_registry = urllib.parse.urlsplit(f"//{registry_host}")
-
-    # Reject malformed registry hosts or credentials.
-    if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
-        raise ValueError("Docker registry prefix is invalid")
-
-    # Validate the optional registry port.
-    try:
-        parsed_registry.port
-    except ValueError as exc:
-        raise ValueError("Docker registry port is invalid") from exc
-
-
-def _validate_docker_image_path(image_path: str) -> None:
-    """Validate Docker image path components after tag composition."""
-
-    components = image_path.split("/")
-
-    repository_components = (
-        components[1:]
-        if len(components) > 1 and ("." in components[0] or ":" in components[0] or components[0] == "localhost")
-        else components
-    )
-
-    # Reject invalid repository components.
-    if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository_components):
-        raise ValueError(f"Invalid Docker image path '{image_path}'")
-
-
 def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None) -> dict[str, list[dict[str, object]]]:
     """Parse the configured environment class and return environment specs."""
 
@@ -480,10 +439,30 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     # Add a registry prefix when requested.
     if registry_prefix:
-        _validate_registry_prefix(registry_prefix)
-        image_path = f"{registry_prefix}/{image_name}"
+        # Reject URL-style registry prefixes and invalid characters.
+        if registry_prefix.startswith("//") or "://" in registry_prefix:
+            raise ValueError("Docker registry prefix must not be a URL")
+        if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
+            raise ValueError("Docker registry prefix contains invalid characters")
 
-    _validate_docker_image_path(image_path)
+        # Parse and restrict production registries to GHCR while allowing localhost development registries.
+        registry_host = registry_prefix.split("/", 1)[0]
+        parsed_registry = urllib.parse.urlsplit(f"//{registry_host}")
+        if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
+            raise ValueError("Docker registry prefix is invalid")
+        try:
+            parsed_registry.port
+        except ValueError as exc:
+            raise ValueError("Docker registry port is invalid") from exc
+        if parsed_registry.hostname != "localhost" and (
+            parsed_registry.hostname != "ghcr.io" or len(registry_prefix.split("/")) != 2
+        ):
+            raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
+
+        # Validate registry namespace components.
+        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
+            raise ValueError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
+        image_path = f"{registry_prefix}/{image_name}"
 
     return f"{image_path}:{version}"
 
@@ -497,7 +476,7 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 @click.option(
     "--registry",
     default=None,
-    help="Docker registry prefix for the image tag, for example localhost:15000.",
+    help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development.",
 )
 @click.option(
     "--push",

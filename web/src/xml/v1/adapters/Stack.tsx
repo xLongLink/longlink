@@ -2,7 +2,7 @@ import { Stack as AstryxStack } from '@astryxdesign/core/Stack';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from './props';
+import { resolveXmlBoolean, resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from '../core/props';
 
 /** Renders an Astryx stack for horizontal or vertical layout. */
 export function Stack({ props, nodes }: Props) {

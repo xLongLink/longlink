@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { setXmlBinding, toXmlBoolean, useBindableValue } from './binding';
+import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     resolveXmlEnum,
@@ -14,7 +14,7 @@ import {
     resolveXmlSizeValue,
     resolveXmlSpacing,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {

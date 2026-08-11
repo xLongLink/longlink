@@ -10,7 +10,6 @@ export { Code } from './Code';
 export { Dialog } from './Dialog';
 export { Divider } from './Divider';
 export { FileInput } from './FileInput';
-export { For } from './For';
 export { FormLayout } from './FormLayout';
 export { Grid } from './Grid';
 export { Heading } from './Heading';

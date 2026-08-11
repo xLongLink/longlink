@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
@@ -13,7 +13,7 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {

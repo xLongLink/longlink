@@ -15,7 +15,7 @@ class PageResponse(BaseModel):
     route: str
 
 
-@router.get("/pages.json", response_model=list[PageResponse], response_model_exclude_unset=True)
+@router.get("/pages.json", response_model=list[PageResponse], response_model_exclude_none=True)
 def get_pages(request: Request):
     """Return the registered SDK runtime pages."""
 
@@ -25,8 +25,8 @@ def get_pages(request: Request):
             "tab": page.tab,
             "path": page.path.lstrip("/"),
             "route": page.route,
-            **({"name": page.name} if page.name else {}),
-            **({"icon": page.icon} if page.icon else {}),
+            "name": page.name,
+            "icon": page.icon,
         }
         for page in request.app.state.page_registry
     ]

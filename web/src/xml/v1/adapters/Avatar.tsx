@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { useXmlContext } from '../core/context';
 import { BaseUrlContext, resolveAnchorUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlEnum, resolveXmlString } from './props';
+import { resolveXmlEnum, resolveXmlString } from '../core/props';
 
 /** Renders a data-oriented Astryx avatar with safe image URLs. */
 export function Avatar({ props }: Props) {

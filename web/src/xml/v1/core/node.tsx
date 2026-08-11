@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { For } from '../adapters';
 import { evaluate } from '../expressions';
+import { isVisibleXmlNode } from './props';
+import { For } from './for';
 import type { ASTNode, ExecutionContext } from '../types';
 import { xmlComponentRegistry } from './registry';
 
@@ -22,12 +23,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
         }
 
         // Handle conditional rendering with "if" parameter.
-        if (props.if != null) {
-            // Skip nodes when their XML condition is false.
-            if (!evaluate(props.if, ctx)) {
-                return null;
-            }
-        }
+        if (!isVisibleXmlNode(node, ctx)) return null;
 
         // Suppress setup-only nodes during render.
         if (node.name === 'State' || node.name === 'Query') {
@@ -41,7 +37,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             return <RegisteredComponent key={index} props={props} nodes={node.children ?? []} />;
         }
 
-        // Delegate loop nodes to the scoped For adapter.
+        // Delegate loop nodes to the scoped core renderer.
         if (node.name === 'For') {
             // Require a loop item alias.
             if (!props.as) throw new Error(`For requires an "as" parameter`);

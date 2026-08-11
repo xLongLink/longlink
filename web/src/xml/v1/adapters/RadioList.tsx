@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     resolveXmlBoolean,
@@ -12,7 +12,7 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {

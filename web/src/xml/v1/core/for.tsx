@@ -1,5 +1,5 @@
-import { useXmlContext, XmlContext } from '../core/context';
-import { renderNode } from '../core/node';
+import { useXmlContext, XmlContext } from './context';
+import { renderNode } from './node';
 import type { Props } from '../types';
 import { resolveXmlString } from './props';
 

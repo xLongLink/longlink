@@ -1,15 +1,8 @@
 import re
 from lxml import etree
 from dataclasses import dataclass
-from fastapi.responses import Response
 
 PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-
-
-class XMLResponse(Response):
-    """Render page content with the XML media type."""
-
-    media_type = "application/xml"
 
 
 @dataclass(slots=True)
@@ -79,19 +72,9 @@ def page_file_route(relative_path: str) -> str:
         route_segments.append(segment)
 
     return "/".join(route_segments)
+
+
 def page_route_key(route: str) -> str:
     """Return a route key that treats dynamic parameter names as equivalent."""
 
     return "/".join(":" if segment.startswith(":") else segment for segment in route.split("/"))
-
-
-def page_file_endpoint(route_prefix: str, relative_path: str) -> str:
-    """Return and validate the SDK endpoint path for one XML page file."""
-
-    path_without_suffix = relative_path.removesuffix(".xml")
-
-    # FastAPI parameter syntax is reserved for application routes, not page file names.
-    if not path_without_suffix or any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
-        raise ValueError("Page endpoint paths cannot contain empty names or FastAPI parameters")
-
-    return f"{route_prefix}/{path_without_suffix}"

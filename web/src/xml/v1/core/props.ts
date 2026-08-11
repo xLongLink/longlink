@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { resolveTranslation } from '../core/i18n';
+import { resolveTranslation } from './i18n';
 import { evaluate } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
 

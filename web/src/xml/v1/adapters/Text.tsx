@@ -2,7 +2,7 @@ import { Text as AstryxText, type TextProps } from '@astryxdesign/core/Text';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
 
 /** Renders semantic Astryx text from a value, translation, or nested XML. */
 export function Text({ props, nodes }: Props) {

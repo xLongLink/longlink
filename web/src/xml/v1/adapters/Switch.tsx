@@ -2,7 +2,7 @@ import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { setXmlBinding, toXmlBoolean, useBindableValue } from './binding';
+import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -10,7 +10,7 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {

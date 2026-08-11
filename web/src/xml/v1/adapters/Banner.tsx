@@ -2,7 +2,7 @@ import { Banner as AstryxBanner } from '@astryxdesign/core/Banner';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from './props';
+import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from '../core/props';
 
 /** Renders a persistent Astryx status banner. */
 export function Banner({ props, nodes }: Props) {

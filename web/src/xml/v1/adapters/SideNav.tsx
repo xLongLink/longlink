@@ -4,8 +4,8 @@ import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
-import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
+import { setXmlBinding, useBindableValue } from '../core/binding';
+import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {

@@ -2,7 +2,7 @@ import { Code as AstryxCode } from '@astryxdesign/core/Code';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlContent, resolveXmlEnum, resolveXmlValue } from './props';
+import { resolveXmlContent, resolveXmlEnum, resolveXmlValue } from '../core/props';
 
 /** Renders inline Astryx code from a value, translation, or nested XML. */
 export function Code({ props, nodes }: Props) {

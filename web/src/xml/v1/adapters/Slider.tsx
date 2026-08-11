@@ -2,7 +2,7 @@ import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import { useState } from 'react';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -11,7 +11,7 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {

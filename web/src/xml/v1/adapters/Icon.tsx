@@ -1,7 +1,7 @@
 import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '../core/context';
 import type { Props } from '../types';
-import { requireXmlString, resolveXmlEnum } from './props';
+import { requireXmlString, resolveXmlEnum } from '../core/props';
 
 const ICON_SIZES = { xsm: 12, sm: 16, md: 20, lg: 24 } as const;
 const ICON_COLOR_CLASSES = {

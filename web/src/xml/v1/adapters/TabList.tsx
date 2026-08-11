@@ -5,7 +5,7 @@ import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveNavigationUrl } from '../core/url';
 import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     isVisibleXmlNode,
     requireXmlString,
@@ -13,7 +13,7 @@ import {
     resolveXmlEnum,
     resolveXmlLabel,
     resolveXmlString,
-} from './props';
+} from '../core/props';
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {

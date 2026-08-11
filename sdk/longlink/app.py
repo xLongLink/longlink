@@ -4,12 +4,12 @@ from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
-from longlink.pages import XMLResponse, PageDefinition, page_route_key, page_file_route, page_file_endpoint, extract_longlink_metadata
+from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
 from longlink.utils import Envs
 from fastapi.routing import APIRoute
 from longlink.logger import ApiAccessFilter
 from longlink.routes import routes
-from fastapi.responses import RedirectResponse
+from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
@@ -27,12 +27,6 @@ class DiscoveredPage:
 
     definition: PageDefinition
     content: str
-
-
-def page_content(content: str) -> str:
-    """Return the validated XML content captured during page discovery."""
-
-    return content
 
 
 def normalize_mount_path(path: str) -> str:
@@ -166,29 +160,22 @@ class LongLink:
         replacement_routes = [
             self.app.router.route_class(
                 page.definition.path,
-                partial(page_content, page.content),
+                partial(lambda content: Response(content, media_type="application/xml"), page.content),
                 methods=["GET"],
-                response_class=XMLResponse,
                 include_in_schema=False,
             )
             for page in discovered_pages
         ]
         registered_routes: dict[str, APIRoute] = self.app.state.page_routes
         stale_route_ids = {id(registered_routes[path]) for path in stale_page_paths}
-        replacement_inserted = False
-        next_routes: list[BaseRoute] = []
+        replacement_index = next(
+            (index for index, route in enumerate(self.app.router.routes) if id(route) in stale_route_ids),
+            len(self.app.router.routes),
+        )
 
         # Replace managed routes at their prior position so they remain ahead of the frontend mount.
-        for route in self.app.router.routes:
-            if id(route) in stale_route_ids:
-                if not replacement_inserted:
-                    next_routes.extend(replacement_routes)
-                    replacement_inserted = True
-                continue
-            next_routes.append(route)
-
-        if not replacement_inserted:
-            next_routes.extend(replacement_routes)
+        next_routes: list[BaseRoute] = [route for route in self.app.router.routes if id(route) not in stale_route_ids]
+        next_routes[replacement_index:replacement_index] = replacement_routes
 
         # Commit the complete catalog and its routes only after all construction has succeeded.
         self.app.router.routes[:] = next_routes
@@ -208,7 +195,13 @@ class LongLink:
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
-            registered_path = page_file_endpoint(route_prefix, relative_path)
+            path_without_suffix = relative_path.removesuffix(".xml")
+
+            # FastAPI parameter syntax is reserved for application routes, not page file names.
+            if not path_without_suffix or any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
+                raise ValueError("Page endpoint paths cannot contain empty names or FastAPI parameters")
+
+            registered_path = f"{route_prefix}/{path_without_suffix}"
 
             # Validate XML pages and extract optional display metadata.
             page = LonglinkXml(page_file)
@@ -216,12 +209,13 @@ class LongLink:
             page_name, page_icon = extract_longlink_metadata(page_root)
 
             page_route = page_file_route(relative_path)
+            route_key = page_route_key(page_route)
             tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
             if registered_path in registered_paths:
                 raise ValueError(f"Page endpoint '{registered_path}' is already registered")
-            if page_route_key(page_route) in registered_route_keys:
+            if route_key in registered_route_keys:
                 raise ValueError(f"Browser route '{page_route}' is already registered")
 
             # Application routes take precedence, so ambiguous page endpoints are rejected.
@@ -243,6 +237,6 @@ class LongLink:
                 )
             )
             registered_paths.add(registered_path)
-            registered_route_keys.add(page_route_key(page_route))
+            registered_route_keys.add(route_key)
 
         return discovered_pages

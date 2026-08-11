@@ -19,7 +19,7 @@ import {
     resolveXmlNumber,
     resolveXmlString,
     resolveXmlValue,
-} from './props';
+} from '../core/props';
 
 type TableRow = Record<string, unknown>;
 

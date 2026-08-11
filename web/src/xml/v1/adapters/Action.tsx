@@ -5,7 +5,7 @@ import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import { BaseUrlContext, resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlString, resolveXmlValue } from '../core/props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
