@@ -1,7 +1,8 @@
 from uuid import UUID
-from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Theme, Accent
+from longlink.shared.models import Email
 
 
 class UserUpdate(BaseModel):
@@ -27,7 +28,7 @@ class UserIdentity(BaseModel):
 
     # Metadata
     name: str
-    email: EmailStr
+    email: Email
     avatar: str
 
 

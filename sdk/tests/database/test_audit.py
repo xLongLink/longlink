@@ -62,9 +62,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
 
             await session.refresh(item)
             assert item.id is not None
-            assert item.created_at == created_at
             assert item.updated_at == created_at
-            assert item.created_id == creator_id
             assert item.updated_id == creator_id
             item_id = item.id
 

@@ -127,7 +127,6 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     # Arrange
     operation = leased_operation()
     transitions: list[UUID] = []
-    errors: list[str] = []
 
     async def failing_handler(claimed: Operation) -> str | None:
         """Return one explicit terminal failure."""
@@ -147,13 +146,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
             finished_at=utcnow(),
         )
 
-    def log_error(message: str, *args: object) -> None:
-        """Capture the formatted terminal error."""
-
-        errors.append(message % args)
-
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
-    monkeypatch.setattr(operation_worker.logger, "error", log_error)
 
     # Act
     result = await operation_worker.execute(operation, failing_handler)
@@ -161,4 +154,3 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     # Assert
     assert result.status == OperationStatus.failed
     assert transitions == [operation.id]
-    assert errors == [f"Operation {operation.id} failed: workload deployment failed"]

@@ -1,11 +1,10 @@
-import pytest
 from fastapi import FastAPI, APIRouter
 from pathlib import Path
 from longlink import LongLink
 from fastapi.testclient import TestClient
 
 
-def test_application_router_preserves_explicit_api_prefix(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_application_router_preserves_explicit_api_prefix(application_source: Path) -> None:
     """Expose Application routes under their explicit API prefix."""
 
     # Arrange
@@ -17,9 +16,6 @@ def test_application_router_preserves_explicit_api_prefix(monkeypatch: pytest.Mo
 
         return {"message": "ok"}
 
-    (tmp_path / "src" / "i18n").mkdir(parents=True)
-    (tmp_path / "src" / "pages").mkdir()
-    monkeypatch.chdir(tmp_path)
     app = FastAPI()
     app.include_router(router)
     LongLink(app)

@@ -1,8 +1,8 @@
 import os
 from typing import Self
-from pydantic import Field, EmailStr, field_validator, model_validator
-from src.models.auth import normalize_email
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from longlink.shared.models import Email
 
 
 class Env(BaseSettings):
@@ -19,7 +19,7 @@ class Env(BaseSettings):
 
     # Initial Platform administrator
     ADMIN_NAME: str = Field(min_length=1)
-    ADMIN_EMAIL: EmailStr
+    ADMIN_EMAIL: Email
     ADMIN_PASSWORD: str = Field(min_length=1)
 
     # Authentication email delivery
@@ -37,20 +37,10 @@ class Env(BaseSettings):
     DATABASE_URL: str
 
     model_config = SettingsConfigDict(
-        env_file=(".env.sample", ".env")
-        if os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
-        else (".env",),
+        env_file=(".env.sample", ".env") if os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"} else (".env",),
         env_file_encoding="utf-8",
         extra="ignore",
     )
-
-    @field_validator("ADMIN_EMAIL", mode="before")
-    @classmethod
-    def normalize_administrator_email(cls, value: object) -> object:
-        """Normalize administrator email identity before validation."""
-
-        # Share the API boundary's canonical identity representation.
-        return normalize_email(value)
 
     @model_validator(mode="after")
     def validate_authentication(self) -> Self:

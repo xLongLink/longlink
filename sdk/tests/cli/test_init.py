@@ -1,10 +1,22 @@
+import pytest
 from pathlib import Path
 from click.testing import CliRunner
 from longlink.cli.init import init_command
 
 
-def test_init_copies_bundled_new_project_scaffold() -> None:
-    """Copy the bundled new project scaffold into the target folder."""
+@pytest.mark.parametrize(
+    ("arguments", "expected_paths"),
+    [
+        pytest.param(["--folder", "sample-app"], ["pyproject.toml", "main.py", "src", "tests"], id="default"),
+        pytest.param(
+            ["--folder", "sample-app", "--ci", "github"],
+            [".github/workflows/release.yml", ".github/workflows/tests.yml"],
+            id="github-ci",
+        ),
+    ],
+)
+def test_init_copies_requested_project_scaffold(arguments: list[str], expected_paths: list[str]) -> None:
+    """Copy the requested project scaffold into the target folder."""
 
     # Arrange
     runner = CliRunner()
@@ -12,34 +24,12 @@ def test_init_copies_bundled_new_project_scaffold() -> None:
     with runner.isolated_filesystem():
 
         # Act
-        result = runner.invoke(init_command, ["--folder", "sample-app"])
-
-        # Assert
-        target = Path.cwd() / "sample-app"
-
-        assert result.exit_code == 0
-        assert (target / "pyproject.toml").is_file()
-        assert (target / "main.py").is_file()
-        assert (target / "src").is_dir()
-        assert (target / "tests").is_dir()
-
-
-def test_init_adds_github_ci_files_when_requested() -> None:
-    """Copy the bundled scaffold and GitHub CI files when requested."""
-
-    # Arrange
-    runner = CliRunner()
-
-    with runner.isolated_filesystem():
-
-        # Act
-        result = runner.invoke(init_command, ["--folder", "sample-app", "--ci", "github"])
+        result = runner.invoke(init_command, arguments)
 
         # Assert
         target = Path.cwd() / "sample-app"
         assert result.exit_code == 0
-        assert (target / ".github" / "workflows" / "release.yml").is_file()
-        assert (target / ".github" / "workflows" / "tests.yml").is_file()
+        assert all((target / path).exists() for path in expected_paths)
 
 
 def test_init_refuses_existing_non_empty_folder() -> None:

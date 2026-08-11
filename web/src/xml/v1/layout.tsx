@@ -3,9 +3,7 @@ import { Link } from '@astryxdesign/core/Link';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { Breadcrumb } from '@/components/Breadcrumb';
 import { PageContainer } from '@/components/PageContainer';
-import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
 import TopLayout from '@/layout/TopLayout';
 
@@ -25,7 +23,6 @@ export default function XmlLayout({
 }) {
     const t = useTranslator();
     const location = useLocation();
-    const isSdkMode = import.meta.env.MODE === 'sdk';
 
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
@@ -49,34 +46,26 @@ export default function XmlLayout({
         <TopLayout
             activeTab={activeHref}
             endContent={
-                isSdkMode ? (
-                    <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                        {t('common.documentation')}
-                    </Link>
-                ) : (
-                    <UserProfile />
-                )
+                <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
+                    {t('common.documentation')}
+                </Link>
             }
             heading={
-                isSdkMode ? (
-                    <Link
-                        as="a"
-                        href="https://longlink.dev"
-                        label={t('common.longlinkHome')}
-                        color="inherit"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <Wordmark />
-                    </Link>
-                ) : (
-                    <Breadcrumb />
-                )
+                <Link
+                    as="a"
+                    href="https://longlink.dev"
+                    label={t('common.longlinkHome')}
+                    color="inherit"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <Wordmark />
+                </Link>
             }
             tabs={resolvedTabs}
             topNavClassName="px-7"
         >
-            <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>
+            <PageContainer minHeight="100%">{children}</PageContainer>
         </TopLayout>
     );
 }

@@ -5,7 +5,7 @@ export function PageContainer({ className, maxWidth = 1000, ...props }: Omit<Sta
     return (
         <Stack
             {...props}
-            className={`mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]${className ? ` ${className}` : ''}`}
+            className={`mx-auto [--container-padding-block-end:var(--spacing-2)] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]${className ? ` ${className}` : ''}`}
             maxWidth={maxWidth}
             width="100%"
         />

@@ -1,15 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { setupContext } from '@/xml/v1/core/context';
-import type { XmlRuntime } from '@/xml/v1/types';
+import { createContext, setupContext } from '@/xml/v1/core/context';
 import { compileProps } from '../helpers';
 
 describe('State', () => {
     /* Multiple state attributes should seed a proxied object slot. */
     it('seeds multi-field state values', async () => {
-        const ctx: XmlRuntime = {
-            scope: { bindings: {} },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
-        };
+        const ctx = createContext();
 
         await setupContext(
             [

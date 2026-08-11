@@ -1,11 +1,12 @@
 from uuid import UUID
 from typing import Literal
 from datetime import datetime
-from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
+from pydantic import Field, HttpUrl, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
 from src.models.statuses import Status
 from src.models.resources import OrganizationApplicationSummary
+from longlink.shared.models import Email
 
 
 class OrganizationCreate(BaseModel):
@@ -26,7 +27,7 @@ class OrganizationInvitationCreate(BaseModel):
     """Validate organization invitation payloads."""
 
     # Metadata
-    email: EmailStr
+    email: Email
 
     # State
     role: OrganizationRoles

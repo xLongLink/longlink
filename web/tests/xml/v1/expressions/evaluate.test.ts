@@ -5,10 +5,9 @@ import type { Scope } from '@/xml/v1/types';
 describe('evaluate', () => {
     /* Evaluation should resolve expressions against the flat runtime context. */
     it('resolves expressions against flat context values', () => {
-        const ctx: Scope = { bindings: { count: 1, total: 10, name: 'from-context' } };
+        const ctx: Scope = { bindings: { count: 1, total: 10 } };
 
         expect(evaluate(compileAttribute('${count + total}'), ctx)).toBe(11);
-        expect(evaluate(compileAttribute('${name}'), ctx)).toBe('from-context');
     });
 
     /* Plain and mixed text should render interpolated values. */

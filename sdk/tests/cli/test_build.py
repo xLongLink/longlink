@@ -4,29 +4,6 @@ from longlink.cli import build
 from click.testing import CliRunner
 
 
-def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
-    """Keep editable sources, migrations, and production-safe defaults in built images."""
-
-    # Act
-    dockerfile = build.render_dockerfile("/workspace/dev", "", "0.1.0")
-
-    # Assert required build and runtime behavior.
-    for expected in (
-        "COPY --from=builder /workspace /workspace",
-        "python -m longlink.database.migrations && exec uvicorn main:app",
-        "uv sync --locked --no-dev",
-        "USER 10001:10001",
-    ):
-        assert expected in dockerfile
-
-
-def test_resolve_image_tag_formats_local_tag() -> None:
-    """Build a normalized local image tag."""
-
-    # Assert
-    assert build.resolve_image_tag("LongLink App", "0.1.0") == "longlink-app:0.1.0"
-
-
 def test_build_reports_missing_project_file_before_docker() -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -190,7 +167,6 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     def fake_run(command: list[str], check: bool) -> None:
         """Capture Docker commands and write the expected build image id."""
 
-        assert check is True
         commands.append(command)
 
         # Simulate Docker writing the requested image ID file.

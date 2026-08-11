@@ -1,0 +1,94 @@
+import pytest
+from httpx2 import AsyncClient
+from factories import create_organization, create_ready_infrastructure
+from src.database.models.users import User
+
+
+@pytest.mark.parametrize("path", ["computes", "databases", "operations", "storages", "users"])
+async def test_platform_user_cannot_access_administrator_collections(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str
+) -> None:
+    """Reject Platform users from every administrator collection."""
+
+    # Act
+    response = await clients[1].get(f"/api/v1/{path}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+@pytest.mark.parametrize(
+    ("path", "payload", "secret_fields", "duplicate_error"),
+    [
+        pytest.param(
+            "databases",
+            {"name": "Ephemeral Database", "host": "database.example", "port": 5432, "username": "admin", "password": "secret", "sslmode": "disable"},
+            ["password"],
+            "Database registry already exists",
+            id="database",
+        ),
+        pytest.param(
+            "storages",
+            {"name": "Ephemeral Storage", "endpoint_url": "https://sos-ch-gva-2.exo.io", "access_key_id": "key", "secret_access_key": "secret"},
+            ["access_key_id", "secret_access_key"],
+            "Storage registry already exists",
+            id="storage",
+        ),
+    ],
+)
+async def test_registry_create_duplicate_and_delete(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    path: str,
+    payload: dict[str, str | int],
+    secret_fields: list[str],
+    duplicate_error: str,
+) -> None:
+    """Create, reject duplicate registration, and delete each unassigned registry type."""
+
+    # Act
+    create_response = await clients[0].post(f"/api/v1/{path}", json=payload)
+    duplicate_response = await clients[0].post(f"/api/v1/{path}", json=payload)
+    created = create_response.json()
+    registry_id = created["id"]
+    delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
+
+    # Assert
+    assert create_response.status_code == 201
+    assert created["name"] == payload["name"]
+    assert all(field not in created and str(payload[field]) not in create_response.text for field in secret_fields)
+    assert duplicate_response.status_code == 409
+    assert duplicate_response.json() == {"detail": duplicate_error}
+    assert delete_response.status_code == 204
+    assert get_response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    ("path", "registry", "error"),
+    [
+        pytest.param("computes", "compute", "Compute registry is used by organizations", id="compute"),
+        pytest.param("databases", "database", "Database registry is used by organizations", id="database"),
+        pytest.param("storages", "storage", "Storage registry is used by organizations", id="storage"),
+    ],
+)
+async def test_registry_delete_rejects_assigned_registry(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    path: str,
+    registry: str,
+    error: str,
+) -> None:
+    """Keep registries while an Organization references them."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    await create_organization(users[0], infrastructure=infrastructure)
+    registry_id = getattr(infrastructure, registry).id
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": error}

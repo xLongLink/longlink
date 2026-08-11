@@ -41,6 +41,10 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
         ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
+        (".", "applications/dashboard", "Storage buckets must be bucket names"),
+        ("..", "applications/dashboard", "Storage buckets must be bucket names"),
+        ("/acme", "applications/dashboard", "Storage buckets must be bucket names"),
+        ("acme/../shared", "applications/dashboard", "Storage buckets must be bucket names"),
     ],
 )
 def test_production_storage_requires_safe_bucket_scope(
@@ -54,20 +58,6 @@ def test_production_storage_requires_safe_bucket_scope(
     # Reject the configured scope before constructing the filesystem.
     with pytest.raises(ValueError, match=message):
         storage_base.create_fs()
-
-
-@pytest.mark.parametrize("bucket", [".", "..", "/acme", "acme/../shared"])
-def test_production_storage_rejects_hostile_bucket_values(monkeypatch: pytest.MonkeyPatch, bucket: str) -> None:
-    """Reject bucket names that could escape or alter the configured storage scope."""
-
-    # Configure a valid prefix beneath a hostile bucket value.
-    configure_production_environment(monkeypatch, bucket, "applications/dashboard")
-
-    # Reject the bucket before constructing the filesystem.
-    with pytest.raises(ValueError, match="Storage buckets must be bucket names"):
-        storage_base.create_fs()
-
-
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 

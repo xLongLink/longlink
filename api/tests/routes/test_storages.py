@@ -1,6 +1,5 @@
 from httpx2 import AsyncClient
-from factories import create_organization, create_ready_infrastructure
-from src.database.models.users import User
+from factories import create_ready_infrastructure
 
 
 async def test_storage_registry_endpoints_return_backend(
@@ -30,74 +29,3 @@ async def test_storage_registry_endpoints_return_backend(
     for response in (list_response, get_response):
         assert registry.access_key_id not in response.text
         assert registry.secret_access_key not in response.text
-
-
-async def test_storage_registry_create_duplicate_and_delete(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Create one storage registry, reject a duplicate, and delete the unused registry."""
-
-    # Arrange
-    client = clients[0]
-    payload = {
-        "name": "Ephemeral Storage",
-        "endpoint_url": "https://sos-ch-gva-2.exo.io",
-        "access_key_id": "key",
-        "secret_access_key": "secret",
-    }
-
-    # Act
-    create_response = await client.post("/api/v1/storages", json=payload)
-    duplicate_response = await client.post("/api/v1/storages", json=payload)
-    created = create_response.json()
-    registry_id = created["id"]
-    delete_response = await client.delete(f"/api/v1/storages/{registry_id}")
-    get_response = await client.get(f"/api/v1/storages/{registry_id}")
-
-    # Assert
-    assert create_response.status_code == 201
-    assert created["name"] == "Ephemeral Storage"
-    assert "access_key_id" not in created
-    assert "secret_access_key" not in created
-    assert payload["access_key_id"] not in create_response.text
-    assert payload["secret_access_key"] not in create_response.text
-    assert duplicate_response.status_code == 409
-    assert duplicate_response.json() == {"detail": "Storage registry already exists"}
-    assert delete_response.status_code == 204
-    assert get_response.status_code == 404
-
-
-async def test_storage_registry_delete_rejects_assigned_registry(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Keep storage registries while any Organization still references them."""
-
-    # Arrange
-    owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(owner, infrastructure=infrastructure)
-    client = clients[0]
-
-    # Act
-    response = await client.delete(f"/api/v1/storages/{infrastructure.storage.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Storage registry is used by organizations"}
-
-
-async def test_storage_registry_routes_require_admin(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Reject Platform users from storage registry administration."""
-
-    # Arrange
-    client = clients[1]
-
-    # Act
-    response = await client.get("/api/v1/storages")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}

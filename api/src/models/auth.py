@@ -1,26 +1,5 @@
-from pydantic import Field, EmailStr, BaseModel, field_validator
-
-
-def normalize_email(value: object) -> object:
-    """Normalize one email identity before Pydantic validates its address format."""
-
-    # Preserve Pydantic's type validation for values that are not strings.
-    return value.strip().lower() if isinstance(value, str) else value
-
-
-class EmailPayload(BaseModel):
-    """Validate one canonical email identity."""
-
-    # Identity
-    email: EmailStr = Field(max_length=254)
-
-    @field_validator("email", mode="before")
-    @classmethod
-    def normalize_email(cls, value: object) -> object:
-        """Normalize email identity before validating its address format."""
-
-        # Keep identity comparisons and persistence case-insensitive.
-        return normalize_email(value)
+from pydantic import Field, BaseModel
+from longlink.shared.models import Email
 
 
 class TokenPayload(BaseModel):
@@ -30,19 +9,25 @@ class TokenPayload(BaseModel):
     token: str = Field(min_length=1, max_length=4096)
 
 
-class PasswordLogin(EmailPayload):
+class PasswordLogin(BaseModel):
     """Validate one local password login request."""
+
+    # Identity
+    email: Email = Field(max_length=254)
 
     # Authentication
     password: str = Field(min_length=1, max_length=1024)
 
 
-class RegistrationComplete(EmailPayload):
+class RegistrationComplete(BaseModel):
     """Validate profile and password setup after email authentication."""
 
     # Profile
     name: str = Field(min_length=1, max_length=127)
     surname: str = Field(min_length=1, max_length=127)
+
+    # Identity
+    email: Email = Field(max_length=254)
 
     # Authentication
     password: str = Field(min_length=1, max_length=1024)

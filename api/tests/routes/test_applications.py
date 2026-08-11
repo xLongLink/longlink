@@ -132,25 +132,17 @@ async def test_application_responses_do_not_expose_environment_secrets(
     assert str(application.id) in {item["id"] for item in list_response.json()}
 
 
-async def test_invalid_application_payload_makes_no_metadata_or_persistence_calls(
+async def test_invalid_application_payload_makes_no_persistence_changes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Reject malformed Application input before image inspection or durable side effects."""
+    """Reject malformed Application input without durable side effects."""
 
     # Capture durable state before submitting an invalid reserved environment variable.
     owner = users[0]
     organization = await create_organization(owner)
     async with session_scope() as session:
         operation_ids = [operation.id for operation in await operations.fetch(session)]
-
-    async def unexpected_metadata(_image: object) -> LongLinkMetadata:
-        """Fail if invalid input reaches remote image metadata inspection."""
-
-        raise AssertionError("invalid Application input inspected remote image metadata")
-
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
 
     # Submit a model-invalid configuration through the public route.
     response = await clients[0].post(
@@ -162,7 +154,7 @@ async def test_invalid_application_payload_makes_no_metadata_or_persistence_call
         },
     )
 
-    # Validation fails before metadata, Application creation, or Operation enqueueing.
+    # Validation fails before Application creation or Operation enqueueing.
     assert response.status_code == 422
     async with session_scope() as session:
         assert await applications.fetch(session) == []

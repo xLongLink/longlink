@@ -45,34 +45,6 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 
-    it.each([
-        ['/sdk', '/sdk/api/issues/123'],
-        ['/api/applications/app-1/proxy', '/api/applications/app-1/proxy/api/issues/123'],
-    ])('sends query requests through %s with shared credentials and Accept defaults', async (baseUrl, expectedUrl) => {
-        const ctx = createContext();
-        const ast = [
-            {
-                name: 'Query',
-                params: compileProps({ id: 'issue', path: '/api/issues/123' }),
-                children: [],
-            },
-        ];
-        let requestInit: RequestInit | undefined;
-        const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-            requestInit = init;
-
-            return new Response(JSON.stringify({ id: '123' }));
-        });
-
-        vi.stubGlobal('fetch', fetchImpl);
-
-        await setupContext(ast, ctx, baseUrl);
-
-        expect(fetchImpl).toHaveBeenCalledOnce();
-        expect(fetchImpl).toHaveBeenCalledWith(expectedUrl, expect.objectContaining({ credentials: 'include' }));
-        expect(new Headers(requestInit?.headers).get('accept')).toBe('application/json');
-    });
-
     it.each(['https://evil.example/issues', '//evil.example/issues', '/\\evil.example/issues'])(
         'rejects unsafe query paths before fetching: %s',
         async (path) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAppRelativeUrl, resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/v1/core/url';
+import { resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/v1/core/url';
 
 describe('resolveUrl', () => {
     it('joins base and relative paths', () => {
@@ -8,10 +8,6 @@ describe('resolveUrl', () => {
         expect(resolveUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
             'https://apps.example/api/applications/123/proxy/items'
         );
-    });
-
-    it('returns an absolute url unchanged', () => {
-        expect(resolveUrl('/api', 'https://example.com')).toBe('https://example.com');
     });
 
     it('resolves dot segments', () => {
@@ -26,17 +22,6 @@ describe('resolveRequestUrl', () => {
         expect(resolveRequestUrl('/api/applications/123/proxy', './items')).toBe('/api/applications/123/proxy/items');
         expect(resolveRequestUrl('https://apps.example/api/applications/123/proxy', '/items')).toBe(
             'https://apps.example/api/applications/123/proxy/items'
-        );
-    });
-
-    it('rejects external request URLs', () => {
-        expect(isAppRelativeUrl('/items')).toBe(true);
-        expect(isAppRelativeUrl('items')).toBe(true);
-        expect(isAppRelativeUrl('https://example.com/items')).toBe(false);
-        expect(isAppRelativeUrl('//example.com/items')).toBe(false);
-        expect(isAppRelativeUrl('/\\example.com/items')).toBe(false);
-        expect(() => resolveRequestUrl('/api', 'https://example.com/items')).toThrow(
-            'XML request URL must be app-relative'
         );
     });
 

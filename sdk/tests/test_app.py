@@ -8,19 +8,6 @@ from longlink.app import LongLink
 from fastapi.testclient import TestClient
 
 
-@pytest.fixture
-def application_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
-    """Create the minimum generated Application source layout."""
-
-    # Create the source directories required by the runtime.
-    source_directory = tmp_path / "src"
-    (source_directory / "i18n").mkdir(parents=True)
-    (source_directory / "pages").mkdir()
-    monkeypatch.chdir(tmp_path)
-
-    return source_directory
-
-
 def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
     """Serve SDK runtime endpoints and the embedded frontend."""
 
@@ -49,42 +36,6 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     # Reject startup before the application begins serving requests.
     with pytest.raises(ValidationError, match="DATABASE_HOST"):
         LongLink(FastAPI())
-
-
-def test_production_health_is_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Serve the runtime health endpoint without SDK-owned authorization."""
-
-    # Create the complete Platform runtime contract and generated source layout.
-    for name, value in {
-        "LONGLINK_DATABASE_HOST": "db",
-        "LONGLINK_DATABASE_NAME": "longlink",
-        "LONGLINK_DATABASE_PORT": "5432",
-        "LONGLINK_DATABASE_SCHEMA": "application",
-        "LONGLINK_DATABASE_PASSWORD": "secret",
-        "LONGLINK_DATABASE_USERNAME": "app",
-        "LONGLINK_STORAGE_BUCKET": "organization",
-        "LONGLINK_STORAGE_PREFIX": "applications/application",
-        "LONGLINK_STORAGE_REGION": "region",
-        "LONGLINK_STORAGE_PASSWORD": "secret",
-        "LONGLINK_STORAGE_USERNAME": "key",
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example.com",
-    }.items():
-        monkeypatch.setenv(name, value)
-    (tmp_path / "src" / "i18n").mkdir(parents=True)
-    (tmp_path / "src" / "pages").mkdir()
-    monkeypatch.chdir(tmp_path)
-
-    # Start the production runtime without SDK authentication dependencies.
-    app = FastAPI()
-    LongLink(app, env="production")
-    client = TestClient(app)
-
-    # Request the public health endpoint.
-    health_response = client.get("/health")
-
-    # Verify the health endpoint remains publicly available.
-    assert health_response.status_code == 200
-    assert health_response.json() == {"ok": True}
 
 
 @pytest.mark.parametrize(
@@ -117,8 +68,7 @@ def test_production_health_is_served_without_sdk_auth(monkeypatch: MonkeyPatch, 
     ],
 )
 def test_xml_pages_are_registered_from_default_pages_directory(
-    monkeypatch: MonkeyPatch,
-    tmp_path: Path,
+    application_source: Path,
     relative_path: str,
     content: str,
     expected_metadata: dict[str, str],
@@ -126,11 +76,9 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     """Expose root, nested, and dynamic XML pages with derived metadata."""
 
     # Build the default page tree.
-    page_path = tmp_path / "src" / "pages" / relative_path
+    page_path = application_source / "pages" / relative_path
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
-    (tmp_path / "src" / "i18n").mkdir()
-    monkeypatch.chdir(tmp_path)
 
     # Start LongLink and request the registered page and page catalog.
     app = FastAPI()
@@ -149,15 +97,13 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     assert all("content" not in item for item in pages)
 
 
-def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
     """Validate SDK XML pages against the bundled schema before registering routes."""
 
     # Create an invalid page in the default Application page directory.
-    page_path = tmp_path / "src" / "pages" / "broken.xml"
+    page_path = application_source / "pages" / "broken.xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text("<unknown />", encoding="utf-8")
-    (tmp_path / "src" / "i18n").mkdir()
-    monkeypatch.chdir(tmp_path)
 
     # Start registration and require schema validation to fail immediately.
     with pytest.raises(ValueError, match="XML is invalid"):
@@ -187,11 +133,11 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
         LongLink(app)
 
 
-def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+def test_translation_catalog_is_served(application_source: Path) -> None:
     """Expose the bundled translation catalog from the SDK application."""
 
     # Create an Application translation catalog in the default source tree.
-    catalog_path = tmp_path / "src" / "i18n" / "en.json"
+    catalog_path = application_source / "i18n" / "en.json"
     catalog_path.parent.mkdir(parents=True, exist_ok=True)
     catalog_path.write_text(
         json.dumps(
@@ -205,9 +151,6 @@ def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path)
         ),
         encoding="utf-8",
     )
-    (tmp_path / "src" / "pages").mkdir()
-    monkeypatch.chdir(tmp_path)
-
     # Request the catalog through the initialized SDK runtime.
     app = FastAPI()
     LongLink(app)

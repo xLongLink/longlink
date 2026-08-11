@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { createContext } from '@/xml/v1/core/context';
 import { parseXML } from '@/xml/v1/core/parser';
-import type { XmlRuntime } from '@/xml/v1/types';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
     /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
-        const ctx: XmlRuntime = {
-            scope: {
-                bindings: {
-                    items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
-                },
-            },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
-        };
+        const ctx = createContext();
+        ctx.scope.bindings.items = [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }];
         const output = renderXmlToMarkup(
             parseXML(
                 '<Table data="$items"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
@@ -29,22 +23,11 @@ describe('Table', () => {
 
     /* Headers and cells should accept rich nested XML content. */
     it('renders rich header and cell slots', () => {
-        const ctx: XmlRuntime = {
-            scope: {
-                bindings: {
-                    items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
-                },
-            },
-            services: {
-                invalidate: async () => {},
-                navigationBaseUrl: '',
-                requestBaseUrl: '',
-                setups: {},
-                translations: {
-                    'inventory.item': { defaultMessage: 'Item' },
-                    'inventory.name': { defaultMessage: '{name}' },
-                },
-            },
+        const ctx = createContext();
+        ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
+        ctx.services.translations = {
+            'inventory.item': { defaultMessage: 'Item' },
+            'inventory.name': { defaultMessage: '{name}' },
         };
         const output = renderXmlToMarkup(
             parseXML(
@@ -60,15 +43,8 @@ describe('Table', () => {
     });
 
     it('keeps parent bindings available inside a table cell loop', () => {
-        const ctx: XmlRuntime = {
-            scope: {
-                bindings: {
-                    prefix: 'Included',
-                    items: [{ tags: [{ name: 'Alpha' }] }],
-                },
-            },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
-        };
+        const ctx = createContext();
+        ctx.scope.bindings = { params: {}, prefix: 'Included', items: [{ tags: [{ name: 'Alpha' }] }] };
 
         const output = renderXmlToMarkup(
             parseXML(

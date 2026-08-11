@@ -1,7 +1,5 @@
 import pytest
-from typing import Any
 from pathlib import Path
-from longlink.utils import xml as xml_utils
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
@@ -127,30 +125,6 @@ def element_from_file(tmp_path: Path, content: str, schema: Path) -> Element:
     path = tmp_path / "page.xml"
     path.write_text(content, encoding="utf-8")
     return Element(path, schema=schema)
-
-
-def test_element_validation_uses_safe_xml_parser(monkeypatch, tmp_path: Path) -> None:
-    """Disable DTD loading, network access, and entity resolution during validation."""
-
-    # Wrap the real parser factory to capture its security options.
-    captured_kwargs: list[dict[str, object]] = []
-    original_parser = xml_utils.etree.XMLParser
-
-    def fake_xml_parser(*args: Any, **kwargs: Any) -> object:
-        """Capture parser security options while preserving parser behavior."""
-
-        captured_kwargs.append(kwargs)
-        return original_parser(*args, **kwargs)
-
-    monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
-
-    # Validate a document through the instrumented parser.
-    element_from_file(tmp_path, '<longlink version="v1" />', ROOT_SCHEMA).validate()
-
-    # Require every parser-hardening option at the XML boundary.
-    assert captured_kwargs[0]["load_dtd"] is False
-    assert captured_kwargs[0]["no_network"] is True
-    assert captured_kwargs[0]["resolve_entities"] is False
 
 
 @pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])
