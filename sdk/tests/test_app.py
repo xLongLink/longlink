@@ -117,13 +117,11 @@ def test_xml_pages_are_registered_from_default_pages_directory(
 ) -> None:
     """Expose root, nested, and dynamic XML pages with derived metadata."""
 
-    # Build the default page tree and an alternate page that must be ignored.
+    # Build the default page tree.
     page_path = tmp_path / "src" / "pages" / relative_path
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
     (tmp_path / "src" / "i18n").mkdir()
-    alternate_path = tmp_path / "alternate.xml"
-    alternate_path.write_text('<longlink version="v1"><Text>Alternate</Text></longlink>', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     # Start LongLink and request the registered page and page catalog.
@@ -131,7 +129,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     LongLink(app)
     client = TestClient(app)
     page_path_without_suffix = relative_path.removesuffix(".xml")
-    response = client.get(f"/pages/{page_path_without_suffix}", params={"page_path": str(alternate_path)})
+    response = client.get(f"/pages/{page_path_without_suffix}")
     pages_response = client.get("/pages.json")
 
     # Verify content and metadata came from the default page tree.

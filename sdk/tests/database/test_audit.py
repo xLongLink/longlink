@@ -8,10 +8,8 @@ from longlink.database import base as database_base
 from longlink.database import audit as database_audit
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.database.audit import install_audit_middleware
 
 
-@pytest.mark.asyncio
 async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch: pytest.MonkeyPatch) -> None:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
@@ -132,7 +130,7 @@ def test_audit_middleware_binds_x_user_id_header(
 
     # Install audit middleware around a route that exposes request-local state.
     app = FastAPI()
-    install_audit_middleware(app)
+    database_audit.install_audit_middleware(app)
 
     @app.get("/")
     async def current_user() -> dict[str, str | None]:

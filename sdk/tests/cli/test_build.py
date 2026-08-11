@@ -23,11 +23,8 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
 def test_resolve_image_tag_formats_local_tag() -> None:
     """Build a normalized local image tag."""
 
-    # Act
-    image_tag = build.resolve_image_tag("LongLink App", "0.1.0")
-
     # Assert
-    assert image_tag == "longlink-app:0.1.0"
+    assert build.resolve_image_tag("LongLink App", "0.1.0") == "longlink-app:0.1.0"
 
 
 def test_build_reports_missing_project_file_before_docker() -> None:

@@ -3,7 +3,6 @@ from collections.abc import Callable
 from longlink.database import migrations as database_migrations
 from alembic.operations.ops import UpgradeOps, DowngradeOps, MigrationScript
 from longlink.database.base import database_metadata
-from longlink.database.migrations import load_application_models
 
 
 def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch) -> None:
@@ -29,7 +28,7 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
 
     # Load project models and verify their metadata registration.
     try:
-        load_application_models()
+        database_migrations.load_application_models()
 
         assert table_name in database_metadata.tables
     finally:

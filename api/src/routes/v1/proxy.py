@@ -1,5 +1,4 @@
 import httpx2
-from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import ApplicationAccess, authuser, get_session, application_access
 from src.utils import roles
