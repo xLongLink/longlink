@@ -7,6 +7,7 @@ import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
+    readXmlProp,
     resolveXmlBoolean,
     resolveXmlEnum,
     resolveXmlLabel,
@@ -74,6 +75,6 @@ export function SelectorOption(): never {
 function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
-    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
+    const label = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
     return { value, label, disabled: resolveXmlBoolean(props, 'isDisabled', ctx, false) };
 }

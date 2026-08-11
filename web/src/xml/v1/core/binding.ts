@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
-import { isReference, isSafePropertyName, resolvePath } from '../expressions';
+import { isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext } from '../types';
 import { resolveXmlValue } from './props';
 
@@ -71,7 +71,7 @@ function normalizeBindableValue(type: BindingType | undefined, value: unknown): 
 
 /** Resolves a writable state target from a raw XML binding expression. */
 function resolveBindableTarget(
-    rawValue: string | undefined,
+    attribute: ASTProps[string] | undefined,
     value: unknown,
     ctx: ExecutionContext
 ): BindingTarget | undefined {
@@ -79,9 +79,9 @@ function resolveBindableTarget(
     if (isBindableValue(value)) return { state: value };
 
     // Only reference expressions can be written.
-    if (!rawValue || !isReference(rawValue)) return undefined;
+    if (attribute?.kind !== 'path' || !attribute.isBinding) return undefined;
 
-    const parts = rawValue.trim().slice(1).split('.').filter(Boolean);
+    const { parts } = attribute;
 
     // Reject empty binding paths.
     if (parts.length === 0) return undefined;

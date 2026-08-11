@@ -7,7 +7,6 @@ import shutil
 import tomllib
 import tempfile
 import subprocess
-import urllib.parse
 from pathlib import Path
 from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
@@ -445,18 +444,19 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
         if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
             raise ValueError("Docker registry prefix contains invalid characters")
 
-        # Parse and restrict production registries to GHCR while allowing localhost development registries.
+        # Restrict production registries to GHCR while allowing localhost development registries.
         registry_host = registry_prefix.split("/", 1)[0]
-        parsed_registry = urllib.parse.urlsplit(f"//{registry_host}")
-        if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
+        if "@" in registry_host:
             raise ValueError("Docker registry prefix is invalid")
-        try:
-            parsed_registry.port
-        except ValueError as exc:
-            raise ValueError("Docker registry port is invalid") from exc
-        if parsed_registry.hostname != "localhost" and (
-            parsed_registry.hostname != "ghcr.io" or len(registry_prefix.split("/")) != 2
-        ):
+
+        host, separator, port = registry_host.partition(":")
+        if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
+            raise ValueError("Docker registry port is invalid")
+        if host == "localhost":
+            pass
+        elif host == "ghcr.io" and not separator and len(registry_prefix.split("/")) == 2:
+            pass
+        else:
             raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.

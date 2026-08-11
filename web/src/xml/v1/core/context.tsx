@@ -38,7 +38,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
                 const params = node.params!;
-                const id = params.id.trim();
+                const id = params.id.kind === 'text' ? params.id.value.trim() : '';
                 const entries = Object.entries(params).filter(([key]) => key !== 'id');
 
                 // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
@@ -49,8 +49,8 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                         const initialValue: Record<string, unknown> = {};
 
                         // Copy declared attributes into the initial state object.
-                        for (const [key, rawValue] of entries) {
-                            const input = rawValue.trim();
+                        for (const [key, attribute] of entries) {
+                            const input = attribute.kind === 'text' ? attribute.value.trim() : null;
 
                             // Preserve empty literal attributes.
                             if (input === '') {
@@ -60,10 +60,10 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
                             // Prefer JSON literals before evaluating expressions.
                             try {
-                                initialValue[key] = JSON.parse(input);
+                                initialValue[key] = JSON.parse(input ?? '');
                                 continue;
                             } catch {
-                                initialValue[key] = evaluate(rawValue, ctx);
+                                initialValue[key] = evaluate(attribute, ctx);
                             }
                         }
 
@@ -81,12 +81,12 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
             // Seed query data before rendering the component tree.
             if (node.name === 'Query') {
                 const params = node.params!;
-                const id = params.id.trim();
-                const rawPath = params.path.trim();
+                const id = params.id.kind === 'text' ? params.id.value.trim() : '';
+                const pathAttribute = params.path;
 
                 // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
                 ctx.setups[id] = async () => {
-                    const path = evaluate(rawPath, ctx);
+                    const path = evaluate(pathAttribute, ctx);
 
                     // Query paths may interpolate route params, but must still resolve to a URL string.
                     if (path == null || typeof path === 'object' || typeof path === 'function') {
@@ -144,7 +144,7 @@ function validateSetupNode(node: ASTNode): void {
         if (!isText(node.params.id)) throw new Error('State id must be literal text');
 
         // Prevent unsafe state property names.
-        if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
+        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
             throw new Error('State id must be a safe property name');
         }
 
@@ -173,7 +173,7 @@ function validateSetupNode(node: ASTNode): void {
         if (!isText(node.params.id)) throw new Error('Query id must be literal text');
 
         // Prevent unsafe query property names.
-        if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
+        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
             throw new Error('Query id must be a safe property name');
         }
     }

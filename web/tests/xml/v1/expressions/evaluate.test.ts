@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluate } from '@/xml/v1/expressions';
+import { compileAttribute, evaluate } from '@/xml/v1/expressions';
 import type { ExecutionContext } from '@/xml/v1/types';
 
 describe('evaluate', () => {
@@ -14,8 +14,8 @@ describe('evaluate', () => {
             name: 'from-context',
         };
 
-        expect(evaluate('${count + total}', ctx)).toBe(11);
-        expect(evaluate('${name}', ctx)).toBe('from-context');
+        expect(evaluate(compileAttribute('${count + total}'), ctx)).toBe(11);
+        expect(evaluate(compileAttribute('${name}'), ctx)).toBe('from-context');
     });
 
     /* Plain and mixed text should render interpolated values. */
@@ -28,7 +28,7 @@ describe('evaluate', () => {
             name: 'Hero',
         };
 
-        expect(evaluate('${index + 1}. ${name}', ctx)).toBe('1. Hero');
+        expect(evaluate(compileAttribute('${index + 1}. ${name}'), ctx)).toBe('1. Hero');
     });
 
     /* Object literals inside `${...}` should be evaluated as objects, not strings. */
@@ -40,7 +40,7 @@ describe('evaluate', () => {
             value: 5,
         };
 
-        expect(evaluate('${{ next: value + 1 }}', ctx)).toEqual({ next: 6 });
+        expect(evaluate(compileAttribute('${{ next: value + 1 }}'), ctx)).toEqual({ next: 6 });
     });
 
     /* Brace characters inside strings should not break wrapped-expression detection. */
@@ -51,7 +51,7 @@ describe('evaluate', () => {
             values: {},
         };
 
-        expect(evaluate('${"{"}', ctx)).toBe('{');
+        expect(evaluate(compileAttribute('${"{"}'), ctx)).toBe('{');
     });
 
     /* `${...}` expressions should resolve directly to nested values. */
@@ -63,7 +63,7 @@ describe('evaluate', () => {
             form: { value: 'draft', placeholder: 'Name' },
         };
 
-        expect(evaluate('${form.value}', ctx)).toBe('draft');
+        expect(evaluate(compileAttribute('${form.value}'), ctx)).toBe('draft');
     });
 
     it('does not read inherited member values', () => {
@@ -74,9 +74,9 @@ describe('evaluate', () => {
             user: { name: 'Ada' },
         };
 
-        expect(evaluate('${user.toString}', ctx)).toBeUndefined();
-        expect(evaluate('${"toString" in user}', ctx)).toBe(false);
-        expect(evaluate('${"name" in user}', ctx)).toBe(true);
+        expect(evaluate(compileAttribute('${user.toString}'), ctx)).toBeUndefined();
+        expect(evaluate(compileAttribute('${"toString" in user}'), ctx)).toBe(false);
+        expect(evaluate(compileAttribute('${"name" in user}'), ctx)).toBe(true);
     });
 
     it('ignores unsafe object literal keys', () => {
@@ -85,7 +85,7 @@ describe('evaluate', () => {
             invalidate: async () => {},
             values: {},
         };
-        const result = evaluate('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}', ctx) as Record<
+        const result = evaluate(compileAttribute('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}'), ctx) as Record<
             string,
             unknown
         >;

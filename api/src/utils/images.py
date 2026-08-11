@@ -1,6 +1,5 @@
 import json
 import httpx2
-from typing import cast
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
@@ -40,10 +39,9 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             # Require a JSON manifest object.
-            raw_manifest: object = manifest_response.json()
-            if not isinstance(raw_manifest, dict):
+            manifest: object = manifest_response.json()
+            if not isinstance(manifest, dict):
                 return None
-            manifest = cast(dict[str, object], raw_manifest)
 
             # Require the resolved manifest digest.
             digest = manifest_response.headers.get("Docker-Content-Digest")
@@ -81,8 +79,10 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             raw_labels = image_config.get("Labels")
             if raw_labels is None:
                 labels: dict[str, str] = {}
-            elif isinstance(raw_labels, dict) and all(isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()):
-                labels = cast(dict[str, str], raw_labels)
+            elif isinstance(raw_labels, dict):
+                labels = {key: value for key, value in raw_labels.items() if isinstance(key, str) and isinstance(value, str)}
+                if len(labels) != len(raw_labels):
+                    return None
             else:
                 return None
 
@@ -97,15 +97,11 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             # Decode environment requirements when present.
             environments = labels.get("longlink.environments")
             if environments is not None:
-                # Parse and require a list from the encoded environment label.
-                try:
-                    parsed_environments = json.loads(environments)
-                    if not isinstance(parsed_environments, list):
-                        return None
-
-                    result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
-                except (json.JSONDecodeError, TypeError, ValueError):
+                # Require a list of valid environment definitions.
+                parsed_environments = json.loads(environments)
+                if not isinstance(parsed_environments, list):
                     return None
+                result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

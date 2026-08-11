@@ -1,6 +1,4 @@
-import tomllib
 from typing import Self
-from pathlib import Path
 from pydantic import BaseModel
 
 type MetadataPayload = dict[str, object]
@@ -37,18 +35,3 @@ class Metadata(BaseModel):
         # Let explicit constructor values win over parsed project metadata.
         metadata_data.update(overrides)
         return cls.model_validate(metadata_data)
-
-
-def load_metadata(pyproject_path: Path | None = None, **overrides: object) -> Metadata:
-    """Load metadata from pyproject location with optional explicit override values."""
-
-    # Resolve a file path once and parse TOML from that location without changing cwd.
-    resolved_pyproject = (pyproject_path or Path("pyproject.toml")).resolve()
-    metadata_data: MetadataPayload = {}
-    if resolved_pyproject.exists():
-
-        # Keep file IO local to this resolved path.
-        with resolved_pyproject.open("rb") as file_handle:
-            metadata_data = tomllib.load(file_handle)
-
-    return Metadata.from_pyproject(metadata_data, **overrides)

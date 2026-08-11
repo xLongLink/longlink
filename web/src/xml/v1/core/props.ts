@@ -7,23 +7,23 @@ const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 
 export type XmlSpacing = (typeof XML_SPACING)[number];
 
-/** Reads a raw XML prop value without coercion. */
-export function readXmlProp(props: ASTProps, name: string): string | undefined {
+/** Reads a compiled XML prop without coercion. */
+export function readXmlProp(props: ASTProps, name: string): ASTProps[string] | undefined {
     const value = props[name];
 
-    return value == null || value === '' ? undefined : value;
+    return value == null || (value.kind === 'text' && value.value === '') ? undefined : value;
 }
 
 /** Resolves a required XML string prop and throws a tag-specific error when missing. */
 export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionContext, componentName: string): string {
     // Required string attributes must be present before evaluation.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) {
+    const attribute = readXmlProp(props, name);
+    if (attribute == null) {
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
     // Normalize unsupported values to an invalid empty string.
-    const value = evaluate(rawValue, ctx);
+    const value = evaluate(attribute, ctx);
     const stringValue = value == null || typeof value === 'object' || typeof value === 'function' ? '' : String(value);
 
     // Whitespace-only values should fail like missing values.
@@ -37,17 +37,12 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 /** Resolves a string XML prop. */
 export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue = ''): string {
     // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
+    const attribute = readXmlProp(props, name);
+    if (attribute == null) return defaultValue;
 
-    const value = evaluate(rawValue, ctx);
+    const value = evaluate(attribute, ctx);
 
     return value == null ? defaultValue : String(value);
-}
-
-/** Resolves an optional XML string prop. */
-export function resolveOptionalXmlString(props: ASTProps, name: string, ctx: ExecutionContext): string | undefined {
-    return resolveXmlString(props, name, ctx) || undefined;
 }
 
 /** Resolves a boolean XML prop. */
@@ -58,10 +53,10 @@ export function resolveXmlBoolean(
     defaultValue?: boolean
 ): boolean | undefined {
     // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
+    const attribute = readXmlProp(props, name);
+    if (attribute == null) return defaultValue;
 
-    const value = evaluate(rawValue, ctx);
+    const value = evaluate(attribute, ctx);
 
     // Preserve explicit XML boolean literals before falling back to truthiness.
     if (value === true || value === 'true') return true;
@@ -83,10 +78,10 @@ export function resolveXmlNumber(
     defaultValue?: number
 ): number | undefined {
     // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
+    const attribute = readXmlProp(props, name);
+    if (attribute == null) return defaultValue;
 
-    const value = evaluate(rawValue, ctx);
+    const value = evaluate(attribute, ctx);
     const numberValue = Number(value);
 
     return Number.isNaN(numberValue) ? defaultValue : numberValue;
@@ -95,10 +90,10 @@ export function resolveXmlNumber(
 /** Resolves a raw value XML prop for bindings and object literals. */
 export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): unknown {
     // Missing attributes keep the caller-provided default.
-    const rawValue = readXmlProp(props, name);
-    if (rawValue == null) return defaultValue;
+    const attribute = readXmlProp(props, name);
+    if (attribute == null) return defaultValue;
 
-    return evaluate(rawValue, ctx);
+    return evaluate(attribute, ctx);
 }
 
 /** Resolves text from translation, value, or rendered XML children. */
@@ -108,7 +103,7 @@ export function resolveXmlContent(
     value: unknown,
     renderChildren: () => ReactNode
 ): ReactNode {
-    return props.i18n ? resolveTranslation(props, ctx) : value != null ? String(value) : renderChildren();
+    return readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : value != null ? String(value) : renderChildren();
 }
 
 /** Return whether an XML node passes its optional conditional expression. */

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { evaluate } from '../expressions';
 import { isVisibleXmlNode } from './props';
 import { For } from './for';
 import type { ASTNode, ExecutionContext } from '../types';
@@ -45,11 +44,7 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
             // Require a loop source expression.
             if (!props.each) throw new Error(`For requires an "each" parameter`);
 
-            const each = evaluate(props.each, ctx);
-
-            // Skip loop rendering when the source is not an array.
-            if (!Array.isArray(each)) return null;
-            return <For key={index} items={each} props={props} nodes={node.children ?? []} />;
+            return <For key={index} props={props} nodes={node.children ?? []} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

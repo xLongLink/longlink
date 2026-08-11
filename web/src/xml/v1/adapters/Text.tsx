@@ -2,7 +2,7 @@ import { Text as AstryxText, type TextProps } from '@astryxdesign/core/Text';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
+import { readXmlProp, resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
 
 /** Renders semantic Astryx text from a value, translation, or nested XML. */
 export function Text({ props, nodes }: Props) {
@@ -25,7 +25,7 @@ export function Text({ props, nodes }: Props) {
         'primary',
         'Text'
     );
-    const weight = props.weight
+    const weight = readXmlProp(props, 'weight')
         ? resolveXmlEnum(props, 'weight', ctx, ['normal', 'medium', 'semibold', 'bold'], 'normal', 'Text')
         : undefined;
     const display = resolveXmlEnum(props, 'display', ctx, ['inline', 'block'], 'inline', 'Text');

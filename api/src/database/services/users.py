@@ -4,7 +4,7 @@ from typing import cast
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, joinedload
+from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
@@ -78,7 +78,7 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
     statement = (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(joinedload(cast(QueryableAttribute[Organization], UserOrganization.organization)))
+        .options(contains_eager(cast(QueryableAttribute[Organization], UserOrganization.organization)))
         .where(
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.deleted_at).is_(None),

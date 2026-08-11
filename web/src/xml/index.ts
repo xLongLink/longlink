@@ -28,7 +28,7 @@ function validateRuntime(ast: ASTNode[]): void {
         throw new Error('XML pages must contain exactly one longlink root');
     }
 
-    const version = root.params?.version;
+    const version = root.params?.version?.kind === 'text' ? root.params.version.value : undefined;
 
     // Do not render documents for a runtime this bundle does not include.
     if (version !== XML_SYNTAX_VERSION) {

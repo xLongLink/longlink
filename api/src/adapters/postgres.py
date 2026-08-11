@@ -7,7 +7,6 @@ from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
 
-MAINTENANCE_DATABASE = "postgres"
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -122,7 +121,7 @@ class Postgres:
         """
 
         # Create the organization database from the maintenance database when it is missing.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             # Create the database only when PostgreSQL does not already list it.
             if (
                 await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
@@ -209,7 +208,7 @@ class Postgres:
         """Delete an application schema and its runtime role when present."""
 
         # Skip cleanup when the organization database was already removed.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             # Stop once PostgreSQL confirms the organization database is absent.
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
             if result.scalar_one_or_none() is None:
@@ -237,7 +236,7 @@ class Postgres:
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
@@ -245,7 +244,7 @@ class Postgres:
         """Delete one organization database and tolerate missing databases."""
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             database_name = self.quote(conn, organization.hex)
             await conn.execute(
                 text(
@@ -267,7 +266,7 @@ class Postgres:
 
         # Runtime roles are cluster-global and remain discoverable after their database is removed.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
-        async with self._connection(MAINTENANCE_DATABASE) as conn:
+        async with self._connection("postgres") as conn:
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             return result.scalar_one_or_none() is not None
 
@@ -295,7 +294,7 @@ class Postgres:
                 )
         except OperationalError:
             # Distinguish an unprovisioned database from connectivity and permission failures.
-            async with self._connection(MAINTENANCE_DATABASE) as conn:
+            async with self._connection("postgres") as conn:
                 database_exists = await conn.scalar(
                     text("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = :database_name)"),
                     {"database_name": database_name},
@@ -311,7 +310,7 @@ class Postgres:
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
-        async with self._connection(MAINTENANCE_DATABASE) as conn:
+        async with self._connection("postgres") as conn:
             result = await conn.execute(
                 text(
                     """

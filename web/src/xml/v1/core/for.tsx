@@ -1,14 +1,19 @@
 import { useXmlContext, XmlContext } from './context';
+import { evaluate } from '../expressions';
 import { renderNode } from './node';
 import type { Props } from '../types';
 import { resolveXmlString } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
-export function For({ items, props, nodes }: Props & { items: unknown[] }) {
+export function For({ props, nodes }: Props) {
     const ctx = useXmlContext();
     const as = resolveXmlString(props, 'as', ctx);
+    const each = props.each ? evaluate(props.each, ctx) : undefined;
 
-    return items.map((item, index) => {
+    // Skip loop rendering when the source is not an array.
+    if (!Array.isArray(each)) return null;
+
+    return each.map((item, index) => {
         const childCtx = {
             ...ctx,
             parent: ctx,

@@ -6,8 +6,7 @@ export function isReference(expr: string): boolean {
 }
 
 /** Returns true when the input is a simple text string. */
-export function isText(expr: string): boolean {
-    const input = expr.trim();
-
-    return input === '' || (!(input.startsWith('${') && input.endsWith('}')) && !isReference(input));
+export function isText(attribute: ASTAttribute): attribute is Extract<ASTAttribute, { kind: 'text' }> {
+    return attribute.kind === 'text';
 }
+import type { ASTAttribute } from '../types';

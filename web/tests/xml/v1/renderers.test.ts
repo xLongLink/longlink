@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ASTNode, ExecutionContext } from '@/xml/v1/types';
-import { renderXmlToMarkup } from './helpers';
+import { compileProps, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     it('resolves localized text through XML adapters', () => {
@@ -11,13 +11,13 @@ describe('renderNode', () => {
             values: {},
             count: 7,
         };
-        expect(renderXmlToMarkup([{ name: 'Text', params: { count: '${count}', i18n: 'copy.count' } }], ctx)).toContain(
+        expect(renderXmlToMarkup([{ name: 'Text', params: compileProps({ count: '${count}', i18n: 'copy.count' }) }], ctx)).toContain(
             'Count 7'
         );
     });
 
     it('skips nodes when if condition is false', () => {
-        const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
+        const node: ASTNode = { name: 'Button', params: compileProps({ if: '${false}' }) };
         expect(renderXmlToMarkup([node])).not.toContain('<button');
     });
 
@@ -34,7 +34,7 @@ describe('renderNode', () => {
         };
         const node: ASTNode = {
             name: 'TextInput',
-            params: { label: 'Name', value: 'form.value' },
+            params: compileProps({ label: 'Name', value: 'form.value' }),
         };
         const output = renderXmlToMarkup([node], ctx);
 

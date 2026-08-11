@@ -1,4 +1,13 @@
 import type { Catalog, TranslatorFn } from '@astryxdesign/core/i18n';
+import type { ExpressionNode } from './expressions/types';
+
+export type ASTAttribute =
+    | { kind: 'text'; value: string }
+    | { kind: 'path'; parts: string[]; isBinding: boolean }
+    | { kind: 'expression'; node: ExpressionNode }
+    | { kind: 'interpolation'; segments: ASTInterpolationSegment[] };
+
+export type ASTInterpolationSegment = { kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode };
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {
@@ -7,8 +16,8 @@ export type ASTNode = {
     children?: ASTNode[];
 };
 
-/** Raw XML attributes attached to an AST node. */
-export type ASTProps = Record<string, string>;
+/** Compiled XML attributes attached to an AST node. */
+export type ASTProps = Record<string, ASTAttribute>;
 
 /** Adapter surface used by XML-backed React components. */
 export interface Props {

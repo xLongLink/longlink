@@ -8,8 +8,8 @@ import {
     resolveXmlEnum,
     resolveXmlLabel,
     resolveXmlNumber,
-    resolveOptionalXmlString,
     resolveXmlSizeValue,
+    resolveXmlString,
     resolveXmlStatus,
 } from '../core/props';
 
@@ -31,9 +31,9 @@ export function FileInput({ props }: Props) {
 
     return (
         <AstryxFileInput
-            accept={resolveOptionalXmlString(props, 'accept', ctx)}
-            description={resolveOptionalXmlString(props, 'description', ctx)}
-            disabledMessage={resolveOptionalXmlString(props, 'disabledMessage', ctx)}
+            accept={resolveXmlString(props, 'accept', ctx) || undefined}
+            description={resolveXmlString(props, 'description', ctx) || undefined}
+            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
             isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isLoading={resolveXmlBoolean(props, 'isLoading', ctx, false)}
@@ -47,7 +47,7 @@ export function FileInput({ props }: Props) {
             onChange={(nextValue) => {
                 setXmlBinding(binding, setLocalValue, nextValue);
             }}
-            placeholder={resolveOptionalXmlString(props, 'placeholder', ctx)}
+            placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
             status={resolveXmlStatus(props, ctx)}
             value={value}
             width={resolveXmlSizeValue(props, 'width', ctx)}

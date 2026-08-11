@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { executeAction } from '@/xml/v1/adapters/Action';
 import type { ASTProps, ExecutionContext } from '@/xml/v1/types';
+import { compileProps } from '../helpers';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
@@ -31,11 +32,11 @@ describe('Action', () => {
         }) satisfies typeof fetch;
 
         await executeAction(
-            {
+            compileProps({
                 action: '/example/profile',
                 json: '${{ fullName: fullName, email: email, notes: notes }}',
                 invalidate: '${["profile", "activity"]}',
-            },
+            }),
             ctx,
             '',
             fetchImpl,
@@ -92,10 +93,10 @@ describe('Action', () => {
             const fetchImpl = (async () => testCase.request()) satisfies typeof fetch;
 
             await executeAction(
-                {
+                compileProps({
                     action: '/example/profile',
                     invalidate: '${["profile", "activity"]}',
-                },
+                }),
                 ctx,
                 '',
                 fetchImpl,
@@ -136,10 +137,10 @@ describe('Action', () => {
         }) satisfies typeof fetch;
 
         await executeAction(
-            {
+            compileProps({
                 action: '/files',
                 form: '${{ file: document.file, label: document.label }}',
-            },
+            }),
             ctx,
             '',
             fetchImpl,
@@ -175,9 +176,9 @@ describe('Action', () => {
         }) satisfies typeof fetch;
 
         await executeAction(
-            {
+            compileProps({
                 invalidate: '${["selectedUserId"]}',
-            },
+            }),
             ctx,
             '',
             fetchImpl,
@@ -196,22 +197,22 @@ describe('Action', () => {
             expectedError: string;
         }> = [
             {
-                props: { invalidate: 'selectedUsers' },
+                props: compileProps({ invalidate: 'selectedUsers' }),
                 values: {},
                 expectedError: 'invalidate must evaluate to an array',
             },
             {
-                props: { action: '/example/profile', method: 'TRACE' },
+                props: compileProps({ action: '/example/profile', method: 'TRACE' }),
                 values: {},
                 expectedError: 'Unsupported action method TRACE',
             },
             {
-                props: { action: 'https://example.com/profile' },
+                props: compileProps({ action: 'https://example.com/profile' }),
                 values: {},
                 expectedError: 'Action URL must be app-relative',
             },
             {
-                props: { action: '/profile', json: '${{ name }}', method: 'GET' },
+                props: compileProps({ action: '/profile', json: '${{ name }}', method: 'GET' }),
                 values: { name: 'Ada' },
                 expectedError: 'GET actions cannot send payloads',
             },

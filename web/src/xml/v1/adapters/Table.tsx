@@ -28,7 +28,7 @@ export function Table({ props, nodes }: Props) {
     const ctx = useXmlContext();
 
     // Require an explicit array data source.
-    if (!readXmlProp(props, 'data')?.trim()) {
+    if (!readXmlProp(props, 'data')) {
         throw new Error('Table requires a data attribute');
     }
 
@@ -86,13 +86,17 @@ function buildColumn(
     const key = readXmlProp(props, 'key');
 
     // Column keys and field paths are literal identifiers, not expressions.
-    if (!key?.trim()) throw new Error('TableColumn requires a string key');
+    if (key?.kind !== 'text' || !key.value.trim()) throw new Error('TableColumn requires a string key');
 
-    const field = readXmlProp(props, 'field') ?? key;
+    const fieldAttribute = readXmlProp(props, 'field');
+    if (fieldAttribute != null && fieldAttribute.kind !== 'text') {
+        throw new Error('TableColumn requires a usable field path');
+    }
+    const field = fieldAttribute?.value ?? key.value;
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'header', ctx, key);
+    const header = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : resolveXmlString(props, 'header', ctx, key.value);
     const widthValue = resolveXmlNumber(props, 'width', ctx);
     const widthType = resolveXmlEnum(props, 'widthType', ctx, ['proportional', 'pixel'], 'proportional', 'TableColumn');
     const minWidth = resolveXmlNumber(props, 'minWidth', ctx);
@@ -108,7 +112,7 @@ function buildColumn(
     return {
         align,
         header,
-        key,
+        key: key.value,
         width,
         renderCell: (row) => {
             const value = resolveFieldValue(row, field);

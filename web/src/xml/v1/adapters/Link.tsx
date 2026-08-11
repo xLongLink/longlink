@@ -5,7 +5,7 @@ import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import { BaseUrlContext, resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
+import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {
@@ -15,7 +15,7 @@ export function Link({ props, nodes }: Props) {
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(baseUrl, href);
     const resolvedTo = resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), to);
-    const content = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
+    const content = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const color = resolveXmlEnum(
         props,

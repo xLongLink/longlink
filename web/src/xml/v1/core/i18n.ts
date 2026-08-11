@@ -48,11 +48,11 @@ export function validateTranslationCatalog(input: unknown): Catalog {
 /** Resolves a localized ICU message from the active XML translation bundle. */
 export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): string {
     // The i18n prop is a literal dotted lookup key, never fallback text.
-    const key = props.i18n?.trim();
+    const key = props.i18n?.kind === 'text' ? props.i18n.value.trim() : '';
 
     // Reject missing or malformed translation keys.
     if (!key || !isTranslationKey(key)) {
-        throw new Error(`i18n must be a dotted translation key, received "${props.i18n ?? ''}"`);
+        throw new Error(`i18n must be a dotted translation key, received "${key}"`);
     }
 
     // Require the active XML translation catalog.
@@ -96,7 +96,7 @@ function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
     const rawCount = props.count;
 
     // Skip plural handling when no count is provided.
-    if (rawCount == null || rawCount === '') return null;
+    if (rawCount == null || (rawCount.kind === 'text' && rawCount.value === '')) return null;
 
     const value = evaluate(rawCount, ctx);
     const numberValue = Number(value);
@@ -109,7 +109,7 @@ function resolveInterpolationValues(props: ASTProps, ctx: ExecutionContext): Rec
     const rawValues = props.values;
 
     // Components without interpolation values use an empty object.
-    if (rawValues == null || rawValues === '') return {};
+    if (rawValues == null || (rawValues.kind === 'text' && rawValues.value === '')) return {};
 
     const values = evaluate(rawValues, ctx);
 

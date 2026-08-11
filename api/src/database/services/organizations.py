@@ -4,7 +4,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -42,7 +42,7 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     statement = (
         select(UserOrganization)
         .join(Organization, Organization.id == UserOrganization.organization_id)
-        .options(joinedload(UserOrganization.organization))
+        .options(contains_eager(UserOrganization.organization))
         .where(
             UserOrganization.user_id == user_id,
             UserOrganization.organization_id == organization_id,

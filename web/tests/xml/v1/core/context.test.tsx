@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createContext, setupContext } from '@/xml/v1/core/context';
+import { compileProps } from '../helpers';
 
 describe('core/context', () => {
     it('preserves state across setup reruns until the slot is invalidated', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'State', params: { id: 'filter', value: 'day' } }];
+        const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }) }];
 
         await setupContext(ast, ctx, '/api');
         (ctx.values.filter as { value: string }).value = 'week';
@@ -20,7 +21,7 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'Query', params: { id: 'issue', path: '/api/issues/${params.issue}' } }];
+        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }) }];
         let requestedUrl = '';
 
         ctx.params = { issue: '123' };
