@@ -8,32 +8,20 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Apply the initial purchase request schema."""
+    """Apply the initial item schema."""
 
-    # Create the Application-owned purchase request table.
+    # Create the Application-owned item table.
     op.create_table(
-        "purchase_requests",
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
+        "item",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("title", sa.String(length=255), nullable=False),
-        sa.Column("amount", sa.Float(), nullable=False),
-        sa.Column("status", sa.String(length=32), nullable=False),
-        sa.Column("vendor", sa.String(length=255), nullable=False),
-        sa.Column("justification", sa.String(length=2000), nullable=False),
-        sa.ForeignKeyConstraint(["created_id"], ["audit.id"]),
-        sa.ForeignKeyConstraint(["updated_id"], ["audit.id"]),
-        sa.ForeignKeyConstraint(["deleted_id"], ["audit.id"]),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("price", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
 
 def downgrade() -> None:
-    """Remove the initial purchase request schema."""
+    """Remove the initial item schema."""
 
-    # Remove the Application-owned purchase request table.
-    op.drop_table("purchase_requests")
+    # Remove the Application-owned item table.
+    op.drop_table("item")

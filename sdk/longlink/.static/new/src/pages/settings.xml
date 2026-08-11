@@ -55,12 +55,12 @@
                 <FormLayout>
                     <CheckboxInput
                         i18n="settings.preferences.email"
-                        description="Send a digest when request status changes."
+                        description="Send a digest when item status changes."
                         value="$emailUpdates"
                     />
                     <Switch
                         i18n="settings.preferences.notifications"
-                        description="Show reminders for stale requests."
+                        description="Show reminders for stale items."
                         value="$notifications"
                     />
                     <Slider i18n="settings.preferences.limit" min="500" max="10000" step="500" value="$budgetLimit" />

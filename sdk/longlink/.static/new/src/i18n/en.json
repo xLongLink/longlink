@@ -1,33 +1,30 @@
 {
-    "requests.amount": {
-        "defaultMessage": "Amount"
+    "items.price": {
+        "defaultMessage": "Price"
     },
-    "requests.attachments.file": {
+    "items.attachments.file": {
         "defaultMessage": "Attachment"
     },
-    "requests.attachments.title": {
+    "items.attachments.title": {
         "defaultMessage": "Attachments"
     },
-    "requests.attachments.uploadedBy": {
-        "defaultMessage": "Uploaded by"
+    "items.description": {
+        "defaultMessage": "Track catalog items and their supporting files."
     },
-    "requests.description": {
-        "defaultMessage": "Track purchase requests and supporting files."
+    "items.fields.name": {
+        "defaultMessage": "Name"
     },
-    "requests.fields.text": {
-        "defaultMessage": "Text"
+    "items.table.item": {
+        "defaultMessage": "Item"
     },
-    "requests.table.request": {
-        "defaultMessage": "Request"
-    },
-    "requests.title": {
-        "defaultMessage": "Purchase requests"
+    "items.title": {
+        "defaultMessage": "Items"
     },
     "settings.application.bold": {
         "defaultMessage": "Finance owns budget checks. "
     },
     "settings.application.code": {
-        "defaultMessage": "PATCH /requests/'{id}'/status"
+        "defaultMessage": "PATCH /items/'{id}'/status"
     },
     "settings.application.costCenter": {
         "defaultMessage": "Cost center"
@@ -105,7 +102,7 @@
         "defaultMessage": "Email updates"
     },
     "settings.preferences.emailHelp": {
-        "defaultMessage": "Send a digest when request status changes."
+        "defaultMessage": "Send a digest when item status changes."
     },
     "settings.preferences.legend": {
         "defaultMessage": "Preferences"
@@ -120,7 +117,7 @@
         "defaultMessage": "In-app notifications"
     },
     "settings.preferences.notificationsHelp": {
-        "defaultMessage": "Show reminders for stale requests."
+        "defaultMessage": "Show reminders for stale items."
     },
     "settings.preferences.pin": {
         "defaultMessage": "Pin policy"

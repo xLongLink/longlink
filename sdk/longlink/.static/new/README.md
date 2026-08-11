@@ -2,12 +2,11 @@
 
 ## App
 
-- The app has Dashboard, Requests, and Settings tabs to show normal XML page navigation.
-- Purchase requests use an application database table and LongLink-managed audit users.
-- The request list and `requests/[request].xml` detail page demonstrate filename-based dynamic XML routing.
-- Attachments upload, list, download, and delete Application files through `longlink.storage`.
+- The app has Dashboard, Items, and Settings tabs to show normal XML page navigation.
+- Items use an application database table.
+- The item catalog and `items/[item].xml` detail page demonstrate filename-based dynamic XML routing.
+- Attachments upload and list Application files through `longlink.storage`.
 - LongLink scopes Application files beneath the Organization bucket automatically.
-- Approval actions update request workflow status through typed FastAPI endpoints.
 - Settings demonstrates local XML state, menus, text, avatar, and form controls.
 
 ## Start

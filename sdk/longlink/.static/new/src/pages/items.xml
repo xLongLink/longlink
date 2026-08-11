@@ -1,0 +1,44 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink version="v1" name="Items" icon="package">
+    <Query id="items" path="/api/items" />
+    <State id="draft" />
+
+    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
+        <Stack>
+            <Heading level="3" i18n="items.title" />
+            <Text as="p" color="secondary" i18n="items.description" />
+        </Stack>
+        <Dialog title="New item" triggerLabel="New item" purpose="form">
+            <Stack gap="3">
+                <FormLayout>
+                    <TextInput
+                        i18n="items.fields.name"
+                        value="$draft.name"
+                        isRequired="true"
+                    />
+                    <NumberInput i18n="items.price" units="CHF" value="$draft.price" min="0" isRequired="true" />
+                </FormLayout>
+                <Action
+                    action="/api/items"
+                    method="POST"
+                    invalidate='${["items"]}'
+                    closeDialog="true"
+                    json="${{ name: draft.name, price: draft.price }}"
+                >
+                    <Button isDisabled="${draft.name === ''}" variant="primary" label="Create item" />
+                </Action>
+            </Stack>
+        </Dialog>
+    </Stack>
+
+    <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
+        <TableColumn key="item" i18n="items.table.item">
+            <Stack gap="1">
+                <Link to="/items/${row.id}" label="$row.name">
+                    <Text value="$row.name" />
+                </Link>
+                <Text color="secondary" value="${`CHF ${row.price}`}" hasTabularNumbers="true" />
+            </Stack>
+        </TableColumn>
+    </Table>
+</longlink>
