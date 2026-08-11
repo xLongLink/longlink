@@ -45,7 +45,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
 
     # Isolate the real SQLite engine behind the SDK's normal session lifecycle.
-    monkeypatch.setattr(database_base, "_engine", engine)
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     monkeypatch.setattr(database_base, "Session", None)
 
     try:

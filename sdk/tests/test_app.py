@@ -7,12 +7,17 @@ from longlink.app import LongLink
 from fastapi.testclient import TestClient
 
 
-def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> None:
+def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
+
+    # Create the required generated Application source layout.
+    (tmp_path / "src" / "i18n").mkdir(parents=True)
+    (tmp_path / "src" / "pages").mkdir()
+    monkeypatch.chdir(tmp_path)
 
     # Initialize the development runtime and its in-process client.
     app = FastAPI()
-    LongLink(app, env="development", i18n=None, pages=None)
+    LongLink(app, env="development")
     client = TestClient(app)
 
     # Exercise runtime metadata, frontend fallback, and development preflight routes.
@@ -36,12 +41,32 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
-def test_production_health_and_root_are_served_without_sdk_auth() -> None:
+def test_production_health_and_root_are_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Serve runtime health and the app shell without SDK-owned authorization."""
+
+    # Create the complete Platform runtime contract and generated source layout.
+    for name, value in {
+        "LONGLINK_DATABASE_HOST": "db",
+        "LONGLINK_DATABASE_NAME": "longlink",
+        "LONGLINK_DATABASE_PORT": "5432",
+        "LONGLINK_DATABASE_SCHEMA": "application",
+        "LONGLINK_DATABASE_PASSWORD": "secret",
+        "LONGLINK_DATABASE_USERNAME": "app",
+        "LONGLINK_STORAGE_BUCKET": "organization",
+        "LONGLINK_STORAGE_PREFIX": "applications/application",
+        "LONGLINK_STORAGE_REGION": "region",
+        "LONGLINK_STORAGE_PASSWORD": "secret",
+        "LONGLINK_STORAGE_USERNAME": "key",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example.com",
+    }.items():
+        monkeypatch.setenv(name, value)
+    (tmp_path / "src" / "i18n").mkdir(parents=True)
+    (tmp_path / "src" / "pages").mkdir()
+    monkeypatch.chdir(tmp_path)
 
     # Start the production runtime without SDK authentication dependencies.
     app = FastAPI()
-    LongLink(app, env="production", i18n=None, pages=None)
+    LongLink(app, env="production")
     client = TestClient(app)
 
     # Request the public health endpoint and frontend shell.
@@ -96,6 +121,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     page_path = tmp_path / "src" / "pages" / relative_path
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
+    (tmp_path / "src" / "i18n").mkdir()
     alternate_path = tmp_path / "alternate.xml"
     alternate_path.write_text('<longlink version="v1"><Text>Alternate</Text></longlink>', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
@@ -124,6 +150,7 @@ def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tm
     page_path = tmp_path / "src" / "pages" / "broken.xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text("<unknown />", encoding="utf-8")
+    (tmp_path / "src" / "i18n").mkdir()
     monkeypatch.chdir(tmp_path)
 
     # Start registration and require schema validation to fail immediately.
@@ -149,6 +176,7 @@ def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path)
         ),
         encoding="utf-8",
     )
+    (tmp_path / "src" / "pages").mkdir()
     monkeypatch.chdir(tmp_path)
 
     # Request the catalog through the initialized SDK runtime.

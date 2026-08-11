@@ -1,23 +1,11 @@
 import asyncio
-from typing import Any
 from alembic import context
-from sqlalchemy import pool, text, engine_from_config
+from sqlalchemy import pool, text
 from longlink.database import urls
-from sqlalchemy.engine import Connection, make_url
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.database.registry import database_metadata
 
 config = context.config
-
-
-def context_options() -> dict[str, Any]:
-    """Return Alembic options for SDK-owned shared-schema migrations."""
-
-    return {
-        "target_metadata": database_metadata,
-        "compare_type": True,
-        "version_table_schema": "shared",
-    }
 
 
 def run_migrations_offline() -> None:
@@ -29,7 +17,7 @@ def run_migrations_offline() -> None:
         url=database_url,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        **context_options(),
+        version_table_schema="shared",
     )
 
     # Emit the schema bootstrap and scope unqualified shared tables to it.
@@ -47,7 +35,7 @@ def do_run_migrations(connection: Connection) -> None:
     connection.commit()
     connection.execute(text("SET search_path TO shared"))
     connection.commit()
-    context.configure(connection=connection, **context_options())
+    context.configure(connection=connection, version_table_schema="shared")
 
     # Keep Alembic in charge of the migration transaction.
     with context.begin_transaction():
@@ -78,20 +66,7 @@ def run_migrations_online() -> None:
     if database_url is None:
         raise RuntimeError("Alembic sqlalchemy.url is not configured")
 
-    # Async drivers need an async engine and a synchronous Alembic callback.
-    parsed_url = make_url(database_url)
-    if parsed_url.drivername.endswith(("aiosqlite", "asyncpg")):
-        asyncio.run(run_async_migrations(database_url))
-        return
-
-    # Synchronous drivers can run Alembic directly on their connection.
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-    with connectable.connect() as connection:
-        do_run_migrations(connection)
+    asyncio.run(run_async_migrations(database_url))
 
 
 # Select migration execution from the active Alembic context.

@@ -2,7 +2,7 @@ import asyncio
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from importlib.resources import files
 
 
@@ -26,6 +26,8 @@ def migration_config(database_url: str | URL, script_location: Path | None = Non
 
     # Preserve structured credentials when callers provide a SQLAlchemy URL.
     url_value = database_url.render_as_string(hide_password=False) if isinstance(database_url, URL) else database_url
+    if make_url(url_value).drivername != "postgresql+asyncpg":
+        raise ValueError("Shared migrations require a postgresql+asyncpg database URL")
     config = Config()
     config.set_main_option("script_location", str(alembic_script_location(script_location)))
 

@@ -85,59 +85,32 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None) -> dict[str, list[dict[str, object]]]:
-    """Parse the configured environment class and return environment specs."""
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str, list[dict[str, object]]]:
+    """Parse the configured Application environment model."""
 
-    # Initialize an empty result and the conventional environment import path.
-    empty_spec: dict[str, list[dict[str, object]]] = {"environments": []}
-    environment_import = "src.envs:Env"
+    # Require the project configuration that selects the environment model.
+    tool_data = pyproject_data.get("tool")
+    longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
+    environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
+    if not isinstance(environment_import, str) or not environment_import.strip():
+        raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
-    # Read an explicit environment class location from project configuration.
-    project_data = pyproject_data
-    if project_data is None and (root / "pyproject.toml").is_file():
-        project_data = read_pyproject(root)
-
-    if project_data is not None:
-
-        # Read the tool table while ignoring malformed values.
-        tool_data = project_data.get("tool", {})
-        if not isinstance(tool_data, dict):
-            tool_data = {}
-
-        # Read the LongLink table while ignoring malformed values.
-        longlink_data = tool_data.get("longlink", {})
-        if not isinstance(longlink_data, dict):
-            longlink_data = {}
-
-        # Use the configured environment import string when provided.
-        configured_environment = longlink_data.get("environment")
-        if configured_environment is not None:
-            if not isinstance(configured_environment, str) or not configured_environment.strip():
-                raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
-
-            environment_import = configured_environment.strip()
-
-    # Parse and validate the configured module and class names without importing them.
-    module_name, separator, class_name = environment_import.partition(":")
-    module_name = module_name.strip()
-    class_name = class_name.strip()
+    # Parse the configured module and class names without importing application code.
+    module_name, separator, class_name = environment_import.strip().partition(":")
     module_parts = module_name.split(".")
-
-    # Require a normal Python import string without importing application code.
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
-    # Resolve the configured environment module and return early when it is absent.
-    module_path = root.joinpath(*module_parts)
-    envs_path = module_path.with_suffix(".py")
+    # Resolve the configured environment module.
+    envs_path = root.joinpath(*module_parts).with_suffix(".py")
     if not envs_path.is_file():
-        return empty_spec
+        raise click.ClickException(f"Environment model not found: {envs_path}")
 
     # Locate the configured settings class without executing application code.
     module = ast.parse(envs_path.read_text(encoding="utf-8"))
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
-        return empty_spec
+        raise click.ClickException(f"Environment model must define Env: {envs_path}")
 
     environments: list[dict[str, object]] = []
 
@@ -477,12 +450,7 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
     is_flag=True,
     help="Push the built image tag after building.",
 )
-@click.option(
-    "--builder",
-    default=None,
-    help="Optional Docker Buildx builder used to isolate build cache.",
-)
-def build_command(tag: str | None, registry: str | None, push: bool, builder: str | None) -> None:
+def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
     # Build inside a temporary context.
@@ -508,8 +476,6 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
 
             # Build from a context that includes local path dependencies referenced by uv.
             command = [docker_command, "build"]
-            if builder:
-                command = [docker_command, "buildx", "build", "--builder", builder, "--load"]
             command.extend(
                 [
                     "--iidfile",

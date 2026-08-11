@@ -59,8 +59,15 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
                 DATABASE_HOST="db",
                 DATABASE_NAME="longlink",
                 DATABASE_PORT=5432,
+                DATABASE_SCHEMA="application",
                 DATABASE_PASSWORD="secret",
                 DATABASE_USERNAME="app",
+                STORAGE_BUCKET="organization",
+                STORAGE_PREFIX="applications/application",
+                STORAGE_REGION="region",
+                STORAGE_PASSWORD="secret",
+                STORAGE_USERNAME="key",
+                STORAGE_ENDPOINT_URL="https://storage.example.com",
             ),
             "postgresql+asyncpg://app:secret@db:5432/longlink",
             {
@@ -92,7 +99,6 @@ def test_create_engine_selects_database_url_and_options(
         return SimpleNamespace(url=database_url)
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
-    monkeypatch.setattr(database_base, "_engine", None)
 
     # Create the environment-specific engine.
     database_base.create_engine(env)

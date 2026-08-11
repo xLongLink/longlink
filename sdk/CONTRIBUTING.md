@@ -32,7 +32,7 @@ The build command writes standard OCI image metadata labels using [OCI annotatio
 
 | Label                   | Value                     | Description                                          |
 | ----------------------- | ------------------------- | ---------------------------------------------------- |
-| `longlink.environments` | `<json-environment-list>` | App environment variables when `src/envs.py` exists. |
+| `longlink.environments` | `<json-environment-list>` | App environment variables declared by `src/envs.py`. |
 
 ## XML
 

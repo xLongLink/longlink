@@ -1,4 +1,5 @@
-from typing import Literal
+from typing import Self, Literal
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,3 +27,34 @@ class Envs(BaseSettings):
     STORAGE_PASSWORD: str | None = None
     STORAGE_USERNAME: str | None = None
     STORAGE_ENDPOINT_URL: str | None = None
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> Self:
+        """Require the complete Platform runtime contract in production."""
+
+        # Local environments supply their own SQLite and filesystem defaults.
+        if self.ENV != "production":
+            return self
+
+        missing_settings = [
+            name
+            for name in (
+                "DATABASE_HOST",
+                "DATABASE_NAME",
+                "DATABASE_PORT",
+                "DATABASE_SCHEMA",
+                "DATABASE_PASSWORD",
+                "DATABASE_USERNAME",
+                "STORAGE_BUCKET",
+                "STORAGE_PREFIX",
+                "STORAGE_REGION",
+                "STORAGE_PASSWORD",
+                "STORAGE_USERNAME",
+                "STORAGE_ENDPOINT_URL",
+            )
+            if getattr(self, name) is None
+        ]
+        if missing_settings:
+            raise ValueError(f"Production settings are required: {', '.join(missing_settings)}")
+
+        return self
