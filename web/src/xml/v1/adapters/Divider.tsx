@@ -1,8 +1,8 @@
 import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
-import type { Props } from '../types';
 import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an Astryx content divider. */
 export function Divider({ props }: Props) {

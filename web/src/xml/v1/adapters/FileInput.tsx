@@ -1,8 +1,7 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
 import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlContext } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -12,6 +11,7 @@ import {
     resolveXmlString,
     resolveXmlStatus,
 } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {

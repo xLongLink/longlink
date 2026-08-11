@@ -1,8 +1,7 @@
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
 import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlContext } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -11,6 +10,7 @@ import {
     resolveXmlStatus,
     resolveXmlString,
 } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an accessible Astryx text input with optional Valtio binding. */
 export function TextInput({ props }: Props) {

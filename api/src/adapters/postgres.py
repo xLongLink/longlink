@@ -6,7 +6,6 @@ from sqlalchemy.exc import OperationalError
 from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
-
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine

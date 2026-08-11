@@ -12,9 +12,9 @@ describe('renderNode', () => {
         ];
 
         for (const testCase of cases) {
-            expect(() => renderNode([{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }) }], ctx)).toThrow(
-                testCase.expected
-            );
+            expect(() =>
+                renderNode([{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }) }], ctx)
+            ).toThrow(testCase.expected);
         }
     });
 });

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { resolveTranslation } from './i18n';
 import { evaluate } from '../expressions';
 import type { ASTNode, ASTProps, ExecutionContext } from '../types';
+import { resolveTranslation } from './i18n';
 
 const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 
@@ -103,7 +103,11 @@ export function resolveXmlContent(
     value: unknown,
     renderChildren: () => ReactNode
 ): ReactNode {
-    return readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : value != null ? String(value) : renderChildren();
+    return readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx)
+        : value != null
+          ? String(value)
+          : renderChildren();
 }
 
 /** Return whether an XML node passes its optional conditional expression. */

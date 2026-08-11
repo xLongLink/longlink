@@ -11,9 +11,9 @@ describe('renderNode', () => {
             values: {},
             count: 7,
         };
-        expect(renderXmlToMarkup([{ name: 'Text', params: compileProps({ count: '${count}', i18n: 'copy.count' }) }], ctx)).toContain(
-            'Count 7'
-        );
+        expect(
+            renderXmlToMarkup([{ name: 'Text', params: compileProps({ count: '${count}', i18n: 'copy.count' }) }], ctx)
+        ).toContain('Count 7');
     });
 
     it('skips nodes when if condition is false', () => {

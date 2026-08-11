@@ -3,9 +3,9 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
+import { resolveXmlString, resolveXmlValue } from '../core/props';
 import { BaseUrlContext, resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlString, resolveXmlValue } from '../core/props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);

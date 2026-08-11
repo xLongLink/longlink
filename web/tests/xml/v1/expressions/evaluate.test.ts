@@ -85,10 +85,10 @@ describe('evaluate', () => {
             invalidate: async () => {},
             values: {},
         };
-        const result = evaluate(compileAttribute('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}'), ctx) as Record<
-            string,
-            unknown
-        >;
+        const result = evaluate(
+            compileAttribute('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}'),
+            ctx
+        ) as Record<string, unknown>;
 
         expect(result.safe).toBe(1);
         expect(result.constructor).toBeUndefined();

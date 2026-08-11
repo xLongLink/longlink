@@ -7,7 +7,10 @@ import type { ASTNode, ASTProps, ExecutionContext } from '@/xml/v1/types';
 /** Compiles string fixture attributes through the same document compiler rules. */
 export function compileProps(props: Record<string, string>): ASTProps {
     return Object.fromEntries(
-        Object.entries(props).map(([name, value]) => [name, compileAttribute(value, name === 'field' || name === 'i18n')])
+        Object.entries(props).map(([name, value]) => [
+            name,
+            compileAttribute(value, name === 'field' || name === 'i18n'),
+        ])
     );
 }
 

@@ -1,8 +1,7 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
 import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlContext } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -12,6 +11,7 @@ import {
     resolveXmlStatus,
     resolveXmlString,
 } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {

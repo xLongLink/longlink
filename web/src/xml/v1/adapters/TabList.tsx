@@ -1,11 +1,9 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState } from 'react';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveNavigationUrl } from '../core/url';
-import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     isVisibleXmlNode,
     requireXmlString,
@@ -14,6 +12,8 @@ import {
     resolveXmlLabel,
     resolveXmlString,
 } from '../core/props';
+import { resolveNavigationUrl } from '../core/url';
+import type { ASTNode, ExecutionContext, Props } from '../types';
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {

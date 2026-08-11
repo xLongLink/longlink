@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { isVisibleXmlNode } from './props';
-import { For } from './for';
 import type { ASTNode, ExecutionContext } from '../types';
+import { For } from './for';
+import { isVisibleXmlNode } from './props';
 import { xmlComponentRegistry } from './registry';
 
 /** Renders XML AST nodes using the active runtime context. */

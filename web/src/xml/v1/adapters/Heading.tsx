@@ -1,8 +1,8 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import type { Props } from '../types';
 import { readXmlProp, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
+import type { Props } from '../types';
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 

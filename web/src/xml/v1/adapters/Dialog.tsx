@@ -3,10 +3,9 @@ import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog'
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useState } from 'react';
+import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import type { Props } from '../types';
-import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     resolveXmlEnum,
@@ -15,6 +14,7 @@ import {
     resolveXmlSpacing,
     resolveXmlString,
 } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {

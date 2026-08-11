@@ -1,7 +1,7 @@
-import { useXmlContext, XmlContext } from './context';
 import { evaluate } from '../expressions';
-import { renderNode } from './node';
 import type { Props } from '../types';
+import { useXmlContext, XmlContext } from './context';
+import { renderNode } from './node';
 import { resolveXmlString } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */

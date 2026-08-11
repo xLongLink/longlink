@@ -8,8 +8,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { useXmlContext, XmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
-import { readSafeProperty } from '../expressions';
-import type { ASTNode, ExecutionContext, Props } from '../types';
 import {
     readXmlProp,
     isVisibleXmlNode,
@@ -20,6 +18,8 @@ import {
     resolveXmlString,
     resolveXmlValue,
 } from '../core/props';
+import { readSafeProperty } from '../expressions';
+import type { ASTNode, ExecutionContext, Props } from '../types';
 
 type TableRow = Record<string, unknown>;
 
@@ -96,7 +96,9 @@ function buildColumn(
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : resolveXmlString(props, 'header', ctx, key.value);
+    const header = readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx)
+        : resolveXmlString(props, 'header', ctx, key.value);
     const widthValue = resolveXmlNumber(props, 'width', ctx);
     const widthType = resolveXmlEnum(props, 'widthType', ctx, ['proportional', 'pixel'], 'proportional', 'TableColumn');
     const minWidth = resolveXmlNumber(props, 'minWidth', ctx);

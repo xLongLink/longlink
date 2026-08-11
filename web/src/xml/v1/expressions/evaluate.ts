@@ -268,8 +268,10 @@ export function evaluate(attribute: ASTAttribute, ctx: ExecutionContext): unknow
             return evaluateNode(attribute.node, ctx);
 
         case 'interpolation':
-            return attribute.segments.map((segment) =>
-                segment.kind === 'text' ? segment.value : String(evaluateNode(segment.node, ctx) ?? '')
-            ).join('');
+            return attribute.segments
+                .map((segment) =>
+                    segment.kind === 'text' ? segment.value : String(evaluateNode(segment.node, ctx) ?? '')
+                )
+                .join('');
     }
 }

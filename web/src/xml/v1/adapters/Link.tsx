@@ -3,9 +3,9 @@ import { useContext } from 'react';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
+import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 import { BaseUrlContext, resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 import type { Props } from '../types';
-import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {

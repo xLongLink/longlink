@@ -1,9 +1,8 @@
 import { Selector as AstryxSelector, type SelectorOptionType } from '@astryxdesign/core/Selector';
 import { useState } from 'react';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import { useXmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
-import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from '../core/binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
@@ -15,6 +14,7 @@ import {
     resolveXmlStatus,
     resolveXmlString,
 } from '../core/props';
+import type { ASTNode, ExecutionContext, Props } from '../types';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
@@ -75,6 +75,8 @@ export function SelectorOption(): never {
 function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
-    const label = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
+    const label = readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx)
+        : resolveXmlString(props, 'label', ctx, value);
     return { value, label, disabled: resolveXmlBoolean(props, 'isDisabled', ctx, false) };
 }

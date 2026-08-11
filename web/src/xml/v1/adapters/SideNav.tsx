@@ -1,11 +1,11 @@
 import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
+import { setXmlBinding, useBindableValue } from '../core/binding';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
+import type { ASTNode, ExecutionContext, Props } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {

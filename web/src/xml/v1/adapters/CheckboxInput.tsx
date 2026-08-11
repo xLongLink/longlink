@@ -1,8 +1,7 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
 import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
+import { useXmlContext } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -11,6 +10,7 @@ import {
     resolveXmlStatus,
     resolveXmlString,
 } from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an Astryx checkbox with boolean Valtio binding. */
 export function CheckboxInput({ props }: Props) {

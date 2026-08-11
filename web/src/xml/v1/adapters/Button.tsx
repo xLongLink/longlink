@@ -1,10 +1,10 @@
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
 import { useXmlContext } from '../core/context';
 import { renderNode } from '../core/node';
+import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, resolveXmlValue } from '../core/props';
 import { resolvePath } from '../expressions';
 import type { Props } from '../types';
 import { useActionHandler } from './Action';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, resolveXmlValue } from '../core/props';
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {
