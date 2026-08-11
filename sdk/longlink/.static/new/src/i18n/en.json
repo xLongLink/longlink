@@ -1,27 +1,6 @@
 {
-    "dashboard.checklist.items.attachment": {
-        "defaultMessage": "Attach quotes, invoices, or screenshots before approval."
-    },
-    "dashboard.checklist.items.budget": {
-        "defaultMessage": "Check the budget owner before changing status."
-    },
-    "dashboard.checklist.items.context": {
-        "defaultMessage": "Explain the business reason in one paragraph."
-    },
-    "dashboard.checklist.steps.archive": {
-        "defaultMessage": "Archive supporting files with the approved request."
-    },
-    "dashboard.checklist.steps.create": {
-        "defaultMessage": "Create the request from the Requests tab."
-    },
-    "dashboard.checklist.steps.review": {
-        "defaultMessage": "Review the detail page and decide."
-    },
-    "dashboard.checklist.title": {
-        "defaultMessage": "Healthy request checklist"
-    },
     "dashboard.description": {
-        "defaultMessage": "Track office purchase requests, review policy, and keep the approval queue visible."
+        "defaultMessage": "Track office purchase requests and keep the approval queue visible."
     },
     "dashboard.metrics.budget.label": {
         "defaultMessage": "Monthly budget"
@@ -41,68 +20,11 @@
     "dashboard.metrics.target.value": {
         "defaultMessage": "{days} days"
     },
-    "dashboard.policy.description": {
-        "defaultMessage": "The sample keeps the rules simple: amount decides who reviews and how quickly reviewers should respond."
-    },
-    "dashboard.policy.table.amount": {
-        "defaultMessage": "Amount"
-    },
-    "dashboard.policy.table.approver": {
-        "defaultMessage": "Approver"
-    },
-    "dashboard.policy.table.fiveDays": {
-        "defaultMessage": "5 days"
-    },
-    "dashboard.policy.table.large": {
-        "defaultMessage": "Above CHF 5,000"
-    },
-    "dashboard.policy.table.medium": {
-        "defaultMessage": "CHF 1,000 to 5,000"
-    },
-    "dashboard.policy.table.oneDay": {
-        "defaultMessage": "1 day"
-    },
-    "dashboard.policy.table.sla": {
-        "defaultMessage": "SLA"
-    },
-    "dashboard.policy.table.small": {
-        "defaultMessage": "Below CHF 1,000"
-    },
-    "dashboard.policy.table.twoDays": {
-        "defaultMessage": "2 days"
-    },
-    "dashboard.policy.title": {
-        "defaultMessage": "Approval policy"
-    },
-    "dashboard.recent.empty": {
-        "defaultMessage": "No requests yet. Create the first one from the Requests tab."
-    },
-    "dashboard.recent.open": {
-        "defaultMessage": "Open request"
-    },
-    "dashboard.recent.title": {
-        "defaultMessage": "Recent requests"
-    },
-    "dashboard.tabs.policy": {
-        "defaultMessage": "Policy"
-    },
-    "dashboard.tabs.recent": {
-        "defaultMessage": "Recent"
-    },
     "dashboard.title": {
         "defaultMessage": "Office operations"
     },
     "requests.amount": {
         "defaultMessage": "Amount"
-    },
-    "requests.attachments.actions": {
-        "defaultMessage": "Actions"
-    },
-    "requests.attachments.delete": {
-        "defaultMessage": "Delete"
-    },
-    "requests.attachments.download": {
-        "defaultMessage": "Download"
     },
     "requests.attachments.file": {
         "defaultMessage": "Attachment"
@@ -110,8 +32,8 @@
     "requests.attachments.title": {
         "defaultMessage": "Attachments"
     },
-    "requests.attachments.upload": {
-        "defaultMessage": "Upload attachment"
+    "requests.attachments.uploadedBy": {
+        "defaultMessage": "Uploaded by"
     },
     "requests.create.submit": {
         "defaultMessage": "Submit request"
@@ -121,15 +43,6 @@
     },
     "requests.description": {
         "defaultMessage": "Track purchase requests and supporting files."
-    },
-    "requests.detail.description": {
-        "defaultMessage": "Review the request, update its workflow status, and manage attachments."
-    },
-    "requests.detail.summary": {
-        "defaultMessage": "Request summary"
-    },
-    "requests.detail.title": {
-        "defaultMessage": "Purchase request detail"
     },
     "requests.fields.text": {
         "defaultMessage": "Text"

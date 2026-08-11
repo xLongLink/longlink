@@ -1,7 +1,7 @@
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { proxy } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
-import { evaluate, isSafePropertyName, isText } from '../expressions';
+import { evaluate, isSafePropertyName } from '../expressions';
 import type { ASTNode, RuntimeServices, Scope, XmlRuntime } from '../types';
 import { resolveRequestUrl } from './url';
 
@@ -160,7 +160,7 @@ function validateSetupNode(node: ASTNode): void {
         if (!node.params?.id) throw new Error('State requires a string id');
 
         // Keep state keys static.
-        if (!isText(node.params.id)) throw new Error('State id must be literal text');
+        if (node.params.id.kind !== 'text') throw new Error('State id must be literal text');
 
         // Prevent unsafe state property names.
         if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
@@ -189,7 +189,7 @@ function validateSetupNode(node: ASTNode): void {
         if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
 
         // Keep query keys static.
-        if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+        if (node.params.id.kind !== 'text') throw new Error('Query id must be literal text');
 
         // Prevent unsafe query property names.
         if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {

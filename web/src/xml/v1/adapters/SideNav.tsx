@@ -21,8 +21,7 @@ export function SideNav({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = String(binding.initialValue ?? items[0].value);
-    const [localValue, setLocalValue] = useState(initialValue);
+    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? items[0].value));
     const value = binding.bound ? String(binding.currentValue ?? items[0].value) : localValue;
     const label = resolveXmlString(props, 'label', ctx, 'Navigation');
     const activeItem = items.find((item) => item.value === value);

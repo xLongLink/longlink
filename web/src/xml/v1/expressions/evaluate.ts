@@ -1,5 +1,4 @@
-import type { Scope } from '../types';
-import type { ASTAttribute } from '../types';
+import type { ASTAttribute, Scope } from '../types';
 import { hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 import type { ExpressionNode } from './types';
 

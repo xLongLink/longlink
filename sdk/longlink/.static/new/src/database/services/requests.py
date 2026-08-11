@@ -1,6 +1,6 @@
 from longlink import database
 from sqlmodel import select
-from src.database.models.requests import PurchaseRequest
+from src.database.models.requests import PurchaseRequest, RequestAttachment
 
 
 async def list_requests() -> list[PurchaseRequest]:
@@ -40,3 +40,33 @@ async def create_request(text: str, amount: float) -> PurchaseRequest:
         await session.refresh(request)
 
     return request
+
+
+async def create_attachment(request_id: int, file_id: str) -> RequestAttachment:
+    """Persist and return one request attachment record."""
+
+    # Build attachment metadata after its file has been stored.
+    attachment = RequestAttachment(request_id=request_id, file_id=file_id)
+
+    # Persist and refresh Platform-supplied audit fields.
+    async with database.session() as session:
+        session.add(attachment)
+        await session.commit()
+        await session.refresh(attachment)
+
+    return attachment
+
+
+async def list_attachments(request_id: int) -> dict[str, RequestAttachment]:
+    """Return active attachment records keyed by storage file id."""
+
+    # Query active metadata with its uploader relationship.
+    async with database.session() as session:
+        statement = select(RequestAttachment).where(
+            RequestAttachment.request_id == request_id,
+            RequestAttachment.deleted_at.is_(None),
+        )
+        result = await session.exec(statement)
+        attachments = result.all()
+
+    return {attachment.file_id: attachment for attachment in attachments}

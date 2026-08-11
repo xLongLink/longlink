@@ -4,7 +4,7 @@ import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from '../core/props';
-import { BaseUrlContext, resolveRequestUrl } from '../core/url';
+import { resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
 import { DialogCloseContext } from './Dialog';
 
@@ -20,7 +20,6 @@ export function useActionHandler() {
 export function Action({ props, nodes }: Props) {
     const ctx = useXmlContext();
     const services = useXmlServices();
-    const baseUrl = useContext(BaseUrlContext);
     const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
 
@@ -28,7 +27,7 @@ export function Action({ props, nodes }: Props) {
     async function handleAction() {
         // Surface action failures through the UI.
         try {
-            await executeAction(props, ctx, services, baseUrl, fetch, toast, closeDialog);
+            await executeAction(props, ctx, services, fetch, toast, closeDialog);
         } catch (error: unknown) {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         }
@@ -42,7 +41,6 @@ export async function executeAction(
     props: Props['props'],
     ctx: ReturnType<typeof useXmlContext>,
     services: ReturnType<typeof useXmlServices>,
-    baseUrl: string,
     fetchImpl: typeof fetch = fetch,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
@@ -91,7 +89,7 @@ export async function executeAction(
 
     // Keep actions scoped to the current application.
     try {
-        requestUrl = resolveRequestUrl(baseUrl, actionUrl);
+        requestUrl = resolveRequestUrl(services.requestBaseUrl, actionUrl);
     } catch {
         toast({ body: 'Action URL must be app-relative', type: 'error' });
         return;

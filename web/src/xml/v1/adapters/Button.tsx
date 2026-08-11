@@ -28,11 +28,11 @@ export function Button({ props, nodes }: Props) {
     const actionHandler = useActionHandler();
 
     /** Applies the LongLink append behavior before the nearest Action request. */
-    async function handleClick() {
+    function handleClick() {
         appendButtonItem(props, ctx, appendTarget);
 
         // Run the nearest action after local state mutation.
-        await actionHandler?.();
+        return actionHandler?.();
     }
 
     return (

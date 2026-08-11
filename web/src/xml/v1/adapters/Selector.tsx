@@ -21,8 +21,9 @@ export function Selector({ props, nodes }: Props) {
     const ctx = useXmlContext();
     const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = binding.initialValue == null ? null : String(binding.initialValue);
-    const [localValue, setLocalValue] = useState<string | null>(initialValue);
+    const [localValue, setLocalValue] = useState<string | null>(
+        binding.initialValue == null ? null : String(binding.initialValue)
+    );
     const currentValue = binding.currentValue == null ? null : String(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
     const options = nodes

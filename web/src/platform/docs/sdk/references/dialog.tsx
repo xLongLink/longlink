@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Dialog',
     slug: 'dialog',
-    category: 'Overlay',
+    category: 'Layout',
     summary: 'Renders a modal workflow from one flat owner element.',
     usage: 'Use Dialog for focused flows that should sit above the current page.',
     attributes: [

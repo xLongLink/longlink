@@ -1,7 +1,5 @@
-import { createContext as createReactContext } from 'react';
 import { hasProtocol, parsePath, parseURL } from 'ufo';
 
-export const BaseUrlContext = createReactContext<string>('');
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 
 /** Resolves a request URL against a base URL string. */

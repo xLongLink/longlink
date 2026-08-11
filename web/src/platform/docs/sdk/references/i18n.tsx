@@ -1,7 +1,7 @@
 import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference';
 
 export const reference = {
-    name: 'i18n',
+    name: 'Translations',
     slug: 'i18n',
     category: 'Runtime',
     summary: 'Looks up visible copy from the active XML translation catalog.',

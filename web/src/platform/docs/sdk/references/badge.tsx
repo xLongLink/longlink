@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Badge',
     slug: 'badge',
-    category: 'Feedback & Status',
+    category: 'Content',
     summary: 'Displays a compact status or enumerated label.',
     usage: 'Use Badge for short, stable labels such as role, status, or category.',
     attributes: [

@@ -29,8 +29,7 @@ export function TabList({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = String(binding.initialValue ?? tabs[0].value);
-    const [localValue, setLocalValue] = useState(initialValue);
+    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? tabs[0].value));
     const value = binding.bound ? String(binding.currentValue ?? tabs[0].value) : localValue;
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TabList');
     const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'hug', 'TabList');

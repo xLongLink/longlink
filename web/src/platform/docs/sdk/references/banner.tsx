@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Banner',
     slug: 'banner',
-    category: 'Feedback & Status',
+    category: 'Content',
     summary: 'Shows persistent page-level feedback.',
     usage: 'Use Banner for important information, warnings, errors, or success states that need space.',
     attributes: [

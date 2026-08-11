@@ -28,3 +28,5 @@ class RequestAttachmentRead(BaseModel):
     name: str
     size: int
     download_url: str
+    uploaded_by_name: str
+    uploaded_by_avatar: str

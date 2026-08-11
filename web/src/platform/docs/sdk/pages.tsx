@@ -7,6 +7,7 @@ import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Divider } from '@astryxdesign/core/Divider';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -55,10 +56,6 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
         title: 'Action',
     },
     {
-        id: 'container',
-        title: 'Container',
-    },
-    {
         id: 'content',
         title: 'Content',
     },
@@ -67,20 +64,12 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
         title: 'Data Input',
     },
     {
-        id: 'feedback-and-status',
-        title: 'Feedback & Status',
-    },
-    {
         id: 'layout',
         title: 'Layout',
     },
     {
         id: 'navigation',
         title: 'Navigation',
-    },
-    {
-        id: 'overlay',
-        title: 'Overlay',
     },
     {
         id: 'table-and-list',
@@ -146,7 +135,7 @@ function renderComponentPreview(name: string) {
     switch (name) {
         case 'if':
             return <Code>{'if="${order.open}"'}</Code>;
-        case 'i18n':
+        case 'Translations':
             return <Code>{'i18n="orders.title"'}</Code>;
         case 'values':
             return <Code>{'values="${{ name: user.name }}"'}</Code>;
@@ -156,18 +145,8 @@ function renderComponentPreview(name: string) {
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':
             return <Code>{'value="$form.name"'}</Code>;
-        case 'Translations':
-            return <Code>{'orders.title'}</Code>;
         case 'longlink':
             return <Code>{'<longlink version="v1" />'}</Code>;
-        case 'State':
-            return <Code>{'<State id="form" />'}</Code>;
-        case 'Query':
-            return <Code>{'<Query id="orders" />'}</Code>;
-        case 'Action':
-            return <Button label="Run" size="sm" variant="primary" />;
-        case 'For':
-            return <Code>{'<For each="$items" />'}</Code>;
         case 'Button':
             return (
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
@@ -374,6 +353,7 @@ export const content = (
             . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
             compose the screen with supported XML components.
         </Text>
+        <CodeBlock code={'<longlink version="v1">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
         {componentCategories.map((category) => (
             <ComponentCategorySection key={category.id} category={category} />
         ))}

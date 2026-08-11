@@ -22,7 +22,6 @@ import * as i18nReference from './i18n';
 import * as iconReference from './icon';
 import * as ifReference from './if';
 import * as linkReference from './link';
-import * as longlinkReference from './longlink';
 import * as numberInputReference from './number-input';
 import * as queryReference from './query';
 import * as radioListReference from './radio-list';
@@ -42,7 +41,6 @@ import * as tableColumnReference from './table-column';
 import * as textReference from './text';
 import * as textAreaReference from './text-area';
 import * as textInputReference from './text-input';
-import * as translationsReference from './translations';
 import * as valuesReference from './values';
 
 const referenceModules = [
@@ -52,8 +50,6 @@ const referenceModules = [
     countReference,
     expressionsReference,
     bindingsReference,
-    translationsReference,
-    longlinkReference,
     stateReference,
     queryReference,
     actionReference,

@@ -15,13 +15,8 @@ type XmlLayoutTab = {
     icon?: LucideIcon;
 };
 
-type XmlLayoutProps = {
-    tabs: Record<string, string | XmlLayoutTab>;
-    children: ReactNode;
-};
-
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
+export default function XmlLayout({ tabs, children }: { tabs: Record<string, string | XmlLayoutTab>; children: ReactNode }) {
     const t = useTranslator();
     const location = useLocation();
     const currentPath = `${location.pathname}${location.search}`;
@@ -29,7 +24,7 @@ export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
 
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
-        const { href, active, icon }: XmlLayoutTab = typeof tab === 'string' ? { href: tab } : tab;
+        const { href, active, icon } = typeof tab === 'string' ? { href: tab } : tab;
         const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
         const isActive = active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath;
 

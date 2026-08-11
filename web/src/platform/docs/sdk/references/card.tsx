@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Card',
     slug: 'card',
-    category: 'Container',
+    category: 'Layout',
     summary: 'Groups one discrete item on an Astryx surface.',
     usage: 'Use Card for self-contained content that can be compared, reordered, or removed independently.',
     attributes: [

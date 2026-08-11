@@ -18,8 +18,9 @@ export function NumberInput({ props }: Props) {
     const ctx = useXmlContext();
     const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = binding.initialValue == null ? null : Number(binding.initialValue);
-    const [localValue, setLocalValue] = useState<number | null>(initialValue);
+    const [localValue, setLocalValue] = useState<number | null>(
+        binding.initialValue == null ? null : Number(binding.initialValue)
+    );
     const currentValue = binding.currentValue == null ? null : Number(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
     const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false);

@@ -8,7 +8,7 @@ import { createContext, setupContext, validateSetupNodes, XmlContext } from './c
 import { XmlErrorBoundary } from './core/errors';
 import { validateTranslationCatalog } from './core/i18n';
 import { renderNode } from './core/node';
-import { BaseUrlContext, resolveUrl } from './core/url';
+import { resolveUrl } from './core/url';
 import type { ASTNode, XmlRuntime } from './types';
 
 type RenderXMLProps = {
@@ -17,21 +17,16 @@ type RenderXMLProps = {
     baseUrl?: string;
 };
 
-type SetupFailure = {
-    ast: ASTNode[];
-    baseUrl: string;
-    error: unknown;
-};
-
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
+    runtimeCtx.services.requestBaseUrl = baseUrl;
     const { requiresSetup, requiresTranslations } = getRequirements(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
-    const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
+    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode[]; baseUrl: string; error: unknown } | null>(null);
     const [version, setVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
@@ -78,7 +73,6 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
 
         runtimeCtx.services.setups = {};
         runtimeCtx.scope.bindings = { params: runtimeCtx.services.params };
-        runtimeCtx.services.requestBaseUrl = baseUrl;
 
         // Hydrate translations from the SDK route before localized nodes render.
         if (waitsForTranslations && runtimeCtx.services.translations === undefined) {
@@ -171,20 +165,18 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     return (
         <XmlErrorBoundary resetKey={version}>
             <InternationalizationProvider locale="en" messages={messages}>
-                <XmlContent ast={ast} baseUrl={baseUrl} ctx={runtimeCtx} />
+                <XmlContent ast={ast} ctx={runtimeCtx} />
             </InternationalizationProvider>
         </XmlErrorBoundary>
     );
 }
 
 /** Installs the active Astryx translator into renderer-owned XML services. */
-function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ctx: XmlRuntime }) {
+function XmlContent({ ast, ctx }: { ast: ASTNode[]; ctx: XmlRuntime }) {
     ctx.services.translate = useTranslator();
 
     return (
-        <BaseUrlContext.Provider value={baseUrl}>
-            <XmlContext.Provider value={ctx}>{renderNode(ast, ctx.scope)}</XmlContext.Provider>
-        </BaseUrlContext.Provider>
+        <XmlContext.Provider value={ctx}>{renderNode(ast, ctx.scope)}</XmlContext.Provider>
     );
 }
 

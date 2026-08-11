@@ -46,7 +46,6 @@ describe('Action', () => {
             }),
             ctx.scope,
             ctx.services,
-            '',
             fetchImpl,
             (options) => {
                 if (options.type === 'error') errorCalls += 1;
@@ -103,7 +102,7 @@ describe('Action', () => {
                     setups: {},
                 },
             };
-            const fetchImpl = (async () => testCase.request()) satisfies typeof fetch;
+            const fetchImpl = (() => testCase.request()) satisfies typeof fetch;
 
             await executeAction(
                 compileProps({
@@ -112,7 +111,6 @@ describe('Action', () => {
                 }),
                 ctx.scope,
                 ctx.services,
-                '',
                 fetchImpl,
                 (options) => {
                     if (options.type === 'error') errorMessage = String(options.body);
@@ -158,7 +156,6 @@ describe('Action', () => {
             }),
             ctx.scope,
             ctx.services,
-            '',
             fetchImpl,
             () => () => {}
         );
@@ -202,7 +199,6 @@ describe('Action', () => {
             }),
             ctx.scope,
             ctx.services,
-            '',
             fetchImpl,
             () => () => {}
         );
@@ -259,7 +255,7 @@ describe('Action', () => {
                 return new Response(null, { status: 204 });
             }) satisfies typeof fetch;
 
-            await executeAction(testCase.props, ctx.scope, ctx.services, '', fetchImpl, (options) => {
+            await executeAction(testCase.props, ctx.scope, ctx.services, fetchImpl, (options) => {
                 if (options.type === 'error') errorMessage = String(options.body);
 
                 return () => {};
