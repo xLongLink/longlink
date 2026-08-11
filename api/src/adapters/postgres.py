@@ -123,7 +123,16 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or application schemas rely on it.
-        await shared_migrations.migrate_database(self.url(organization.hex, search_path="shared").render_as_string(hide_password=False))
+        await shared_migrations.migrate_database(
+            URL.create(
+                "postgresql+asyncpg",
+                username=self._username,
+                password=self._password,
+                host=self._host,
+                port=self._port,
+                database=organization.hex,
+            ).update_query_dict({"ssl": self._sslmode.value})
+        )
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:
@@ -215,16 +224,18 @@ class Postgres:
             database = self.quote(conn, organization.hex)
             shared_schema = self.quote(conn, "shared")
 
-            # Remove every grant and setting assigned during Application provisioning before dropping its role.
-            await conn.exec_driver_sql(
-                f"""
-                REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
-                REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
-                REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
-                ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
-                ALTER ROLE {role} IN DATABASE {database} RESET search_path;
-                """
-            )
+            # Remove every grant and setting assigned during Application provisioning when its role exists.
+            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            if result.scalar_one_or_none() is not None:
+                await conn.exec_driver_sql(
+                    f"""
+                    REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
+                    REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
+                    REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
+                    ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
+                    ALTER ROLE {role} IN DATABASE {database} RESET search_path;
+                    """
+                )
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
