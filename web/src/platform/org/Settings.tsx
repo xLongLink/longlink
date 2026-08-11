@@ -26,7 +26,7 @@ import type {
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
-import { formatBytes, numberFormatter } from '@/lib/utils';
+import { formatBytes } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';

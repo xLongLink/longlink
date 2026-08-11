@@ -327,7 +327,9 @@ const pageReferences = [
     },
 ];
 
-export const pageReferenceDocs = pageReferences.map(({ content, metadata, ...reference }) => reference);
+export const pageReferenceDocs = pageReferences.map(
+    ({ content: _content, metadata: _metadata, ...reference }) => reference
+);
 
 export const pageReferenceDocPages = pageReferences.map(({ name, slug, summary, content, metadata }) => ({
     path: `/docs/sdk/pages/${slug}`,

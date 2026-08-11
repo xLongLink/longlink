@@ -44,6 +44,7 @@ sdk\:format: sdk\:install
 # Format web code and repository docs.
 web\:format: web\:install
 	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
+	cd web && vp check
 
 
 # Run API and SDK ty checks.
