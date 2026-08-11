@@ -16,7 +16,13 @@ type XmlLayoutTab = {
 };
 
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({ tabs, children }: { tabs: Record<string, string | XmlLayoutTab>; children: ReactNode }) {
+export default function XmlLayout({
+    tabs,
+    children,
+}: {
+    tabs: Record<string, string | XmlLayoutTab>;
+    children: ReactNode;
+}) {
     const t = useTranslator();
     const location = useLocation();
     const currentPath = `${location.pathname}${location.search}`;

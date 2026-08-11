@@ -16,7 +16,10 @@ describe('renderNode', () => {
 
         for (const testCase of cases) {
             expect(() =>
-                renderNode([{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }), children: [] }], ctx.scope)
+                renderNode(
+                    [{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }), children: [] }],
+                    ctx.scope
+                )
             ).toThrow(testCase.expected);
         }
     });

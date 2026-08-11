@@ -19,12 +19,5 @@ export function Avatar({ props }: Props) {
         'Avatar'
     );
 
-    return (
-        <AstryxAvatar
-            alt={alt || undefined}
-            name={name || undefined}
-            size={size}
-            src={src || undefined}
-        />
-    );
+    return <AstryxAvatar alt={alt || undefined} name={name || undefined} size={size} src={src || undefined} />;
 }

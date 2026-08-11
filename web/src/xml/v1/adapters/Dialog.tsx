@@ -42,12 +42,7 @@ export function Dialog({ props, nodes }: Props) {
 
     return (
         <>
-            {triggerLabel && (
-                <Button
-                    clickAction={() => setOpen(true)}
-                    label={triggerLabel}
-                />
-            )}
+            {triggerLabel && <Button clickAction={() => setOpen(true)} label={triggerLabel} />}
             <DialogCloseContext.Provider value={close}>
                 <AstryxDialog
                     isOpen={isOpen}

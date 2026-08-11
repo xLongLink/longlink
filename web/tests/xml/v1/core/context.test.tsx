@@ -21,7 +21,9 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] }];
+        const ast = [
+            { name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] },
+        ];
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };

@@ -1,7 +1,4 @@
-import {
-    Table as AstryxTable,
-    type TableColumn as AstryxTableColumn,
-} from '@astryxdesign/core/Table';
+import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
