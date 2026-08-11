@@ -66,8 +66,8 @@ async def enqueue(
         raise ValueError("Compute operations must target their compute registry")
 
     # Require the assigned compute before scheduling its resource work.
-    compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-    if compute is None:
+    compute_result = await session.scalar(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
+    if compute_result is None:
         raise NotFoundError("Operation compute registry not found")
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.

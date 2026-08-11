@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 from uuid import UUID
 from typing import ClassVar
 from fastapi import FastAPI
@@ -144,3 +145,33 @@ def test_audit_middleware_binds_x_user_id_header(
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
     assert database_audit._current_user_id.get() is None
+
+
+async def test_audit_middleware_isolates_concurrent_request_identities() -> None:
+    """Keep audit identities isolated across concurrently handled requests."""
+
+    # Install the middleware around a route that yields while reading its identity.
+    app = FastAPI()
+    database_audit.install_audit_middleware(app)
+
+    @app.get("/")
+    async def current_user() -> dict[str, str | None]:
+        """Return the request-local audit identity after yielding control."""
+
+        await asyncio.sleep(0)
+        user_id = database_audit._current_user_id.get()
+        return {"user_id": str(user_id) if user_id is not None else None}
+
+    client = TestClient(app)
+    first_id = "00000000-0000-0000-0000-000000000006"
+    second_id = "00000000-0000-0000-0000-000000000007"
+
+    # Dispatch two requests concurrently, each with a distinct trusted identity.
+    first_response, second_response = await asyncio.gather(
+        asyncio.to_thread(client.get, "/", headers={"x-user-id": first_id}),
+        asyncio.to_thread(client.get, "/", headers={"x-user-id": second_id}),
+    )
+
+    # Each handler observes only its own request identity.
+    assert first_response.json() == {"user_id": first_id}
+    assert second_response.json() == {"user_id": second_id}

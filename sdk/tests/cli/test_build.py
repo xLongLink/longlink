@@ -147,6 +147,30 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
         assert not (build_context / directory_name).exists()
 
 
+def test_build_app_does_not_follow_out_of_tree_symlinks(tmp_path: Path) -> None:
+    """Exclude linked files whose resolved targets are outside the build root."""
+
+    # Create a minimal application and a file outside its Docker build context.
+    root = tmp_path / "app"
+    root.mkdir()
+    (root / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        encoding="utf-8",
+    )
+    (root / "src").mkdir()
+    (root / "src" / "envs.py").write_text("class Env:\n    pass\n", encoding="utf-8")
+    outside_file = tmp_path / "outside-secret.txt"
+    outside_file.write_text("must not enter the build context", encoding="utf-8")
+    (root / "linked-secret.txt").symlink_to(outside_file)
+    build_context = tmp_path / "context"
+
+    # Build the temporary context.
+    build.build_app(build_context, base_path=root, tag="dev")
+
+    # Never materialize an out-of-tree linked file in the build context.
+    assert not (build_context / "linked-secret.txt").exists()
+
+
 def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.MonkeyPatch) -> None:
     """Build a Docker image in a temporary context, push it, and report image details."""
 

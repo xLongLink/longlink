@@ -17,8 +17,8 @@ async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
     return result.all()
 
 
-async def available(session: AsyncSession) -> DatabaseRegistry | None:
-    """Return the least-used database registry."""
+async def available(session: AsyncSession) -> UUID | None:
+    """Return the ID of the least-used database registry."""
 
     # Order database registries by their active Organization assignment count.
     assignments = (
@@ -26,7 +26,7 @@ async def available(session: AsyncSession) -> DatabaseRegistry | None:
         .where(Organization.database_id == DatabaseRegistry.id, Organization.deleted_at.is_(None))
         .scalar_subquery()
     )
-    return await session.scalar(select(DatabaseRegistry).order_by(assignments, DatabaseRegistry.name).limit(1))
+    return await session.scalar(select(DatabaseRegistry.id).order_by(assignments, DatabaseRegistry.name).limit(1))
 
 
 async def get(session: AsyncSession, registry_id: UUID) -> DatabaseRegistry | None:

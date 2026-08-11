@@ -3,17 +3,26 @@ import pytest
 from pytest import MonkeyPatch
 from fastapi import FastAPI
 from pathlib import Path
+from pydantic import ValidationError
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
 
 
-def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
+@pytest.fixture
+def application_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
+    """Create the minimum generated Application source layout."""
 
-    # Create the required generated Application source layout.
-    (tmp_path / "src" / "i18n").mkdir(parents=True)
-    (tmp_path / "src" / "pages").mkdir()
+    # Create the source directories required by the runtime.
+    source_directory = tmp_path / "src"
+    (source_directory / "i18n").mkdir(parents=True)
+    (source_directory / "pages").mkdir()
     monkeypatch.chdir(tmp_path)
+
+    return source_directory
+
+
+def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(application_source: Path) -> None:
+    """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
 
     # Initialize the development runtime and its in-process client.
     app = FastAPI()
@@ -39,6 +48,39 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(monkey
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_development_cors_rejects_untrusted_origin(application_source: Path) -> None:
+    """Reject browser preflight requests from origins outside the local allowlist."""
+
+    # Start the development runtime with its local frontend CORS policy.
+    app = FastAPI()
+    LongLink(app, env="development")
+    client = TestClient(app)
+
+    # Request an API resource from an untrusted browser origin.
+    response = client.options(
+        "/pages.json",
+        headers={
+            "origin": "https://untrusted.example.com",
+            "access-control-request-method": "GET",
+        },
+    )
+
+    # Reject the preflight without depending on implementation-specific headers.
+    assert response.status_code == 400
+
+
+def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
+    """Require every Platform-owned runtime setting before production startup."""
+
+    # Ensure the production contract is incomplete.
+    monkeypatch.setenv("LONGLINK_ENV", "production")
+    monkeypatch.delenv("LONGLINK_DATABASE_HOST", raising=False)
+
+    # Reject startup before the application begins serving requests.
+    with pytest.raises(ValidationError, match="DATABASE_HOST"):
+        LongLink(FastAPI())
 
 
 def test_production_health_is_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -152,6 +194,29 @@ def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tm
     # Start registration and require schema validation to fail immediately.
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink(FastAPI())
+
+
+def test_application_route_collision_with_page_endpoint_is_rejected(
+    application_source: Path,
+) -> None:
+    """Reject page endpoints that would overlap an Application-owned route."""
+
+    # Create a page whose endpoint is already owned by the Application.
+    (application_source / "pages" / "dashboard.xml").write_text(
+        '<longlink version="v1"><Text i18n="dashboard.title" /></longlink>',
+        encoding="utf-8",
+    )
+    app = FastAPI()
+
+    @app.get("/pages/dashboard")
+    async def application_dashboard() -> dict[str, str]:
+        """Return the Application dashboard resource."""
+
+        return {"source": "application"}
+
+    # Reject ambiguous ownership during runtime registration.
+    with pytest.raises(ValueError, match="overlaps an Application route"):
+        LongLink(app)
 
 
 def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:

@@ -16,6 +16,23 @@ PRODUCTION_SETTINGS = {
 }
 
 
+def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str) -> None:
+    """Configure the complete Platform storage contract for one test."""
+
+    # Provide the shared production settings before applying the storage scope.
+    monkeypatch.setenv("LONGLINK_ENV", "production")
+    for name, value in PRODUCTION_SETTINGS.items():
+        monkeypatch.setenv(name, value)
+    if bucket:
+        monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
+    else:
+        monkeypatch.delenv("LONGLINK_STORAGE_BUCKET", raising=False)
+    if prefix:
+        monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
+    else:
+        monkeypatch.delenv("LONGLINK_STORAGE_PREFIX", raising=False)
+
+
 @pytest.mark.parametrize(
     ("bucket", "prefix", "message"),
     [
@@ -32,20 +49,22 @@ def test_production_storage_requires_safe_bucket_scope(
     """Reject production storage that is not safely scoped within a bucket."""
 
     # Configure incomplete or unsafe production storage scopes.
-    monkeypatch.setenv("LONGLINK_ENV", "production")
-    for name, value in PRODUCTION_SETTINGS.items():
-        monkeypatch.setenv(name, value)
-    if bucket:
-        monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
-    else:
-        monkeypatch.delenv("LONGLINK_STORAGE_BUCKET", raising=False)
-    if prefix:
-        monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
-    else:
-        monkeypatch.delenv("LONGLINK_STORAGE_PREFIX", raising=False)
+    configure_production_environment(monkeypatch, bucket, prefix)
 
     # Reject the configured scope before constructing the filesystem.
     with pytest.raises(ValueError, match=message):
+        storage_base.create_fs()
+
+
+@pytest.mark.parametrize("bucket", [".", "..", "/acme", "acme/../shared"])
+def test_production_storage_rejects_hostile_bucket_values(monkeypatch: pytest.MonkeyPatch, bucket: str) -> None:
+    """Reject bucket names that could escape or alter the configured storage scope."""
+
+    # Configure a valid prefix beneath a hostile bucket value.
+    configure_production_environment(monkeypatch, bucket, "applications/dashboard")
+
+    # Reject the bucket before constructing the filesystem.
+    with pytest.raises(ValueError, match="Storage buckets must be bucket names"):
         storage_base.create_fs()
 
 
@@ -74,11 +93,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
         return FakeFileSystem()
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
-    monkeypatch.setenv("LONGLINK_ENV", "production")
-    for name, value in PRODUCTION_SETTINGS.items():
-        monkeypatch.setenv(name, value)
-    monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", "acme")
-    monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", "applications/dashboard/")
+    configure_production_environment(monkeypatch, "acme", "applications/dashboard/")
 
     # Build production storage for a scoped Application prefix.
     filesystem = storage_base.create_fs()

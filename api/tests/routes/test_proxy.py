@@ -277,6 +277,37 @@ async def test_application_proxy_allows_organization_read_members(
     assert response.status_code == 503
 
 
+async def test_application_proxy_rejects_cross_organization_access_before_creating_gateway_client(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject a tenant's request before creating an upstream gateway client."""
+
+    # Create an Application owned by a separate Organization.
+    owner, other_owner, _ = users
+    organization = await create_organization(owner)
+    application = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+
+    class UnexpectedGatewayClient:
+        """Fail if an unauthorized request reaches the upstream boundary."""
+
+        def __init__(self, *_args: object) -> None:
+            """Reject gateway client construction for this denied request."""
+
+            raise AssertionError("cross-organization proxy request reached the gateway")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", UnexpectedGatewayClient)
+
+    # Request the other Organization's runtime through an authenticated session.
+    response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
+
+    # Verify authorization rejects the request without any gateway or upstream creation.
+    assert other_owner.id != owner.id
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
+
+
 async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

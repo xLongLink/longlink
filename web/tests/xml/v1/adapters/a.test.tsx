@@ -35,4 +35,23 @@ describe('Link', () => {
         expect(navigationOutput).toContain('href="/orgs/acme/apps/tracker/issues/123"');
         expect(anchorOutput).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
+
+    it('drops unsafe expression-backed navigation targets and falls back to a safe href', () => {
+        const output = renderXmlToMarkup(
+            parseXML('<Link to="${destination}" href="${fallback}" />'),
+            {
+                scope: { bindings: { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' } },
+                services: {
+                    invalidate: async () => {},
+                    navigationBaseUrl: '/orgs/acme/apps/tracker',
+                    requestBaseUrl: '',
+                    setups: {},
+                },
+            },
+            '/orgs/acme/apps/tracker'
+        );
+
+        expect(output).toContain('href="/orgs/acme/apps/tracker/files/document.pdf"');
+        expect(output).not.toContain('javascript:');
+    });
 });

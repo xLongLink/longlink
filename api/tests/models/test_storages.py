@@ -22,19 +22,26 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
 
 
 @pytest.mark.parametrize(
-    "payload",
+    "endpoint_url",
     [
-        {
-            "name": "Primary Storage",
-            "endpoint_url": "http://sos-ch-gva-2.exo.io",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-        },
+        "http://sos-ch-gva-2.exo.io",
+        "https://access:secret@sos-ch-gva-2.exo.io",
+        "https://sos-ch-gva-2.exo.io:443",
+        "https://sos-ch-gva-2.exo.io:invalid",
+        "https://sos-ch-gva-2.exo.io/bucket",
+        "https://sos-ch-gva-2.exo.io?endpoint=metadata.internal",
+        "https://sos-ch-gva-2.exo.io#metadata.internal",
+        "https://sos-ch-gva-2.exo.io.attacker.example",
     ],
 )
-def test_storage_registry_create_rejects_invalid_endpoint_payload(payload: dict[str, object]) -> None:
+def test_storage_registry_create_rejects_ssrf_and_parser_bypass_endpoints(endpoint_url: str) -> None:
     """Reject storage registry payloads that cannot identify a supported Exoscale backend."""
 
     # Invalid storage registry values fail before service-layer persistence.
+    payload = {
+        "name": "Primary Storage",
+        "access_key_id": "access-key",
+        "secret_access_key": "secret-key",
+    }
     with pytest.raises(ValidationError):
-        StorageRegistryCreate.model_validate(payload)
+        StorageRegistryCreate.model_validate({**payload, "endpoint_url": endpoint_url})

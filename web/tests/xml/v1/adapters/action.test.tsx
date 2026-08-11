@@ -4,7 +4,6 @@ import type { ASTProps, Scope, XmlRuntime } from '@/xml/v1/types';
 import { compileProps } from '../helpers';
 
 describe('Action', () => {
-    /* The action shell should send a request with a JSON payload. */
     it('sends a request and invalidates after success', async () => {
         const invalidations: Array<string | string[]> = [];
         let successCalls = 0;
@@ -56,6 +55,8 @@ describe('Action', () => {
 
         expect(requestUrl).toBe('/example/profile');
         expect(requestInit?.method).toBe('POST');
+        expect(requestInit?.credentials).toBe('include');
+        expect(new Headers(requestInit?.headers).get('accept')).toBe('application/json');
         expect(new Headers(requestInit?.headers).get('content-type')).toBe('application/json');
         expect(requestInit?.body).toBe(
             JSON.stringify({
@@ -69,7 +70,6 @@ describe('Action', () => {
         expect(errorCalls).toBe(0);
     });
 
-    /* HTTP and transport failures must stop before invalidation and success notification. */
     it('reports request failures without invalidating', async () => {
         const cases: Array<{ request: () => Promise<Response>; expectedError: string }> = [
             {
@@ -120,15 +120,19 @@ describe('Action', () => {
         }
     });
 
-    /* The action shell should send multipart form data without a JSON content type. */
-    it('sends multipart form data', async () => {
-        const file = new File(['supplier sheet'], 'supplier.txt');
+    it('sends multipart form data with multiple files, primitives, nested values, and nulls', async () => {
+        const firstFile = new File(['first supplier sheet'], 'first.txt');
+        const secondFile = new File(['second supplier sheet'], 'second.txt');
         const ctx: XmlRuntime = {
             scope: {
                 bindings: {
                     document: {
-                        file,
-                        label: 'Supplier sheet',
+                        files: [firstFile, secondFile],
+                        label: 'Supplier sheets',
+                        quantity: 2,
+                        published: false,
+                        metadata: { category: 'suppliers' },
+                        optional: null,
                     },
                 },
             },
@@ -146,7 +150,7 @@ describe('Action', () => {
         await executeAction(
             compileProps({
                 action: '/files',
-                form: '${{ file: document.file, label: document.label }}',
+                form: '${{ files: document.files, label: document.label, quantity: document.quantity, published: document.published, metadata: document.metadata, optional: document.optional }}',
             }),
             ctx.scope,
             ctx.services,
@@ -155,15 +159,22 @@ describe('Action', () => {
         );
 
         const body = requestInit?.body as FormData;
-        const uploadedFile = body.get('file') as File;
+        const uploadedFiles = body.getAll('files') as File[];
 
         expect(body).toBeInstanceOf(FormData);
-        expect(uploadedFile.name).toBe('supplier.txt');
-        expect(await uploadedFile.text()).toBe('supplier sheet');
-        expect(body.get('label')).toBe('Supplier sheet');
+        expect(requestInit?.credentials).toBe('include');
+        expect(new Headers(requestInit?.headers).get('accept')).toBe('application/json');
+        expect(new Headers(requestInit?.headers).has('content-type')).toBe(false);
+        expect(uploadedFiles.map((file) => file.name)).toEqual(['first.txt', 'second.txt']);
+        expect(await uploadedFiles[0]?.text()).toBe('first supplier sheet');
+        expect(await uploadedFiles[1]?.text()).toBe('second supplier sheet');
+        expect(body.get('label')).toBe('Supplier sheets');
+        expect(body.get('quantity')).toBe('2');
+        expect(body.get('published')).toBe('false');
+        expect(body.get('metadata')).toBe('{"category":"suppliers"}');
+        expect(body.has('optional')).toBe(false);
     });
 
-    /* Actions require an endpoint before they can invalidate setup values. */
     it('rejects actions without an endpoint', async () => {
         const ctx: XmlRuntime = {
             scope: { bindings: {} },
@@ -195,7 +206,6 @@ describe('Action', () => {
         expect(fetchCalls).toBe(0);
     });
 
-    /* Invalid action configuration must fail before sending a request. */
     it('rejects invalid actions before fetching', async () => {
         const cases: Array<{
             props: ASTProps;
@@ -251,5 +261,42 @@ describe('Action', () => {
             expect(fetchCalls).toBe(0);
             expect(errorMessage).toBe(testCase.expectedError);
         }
+    });
+
+    it.each([401, 403])('reports a %i response without closing or invalidating', async (status) => {
+        let invalidationCalls = 0;
+        let closeCalls = 0;
+        let errorMessage = '';
+        const ctx: XmlRuntime = {
+            scope: { bindings: {} },
+            services: {
+                invalidate: async () => {
+                    invalidationCalls += 1;
+                },
+                navigationBaseUrl: '',
+                requestBaseUrl: '',
+                setups: {},
+            },
+        };
+        const fetchImpl = (async () => new Response(null, { status })) satisfies typeof fetch;
+
+        await executeAction(
+            compileProps({ action: '/example/profile', closeDialog: 'true', invalidate: '${["profile"]}' }),
+            ctx.scope,
+            ctx.services,
+            fetchImpl,
+            (options) => {
+                if (options.type === 'error') errorMessage = String(options.body);
+
+                return () => {};
+            },
+            () => {
+                closeCalls += 1;
+            }
+        );
+
+        expect(invalidationCalls).toBe(0);
+        expect(closeCalls).toBe(0);
+        expect(errorMessage).toBe(`Request failed with status ${status}`);
     });
 });

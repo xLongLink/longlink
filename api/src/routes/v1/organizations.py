@@ -106,9 +106,6 @@ async def get_organization_database_usage(
     except Exception as exc:
         logger.exception("Failed to inspect database usage for organization '%s': %r", membership.organization.slug, exc)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
-    if usage is None:
-        return None
-
     return usage
 
 
@@ -250,11 +247,11 @@ async def create_organization(
     compute_id = await compute.available(session)
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
-    database_registry = await database.available(session)
-    if database_registry is None:
+    database_id = await database.available(session)
+    if database_id is None:
         raise UnavailableError("No database registry available")
-    storage_registry = await storage.available(session)
-    if storage_registry is None:
+    storage_id = await storage.available(session)
+    if storage_id is None:
         raise UnavailableError("No storage registry available")
 
     # Persist the Organization with its selected infrastructure registries.
@@ -264,8 +261,8 @@ async def create_organization(
         slug,
         user,
         compute_id=compute_id,
-        storage_id=storage_registry.id,
-        database_id=database_registry.id,
+        storage_id=storage_id,
+        database_id=database_id,
     )
     await session.commit()
     return organization

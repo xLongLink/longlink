@@ -1,6 +1,7 @@
 import { hasProtocol, parsePath, parseURL } from 'ufo';
 
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
@@ -66,7 +67,23 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
         throw new Error('XML request URL must be app-relative');
     }
 
-    return resolveUrl(baseUrl, value);
+    // Reject encoded separators and dot segments before browser URL normalization can escape the proxy prefix.
+    const requestPath = value.split(/[?#]/, 1)[0];
+    if (/(?:^|\/)(?=[^/]*%2e)(?:\.|%2e){1,2}(?=\/|$)|%2f|%5c/i.test(requestPath)) {
+        throw new Error('XML request URL must remain within the application');
+    }
+
+    // Preserve app-relative leading slashes while resolving through the platform application proxy.
+    const base = new URL(baseUrl, RELATIVE_URL_ORIGIN);
+    const basePathname = base.pathname.endsWith('/') ? base.pathname : `${base.pathname}/`;
+    const url = new URL(value.replace(/^\/+/, ''), `${base.origin}${basePathname}`);
+
+    // Require the normalized browser URL to retain the complete application proxy path.
+    if (!url.pathname.startsWith(basePathname)) {
+        throw new Error('XML request URL must remain within the application');
+    }
+
+    return base.origin === RELATIVE_URL_ORIGIN ? `${url.pathname}${url.search}${url.hash}` : url.toString();
 }
 
 /** Resolves an application navigation URL or omits invalid destinations. */

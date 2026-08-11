@@ -16,8 +16,8 @@ async def fetch(session: AsyncSession) -> Sequence[StorageRegistry]:
     return result.all()
 
 
-async def available(session: AsyncSession) -> StorageRegistry | None:
-    """Return the least-used storage registry."""
+async def available(session: AsyncSession) -> UUID | None:
+    """Return the ID of the least-used storage registry."""
 
     # Order storage registries by their active Organization assignment count.
     assignments = (
@@ -25,7 +25,7 @@ async def available(session: AsyncSession) -> StorageRegistry | None:
         .where(Organization.storage_id == StorageRegistry.id, Organization.deleted_at.is_(None))
         .scalar_subquery()
     )
-    return await session.scalar(select(StorageRegistry).order_by(assignments, StorageRegistry.name).limit(1))
+    return await session.scalar(select(StorageRegistry.id).order_by(assignments, StorageRegistry.name).limit(1))
 
 
 async def get(session: AsyncSession, registry_id: UUID) -> StorageRegistry | None:

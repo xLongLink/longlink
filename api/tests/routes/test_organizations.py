@@ -393,7 +393,7 @@ async def test_list_organizations_includes_created_organization(
     assert str(organization.id) in {item["id"] for item in response.json()}
 
 
-async def test_get_organization_returns_404_for_non_member(
+async def test_get_organization_returns_403_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -596,7 +596,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_create_organization_invitation_returns_404_for_non_member(
+async def test_create_organization_invitation_returns_403_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:

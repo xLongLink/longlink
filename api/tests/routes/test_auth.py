@@ -4,6 +4,7 @@ from httpx2 import AsyncClient, ASGITransport
 from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from urllib.parse import parse_qs, urlparse
+from src.environments import env
 from src.database.session import get_session
 from src.database.models.users import User
 
@@ -174,3 +175,48 @@ async def test_forgot_and_reset_password(
     assert old_login.status_code == 400
     assert old_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert new_login.status_code == 204
+
+
+async def test_authenticated_logout_rejects_cross_origin_request(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Prevent a foreign origin from clearing an authenticated browser session."""
+
+    # Send a credentialed logout request initiated by an untrusted origin.
+    client = clients[0]
+    response = await client.post("/api/v1/auth/logout", headers={"origin": "https://attacker.example"})
+    profile_response = await client.get("/api/v1/me")
+
+    # Reject CSRF logout attempts without expiring the caller's authenticated session.
+    assert response.status_code == 403
+    assert "set-cookie" not in response.headers
+    assert profile_response.status_code == 200
+
+
+async def test_password_login_sets_production_session_security_and_cache_attributes(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Issue a production browser session only as a secure, private credential."""
+
+    # Make the route render production cookie attributes.
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    user = users[0]
+
+    # Authenticate with the production cookie policy.
+    response = await client.post(
+        "/api/v1/auth/password/login",
+        json={"email": user.email, "password": TEST_PASSWORD},
+    )
+
+    # Verify the credential cannot be read by scripts, sent insecurely, or cached.
+    assert response.status_code == 204
+    assert response.headers["cache-control"] == "no-store"
+    cookie = response.headers["set-cookie"]
+    assert "longlink_auth=" in cookie
+    assert "HttpOnly" in cookie
+    assert "Max-Age=2592000" in cookie
+    assert "Path=/" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Secure" in cookie
