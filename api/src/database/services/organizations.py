@@ -110,18 +110,15 @@ async def set_runtime(session: AsyncSession, organization_id: UUID, expected_sta
     """Transition one active Organization from the expected lifecycle state."""
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
-    if (
-        await session.execute(
-            sql_update(Organization)
-            .where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-                Organization.status == expected_status,
-            )
-            .values(status=status)
+    await session.execute(
+        sql_update(Organization)
+        .where(
+            Organization.id == organization_id,
+            Organization.deleted_at.is_(None),
+            Organization.status == expected_status,
         )
-    ).rowcount != 1:
-        return
+        .values(status=status)
+    )
 
 
 async def purge(session: AsyncSession, organization_id: UUID) -> None:

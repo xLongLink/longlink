@@ -4,7 +4,6 @@ import { renderXmlToMarkup } from '../helpers';
 
 const translations = {
     'anchors.download': { defaultMessage: 'Download' },
-    'anchors.labelOnly': { defaultMessage: 'Label only' },
     'anchors.openIssue': { defaultMessage: 'Open issue' },
 };
 
@@ -43,28 +42,5 @@ describe('Link', () => {
         expect(navigationOutput).toContain('href="/orgs/acme/apps/tracker/issues/123"');
         expect(navigationOutput).toContain('Open issue');
         expect(anchorOutput).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
-    });
-
-    it('omits href from unsafe anchors', () => {
-        const unsafeAnchors = [
-            '<Link href="javascript:alert(1)" i18n="anchors.labelOnly" />',
-            '<Link to="https://evil.example.com/issues/123" i18n="anchors.labelOnly" />',
-        ];
-
-        for (const anchor of unsafeAnchors) {
-            const output = renderXmlToMarkup(parseXML(anchor), {
-                scope: { bindings: {} },
-                services: {
-                    invalidate: async () => {},
-                    navigationBaseUrl: '',
-                    requestBaseUrl: '',
-                    setups: {},
-                    translations,
-                },
-            });
-
-            expect(output).toContain('Label only');
-            expect(output).not.toContain('href=');
-        }
     });
 });

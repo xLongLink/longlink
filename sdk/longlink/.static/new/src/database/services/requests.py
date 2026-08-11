@@ -10,9 +10,7 @@ async def list_requests() -> list[PurchaseRequest]:
     async with database.session() as session:
         statement = select(PurchaseRequest).order_by(PurchaseRequest.id)
         result = await session.exec(statement)
-        purchase_requests = result.all()
-
-    return purchase_requests
+        return result.all()
 
 
 async def get_request(request_id: int) -> PurchaseRequest | None:
@@ -22,9 +20,7 @@ async def get_request(request_id: int) -> PurchaseRequest | None:
     async with database.session() as session:
         statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
         result = await session.exec(statement)
-        request = result.first()
-
-    return request
+        return result.first()
 
 
 async def create_request(text: str, amount: float) -> PurchaseRequest:

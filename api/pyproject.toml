@@ -74,7 +74,6 @@ target-version = "py312"
 select = ["UP", "D300", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["D300"]
 "src/database/models/*.py" = ["UP037", "UP045"]
 
 [tool.ruff.lint.isort]
@@ -91,7 +90,6 @@ include = ["main.py", "scripts", "src", "alembic"]
 exclude = ["src/.static", "tests", "src/database/models", "src/database/services"]
 
 [tool.pytest.ini_options]
-pythonpath = [".", "../sdk"]
 markers = [
     "integration: marks tests requiring container-backed infrastructure",
     "no_db: skips the API test database fixture for pure unit tests",

@@ -59,7 +59,6 @@ async def reset_db(
             yield
         finally:
             session.Session = None
-            session._engine = None
         return
 
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
@@ -67,21 +66,18 @@ async def reset_db(
 
     # Clear any cached session engine before binding the test database.
     session.Session = None
-    session._engine = None
 
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(PlatformModel.metadata.create_all)
 
-    session._engine = engine
     session.Session = async_sessionmaker(engine, expire_on_commit=False)
 
     try:
         yield
     finally:
         session.Session = None
-        session._engine = None
         await engine.dispose()
 
 

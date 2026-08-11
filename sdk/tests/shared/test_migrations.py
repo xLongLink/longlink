@@ -89,23 +89,21 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     verification_engine = create_async_engine(postgresql_url)
     try:
         async with verification_engine.connect() as connection:
-            rows = (
-                await connection.execute(
-                    text(
-                        """
-                        SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
-                        FROM shared.audit
-                        WHERE id = :user_id
-                        """
-                    ),
-                    {"user_id": user_id},
-                )
-            ).mappings().all()
+            result = await connection.execute(
+                text(
+                    """
+                    SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
+                    FROM shared.audit
+                    WHERE id = :user_id
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            row = result.mappings().one()
     finally:
         await verification_engine.dispose()
 
-    assert len(rows) == 1
-    assert dict(rows[0]) == {
+    assert dict(row) == {
         "id": user_id,
         "name": "Updated User",
         "email": "updated@example.com",
