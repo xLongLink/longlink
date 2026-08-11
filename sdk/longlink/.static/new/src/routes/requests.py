@@ -62,7 +62,7 @@ async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
     # Validate the request before accessing its attachment storage.
-    await _require_request(request_id, include_audit_users=False)
+    await _require_request(request_id)
 
     # List the request directory and treat missing storage as an empty collection.
     attachments_directory = f"{ATTACHMENTS_DIRECTORY}/{request_id}"
@@ -85,7 +85,7 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
     """Upload one file attachment for a purchase request."""
 
     # Validate the request before accepting attachment content.
-    await _require_request(request_id, include_audit_users=False)
+    await _require_request(request_id)
 
     # Normalize the supplied name and derive its unique storage path.
     file_name = _safe_file_name(file.filename)
@@ -119,7 +119,7 @@ async def request_attachment_download_endpoint(request_id: int, file_id: str) ->
     """Download one purchase request attachment."""
 
     # Validate the request before accessing its attachment storage.
-    await _require_request(request_id, include_audit_users=False)
+    await _require_request(request_id)
 
     # Resolve the attachment path and reject files that are not present.
     storage_path = _attachment_path(request_id, file_id)
@@ -145,7 +145,7 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str):
     """Delete one purchase request attachment."""
 
     # Validate the request before modifying its attachment storage.
-    await _require_request(request_id, include_audit_users=False)
+    await _require_request(request_id)
 
     # Resolve the attachment path and remove the file when it is present.
     storage_path = _attachment_path(request_id, file_id)
@@ -153,11 +153,11 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str):
         storage.rm(storage_path)
 
 
-async def _require_request(request_id: int, include_audit_users: bool = True) -> PurchaseRequest:
+async def _require_request(request_id: int) -> PurchaseRequest:
     """Return one purchase request or raise a 404 response."""
 
     # Retrieve the request and translate a missing record into an API error.
-    request = await requests.get_request(request_id, include_audit_users=include_audit_users)
+    request = await requests.get_request(request_id)
     if request is None:
         raise HTTPException(status_code=404, detail="Purchase request not found")
 
