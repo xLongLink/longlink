@@ -33,7 +33,6 @@ async def list_organizations(_user: User = Depends(authadmin), session: AsyncSes
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
 async def get_organization(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -85,7 +84,6 @@ async def update_organization(
     response_model=int | None,
 )
 async def get_organization_database_usage(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -119,7 +117,6 @@ async def get_organization_database_usage(
     response_model=OrganizationStorageUsageResponse | None,
 )
 async def get_organization_storage_usage(
-    organization_id: UUID,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -158,7 +155,6 @@ async def get_organization_storage_usage(
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
-    organization_id: UUID,
     payload: OrganizationInvitationCreate,
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
@@ -180,7 +176,6 @@ async def create_organization_invitation(
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
-    organization_id: UUID,
     member_id: UUID,
     payload: OrganizationMemberUpdate,
     user: User = Depends(authuser),

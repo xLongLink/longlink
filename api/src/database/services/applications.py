@@ -82,7 +82,8 @@ async def create(
     if current is None:
         raise NotFoundError("Organization not found")
     compute = await session.get(ComputeRegistry, current.compute_id, with_for_update=True)
-    organization = (await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())).one_or_none()
+    organization_result = await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
+    organization = organization_result.one_or_none()
     if compute is None or organization is None:
         raise NotFoundError("Organization not found")
     if compute.status != Status.running:
@@ -162,10 +163,12 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
         return None
 
     # Lock the Organization and Application state before tombstoning.
-    organization = (
-        await session.scalars(select(Organization).where(Organization.id == current.organization_id).with_for_update())
-    ).one_or_none()
-    application = (await session.scalars(select(Application).where(Application.id == application_id).with_for_update())).one_or_none()
+    organization_result = await session.scalars(
+        select(Organization).where(Organization.id == current.organization_id).with_for_update()
+    )
+    organization = organization_result.one_or_none()
+    application_result = await session.scalars(select(Application).where(Application.id == application_id).with_for_update())
+    application = application_result.one_or_none()
     if organization is None or application is None:
         return None
 

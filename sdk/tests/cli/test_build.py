@@ -157,7 +157,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     commands: list[list[str]] = []
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
+    def fake_build_app(build_context: Path, _base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
         """Create fake Docker artifacts for the build command."""
 
         assert tag == "dev"

@@ -29,7 +29,7 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
     assert [item.id for item in invitation_rows] == [invitation.id]
 
 
-async def test_create_rejects_invitation_for_missing_organization(users: tuple[User, User, User]) -> None:
+async def test_create_rejects_invitation_for_missing_organization() -> None:
     """Reject invitations for organizations that do not exist."""
 
     # Arrange

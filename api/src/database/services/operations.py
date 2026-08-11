@@ -25,16 +25,17 @@ async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID,
     """Discover release reconciliation targets in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    compute_rows = (await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)))).all()
-    organization_rows = (await session.scalars(select(Organization).order_by(col(Organization.compute_id), col(Organization.id)))).all()
-    application_rows = (
-        await session.execute(
-            select(col(Application.id), col(Application.deleted_at), col(Organization.compute_id))
-            .join(Organization, col(Organization.id) == col(Application.organization_id))
-            .where(col(Organization.deleted_at).is_(None))
-            .order_by(col(Organization.compute_id), col(Application.id))
-        )
-    ).all()
+    result = await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)))
+    compute_rows = result.all()
+    result = await session.scalars(select(Organization).order_by(col(Organization.compute_id), col(Organization.id)))
+    organization_rows = result.all()
+    result = await session.execute(
+        select(col(Application.id), col(Application.deleted_at), col(Organization.compute_id))
+        .join(Organization, col(Organization.id) == col(Application.organization_id))
+        .where(col(Organization.deleted_at).is_(None))
+        .order_by(col(Organization.compute_id), col(Application.id))
+    )
+    application_rows = result.all()
 
     targets = [(OperationKind.compute_create, compute.id, compute.id) for compute in compute_rows]
     targets.extend(

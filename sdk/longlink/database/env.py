@@ -1,24 +1,16 @@
 import asyncio
-from typing import Any
 from alembic import context
 from sqlalchemy.engine import Connection
 from longlink.database.base import create_engine, database_metadata
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
-# Initialize the migration engine and shared Alembic context options.
+# Initialize the migration engine.
 settings = Envs()
 engine = create_engine(settings)
-migration_context_options: dict[str, Any] = {
-    "target_metadata": database_metadata,
-    "include_object": include_object,
-    "compare_type": True,
-    "render_as_batch": True,
-}
 
 # Keep Application migration state out of the shared schema resolved by the production search path.
-if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+"):
-    migration_context_options["version_table_schema"] = settings.DATABASE_SCHEMA
+version_table_schema = settings.DATABASE_SCHEMA if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+") else None
 
 
 def run_migrations_offline() -> None:
@@ -28,7 +20,11 @@ def run_migrations_offline() -> None:
     context.configure(
         url=str(engine.url),
         literal_binds=True,
-        **migration_context_options,
+        target_metadata=database_metadata,
+        include_object=include_object,
+        compare_type=True,
+        render_as_batch=True,
+        version_table_schema=version_table_schema,
     )
 
     # Wrap offline migration output in Alembic's transaction context.
@@ -42,7 +38,11 @@ def do_run_migrations(connection: Connection) -> None:
     # Configure Alembic with the synchronous connection exposed by SQLAlchemy.
     context.configure(
         connection=connection,
-        **migration_context_options,
+        target_metadata=database_metadata,
+        include_object=include_object,
+        compare_type=True,
+        render_as_batch=True,
+        version_table_schema=version_table_schema,
     )
 
     # Wrap online migration work in Alembic's transaction context.

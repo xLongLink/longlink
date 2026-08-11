@@ -17,28 +17,26 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
     normalized_email = email.strip().lower()
 
     # Require an active target organization.
-    if (
-        await session.scalars(
-            select(Organization.id).where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-            )
+    result = await session.scalars(
+        select(Organization.id).where(
+            Organization.id == organization_id,
+            Organization.deleted_at.is_(None),
         )
-    ).one_or_none() is None:
+    )
+    if result.one_or_none() is None:
         raise NotFoundError("Organization not found")
 
     # Reject emails that already belong to the organization.
-    if (
-        await session.scalars(
-            select(User.id)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                func.lower(User.email) == normalized_email,
-            )
+    result = await session.scalars(
+        select(User.id)
+        .join(UserOrganization, UserOrganization.user_id == User.id)
+        .where(
+            UserOrganization.organization_id == organization_id,
+            UserOrganization.deleted_at.is_(None),
+            func.lower(User.email) == normalized_email,
         )
-    ).one_or_none() is not None:
+    )
+    if result.one_or_none() is not None:
         raise ConflictError("User is already a member")
 
     # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
@@ -89,31 +87,29 @@ async def accept(session: AsyncSession, user_id: UUID) -> set[UUID]:
     normalized_email = user.email.strip().lower()
 
     # Lock the recipient's active grants before creating or restoring memberships.
-    invitations = (
-        await session.scalars(
-            select(OrganizationInvitation)
-            .join(Organization, Organization.id == OrganizationInvitation.organization_id)
-            .where(
-                Organization.deleted_at.is_(None),
-                OrganizationInvitation.email == normalized_email,
-            )
-            .with_for_update()
+    result = await session.scalars(
+        select(OrganizationInvitation)
+        .join(Organization, Organization.id == OrganizationInvitation.organization_id)
+        .where(
+            Organization.deleted_at.is_(None),
+            OrganizationInvitation.email == normalized_email,
         )
-    ).all()
+        .with_for_update()
+    )
+    invitations = result.all()
     if not invitations:
         return set()
 
     # Lock every existing membership before creating or restoring invitation access.
-    memberships = (
-        await session.scalars(
-            select(UserOrganization)
-            .where(
-                UserOrganization.user_id == user.id,
-                UserOrganization.organization_id.in_([invitation.organization_id for invitation in invitations]),
-            )
-            .with_for_update()
+    result = await session.scalars(
+        select(UserOrganization)
+        .where(
+            UserOrganization.user_id == user.id,
+            UserOrganization.organization_id.in_([invitation.organization_id for invitation in invitations]),
         )
-    ).all()
+        .with_for_update()
+    )
+    memberships = result.all()
     memberships_by_organization_id = {membership.organization_id: membership for membership in memberships}
 
     now = utcnow()
