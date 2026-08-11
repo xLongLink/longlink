@@ -15,7 +15,6 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 - Keep storage interfaces provider-agnostic and normalized to S3-compatible semantics.
 - Prefer simple, explicit APIs.
 - Remove obsolete code when replacing behavior.
-- Do not add tests right now (current project phase).
 
 ## Development
 

@@ -98,12 +98,6 @@
     "dashboard.recent.open": {
         "defaultMessage": "Open request"
     },
-    "dashboard.recent.status": {
-        "defaultMessage": "{status}"
-    },
-    "dashboard.recent.summary": {
-        "defaultMessage": "{vendor} - CHF {amount}"
-    },
     "dashboard.recent.title": {
         "defaultMessage": "Recent requests"
     },
@@ -115,15 +109,6 @@
     },
     "dashboard.title": {
         "defaultMessage": "Office operations"
-    },
-    "requests.actions.approve": {
-        "defaultMessage": "Approve"
-    },
-    "requests.actions.decision": {
-        "defaultMessage": "Decision"
-    },
-    "requests.actions.reject": {
-        "defaultMessage": "Reject"
     },
     "requests.attachments.actions": {
         "defaultMessage": "Actions"
@@ -167,29 +152,11 @@
     "requests.description": {
         "defaultMessage": "Track purchase requests and supporting files."
     },
-    "requests.detail.approvedNote": {
-        "defaultMessage": "This request is approved and ready for procurement."
-    },
     "requests.detail.back": {
         "defaultMessage": "Back to requests"
     },
-    "requests.detail.createdBy": {
-        "defaultMessage": "Created by {name}"
-    },
     "requests.detail.description": {
         "defaultMessage": "Review the request, update its workflow status, and manage attachments."
-    },
-    "requests.detail.justification": {
-        "defaultMessage": "{justification}"
-    },
-    "requests.detail.rejectedNote": {
-        "defaultMessage": "This request is rejected. Add context before reopening it."
-    },
-    "requests.detail.requestStatus": {
-        "defaultMessage": "{status}"
-    },
-    "requests.detail.requestTitle": {
-        "defaultMessage": "{title}"
     },
     "requests.detail.summary": {
         "defaultMessage": "Request summary"
@@ -197,32 +164,14 @@
     "requests.detail.title": {
         "defaultMessage": "Purchase request detail"
     },
-    "requests.detail.vendorAmount": {
-        "defaultMessage": "{vendor} - CHF {amount}"
-    },
     "requests.fields.amount": {
         "defaultMessage": "Amount"
-    },
-    "requests.fields.currency": {
-        "defaultMessage": "CHF"
-    },
-    "requests.fields.justification": {
-        "defaultMessage": "Justification"
     },
     "requests.fields.text": {
         "defaultMessage": "Text"
     },
-    "requests.fields.titleHelp": {
-        "defaultMessage": "Use a short, searchable name."
-    },
-    "requests.fields.vendor": {
-        "defaultMessage": "Vendor"
-    },
     "requests.table.amount": {
         "defaultMessage": "Amount"
-    },
-    "requests.table.createdBy": {
-        "defaultMessage": "Created by"
     },
     "requests.table.open": {
         "defaultMessage": "Open"
@@ -230,14 +179,8 @@
     "requests.table.request": {
         "defaultMessage": "Request"
     },
-    "requests.table.status": {
-        "defaultMessage": "Status"
-    },
     "requests.table.text": {
         "defaultMessage": "{text}"
-    },
-    "requests.table.vendor": {
-        "defaultMessage": "Vendor"
     },
     "requests.title": {
         "defaultMessage": "Purchase requests"

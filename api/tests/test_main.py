@@ -23,5 +23,6 @@ def test_versioned_openapi_describes_only_v1_paths() -> None:
     openapi_response = client.get("/api/v1/openapi.json")
 
     assert openapi_response.status_code == 200
-    assert openapi_response.json()["info"]["version"] == "1.0.0"
-    assert all(path.startswith("/api/v1/") for path in openapi_response.json()["paths"])
+    openapi = openapi_response.json()
+    assert openapi["info"]["version"] == "1.0.0"
+    assert all(path.startswith("/api/v1/") for path in openapi["paths"])

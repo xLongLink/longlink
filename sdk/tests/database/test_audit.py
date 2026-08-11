@@ -8,7 +8,7 @@ from longlink.database import base as database_base
 from longlink.database import audit as database_audit
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.database.audit import audit_user_scope, install_audit_middleware
+from longlink.database.audit import install_audit_middleware
 
 
 @pytest.mark.asyncio
@@ -53,9 +53,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.session() as session:
             item = AuditLifecycleItem(name="draft", created_at=None, updated_at=None)
-            with audit_user_scope(creator_id):
+            token = database_audit._current_user_id.set(creator_id)
+            try:
                 session.add(item)
                 await session.commit()
+            finally:
+                database_audit._current_user_id.reset(token)
 
             assert database_audit._current_user_id.get() is None
             await session.refresh(item)
@@ -71,9 +74,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            with audit_user_scope(updater_id):
+            token = database_audit._current_user_id.set(updater_id)
+            try:
                 item.name = "reviewed"
                 await session.commit()
+            finally:
+                database_audit._current_user_id.reset(token)
 
             await session.refresh(item)
             assert item.updated_at == updated_at
@@ -84,9 +90,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            with audit_user_scope(deleter_id):
+            token = database_audit._current_user_id.set(deleter_id)
+            try:
                 await session.delete(item)
                 await session.commit()
+            finally:
+                database_audit._current_user_id.reset(token)
 
         # Reload after deletion to prove the row and all persisted audit values remain.
         async with database_base.session() as session:

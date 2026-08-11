@@ -53,10 +53,10 @@ export default function CreateStorage() {
                 },
                 (value) => zStorageRegistryResponse.parse(value)
             ),
-        onSuccess: async () => {
+        onSuccess: () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
+            return queryClient.invalidateQueries({ queryKey: storagesQueryKey });
         },
     });
 

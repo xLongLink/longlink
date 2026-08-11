@@ -71,16 +71,16 @@ function ResourceSettings<T extends Record<string, unknown>>({
             retry: false,
         }
     );
-    const resourceError = organizationError ?? error;
-
     return (
         <VStack gap={4}>
             <VStack gap={1}>
                 <Heading level={2}>{title}</Heading>
                 <Text type="supporting">{description}</Text>
             </VStack>
-            {isOrganizationLoading || isLoading ? null : resourceError ? (
-                <Banner status="error" title={resourceError.message} />
+            {isOrganizationLoading || isLoading ? null : organizationError ? (
+                <Banner status="error" title={organizationError.message} />
+            ) : error ? (
+                <Banner status="error" title={error.message} />
             ) : (
                 <Table
                     columns={columns}
@@ -131,7 +131,11 @@ export default function Settings({
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const peopleSection: PeopleSection = location.hash.replace(/^#/, '') === 'invitations' ? 'invitations' : 'members';
     const section = routeSection === 'people' ? peopleSection : routeSection;
-    const { data: databaseUsage, error: databaseError, isLoading: isDatabaseLoading } = useApiQuery<number | null>(
+    const {
+        data: databaseUsage,
+        error: databaseError,
+        isLoading: isDatabaseLoading,
+    } = useApiQuery<number | null>(
         section === 'database' && organizationId ? platformApiPath(`/organizations/${organizationId}/database`) : null,
         {
             parse: (value) => z.int().gte(0).nullable().parse(value),

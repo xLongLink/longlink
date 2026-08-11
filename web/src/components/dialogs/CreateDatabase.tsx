@@ -56,10 +56,10 @@ export default function CreateDatabase() {
                 },
                 (value) => zDatabaseRegistryResponse.parse(value)
             ),
-        onSuccess: async () => {
+        onSuccess: () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
+            return queryClient.invalidateQueries({ queryKey: databasesQueryKey });
         },
     });
 

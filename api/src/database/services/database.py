@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import func, text, select
+from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -15,13 +15,6 @@ async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
     # Open a session for the registry list query.
     result = await session.scalars(select(DatabaseRegistry))
     return result.all()
-
-
-async def ready(session: AsyncSession) -> None:
-    """Verify the Platform database accepts queries."""
-
-    # Execute a minimal query through the caller-owned connection.
-    await session.execute(text("SELECT 1"))
 
 
 async def available(session: AsyncSession) -> DatabaseRegistry | None:

@@ -115,8 +115,8 @@ async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     engine = _engine if _engine is not None else create_engine(Envs())
 
     # Verify connection once before exposing the session factory.
-    async with engine.connect() as connection:
-        await connection.run_sync(lambda _: None)
+    async with engine.connect():
+        pass
 
     # Cache the session factory after the engine connection succeeds.
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

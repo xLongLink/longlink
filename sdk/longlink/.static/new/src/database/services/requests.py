@@ -33,14 +33,10 @@ async def create_request(text: str, amount: float) -> PurchaseRequest:
     # Build the request from the validated route values.
     request = PurchaseRequest(text=text, amount=amount)
 
-    # Persist the request before reloading its public response shape.
+    # Persist and refresh the request so it includes its generated id.
     async with database.session() as session:
         session.add(request)
         await session.commit()
+        await session.refresh(request)
 
-    # Reload through the public reader so create and list responses share one shape.
-    created_request = await get_request(int(request.id or 0))
-    if created_request is None:
-        raise RuntimeError("Created purchase request could not be loaded")
-
-    return created_request
+    return request

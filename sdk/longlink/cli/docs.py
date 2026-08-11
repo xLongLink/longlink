@@ -39,17 +39,14 @@ def resolve_component_schema(component: str) -> Path:
 
     adapters = ROOT / ".static" / "xsd" / "adapters"
     normalized = component.casefold()
-    schema_paths = tuple(adapters.glob("*.xsd"))
 
     # Prefer direct schema filename matches.
-    for schema_path in schema_paths:
-
-        # Compare filenames without case sensitivity.
-        if schema_path.stem.casefold() == normalized:
-            return schema_path
+    schema_path = next((path for path in adapters.glob("*.xsd") if path.stem.casefold() == normalized), None)
+    if schema_path is not None:
+        return schema_path
 
     # Fall back to component element declarations.
-    for schema_path in schema_paths:
+    for schema_path in adapters.glob("*.xsd"):
         schema = load_schema(schema_path)
         if any(name.casefold() == normalized for name in schema.elements):
             return schema_path
