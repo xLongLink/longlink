@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator
 from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.utils.time import utcnow
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
@@ -32,9 +32,9 @@ class AuditTable(Base):
     deleted_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
 
     # Audit user relationships
-    created_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.created_id], lazy="selectin"))
-    updated_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.updated_id], lazy="selectin"))
-    deleted_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.deleted_id], lazy="selectin"))
+    created_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.created_id], lazy="selectin"))
+    updated_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.updated_id], lazy="selectin"))
+    deleted_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
 Session: async_sessionmaker[AsyncSession] | None = None

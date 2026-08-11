@@ -8,7 +8,7 @@ from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db
@@ -34,7 +34,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             password="secret",
             sslmode=DatabaseSSLMode.disable,
         )
-        active_user = AuditUser(
+        active_user = Audit(
             id=UUID("11111111-1111-1111-1111-111111111111"),
             name="Owner User",
             email="owner@example.com",

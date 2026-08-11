@@ -2,6 +2,7 @@ import logging
 from typing import Literal
 from fastapi import FastAPI
 from pathlib import Path
+from longlink import storage
 from functools import partial
 from dataclasses import dataclass
 from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
@@ -41,6 +42,7 @@ class LongLink:
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
         app.state.page_registry = []
+        app.state.storage = storage
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)

@@ -54,7 +54,7 @@ async def item_attachments_get_endpoint(item_id: int):
 
     # Derive display names from the generated storage ids.
     return [
-        {"id": PurePosixPath(path).name, "name": _display_file_name(PurePosixPath(path).name)}
+        {"id": PurePosixPath(path).name, "name": PurePosixPath(path).name.split("-", 1)[-1]}
         for path in entries
     ]
 
@@ -66,8 +66,8 @@ async def item_attachments_post_endpoint(item_id: int, file: UploadFile):
     # Validate the item before accepting attachment content.
     await _require_item(item_id)
 
-    # Normalize the supplied name and derive its unique storage path.
-    file_name = _safe_file_name(file.filename)
+    # Keep the uploaded basename beneath the item-specific storage directory.
+    file_name = PurePosixPath(file.filename or "attachment.bin").name or "attachment.bin"
     file_id = f"{uuid4().hex}-{file_name}"
     storage_path = f"{ATTACHMENTS_DIRECTORY}/{item_id}/{file_id}"
 
@@ -94,23 +94,3 @@ async def _require_item(item_id: int) -> Item:
         raise HTTPException(status_code=404, detail="Item not found")
 
     return item
-
-
-def _safe_file_name(file_name: str | None) -> str:
-    """Return a storage-safe file name without path separators."""
-
-    # Normalize the supplied name to a safe basename and character set.
-    source_name = PurePosixPath(file_name or "attachment.bin").name.strip()
-    normalized_name = "".join(
-        character if character.isalnum() or character in ".-_" else "-"
-        for character in source_name
-    )
-
-    return normalized_name.strip(".-") or "attachment.bin"
-
-
-def _display_file_name(file_id: str) -> str:
-    """Return the original display name stored inside an attachment id."""
-
-    # Remove the generated storage prefix while preserving names without one.
-    return file_id.split("-", 1)[1] if "-" in file_id else file_id

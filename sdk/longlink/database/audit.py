@@ -112,6 +112,7 @@ def install_audit_middleware(app: FastAPI) -> None:
 
         # Keep the user bound across downstream request handling.
         token = _current_user_id.set(user_id)
+        request.state.user_id = user_id
         try:
             return await call_next(request)
         finally:

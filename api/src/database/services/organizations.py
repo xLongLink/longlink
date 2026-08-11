@@ -13,7 +13,7 @@ from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -212,13 +212,13 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     memberships = await members(session, organization_id, include_deleted=True)
-    rows: list[AuditUser] = []
+    rows: list[Audit] = []
     for membership in memberships:
         user = membership.user
         deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
         updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
         rows.append(
-            AuditUser(
+            Audit(
                 id=user.id,
                 name=user.name,
                 email=user.email,

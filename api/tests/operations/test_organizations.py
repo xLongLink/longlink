@@ -5,7 +5,7 @@ from src.models.roles import OrganizationRoles
 from src.database.session import get_session, session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
-from longlink.shared.models import AuditUser
+from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -19,7 +19,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     organization = await create_organization(owner, infrastructure=infrastructure)
     base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
     deleted_at = base_time + timedelta(minutes=2)
-    calls: list[tuple[str, list[AuditUser]]] = []
+    calls: list[tuple[str, list[Audit]]] = []
 
     # Persist one deleted membership whose deactivation follows its last regular update.
     Session = await get_session()
@@ -38,7 +38,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         )
         await session.commit()
 
-    async def sync(shared_schema_url: str, rows: list[AuditUser]) -> None:
+    async def sync(shared_schema_url: str, rows: list[Audit]) -> None:
         """Capture the shared audit payload."""
 
         calls.append((shared_schema_url, rows))

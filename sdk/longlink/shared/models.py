@@ -7,7 +7,7 @@ from longlink.database.types import UTCDateTime
 from longlink.database.registry import Base
 
 
-class AuditUser(Base, table=True):
+class Audit(Base, table=True):
     """Represent one Platform-owned Organization user shared across all Organization Applications.
 
     Applications have read-only access to this shared-schema projection.
