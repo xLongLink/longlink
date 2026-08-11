@@ -23,7 +23,6 @@ VALID_FRAGMENTS = [
     ),
     ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
     ("badge", _adapter_schema("Badge.xsd"), '<Badge label="$item.status" variant="success" />'),
-    ("banner", _adapter_schema("Banner.xsd"), '<Banner status="warning" title="Review required"><Text value="Details" /></Banner>'),
     (
         "button",
         _adapter_schema("Button.xsd"),
@@ -35,7 +34,6 @@ VALID_FRAGMENTS = [
         _adapter_schema("CheckboxInput.xsd"),
         '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" />',
     ),
-    ("code", _adapter_schema("Code.xsd"), '<Code value="$item.code" color="secondary" />'),
     (
         "dialog",
         _adapter_schema("Dialog.xsd"),

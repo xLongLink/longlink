@@ -126,20 +126,6 @@
       <xsd:enumeration value="yellow" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="BannerStatusType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="info" />
-      <xsd:enumeration value="warning" />
-      <xsd:enumeration value="error" />
-      <xsd:enumeration value="success" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="BannerContainerType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="card" />
-      <xsd:enumeration value="section" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="CardVariantType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="default" />
@@ -155,13 +141,6 @@
       <xsd:enumeration value="red" />
       <xsd:enumeration value="teal" />
       <xsd:enumeration value="yellow" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="CodeColorType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="primary" />
-      <xsd:enumeration value="secondary" />
-      <xsd:enumeration value="inherit" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="DialogPurposeType">

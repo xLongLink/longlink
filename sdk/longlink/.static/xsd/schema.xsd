@@ -7,13 +7,11 @@
   <xsd:include schemaLocation="adapters/Action.xsd" />
   <xsd:include schemaLocation="adapters/Text.xsd" />
   <xsd:include schemaLocation="adapters/Heading.xsd" />
-  <xsd:include schemaLocation="adapters/Code.xsd" />
   <xsd:include schemaLocation="adapters/Link.xsd" />
   <xsd:include schemaLocation="adapters/Divider.xsd" />
   <xsd:include schemaLocation="adapters/Icon.xsd" />
   <xsd:include schemaLocation="adapters/Avatar.xsd" />
   <xsd:include schemaLocation="adapters/Badge.xsd" />
-  <xsd:include schemaLocation="adapters/Banner.xsd" />
   <xsd:include schemaLocation="adapters/Button.xsd" />
   <xsd:include schemaLocation="adapters/Card.xsd" />
   <xsd:include schemaLocation="adapters/Stack.xsd" />

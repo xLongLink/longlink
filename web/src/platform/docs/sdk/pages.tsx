@@ -1,6 +1,5 @@
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
@@ -160,8 +159,6 @@ function renderComponentPreview(name: string) {
             );
         case 'Avatar':
             return <Avatar name="Ada Lovelace" size="lg" />;
-        case 'Code':
-            return <Code>order.status</Code>;
         case 'Heading':
             return <Heading level={3}>Orders</Heading>;
         case 'Icon':
@@ -250,8 +247,6 @@ function renderComponentPreview(name: string) {
             return <TextInput isLabelHidden label="Name" size="sm" value="New order" width={140} onChange={noop} />;
         case 'Badge':
             return <Badge label="Open" variant="info" />;
-        case 'Banner':
-            return <Banner status="success" title="Saved" />;
         case 'Divider':
             return (
                 <Stack gap={3} width="100%">

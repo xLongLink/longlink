@@ -1,11 +1,9 @@
 export { Action } from './Action';
 export { Avatar } from './Avatar';
 export { Badge } from './Badge';
-export { Banner } from './Banner';
 export { Button } from './Button';
 export { Card } from './Card';
 export { CheckboxInput } from './CheckboxInput';
-export { Code } from './Code';
 export { Dialog } from './Dialog';
 export { Divider } from './Divider';
 export { FileInput } from './FileInput';

@@ -46,7 +46,7 @@
                 <Divider />
                 <Heading level="3" i18n="settings.application.runbook" />
                 <Text as="p" i18n="settings.application.bold" weight="semibold" />
-                <Code i18n="settings.application.code" />
+                <Text type="code" i18n="settings.application.code" />
             </Stack>
         </SideNavItem>
 

@@ -2,12 +2,10 @@ import { FileCode2 } from 'lucide-react';
 import * as actionReference from './action';
 import * as avatarReference from './avatar';
 import * as badgeReference from './badge';
-import * as bannerReference from './banner';
 import * as bindingsReference from './bindings';
 import * as buttonReference from './button';
 import * as cardReference from './card';
 import * as checkboxInputReference from './checkbox-input';
-import * as codeReference from './code';
 import * as countReference from './count';
 import * as dialogReference from './dialog';
 import * as dividerReference from './divider';
@@ -53,7 +51,6 @@ const referenceModules = [
     linkReference,
     cardReference,
     avatarReference,
-    codeReference,
     headingReference,
     iconReference,
     textReference,
@@ -69,7 +66,6 @@ const referenceModules = [
     textAreaReference,
     textInputReference,
     badgeReference,
-    bannerReference,
     dividerReference,
     gridReference,
     stackReference,

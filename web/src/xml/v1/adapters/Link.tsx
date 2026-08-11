@@ -13,7 +13,9 @@ export function Link({ props, nodes }: Props) {
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, href);
     const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, to);
-    const content = resolveXmlContent(props, ctx, services, undefined, () => renderNode(nodes, ctx));
+    const content = resolveXmlContent(props, ctx, services, undefined, () =>
+        nodes.length > 0 ? renderNode(nodes, ctx) : undefined
+    );
     const label = resolveXmlString(props, 'label', ctx);
     const color = resolveXmlEnum(
         props,
