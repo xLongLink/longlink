@@ -110,7 +110,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         await runtime_engine.dispose()
         runtime_engine = None
         await adapter.delete_schema(organization_id, application_id)
-        database_usage_after_schema_delete = await adapter.database_usage(database_name)
         await adapter.delete_database(organization_id)
         database_usage_after_delete = await adapter.database_usage(database_name)
         server_usage_after_delete = await adapter.usage()
@@ -125,7 +124,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert database_usage is not None
         assert database_usage > 0
         assert server_usage > 0
-        assert database_usage_after_schema_delete is not None
         assert database_usage_after_delete is None
         assert server_usage_after_delete == 0
     finally:

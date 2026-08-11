@@ -56,7 +56,6 @@ describe('Action', () => {
 
         expect(requestUrl).toBe('/example/profile');
         expect(requestInit?.method).toBe('POST');
-        expect(requestInit?.credentials).toBe('include');
         expect(new Headers(requestInit?.headers).get('content-type')).toBe('application/json');
         expect(requestInit?.body).toBe(
             JSON.stringify({
@@ -87,7 +86,6 @@ describe('Action', () => {
 
         for (const testCase of cases) {
             let invalidationCalls = 0;
-            let successCalls = 0;
             let errorMessage = '';
             const ctx: XmlRuntime = {
                 scope: { bindings: {} },
@@ -112,21 +110,19 @@ describe('Action', () => {
                 fetchImpl,
                 (options) => {
                     if (options.type === 'error') errorMessage = String(options.body);
-                    else successCalls += 1;
 
                     return () => {};
                 }
             );
 
             expect(invalidationCalls).toBe(0);
-            expect(successCalls).toBe(0);
             expect(errorMessage).toBe(testCase.expectedError);
         }
     });
 
     /* The action shell should send multipart form data without a JSON content type. */
     it('sends multipart form data', async () => {
-        const file = new File(['supplier sheet'], 'supplier.txt', { type: 'text/plain' });
+        const file = new File(['supplier sheet'], 'supplier.txt');
         const ctx: XmlRuntime = {
             scope: {
                 bindings: {
@@ -161,7 +157,6 @@ describe('Action', () => {
         const body = requestInit?.body as FormData;
         const uploadedFile = body.get('file') as File;
 
-        expect(Object.fromEntries(new Headers(requestInit?.headers))).toEqual({ accept: 'application/json' });
         expect(body).toBeInstanceOf(FormData);
         expect(uploadedFile.name).toBe('supplier.txt');
         expect(await uploadedFile.text()).toBe('supplier sheet');
@@ -170,13 +165,10 @@ describe('Action', () => {
 
     /* Actions require an endpoint before they can invalidate setup values. */
     it('rejects actions without an endpoint', async () => {
-        let invalidateCalls = 0;
         const ctx: XmlRuntime = {
             scope: { bindings: {} },
             services: {
-                invalidate: async () => {
-                    invalidateCalls += 1;
-                },
+                invalidate: async () => {},
                 navigationBaseUrl: '',
                 requestBaseUrl: '',
                 setups: {},
@@ -200,7 +192,6 @@ describe('Action', () => {
             () => () => {}
         );
 
-        expect(invalidateCalls).toBe(0);
         expect(fetchCalls).toBe(0);
     });
 

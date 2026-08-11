@@ -247,8 +247,8 @@ async def create_organization(
     slug = names.slugify(payload.name)
 
     # Resolve the least-used ready infrastructure registries.
-    compute_registry = await compute.available(session)
-    if compute_registry is None:
+    compute_id = await compute.available(session)
+    if compute_id is None:
         raise UnavailableError("No ready compute registry available")
     database_registry = await database.available(session)
     if database_registry is None:
@@ -263,7 +263,7 @@ async def create_organization(
         payload.name,
         slug,
         user,
-        compute_id=compute_registry.id,
+        compute_id=compute_id,
         storage_id=storage_registry.id,
         database_id=database_registry.id,
     )

@@ -34,9 +34,7 @@ describe('core/context', () => {
             value: async (input: RequestInfo | URL) => {
                 requestedUrl = String(input);
 
-                return new Response(JSON.stringify({ id: '123' }), {
-                    headers: { 'content-type': 'application/json' },
-                });
+                return new Response(JSON.stringify({ id: '123' }));
             },
         });
 

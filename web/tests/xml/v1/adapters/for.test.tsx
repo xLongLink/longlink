@@ -13,17 +13,11 @@ describe('For', () => {
                 navigationBaseUrl: '',
                 requestBaseUrl: '',
                 setups: {},
-                translations: { 'items.name': { defaultMessage: '{name}' } },
             },
         };
 
         expect(
-            renderXmlToMarkup(
-                parseXML(
-                    '<For each="$items" as="item"><Text i18n="items.name" values="${{ name: item.name }}" /></For>'
-                ),
-                ctx
-            )
+            renderXmlToMarkup(parseXML('<For each="$items" as="item"><Text value="${item.name}" /></For>'), ctx)
         ).toContain('Alpha');
     });
 

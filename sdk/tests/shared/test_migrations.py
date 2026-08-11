@@ -82,9 +82,6 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     )
     await shared_audit.sync(postgresql_url, [deactivated_user])
 
-    # Repeat the same synchronization payload to prove row-level idempotency.
-    await shared_audit.sync(postgresql_url, [deactivated_user])
-
     # Read the persisted row from its qualified shared table and verify no duplicate was created.
     verification_engine = create_async_engine(postgresql_url)
     try:

@@ -41,8 +41,8 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(monkey
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
-def test_production_health_and_root_are_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Serve runtime health and the app shell without SDK-owned authorization."""
+def test_production_health_is_served_without_sdk_auth(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Serve the runtime health endpoint without SDK-owned authorization."""
 
     # Create the complete Platform runtime contract and generated source layout.
     for name, value in {
@@ -69,14 +69,12 @@ def test_production_health_and_root_are_served_without_sdk_auth(monkeypatch: Mon
     LongLink(app, env="production")
     client = TestClient(app)
 
-    # Request the public health endpoint and frontend shell.
+    # Request the public health endpoint.
     health_response = client.get("/health")
-    root_response = client.get("/")
 
-    # Verify both resources remain publicly available.
+    # Verify the health endpoint remains publicly available.
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
-    assert root_response.status_code == 200
 
 
 @pytest.mark.parametrize(

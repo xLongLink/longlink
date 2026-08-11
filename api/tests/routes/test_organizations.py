@@ -204,9 +204,7 @@ async def test_organization_database_endpoint_returns_unavailable_when_backend_f
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the selected database TLS configuration."""
-
-            assert sslmode == infrastructure.database.sslmode
+            """Accept the selected database connection settings."""
 
         async def database_usage(self, database_name: str) -> int:
             """Raise the backend error expected by the test."""

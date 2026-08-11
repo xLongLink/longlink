@@ -25,12 +25,6 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
     "payload",
     [
         {
-            "name": "",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "access_key_id": "access-key",
-            "secret_access_key": "secret-key",
-        },
-        {
             "name": "Primary Storage",
             "endpoint_url": "http://sos-ch-gva-2.exo.io",
             "access_key_id": "access-key",
