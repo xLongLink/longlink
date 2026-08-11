@@ -173,6 +173,7 @@ async def create_organization_invitation(
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
+    organization_id: UUID,
     member_id: UUID,
     payload: OrganizationMemberUpdate,
     user: User = Depends(authuser),
@@ -188,7 +189,7 @@ async def update_organization_member(
     # Persist the requested role only for an active Organization member.
     updated = await organizations.update_member_role(
         session,
-        membership.organization_id,
+        organization_id,
         member_id,
         payload.role,
         user,
