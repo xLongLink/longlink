@@ -2,17 +2,18 @@ import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSect
 import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
-import type { ASTNode, ExecutionContext, Props } from '../types';
+import type { ASTNode, Props, Scope } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
-        .map((node) => resolveSideNavItem(node, ctx));
+        .map((node) => resolveSideNavItem(node, ctx, services));
 
     // Side navigation without destinations is not meaningful or accessible.
     if (items.length === 0) {
@@ -58,9 +59,9 @@ export function SideNavItem(): never {
 }
 
 /** Resolves a serializable XML side navigation definition. */
-function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext) {
+function resolveSideNavItem(node: ASTNode, ctx: Scope, services: ReturnType<typeof useXmlServices>) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
-    const label = resolveXmlLabel(props, ctx, 'SideNavItem');
+    const label = resolveXmlLabel(props, ctx, services, 'SideNavItem');
     return { icon: resolveXmlString(props, 'icon', ctx) || undefined, label, nodes: node.children ?? [], value };
 }

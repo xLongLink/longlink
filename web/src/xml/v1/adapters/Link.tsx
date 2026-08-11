@@ -1,6 +1,6 @@
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import { useContext } from 'react';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
@@ -10,12 +10,13 @@ import type { Props } from '../types';
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const baseUrl = useContext(BaseUrlContext);
     const href = resolveXmlString(props, 'href', ctx);
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(baseUrl, href);
-    const resolvedTo = resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), to);
-    const content = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
+    const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, to);
+    const content = readXmlProp(props, 'i18n') ? resolveTranslation(props, ctx, services) : renderNode(nodes, ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const color = resolveXmlEnum(
         props,

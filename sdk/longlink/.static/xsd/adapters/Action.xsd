@@ -9,6 +9,7 @@
     <xsd:attribute name="form" type="xsd:string" use="optional" />
     <xsd:attribute name="json" type="xsd:string" use="optional" />
     <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
+    <xsd:attribute name="closeDialog" type="xsd:string" use="optional" />
     <xsd:attribute name="method" type="ActionMethodType" use="optional" default="POST" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>

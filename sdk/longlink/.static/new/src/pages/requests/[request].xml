@@ -5,7 +5,6 @@
     <State id="attachment" file="${null}" />
 
     <Stack gap="3">
-        <Link to="/requests" i18n="requests.detail.back" hasUnderline="true" />
         <Heading level="1" i18n="requests.detail.title" />
         <Text as="p" color="secondary" i18n="requests.detail.description" />
     </Stack>

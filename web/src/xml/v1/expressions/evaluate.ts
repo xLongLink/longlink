@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '../types';
+import type { Scope } from '../types';
 import type { ASTAttribute } from '../types';
 import { hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 import type { ExpressionNode } from './types';
@@ -59,7 +59,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
 }
 
 /** Evaluates a supported AST node against the current scope. */
-function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
+function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
     // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
@@ -256,7 +256,7 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
 }
 
 /** Evaluates a compiled XML attribute against the current XML runtime scope. */
-export function evaluate(attribute: ASTAttribute, ctx: ExecutionContext): unknown {
+export function evaluate(attribute: ASTAttribute, ctx: Scope): unknown {
     switch (attribute.kind) {
         case 'text':
             return attribute.value;

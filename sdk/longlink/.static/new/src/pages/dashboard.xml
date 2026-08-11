@@ -6,7 +6,6 @@
     <Stack gap="3">
         <Heading level="1" i18n="dashboard.title" />
         <Text as="p" color="secondary" i18n="dashboard.description" />
-        <Link to="/requests" i18n="dashboard.openRequests" hasUnderline="true" />
     </Stack>
 
     <Grid columns="2" gap="4">
@@ -60,9 +59,9 @@
                             <Text if="${policy.tier === 'large'}" i18n="dashboard.policy.table.large" />
                         </TableColumn>
                         <TableColumn key="approver" i18n="dashboard.policy.table.approver">
-                            <Text if="${policy.tier === 'small'}" i18n="dashboard.policy.table.manager" />
-                            <Text if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.finance" />
-                            <Text if="${policy.tier === 'large'}" i18n="dashboard.policy.table.owner" />
+                            <Text if="${policy.tier === 'small'}" i18n="workflow.manager" />
+                            <Text if="${policy.tier === 'medium'}" i18n="workflow.finance" />
+                            <Text if="${policy.tier === 'large'}" i18n="workflow.owner" />
                         </TableColumn>
                         <TableColumn key="sla" i18n="dashboard.policy.table.sla">
                             <Text if="${policy.tier === 'small'}" i18n="dashboard.policy.table.oneDay" />

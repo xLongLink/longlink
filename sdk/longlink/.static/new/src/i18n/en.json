@@ -23,9 +23,6 @@
     "dashboard.description": {
         "defaultMessage": "Track office purchase requests, review policy, and keep the approval queue visible."
     },
-    "dashboard.logoFallback": {
-        "defaultMessage": "LL"
-    },
     "dashboard.metrics.budget.label": {
         "defaultMessage": "Monthly budget"
     },
@@ -44,9 +41,6 @@
     "dashboard.metrics.target.value": {
         "defaultMessage": "{days} days"
     },
-    "dashboard.openRequests": {
-        "defaultMessage": "Open requests"
-    },
     "dashboard.policy.description": {
         "defaultMessage": "The sample keeps the rules simple: amount decides who reviews and how quickly reviewers should respond."
     },
@@ -56,29 +50,17 @@
     "dashboard.policy.table.approver": {
         "defaultMessage": "Approver"
     },
-    "dashboard.policy.table.finance": {
-        "defaultMessage": "Finance"
-    },
     "dashboard.policy.table.fiveDays": {
         "defaultMessage": "5 days"
     },
-    "dashboard.policy.table.footer": {
-        "defaultMessage": "Escalate overdue requests from the request detail page."
-    },
     "dashboard.policy.table.large": {
         "defaultMessage": "Above CHF 5,000"
-    },
-    "dashboard.policy.table.manager": {
-        "defaultMessage": "Manager"
     },
     "dashboard.policy.table.medium": {
         "defaultMessage": "CHF 1,000 to 5,000"
     },
     "dashboard.policy.table.oneDay": {
         "defaultMessage": "1 day"
-    },
-    "dashboard.policy.table.owner": {
-        "defaultMessage": "Owner"
     },
     "dashboard.policy.table.sla": {
         "defaultMessage": "SLA"
@@ -110,6 +92,9 @@
     "dashboard.title": {
         "defaultMessage": "Office operations"
     },
+    "requests.amount": {
+        "defaultMessage": "Amount"
+    },
     "requests.attachments.actions": {
         "defaultMessage": "Actions"
     },
@@ -122,9 +107,6 @@
     "requests.attachments.file": {
         "defaultMessage": "Attachment"
     },
-    "requests.attachments.help": {
-        "defaultMessage": "Files are stored through the LongLink storage facade, so local and production storage use the same API."
-    },
     "requests.attachments.title": {
         "defaultMessage": "Attachments"
     },
@@ -133,15 +115,6 @@
     },
     "requests.count": {
         "defaultMessage": "{count, plural, one {# request in the queue.} other {# requests in the queue.}}"
-    },
-    "requests.create.description": {
-        "defaultMessage": "Submit a request with enough context for an approver to make a decision."
-    },
-    "requests.create.open": {
-        "defaultMessage": "New request"
-    },
-    "requests.create.section": {
-        "defaultMessage": "Request details"
     },
     "requests.create.submit": {
         "defaultMessage": "Submit request"
@@ -152,9 +125,6 @@
     "requests.description": {
         "defaultMessage": "Track purchase requests and supporting files."
     },
-    "requests.detail.back": {
-        "defaultMessage": "Back to requests"
-    },
     "requests.detail.description": {
         "defaultMessage": "Review the request, update its workflow status, and manage attachments."
     },
@@ -164,23 +134,14 @@
     "requests.detail.title": {
         "defaultMessage": "Purchase request detail"
     },
-    "requests.fields.amount": {
-        "defaultMessage": "Amount"
-    },
     "requests.fields.text": {
         "defaultMessage": "Text"
-    },
-    "requests.table.amount": {
-        "defaultMessage": "Amount"
     },
     "requests.table.open": {
         "defaultMessage": "Open"
     },
     "requests.table.request": {
         "defaultMessage": "Request"
-    },
-    "requests.table.text": {
-        "defaultMessage": "{text}"
     },
     "requests.title": {
         "defaultMessage": "Purchase requests"
@@ -311,26 +272,17 @@
     "settings.workflow.description": {
         "defaultMessage": "Use radio lists and selectors to model workflow defaults."
     },
-    "settings.workflow.finance": {
-        "defaultMessage": "Finance"
-    },
     "settings.workflow.high": {
         "defaultMessage": "High"
     },
     "settings.workflow.low": {
         "defaultMessage": "Low"
     },
-    "settings.workflow.manager": {
-        "defaultMessage": "Manager"
-    },
     "settings.workflow.medium": {
         "defaultMessage": "Medium"
     },
     "settings.workflow.owner": {
         "defaultMessage": "Default approver"
-    },
-    "settings.workflow.ownerRole": {
-        "defaultMessage": "Owner"
     },
     "settings.workflow.risk": {
         "defaultMessage": "Risk level"
@@ -343,5 +295,14 @@
     },
     "settings.workflow.tags": {
         "defaultMessage": "Review tags"
+    },
+    "workflow.finance": {
+        "defaultMessage": "Finance"
+    },
+    "workflow.manager": {
+        "defaultMessage": "Manager"
+    },
+    "workflow.owner": {
+        "defaultMessage": "Owner"
     }
 }

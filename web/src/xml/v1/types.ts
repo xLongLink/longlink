@@ -25,13 +25,25 @@ export interface Props {
     nodes: ASTNode[];
 }
 
-/** XML runtime scope with lexical parent lookup. */
-export type ExecutionContext = {
+/** XML lexical scope with local bindings and parent lookup. */
+export type Scope = {
+    parent?: Scope;
+    bindings: Record<string, unknown>;
+};
+
+/** Renderer and host services available to the XML runtime. */
+export type RuntimeServices = {
+    invalidate: (ids: string | string[]) => Promise<void>;
+    navigationBaseUrl: string;
+    params: Record<string, string>;
+    requestBaseUrl: string;
+    setups: Record<string, () => Promise<void> | void>;
     translate?: TranslatorFn;
     translations?: Catalog;
-    parent?: ExecutionContext;
-    setups: Record<string, () => Promise<void> | void>;
-    invalidate: (ids: string | string[]) => Promise<void>;
-    values: Record<string, unknown>;
-    [key: string]: unknown;
+};
+
+/** Complete XML runtime with separately-owned lexical and service state. */
+export type XmlRuntime = {
+    scope: Scope;
+    services: RuntimeServices;
 };

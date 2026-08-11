@@ -117,8 +117,9 @@ function resolveApplicationHref(routePath: string, organization?: string, applic
 function createPageState(key: string, params: Record<string, string>, navigationBaseUrl: string): PageState {
     const runtimeContext = createXmlContext();
 
-    runtimeContext.params = params;
-    runtimeContext.navigationBaseUrl = navigationBaseUrl;
+    runtimeContext.services.params = params;
+    runtimeContext.services.navigationBaseUrl = navigationBaseUrl;
+    runtimeContext.scope.bindings.params = params;
 
     return {
         cacheKey: key,

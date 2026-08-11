@@ -1,7 +1,7 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -16,6 +16,7 @@ import type { Props } from '../types';
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
     const initialValue = binding.initialValue == null ? null : Number(binding.initialValue);
     const [localValue, setLocalValue] = useState<number | null>(initialValue);
@@ -33,7 +34,7 @@ export function NumberInput({ props }: Props) {
         isLabelHidden: resolveXmlBoolean(props, 'isLabelHidden', ctx, false),
         isOptional: resolveXmlBoolean(props, 'isOptional', ctx, false),
         isRequired: resolveXmlBoolean(props, 'isRequired', ctx, false),
-        label: resolveXmlLabel(props, ctx, 'NumberInput'),
+        label: resolveXmlLabel(props, ctx, services, 'NumberInput'),
         max: resolveXmlNumber(props, 'max', ctx),
         min: resolveXmlNumber(props, 'min', ctx),
         placeholder: resolveXmlString(props, 'placeholder', ctx) || undefined,

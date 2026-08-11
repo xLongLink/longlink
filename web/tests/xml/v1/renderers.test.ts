@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import type { ASTNode, ExecutionContext } from '@/xml/v1/types';
+import type { ASTNode, XmlRuntime } from '@/xml/v1/types';
 import { compileProps, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     it('resolves localized text through XML adapters', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            translations: { 'copy.count': { defaultMessage: 'Count {count}' } },
-            values: {},
-            count: 7,
+        const ctx: XmlRuntime = {
+            scope: { bindings: { count: 7 } },
+            services: {
+                invalidate: async () => {},
+                navigationBaseUrl: '',
+                params: {},
+                requestBaseUrl: '',
+                setups: {},
+                translations: { 'copy.count': { defaultMessage: 'Count {count}' } },
+            },
         };
         expect(
             renderXmlToMarkup([{ name: 'Text', params: compileProps({ count: '${count}', i18n: 'copy.count' }) }], ctx)
@@ -26,11 +30,9 @@ describe('renderNode', () => {
     });
 
     it('resolves input props from expressions', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-            form: { value: 'Ada' },
+        const ctx: XmlRuntime = {
+            scope: { bindings: { form: { value: 'Ada' } } },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
         };
         const node: ASTNode = {
             name: 'TextInput',

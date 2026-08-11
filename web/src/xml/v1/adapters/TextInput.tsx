@@ -1,7 +1,7 @@
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -15,10 +15,11 @@ import type { Props } from '../types';
 /** Renders an accessible Astryx text input with optional Valtio binding. */
 export function TextInput({ props }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
     const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
-    const label = resolveXmlLabel(props, ctx, 'TextInput');
+    const label = resolveXmlLabel(props, ctx, services, 'TextInput');
     const type = resolveXmlEnum(props, 'type', ctx, ['text', 'password', 'email'], 'text', 'TextInput');
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextInput');
 

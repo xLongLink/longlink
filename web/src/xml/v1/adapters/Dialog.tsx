@@ -2,9 +2,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useState } from 'react';
+import { createContext, useState } from 'react';
 import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import {
     requireXmlString,
@@ -16,13 +16,16 @@ import {
 } from '../core/props';
 import type { Props } from '../types';
 
+export const DialogCloseContext = createContext<(() => void) | null>(null);
+
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'isOpen', ctx);
     const [localOpen, setLocalOpen] = useState(toXmlBoolean(binding.initialValue));
     const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;
-    const title = resolveXmlLabel(props, ctx, 'Dialog', 'title');
+    const title = resolveXmlLabel(props, ctx, services, 'Dialog', 'title');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const triggerVariant = resolveXmlEnum(
@@ -42,6 +45,11 @@ export function Dialog({ props, nodes }: Props) {
         setXmlBinding(binding, setLocalOpen, nextOpen);
     }
 
+    /** Closes this dialog after a nested action succeeds. */
+    function close() {
+        setOpen(false);
+    }
+
     return (
         <>
             {triggerLabel && (
@@ -52,30 +60,32 @@ export function Dialog({ props, nodes }: Props) {
                     variant={triggerVariant}
                 />
             )}
-            <AstryxDialog
-                isOpen={isOpen}
-                maxHeight={resolveXmlSizeValue(props, 'maxHeight', ctx)}
-                onOpenChange={setOpen}
-                padding={resolveXmlSpacing(props, 'padding', ctx)}
-                purpose={purpose}
-                variant={variant}
-                width={resolveXmlSizeValue(props, 'width', ctx)}
-            >
-                <Layout
-                    header={
-                        <DialogHeader
-                            onOpenChange={purpose === 'required' ? undefined : setOpen}
-                            subtitle={resolveXmlString(props, 'subtitle', ctx) || undefined}
-                            title={title}
-                        />
-                    }
-                    content={
-                        <LayoutContent>
-                            <Stack gap={4}>{renderNode(nodes, ctx)}</Stack>
-                        </LayoutContent>
-                    }
-                />
-            </AstryxDialog>
+            <DialogCloseContext.Provider value={close}>
+                <AstryxDialog
+                    isOpen={isOpen}
+                    maxHeight={resolveXmlSizeValue(props, 'maxHeight', ctx)}
+                    onOpenChange={setOpen}
+                    padding={resolveXmlSpacing(props, 'padding', ctx)}
+                    purpose={purpose}
+                    variant={variant}
+                    width={resolveXmlSizeValue(props, 'width', ctx)}
+                >
+                    <Layout
+                        header={
+                            <DialogHeader
+                                onOpenChange={purpose === 'required' ? undefined : setOpen}
+                                subtitle={resolveXmlString(props, 'subtitle', ctx) || undefined}
+                                title={title}
+                            />
+                        }
+                        content={
+                            <LayoutContent>
+                                <Stack gap={4}>{renderNode(nodes, ctx)}</Stack>
+                            </LayoutContent>
+                        }
+                    />
+                </AstryxDialog>
+            </DialogCloseContext.Provider>
         </>
     );
 }

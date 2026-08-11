@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXmlString, resolveXmlValue } from '../core/props';
+import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from '../core/props';
 import { BaseUrlContext, resolveRequestUrl } from '../core/url';
 import type { Props } from '../types';
+import { DialogCloseContext } from './Dialog';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
@@ -18,14 +19,16 @@ export function useActionHandler() {
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const baseUrl = useContext(BaseUrlContext);
+    const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
         // Surface action failures through the UI.
         try {
-            await executeAction(props, ctx, baseUrl, fetch, toast);
+            await executeAction(props, ctx, services, baseUrl, fetch, toast, closeDialog);
         } catch (error: unknown) {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         }
@@ -38,9 +41,11 @@ export function Action({ props, nodes }: Props) {
 export async function executeAction(
     props: Props['props'],
     ctx: ReturnType<typeof useXmlContext>,
+    services: ReturnType<typeof useXmlServices>,
     baseUrl: string,
     fetchImpl: typeof fetch = fetch,
-    toast: ReturnType<typeof useToast>
+    toast: ReturnType<typeof useToast>,
+    closeDialog: (() => void) | null = null
 ): Promise<void> {
     let actionUrl: string;
     let formValue: unknown;
@@ -71,7 +76,7 @@ export async function executeAction(
 
     // Allow invalidation-only actions.
     if (!actionUrl) {
-        await ctx.invalidate(invalidate);
+        await services.invalidate(invalidate);
 
         return;
     }
@@ -136,7 +141,10 @@ export async function executeAction(
         return;
     }
 
-    await ctx.invalidate(invalidate);
+    await services.invalidate(invalidate);
+
+    // Close the containing dialog only after the request and invalidation succeed.
+    if (resolveXmlBoolean(props, 'closeDialog', ctx, false)) closeDialog?.();
 
     toast({ body: `Request completed with status ${response.status}` });
 }

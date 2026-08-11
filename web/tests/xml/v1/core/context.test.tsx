@@ -8,15 +8,15 @@ describe('core/context', () => {
         const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }) }];
 
         await setupContext(ast, ctx, '/api');
-        (ctx.values.filter as { value: string }).value = 'week';
+        (ctx.scope.bindings.filter as { value: string }).value = 'week';
         await setupContext(ast, ctx, '/api');
 
-        expect((ctx.values.filter as { value: string }).value).toBe('week');
+        expect((ctx.scope.bindings.filter as { value: string }).value).toBe('week');
 
-        delete ctx.values.filter;
-        await ctx.setups.filter();
+        delete ctx.scope.bindings.filter;
+        await ctx.services.setups.filter();
 
-        expect((ctx.values.filter as { value: string }).value).toBe('day');
+        expect((ctx.scope.bindings.filter as { value: string }).value).toBe('day');
     });
 
     it('evaluates query paths against route params', async () => {
@@ -24,7 +24,8 @@ describe('core/context', () => {
         const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }) }];
         let requestedUrl = '';
 
-        ctx.params = { issue: '123' };
+        ctx.services.params = { issue: '123' };
+        ctx.scope.bindings.params = ctx.services.params;
         const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
 
         Object.defineProperty(globalThis, 'fetch', {
@@ -49,6 +50,6 @@ describe('core/context', () => {
         }
 
         expect(requestedUrl).toBe('/proxy/api/issues/123');
-        expect(ctx.values.issue).toEqual({ id: '123' });
+        expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 });

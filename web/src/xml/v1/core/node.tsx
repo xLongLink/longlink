@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import type { ASTNode, ExecutionContext } from '../types';
+import type { ASTNode, Scope } from '../types';
 import { For } from './for';
 import { isVisibleXmlNode } from './props';
 import { xmlComponentRegistry } from './registry';
 
 /** Renders XML AST nodes using the active runtime context. */
-export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
+export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
         const props = node.params ?? {};
 

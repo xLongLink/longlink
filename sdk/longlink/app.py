@@ -11,6 +11,7 @@ from longlink.logger import ApiAccessFilter
 from longlink.routes import routes
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
+from fastapi.exceptions import HTTPException
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
@@ -70,8 +71,10 @@ class LongLink:
 
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
+        self.environment = environment
         app.state.page_registry = []
         app.state.page_routes = {}
+        self.development_page_directories: dict[str, Path] = {}
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -148,6 +151,11 @@ class LongLink:
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
 
+        # Development pages are discovered for every request so source edits need no restart.
+        if self.environment == "development":
+            self.register_development_page_directory(route_prefix, pages_directory)
+            return
+
         # Identify existing SDK pages that this directory replaces without mutating them.
         normalized_prefix = normalize_mount_path(route_prefix)
         registered_pages: list[PageDefinition] = self.app.state.page_registry
@@ -184,6 +192,59 @@ class LongLink:
             **{path: route for path, route in registered_routes.items() if path not in stale_page_paths},
             **{page.definition.path: route for page, route in zip(discovered_pages, replacement_routes, strict=True)},
         }
+
+    def register_development_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
+        """Register one dynamic development route for an XML page directory."""
+
+        # Resolve the prefix once while retaining the source directory for request-time discovery.
+        normalized_prefix = normalize_mount_path(route_prefix)
+        self.development_page_directories[normalized_prefix] = pages_directory
+        self.app.state.refresh_pages = self.refresh_development_pages
+        self.refresh_development_pages()
+
+        def serve_page(page_path: str) -> Response:
+            """Serve the current XML source for one development page endpoint."""
+
+            return self.serve_development_page(normalized_prefix, page_path)
+
+        # A catch-all page route exposes new and renamed source files without mutating FastAPI routes.
+        self.app.router.routes.append(
+            self.app.router.route_class(
+                f"{normalized_prefix}/{{page_path:path}}",
+                serve_page,
+                methods=["GET"],
+                include_in_schema=False,
+            )
+        )
+
+    def refresh_development_pages(self) -> list[DiscoveredPage]:
+        """Discover the current development page catalog without retaining XML content."""
+
+        registered_pages: list[PageDefinition] = []
+        discovered_pages: list[DiscoveredPage] = []
+
+        # Validate each source directory against the current complete page catalog.
+        for route_prefix, pages_directory in self.development_page_directories.items():
+            directory_pages = self.discover_pages(route_prefix, pages_directory, registered_pages)
+            discovered_pages.extend(directory_pages)
+            registered_pages.extend(page.definition for page in directory_pages)
+
+        self.app.state.page_registry[:] = registered_pages
+        return discovered_pages
+
+    def serve_development_page(self, route_prefix: str, page_path: str) -> Response:
+        """Return one XML page from the current development source tree."""
+
+        # Rediscover the source tree so content, metadata, and file changes are immediately visible.
+        discovered_pages = self.refresh_development_pages()
+        endpoint_path = f"{route_prefix}/{page_path}"
+        page = next((item for item in discovered_pages if item.definition.path == endpoint_path), None)
+
+        # Unknown endpoints include deleted and renamed XML files.
+        if page is None:
+            raise HTTPException(status_code=404, detail="Page not found")
+
+        return Response(page.content, media_type="application/xml")
 
     def discover_pages(self, route_prefix: str, pages_directory: Path, registered_pages: list[PageDefinition]) -> list[DiscoveredPage]:
         """Discover and validate all XML pages before registering any route."""

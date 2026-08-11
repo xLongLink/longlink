@@ -1,5 +1,5 @@
 import { ButtonGroup as AstryxButtonGroup } from '@astryxdesign/core/ButtonGroup';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel } from '../core/props';
 import type { Props } from '../types';
@@ -7,7 +7,8 @@ import type { Props } from '../types';
 /** Groups XML buttons with Astryx connected-button semantics. */
 export function ButtonGroup({ props, nodes }: Props) {
     const ctx = useXmlContext();
-    const label = resolveXmlLabel(props, ctx, 'ButtonGroup');
+    const services = useXmlServices();
+    const label = resolveXmlLabel(props, ctx, services, 'ButtonGroup');
     const orientation = resolveXmlEnum(
         props,
         'orientation',

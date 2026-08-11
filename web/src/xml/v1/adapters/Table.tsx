@@ -5,7 +5,7 @@ import {
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { useXmlContext, XmlContext } from '../core/context';
+import { useXmlRuntime, XmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import {
@@ -19,13 +19,14 @@ import {
     resolveXmlValue,
 } from '../core/props';
 import { readSafeProperty } from '../expressions';
-import type { ASTNode, ExecutionContext, Props } from '../types';
+import type { ASTNode, Props, Scope } from '../types';
 
 type TableRow = Record<string, unknown>;
 
 /** Renders XML row data through the Astryx data-driven Table API. */
 export function Table({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const runtime = useXmlRuntime();
+    const ctx = runtime.scope;
 
     // Require an explicit array data source.
     if (!readXmlProp(props, 'data')) {
@@ -39,7 +40,7 @@ export function Table({ props, nodes }: Props) {
     const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node) => buildColumn(node, ctx, rowName, rows));
+        .map((node) => buildColumn(node, ctx, runtime.services, rowName, rows));
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {
@@ -78,7 +79,8 @@ export function TableColumn(): never {
 /** Converts one XML column into an Astryx column with an optional renderCell callback. */
 function buildColumn(
     node: ASTNode,
-    ctx: ExecutionContext,
+    ctx: Scope,
+    services: ReturnType<typeof useXmlRuntime>['services'],
     rowName: string,
     rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
@@ -97,7 +99,7 @@ function buildColumn(
         throw new Error('TableColumn requires a usable field path');
     }
     const header = readXmlProp(props, 'i18n')
-        ? resolveTranslation(props, ctx)
+        ? resolveTranslation(props, ctx, services)
         : resolveXmlString(props, 'header', ctx, key.value);
     const widthValue = resolveXmlNumber(props, 'width', ctx);
     const widthType = resolveXmlEnum(props, 'widthType', ctx, ['proportional', 'pixel'], 'proportional', 'TableColumn');
@@ -122,13 +124,16 @@ function buildColumn(
             // Shorthand columns render the resolved field value directly.
             if (cellNodes.length === 0) return value == null ? '' : String(value);
 
-            const rowCtx: ExecutionContext = {
-                ...ctx,
+            const rowCtx: Scope = {
                 parent: ctx,
-                values: { index: rows.indexOf(row), value, [rowName]: row },
+                bindings: { index: rows.indexOf(row), value, [rowName]: row },
             };
 
-            return <XmlContext.Provider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</XmlContext.Provider>;
+            return (
+                <XmlContext.Provider value={{ scope: rowCtx, services }}>
+                    {renderNode(cellNodes, rowCtx)}
+                </XmlContext.Provider>
+            );
         },
     };
 }

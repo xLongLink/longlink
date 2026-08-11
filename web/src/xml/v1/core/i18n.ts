@@ -1,6 +1,6 @@
 import type { Catalog } from '@astryxdesign/core/i18n';
 import { evaluate } from '../expressions';
-import type { ASTProps, ExecutionContext } from '../types';
+import type { ASTProps, RuntimeServices, Scope } from '../types';
 
 const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
 
@@ -46,7 +46,7 @@ export function validateTranslationCatalog(input: unknown): Catalog {
 }
 
 /** Resolves a localized ICU message from the active XML translation bundle. */
-export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): string {
+export function resolveTranslation(props: ASTProps, ctx: Scope, services: RuntimeServices): string {
     // The i18n prop is a literal dotted lookup key, never fallback text.
     const key = props.i18n?.kind === 'text' ? props.i18n.value.trim() : '';
 
@@ -56,7 +56,7 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
     }
 
     // Require the active XML translation catalog.
-    const translations = ctx.translations;
+    const translations = services.translations;
     if (!translations) {
         throw new Error(`Missing translation catalog for key "${key}"`);
     }
@@ -67,7 +67,7 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
     }
 
     // Require the translator installed by the XML Astryx provider boundary.
-    const translate = ctx.translate;
+    const translate = services.translate;
     if (!translate) {
         throw new Error(`Missing Astryx translator for key "${key}"`);
     }
@@ -91,7 +91,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /** Resolves the active numeric count used for plural selection. */
-function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
+function resolveCount(props: ASTProps, ctx: Scope): number | null {
     // Count stays optional so plain localized strings do not need plural data.
     const rawCount = props.count;
 
@@ -105,7 +105,7 @@ function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
 }
 
 /** Resolves the values object used for ICU message formatting. */
-function resolveInterpolationValues(props: ASTProps, ctx: ExecutionContext): Record<string, unknown> {
+function resolveInterpolationValues(props: ASTProps, ctx: Scope): Record<string, unknown> {
     const rawValues = props.values;
 
     // Components without interpolation values use an empty object.

@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/v1/core/parser';
-import type { ExecutionContext } from '@/xml/v1/types';
+import type { XmlRuntime } from '@/xml/v1/types';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
     /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {
-                items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
+                },
             },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
         };
         const output = renderXmlToMarkup(
             parseXML(
@@ -28,15 +29,22 @@ describe('Table', () => {
 
     /* Headers and cells should accept rich nested XML content. */
     it('renders rich header and cell slots', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            translations: {
-                'inventory.item': { defaultMessage: 'Item' },
-                'inventory.name': { defaultMessage: '{name}' },
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
+                },
             },
-            values: {
-                items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
+            services: {
+                invalidate: async () => {},
+                navigationBaseUrl: '',
+                params: {},
+                requestBaseUrl: '',
+                setups: {},
+                translations: {
+                    'inventory.item': { defaultMessage: 'Item' },
+                    'inventory.name': { defaultMessage: '{name}' },
+                },
             },
         };
         const output = renderXmlToMarkup(
@@ -50,5 +58,26 @@ describe('Table', () => {
         expect(output).toContain('SKU');
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
+    });
+
+    it('keeps parent bindings available inside a table cell loop', () => {
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    prefix: 'Included',
+                    items: [{ tags: [{ name: 'Alpha' }] }],
+                },
+            },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+        };
+
+        const output = renderXmlToMarkup(
+            parseXML(
+                '<Table data="$items"><TableColumn key="tags"><For each="$row.tags" as="tag"><Text value="${prefix + \' \' + tag.name + \' \' + index}" /></For></TableColumn></Table>'
+            ),
+            ctx
+        );
+
+        expect(output).toContain('Included Alpha 0');
     });
 });

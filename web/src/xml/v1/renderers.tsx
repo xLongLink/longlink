@@ -9,11 +9,11 @@ import { XmlErrorBoundary } from './core/errors';
 import { validateTranslationCatalog } from './core/i18n';
 import { renderNode } from './core/node';
 import { BaseUrlContext, resolveUrl } from './core/url';
-import type { ASTNode, ExecutionContext } from './types';
+import type { ASTNode, XmlRuntime } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];
-    ctx?: ExecutionContext;
+    ctx?: XmlRuntime;
     baseUrl?: string;
 };
 
@@ -27,7 +27,7 @@ type SetupFailure = {
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
-    const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
+    const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
     const requiresSetup = hasMatchingNode(ast, (node) => node.name === 'State' || node.name === 'Query');
     const requiresTranslations = hasMatchingNode(ast, (node) => Boolean(node.params?.i18n));
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
@@ -64,7 +64,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             unsubscribeAll();
 
             // Subscribe to reactive state values in the context.
-            for (const value of Object.values(runtimeCtx.values)) {
+            for (const value of Object.values(runtimeCtx.scope.bindings)) {
                 // Skip non-reactive context values.
                 if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
 
@@ -77,11 +77,12 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             }
         }
 
-        runtimeCtx.setups = {};
-        runtimeCtx.values = {};
+        runtimeCtx.services.setups = {};
+        runtimeCtx.scope.bindings = { params: runtimeCtx.services.params };
+        runtimeCtx.services.requestBaseUrl = baseUrl;
 
         // Hydrate translations from the SDK route before localized nodes render.
-        if (waitsForTranslations && runtimeCtx.translations === undefined) {
+        if (waitsForTranslations && runtimeCtx.services.translations === undefined) {
             void fetchApiJson<unknown>(resolveUrl(baseUrl, '/i18n/en.json'), {
                 cache: 'no-cache',
             })
@@ -89,7 +90,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
                     // Ignore translations after cleanup.
                     if (!mounted) return;
 
-                    runtimeCtx.translations = validateTranslationCatalog(translations);
+                    runtimeCtx.services.translations = validateTranslationCatalog(translations);
                     setVersion((current) => current + 1);
                 })
                 .catch((error: unknown) => {
@@ -105,16 +106,16 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         }
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        runtimeCtx.invalidate = async (ids) => {
+        runtimeCtx.services.invalidate = async (ids) => {
             const list = Array.isArray(ids) ? ids : [ids];
 
             // Refresh each requested setup value.
             for (const id of list) {
                 // Skip unknown invalidation targets.
-                const setup = runtimeCtx.setups[id];
+                const setup = runtimeCtx.services.setups[id];
                 if (!setup) continue;
 
-                delete runtimeCtx.values[id];
+                delete runtimeCtx.scope.bindings[id];
                 await setup();
             }
 
@@ -158,13 +159,13 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
     if (requiresSetup && initializedAst !== ast) return null;
 
     // Wait for translations before localized nodes render.
-    if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
+    if (waitsForTranslations && runtimeCtx.services.translations === undefined) return null;
 
     const messages: MessagesByLocale = {
         ...translationCatalogs,
         en: {
             ...translationCatalogs.en,
-            ...runtimeCtx.translations,
+            ...runtimeCtx.services.translations,
         },
     };
 
@@ -177,13 +178,13 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
     );
 }
 
-/** Installs the active Astryx translator into the mutable XML execution scope. */
-function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ctx: ExecutionContext }) {
-    ctx.translate = useTranslator();
+/** Installs the active Astryx translator into renderer-owned XML services. */
+function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ctx: XmlRuntime }) {
+    ctx.services.translate = useTranslator();
 
     return (
         <BaseUrlContext.Provider value={baseUrl}>
-            <XmlContext.Provider value={ctx}>{renderNode(ast, ctx)}</XmlContext.Provider>
+            <XmlContext.Provider value={ctx}>{renderNode(ast, ctx.scope)}</XmlContext.Provider>
         </BaseUrlContext.Provider>
     );
 }

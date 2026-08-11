@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { evaluate } from '../expressions';
-import type { ASTNode, ASTProps, ExecutionContext } from '../types';
+import type { ASTNode, ASTProps, RuntimeServices, Scope } from '../types';
 import { resolveTranslation } from './i18n';
 
 const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
@@ -15,7 +15,7 @@ export function readXmlProp(props: ASTProps, name: string): ASTProps[string] | u
 }
 
 /** Resolves a required XML string prop and throws a tag-specific error when missing. */
-export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionContext, componentName: string): string {
+export function requireXmlString(props: ASTProps, name: string, ctx: Scope, componentName: string): string {
     // Required string attributes must be present before evaluation.
     const attribute = readXmlProp(props, name);
     if (attribute == null) {
@@ -35,7 +35,7 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 }
 
 /** Resolves a string XML prop. */
-export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue = ''): string {
+export function resolveXmlString(props: ASTProps, name: string, ctx: Scope, defaultValue = ''): string {
     // Missing attributes keep the caller-provided default.
     const attribute = readXmlProp(props, name);
     if (attribute == null) return defaultValue;
@@ -49,7 +49,7 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 export function resolveXmlBoolean(
     props: ASTProps,
     name: string,
-    ctx: ExecutionContext,
+    ctx: Scope,
     defaultValue?: boolean
 ): boolean | undefined {
     // Missing attributes keep the caller-provided default.
@@ -71,12 +71,7 @@ export function resolveXmlBoolean(
 }
 
 /** Resolves a numeric XML prop. */
-export function resolveXmlNumber(
-    props: ASTProps,
-    name: string,
-    ctx: ExecutionContext,
-    defaultValue?: number
-): number | undefined {
+export function resolveXmlNumber(props: ASTProps, name: string, ctx: Scope, defaultValue?: number): number | undefined {
     // Missing attributes keep the caller-provided default.
     const attribute = readXmlProp(props, name);
     if (attribute == null) return defaultValue;
@@ -88,7 +83,7 @@ export function resolveXmlNumber(
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */
-export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: unknown): unknown {
+export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope, defaultValue?: unknown): unknown {
     // Missing attributes keep the caller-provided default.
     const attribute = readXmlProp(props, name);
     if (attribute == null) return defaultValue;
@@ -99,19 +94,20 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: ExecutionCon
 /** Resolves text from translation, value, or rendered XML children. */
 export function resolveXmlContent(
     props: ASTProps,
-    ctx: ExecutionContext,
+    ctx: Scope,
+    services: RuntimeServices,
     value: unknown,
     renderChildren: () => ReactNode
 ): ReactNode {
     return readXmlProp(props, 'i18n')
-        ? resolveTranslation(props, ctx)
+        ? resolveTranslation(props, ctx, services)
         : value != null
           ? String(value)
           : renderChildren();
 }
 
 /** Return whether an XML node passes its optional conditional expression. */
-export function isVisibleXmlNode(node: ASTNode, ctx: ExecutionContext): boolean {
+export function isVisibleXmlNode(node: ASTNode, ctx: Scope): boolean {
     if (node.params?.if == null) return true;
 
     return Boolean(evaluate(node.params.if, ctx));
@@ -120,7 +116,8 @@ export function isVisibleXmlNode(node: ASTNode, ctx: ExecutionContext): boolean 
 /** Resolves an accessible XML label from a translation key or label attribute. */
 export function resolveXmlLabel(
     props: ASTProps,
-    ctx: ExecutionContext,
+    ctx: Scope,
+    services: RuntimeServices,
     componentName: string,
     attribute = 'label'
 ): string {
@@ -132,7 +129,7 @@ export function resolveXmlLabel(
         throw new Error(`${componentName} requires exactly one of ${attribute} or i18n`);
     }
 
-    if (i18n != null) return resolveTranslation(props, ctx);
+    if (i18n != null) return resolveTranslation(props, ctx, services);
 
     return requireXmlString(props, attribute, ctx, componentName);
 }
@@ -141,7 +138,7 @@ export function resolveXmlLabel(
 export function resolveXmlEnum<const T extends string>(
     props: ASTProps,
     name: string,
-    ctx: ExecutionContext,
+    ctx: Scope,
     values: readonly T[],
     defaultValue: T,
     componentName: string
@@ -160,7 +157,7 @@ export function resolveXmlEnum<const T extends string>(
 /** Resolves Astryx input status attributes into the component object shape. */
 export function resolveXmlStatus(
     props: ASTProps,
-    ctx: ExecutionContext
+    ctx: Scope
 ): { type: 'warning' | 'error' | 'success'; message?: string } | undefined {
     // Omit status when the XML attribute is absent.
     if (readXmlProp(props, 'status') == null) return undefined;
@@ -175,7 +172,7 @@ export function resolveXmlStatus(
 export function resolveXmlSpacing(
     props: ASTProps,
     name: string,
-    ctx: ExecutionContext,
+    ctx: Scope,
     defaultValue?: XmlSpacing
 ): XmlSpacing | undefined {
     const value = resolveXmlNumber(props, name, ctx, defaultValue);
@@ -191,7 +188,7 @@ export function resolveXmlSpacing(
 }
 
 /** Resolves a serializable Astryx width or height value. */
-export function resolveXmlSizeValue(props: ASTProps, name: string, ctx: ExecutionContext): string | number | undefined {
+export function resolveXmlSizeValue(props: ASTProps, name: string, ctx: Scope): string | number | undefined {
     const value = resolveXmlValue(props, name, ctx);
 
     // Astryx sizing props only accept CSS strings and pixel numbers.

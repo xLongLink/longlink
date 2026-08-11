@@ -2,7 +2,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import {
     isVisibleXmlNode,
@@ -13,14 +13,15 @@ import {
     resolveXmlString,
 } from '../core/props';
 import { resolveNavigationUrl } from '../core/url';
-import type { ASTNode, ExecutionContext, Props } from '../types';
+import type { ASTNode, Props, Scope } from '../types';
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
-        .map((node) => resolveTab(node, ctx));
+        .map((node) => resolveTab(node, ctx, services));
 
     // Tab navigation without options is not meaningful or accessible.
     if (tabs.length === 0) {
@@ -63,12 +64,11 @@ export function Tab(): never {
 }
 
 /** Resolves a serializable XML tab definition. */
-function resolveTab(node: ASTNode, ctx: ExecutionContext) {
+function resolveTab(node: ASTNode, ctx: Scope, services: ReturnType<typeof useXmlServices>) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'Tab');
-    const label = resolveXmlLabel(props, ctx, 'Tab');
-    const href =
-        resolveNavigationUrl(String(ctx.navigationBaseUrl ?? ''), resolveXmlString(props, 'to', ctx)) || undefined;
+    const label = resolveXmlLabel(props, ctx, services, 'Tab');
+    const href = resolveNavigationUrl(services.navigationBaseUrl, resolveXmlString(props, 'to', ctx)) || undefined;
 
     return { href, label, nodes: node.children ?? [], value };
 }

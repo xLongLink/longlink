@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { executeAction } from '@/xml/v1/adapters/Action';
-import type { ASTProps, ExecutionContext } from '@/xml/v1/types';
+import type { ASTProps, Scope, XmlRuntime } from '@/xml/v1/types';
 import { compileProps } from '../helpers';
 
 describe('Action', () => {
@@ -9,15 +9,22 @@ describe('Action', () => {
         const invalidations: Array<string | string[]> = [];
         let successCalls = 0;
         let errorCalls = 0;
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async (ids) => {
-                invalidations.push(ids);
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    fullName: 'Ada Lovelace',
+                    email: 'ada@example.com',
+                    notes: 'Build the first program',
+                },
             },
-            values: {
-                fullName: 'Ada Lovelace',
-                email: 'ada@example.com',
-                notes: 'Build the first program',
+            services: {
+                invalidate: async (ids) => {
+                    invalidations.push(ids);
+                },
+                navigationBaseUrl: '',
+                params: {},
+                requestBaseUrl: '',
+                setups: {},
             },
         };
 
@@ -37,7 +44,8 @@ describe('Action', () => {
                 json: '${{ fullName: fullName, email: email, notes: notes }}',
                 invalidate: '${["profile", "activity"]}',
             }),
-            ctx,
+            ctx.scope,
+            ctx.services,
             '',
             fetchImpl,
             (options) => {
@@ -83,12 +91,17 @@ describe('Action', () => {
             let invalidationCalls = 0;
             let successCalls = 0;
             let errorMessage = '';
-            const ctx: ExecutionContext = {
-                setups: {},
-                invalidate: async () => {
-                    invalidationCalls += 1;
+            const ctx: XmlRuntime = {
+                scope: { bindings: {} },
+                services: {
+                    invalidate: async () => {
+                        invalidationCalls += 1;
+                    },
+                    navigationBaseUrl: '',
+                    params: {},
+                    requestBaseUrl: '',
+                    setups: {},
                 },
-                values: {},
             };
             const fetchImpl = (async () => testCase.request()) satisfies typeof fetch;
 
@@ -97,7 +110,8 @@ describe('Action', () => {
                     action: '/example/profile',
                     invalidate: '${["profile", "activity"]}',
                 }),
-                ctx,
+                ctx.scope,
+                ctx.services,
                 '',
                 fetchImpl,
                 (options) => {
@@ -117,15 +131,16 @@ describe('Action', () => {
     /* The action shell should send multipart form data without a JSON content type. */
     it('sends multipart form data', async () => {
         const file = new File(['supplier sheet'], 'supplier.txt', { type: 'text/plain' });
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {
-                document: {
-                    file,
-                    label: 'Supplier sheet',
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    document: {
+                        file,
+                        label: 'Supplier sheet',
+                    },
                 },
             },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
         };
 
         let requestInit: RequestInit | undefined;
@@ -141,7 +156,8 @@ describe('Action', () => {
                 action: '/files',
                 form: '${{ file: document.file, label: document.label }}',
             }),
-            ctx,
+            ctx.scope,
+            ctx.services,
             '',
             fetchImpl,
             () => () => {}
@@ -160,12 +176,17 @@ describe('Action', () => {
     /* The action shell should still invalidate without an endpoint. */
     it('invalidates slots when no action is configured', async () => {
         let invalidateCalls = 0;
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {
-                invalidateCalls += 1;
+        const ctx: XmlRuntime = {
+            scope: { bindings: {} },
+            services: {
+                invalidate: async () => {
+                    invalidateCalls += 1;
+                },
+                navigationBaseUrl: '',
+                params: {},
+                requestBaseUrl: '',
+                setups: {},
             },
-            values: {},
         };
 
         let fetchCalls = 0;
@@ -179,7 +200,8 @@ describe('Action', () => {
             compileProps({
                 invalidate: '${["selectedUserId"]}',
             }),
-            ctx,
+            ctx.scope,
+            ctx.services,
             '',
             fetchImpl,
             () => () => {}
@@ -193,7 +215,7 @@ describe('Action', () => {
     it('rejects invalid actions before fetching', async () => {
         const cases: Array<{
             props: ASTProps;
-            values: ExecutionContext['values'];
+            values: Scope['bindings'];
             expectedError: string;
         }> = [
             {
@@ -219,10 +241,15 @@ describe('Action', () => {
         ];
 
         for (const testCase of cases) {
-            const ctx: ExecutionContext = {
-                setups: {},
-                invalidate: async () => {},
-                values: testCase.values,
+            const ctx: XmlRuntime = {
+                scope: { bindings: testCase.values },
+                services: {
+                    invalidate: async () => {},
+                    navigationBaseUrl: '',
+                    params: {},
+                    requestBaseUrl: '',
+                    setups: {},
+                },
             };
             let fetchCalls = 0;
             let errorMessage = '';
@@ -232,7 +259,7 @@ describe('Action', () => {
                 return new Response(null, { status: 204 });
             }) satisfies typeof fetch;
 
-            await executeAction(testCase.props, ctx, '', fetchImpl, (options) => {
+            await executeAction(testCase.props, ctx.scope, ctx.services, '', fetchImpl, (options) => {
                 if (options.type === 'error') errorMessage = String(options.body);
 
                 return () => {};

@@ -1,7 +1,7 @@
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import { renderNode } from '../core/node';
 import {
     requireXmlString,
@@ -17,6 +17,7 @@ import type { Props } from '../types';
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
     const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
@@ -32,7 +33,7 @@ export function RadioList({ props, nodes }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, 'RadioList')}
+            label={resolveXmlLabel(props, ctx, services, 'RadioList')}
             onChange={(nextValue) => {
                 setXmlBinding(binding, setLocalValue, nextValue);
             }}
@@ -50,12 +51,13 @@ export function RadioList({ props, nodes }: Props) {
 /** Renders one data-oriented Astryx radio option. */
 export function RadioListItem({ props }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
 
     return (
         <AstryxRadioListItem
             description={resolveXmlString(props, 'description', ctx) || undefined}
             isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            label={resolveXmlLabel(props, ctx, 'RadioListItem')}
+            label={resolveXmlLabel(props, ctx, services, 'RadioListItem')}
             value={requireXmlString(props, 'value', ctx, 'RadioListItem')}
         />
     );

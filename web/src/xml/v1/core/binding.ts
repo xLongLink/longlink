@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
 import { isSafePropertyName, resolvePath } from '../expressions';
-import type { ASTProps, ExecutionContext } from '../types';
+import type { ASTProps, Scope } from '../types';
 import { resolveXmlValue } from './props';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});
@@ -26,7 +26,7 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type?: BindingType) {
+export function useBindableValue(props: ASTProps, name: string, ctx: Scope, type?: BindingType) {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const [initialValue] = useState(value);
@@ -73,7 +73,7 @@ function normalizeBindableValue(type: BindingType | undefined, value: unknown): 
 function resolveBindableTarget(
     attribute: ASTProps[string] | undefined,
     value: unknown,
-    ctx: ExecutionContext
+    ctx: Scope
 ): BindingTarget | undefined {
     // Use resolved proxy values directly.
     if (isBindableValue(value)) return { state: value };

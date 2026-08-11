@@ -77,9 +77,9 @@
                 <Text as="p" i18n="settings.workflow.description" />
                 <FormLayout>
                     <RadioList i18n="settings.workflow.owner" value="$workflow.owner">
-                        <RadioListItem value="manager" i18n="settings.workflow.manager" />
-                        <RadioListItem value="finance" i18n="settings.workflow.finance" />
-                        <RadioListItem value="owner" i18n="settings.workflow.ownerRole" />
+                        <RadioListItem value="manager" i18n="workflow.manager" />
+                        <RadioListItem value="finance" i18n="workflow.finance" />
+                        <RadioListItem value="owner" i18n="workflow.owner" />
                     </RadioList>
                     <Selector i18n="settings.workflow.risk" value="$workflow.risk">
                         <SelectorOption value="low" i18n="settings.workflow.low" />

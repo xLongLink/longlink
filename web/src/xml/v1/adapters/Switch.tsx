@@ -1,7 +1,7 @@
 import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import { useState } from 'react';
 import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -15,6 +15,7 @@ import type { Props } from '../types';
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(toXmlBoolean(binding.initialValue));
     const value = binding.bound ? toXmlBoolean(binding.currentValue) : localValue;
@@ -30,7 +31,7 @@ export function Switch({ props }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, 'Switch')}
+            label={resolveXmlLabel(props, ctx, services, 'Switch')}
             labelPosition={labelPosition}
             labelSpacing={labelSpacing}
             onChange={(nextValue) => {

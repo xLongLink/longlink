@@ -37,4 +37,4 @@ function validateRuntime(ast: ASTNode[]): void {
 }
 
 export { createContext, resolveRequestUrl } from './v1';
-export type { ASTNode, ExecutionContext } from './v1';
+export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './v1';

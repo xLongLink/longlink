@@ -1,7 +1,7 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { useState } from 'react';
 import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlContext } from '../core/context';
+import { useXmlContext, useXmlServices } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -15,6 +15,7 @@ import type { Props } from '../types';
 /** Renders an Astryx checkbox with boolean Valtio binding. */
 export function CheckboxInput({ props }: Props) {
     const ctx = useXmlContext();
+    const services = useXmlServices();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(toXmlBoolean(binding.initialValue));
     const value = binding.bound ? toXmlBoolean(binding.currentValue) : localValue;
@@ -30,7 +31,7 @@ export function CheckboxInput({ props }: Props) {
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isReadOnly={resolveXmlBoolean(props, 'isReadOnly', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, 'CheckboxInput')}
+            label={resolveXmlLabel(props, ctx, services, 'CheckboxInput')}
             onChange={(nextValue) => {
                 setXmlBinding(binding, setLocalValue, nextValue);
             }}
