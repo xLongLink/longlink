@@ -1,5 +1,5 @@
 import type { PublicPage } from '../public';
-import { pageReferenceDocs } from './sdk/references';
+import { pageReferenceDocs } from './sdk/pages/index';
 
 export const documentationPages = {
     introduction: {

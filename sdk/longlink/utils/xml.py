@@ -64,17 +64,6 @@ class Element:
         self._content: str | None = None
 
 
-    @classmethod
-    def from_content(cls, content: str, schema: str | Path | None = None) -> "Element":
-        """Create an element instance from in-memory XML content."""
-
-        instance = cls.__new__(cls)
-        instance.path = Path("<memory>")
-        instance.schema_path = Path(schema) if schema is not None else None
-        instance._content = content
-        return instance
-
-
     @property
     def content(self) -> str:
         """Return the raw XML payload."""
@@ -120,9 +109,3 @@ class Element:
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
         return xml_doc
-
-class Longlink(Element):
-    """Load and validate LongLink XML documents from disk.
-
-    LongLink documents are discovered from XML files and can define custom UI components and interactions.
-    """

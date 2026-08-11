@@ -121,7 +121,15 @@ UNSUPPORTED_MARKUP_FRAGMENTS = [
 ]
 
 
-def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
+def element_from_file(tmp_path: Path, content: str, schema: Path) -> Element:
+    """Write XML content to a temporary file for ordinary Element validation."""
+
+    path = tmp_path / "page.xml"
+    path.write_text(content, encoding="utf-8")
+    return Element(path, schema=schema)
+
+
+def test_element_validation_uses_safe_xml_parser(monkeypatch, tmp_path: Path) -> None:
     """Disable DTD loading, network access, and entity resolution during validation."""
 
     # Wrap the real parser factory to capture its security options.
@@ -137,7 +145,7 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
 
     # Validate a document through the instrumented parser.
-    Element.from_content('<longlink version="v1" />', schema=ROOT_SCHEMA).validate()
+    element_from_file(tmp_path, '<longlink version="v1" />', ROOT_SCHEMA).validate()
 
     # Require every parser-hardening option at the XML boundary.
     assert captured_kwargs[0]["load_dtd"] is False
@@ -146,11 +154,11 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
 
 
 @pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])
-def test_element_validation_rejects_unsupported_markup(_name: str, content: str) -> None:
+def test_element_validation_rejects_unsupported_markup(_name: str, content: str, tmp_path: Path) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
-    # Build an in-memory document containing unsupported browser markup.
-    element = Element.from_content(content, schema=ROOT_SCHEMA)
+    # Build a document containing unsupported browser markup.
+    element = element_from_file(tmp_path, content, ROOT_SCHEMA)
 
     # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
@@ -158,20 +166,20 @@ def test_element_validation_rejects_unsupported_markup(_name: str, content: str)
 
 
 @pytest.mark.parametrize(("_name", "schema", "content"), VALID_FRAGMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
-def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, content: str) -> None:
+def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, content: str, tmp_path: Path) -> None:
     """Validate representative XML fragments for each adapter schema."""
 
     # Build and validate the fragment against its adapter schema.
-    element = Element.from_content(content, schema=schema)
+    element = element_from_file(tmp_path, content, schema)
     element.validate()
 
 
 @pytest.mark.parametrize(("_name", "schema", "content"), INVALID_FRAGMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
-def test_adapter_schema_rejects_invalid_fragments(_name: str, schema: Path, content: str) -> None:
+def test_adapter_schema_rejects_invalid_fragments(_name: str, schema: Path, content: str, tmp_path: Path) -> None:
     """Reject representative invalid XML fragments through adapter schemas."""
 
     # Build the invalid fragment against its adapter schema.
-    element = Element.from_content(content, schema=schema)
+    element = element_from_file(tmp_path, content, schema)
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):

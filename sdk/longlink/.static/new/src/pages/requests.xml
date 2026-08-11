@@ -31,7 +31,7 @@
         </Dialog>
     </Stack>
 
-    <Table data="$requests" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
+    <Table data="$requests" idKey="id" density="compact" emptyLabel="No purchase requests yet." hasHover="true">
         <TableColumn key="request" i18n="requests.table.request">
             <Stack gap="1">
                 <Link to="/requests/${row.id}" label="$row.text">

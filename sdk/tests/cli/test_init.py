@@ -58,5 +58,5 @@ def test_init_refuses_existing_non_empty_folder() -> None:
 
         # Assert
         assert result.exit_code == 1
-        assert "Target folder is not empty" in result.output
+        assert "Target already exists" in result.output
         assert (target / "README.md").read_text(encoding="utf-8") == "Existing project\n"

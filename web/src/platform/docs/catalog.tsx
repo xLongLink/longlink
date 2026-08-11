@@ -23,7 +23,7 @@ import * as database from '@/platform/docs/sdk/database';
 import * as environments from '@/platform/docs/sdk/environments';
 import * as applicationsOverview from '@/platform/docs/sdk/index';
 import * as pages from '@/platform/docs/sdk/pages';
-import { pageReferenceDocPages } from '@/platform/docs/sdk/references';
+import { pageReferenceDocPages } from '@/platform/docs/sdk/pages/index';
 import * as routes from '@/platform/docs/sdk/routes';
 import * as storage from '@/platform/docs/sdk/storage';
 import * as testing from '@/platform/docs/sdk/testing';

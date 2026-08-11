@@ -24,7 +24,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Info } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
-import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/references';
+import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/pages/index';
 
 type ComponentSummary = {
     name: string;

@@ -11,7 +11,7 @@ from longlink.routes import routes
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
-from longlink.utils.xml import Longlink as LonglinkXml
+from longlink.utils.xml import Element
 from fastapi.staticfiles import StaticFiles
 from longlink.middleware import install_frontend_middleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -145,7 +145,7 @@ class LongLink:
             registered_path = f"/pages/{path_without_suffix}"
 
             # Validate XML pages and extract optional display metadata.
-            page = LonglinkXml(page_file)
+            page = Element(page_file)
             page_root = page.validate()
             page_name, page_icon = extract_longlink_metadata(page_root)
 

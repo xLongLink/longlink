@@ -11,7 +11,6 @@ from pathlib import Path
 from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
-from longlink.utils.metadata import Metadata
 
 BUILD_CONTEXT_IGNORE_PATTERNS = (
     ".cache",
@@ -336,7 +335,18 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     source_root, workdir = resolve_docker_paths(root, pyproject_data)
     repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
     env_spec = read_env_spec(root, pyproject_data)
-    project_metadata = Metadata.from_pyproject(pyproject_data)
+    project_data = pyproject_data.get("project")
+    if not isinstance(project_data, dict):
+        raise click.ClickException("[project] metadata is required")
+    project_name = project_data.get("name")
+    project_version = project_data.get("version")
+    project_description = project_data.get("description")
+    if not isinstance(project_name, str) or not project_name.strip():
+        raise click.ClickException("[project].name is required")
+    if not isinstance(project_version, str) or not project_version.strip():
+        raise click.ClickException("[project].version is required")
+    if project_description is not None and not isinstance(project_description, str):
+        raise click.ClickException("[project].description must be a string")
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -345,8 +355,11 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         sdk_version = "0.0.0"
 
     # Resolve the image version and render its metadata labels.
-    version = tag or project_metadata.version
-    labels = render_image_labels(project_metadata.model_dump(), env_spec)
+    version = tag or project_version
+    labels = render_image_labels(
+        {"name": project_name, "version": project_version, "description": project_description},
+        env_spec,
+    )
 
     # Copy the source tree into a throwaway Docker build context.
     shutil.copytree(
@@ -390,7 +403,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, sdk_version), encoding="utf-8")
 
-    return dockerfile_path, version, project_metadata.name
+    return dockerfile_path, version, project_name
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
