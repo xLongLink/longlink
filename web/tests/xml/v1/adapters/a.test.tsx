@@ -18,7 +18,6 @@ describe('Link', () => {
                 services: {
                     invalidate: async () => {},
                     navigationBaseUrl: '/orgs/acme/apps/tracker',
-                    params: {},
                     requestBaseUrl: '',
                     setups: {},
                     translations,
@@ -33,7 +32,6 @@ describe('Link', () => {
                 services: {
                     invalidate: async () => {},
                     navigationBaseUrl: '',
-                    params: {},
                     requestBaseUrl: '',
                     setups: {},
                     translations,
@@ -59,7 +57,6 @@ describe('Link', () => {
                 services: {
                     invalidate: async () => {},
                     navigationBaseUrl: '',
-                    params: {},
                     requestBaseUrl: '',
                     setups: {},
                     translations,

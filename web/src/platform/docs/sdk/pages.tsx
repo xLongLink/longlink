@@ -129,7 +129,7 @@ function renderComponentPreview(name: string) {
         case 'values':
             return <Code>{'values="${{ name: user.name }}"'}</Code>;
         case 'count':
-            return <Code>{'count="${orders.length}"'}</Code>;
+            return <Code>{'values="${{ count: orders.length }}"'}</Code>;
         case 'Expressions':
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':

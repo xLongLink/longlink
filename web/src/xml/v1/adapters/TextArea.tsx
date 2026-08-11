@@ -1,7 +1,7 @@
 import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -15,8 +15,7 @@ import type { Props } from '../types';
 
 /** Renders an accessible Astryx text area with optional Valtio binding. */
 export function TextArea({ props }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
     const value = binding.bound ? String(binding.currentValue ?? '') : localValue;

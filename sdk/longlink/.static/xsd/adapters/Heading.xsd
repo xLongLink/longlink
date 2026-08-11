@@ -8,7 +8,6 @@
     <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
     <xsd:attribute name="values" type="xsd:string" use="optional" />
     <xsd:attribute name="count" type="xsd:string" use="optional" />
-    <xsd:attribute name="type" type="HeadingDisplayType" use="optional" />
     <xsd:attribute name="color" type="TextColorType" use="optional" default="primary" />
     <xsd:attribute name="justify" type="AlignType" use="optional" default="start" />
     <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" use="optional" />

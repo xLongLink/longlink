@@ -12,7 +12,6 @@ export { Grid } from './Grid';
 export { Heading } from './Heading';
 export { Icon } from './Icon';
 export { Link } from './Link';
-export { Longlink } from './Longlink';
 export { NumberInput } from './NumberInput';
 export { RadioList, RadioListItem } from './RadioList';
 export { Selector, SelectorOption } from './Selector';

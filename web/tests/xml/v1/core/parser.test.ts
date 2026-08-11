@@ -32,6 +32,7 @@ describe('parseXML', () => {
         ).toEqual([
             {
                 name: 'longlink',
+                params: {},
                 children: [
                     { name: 'Button', params: { i18n: { kind: 'text', value: 'actions.save' } }, children: [] },
                     { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },

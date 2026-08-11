@@ -11,7 +11,6 @@ describe('For', () => {
             services: {
                 invalidate: async () => {},
                 navigationBaseUrl: '',
-                params: {},
                 requestBaseUrl: '',
                 setups: {},
                 translations: { 'items.name': { defaultMessage: '{name}' } },
@@ -40,7 +39,6 @@ describe('For', () => {
             services: {
                 invalidate: async () => {},
                 navigationBaseUrl: '',
-                params: { issue: '123' },
                 requestBaseUrl: '',
                 setups: {},
             },

@@ -18,6 +18,12 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${index + 1}. ${name}'), ctx)).toBe('1. Hero');
     });
 
+    it('preserves literal expression syntax without parsing it', () => {
+        const ctx: Scope = { bindings: {} };
+
+        expect(evaluate(compileAttribute('${not valid', true), ctx)).toBe('${not valid');
+    });
+
     /* Object literals inside `${...}` should be evaluated as objects, not strings. */
     it('parses object literals wrapped in `${...}`', () => {
         const ctx: Scope = { bindings: { value: 5 } };
@@ -43,8 +49,12 @@ describe('evaluate', () => {
         const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
 
         expect(evaluate(compileAttribute('${user.toString}'), ctx)).toBeUndefined();
-        expect(evaluate(compileAttribute('${"toString" in user}'), ctx)).toBe(false);
-        expect(evaluate(compileAttribute('${"name" in user}'), ctx)).toBe(true);
+    });
+
+    it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
+        const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
+
+        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
     });
 
     it('ignores unsafe object literal keys', () => {

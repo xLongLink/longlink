@@ -1,5 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { InternationalizationProvider, useTranslator, type MessagesByLocale } from '@astryxdesign/core/i18n';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
@@ -72,7 +73,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
         }
 
         runtimeCtx.services.setups = {};
-        runtimeCtx.scope.bindings = { params: runtimeCtx.services.params };
+        runtimeCtx.scope.bindings = { params: runtimeCtx.scope.bindings.params };
 
         // Hydrate translations from the SDK route before localized nodes render.
         if (waitsForTranslations && runtimeCtx.services.translations === undefined) {
@@ -174,9 +175,16 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
 /** Installs the active Astryx translator into renderer-owned XML services. */
 function XmlContent({ ast, ctx }: { ast: ASTNode[]; ctx: XmlRuntime }) {
     ctx.services.translate = useTranslator();
+    const [root] = ast;
 
     return (
-        <XmlContext.Provider value={ctx}>{renderNode(ast, ctx.scope)}</XmlContext.Provider>
+        <XmlContext.Provider value={ctx}>
+            {ast.length === 1 && root?.name === 'longlink' ? (
+                <Stack gap={6}>{renderNode(root.children, ctx.scope)}</Stack>
+            ) : (
+                renderNode(ast, ctx.scope)
+            )}
+        </XmlContext.Provider>
     );
 }
 
@@ -191,7 +199,7 @@ function getRequirements(nodes: ASTNode[]): { requiresSetup: boolean; requiresTr
         requiresTranslations ||= node.params?.i18n != null;
         if (requiresSetup && requiresTranslations) break;
 
-        const nested = getRequirements(node.children ?? []);
+        const nested = getRequirements(node.children);
         requiresSetup ||= nested.requiresSetup;
         requiresTranslations ||= nested.requiresTranslations;
         if (requiresSetup && requiresTranslations) break;

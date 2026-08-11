@@ -4,7 +4,6 @@
   <xsd:complexType name="TableType">
     <xsd:sequence><xsd:element ref="TableColumn" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
     <xsd:attribute name="data" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="rowName" type="NonBlankStringType" use="optional" default="row" />
     <xsd:attribute name="idKey" type="FieldPathType" use="optional" />
     <xsd:attribute name="emptyLabel" type="NonBlankStringType" use="optional" default="No data" />
     <xsd:attribute name="density" type="TableDensityType" use="optional" default="balanced" />
@@ -23,9 +22,6 @@
     <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
     <xsd:attribute name="values" type="xsd:string" use="optional" />
     <xsd:attribute name="count" type="xsd:string" use="optional" />
-    <xsd:attribute name="width" type="PositiveDecimalType" use="optional" />
-    <xsd:attribute name="widthType" type="TableWidthType" use="optional" default="proportional" />
-    <xsd:attribute name="minWidth" type="NonNegativeDecimalType" use="optional" />
     <xsd:attribute name="align" type="AlignType" use="optional" default="start" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>

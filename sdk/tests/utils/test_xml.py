@@ -26,7 +26,7 @@ VALID_FRAGMENTS = [
     (
         "button",
         _adapter_schema("Button.xsd"),
-        '<Button append="cart" item="${item}" type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
+        '<Button type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
     ),
     ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text i18n="cards.content" /></Card>'),
     (
@@ -71,7 +71,7 @@ VALID_FRAGMENTS = [
     (
         "table",
         _adapter_schema("Table.xsd"),
-        '<Table data="$items" rowName="item" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
+        '<Table data="$items" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
     ),
     (
         "tab-list",
@@ -85,6 +85,13 @@ VALID_FRAGMENTS = [
 
 INVALID_FRAGMENTS = [
     ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button i18n="actions.save" /></Action>'),
+    ("removed-avatar-fallback-src", _adapter_schema("Avatar.xsd"), '<Avatar fallbackSrc="/fallback.png" />'),
+    ("removed-button-append", _adapter_schema("Button.xsd"), '<Button label="Add" append="cart" item="${item}" />'),
+    ("removed-button-item", _adapter_schema("Button.xsd"), '<Button label="Add" item="${item}" />'),
+    ("removed-dialog-trigger-variant", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerVariant="primary" />'),
+    ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
+    ("removed-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="display-1" value="Title" />'),
+    ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
     ("old-text-interpolation", _adapter_schema("Text.xsd"), '<Text i18n="users.name" name="$user.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
@@ -99,6 +106,10 @@ INVALID_FRAGMENTS = [
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
+    ("removed-table-row-name", _adapter_schema("Table.xsd"), '<Table data="$items" rowName="item"><TableColumn key="sku" /></Table>'),
+    ("removed-table-column-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" width="1" /></Table>'),
+    ("removed-table-column-width-type", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>'),
+    ("removed-table-column-min-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>'),
     ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text i18n="tabs.overview" /></Tab></TabList>'),
     ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1"><Text i18n="dashboard.title"></longlink>'),
 ]

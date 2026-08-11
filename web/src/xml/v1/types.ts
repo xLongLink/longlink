@@ -13,7 +13,7 @@ export type ASTInterpolationSegment = { kind: 'text'; value: string } | { kind: 
 export type ASTNode = {
     name: string;
     params?: ASTProps;
-    children?: ASTNode[];
+    children: ASTNode[];
 };
 
 /** Compiled XML attributes attached to an AST node. */
@@ -35,7 +35,6 @@ export type Scope = {
 export type RuntimeServices = {
     invalidate: (ids: string | string[]) => Promise<void>;
     navigationBaseUrl: string;
-    params: Record<string, string>;
     requestBaseUrl: string;
     setups: Record<string, () => Promise<void> | void>;
     translate?: TranslatorFn;

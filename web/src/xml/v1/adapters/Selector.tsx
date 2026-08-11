@@ -1,7 +1,7 @@
 import { Selector as AstryxSelector, type SelectorOptionType } from '@astryxdesign/core/Selector';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import {
     requireXmlString,
@@ -14,12 +14,11 @@ import {
     resolveXmlStatus,
     resolveXmlString,
 } from '../core/props';
-import type { ASTNode, Props, Scope } from '../types';
+import type { ASTNode, Props, RuntimeServices, Scope } from '../types';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState<string | null>(
         binding.initialValue == null ? null : String(binding.initialValue)
@@ -74,7 +73,7 @@ export function SelectorOption(): never {
 }
 
 /** Converts one XML option node into Astryx selector data. */
-function resolveOption(node: ASTNode, ctx: Scope, services: ReturnType<typeof useXmlServices>): SelectorOptionType {
+function resolveOption(node: ASTNode, ctx: Scope, services: RuntimeServices): SelectorOptionType {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
     const label = readXmlProp(props, 'i18n')

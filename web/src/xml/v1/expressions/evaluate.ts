@@ -1,5 +1,5 @@
 import type { ASTAttribute, Scope } from '../types';
-import { hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
+import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 import type { ExpressionNode } from './types';
 
 type SafeExpressionCall = (...args: unknown[]) => unknown;
@@ -120,12 +120,6 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
                 case '!==':
                     return left !== right;
 
-                case '==':
-                    return (left as number) == (right as number);
-
-                case '!=':
-                    return (left as number) != (right as number);
-
                 case '<':
                     return (left as number) < (right as number);
 
@@ -137,27 +131,6 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
 
                 case '>=':
                     return (left as number) >= (right as number);
-
-                case 'in': {
-                    // Support pythonic membership checks against strings, arrays, and objects.
-                    if (typeof right === 'string') {
-                        return right.includes(String(left ?? ''));
-                    }
-
-                    // Check array membership directly.
-                    if (Array.isArray(right)) {
-                        return right.includes(left);
-                    }
-
-                    // Check object membership through safe keys.
-                    if (right != null && typeof right === 'object') {
-                        const key = String(left);
-
-                        return hasSafeProperty(right, key);
-                    }
-
-                    return false;
-                }
 
                 default:
                     throw new Error('Operator not allowed');

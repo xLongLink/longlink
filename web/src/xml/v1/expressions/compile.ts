@@ -11,22 +11,19 @@ type InterpolationSegment = {
 /** Compiles an XML attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string, literal = false): ASTAttribute {
     const input = value.trim();
-    const standaloneExpression = readStandaloneExpression(input);
 
     // Preserve literal empty attribute values.
     if (input === '' || literal) return { kind: 'text', value };
+
+    const standaloneExpression = readStandaloneExpression(input);
 
     // Keep standalone expressions typed when they are evaluated.
     if (standaloneExpression) return { kind: 'expression', node: standaloneExpression.node };
 
     // Store reference paths for deferred scope lookup and writable bindings.
-    if (/^\$[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(input)) {
-        return { kind: 'path', parts: input.slice(1).split('.'), isBinding: true };
-    }
-
-    // Preserve legacy dotted scope paths without making them writable bindings.
-    if (/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+$/.test(input)) {
-        return { kind: 'path', parts: input.split('.'), isBinding: false };
+    const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
+    if (reference && (reference[1] || input.includes('.'))) {
+        return { kind: 'path', parts: input.slice(reference[1] ? 1 : 0).split('.'), isBinding: Boolean(reference[1]) };
     }
 
     // Compile mixed text and expressions into segments that render as text.
@@ -58,7 +55,6 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
     try {
         const node = parseExpressionAt(input, start + 2, {
             ecmaVersion: 'latest',
-            sourceType: 'script',
         }) as unknown as ExpressionNode & { end: number };
         let end = node.end;
 

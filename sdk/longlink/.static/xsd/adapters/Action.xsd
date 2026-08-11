@@ -5,7 +5,7 @@
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
     </xsd:sequence>
-    <xsd:attribute name="action" type="xsd:string" use="optional" />
+    <xsd:attribute name="action" type="xsd:string" use="required" />
     <xsd:attribute name="form" type="xsd:string" use="optional" />
     <xsd:attribute name="json" type="xsd:string" use="optional" />
     <xsd:attribute name="invalidate" type="xsd:string" use="optional" />

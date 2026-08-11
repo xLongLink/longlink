@@ -16,11 +16,6 @@
       <xsd:minExclusive value="0" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="NonNegativeDecimalType">
-    <xsd:restriction base="xsd:decimal">
-      <xsd:minInclusive value="0" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="TranslationKeyType">
     <xsd:restriction base="xsd:string">
       <xsd:pattern value="[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+" />
@@ -202,13 +197,6 @@
       <xsd:maxInclusive value="6" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="HeadingDisplayType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="display-1" />
-      <xsd:enumeration value="display-2" />
-      <xsd:enumeration value="display-3" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="TextColorType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="primary" />
@@ -217,29 +205,6 @@
       <xsd:enumeration value="placeholder" />
       <xsd:enumeration value="accent" />
       <xsd:enumeration value="inherit" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="IconColorType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="primary" />
-      <xsd:enumeration value="secondary" />
-      <xsd:enumeration value="tertiary" />
-      <xsd:enumeration value="disabled" />
-      <xsd:enumeration value="accent" />
-      <xsd:enumeration value="success" />
-      <xsd:enumeration value="error" />
-      <xsd:enumeration value="warning" />
-      <xsd:enumeration value="inherit" />
-      <xsd:enumeration value="blue" />
-      <xsd:enumeration value="red" />
-      <xsd:enumeration value="green" />
-      <xsd:enumeration value="gray" />
-      <xsd:enumeration value="cyan" />
-      <xsd:enumeration value="teal" />
-      <xsd:enumeration value="yellow" />
-      <xsd:enumeration value="orange" />
-      <xsd:enumeration value="pink" />
-      <xsd:enumeration value="purple" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="SliderValueDisplayType">
@@ -304,12 +269,6 @@
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="wrap" />
       <xsd:enumeration value="truncate" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TableWidthType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="proportional" />
-      <xsd:enumeration value="pixel" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TabLayoutType">

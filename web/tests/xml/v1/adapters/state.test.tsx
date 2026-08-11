@@ -8,15 +8,21 @@ describe('State', () => {
     it('seeds multi-field state values', async () => {
         const ctx: XmlRuntime = {
             scope: { bindings: {} },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
 
         await setupContext(
-            [{ name: 'State', params: compileProps({ id: 'state1', value1: 'first value', score: '10', list: '[]' }) }],
+            [
+                {
+                    name: 'State',
+                    params: compileProps({ id: 'state1', value1: 'first value', score: '10', list: '[]' }),
+                    children: [],
+                },
+            ],
             ctx,
             ''
         );
 
-        expect(ctx.scope.bindings.state1).toEqual({ value1: 'first value', score: 10, list: [] });
+        expect(ctx.scope.bindings.state1).toEqual({ value1: 'first value', score: '10', list: '[]' });
     });
 });

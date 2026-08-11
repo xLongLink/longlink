@@ -25,17 +25,19 @@
                     closeDialog="true"
                     json="${{ text: draft.text, amount: draft.amount }}"
                 >
-                    <Button isDisabled="${draft.text in ['']}" variant="primary" label="Create purchase request" />
+                    <Button isDisabled="${draft.text === ''}" variant="primary" label="Create purchase request" />
                 </Action>
             </Stack>
         </Dialog>
     </Stack>
 
-    <Table data="$requests" rowName="request" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
+    <Table data="$requests" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
         <TableColumn key="request" i18n="requests.table.request">
             <Stack gap="1">
-                <Link to="/requests/${request.id}" label="$request.text" />
-                <Text color="secondary" value="${`CHF ${request.amount}`}" hasTabularNumbers="true" />
+                <Link to="/requests/${row.id}" label="$row.text">
+                    <Text value="$row.text" />
+                </Link>
+                <Text color="secondary" value="${`CHF ${row.amount}`}" hasTabularNumbers="true" />
             </Stack>
         </TableColumn>
     </Table>

@@ -12,11 +12,11 @@ describe('Table', () => {
                     items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
                 },
             },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items" rowName="item"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
+                '<Table data="$items"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
             ),
             ctx
         );
@@ -38,7 +38,6 @@ describe('Table', () => {
             services: {
                 invalidate: async () => {},
                 navigationBaseUrl: '',
-                params: {},
                 requestBaseUrl: '',
                 setups: {},
                 translations: {
@@ -49,7 +48,7 @@ describe('Table', () => {
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items" rowName="item"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: item.name }}" /><Badge variant="neutral" label="$item.sku" /></Stack></TableColumn></Table>'
+                '<Table data="$items"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: row.name }}" /><Badge variant="neutral" label="$row.sku" /></Stack></TableColumn></Table>'
             ),
             ctx
         );
@@ -68,7 +67,7 @@ describe('Table', () => {
                     items: [{ tags: [{ name: 'Alpha' }] }],
                 },
             },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
 
         const output = renderXmlToMarkup(

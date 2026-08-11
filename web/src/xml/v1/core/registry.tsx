@@ -14,7 +14,6 @@ import {
     Heading,
     Icon,
     Link,
-    Longlink,
     NumberInput,
     RadioList,
     RadioListItem,
@@ -37,7 +36,6 @@ import type { Props } from '../types';
 
 /** Explicit XML v1 tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
-    longlink: Longlink,
     Action,
     Avatar,
     Badge,

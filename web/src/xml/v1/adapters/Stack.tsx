@@ -1,12 +1,12 @@
 import { Stack as AstryxStack } from '@astryxdesign/core/Stack';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders an Astryx stack for horizontal or vertical layout. */
 export function Stack({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx } = useXmlRuntime();
     const direction = resolveXmlEnum(props, 'direction', ctx, ['horizontal', 'vertical'], 'vertical', 'Stack');
     const justify = resolveXmlEnum(
         props,

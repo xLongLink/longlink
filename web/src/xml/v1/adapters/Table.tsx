@@ -1,7 +1,5 @@
 import {
     Table as AstryxTable,
-    pixel,
-    proportional,
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -14,7 +12,6 @@ import {
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlNumber,
     resolveXmlString,
     resolveXmlValue,
 } from '../core/props';
@@ -37,10 +34,9 @@ export function Table({ props, nodes }: Props) {
     const rows = Array.isArray(data)
         ? data.filter((row): row is TableRow => row != null && typeof row === 'object' && !Array.isArray(row))
         : [];
-    const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node) => buildColumn(node, ctx, runtime.services, rowName, rows));
+        .map((node) => buildColumn(node, ctx, runtime.services, rows));
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {
@@ -81,7 +77,6 @@ function buildColumn(
     node: ASTNode,
     ctx: Scope,
     services: ReturnType<typeof useXmlRuntime>['services'],
-    rowName: string,
     rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
     const props = node.params ?? {};
@@ -101,23 +96,13 @@ function buildColumn(
     const header = readXmlProp(props, 'i18n')
         ? resolveTranslation(props, ctx, services)
         : resolveXmlString(props, 'header', ctx, key.value);
-    const widthValue = resolveXmlNumber(props, 'width', ctx);
-    const widthType = resolveXmlEnum(props, 'widthType', ctx, ['proportional', 'pixel'], 'proportional', 'TableColumn');
-    const minWidth = resolveXmlNumber(props, 'minWidth', ctx);
-    const width =
-        widthValue == null
-            ? undefined
-            : widthType === 'pixel'
-              ? pixel(widthValue)
-              : proportional(widthValue, minWidth == null ? undefined : { minWidth });
     const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'start', 'TableColumn');
-    const cellNodes = node.children ?? [];
+    const cellNodes = node.children;
 
     return {
         align,
         header,
         key: key.value,
-        width,
         renderCell: (row) => {
             const value = field.split('.').reduce<unknown>((current, segment) => {
                 if (current == null || typeof current !== 'object') return undefined;
@@ -130,7 +115,7 @@ function buildColumn(
 
             const rowCtx: Scope = {
                 parent: ctx,
-                bindings: { index: rows.indexOf(row), value, [rowName]: row },
+                bindings: { index: rows.indexOf(row), row, value },
             };
 
             return (

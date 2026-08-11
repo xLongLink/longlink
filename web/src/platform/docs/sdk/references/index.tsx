@@ -75,12 +75,12 @@ const referenceModules = [
     tableReference,
 ];
 
-export const pageReferenceDocs = referenceModules.map(({ reference }) => reference);
+export const pageReferenceDocs = referenceModules.map(({ catalog }) => catalog);
 
-export const pageReferenceDocPages = referenceModules.map(({ reference, content, metadata }) => ({
-    path: `/docs/sdk/pages/${reference.slug}`,
-    title: reference.name,
-    description: reference.summary,
+export const pageReferenceDocPages = referenceModules.map(({ catalog, content, metadata }) => ({
+    path: `/docs/sdk/pages/${catalog.slug}`,
+    title: catalog.name,
+    description: catalog.summary,
     icon: <FileCode2 aria-hidden="true" size={16} />,
     content,
     metadata,

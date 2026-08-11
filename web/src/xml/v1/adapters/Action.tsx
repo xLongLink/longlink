@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from '../core/props';
 import { resolveRequestUrl } from '../core/url';
-import type { Props } from '../types';
+import type { Props, RuntimeServices, Scope } from '../types';
 import { DialogCloseContext } from './Dialog';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
@@ -18,8 +18,7 @@ export function useActionHandler() {
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
 
@@ -39,8 +38,8 @@ export function Action({ props, nodes }: Props) {
 /** Executes the action request and invalidation flow. */
 export async function executeAction(
     props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>,
-    services: ReturnType<typeof useXmlServices>,
+    ctx: Scope,
+    services: RuntimeServices,
     fetchImpl: typeof fetch = fetch,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
@@ -61,6 +60,7 @@ export async function executeAction(
         invalidate = invalidationValue.map((value) => String(value));
         method = resolveXmlString(props, 'method', ctx, 'POST');
         actionUrl = resolveXmlString(props, 'action', ctx, '');
+        if (!actionUrl) throw new Error('Action requires an action URL');
 
         // Resolve action payloads at click time so they see the latest state.
         formValue = resolveXmlValue(props, 'form', ctx);
@@ -71,13 +71,6 @@ export async function executeAction(
     }
 
     const normalizedMethod = method.trim().toUpperCase();
-
-    // Allow invalidation-only actions.
-    if (!actionUrl) {
-        await services.invalidate(invalidate);
-
-        return;
-    }
 
     // Reject methods outside the supported action set.
     if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {

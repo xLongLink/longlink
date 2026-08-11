@@ -1,7 +1,7 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { readXmlProp, resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
+import { resolveXmlContent, resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -18,9 +18,6 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
-    const type = readXmlProp(props, 'type')
-        ? resolveXmlEnum(props, 'type', ctx, ['display-1', 'display-2', 'display-3'], 'display-1', 'Heading')
-        : undefined;
     const color = resolveXmlEnum(
         props,
         'color',
@@ -33,7 +30,7 @@ export function Heading({ props, nodes }: Props) {
     const maxLines = resolveXmlNumber(props, 'maxLines', ctx, 0);
 
     return (
-        <AstryxHeading color={color} justify={justify} level={level} maxLines={maxLines} type={type}>
+        <AstryxHeading color={color} justify={justify} level={level} maxLines={maxLines}>
             {content}
         </AstryxHeading>
     );

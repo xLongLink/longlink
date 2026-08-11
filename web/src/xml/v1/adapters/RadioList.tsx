@@ -1,7 +1,7 @@
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
     requireXmlString,
@@ -16,8 +16,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
     const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
     const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
@@ -50,8 +49,7 @@ export function RadioList({ props, nodes }: Props) {
 
 /** Renders one data-oriented Astryx radio option. */
 export function RadioListItem({ props }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
 
     return (
         <AstryxRadioListItem

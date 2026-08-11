@@ -1,12 +1,12 @@
 import { Card as AstryxCard } from '@astryxdesign/core/Card';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlEnum, resolveXmlSizeValue, resolveXmlSpacing } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders an Astryx card container. */
 export function Card({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx } = useXmlRuntime();
     const variant = resolveXmlEnum(
         props,
         'variant',

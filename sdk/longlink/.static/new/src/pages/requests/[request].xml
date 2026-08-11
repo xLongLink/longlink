@@ -19,18 +19,18 @@
                     closeDialog="true"
                     form="${{ file: attachment.file }}"
                 >
-                    <Button isDisabled="${attachment.file in [null]}" variant="primary" label="Upload attachment" />
+                    <Button isDisabled="${attachment.file === null}" variant="primary" label="Upload attachment" />
                 </Action>
             </Stack>
         </Dialog>
     </Stack>
 
-    <Table data="$attachments" rowName="attachment" idKey="id" emptyLabel="No attachments uploaded yet.">
+    <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
         <TableColumn key="name" field="name" header="File" />
         <TableColumn key="uploadedBy" i18n="requests.attachments.uploadedBy">
             <Stack direction="horizontal" gap="2">
-                <Avatar src="$attachment.uploaded_by_avatar" name="$attachment.uploaded_by_name" size="sm" />
-                <Text value="$attachment.uploaded_by_name" />
+                <Avatar src="$row.uploaded_by_avatar" name="$row.uploaded_by_name" size="sm" />
+                <Text value="$row.uploaded_by_name" />
             </Stack>
         </TableColumn>
     </Table>

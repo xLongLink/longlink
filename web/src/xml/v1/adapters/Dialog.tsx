@@ -4,7 +4,7 @@ import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { createContext, useState } from 'react';
 import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
     requireXmlString,
@@ -20,23 +20,13 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx);
     const [localOpen, setLocalOpen] = useState(toXmlBoolean(binding.initialValue));
     const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;
     const title = resolveXmlLabel(props, ctx, services, 'Dialog', 'title');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
-    const triggerVariant = resolveXmlEnum(
-        props,
-        'triggerVariant',
-        ctx,
-        ['primary', 'secondary', 'ghost', 'destructive'],
-        'secondary',
-        'Dialog'
-    );
-    const triggerSize = resolveXmlEnum(props, 'triggerSize', ctx, ['sm', 'md', 'lg'], 'md', 'Dialog');
     const purpose = resolveXmlEnum(props, 'purpose', ctx, ['required', 'form', 'info'], 'info', 'Dialog');
     const variant = resolveXmlEnum(props, 'variant', ctx, ['standard', 'fullscreen'], 'standard', 'Dialog');
 
@@ -56,8 +46,6 @@ export function Dialog({ props, nodes }: Props) {
                 <Button
                     clickAction={() => setOpen(true)}
                     label={triggerLabel}
-                    size={triggerSize}
-                    variant={triggerVariant}
                 />
             )}
             <DialogCloseContext.Provider value={close}>

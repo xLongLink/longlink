@@ -2,21 +2,18 @@ import { createContext as createReactContext, useContext as useReactContext } fr
 import { proxy } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { evaluate, isSafePropertyName } from '../expressions';
-import type { ASTNode, RuntimeServices, Scope, XmlRuntime } from '../types';
+import type { ASTNode, XmlRuntime } from '../types';
 import { resolveRequestUrl } from './url';
 
 export const XmlContext = createReactContext<XmlRuntime | null>(null);
 
 /** Creates a blank XML runtime context. */
 export function createContext(): XmlRuntime {
-    const params = {};
-
     return {
-        scope: { bindings: { params } },
+        scope: { bindings: { params: {} } },
         services: {
             invalidate: async () => {},
             navigationBaseUrl: '',
-            params,
             requestBaseUrl: '',
             setups: {},
         },
@@ -28,20 +25,10 @@ export function useXmlRuntime(): XmlRuntime {
     // Fail fast when XML runtime state is unavailable.
     const runtime = useReactContext(XmlContext);
     if (!runtime) {
-        throw new Error('useXmlContext must be used inside a rendered XML component');
+        throw new Error('useXmlRuntime must be used inside a rendered XML component');
     }
 
     return runtime;
-}
-
-/** Returns the active XML lexical scope. */
-export function useXmlContext(): Scope {
-    return useXmlRuntime().scope;
-}
-
-/** Returns the renderer and host services for the active XML runtime. */
-export function useXmlServices(): RuntimeServices {
-    return useXmlRuntime().services;
 }
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
@@ -69,21 +56,7 @@ export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl:
 
                         // Copy declared attributes into the initial state object.
                         for (const [key, attribute] of entries) {
-                            const input = attribute.kind === 'text' ? attribute.value.trim() : null;
-
-                            // Preserve empty literal attributes.
-                            if (input === '') {
-                                initialValue[key] = '';
-                                continue;
-                            }
-
-                            // Prefer JSON literals before evaluating expressions.
-                            try {
-                                initialValue[key] = JSON.parse(input ?? '');
-                                continue;
-                            } catch {
-                                initialValue[key] = evaluate(attribute, scope);
-                            }
+                            initialValue[key] = evaluate(attribute, scope);
                         }
 
                         // Keep state values reactive for bound XML controls.
@@ -119,7 +92,7 @@ export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl:
                 await services.setups[id]();
             }
 
-            await walk(node.children ?? []);
+            await walk(node.children);
         }
     }
 
@@ -134,7 +107,7 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 
         // Skip nested loop content because it has its own scope.
         if (node.name !== 'For') {
-            validateSetupNodes(node.children ?? []);
+            validateSetupNodes(node.children);
         }
     }
 }
@@ -174,7 +147,7 @@ function validateSetupNode(node: ASTNode): void {
         }
 
         // Keep State declarations leaf-only.
-        if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
+        if (node.children.length > 0) throw new Error('State cannot have children');
     }
 
     // Validate query declarations.
@@ -186,7 +159,7 @@ function validateSetupNode(node: ASTNode): void {
         if (!node.params?.path) throw new Error('Query requires a string path');
 
         // Keep Query declarations leaf-only.
-        if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
+        if (node.children.length > 0) throw new Error('Query cannot have children');
 
         // Keep query keys static.
         if (node.params.id.kind !== 'text') throw new Error('Query id must be literal text');

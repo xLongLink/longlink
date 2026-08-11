@@ -33,7 +33,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
 
         // Render registered XML components directly.
         if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={props} nodes={node.children ?? []} />;
+            return <RegisteredComponent key={index} props={props} nodes={node.children} />;
         }
 
         // Delegate loop nodes to the scoped core renderer.
@@ -44,7 +44,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
             // Require a loop source expression.
             if (!props.each) throw new Error(`For requires an "each" parameter`);
 
-            return <For key={index} props={props} nodes={node.children ?? []} />;
+            return <For key={index} props={props} nodes={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

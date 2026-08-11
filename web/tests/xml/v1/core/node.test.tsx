@@ -7,7 +7,7 @@ describe('renderNode', () => {
     it('rejects styling and event handler attributes on xml nodes', () => {
         const ctx: XmlRuntime = {
             scope: { bindings: {} },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
         const cases = [
             { name: 'className', expected: 'className is not supported in XML' },
@@ -16,7 +16,7 @@ describe('renderNode', () => {
 
         for (const testCase of cases) {
             expect(() =>
-                renderNode([{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }) }], ctx.scope)
+                renderNode([{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }), children: [] }], ctx.scope)
             ).toThrow(testCase.expected);
         }
     });

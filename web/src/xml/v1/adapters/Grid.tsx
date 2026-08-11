@@ -1,12 +1,12 @@
 import { Grid as AstryxGrid } from '@astryxdesign/core/Grid';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { readXmlProp, resolveXmlEnum, resolveXmlNumber, resolveXmlSizeValue, resolveXmlSpacing } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders a fixed or responsive Astryx grid. */
 export function Grid({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx } = useXmlRuntime();
     const columnCount = resolveXmlNumber(props, 'columns', ctx);
     const minWidth = resolveXmlNumber(props, 'minColumnWidth', ctx);
     const maxColumns = resolveXmlNumber(props, 'maxColumns', ctx);

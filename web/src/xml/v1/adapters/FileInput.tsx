@@ -1,7 +1,7 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 import { useState } from 'react';
 import { setXmlBinding, useBindableValue } from '../core/binding';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -15,8 +15,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, 'file');
     const [localValue, setLocalValue] = useState<File | File[] | null>(null);
     const boundValue =

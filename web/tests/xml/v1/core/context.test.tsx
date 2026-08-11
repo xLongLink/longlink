@@ -5,7 +5,7 @@ import { compileProps } from '../helpers';
 describe('core/context', () => {
     it('preserves state across setup reruns until the slot is invalidated', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }) }];
+        const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }), children: [] }];
 
         await setupContext(ast, ctx, '/api');
         (ctx.scope.bindings.filter as { value: string }).value = 'week';
@@ -21,11 +21,10 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }) }];
+        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] }];
         let requestedUrl = '';
 
-        ctx.services.params = { issue: '123' };
-        ctx.scope.bindings.params = ctx.services.params;
+        ctx.scope.bindings.params = { issue: '123' };
         const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
 
         Object.defineProperty(globalThis, 'fetch', {

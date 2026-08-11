@@ -1,12 +1,12 @@
 import { FormLayout as AstryxFormLayout } from '@astryxdesign/core/FormLayout';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlEnum } from '../core/props';
 import type { Props } from '../types';
 
 /** Arranges Astryx fields with consistent form spacing. */
 export function FormLayout({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx } = useXmlRuntime();
     const direction = resolveXmlEnum(
         props,
         'direction',

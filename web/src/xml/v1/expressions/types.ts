@@ -47,7 +47,7 @@ type TemplateLiteralNode = {
 
 type BinaryExpressionNode = {
     type: 'BinaryExpression';
-    operator: '+' | '-' | '*' | '/' | '%' | '**' | 'in' | '===' | '!==' | '==' | '!=' | '<' | '<=' | '>' | '>=';
+    operator: '+' | '-' | '*' | '/' | '%' | '**' | '===' | '!==' | '<' | '<=' | '>' | '>=';
     left: ExpressionNode;
     right: ExpressionNode;
 };

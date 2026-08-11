@@ -1,5 +1,5 @@
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
-import { useXmlContext, useXmlServices } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlString } from '../core/props';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
@@ -7,8 +7,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const services = useXmlServices();
+    const { scope: ctx, services } = useXmlRuntime();
     const href = resolveXmlString(props, 'href', ctx);
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, href);

@@ -22,7 +22,6 @@ describe('Action', () => {
                     invalidations.push(ids);
                 },
                 navigationBaseUrl: '',
-                params: {},
                 requestBaseUrl: '',
                 setups: {},
             },
@@ -97,7 +96,6 @@ describe('Action', () => {
                         invalidationCalls += 1;
                     },
                     navigationBaseUrl: '',
-                    params: {},
                     requestBaseUrl: '',
                     setups: {},
                 },
@@ -138,7 +136,7 @@ describe('Action', () => {
                     },
                 },
             },
-            services: { invalidate: async () => {}, navigationBaseUrl: '', params: {}, requestBaseUrl: '', setups: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
 
         let requestInit: RequestInit | undefined;
@@ -170,8 +168,8 @@ describe('Action', () => {
         expect(body.get('label')).toBe('Supplier sheet');
     });
 
-    /* The action shell should still invalidate without an endpoint. */
-    it('invalidates slots when no action is configured', async () => {
+    /* Actions require an endpoint before they can invalidate setup values. */
+    it('rejects actions without an endpoint', async () => {
         let invalidateCalls = 0;
         const ctx: XmlRuntime = {
             scope: { bindings: {} },
@@ -180,7 +178,6 @@ describe('Action', () => {
                     invalidateCalls += 1;
                 },
                 navigationBaseUrl: '',
-                params: {},
                 requestBaseUrl: '',
                 setups: {},
             },
@@ -203,7 +200,7 @@ describe('Action', () => {
             () => () => {}
         );
 
-        expect(invalidateCalls).toBe(1);
+        expect(invalidateCalls).toBe(0);
         expect(fetchCalls).toBe(0);
     });
 
@@ -242,7 +239,6 @@ describe('Action', () => {
                 services: {
                     invalidate: async () => {},
                     navigationBaseUrl: '',
-                    params: {},
                     requestBaseUrl: '',
                     setups: {},
                 },

@@ -73,8 +73,6 @@ export function resolveTranslation(props: ASTProps, ctx: Scope, services: Runtim
     }
 
     const values = resolveInterpolationValues(props, ctx);
-    const count = resolveCount(props, ctx);
-    if (count != null) values.count = count;
 
     // Always format through ICU so malformed messages and missing values fail visibly.
     return translate(key, values);
@@ -88,20 +86,6 @@ function isTranslationKey(value: string): boolean {
 /** Returns whether a value is a non-array object record. */
 function isRecord(value: unknown): value is Record<string, unknown> {
     return value != null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** Resolves the active numeric count used for plural selection. */
-function resolveCount(props: ASTProps, ctx: Scope): number | null {
-    // Count stays optional so plain localized strings do not need plural data.
-    const rawCount = props.count;
-
-    // Skip plural handling when no count is provided.
-    if (rawCount == null || (rawCount.kind === 'text' && rawCount.value === '')) return null;
-
-    const value = evaluate(rawCount, ctx);
-    const numberValue = Number(value);
-
-    return Number.isNaN(numberValue) ? null : numberValue;
 }
 
 /** Resolves the values object used for ICU message formatting. */
