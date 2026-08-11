@@ -3,10 +3,11 @@ from typing import Literal
 from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
-from longlink.pages import XMLResponse, PageDefinition, page_file_route, extract_longlink_metadata
+from dataclasses import dataclass
+from longlink.pages import XMLResponse, PageDefinition, page_route_key, page_file_route, page_file_endpoint, extract_longlink_metadata
 from longlink.utils import Envs
 from fastapi.routing import APIRoute
-from longlink.logger import ApiAccessFilter, logger
+from longlink.logger import ApiAccessFilter
 from longlink.routes import routes
 from fastapi.responses import RedirectResponse
 from starlette.routing import Match, BaseRoute
@@ -18,6 +19,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from longlink.database.audit import install_audit_middleware
 
 Environment = Literal["development", "testing", "production"]
+
+
+@dataclass(slots=True)
+class DiscoveredPage:
+    """Describe one validated XML page ready for route registration."""
+
+    definition: PageDefinition
+    content: str
+
+
+def page_content(content: str) -> str:
+    """Return the validated XML content captured during page discovery."""
+
+    return content
 
 
 def normalize_mount_path(path: str) -> str:
@@ -55,13 +70,14 @@ class LongLink:
     def __init__(self, app: FastAPI, env: Environment | None = None, i18n: str | None = "/i18n", pages: str | None = "/pages") -> None:
         """Install runtime services, routes, and the frontend fallback into an Application app."""
 
-        # Preserve Application routes so overlapping LongLink content can be reported.
-        application_routes = list(app.router.routes)
+        # Preserve Application routes so page collisions are rejected during discovery.
+        self.application_routes = list(app.router.routes)
         self.app = app
 
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
         app.state.page_registry = []
+        app.state.page_routes = {}
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -115,38 +131,9 @@ class LongLink:
                 allow_headers=["*"],
             )
 
-        # Report Application routes that take precedence over LongLink content.
-        self.warn_overlapping_routes(application_routes)
-
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
-
-    def warn_overlapping_routes(self, application_routes: list[BaseRoute]) -> None:
-        """Warn when Application routes take precedence over LongLink runtime content."""
-
-        # Combine LongLink's included routers with dynamically registered page routes.
-        application_route_ids = {id(route) for route in application_routes}
-        longlink_routes = [
-            route for route in self.app.router.routes if isinstance(route, APIRoute) and id(route) not in application_route_ids
-        ]
-        warned_routes: set[tuple[int, str]] = set()
-
-        for application_route in application_routes:
-            for longlink_route in longlink_routes:
-                for method in longlink_route.methods or set():
-                    scope = {"type": "http", "method": method, "path": longlink_route.path}
-                    match, _ = application_route.matches(scope)
-                    warning_key = (id(application_route), method)
-
-                    # Application routes are registered first and therefore replace matching LongLink routes.
-                    if match is Match.FULL and warning_key not in warned_routes:
-                        logger.warning(
-                            "Application route overlaps LongLink route %s %s. Add the /api prefix to avoid replacing LongLink content.",
-                            method,
-                            longlink_route.path,
-                        )
-                        warned_routes.add(warning_key)
 
     def install_root_redirect(self) -> None:
         """Redirect the application root to its first static page."""
@@ -167,25 +154,61 @@ class LongLink:
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
 
-        # Prepare normalized route state for replacing pages under this directory.
+        # Identify existing SDK pages that this directory replaces without mutating them.
         normalized_prefix = normalize_mount_path(route_prefix)
         registered_pages: list[PageDefinition] = self.app.state.page_registry
         stale_page_prefix = f"{normalized_prefix.rstrip('/')}/"
         stale_page_paths = {page.path for page in registered_pages if page.path.startswith(stale_page_prefix)}
+        retained_pages = [page for page in registered_pages if page.path not in stale_page_paths]
 
-        # Remove previously registered SDK page routes before replacing the page registry.
-        if stale_page_paths:
-            self.app.router.routes = [route for route in self.app.router.routes if getattr(route, "path", None) not in stale_page_paths]
+        # Validate the complete replacement catalog before changing routes or registry state.
+        discovered_pages = self.discover_pages(normalized_prefix, pages_directory, retained_pages)
+        replacement_routes = [
+            self.app.router.route_class(
+                page.definition.path,
+                partial(page_content, page.content),
+                methods=["GET"],
+                response_class=XMLResponse,
+                include_in_schema=False,
+            )
+            for page in discovered_pages
+        ]
+        registered_routes: dict[str, APIRoute] = self.app.state.page_routes
+        stale_route_ids = {id(registered_routes[path]) for path in stale_page_paths}
+        replacement_inserted = False
+        next_routes: list[BaseRoute] = []
 
-        # Remove stale page metadata before discovering replacement files.
-        registered_pages[:] = [page for page in registered_pages if page.path not in stale_page_paths]
-        registered_page_paths = {page.path for page in registered_pages}
+        # Replace managed routes at their prior position so they remain ahead of the frontend mount.
+        for route in self.app.router.routes:
+            if id(route) in stale_route_ids:
+                if not replacement_inserted:
+                    next_routes.extend(replacement_routes)
+                    replacement_inserted = True
+                continue
+            next_routes.append(route)
+
+        if not replacement_inserted:
+            next_routes.extend(replacement_routes)
+
+        # Commit the complete catalog and its routes only after all construction has succeeded.
+        self.app.router.routes[:] = next_routes
+        registered_pages[:] = [*retained_pages, *(page.definition for page in discovered_pages)]
+        self.app.state.page_routes = {
+            **{path: route for path, route in registered_routes.items() if path not in stale_page_paths},
+            **{page.definition.path: route for page, route in zip(discovered_pages, replacement_routes, strict=True)},
+        }
+
+    def discover_pages(self, route_prefix: str, pages_directory: Path, registered_pages: list[PageDefinition]) -> list[DiscoveredPage]:
+        """Discover and validate all XML pages before registering any route."""
+
+        registered_paths = {page.path for page in registered_pages}
+        registered_route_keys = {page_route_key(page.route) for page in registered_pages}
+        discovered_pages: list[DiscoveredPage] = []
 
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
-            registered_path = f"{normalized_prefix}/{relative_path.removesuffix('.xml')}"
-            page_endpoint = partial(page_file.read_text, encoding="utf-8")
+            registered_path = page_file_endpoint(route_prefix, relative_path)
 
             # Validate XML pages and extract optional display metadata.
             page = LonglinkXml(page_file)
@@ -195,24 +218,31 @@ class LongLink:
             page_route = page_file_route(relative_path)
             tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 
-            # Page endpoints must remain unique across registered directories.
-            if registered_path in registered_page_paths:
+            # Page endpoints and browser routes must remain unique across all directories.
+            if registered_path in registered_paths:
                 raise ValueError(f"Page endpoint '{registered_path}' is already registered")
+            if page_route_key(page_route) in registered_route_keys:
+                raise ValueError(f"Browser route '{page_route}' is already registered")
 
-            registered_pages.append(
-                PageDefinition(
-                    path=registered_path,
-                    route=page_route,
-                    tab=tab,
-                    name=page_name,
-                    icon=page_icon,
+            # Application routes take precedence, so ambiguous page endpoints are rejected.
+            for application_route in self.application_routes:
+                match, _ = application_route.matches({"type": "http", "method": "GET", "path": registered_path})
+                if match is Match.FULL:
+                    raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
+
+            discovered_pages.append(
+                DiscoveredPage(
+                    definition=PageDefinition(
+                        path=registered_path,
+                        route=page_route,
+                        tab=tab,
+                        name=page_name,
+                        icon=page_icon,
+                    ),
+                    content=page.content,
                 )
             )
-            registered_page_paths.add(registered_path)
-            self.app.add_api_route(
-                registered_path,
-                page_endpoint,
-                methods=["GET"],
-                response_class=XMLResponse,
-                include_in_schema=False,
-            )
+            registered_paths.add(registered_path)
+            registered_route_keys.add(page_route_key(page_route))
+
+        return discovered_pages

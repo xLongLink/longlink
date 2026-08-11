@@ -18,6 +18,15 @@ export type Accent = 'slate' | 'gray' | 'zinc' | 'neutral' | 'stone' | 'red' | '
  */
 export type ApplicationCreate = {
     /**
+     * Name
+     */
+    name: string;
+    icon?: Icon | null;
+    /**
+     * Image
+     */
+    image: string;
+    /**
      * Description
      */
     description?: string | null;
@@ -27,15 +36,6 @@ export type ApplicationCreate = {
     envs?: {
         [key: string]: string;
     };
-    icon?: Icon | null;
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Name
-     */
-    name: string;
 };
 
 /**
@@ -45,10 +45,6 @@ export type ApplicationCreate = {
  */
 export type ApplicationOrganizationResponse = {
     /**
-     * Avatar
-     */
-    avatar: string;
-    /**
      * Id
      */
     id: string;
@@ -60,6 +56,10 @@ export type ApplicationOrganizationResponse = {
      * Slug
      */
     slug: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
 };
 
 /**
@@ -69,36 +69,36 @@ export type ApplicationOrganizationResponse = {
  */
 export type ApplicationResponse = {
     /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Description
-     */
-    description: string | null;
-    icon: Icon | null;
-    /**
      * Id
      */
     id: string;
+    organization: ApplicationOrganizationResponse;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    icon: Icon | null;
     /**
      * Image
      */
     image: string;
     /**
-     * Name
-     */
-    name: string;
-    organization: ApplicationOrganizationResponse;
-    /**
-     * Slug
-     */
-    slug: string;
-    status: Status;
-    /**
      * Version
      */
     version: string | null;
+    /**
+     * Description
+     */
+    description: string | null;
+    status: Status;
+    /**
+     * Created At
+     */
+    created_at: string;
 };
 
 /**
@@ -108,15 +108,15 @@ export type ApplicationResponse = {
  */
 export type ComputeRegistryCreate = {
     /**
+     * Name
+     */
+    name: string;
+    /**
      * Kubeconfig
      */
     kubeconfig: {
         [key: string]: unknown;
     };
-    /**
-     * Name
-     */
-    name: string;
 };
 
 /**
@@ -126,10 +126,6 @@ export type ComputeRegistryCreate = {
  */
 export type ComputeRegistryResponse = {
     /**
-     * Gateway Url
-     */
-    gateway_url: string | null;
-    /**
      * Id
      */
     id: string;
@@ -137,6 +133,10 @@ export type ComputeRegistryResponse = {
      * Name
      */
     name: string;
+    /**
+     * Gateway Url
+     */
+    gateway_url: string | null;
     status: Status;
 };
 
@@ -151,22 +151,22 @@ export type DatabaseRegistryCreate = {
      */
     host: string;
     /**
-     * Name
-     */
-    name: string;
-    /**
-     * Password
-     */
-    password: string;
-    /**
      * Port
      */
     port: number;
     sslmode?: DatabaseSslMode;
     /**
+     * Password
+     */
+    password: string;
+    /**
      * Username
      */
     username: string;
+    /**
+     * Name
+     */
+    name: string;
 };
 
 /**
@@ -178,10 +178,6 @@ export type DatabaseRegistryCreate = {
  */
 export type DatabaseRegistryResponse = {
     /**
-     * Host
-     */
-    host: string;
-    /**
      * Id
      */
     id: string;
@@ -189,6 +185,10 @@ export type DatabaseRegistryResponse = {
      * Name
      */
     name: string;
+    /**
+     * Host
+     */
+    host: string;
     /**
      * Port
      */
@@ -226,21 +226,21 @@ export type EmailPayload = {
  */
 export type EnvironmentMetadata = {
     /**
-     * Description
-     */
-    description?: string | null;
-    /**
      * Name
      */
     name: string;
+    /**
+     * Type
+     */
+    type: string;
     /**
      * Required
      */
     required: boolean;
     /**
-     * Type
+     * Description
      */
-    type: string;
+    description?: string | null;
 };
 
 /**
@@ -267,25 +267,25 @@ export type Icon = 'activity' | 'arrow-right' | 'banknote' | 'bell' | 'box' | 'b
  */
 export type LongLinkMetadata = {
     /**
-     * Description
+     * Title
      */
-    description?: string | null;
+    title?: string | null;
     /**
      * Digest
      */
     digest?: string | null;
     /**
-     * Environments
-     */
-    environments?: Array<EnvironmentMetadata>;
-    /**
-     * Title
-     */
-    title?: string | null;
-    /**
      * Version
      */
     version?: string | null;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Environments
+     */
+    environments?: Array<EnvironmentMetadata>;
 };
 
 /**
@@ -302,6 +302,16 @@ export type OperationKind = 'compute.create' | 'application.create' | 'applicati
  */
 export type OperationResponse = {
     /**
+     * Id
+     */
+    id: string;
+    kind: OperationKind;
+    /**
+     * Target Id
+     */
+    target_id: string;
+    status: OperationStatus;
+    /**
      * Created At
      */
     created_at: string;
@@ -309,16 +319,6 @@ export type OperationResponse = {
      * Finished At
      */
     finished_at: string | null;
-    /**
-     * Id
-     */
-    id: string;
-    kind: OperationKind;
-    status: OperationStatus;
-    /**
-     * Target Id
-     */
-    target_id: string;
 };
 
 /**
@@ -335,11 +335,6 @@ export type OperationStatus = 'active' | 'completed' | 'failed' | 'scheduled';
  */
 export type OrganizationApplicationSummary = {
     /**
-     * Description
-     */
-    description?: string | null;
-    icon?: Icon | null;
-    /**
      * Id
      */
     id: string;
@@ -351,6 +346,11 @@ export type OrganizationApplicationSummary = {
      * Slug
      */
     slug: string;
+    icon?: Icon | null;
+    /**
+     * Description
+     */
+    description?: string | null;
     status: Status;
 };
 
@@ -392,19 +392,19 @@ export type OrganizationDatabaseUsageResponse = {
  * Represent an Organization with its members and Application access.
  */
 export type OrganizationDetails = {
+    organization: OrganizationSummary;
     /**
-     * Applications
+     * Members
      */
-    applications: Array<OrganizationApplicationSummary>;
+    members: Array<OrganizationMemberAccessResponse>;
     /**
      * Invitations
      */
     invitations: Array<OrganizationInvitationResponse>;
     /**
-     * Members
+     * Applications
      */
-    members: Array<OrganizationMemberAccessResponse>;
-    organization: OrganizationSummary;
+    applications: Array<OrganizationApplicationSummary>;
 };
 
 /**
@@ -427,18 +427,18 @@ export type OrganizationInvitationCreate = {
  */
 export type OrganizationInvitationResponse = {
     /**
-     * Created At
+     * Id
      */
-    created_at: string;
+    id: string;
     /**
      * Email
      */
     email: string;
-    /**
-     * Id
-     */
-    id: string;
     role: OrganizationRoles;
+    /**
+     * Created At
+     */
+    created_at: string;
 };
 
 /**
@@ -447,8 +447,8 @@ export type OrganizationInvitationResponse = {
  * Represent one Organization member and their access role.
  */
 export type OrganizationMemberAccessResponse = {
-    role: OrganizationRoles;
     user: UserIdentity;
+    role: OrganizationRoles;
 };
 
 /**
@@ -490,26 +490,6 @@ export type OrganizationStorageUsageResponse = {
  */
 export type OrganizationSummary = {
     /**
-     * Avatar
-     */
-    avatar: string;
-    /**
-     * Compute Id
-     */
-    compute_id: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Database Id
-     */
-    database_id: string;
-    /**
-     * Deleted At
-     */
-    deleted_at: string | null;
-    /**
      * Id
      */
     id: string;
@@ -521,15 +501,35 @@ export type OrganizationSummary = {
      * Slug
      */
     slug: string;
-    status: Status;
+    /**
+     * Avatar
+     */
+    avatar: string;
+    /**
+     * Compute Id
+     */
+    compute_id: string;
     /**
      * Storage Id
      */
     storage_id: string;
     /**
+     * Database Id
+     */
+    database_id: string;
+    status: Status;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
      * Updated At
      */
     updated_at: string;
+    /**
+     * Deleted At
+     */
+    deleted_at: string | null;
 };
 
 /**
@@ -594,13 +594,13 @@ export type RegistrationComplete = {
      */
     name: string;
     /**
-     * Password
-     */
-    password: string;
-    /**
      * Surname
      */
     surname: string;
+    /**
+     * Password
+     */
+    password: string;
 };
 
 /**
@@ -617,21 +617,21 @@ export type Status = 'creating' | 'running' | 'failed' | 'deleting';
  */
 export type StorageRegistryCreate = {
     /**
-     * Access Key Id
-     */
-    access_key_id: string;
-    /**
      * Endpoint Url
      */
     endpoint_url: string;
     /**
-     * Name
+     * Access Key Id
      */
-    name: string;
+    access_key_id: string;
     /**
      * Secret Access Key
      */
     secret_access_key: string;
+    /**
+     * Name
+     */
+    name: string;
 };
 
 /**
@@ -641,10 +641,6 @@ export type StorageRegistryCreate = {
  */
 export type StorageRegistryResponse = {
     /**
-     * Endpoint Url
-     */
-    endpoint_url: string;
-    /**
      * Id
      */
     id: string;
@@ -652,6 +648,10 @@ export type StorageRegistryResponse = {
      * Name
      */
     name: string;
+    /**
+     * Endpoint Url
+     */
+    endpoint_url: string;
 };
 
 /**
@@ -680,14 +680,6 @@ export type TokenPayload = {
  */
 export type UserIdentity = {
     /**
-     * Avatar
-     */
-    avatar: string;
-    /**
-     * Email
-     */
-    email: string;
-    /**
      * Id
      */
     id: string;
@@ -695,6 +687,14 @@ export type UserIdentity = {
      * Name
      */
     name: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
 };
 
 /**
@@ -714,10 +714,6 @@ export type UserOrganizationMembership = {
  */
 export type UserOrganizationSummary = {
     /**
-     * Avatar
-     */
-    avatar: string;
-    /**
      * Id
      */
     id: string;
@@ -729,6 +725,10 @@ export type UserOrganizationSummary = {
      * Slug
      */
     slug: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
 };
 
 /**
@@ -737,15 +737,6 @@ export type UserOrganizationSummary = {
  * Represent the authenticated user payload returned by the API.
  */
 export type UserProfile = {
-    accent: Accent;
-    /**
-     * Avatar
-     */
-    avatar: string;
-    /**
-     * Email
-     */
-    email: string;
     /**
      * Id
      */
@@ -755,11 +746,20 @@ export type UserProfile = {
      */
     name: string;
     /**
+     * Email
+     */
+    email: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
+    role: PlatformRoles;
+    theme: Theme;
+    accent: Accent;
+    /**
      * Radius
      */
     radius: number;
-    role: PlatformRoles;
-    theme: Theme;
 };
 
 /**
@@ -769,14 +769,6 @@ export type UserProfile = {
  */
 export type UserSummary = {
     /**
-     * Avatar
-     */
-    avatar: string;
-    /**
-     * Email
-     */
-    email: string;
-    /**
      * Id
      */
     id: string;
@@ -784,6 +776,14 @@ export type UserSummary = {
      * Name
      */
     name: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
     role: PlatformRoles;
 };
 
@@ -793,36 +793,26 @@ export type UserSummary = {
  * Payload to update mutable user profile fields.
  */
 export type UserUpdate = {
-    accent?: Accent | null;
-    /**
-     * Avatar
-     */
-    avatar?: string | null;
     /**
      * Name
      */
     name?: string | null;
     /**
+     * Avatar
+     */
+    avatar?: string | null;
+    theme?: Theme | null;
+    accent?: Accent | null;
+    /**
      * Radius
      */
     radius?: number | null;
-    theme?: Theme | null;
 };
 
 /**
  * ValidationError
  */
 export type ValidationError = {
-    /**
-     * Context
-     */
-    ctx?: {
-        [key: string]: unknown;
-    };
-    /**
-     * Input
-     */
-    input?: unknown;
     /**
      * Location
      */
@@ -835,7 +825,238 @@ export type ValidationError = {
      * Error Type
      */
     type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
 };
+
+export type PasswordLoginApiV1AuthPasswordLoginPostData = {
+    body: PasswordLogin;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/password/login';
+};
+
+export type PasswordLoginApiV1AuthPasswordLoginPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PasswordLoginApiV1AuthPasswordLoginPostError = PasswordLoginApiV1AuthPasswordLoginPostErrors[keyof PasswordLoginApiV1AuthPasswordLoginPostErrors];
+
+export type PasswordLoginApiV1AuthPasswordLoginPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type PasswordLoginApiV1AuthPasswordLoginPostResponse = PasswordLoginApiV1AuthPasswordLoginPostResponses[keyof PasswordLoginApiV1AuthPasswordLoginPostResponses];
+
+export type RequestPasswordResetApiV1AuthForgotPasswordPostData = {
+    body: EmailPayload;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/forgot-password';
+};
+
+export type RequestPasswordResetApiV1AuthForgotPasswordPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RequestPasswordResetApiV1AuthForgotPasswordPostError = RequestPasswordResetApiV1AuthForgotPasswordPostErrors[keyof RequestPasswordResetApiV1AuthForgotPasswordPostErrors];
+
+export type RequestPasswordResetApiV1AuthForgotPasswordPostResponses = {
+    /**
+     * Successful Response
+     */
+    202: unknown;
+};
+
+export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostData = {
+    body: TokenPayload;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/reset-password/verify';
+};
+
+export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostError = VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors[keyof VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors];
+
+export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponse = VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses[keyof VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses];
+
+export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/reset-password/setup';
+};
+
+export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetError = GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors[keyof GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors];
+
+export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponse = GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses[keyof GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses];
+
+export type ResetPasswordApiV1AuthResetPasswordPostData = {
+    body: PasswordResetComplete;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/reset-password';
+};
+
+export type ResetPasswordApiV1AuthResetPasswordPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetPasswordApiV1AuthResetPasswordPostError = ResetPasswordApiV1AuthResetPasswordPostErrors[keyof ResetPasswordApiV1AuthResetPasswordPostErrors];
+
+export type ResetPasswordApiV1AuthResetPasswordPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ResetPasswordApiV1AuthResetPasswordPostResponse = ResetPasswordApiV1AuthResetPasswordPostResponses[keyof ResetPasswordApiV1AuthResetPasswordPostResponses];
+
+export type RequestRegistrationApiV1AuthRegisterPostData = {
+    body: EmailPayload;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/register';
+};
+
+export type RequestRegistrationApiV1AuthRegisterPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RequestRegistrationApiV1AuthRegisterPostError = RequestRegistrationApiV1AuthRegisterPostErrors[keyof RequestRegistrationApiV1AuthRegisterPostErrors];
+
+export type RequestRegistrationApiV1AuthRegisterPostResponses = {
+    /**
+     * Successful Response
+     */
+    202: unknown;
+};
+
+export type VerifyRegistrationTokenApiV1AuthVerifyPostData = {
+    body: TokenPayload;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/verify';
+};
+
+export type VerifyRegistrationTokenApiV1AuthVerifyPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type VerifyRegistrationTokenApiV1AuthVerifyPostError = VerifyRegistrationTokenApiV1AuthVerifyPostErrors[keyof VerifyRegistrationTokenApiV1AuthVerifyPostErrors];
+
+export type VerifyRegistrationTokenApiV1AuthVerifyPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmailPayload;
+};
+
+export type VerifyRegistrationTokenApiV1AuthVerifyPostResponse = VerifyRegistrationTokenApiV1AuthVerifyPostResponses[keyof VerifyRegistrationTokenApiV1AuthVerifyPostResponses];
+
+export type GetRegistrationSetupApiV1AuthRegisterSetupGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/register/setup';
+};
+
+export type GetRegistrationSetupApiV1AuthRegisterSetupGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRegistrationSetupApiV1AuthRegisterSetupGetError = GetRegistrationSetupApiV1AuthRegisterSetupGetErrors[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetErrors];
+
+export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmailPayload;
+};
+
+export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponse = GetRegistrationSetupApiV1AuthRegisterSetupGetResponses[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetResponses];
+
+export type CompleteRegistrationApiV1AuthRegisterCompletePostData = {
+    body: RegistrationComplete;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/register/complete';
+};
+
+export type CompleteRegistrationApiV1AuthRegisterCompletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CompleteRegistrationApiV1AuthRegisterCompletePostError = CompleteRegistrationApiV1AuthRegisterCompletePostErrors[keyof CompleteRegistrationApiV1AuthRegisterCompletePostErrors];
+
+export type CompleteRegistrationApiV1AuthRegisterCompletePostResponses = {
+    /**
+     * Successful Response
+     */
+    201: UserProfile;
+};
+
+export type CompleteRegistrationApiV1AuthRegisterCompletePostResponse = CompleteRegistrationApiV1AuthRegisterCompletePostResponses[keyof CompleteRegistrationApiV1AuthRegisterCompletePostResponses];
 
 export type ListApplicationsApiV1ApplicationsGetData = {
     body?: never;
@@ -864,35 +1085,35 @@ export type ListApplicationsApiV1ApplicationsGetResponses = {
 
 export type ListApplicationsApiV1ApplicationsGetResponse = ListApplicationsApiV1ApplicationsGetResponses[keyof ListApplicationsApiV1ApplicationsGetResponses];
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteData = {
-    body?: never;
+export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostData = {
+    body: ApplicationCreate;
     path: {
         /**
-         * Application Id
+         * Organization Id
          */
-        application_id: string;
+        organization_id: string;
     };
     query?: never;
-    url: '/api/v1/applications/{application_id}';
+    url: '/api/v1/organizations/{organization_id}/applications';
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors = {
+export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteError = DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors];
+export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostError = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors];
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses = {
+export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses = {
     /**
      * Successful Response
      */
     202: ApplicationResponse;
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses];
+export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
 
 export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetData = {
     body?: never;
@@ -926,226 +1147,35 @@ export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses = {
 
 export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse = GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses[keyof GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses];
 
-export type RequestPasswordResetApiV1AuthForgotPasswordPostData = {
-    body: EmailPayload;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/forgot-password';
-};
-
-export type RequestPasswordResetApiV1AuthForgotPasswordPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RequestPasswordResetApiV1AuthForgotPasswordPostError = RequestPasswordResetApiV1AuthForgotPasswordPostErrors[keyof RequestPasswordResetApiV1AuthForgotPasswordPostErrors];
-
-export type RequestPasswordResetApiV1AuthForgotPasswordPostResponses = {
-    /**
-     * Successful Response
-     */
-    202: unknown;
-};
-
-export type PasswordLoginApiV1AuthPasswordLoginPostData = {
-    body: PasswordLogin;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/password/login';
-};
-
-export type PasswordLoginApiV1AuthPasswordLoginPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type PasswordLoginApiV1AuthPasswordLoginPostError = PasswordLoginApiV1AuthPasswordLoginPostErrors[keyof PasswordLoginApiV1AuthPasswordLoginPostErrors];
-
-export type PasswordLoginApiV1AuthPasswordLoginPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type PasswordLoginApiV1AuthPasswordLoginPostResponse = PasswordLoginApiV1AuthPasswordLoginPostResponses[keyof PasswordLoginApiV1AuthPasswordLoginPostResponses];
-
-export type RequestRegistrationApiV1AuthRegisterPostData = {
-    body: EmailPayload;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/register';
-};
-
-export type RequestRegistrationApiV1AuthRegisterPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RequestRegistrationApiV1AuthRegisterPostError = RequestRegistrationApiV1AuthRegisterPostErrors[keyof RequestRegistrationApiV1AuthRegisterPostErrors];
-
-export type RequestRegistrationApiV1AuthRegisterPostResponses = {
-    /**
-     * Successful Response
-     */
-    202: unknown;
-};
-
-export type CompleteRegistrationApiV1AuthRegisterCompletePostData = {
-    body: RegistrationComplete;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/register/complete';
-};
-
-export type CompleteRegistrationApiV1AuthRegisterCompletePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CompleteRegistrationApiV1AuthRegisterCompletePostError = CompleteRegistrationApiV1AuthRegisterCompletePostErrors[keyof CompleteRegistrationApiV1AuthRegisterCompletePostErrors];
-
-export type CompleteRegistrationApiV1AuthRegisterCompletePostResponses = {
-    /**
-     * Successful Response
-     */
-    201: UserProfile;
-};
-
-export type CompleteRegistrationApiV1AuthRegisterCompletePostResponse = CompleteRegistrationApiV1AuthRegisterCompletePostResponses[keyof CompleteRegistrationApiV1AuthRegisterCompletePostResponses];
-
-export type GetRegistrationSetupApiV1AuthRegisterSetupGetData = {
+export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteData = {
     body?: never;
-    path?: never;
+    path: {
+        /**
+         * Application Id
+         */
+        application_id: string;
+    };
     query?: never;
-    url: '/api/v1/auth/register/setup';
+    url: '/api/v1/applications/{application_id}';
 };
 
-export type GetRegistrationSetupApiV1AuthRegisterSetupGetErrors = {
+export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetRegistrationSetupApiV1AuthRegisterSetupGetError = GetRegistrationSetupApiV1AuthRegisterSetupGetErrors[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetErrors];
+export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteError = DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors];
 
-export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponses = {
+export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses = {
     /**
      * Successful Response
      */
-    200: EmailPayload;
+    202: ApplicationResponse;
 };
 
-export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponse = GetRegistrationSetupApiV1AuthRegisterSetupGetResponses[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetResponses];
-
-export type ResetPasswordApiV1AuthResetPasswordPostData = {
-    body: PasswordResetComplete;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/reset-password';
-};
-
-export type ResetPasswordApiV1AuthResetPasswordPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ResetPasswordApiV1AuthResetPasswordPostError = ResetPasswordApiV1AuthResetPasswordPostErrors[keyof ResetPasswordApiV1AuthResetPasswordPostErrors];
-
-export type ResetPasswordApiV1AuthResetPasswordPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type ResetPasswordApiV1AuthResetPasswordPostResponse = ResetPasswordApiV1AuthResetPasswordPostResponses[keyof ResetPasswordApiV1AuthResetPasswordPostResponses];
-
-export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/reset-password/setup';
-};
-
-export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetError = GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors[keyof GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors];
-
-export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponse = GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses[keyof GetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponses];
-
-export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostData = {
-    body: TokenPayload;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/reset-password/verify';
-};
-
-export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostError = VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors[keyof VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors];
-
-export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponse = VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses[keyof VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponses];
-
-export type VerifyRegistrationTokenApiV1AuthVerifyPostData = {
-    body: TokenPayload;
-    path?: never;
-    query?: never;
-    url: '/api/v1/auth/verify';
-};
-
-export type VerifyRegistrationTokenApiV1AuthVerifyPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type VerifyRegistrationTokenApiV1AuthVerifyPostError = VerifyRegistrationTokenApiV1AuthVerifyPostErrors[keyof VerifyRegistrationTokenApiV1AuthVerifyPostErrors];
-
-export type VerifyRegistrationTokenApiV1AuthVerifyPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: EmailPayload;
-};
-
-export type VerifyRegistrationTokenApiV1AuthVerifyPostResponse = VerifyRegistrationTokenApiV1AuthVerifyPostResponses[keyof VerifyRegistrationTokenApiV1AuthVerifyPostResponses];
+export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;
@@ -1423,6 +1453,26 @@ export type HealthzApiV1HealthzGetResponses = {
 
 export type HealthzApiV1HealthzGetResponse = HealthzApiV1HealthzGetResponses[keyof HealthzApiV1HealthzGetResponses];
 
+export type ReadyzApiV1ReadyzGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/readyz';
+};
+
+export type ReadyzApiV1ReadyzGetResponses = {
+    /**
+     * Response Readyz Api V1 Readyz Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: boolean;
+    };
+};
+
+export type ReadyzApiV1ReadyzGetResponse = ReadyzApiV1ReadyzGetResponses[keyof ReadyzApiV1ReadyzGetResponses];
+
 export type ListIconsApiV1IconsGetData = {
     body?: never;
     path?: never;
@@ -1479,83 +1529,6 @@ export type InspectImageApiV1ImageGetResponses = {
 };
 
 export type InspectImageApiV1ImageGetResponse = InspectImageApiV1ImageGetResponses[keyof InspectImageApiV1ImageGetResponses];
-
-export type GetMeApiV1MeGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/me';
-};
-
-export type GetMeApiV1MeGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetMeApiV1MeGetError = GetMeApiV1MeGetErrors[keyof GetMeApiV1MeGetErrors];
-
-export type GetMeApiV1MeGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: UserProfile;
-};
-
-export type GetMeApiV1MeGetResponse = GetMeApiV1MeGetResponses[keyof GetMeApiV1MeGetResponses];
-
-export type PatchMeApiV1MePatchData = {
-    body: UserUpdate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/me';
-};
-
-export type PatchMeApiV1MePatchErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type PatchMeApiV1MePatchError = PatchMeApiV1MePatchErrors[keyof PatchMeApiV1MePatchErrors];
-
-export type PatchMeApiV1MePatchResponses = {
-    /**
-     * Successful Response
-     */
-    200: UserProfile;
-};
-
-export type PatchMeApiV1MePatchResponse = PatchMeApiV1MePatchResponses[keyof PatchMeApiV1MePatchResponses];
-
-export type GetMyOrganizationsApiV1MeOrganizationsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/me/organizations';
-};
-
-export type GetMyOrganizationsApiV1MeOrganizationsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetMyOrganizationsApiV1MeOrganizationsGetError = GetMyOrganizationsApiV1MeOrganizationsGetErrors[keyof GetMyOrganizationsApiV1MeOrganizationsGetErrors];
-
-export type GetMyOrganizationsApiV1MeOrganizationsGetResponses = {
-    /**
-     * Response Get My Organizations Api V1 Me Organizations Get
-     *
-     * Successful Response
-     */
-    200: Array<UserOrganizationMembership>;
-};
-
-export type GetMyOrganizationsApiV1MeOrganizationsGetResponse = GetMyOrganizationsApiV1MeOrganizationsGetResponses[keyof GetMyOrganizationsApiV1MeOrganizationsGetResponses];
 
 export type ListOperationsApiV1OperationsGetData = {
     body?: never;
@@ -1726,36 +1699,6 @@ export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses = {
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses[keyof UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses];
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostData = {
-    body: ApplicationCreate;
-    path: {
-        /**
-         * Organization Id
-         */
-        organization_id: string;
-    };
-    query?: never;
-    url: '/api/v1/organizations/{organization_id}/applications';
-};
-
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostError = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors];
-
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses = {
-    /**
-     * Successful Response
-     */
-    202: ApplicationResponse;
-};
-
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
-
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetData = {
     body?: never;
     path: {
@@ -1787,6 +1730,38 @@ export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabase
 };
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses[keyof GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses];
+
+export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetData = {
+    body?: never;
+    path: {
+        /**
+         * Organization Id
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/{organization_id}/storage';
+};
+
+export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetError = GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors[keyof GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors];
+
+export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses = {
+    /**
+     * Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get
+     *
+     * Successful Response
+     */
+    200: OrganizationStorageUsageResponse | null;
+};
+
+export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses[keyof GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses];
 
 export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostData = {
     body: OrganizationInvitationCreate;
@@ -1851,58 +1826,6 @@ export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMembe
 };
 
 export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponses[keyof UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponses];
-
-export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetData = {
-    body?: never;
-    path: {
-        /**
-         * Organization Id
-         */
-        organization_id: string;
-    };
-    query?: never;
-    url: '/api/v1/organizations/{organization_id}/storage';
-};
-
-export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetError = GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors[keyof GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors];
-
-export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses = {
-    /**
-     * Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get
-     *
-     * Successful Response
-     */
-    200: OrganizationStorageUsageResponse | null;
-};
-
-export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses[keyof GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponses];
-
-export type ReadyzApiV1ReadyzGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/readyz';
-};
-
-export type ReadyzApiV1ReadyzGetResponses = {
-    /**
-     * Response Readyz Api V1 Readyz Get
-     *
-     * Successful Response
-     */
-    200: {
-        [key: string]: boolean;
-    };
-};
-
-export type ReadyzApiV1ReadyzGetResponse = ReadyzApiV1ReadyzGetResponses[keyof ReadyzApiV1ReadyzGetResponses];
 
 export type ListStorageRegistriesApiV1StoragesGetData = {
     body?: never;
@@ -2015,6 +1938,83 @@ export type GetStorageRegistryApiV1StoragesRegistryIdGetResponses = {
 };
 
 export type GetStorageRegistryApiV1StoragesRegistryIdGetResponse = GetStorageRegistryApiV1StoragesRegistryIdGetResponses[keyof GetStorageRegistryApiV1StoragesRegistryIdGetResponses];
+
+export type GetMeApiV1MeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me';
+};
+
+export type GetMeApiV1MeGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMeApiV1MeGetError = GetMeApiV1MeGetErrors[keyof GetMeApiV1MeGetErrors];
+
+export type GetMeApiV1MeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserProfile;
+};
+
+export type GetMeApiV1MeGetResponse = GetMeApiV1MeGetResponses[keyof GetMeApiV1MeGetResponses];
+
+export type PatchMeApiV1MePatchData = {
+    body: UserUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me';
+};
+
+export type PatchMeApiV1MePatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PatchMeApiV1MePatchError = PatchMeApiV1MePatchErrors[keyof PatchMeApiV1MePatchErrors];
+
+export type PatchMeApiV1MePatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserProfile;
+};
+
+export type PatchMeApiV1MePatchResponse = PatchMeApiV1MePatchResponses[keyof PatchMeApiV1MePatchResponses];
+
+export type GetMyOrganizationsApiV1MeOrganizationsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me/organizations';
+};
+
+export type GetMyOrganizationsApiV1MeOrganizationsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMyOrganizationsApiV1MeOrganizationsGetError = GetMyOrganizationsApiV1MeOrganizationsGetErrors[keyof GetMyOrganizationsApiV1MeOrganizationsGetErrors];
+
+export type GetMyOrganizationsApiV1MeOrganizationsGetResponses = {
+    /**
+     * Response Get My Organizations Api V1 Me Organizations Get
+     *
+     * Successful Response
+     */
+    200: Array<UserOrganizationMembership>;
+};
+
+export type GetMyOrganizationsApiV1MeOrganizationsGetResponse = GetMyOrganizationsApiV1MeOrganizationsGetResponses[keyof GetMyOrganizationsApiV1MeOrganizationsGetResponses];
 
 export type ListUsersApiV1UsersGetData = {
     body?: never;

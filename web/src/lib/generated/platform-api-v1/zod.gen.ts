@@ -38,10 +38,10 @@ export const zAccent = z.enum([
  * Represent the compact Organization associated with an Application.
  */
 export const zApplicationOrganizationResponse = z.object({
-    avatar: z.string(),
     id: z.uuid(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
+    avatar: z.string()
 });
 
 /**
@@ -50,8 +50,8 @@ export const zApplicationOrganizationResponse = z.object({
  * Validate one compute registry creation payload.
  */
 export const zComputeRegistryCreate = z.object({
-    kubeconfig: z.record(z.string(), z.unknown()),
-    name: z.string().min(1).max(128)
+    name: z.string().min(1).max(128),
+    kubeconfig: z.record(z.string(), z.unknown())
 });
 
 /**
@@ -75,11 +75,11 @@ export const zDatabaseSslMode = z.enum([
  */
 export const zDatabaseRegistryCreate = z.object({
     host: z.string().min(1).max(255),
-    name: z.string().min(1).max(128),
-    password: z.string().min(1).max(255),
     port: z.int().gte(1).lte(65535),
     sslmode: zDatabaseSslMode.optional().default('require'),
-    username: z.string().min(1).max(255)
+    password: z.string().min(1).max(255),
+    username: z.string().min(1).max(255),
+    name: z.string().min(1).max(128)
 });
 
 /**
@@ -90,9 +90,9 @@ export const zDatabaseRegistryCreate = z.object({
  * Non-secret connection metadata remains available for administrator diagnostics.
  */
 export const zDatabaseRegistryResponse = z.object({
-    host: z.string(),
     id: z.uuid(),
     name: z.string(),
+    host: z.string(),
     port: z.int(),
     sslmode: zDatabaseSslMode,
     username: z.string()
@@ -113,10 +113,10 @@ export const zEmailPayload = z.object({
  * Typed metadata for a single environment variable.
  */
 export const zEnvironmentMetadata = z.object({
-    description: z.string().nullish(),
     name: z.string(),
+    type: z.string(),
     required: z.boolean(),
-    type: z.string()
+    description: z.string().nullish()
 });
 
 /**
@@ -163,11 +163,11 @@ export const zIcon = z.enum([
  * Validate application creation payloads.
  */
 export const zApplicationCreate = z.object({
-    description: z.string().max(255).nullish(),
-    envs: z.record(z.string(), z.string()).optional(),
+    name: z.string().min(1).max(100),
     icon: zIcon.nullish(),
     image: z.string(),
-    name: z.string().min(1).max(100)
+    description: z.string().max(255).nullish(),
+    envs: z.record(z.string(), z.string()).optional()
 });
 
 /**
@@ -176,11 +176,11 @@ export const zApplicationCreate = z.object({
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export const zLongLinkMetadata = z.object({
-    description: z.string().nullish(),
-    digest: z.string().nullish(),
-    environments: z.array(zEnvironmentMetadata).optional(),
     title: z.string().nullish(),
-    version: z.string().nullish()
+    digest: z.string().nullish(),
+    version: z.string().nullish(),
+    description: z.string().nullish(),
+    environments: z.array(zEnvironmentMetadata).optional()
 });
 
 /**
@@ -214,12 +214,12 @@ export const zOperationStatus = z.enum([
  * Expose administrative asynchronous reconciliation state for one Platform resource target.
  */
 export const zOperationResponse = z.object({
-    created_at: z.iso.datetime(),
-    finished_at: z.iso.datetime().nullable(),
     id: z.uuid(),
     kind: zOperationKind,
+    target_id: z.uuid(),
     status: zOperationStatus,
-    target_id: z.uuid()
+    created_at: z.iso.datetime(),
+    finished_at: z.iso.datetime().nullable()
 });
 
 /**
@@ -271,10 +271,10 @@ export const zOrganizationInvitationCreate = z.object({
  * Represent one organization invitation in API responses.
  */
 export const zOrganizationInvitationResponse = z.object({
-    created_at: z.iso.datetime(),
-    email: z.string(),
     id: z.uuid(),
-    role: zOrganizationRoles
+    email: z.string(),
+    role: zOrganizationRoles,
+    created_at: z.iso.datetime()
 });
 
 /**
@@ -342,8 +342,8 @@ export const zPlatformRoles = z.enum(['user', 'administrator']);
 export const zRegistrationComplete = z.object({
     email: z.email().max(254),
     name: z.string().min(1).max(127),
-    password: z.string().min(1).max(1024),
-    surname: z.string().min(1).max(127)
+    surname: z.string().min(1).max(127),
+    password: z.string().min(1).max(1024)
 });
 
 /**
@@ -364,16 +364,16 @@ export const zStatus = z.enum([
  * Represent one application in API responses.
  */
 export const zApplicationResponse = z.object({
-    created_at: z.iso.datetime(),
-    description: z.string().nullable(),
-    icon: zIcon.nullable(),
     id: z.uuid(),
-    image: z.string(),
-    name: z.string(),
     organization: zApplicationOrganizationResponse,
+    name: z.string(),
     slug: z.string(),
+    icon: zIcon.nullable(),
+    image: z.string(),
+    version: z.string().nullable(),
+    description: z.string().nullable(),
     status: zStatus,
-    version: z.string().nullable()
+    created_at: z.iso.datetime()
 });
 
 /**
@@ -382,9 +382,9 @@ export const zApplicationResponse = z.object({
  * Describe one compute backend without exposing its private connection state or secrets.
  */
 export const zComputeRegistryResponse = z.object({
-    gateway_url: z.string().nullable(),
     id: z.uuid(),
     name: z.string(),
+    gateway_url: z.string().nullable(),
     status: zStatus
 });
 
@@ -394,11 +394,11 @@ export const zComputeRegistryResponse = z.object({
  * Represent a compact LongLink Application in nested Organization responses.
  */
 export const zOrganizationApplicationSummary = z.object({
-    description: z.string().nullish(),
-    icon: zIcon.nullish(),
     id: z.uuid(),
     name: z.string(),
     slug: z.string(),
+    icon: zIcon.nullish(),
+    description: z.string().nullish(),
     status: zStatus
 });
 
@@ -408,17 +408,17 @@ export const zOrganizationApplicationSummary = z.object({
  * Represent one organization in admin list responses.
  */
 export const zOrganizationSummary = z.object({
-    avatar: z.string(),
-    compute_id: z.uuid(),
-    created_at: z.iso.datetime(),
-    database_id: z.uuid(),
-    deleted_at: z.iso.datetime().nullable(),
     id: z.uuid(),
     name: z.string(),
     slug: z.string(),
-    status: zStatus,
+    avatar: z.string(),
+    compute_id: z.uuid(),
     storage_id: z.uuid(),
-    updated_at: z.iso.datetime()
+    database_id: z.uuid(),
+    status: zStatus,
+    created_at: z.iso.datetime(),
+    updated_at: z.iso.datetime(),
+    deleted_at: z.iso.datetime().nullable()
 });
 
 /**
@@ -427,10 +427,10 @@ export const zOrganizationSummary = z.object({
  * Validate one storage registry creation payload.
  */
 export const zStorageRegistryCreate = z.object({
-    access_key_id: z.string().min(1).max(255),
     endpoint_url: z.string().min(1).max(255),
-    name: z.string().min(1).max(128),
-    secret_access_key: z.string().min(1).max(255)
+    access_key_id: z.string().min(1).max(255),
+    secret_access_key: z.string().min(1).max(255),
+    name: z.string().min(1).max(128)
 });
 
 /**
@@ -439,9 +439,9 @@ export const zStorageRegistryCreate = z.object({
  * Describe one Exoscale SOS backend without exposing Platform credentials.
  */
 export const zStorageRegistryResponse = z.object({
-    endpoint_url: z.string(),
     id: z.uuid(),
-    name: z.string()
+    name: z.string(),
+    endpoint_url: z.string()
 });
 
 /**
@@ -470,10 +470,10 @@ export const zTokenPayload = z.object({
  * Represent a user identity in nested API responses.
  */
 export const zUserIdentity = z.object({
-    avatar: z.string(),
-    email: z.email(),
     id: z.uuid(),
-    name: z.string()
+    name: z.string(),
+    email: z.email(),
+    avatar: z.string()
 });
 
 /**
@@ -482,8 +482,8 @@ export const zUserIdentity = z.object({
  * Represent one Organization member and their access role.
  */
 export const zOrganizationMemberAccessResponse = z.object({
-    role: zOrganizationRoles,
-    user: zUserIdentity
+    user: zUserIdentity,
+    role: zOrganizationRoles
 });
 
 /**
@@ -492,10 +492,10 @@ export const zOrganizationMemberAccessResponse = z.object({
  * Represent an Organization with its members and Application access.
  */
 export const zOrganizationDetails = z.object({
-    applications: z.array(zOrganizationApplicationSummary),
-    invitations: z.array(zOrganizationInvitationResponse),
+    organization: zOrganizationSummary,
     members: z.array(zOrganizationMemberAccessResponse),
-    organization: zOrganizationSummary
+    invitations: z.array(zOrganizationInvitationResponse),
+    applications: z.array(zOrganizationApplicationSummary)
 });
 
 /**
@@ -504,10 +504,10 @@ export const zOrganizationDetails = z.object({
  * Represent a compact Organization in current-user membership responses.
  */
 export const zUserOrganizationSummary = z.object({
-    avatar: z.string(),
     id: z.uuid(),
     name: z.string(),
-    slug: z.string()
+    slug: z.string(),
+    avatar: z.string()
 });
 
 /**
@@ -526,14 +526,14 @@ export const zUserOrganizationMembership = z.object({
  * Represent the authenticated user payload returned by the API.
  */
 export const zUserProfile = z.object({
-    accent: zAccent,
-    avatar: z.string(),
-    email: z.email(),
     id: z.uuid(),
     name: z.string(),
-    radius: z.number(),
+    email: z.email(),
+    avatar: z.string(),
     role: zPlatformRoles,
-    theme: zTheme
+    theme: zTheme,
+    accent: zAccent,
+    radius: z.number()
 });
 
 /**
@@ -542,10 +542,10 @@ export const zUserProfile = z.object({
  * Represent a compact user object in nested responses.
  */
 export const zUserSummary = z.object({
-    avatar: z.string(),
-    email: z.email(),
     id: z.uuid(),
     name: z.string(),
+    email: z.email(),
+    avatar: z.string(),
     role: zPlatformRoles
 });
 
@@ -555,22 +555,22 @@ export const zUserSummary = z.object({
  * Payload to update mutable user profile fields.
  */
 export const zUserUpdate = z.object({
-    accent: zAccent.nullish(),
-    avatar: z.string().max(2048).nullish(),
     name: z.string().min(1).max(255).nullish(),
-    radius: z.number().gte(0).lte(1.5).nullish(),
-    theme: zTheme.nullish()
+    avatar: z.string().max(2048).nullish(),
+    theme: zTheme.nullish(),
+    accent: zAccent.nullish(),
+    radius: z.number().gte(0).lte(1.5).nullish()
 });
 
 /**
  * ValidationError
  */
 export const zValidationError = z.object({
-    ctx: z.record(z.string(), z.unknown()).optional(),
-    input: z.unknown().optional(),
     loc: z.array(z.union([z.string(), z.int()])),
     msg: z.string(),
-    type: z.string()
+    type: z.string(),
+    input: z.unknown().optional(),
+    ctx: z.record(z.string(), z.unknown()).optional()
 });
 
 /**
@@ -580,6 +580,55 @@ export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
 });
 
+export const zPasswordLoginApiV1AuthPasswordLoginPostBody = zPasswordLogin;
+
+/**
+ * Successful Response
+ */
+export const zPasswordLoginApiV1AuthPasswordLoginPostResponse = z.void();
+
+export const zRequestPasswordResetApiV1AuthForgotPasswordPostBody = zEmailPayload;
+
+export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostBody = zTokenPayload;
+
+/**
+ * Successful Response
+ */
+export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponse = z.void();
+
+/**
+ * Successful Response
+ */
+export const zGetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponse = z.void();
+
+export const zResetPasswordApiV1AuthResetPasswordPostBody = zPasswordResetComplete;
+
+/**
+ * Successful Response
+ */
+export const zResetPasswordApiV1AuthResetPasswordPostResponse = z.void();
+
+export const zRequestRegistrationApiV1AuthRegisterPostBody = zEmailPayload;
+
+export const zVerifyRegistrationTokenApiV1AuthVerifyPostBody = zTokenPayload;
+
+/**
+ * Successful Response
+ */
+export const zVerifyRegistrationTokenApiV1AuthVerifyPostResponse = zEmailPayload;
+
+/**
+ * Successful Response
+ */
+export const zGetRegistrationSetupApiV1AuthRegisterSetupGetResponse = zEmailPayload;
+
+export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrationComplete;
+
+/**
+ * Successful Response
+ */
+export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserProfile;
+
 /**
  * Response List Applications Api V1 Applications Get
  *
@@ -587,14 +636,16 @@ export const zHttpValidationError = z.object({
  */
 export const zListApplicationsApiV1ApplicationsGetResponse = z.array(zApplicationResponse);
 
-export const zDeleteApplicationApiV1ApplicationsApplicationIdDeletePath = z.object({
-    application_id: z.uuid()
+export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostBody = zApplicationCreate;
+
+export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostPath = z.object({
+    organization_id: z.uuid()
 });
 
 /**
  * Successful Response
  */
-export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = zApplicationResponse;
+export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = zApplicationResponse;
 
 export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.object({
     application_id: z.uuid()
@@ -607,54 +658,14 @@ export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.ob
  */
 export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse = z.array(z.string());
 
-export const zRequestPasswordResetApiV1AuthForgotPasswordPostBody = zEmailPayload;
-
-export const zPasswordLoginApiV1AuthPasswordLoginPostBody = zPasswordLogin;
-
-/**
- * Successful Response
- */
-export const zPasswordLoginApiV1AuthPasswordLoginPostResponse = z.void();
-
-export const zRequestRegistrationApiV1AuthRegisterPostBody = zEmailPayload;
-
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrationComplete;
+export const zDeleteApplicationApiV1ApplicationsApplicationIdDeletePath = z.object({
+    application_id: z.uuid()
+});
 
 /**
  * Successful Response
  */
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserProfile;
-
-/**
- * Successful Response
- */
-export const zGetRegistrationSetupApiV1AuthRegisterSetupGetResponse = zEmailPayload;
-
-export const zResetPasswordApiV1AuthResetPasswordPostBody = zPasswordResetComplete;
-
-/**
- * Successful Response
- */
-export const zResetPasswordApiV1AuthResetPasswordPostResponse = z.void();
-
-/**
- * Successful Response
- */
-export const zGetPasswordResetSetupApiV1AuthResetPasswordSetupGetResponse = z.void();
-
-export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostBody = zTokenPayload;
-
-/**
- * Successful Response
- */
-export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostResponse = z.void();
-
-export const zVerifyRegistrationTokenApiV1AuthVerifyPostBody = zTokenPayload;
-
-/**
- * Successful Response
- */
-export const zVerifyRegistrationTokenApiV1AuthVerifyPostResponse = zEmailPayload;
+export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = zApplicationResponse;
 
 /**
  * Response List Compute Registries Api V1 Computes Get
@@ -739,6 +750,13 @@ export const zGetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponse = z.int()
 export const zHealthzApiV1HealthzGetResponse = z.record(z.string(), z.boolean());
 
 /**
+ * Response Readyz Api V1 Readyz Get
+ *
+ * Successful Response
+ */
+export const zReadyzApiV1ReadyzGetResponse = z.record(z.string(), z.boolean());
+
+/**
  * Response List Icons Api V1 Icons Get
  *
  * Successful Response
@@ -753,25 +771,6 @@ export const zInspectImageApiV1ImageGetQuery = z.object({
  * Successful Response
  */
 export const zInspectImageApiV1ImageGetResponse = zLongLinkMetadata;
-
-/**
- * Successful Response
- */
-export const zGetMeApiV1MeGetResponse = zUserProfile;
-
-export const zPatchMeApiV1MePatchBody = zUserUpdate;
-
-/**
- * Successful Response
- */
-export const zPatchMeApiV1MePatchResponse = zUserProfile;
-
-/**
- * Response Get My Organizations Api V1 Me Organizations Get
- *
- * Successful Response
- */
-export const zGetMyOrganizationsApiV1MeOrganizationsGetResponse = z.array(zUserOrganizationMembership);
 
 /**
  * Response List Operations Api V1 Operations Get
@@ -823,17 +822,6 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationSummary;
 
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostBody = zApplicationCreate;
-
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = zApplicationResponse;
-
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()
 });
@@ -844,6 +832,17 @@ export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDataba
  * Successful Response
  */
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = zOrganizationDatabaseUsageResponse.nullable();
+
+export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get
+ *
+ * Successful Response
+ */
+export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = zOrganizationStorageUsageResponse.nullable();
 
 export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostBody = zOrganizationInvitationCreate;
 
@@ -867,24 +866,6 @@ export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMem
  * Successful Response
  */
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = z.void();
-
-export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get
- *
- * Successful Response
- */
-export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = zOrganizationStorageUsageResponse.nullable();
-
-/**
- * Response Readyz Api V1 Readyz Get
- *
- * Successful Response
- */
-export const zReadyzApiV1ReadyzGetResponse = z.record(z.string(), z.boolean());
 
 /**
  * Response List Storage Registries Api V1 Storages Get
@@ -917,6 +898,25 @@ export const zGetStorageRegistryApiV1StoragesRegistryIdGetPath = z.object({
  * Successful Response
  */
 export const zGetStorageRegistryApiV1StoragesRegistryIdGetResponse = zStorageRegistryResponse;
+
+/**
+ * Successful Response
+ */
+export const zGetMeApiV1MeGetResponse = zUserProfile;
+
+export const zPatchMeApiV1MePatchBody = zUserUpdate;
+
+/**
+ * Successful Response
+ */
+export const zPatchMeApiV1MePatchResponse = zUserProfile;
+
+/**
+ * Response Get My Organizations Api V1 Me Organizations Get
+ *
+ * Successful Response
+ */
+export const zGetMyOrganizationsApiV1MeOrganizationsGetResponse = z.array(zUserOrganizationMembership);
 
 /**
  * Response List Users Api V1 Users Get

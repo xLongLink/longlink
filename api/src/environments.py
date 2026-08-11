@@ -4,14 +4,12 @@ from pydantic import Field, EmailStr, field_validator, model_validator
 from src.models.auth import normalize_email
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
-
 
 class Env(BaseSettings):
     """Define startup-validated settings for one LongLink Platform API replica."""
 
     # Runtime mode
-    DEVELOPMENT: bool = DEVELOPMENT
+    DEVELOPMENT: bool = False
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
 
     # Authentication
@@ -39,7 +37,9 @@ class Env(BaseSettings):
     DATABASE_URL: str
 
     model_config = SettingsConfigDict(
-        env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
+        env_file=(".env.sample", ".env")
+        if os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
+        else (".env",),
         env_file_encoding="utf-8",
         extra="ignore",
     )

@@ -1,39 +1,26 @@
 from longlink import database
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
 from src.database.models.requests import PurchaseRequest
 
 
 async def list_requests() -> list[PurchaseRequest]:
     """Return purchase requests with their platform-managed audit users."""
 
-    # Query requests and eagerly load their shared audit users for display.
+    # Query requests and their select-in-loaded audit users for display.
     async with database.session() as session:
-        statement = (
-            select(PurchaseRequest)
-            .options(
-                selectinload(PurchaseRequest.created_by),
-                selectinload(PurchaseRequest.updated_by),
-            )
-            .order_by(PurchaseRequest.id)
-        )
+        statement = select(PurchaseRequest).order_by(PurchaseRequest.id)
         result = await session.exec(statement)
-        purchase_requests = list(result.all())
+        purchase_requests = result.all()
 
     return purchase_requests
 
 
-async def get_request(request_id: int, include_audit_users: bool = True) -> PurchaseRequest | None:
-    """Return one purchase request, optionally with its platform-managed audit users."""
+async def get_request(request_id: int) -> PurchaseRequest | None:
+    """Return one purchase request with its platform-managed audit users."""
 
-    # Query the request and load audit users only when its response needs them.
+    # Query the request with its select-in-loaded audit users.
     async with database.session() as session:
         statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
-        if include_audit_users:
-            statement = statement.options(
-                selectinload(PurchaseRequest.created_by),
-                selectinload(PurchaseRequest.updated_by),
-            )
         result = await session.exec(statement)
         request = result.first()
 
@@ -70,14 +57,7 @@ async def update_request_status(request_id: int, status: str) -> PurchaseRequest
 
     # Load the request and return immediately when it does not exist.
     async with database.session() as session:
-        statement = (
-            select(PurchaseRequest)
-            .options(
-                selectinload(PurchaseRequest.created_by),
-                selectinload(PurchaseRequest.updated_by),
-            )
-            .where(PurchaseRequest.id == request_id)
-        )
+        statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
         request = (await session.exec(statement)).first()
         if request is None:
             return None

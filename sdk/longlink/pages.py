@@ -47,6 +47,10 @@ def page_file_route(relative_path: str) -> str:
     path_without_suffix = normalized_path.removesuffix(".xml")
     route_segments: list[str] = []
 
+    # Empty file stems cannot provide either an endpoint or browser route.
+    if not path_without_suffix:
+        raise ValueError("Page file routes must include a file name")
+
     # Convert filesystem route conventions into React Router-style route patterns.
     for segment in path_without_suffix.split("/"):
         # Index segments map to the current route level.
@@ -68,6 +72,26 @@ def page_file_route(relative_path: str) -> str:
             route_segments.append(f":{parameter_name}")
             continue
 
+        # Static file names cannot introduce browser route parameters or wildcards.
+        if segment.startswith(":") or "*" in segment:
+            raise ValueError("Static page route segments cannot contain route parameters or wildcards")
+
         route_segments.append(segment)
 
     return "/".join(route_segments)
+def page_route_key(route: str) -> str:
+    """Return a route key that treats dynamic parameter names as equivalent."""
+
+    return "/".join(":" if segment.startswith(":") else segment for segment in route.split("/"))
+
+
+def page_file_endpoint(route_prefix: str, relative_path: str) -> str:
+    """Return and validate the SDK endpoint path for one XML page file."""
+
+    path_without_suffix = relative_path.removesuffix(".xml")
+
+    # FastAPI parameter syntax is reserved for application routes, not page file names.
+    if not path_without_suffix or any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
+        raise ValueError("Page endpoint paths cannot contain empty names or FastAPI parameters")
+
+    return f"{route_prefix}/{path_without_suffix}"
