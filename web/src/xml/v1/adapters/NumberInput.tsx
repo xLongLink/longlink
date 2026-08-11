@@ -1,8 +1,7 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -11,14 +10,16 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
+import type { Props } from '../types';
 
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = binding.initialValue == null ? null : Number(binding.initialValue);
-    const [localValue, setLocalValue] = useState<number | null>(initialValue);
+    const [localValue, setLocalValue] = useState<number | null>(
+        binding.initialValue == null ? null : Number(binding.initialValue)
+    );
     const currentValue = binding.currentValue == null ? null : Number(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
     const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false);
@@ -33,7 +34,7 @@ export function NumberInput({ props }: Props) {
         isLabelHidden: resolveXmlBoolean(props, 'isLabelHidden', ctx, false),
         isOptional: resolveXmlBoolean(props, 'isOptional', ctx, false),
         isRequired: resolveXmlBoolean(props, 'isRequired', ctx, false),
-        label: resolveXmlLabel(props, ctx, 'NumberInput'),
+        label: resolveXmlLabel(props, ctx, services, 'NumberInput'),
         max: resolveXmlNumber(props, 'max', ctx),
         min: resolveXmlNumber(props, 'min', ctx),
         placeholder: resolveXmlString(props, 'placeholder', ctx) || undefined,

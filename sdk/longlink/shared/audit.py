@@ -13,10 +13,9 @@ async def sync(database_url: str | URL, rows: list[AuditUser]) -> None:
         return
 
     # Open a short-lived engine because organization databases are selected dynamically.
-    connect_args = urls.connect_args(database_url)
     engine = create_async_engine(
         database_url,
-        **({"connect_args": connect_args} if connect_args else {}),
+        connect_args=urls.connect_args(database_url),
     )
 
     # Dispose the operation-scoped engine after synchronization completes.

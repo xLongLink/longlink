@@ -1,16 +1,13 @@
 import { Avatar as AstryxAvatar, type AvatarSize } from '@astryxdesign/core/Avatar';
-import { useContext } from 'react';
-import { useXmlContext } from '../core/context';
-import { BaseUrlContext, resolveAnchorUrl } from '../core/url';
+import { useXmlRuntime } from '../core/context';
+import { resolveXmlEnum, resolveXmlString } from '../core/props';
+import { resolveAnchorUrl } from '../core/url';
 import type { Props } from '../types';
-import { resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders a data-oriented Astryx avatar with safe image URLs. */
 export function Avatar({ props }: Props) {
-    const ctx = useXmlContext();
-    const baseUrl = useContext(BaseUrlContext);
-    const src = resolveAnchorUrl(baseUrl, resolveXmlString(props, 'src', ctx));
-    const fallbackSrc = resolveAnchorUrl(baseUrl, resolveXmlString(props, 'fallbackSrc', ctx));
+    const { scope: ctx, services } = useXmlRuntime();
+    const src = resolveAnchorUrl(services.requestBaseUrl, resolveXmlString(props, 'src', ctx));
     const name = resolveXmlString(props, 'name', ctx);
     const alt = resolveXmlString(props, 'alt', ctx);
     const size = resolveXmlEnum<Extract<AvatarSize, string>>(
@@ -22,13 +19,5 @@ export function Avatar({ props }: Props) {
         'Avatar'
     );
 
-    return (
-        <AstryxAvatar
-            alt={alt || undefined}
-            fallbackSrc={fallbackSrc || undefined}
-            name={name || undefined}
-            size={size}
-            src={src || undefined}
-        />
-    );
+    return <AstryxAvatar alt={alt || undefined} name={name || undefined} size={size} src={src || undefined} />;
 }

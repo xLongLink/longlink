@@ -63,15 +63,14 @@ def generate_command() -> None:
             )
 
         description = translation.get("description")
-        if "description" in translation and not isinstance(description, str):
-            raise click.ClickException(
-                f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: description must be a string.'
-            )
-
-        existing_catalog[key] = {
-            "defaultMessage": default_message,
-            **({"description": description} if isinstance(description, str) else {}),
-        }
+        entry = {"defaultMessage": default_message}
+        if "description" in translation:
+            if not isinstance(description, str):
+                raise click.ClickException(
+                    f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: description must be a string.'
+                )
+            entry["description"] = description
+        existing_catalog[key] = entry
 
     # Parse XML fragments without loading external resources.
     parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)

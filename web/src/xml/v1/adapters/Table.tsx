@@ -1,34 +1,29 @@
-import {
-    Table as AstryxTable,
-    pixel,
-    proportional,
-    type TableColumn as AstryxTableColumn,
-} from '@astryxdesign/core/Table';
+import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { useXmlContext, XmlContext } from '../core/context';
+import { useXmlRuntime, XmlContext } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
-import { readSafeProperty } from '../expressions';
-import type { ASTNode, ExecutionContext, Props } from '../types';
 import {
     readXmlProp,
     isVisibleXmlNode,
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlNumber,
     resolveXmlString,
     resolveXmlValue,
-} from './props';
+} from '../core/props';
+import { readSafeProperty } from '../expressions';
+import type { ASTNode, Props, Scope } from '../types';
 
 type TableRow = Record<string, unknown>;
 
 /** Renders XML row data through the Astryx data-driven Table API. */
 export function Table({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const runtime = useXmlRuntime();
+    const ctx = runtime.scope;
 
     // Require an explicit array data source.
-    if (!readXmlProp(props, 'data')?.trim()) {
+    if (!readXmlProp(props, 'data')) {
         throw new Error('Table requires a data attribute');
     }
 
@@ -36,10 +31,9 @@ export function Table({ props, nodes }: Props) {
     const rows = Array.isArray(data)
         ? data.filter((row): row is TableRow => row != null && typeof row === 'object' && !Array.isArray(row))
         : [];
-    const rowName = resolveXmlString(props, 'rowName', ctx, 'row');
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node) => buildColumn(node, ctx, rowName, rows));
+        .map((node) => buildColumn(node, ctx, runtime.services, rows));
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {
@@ -78,60 +72,54 @@ export function TableColumn(): never {
 /** Converts one XML column into an Astryx column with an optional renderCell callback. */
 function buildColumn(
     node: ASTNode,
-    ctx: ExecutionContext,
-    rowName: string,
+    ctx: Scope,
+    services: ReturnType<typeof useXmlRuntime>['services'],
     rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
     const props = node.params ?? {};
     const key = readXmlProp(props, 'key');
 
     // Column keys and field paths are literal identifiers, not expressions.
-    if (!key?.trim()) throw new Error('TableColumn requires a string key');
+    if (key?.kind !== 'text' || !key.value.trim()) throw new Error('TableColumn requires a string key');
 
-    const field = readXmlProp(props, 'field') ?? key;
+    const fieldAttribute = readXmlProp(props, 'field');
+    if (fieldAttribute != null && fieldAttribute.kind !== 'text') {
+        throw new Error('TableColumn requires a usable field path');
+    }
+    const field = fieldAttribute?.value ?? key.value;
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'header', ctx, key);
-    const widthValue = resolveXmlNumber(props, 'width', ctx);
-    const widthType = resolveXmlEnum(props, 'widthType', ctx, ['proportional', 'pixel'], 'proportional', 'TableColumn');
-    const minWidth = resolveXmlNumber(props, 'minWidth', ctx);
-    const width =
-        widthValue == null
-            ? undefined
-            : widthType === 'pixel'
-              ? pixel(widthValue)
-              : proportional(widthValue, minWidth == null ? undefined : { minWidth });
+    const header = readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx, services)
+        : resolveXmlString(props, 'header', ctx, key.value);
     const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'start', 'TableColumn');
-    const cellNodes = node.children ?? [];
+    const cellNodes = node.children;
 
     return {
         align,
         header,
-        key,
-        width,
+        key: key.value,
         renderCell: (row) => {
-            const value = resolveFieldValue(row, field);
+            const value = field.split('.').reduce<unknown>((current, segment) => {
+                if (current == null || typeof current !== 'object') return undefined;
+
+                return readSafeProperty(current, segment);
+            }, row);
 
             // Shorthand columns render the resolved field value directly.
             if (cellNodes.length === 0) return value == null ? '' : String(value);
 
-            const rowCtx: ExecutionContext = {
-                ...ctx,
+            const rowCtx: Scope = {
                 parent: ctx,
-                values: { index: rows.indexOf(row), value, [rowName]: row },
+                bindings: { index: rows.indexOf(row), row, value },
             };
 
-            return <XmlContext.Provider value={rowCtx}>{renderNode(cellNodes, rowCtx)}</XmlContext.Provider>;
+            return (
+                <XmlContext.Provider value={{ scope: rowCtx, services }}>
+                    {renderNode(cellNodes, rowCtx)}
+                </XmlContext.Provider>
+            );
         },
     };
-}
-
-/** Resolves a dotted field path against one row without unsafe property access. */
-function resolveFieldValue(row: TableRow, field: string): unknown {
-    return field.split('.').reduce<unknown>((current, segment) => {
-        if (current == null || typeof current !== 'object') return undefined;
-
-        return readSafeProperty(current, segment);
-    }, row);
 }

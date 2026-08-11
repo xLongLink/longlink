@@ -19,6 +19,7 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "sqlmodel>=0.0.39",
     "uvicorn>=0.52.1",
+    "watchfiles>=0.20",
     "xmlschema>=4.3.2",
 ]
 requires-python = ">=3.12"

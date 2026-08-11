@@ -10,8 +10,6 @@
     <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
     <xsd:attribute name="isOpen" type="xsd:string" use="optional" />
     <xsd:attribute name="triggerLabel" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="triggerVariant" type="ButtonVariantType" use="optional" default="secondary" />
-    <xsd:attribute name="triggerSize" type="SizeType" use="optional" default="md" />
     <xsd:attribute name="purpose" type="DialogPurposeType" use="optional" default="info" />
     <xsd:attribute name="variant" type="DialogVariantType" use="optional" default="standard" />
     <xsd:attribute name="width" type="xsd:string" use="optional" />

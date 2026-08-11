@@ -78,15 +78,12 @@ export function useUserOrganizations() {
 export function useSignOut() {
     const queryClient = useQueryClient();
 
-    /** Signs the current user out and clears cached session state. */
-    const signOut = async () => {
+    return async () => {
         await fetchApiVoid(platformApiPath('/auth/logout'), { method: 'POST' });
         queryClient.clear();
         localStorage.removeItem(THEME_PREFERENCES_KEY);
         window.location.assign('/organizations');
     };
-
-    return signOut;
 }
 
 /** Updates the current user profile. */

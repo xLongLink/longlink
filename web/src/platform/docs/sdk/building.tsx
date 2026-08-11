@@ -33,7 +33,7 @@ description = "Order workflow service"
 
 [tool.longlink]
 environment = "src.envs:Env"
-description = "Operational order management for warehouse teams"`}
+`}
                 hasLanguageLabel={false}
                 language="toml"
                 title="pyproject.toml"

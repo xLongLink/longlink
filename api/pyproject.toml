@@ -85,7 +85,7 @@ length-sort = true
 extra-paths = ["../sdk"]
 
 [tool.ty.src]
-include = ["main.py", "seed.py", "src", "alembic"]
+include = ["main.py", "scripts", "src", "alembic"]
 # Keep SQLModel descriptor diagnostics out of the gate while still checking
 # callers and non-ORM API code.
 exclude = ["src/.static", "tests", "src/database/models", "src/database/services"]

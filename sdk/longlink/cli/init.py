@@ -20,23 +20,15 @@ def init_command(folder: str, ci_provider: str | None) -> None:
     source = ROOT / ".static" / "new"
     target = Path(folder)
 
-    # Refuse unsafe targets so scaffold generation cannot silently merge with user files.
+    # Scaffold generation never merges into an existing target.
     if target.exists():
-
-        # Reject file targets because the scaffold must be a directory.
-        if not target.is_dir():
-            raise click.ClickException(f"Target already exists and is not a directory: {target}")
-
-        # Reject non-empty directories to avoid overwriting user files.
-        if any(target.iterdir()):
-            raise click.ClickException(f"Target folder is not empty: {target}")
+        raise click.ClickException(f"Target already exists: {target}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
     shutil.copytree(
         source,
         target,
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns(".pytest_cache", ".venv", "__pycache__"),
+        ignore=shutil.ignore_patterns(".pytest_cache", ".ruff_cache", ".venv", "__pycache__"),
     )
 
     # Add provider-specific automation files only when explicitly requested.

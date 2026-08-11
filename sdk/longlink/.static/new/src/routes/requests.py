@@ -1,17 +1,14 @@
-import urllib.parse
 from uuid import uuid4
 from fastapi import APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import storage
-from fastapi.responses import Response
 from src.schemas.requests import (
     PurchaseRequestRead,
     PurchaseRequestCreate,
     RequestAttachmentRead,
-    PurchaseRequestStatusUpdate,
 )
 from src.database.services import requests
-from src.database.models.requests import PurchaseRequest
+from src.database.models.requests import PurchaseRequest, RequestAttachment
 
 router = APIRouter(prefix="/api")
 
@@ -21,21 +18,16 @@ UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 @router.get("/requests", response_model=list[PurchaseRequestRead])
 async def requests_get_endpoint():
-    """Return purchase requests with their platform-managed audit users."""
+    """Return purchase requests."""
 
     return await requests.list_requests()
 
 
 @router.post("/requests", response_model=PurchaseRequestRead)
 async def requests_post_endpoint(payload: PurchaseRequestCreate):
-    """Create a purchase request and return its audit data."""
+    """Create a purchase request."""
 
-    return await requests.create_request(
-        title=payload.title,
-        amount=payload.amount,
-        vendor=payload.vendor,
-        justification=payload.justification,
-    )
+    return await requests.create_request(text=payload.text, amount=payload.amount)
 
 
 @router.get("/requests/{request_id}", response_model=PurchaseRequestRead)
@@ -45,19 +37,9 @@ async def request_get_endpoint(request_id: int):
     return await _require_request(request_id)
 
 
-@router.patch("/requests/{request_id}/status", response_model=PurchaseRequestRead)
-async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate):
-    """Update one purchase request workflow status."""
-
-    # Update the request and reject ids that are not present.
-    request = await requests.update_request_status(request_id, payload.status)
-    if request is None:
-        raise HTTPException(status_code=404, detail="Purchase request not found")
-
-    return request
-
-
-@router.get("/requests/{request_id}/attachments", response_model=list[RequestAttachmentRead])
+@router.get(
+    "/requests/{request_id}/attachments", response_model=list[RequestAttachmentRead]
+)
 async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
@@ -73,8 +55,12 @@ async def request_attachments_get_endpoint(request_id: int):
         return []
 
     # Convert each stored file entry into attachment response metadata.
+    attachments = await requests.list_attachments(request_id)
     return [
-        _attachment_from_entry(request_id, entry)
+        _attachment_from_entry(
+            entry,
+            attachments.get(PurePosixPath(str(entry.get("name", ""))).name),
+        )
         for entry in entries
         if entry.get("type") != "directory"
     ]
@@ -91,66 +77,20 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile):
     file_name = _safe_file_name(file.filename)
     file_id = f"{uuid4().hex}-{file_name}"
     storage_path = _attachment_path(request_id, file_id)
-    uploaded_size = 0
 
     # Create the attachment directory and close the upload after storage completes.
     try:
         storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{request_id}", exist_ok=True)
 
         with storage.open(storage_path, "wb") as stored_file:
-
             # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)
-                uploaded_size += len(chunk)
     finally:
         await file.close()
 
-    return {
-        "id": file_id,
-        "name": file_name,
-        "size": uploaded_size,
-        "download_url": f"/api/requests/{request_id}/attachments/{file_id}",
-    }
-
-
-@router.get("/requests/{request_id}/attachments/{file_id}")
-async def request_attachment_download_endpoint(request_id: int, file_id: str) -> Response:
-    """Download one purchase request attachment."""
-
-    # Validate the request before accessing its attachment storage.
-    await _require_request(request_id)
-
-    # Resolve the attachment path and reject files that are not present.
-    storage_path = _attachment_path(request_id, file_id)
-    if not storage.exists(storage_path):
-        raise HTTPException(status_code=404, detail="Attachment not found")
-
-    # Read the stored attachment for the response body.
-    with storage.open(storage_path, "rb") as stored_file:
-        content = stored_file.read()
-
-    # Encode the original name for a standards-compliant download header.
-    download_name = urllib.parse.quote(_display_file_name(file_id), safe="")
-
-    return Response(
-        content=content,
-        media_type="application/octet-stream",
-        headers={"content-disposition": f"attachment; filename*=UTF-8''{download_name}"},
-    )
-
-
-@router.delete("/requests/{request_id}/attachments/{file_id}", status_code=204)
-async def request_attachment_delete_endpoint(request_id: int, file_id: str):
-    """Delete one purchase request attachment."""
-
-    # Validate the request before modifying its attachment storage.
-    await _require_request(request_id)
-
-    # Resolve the attachment path and remove the file when it is present.
-    storage_path = _attachment_path(request_id, file_id)
-    if storage.exists(storage_path):
-        storage.rm(storage_path)
+    attachment = await requests.create_attachment(request_id, file_id)
+    return _attachment_response(file_id, file_name, attachment)
 
 
 async def _require_request(request_id: int) -> PurchaseRequest:
@@ -188,23 +128,26 @@ def _safe_file_name(file_name: str | None) -> str:
     return normalized_name.strip(".-") or "attachment.bin"
 
 
-def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> dict[str, object]:
+def _attachment_from_entry(entry: dict[str, object], attachment: RequestAttachment | None) -> dict[str, object]:
     """Return API metadata for one fsspec attachment listing entry."""
 
     # Extract the stored attachment id from the external listing path.
     storage_path = str(entry.get("name", ""))
     file_id = PurePosixPath(storage_path).name
 
-    # Accept integer sizes from fsspec and safely default malformed external metadata.
-    size = entry.get("size")
-    if not isinstance(size, int):
-        size = 0
+    return _attachment_response(file_id, _display_file_name(file_id), attachment)
 
+
+def _attachment_response(file_id: str, name: str, attachment: RequestAttachment | None) -> dict[str, object]:
+    """Return one attachment response including its uploader profile."""
+
+    # Fall back to a neutral avatar when storage predates attachment metadata.
+    uploader = attachment.created_by if attachment is not None else None
     return {
         "id": file_id,
-        "name": _display_file_name(file_id),
-        "size": size,
-        "download_url": f"/api/requests/{request_id}/attachments/{file_id}",
+        "name": name,
+        "uploaded_by_name": uploader.name if uploader is not None else "Unknown user",
+        "uploaded_by_avatar": uploader.avatar if uploader is not None else "",
     }
 
 

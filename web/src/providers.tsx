@@ -4,7 +4,6 @@ import { Theme } from '@astryxdesign/core/theme';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { DEFAULT_RADIUS, getAstryxTheme, type Accent, type Theme as ThemeMode } from '@/lib/theme';
-import { stoneTheme } from '@/themes/stone/stoneTheme';
 
 type AstryxRouterLinkProps = Omit<ComponentPropsWithoutRef<'a'>, 'href'> & { href: string };
 
@@ -26,10 +25,7 @@ export function AstryxProvider({
     radius?: number;
 }) {
     return (
-        <Theme
-            theme={accent === 'neutral' && radius === DEFAULT_RADIUS ? stoneTheme : getAstryxTheme(accent, radius)}
-            mode={mode}
-        >
+        <Theme theme={getAstryxTheme(accent, radius)} mode={mode}>
             <LinkProvider component={AstryxRouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>{children}</LayerProvider>
             </LinkProvider>

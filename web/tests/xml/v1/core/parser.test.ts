@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/v1/core/parser';
 
 describe('parseXML', () => {
-    /* XML attributes are component props and must stay as strings for runtime resolution. */
-    it('keeps attributes as string params', () => {
+    /* XML attributes are compiled without resolving runtime values. */
+    it('compiles literal attribute params', () => {
         expect(parseXML('<Button isDisabled="false" count="5" label="Save" />')).toEqual([
             {
                 name: 'Button',
                 params: {
-                    count: '5',
-                    isDisabled: 'false',
-                    label: 'Save',
+                    count: { kind: 'text', value: '5' },
+                    isDisabled: { kind: 'text', value: 'false' },
+                    label: { kind: 'text', value: 'Save' },
                 },
                 children: [],
             },
@@ -32,10 +32,11 @@ describe('parseXML', () => {
         ).toEqual([
             {
                 name: 'longlink',
+                params: {},
                 children: [
-                    { name: 'Button', params: { i18n: 'actions.save' }, children: [] },
-                    { name: 'State', params: { id: 'first' }, children: [] },
-                    { name: 'State', params: { id: 'second' }, children: [] },
+                    { name: 'Button', params: { i18n: { kind: 'text', value: 'actions.save' } }, children: [] },
+                    { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },
+                    { name: 'State', params: { id: { kind: 'text', value: 'second' } }, children: [] },
                 ],
             },
         ]);

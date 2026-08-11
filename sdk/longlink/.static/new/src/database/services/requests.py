@@ -1,12 +1,12 @@
 from longlink import database
 from sqlmodel import select
-from src.database.models.requests import PurchaseRequest
+from src.database.models.requests import PurchaseRequest, RequestAttachment
 
 
 async def list_requests() -> list[PurchaseRequest]:
-    """Return purchase requests with their platform-managed audit users."""
+    """Return purchase requests."""
 
-    # Query requests and their select-in-loaded audit users for display.
+    # Query requests for display.
     async with database.session() as session:
         statement = select(PurchaseRequest).order_by(PurchaseRequest.id)
         result = await session.exec(statement)
@@ -16,9 +16,9 @@ async def list_requests() -> list[PurchaseRequest]:
 
 
 async def get_request(request_id: int) -> PurchaseRequest | None:
-    """Return one purchase request with its platform-managed audit users."""
+    """Return one purchase request."""
 
-    # Query the request with its select-in-loaded audit users.
+    # Query the request by id.
     async with database.session() as session:
         statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
         result = await session.exec(statement)
@@ -27,43 +27,46 @@ async def get_request(request_id: int) -> PurchaseRequest | None:
     return request
 
 
-async def create_request(title: str, amount: float, vendor: str, justification: str) -> PurchaseRequest:
-    """Persist a purchase request and return it with its audit users."""
+async def create_request(text: str, amount: float) -> PurchaseRequest:
+    """Persist and return a purchase request."""
 
-    # Build the submitted request from the validated route values.
-    request = PurchaseRequest(
-        title=title,
-        amount=amount,
-        vendor=vendor,
-        status="submitted",
-        justification=justification,
-    )
+    # Build the request from the validated route values.
+    request = PurchaseRequest(text=text, amount=amount)
 
-    # Persist the request before reloading its public response shape.
+    # Persist and refresh the request so it includes its generated id.
     async with database.session() as session:
         session.add(request)
         await session.commit()
-
-    # Reload through the public reader so create and list responses share one shape.
-    created_request = await get_request(int(request.id or 0))
-    if created_request is None:
-        raise RuntimeError("Created purchase request could not be loaded")
-
-    return created_request
-
-
-async def update_request_status(request_id: int, status: str) -> PurchaseRequest | None:
-    """Update one purchase request workflow status."""
-
-    # Load the request and return immediately when it does not exist.
-    async with database.session() as session:
-        statement = select(PurchaseRequest).where(PurchaseRequest.id == request_id)
-        request = (await session.exec(statement)).first()
-        if request is None:
-            return None
-
-        # Persist the requested workflow status.
-        request.status = status
-        await session.commit()
+        await session.refresh(request)
 
     return request
+
+
+async def create_attachment(request_id: int, file_id: str) -> RequestAttachment:
+    """Persist and return one request attachment record."""
+
+    # Build attachment metadata after its file has been stored.
+    attachment = RequestAttachment(request_id=request_id, file_id=file_id)
+
+    # Persist and refresh Platform-supplied audit fields.
+    async with database.session() as session:
+        session.add(attachment)
+        await session.commit()
+        await session.refresh(attachment)
+
+    return attachment
+
+
+async def list_attachments(request_id: int) -> dict[str, RequestAttachment]:
+    """Return active attachment records keyed by storage file id."""
+
+    # Query active metadata with its uploader relationship.
+    async with database.session() as session:
+        statement = select(RequestAttachment).where(
+            RequestAttachment.request_id == request_id,
+            RequestAttachment.deleted_at.is_(None),
+        )
+        result = await session.exec(statement)
+        attachments = result.all()
+
+    return {attachment.file_id: attachment for attachment in attachments}

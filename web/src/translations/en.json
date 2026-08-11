@@ -851,9 +851,6 @@
     "resources.podsTitle": {
         "defaultMessage": "Pods"
     },
-    "resources.tableCount": {
-        "defaultMessage": "{count} tables"
-    },
     "resources.namespacesDescription": {
         "defaultMessage": "Namespaces managed by compute backend {name}."
     },

@@ -6,8 +6,6 @@ from sqlalchemy.exc import OperationalError
 from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
-
-MAINTENANCE_DATABASE = "postgres"
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
@@ -23,13 +21,6 @@ class DatabaseRuntimeConnection(TypedDict):
     sslmode: DatabaseSSLMode
     username: str
     database_name: str
-
-
-class DatabaseUsage(TypedDict):
-    """Describe physical usage for one database."""
-
-    space_used: int
-    table_count: int
 
 
 class Postgres:
@@ -122,7 +113,7 @@ class Postgres:
         """
 
         # Create the organization database from the maintenance database when it is missing.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             # Create the database only when PostgreSQL does not already list it.
             if (
                 await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
@@ -132,7 +123,16 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or application schemas rely on it.
-        await shared_migrations.migrate_database(self.url(organization.hex, search_path="shared").render_as_string(hide_password=False))
+        await shared_migrations.migrate_database(
+            URL.create(
+                "postgresql+asyncpg",
+                username=self._username,
+                password=self._password,
+                host=self._host,
+                port=self._port,
+                database=organization.hex,
+            ).update_query_dict({"ssl": self._sslmode.value})
+        )
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:
@@ -209,7 +209,7 @@ class Postgres:
         """Delete an application schema and its runtime role when present."""
 
         # Skip cleanup when the organization database was already removed.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             # Stop once PostgreSQL confirms the organization database is absent.
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
             if result.scalar_one_or_none() is None:
@@ -224,20 +224,22 @@ class Postgres:
             database = self.quote(conn, organization.hex)
             shared_schema = self.quote(conn, "shared")
 
-            # Remove every grant and setting assigned during Application provisioning before dropping its role.
-            await conn.exec_driver_sql(
-                f"""
-                REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
-                REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
-                REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
-                ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
-                ALTER ROLE {role} IN DATABASE {database} RESET search_path;
-                """
-            )
+            # Remove every grant and setting assigned during Application provisioning when its role exists.
+            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            if result.scalar_one_or_none() is not None:
+                await conn.exec_driver_sql(
+                    f"""
+                    REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
+                    REVOKE ALL PRIVILEGES ON SCHEMA {shared_schema} FROM {role};
+                    REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {shared_schema} FROM {role};
+                    ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} REVOKE ALL ON TABLES FROM {role};
+                    ALTER ROLE {role} IN DATABASE {database} RESET search_path;
+                    """
+                )
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
@@ -245,7 +247,7 @@ class Postgres:
         """Delete one organization database and tolerate missing databases."""
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
-        async with self._connection(MAINTENANCE_DATABASE, autocommit=True) as conn:
+        async with self._connection("postgres", autocommit=True) as conn:
             database_name = self.quote(conn, organization.hex)
             await conn.execute(
                 text(
@@ -267,51 +269,27 @@ class Postgres:
 
         # Runtime roles are cluster-global and remain discoverable after their database is removed.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
-        async with self._connection(MAINTENANCE_DATABASE) as conn:
+        async with self._connection("postgres") as conn:
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             return result.scalar_one_or_none() is not None
 
-    async def database_usage(self, database_name: str) -> DatabaseUsage | None:
-        """Return physical size and user table count for one database when it exists."""
+    async def database_usage(self, database_name: str) -> int | None:
+        """Return physical size for one database when it exists."""
 
-        # Read both metrics from the exact Organization database and normalize an absent database to no usage.
+        # Read the exact Organization database size and normalize connection failures to no usage.
         try:
             async with self._connection(database_name) as conn:
-                result = await conn.execute(
-                    text(
-                        """
-                        SELECT
-                            pg_database_size(current_database()) AS space_used,
-                            (
-                                SELECT COUNT(c.oid)
-                                FROM pg_namespace n
-                                JOIN pg_class c ON c.relnamespace = n.oid
-                                WHERE n.nspname != 'information_schema'
-                                AND n.nspname !~ '^pg_'
-                                AND c.relkind IN ('r', 'p')
-                            ) AS table_count
-                        """
-                    )
-                )
+                space_used = await conn.scalar(text("SELECT pg_database_size(current_database())"))
         except OperationalError:
-            # Distinguish an unprovisioned database from connectivity and permission failures.
-            async with self._connection(MAINTENANCE_DATABASE) as conn:
-                database_exists = await conn.scalar(
-                    text("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = :database_name)"),
-                    {"database_name": database_name},
-                )
-            if not database_exists:
-                return None
-            raise
+            return None
 
-        usage = result.mappings().one()
-        return {"space_used": int(usage["space_used"]), "table_count": int(usage["table_count"])}
+        return int(space_used)
 
     async def usage(self) -> int:
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
-        async with self._connection(MAINTENANCE_DATABASE) as conn:
+        async with self._connection("postgres") as conn:
             result = await conn.execute(
                 text(
                     """

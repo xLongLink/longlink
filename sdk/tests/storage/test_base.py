@@ -2,12 +2,25 @@ import pytest
 from longlink.storage import base as storage_base
 from fsspec.implementations.dirfs import DirFileSystem
 
+PRODUCTION_SETTINGS = {
+    "LONGLINK_DATABASE_HOST": "db",
+    "LONGLINK_DATABASE_NAME": "longlink",
+    "LONGLINK_DATABASE_PORT": "5432",
+    "LONGLINK_DATABASE_SCHEMA": "application",
+    "LONGLINK_DATABASE_PASSWORD": "secret",
+    "LONGLINK_DATABASE_USERNAME": "app",
+    "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.runtime.longlink.internal:19000",
+    "LONGLINK_STORAGE_PASSWORD": "secret@key",
+    "LONGLINK_STORAGE_REGION": "ch-gva-2",
+    "LONGLINK_STORAGE_USERNAME": "access/key",
+}
+
 
 @pytest.mark.parametrize(
     ("bucket", "prefix", "message"),
     [
-        ("", "applications/dashboard/", "Production storage settings require a bucket"),
-        ("acme", "", "Production storage settings require a prefix"),
+        ("", "applications/dashboard/", "STORAGE_BUCKET"),
+        ("acme", "", "STORAGE_PREFIX"),
         ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
@@ -20,9 +33,8 @@ def test_production_storage_requires_safe_bucket_scope(
 
     # Configure incomplete or unsafe production storage scopes.
     monkeypatch.setenv("LONGLINK_ENV", "production")
-    monkeypatch.setenv("LONGLINK_STORAGE_ENDPOINT_URL", "http://storage.runtime.longlink.internal:19000")
-    monkeypatch.setenv("LONGLINK_STORAGE_PASSWORD", "secret@key")
-    monkeypatch.setenv("LONGLINK_STORAGE_USERNAME", "access/key")
+    for name, value in PRODUCTION_SETTINGS.items():
+        monkeypatch.setenv(name, value)
     if bucket:
         monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
     else:
@@ -63,12 +75,10 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
     monkeypatch.setenv("LONGLINK_ENV", "production")
+    for name, value in PRODUCTION_SETTINGS.items():
+        monkeypatch.setenv(name, value)
     monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", "acme")
-    monkeypatch.setenv("LONGLINK_STORAGE_ENDPOINT_URL", "http://storage.runtime.longlink.internal:19000")
-    monkeypatch.setenv("LONGLINK_STORAGE_PASSWORD", "secret@key")
     monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", "applications/dashboard/")
-    monkeypatch.setenv("LONGLINK_STORAGE_REGION", "ch-gva-2")
-    monkeypatch.setenv("LONGLINK_STORAGE_USERNAME", "access/key")
 
     # Build production storage for a scoped Application prefix.
     filesystem = storage_base.create_fs()

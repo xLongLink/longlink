@@ -2,15 +2,13 @@
 <longlink version="v1" name="Settings" icon="settings-2">
     <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
     <State id="reviewer" name="Mira Tanner" initials="MT" badge="Approver" avatarUrl="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner" />
-    <State id="draftLink" label="Vendor quote" />
-    <State id="quickLinks" value='${[]}' />
-    <State id="emailUpdates" value="true" />
-    <State id="notifications" value="true" />
-    <State id="budgetLimit" value="2500" />
+    <State id="emailUpdates" value="${true}" />
+    <State id="notifications" value="${true}" />
+    <State id="budgetLimit" value="${2500}" />
     <State id="workflow" owner="manager" risk="medium" />
 
-    <Stack gap="3">
-        <Heading level="1" i18n="settings.title" />
+    <Stack>
+        <Heading level="3" i18n="settings.title" />
         <Text as="p" color="secondary" i18n="settings.description" />
     </Stack>
 
@@ -46,7 +44,7 @@
                 <Divider />
                 <Heading level="3" i18n="settings.application.runbook" />
                 <Text as="p" i18n="settings.application.bold" weight="semibold" />
-                <Code i18n="settings.application.code" />
+                <Text type="code" i18n="settings.application.code" />
             </Stack>
         </SideNavItem>
 
@@ -77,9 +75,9 @@
                 <Text as="p" i18n="settings.workflow.description" />
                 <FormLayout>
                     <RadioList i18n="settings.workflow.owner" value="$workflow.owner">
-                        <RadioListItem value="manager" i18n="settings.workflow.manager" />
-                        <RadioListItem value="finance" i18n="settings.workflow.finance" />
-                        <RadioListItem value="owner" i18n="settings.workflow.ownerRole" />
+                        <RadioListItem value="manager" i18n="workflow.manager" />
+                        <RadioListItem value="finance" i18n="workflow.finance" />
+                        <RadioListItem value="owner" i18n="workflow.owner" />
                     </RadioList>
                     <Selector i18n="settings.workflow.risk" value="$workflow.risk">
                         <SelectorOption value="low" i18n="settings.workflow.low" />
@@ -90,30 +88,5 @@
             </Stack>
         </SideNavItem>
 
-        <SideNavItem value="links" icon="externalLink" i18n="settings.sections.links">
-            <Stack gap="4">
-                <Heading level="2" i18n="settings.sections.links" />
-                <Text as="p" i18n="settings.links.description" />
-                <TextInput i18n="settings.links.label" value="$draftLink.label" />
-                <ButtonGroup i18n="settings.links.actions">
-                    <Button
-                        append="${'quickLinks.value'}"
-                        item="${{ label: draftLink.label }}"
-                        isDisabled="${draftLink.label in ['']}"
-                        variant="primary"
-                        i18n="settings.links.add"
-                    />
-                    <Action invalidate='${["quickLinks"]}'>
-                        <Button i18n="settings.links.reset" />
-                    </Action>
-                </ButtonGroup>
-                <Text if="${quickLinks.value.length in [0]}" i18n="settings.links.empty" />
-                <Stack direction="horizontal" wrap="wrap" gap="2">
-                    <For each="$quickLinks.value" as="link">
-                        <Badge label="$link.label" />
-                    </For>
-                </Stack>
-            </Stack>
-        </SideNavItem>
     </SideNav>
 </longlink>

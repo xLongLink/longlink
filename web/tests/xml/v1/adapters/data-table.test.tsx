@@ -1,21 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/v1/core/parser';
-import type { ExecutionContext } from '@/xml/v1/types';
+import type { XmlRuntime } from '@/xml/v1/types';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
     /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {
-                items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    items: [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }],
+                },
             },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items" rowName="item"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
+                '<Table data="$items"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
             ),
             ctx
         );
@@ -28,20 +29,26 @@ describe('Table', () => {
 
     /* Headers and cells should accept rich nested XML content. */
     it('renders rich header and cell slots', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            translations: {
-                'inventory.item': { defaultMessage: 'Item' },
-                'inventory.name': { defaultMessage: '{name}' },
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
+                },
             },
-            values: {
-                items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
+            services: {
+                invalidate: async () => {},
+                navigationBaseUrl: '',
+                requestBaseUrl: '',
+                setups: {},
+                translations: {
+                    'inventory.item': { defaultMessage: 'Item' },
+                    'inventory.name': { defaultMessage: '{name}' },
+                },
             },
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items" rowName="item"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: item.name }}" /><Badge variant="neutral" label="$item.sku" /></Stack></TableColumn></Table>'
+                '<Table data="$items"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: row.name }}" /><Badge variant="neutral" label="$row.sku" /></Stack></TableColumn></Table>'
             ),
             ctx
         );
@@ -50,5 +57,26 @@ describe('Table', () => {
         expect(output).toContain('SKU');
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
+    });
+
+    it('keeps parent bindings available inside a table cell loop', () => {
+        const ctx: XmlRuntime = {
+            scope: {
+                bindings: {
+                    prefix: 'Included',
+                    items: [{ tags: [{ name: 'Alpha' }] }],
+                },
+            },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
+        };
+
+        const output = renderXmlToMarkup(
+            parseXML(
+                '<Table data="$items"><TableColumn key="tags"><For each="$row.tags" as="tag"><Text value="${prefix + \' \' + tag.name + \' \' + index}" /></For></TableColumn></Table>'
+            ),
+            ctx
+        );
+
+        expect(output).toContain('Included Alpha 0');
     });
 });

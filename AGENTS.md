@@ -2,6 +2,7 @@
 
 - When listing improvement suggestions, use numbered lists.
 - Project is in _MVP mode - No need for backwards compatibility_
+- Focus on building complex things as simple as possible. Find ways to reduce complexity when solving problems
 
 At the end of each task, return 5 cleanup and simplfications opportunities related to the task that would result in removing code:
 
@@ -28,7 +29,7 @@ longlink/
 ## Python Guidelines
 
 - Avoid renaming imports.
-- Follow the YAGNI principle.
+- Channel YAGNI principle.
 - Inline single use constants.
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.

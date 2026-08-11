@@ -69,7 +69,7 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         ),
         pytest.param(
             "src/envs.py",
-            None,
+            '[tool.longlink]\nenvironment = "src.envs:Env"\n',
             "from pydantic import BaseModel, Field\n\n"
             "class Env(BaseModel):\n"
             "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
@@ -87,7 +87,7 @@ def test_build_reports_missing_project_file_before_docker() -> None:
 def test_read_env_spec_emits_supported_environment_metadata(
     tmp_path: Path,
     module_path: str,
-    project_config: str | None,
+    project_config: str,
     module_source: str,
     expected_spec: dict[str, object],
 ) -> None:
@@ -97,11 +97,10 @@ def test_read_env_spec_emits_supported_environment_metadata(
     settings_path = tmp_path / module_path
     settings_path.parent.mkdir(parents=True)
     settings_path.write_text(module_source)
-    if project_config is not None:
-        (tmp_path / "pyproject.toml").write_text(project_config)
+    (tmp_path / "pyproject.toml").write_text(project_config)
 
     # Act
-    env_spec = build.read_env_spec(tmp_path)
+    env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
     # Assert
     assert env_spec == expected_spec
@@ -113,8 +112,13 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     # Arrange
     root = tmp_path / "app"
     root.mkdir()
-    (root / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n')
+    (root / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n'
+    )
     (root / "main.py").write_text("app = object()\n")
+    envs_path = root / "src" / "envs.py"
+    envs_path.parent.mkdir()
+    envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
     (root / ".env").write_text("SECRET=one\n")
     (root / ".env.local").write_text("SECRET=two\n")
     (root / "dev.db").write_text("sqlite\n")

@@ -1,15 +1,13 @@
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Code } from '@astryxdesign/core/Code';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Divider } from '@astryxdesign/core/Divider';
 import { FileInput } from '@astryxdesign/core/FileInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
@@ -26,7 +24,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Info } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
-import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/references';
+import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/pages/index';
 
 type ComponentSummary = {
     name: string;
@@ -55,36 +53,16 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
         title: 'Action',
     },
     {
-        id: 'container',
-        title: 'Container',
-    },
-    {
         id: 'content',
         title: 'Content',
     },
     {
-        id: 'data-input',
-        title: 'Data Input',
-    },
-    {
-        id: 'feedback-and-status',
-        title: 'Feedback & Status',
+        id: 'form',
+        title: 'Form',
     },
     {
         id: 'layout',
         title: 'Layout',
-    },
-    {
-        id: 'navigation',
-        title: 'Navigation',
-    },
-    {
-        id: 'overlay',
-        title: 'Overlay',
-    },
-    {
-        id: 'table-and-list',
-        title: 'Table & List',
     },
 ];
 
@@ -146,28 +124,18 @@ function renderComponentPreview(name: string) {
     switch (name) {
         case 'if':
             return <Code>{'if="${order.open}"'}</Code>;
-        case 'i18n':
+        case 'Translations':
             return <Code>{'i18n="orders.title"'}</Code>;
         case 'values':
             return <Code>{'values="${{ name: user.name }}"'}</Code>;
         case 'count':
-            return <Code>{'count="${orders.length}"'}</Code>;
+            return <Code>{'values="${{ count: orders.length }}"'}</Code>;
         case 'Expressions':
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':
             return <Code>{'value="$form.name"'}</Code>;
-        case 'Translations':
-            return <Code>{'orders.title'}</Code>;
         case 'longlink':
             return <Code>{'<longlink version="v1" />'}</Code>;
-        case 'State':
-            return <Code>{'<State id="form" />'}</Code>;
-        case 'Query':
-            return <Code>{'<Query id="orders" />'}</Code>;
-        case 'Action':
-            return <Button label="Run" size="sm" variant="primary" />;
-        case 'For':
-            return <Code>{'<For each="$items" />'}</Code>;
         case 'Button':
             return (
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
@@ -175,13 +143,6 @@ function renderComponentPreview(name: string) {
                     <Button label="Edit" size="sm" variant="secondary" />
                     <Button label="View" size="sm" variant="ghost" />
                 </Stack>
-            );
-        case 'ButtonGroup':
-            return (
-                <ButtonGroup label="Document actions" size="sm">
-                    <Button label="Copy" variant="secondary" />
-                    <Button label="Paste" variant="secondary" />
-                </ButtonGroup>
             );
         case 'Link':
             return (
@@ -198,8 +159,6 @@ function renderComponentPreview(name: string) {
             );
         case 'Avatar':
             return <Avatar name="Ada Lovelace" size="lg" />;
-        case 'Code':
-            return <Code>order.status</Code>;
         case 'Heading':
             return <Heading level={3}>Orders</Heading>;
         case 'Icon':
@@ -288,23 +247,12 @@ function renderComponentPreview(name: string) {
             return <TextInput isLabelHidden label="Name" size="sm" value="New order" width={140} onChange={noop} />;
         case 'Badge':
             return <Badge label="Open" variant="info" />;
-        case 'Banner':
-            return <Banner status="success" title="Saved" />;
         case 'Divider':
             return (
                 <Stack gap={3} width="100%">
                     <Text type="supporting">Before</Text>
                     <Divider />
                     <Text type="supporting">After</Text>
-                </Stack>
-            );
-        case 'FormLayout':
-            return (
-                <Stack width={150}>
-                    <FormLayout direction="vertical">
-                        <TextInput isLabelHidden label="Title" size="sm" value="Request" onChange={noop} />
-                        <CheckboxInput label="Active" size="sm" value onChange={noop} />
-                    </FormLayout>
                 </Stack>
             );
         case 'Grid':
@@ -354,8 +302,6 @@ function renderComponentPreview(name: string) {
                     />
                 </Stack>
             );
-        case 'TableColumn':
-            return <Code>{'<TableColumn />'}</Code>;
         default:
             return <Code>{`<${name} />`}</Code>;
     }
@@ -374,6 +320,7 @@ export const content = (
             . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
             compose the screen with supported XML components.
         </Text>
+        <CodeBlock code={'<longlink version="v1">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
         {componentCategories.map((category) => (
             <ComponentCategorySection key={category.id} category={category} />
         ))}

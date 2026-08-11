@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { BaseUrlContext, resolveRequestUrl } from '../core/url';
-import type { Props } from '../types';
-import { resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from '../core/props';
+import { resolveRequestUrl } from '../core/url';
+import type { Props, RuntimeServices, Scope } from '../types';
+import { DialogCloseContext } from './Dialog';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
@@ -17,15 +18,15 @@ export function useActionHandler() {
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
-    const ctx = useXmlContext();
-    const baseUrl = useContext(BaseUrlContext);
+    const { scope: ctx, services } = useXmlRuntime();
+    const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
         // Surface action failures through the UI.
         try {
-            await executeAction(props, ctx, baseUrl, fetch, toast);
+            await executeAction(props, ctx, services, fetch, toast, closeDialog);
         } catch (error: unknown) {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         }
@@ -37,10 +38,11 @@ export function Action({ props, nodes }: Props) {
 /** Executes the action request and invalidation flow. */
 export async function executeAction(
     props: Props['props'],
-    ctx: ReturnType<typeof useXmlContext>,
-    baseUrl: string,
+    ctx: Scope,
+    services: RuntimeServices,
     fetchImpl: typeof fetch = fetch,
-    toast: ReturnType<typeof useToast>
+    toast: ReturnType<typeof useToast>,
+    closeDialog: (() => void) | null = null
 ): Promise<void> {
     let actionUrl: string;
     let formValue: unknown;
@@ -58,6 +60,7 @@ export async function executeAction(
         invalidate = invalidationValue.map((value) => String(value));
         method = resolveXmlString(props, 'method', ctx, 'POST');
         actionUrl = resolveXmlString(props, 'action', ctx, '');
+        if (!actionUrl) throw new Error('Action requires an action URL');
 
         // Resolve action payloads at click time so they see the latest state.
         formValue = resolveXmlValue(props, 'form', ctx);
@@ -69,13 +72,6 @@ export async function executeAction(
 
     const normalizedMethod = method.trim().toUpperCase();
 
-    // Allow invalidation-only actions.
-    if (!actionUrl) {
-        await ctx.invalidate(invalidate);
-
-        return;
-    }
-
     // Reject methods outside the supported action set.
     if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
         toast({ body: `Unsupported action method ${normalizedMethod}`, type: 'error' });
@@ -86,7 +82,7 @@ export async function executeAction(
 
     // Keep actions scoped to the current application.
     try {
-        requestUrl = resolveRequestUrl(baseUrl, actionUrl);
+        requestUrl = resolveRequestUrl(services.requestBaseUrl, actionUrl);
     } catch {
         toast({ body: 'Action URL must be app-relative', type: 'error' });
         return;
@@ -136,7 +132,10 @@ export async function executeAction(
         return;
     }
 
-    await ctx.invalidate(invalidate);
+    await services.invalidate(invalidate);
+
+    // Close the containing dialog only after the request and invalidation succeed.
+    if (resolveXmlBoolean(props, 'closeDialog', ctx, false)) closeDialog?.();
 
     toast({ body: `Request completed with status ${response.status}` });
 }

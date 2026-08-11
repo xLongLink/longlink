@@ -73,11 +73,7 @@ jobs:
 
             - name: Run tests
               working-directory: api
-              run: uv run --locked pytest -m "not integration" tests
-
-            - name: Run integration tests
-              working-directory: api
-              run: uv run --locked pytest -m integration tests
+              run: uv run --locked pytest tests
 
             - name: Run type checks
               working-directory: api
@@ -107,11 +103,7 @@ jobs:
 
             - name: Run tests
               working-directory: sdk
-              run: uv run --locked pytest -m "not integration" tests
-
-            - name: Run integration tests
-              working-directory: sdk
-              run: uv run --locked pytest -m integration tests
+              run: uv run --locked pytest tests
 
             - name: Run type checks
               working-directory: sdk

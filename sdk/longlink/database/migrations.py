@@ -1,50 +1,13 @@
 import sys
-import time
-import socket
 import importlib.util
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
-from sqlalchemy.exc import OperationalError
 from alembic.operations.ops import MigrationScript
+from longlink.utils.settings import Envs
 
 CURRENT_FILE = Path(__file__).resolve()
 MIGRATIONS_DIRECTORY = "migrations"
-MIGRATION_RETRY_ATTEMPTS = 30
-MIGRATION_RETRY_DELAY_SECONDS = 2
-_RETRYABLE_MIGRATION_ERROR_FRAGMENTS = (
-    "connect call failed",
-    "connection refused",
-    "could not translate host name",
-    "name or service not known",
-    "temporary failure in name resolution",
-)
-
-
-def retryable_migration_error(exc: BaseException) -> bool:
-    """Return whether a migration failure looks like transient database connectivity."""
-
-    # Inspect every linked exception for retryable database failures.
-    seen: set[int] = set()
-    chained_exception: BaseException | None = exc
-    while chained_exception is not None and id(chained_exception) not in seen:
-        seen.add(id(chained_exception))
-
-        # Retry standard transient connection failures.
-        if isinstance(chained_exception, (ConnectionError, TimeoutError, socket.gaierror)):
-            return True
-
-        # Check SQLAlchemy connection failures for known transient messages.
-        if isinstance(chained_exception, OperationalError):
-            message = str(chained_exception).lower()
-
-            # Match backend-specific transient connectivity text.
-            if any(fragment in message for fragment in _RETRYABLE_MIGRATION_ERROR_FRAGMENTS):
-                return True
-
-        chained_exception = chained_exception.__cause__ or chained_exception.__context__
-
-    return False
 
 
 def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
@@ -96,7 +59,7 @@ def make_migrations() -> bool:
     # Load application models before comparing their metadata with the database.
     load_application_models()
 
-    # Prepare the application migration directory.
+    # Prepare the application migration directory for local revision generation.
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
     migrations_path.mkdir(exist_ok=True)
 
@@ -135,8 +98,10 @@ def make_migrations() -> bool:
 def apply_migrations() -> None:
     """Apply all pending Alembic migrations."""
 
-    # Prepare the application migration directory.
+    # Production images must include committed application migrations.
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
+    if Envs().ENV == "production" and (not migrations_path.is_dir() or not any(migrations_path.glob("*.py"))):
+        raise RuntimeError(f"Production applications require migrations in {migrations_path}")
     migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to apply revisions from the application directory.
@@ -144,26 +109,7 @@ def apply_migrations() -> None:
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))
 
-    # Retry startup while the database becomes reachable.
-    for attempt in range(1, MIGRATION_RETRY_ATTEMPTS + 1):
-
-        # Attempt the migration before deciding whether to wait.
-        try:
-            command.upgrade(cfg, "head")
-            return
-        except Exception as exc:
-
-            # Stop retrying on final attempts or non-transient errors.
-            if attempt == MIGRATION_RETRY_ATTEMPTS or not retryable_migration_error(exc):
-                raise
-
-            print(
-                "Database migrations could not connect to the database; "
-                f"retrying in {MIGRATION_RETRY_DELAY_SECONDS}s "
-                f"({attempt}/{MIGRATION_RETRY_ATTEMPTS})",
-                file=sys.stderr,
-            )
-            time.sleep(MIGRATION_RETRY_DELAY_SECONDS)
+    command.upgrade(cfg, "head")
 
 
 # Run migrations when invoked as a script.

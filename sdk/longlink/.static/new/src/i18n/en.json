@@ -1,243 +1,24 @@
 {
-    "dashboard.checklist.items.attachment": {
-        "defaultMessage": "Attach quotes, invoices, or screenshots before approval."
-    },
-    "dashboard.checklist.items.budget": {
-        "defaultMessage": "Check the budget owner before changing status."
-    },
-    "dashboard.checklist.items.context": {
-        "defaultMessage": "Explain the business reason in one paragraph."
-    },
-    "dashboard.checklist.steps.archive": {
-        "defaultMessage": "Archive supporting files with the approved request."
-    },
-    "dashboard.checklist.steps.create": {
-        "defaultMessage": "Create the request from the Requests tab."
-    },
-    "dashboard.checklist.steps.review": {
-        "defaultMessage": "Review the detail page and decide."
-    },
-    "dashboard.checklist.title": {
-        "defaultMessage": "Healthy request checklist"
-    },
-    "dashboard.description": {
-        "defaultMessage": "Track office purchase requests, review policy, and keep the approval queue visible."
-    },
-    "dashboard.logoFallback": {
-        "defaultMessage": "LL"
-    },
-    "dashboard.metrics.budget.label": {
-        "defaultMessage": "Monthly budget"
-    },
-    "dashboard.metrics.budget.value": {
-        "defaultMessage": "CHF {amount}"
-    },
-    "dashboard.metrics.requests.count": {
-        "defaultMessage": "{count, plural, one {# request} other {# requests}}"
-    },
-    "dashboard.metrics.requests.label": {
-        "defaultMessage": "Open work"
-    },
-    "dashboard.metrics.target.label": {
-        "defaultMessage": "Review target"
-    },
-    "dashboard.metrics.target.value": {
-        "defaultMessage": "{days} days"
-    },
-    "dashboard.openRequests": {
-        "defaultMessage": "Open requests"
-    },
-    "dashboard.policy.description": {
-        "defaultMessage": "The sample keeps the rules simple: amount decides who reviews and how quickly reviewers should respond."
-    },
-    "dashboard.policy.table.amount": {
+    "requests.amount": {
         "defaultMessage": "Amount"
-    },
-    "dashboard.policy.table.approver": {
-        "defaultMessage": "Approver"
-    },
-    "dashboard.policy.table.finance": {
-        "defaultMessage": "Finance"
-    },
-    "dashboard.policy.table.fiveDays": {
-        "defaultMessage": "5 days"
-    },
-    "dashboard.policy.table.footer": {
-        "defaultMessage": "Escalate overdue requests from the request detail page."
-    },
-    "dashboard.policy.table.large": {
-        "defaultMessage": "Above CHF 5,000"
-    },
-    "dashboard.policy.table.manager": {
-        "defaultMessage": "Manager"
-    },
-    "dashboard.policy.table.medium": {
-        "defaultMessage": "CHF 1,000 to 5,000"
-    },
-    "dashboard.policy.table.oneDay": {
-        "defaultMessage": "1 day"
-    },
-    "dashboard.policy.table.owner": {
-        "defaultMessage": "Owner"
-    },
-    "dashboard.policy.table.sla": {
-        "defaultMessage": "SLA"
-    },
-    "dashboard.policy.table.small": {
-        "defaultMessage": "Below CHF 1,000"
-    },
-    "dashboard.policy.table.twoDays": {
-        "defaultMessage": "2 days"
-    },
-    "dashboard.policy.title": {
-        "defaultMessage": "Approval policy"
-    },
-    "dashboard.recent.empty": {
-        "defaultMessage": "No requests yet. Create the first one from the Requests tab."
-    },
-    "dashboard.recent.open": {
-        "defaultMessage": "Open request"
-    },
-    "dashboard.recent.status": {
-        "defaultMessage": "{status}"
-    },
-    "dashboard.recent.summary": {
-        "defaultMessage": "{vendor} - CHF {amount}"
-    },
-    "dashboard.recent.title": {
-        "defaultMessage": "Recent requests"
-    },
-    "dashboard.tabs.policy": {
-        "defaultMessage": "Policy"
-    },
-    "dashboard.tabs.recent": {
-        "defaultMessage": "Recent"
-    },
-    "dashboard.title": {
-        "defaultMessage": "Office operations"
-    },
-    "requests.actions.approve": {
-        "defaultMessage": "Approve"
-    },
-    "requests.actions.decision": {
-        "defaultMessage": "Decision"
-    },
-    "requests.actions.reject": {
-        "defaultMessage": "Reject"
-    },
-    "requests.attachments.actions": {
-        "defaultMessage": "Actions"
-    },
-    "requests.attachments.delete": {
-        "defaultMessage": "Delete"
-    },
-    "requests.attachments.download": {
-        "defaultMessage": "Download"
     },
     "requests.attachments.file": {
         "defaultMessage": "Attachment"
     },
-    "requests.attachments.help": {
-        "defaultMessage": "Files are stored through the LongLink storage facade, so local and production storage use the same API."
-    },
     "requests.attachments.title": {
         "defaultMessage": "Attachments"
     },
-    "requests.attachments.upload": {
-        "defaultMessage": "Upload attachment"
-    },
-    "requests.count": {
-        "defaultMessage": "{count, plural, one {# request in the queue.} other {# requests in the queue.}}"
-    },
-    "requests.create.description": {
-        "defaultMessage": "Submit a request with enough context for an approver to make a decision."
-    },
-    "requests.create.open": {
-        "defaultMessage": "New request"
-    },
-    "requests.create.section": {
-        "defaultMessage": "Request details"
-    },
-    "requests.create.submit": {
-        "defaultMessage": "Submit request"
-    },
-    "requests.create.title": {
-        "defaultMessage": "Create purchase request"
+    "requests.attachments.uploadedBy": {
+        "defaultMessage": "Uploaded by"
     },
     "requests.description": {
         "defaultMessage": "Track purchase requests and supporting files."
     },
-    "requests.detail.approvedNote": {
-        "defaultMessage": "This request is approved and ready for procurement."
-    },
-    "requests.detail.back": {
-        "defaultMessage": "Back to requests"
-    },
-    "requests.detail.createdBy": {
-        "defaultMessage": "Created by {name}"
-    },
-    "requests.detail.description": {
-        "defaultMessage": "Review the request, update its workflow status, and manage attachments."
-    },
-    "requests.detail.justification": {
-        "defaultMessage": "{justification}"
-    },
-    "requests.detail.rejectedNote": {
-        "defaultMessage": "This request is rejected. Add context before reopening it."
-    },
-    "requests.detail.requestStatus": {
-        "defaultMessage": "{status}"
-    },
-    "requests.detail.requestTitle": {
-        "defaultMessage": "{title}"
-    },
-    "requests.detail.summary": {
-        "defaultMessage": "Request summary"
-    },
-    "requests.detail.title": {
-        "defaultMessage": "Purchase request detail"
-    },
-    "requests.detail.vendorAmount": {
-        "defaultMessage": "{vendor} - CHF {amount}"
-    },
-    "requests.fields.amount": {
-        "defaultMessage": "Amount"
-    },
-    "requests.fields.currency": {
-        "defaultMessage": "CHF"
-    },
-    "requests.fields.justification": {
-        "defaultMessage": "Justification"
-    },
-    "requests.fields.title": {
-        "defaultMessage": "Title"
-    },
-    "requests.fields.titleHelp": {
-        "defaultMessage": "Use a short, searchable name."
-    },
-    "requests.fields.vendor": {
-        "defaultMessage": "Vendor"
-    },
-    "requests.table.amount": {
-        "defaultMessage": "Amount"
-    },
-    "requests.table.createdBy": {
-        "defaultMessage": "Created by"
-    },
-    "requests.table.open": {
-        "defaultMessage": "Open"
+    "requests.fields.text": {
+        "defaultMessage": "Text"
     },
     "requests.table.request": {
         "defaultMessage": "Request"
-    },
-    "requests.table.status": {
-        "defaultMessage": "Status"
-    },
-    "requests.table.title": {
-        "defaultMessage": "{title}"
-    },
-    "requests.table.vendor": {
-        "defaultMessage": "Vendor"
     },
     "requests.title": {
         "defaultMessage": "Purchase requests"
@@ -299,14 +80,11 @@
     "settings.description": {
         "defaultMessage": "Configure application defaults with local XML state and Astryx form controls."
     },
-    "settings.links.actions": {
-        "defaultMessage": "Links"
-    },
     "settings.links.add": {
         "defaultMessage": "Add"
     },
     "settings.links.description": {
-        "defaultMessage": "Use actions, button groups, loops, and badges for small configurable collections."
+        "defaultMessage": "Use actions, loops, and badges for small configurable collections."
     },
     "settings.links.empty": {
         "defaultMessage": "No quick links added yet."
@@ -368,26 +146,17 @@
     "settings.workflow.description": {
         "defaultMessage": "Use radio lists and selectors to model workflow defaults."
     },
-    "settings.workflow.finance": {
-        "defaultMessage": "Finance"
-    },
     "settings.workflow.high": {
         "defaultMessage": "High"
     },
     "settings.workflow.low": {
         "defaultMessage": "Low"
     },
-    "settings.workflow.manager": {
-        "defaultMessage": "Manager"
-    },
     "settings.workflow.medium": {
         "defaultMessage": "Medium"
     },
     "settings.workflow.owner": {
         "defaultMessage": "Default approver"
-    },
-    "settings.workflow.ownerRole": {
-        "defaultMessage": "Owner"
     },
     "settings.workflow.risk": {
         "defaultMessage": "Risk level"
@@ -400,5 +169,14 @@
     },
     "settings.workflow.tags": {
         "defaultMessage": "Review tags"
+    },
+    "workflow.finance": {
+        "defaultMessage": "Finance"
+    },
+    "workflow.manager": {
+        "defaultMessage": "Manager"
+    },
+    "workflow.owner": {
+        "defaultMessage": "Owner"
     }
 }

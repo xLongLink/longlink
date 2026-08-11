@@ -47,10 +47,10 @@ export default function CreateCompute() {
                 },
                 (value) => zComputeRegistryResponse.parse(value)
             ),
-        onSuccess: async () => {
+        onSuccess: () => {
             setOpen(false);
             form.reset();
-            await queryClient.invalidateQueries({ queryKey: computesQueryKey });
+            return queryClient.invalidateQueries({ queryKey: computesQueryKey });
         },
     });
 

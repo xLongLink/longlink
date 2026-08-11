@@ -1,33 +1,14 @@
-import contextlib
 from uuid import UUID
 from .base import AuditTable
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
 from contextvars import ContextVar
-from collections.abc import Callable, Awaitable, Generator
+from collections.abc import Callable, Awaitable
 from longlink.utils.time import utcnow
 from starlette.responses import Response
 
 _current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", default=None)
-
-
-@contextlib.contextmanager
-def audit_user_scope(user_id: UUID | None) -> Generator[None]:
-    """Bind an audit user ID for the current execution scope."""
-
-    # Capture the context token so the previous audit user can be restored.
-    token = _current_user_id.set(user_id)
-
-    # Keep the scoped user bound until the caller exits.
-    try:
-        yield
-
-    # Always restore the previous audit context.
-    finally:
-        _current_user_id.reset(token)
-
-
 # ---------------------------------------------------------------------
 # SQLModel audit hook
 # ---------------------------------------------------------------------
@@ -130,5 +111,8 @@ def install_audit_middleware(app: FastAPI) -> None:
                 pass
 
         # Keep the user bound across downstream request handling.
-        with audit_user_scope(user_id):
+        token = _current_user_id.set(user_id)
+        try:
             return await call_next(request)
+        finally:
+            _current_user_id.reset(token)

@@ -23,16 +23,10 @@ VALID_FRAGMENTS = [
     ),
     ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
     ("badge", _adapter_schema("Badge.xsd"), '<Badge label="$item.status" variant="success" />'),
-    ("banner", _adapter_schema("Banner.xsd"), '<Banner status="warning" title="Review required"><Text value="Details" /></Banner>'),
     (
         "button",
         _adapter_schema("Button.xsd"),
-        '<Button append="cart" item="${item}" type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
-    ),
-    (
-        "button-group",
-        _adapter_schema("ButtonGroup.xsd"),
-        '<ButtonGroup label="Actions" orientation="horizontal"><Button label="Cancel" /><Button label="Save" variant="primary" /></ButtonGroup>',
+        '<Button type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
     ),
     ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text i18n="cards.content" /></Card>'),
     (
@@ -40,7 +34,6 @@ VALID_FRAGMENTS = [
         _adapter_schema("CheckboxInput.xsd"),
         '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" />',
     ),
-    ("code", _adapter_schema("Code.xsd"), '<Code value="$item.code" color="secondary" />'),
     (
         "dialog",
         _adapter_schema("Dialog.xsd"),
@@ -78,7 +71,7 @@ VALID_FRAGMENTS = [
     (
         "table",
         _adapter_schema("Table.xsd"),
-        '<Table data="$items" rowName="item" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
+        '<Table data="$items" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
     ),
     (
         "tab-list",
@@ -92,6 +85,13 @@ VALID_FRAGMENTS = [
 
 INVALID_FRAGMENTS = [
     ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button i18n="actions.save" /></Action>'),
+    ("removed-avatar-fallback-src", _adapter_schema("Avatar.xsd"), '<Avatar fallbackSrc="/fallback.png" />'),
+    ("removed-button-append", _adapter_schema("Button.xsd"), '<Button label="Add" append="cart" item="${item}" />'),
+    ("removed-button-item", _adapter_schema("Button.xsd"), '<Button label="Add" item="${item}" />'),
+    ("removed-dialog-trigger-variant", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerVariant="primary" />'),
+    ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
+    ("removed-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="display-1" value="Title" />'),
+    ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
     ("old-text-interpolation", _adapter_schema("Text.xsd"), '<Text i18n="users.name" name="$user.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
@@ -106,6 +106,10 @@ INVALID_FRAGMENTS = [
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
+    ("removed-table-row-name", _adapter_schema("Table.xsd"), '<Table data="$items" rowName="item"><TableColumn key="sku" /></Table>'),
+    ("removed-table-column-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" width="1" /></Table>'),
+    ("removed-table-column-width-type", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>'),
+    ("removed-table-column-min-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>'),
     ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text i18n="tabs.overview" /></Tab></TabList>'),
     ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1"><Text i18n="dashboard.title"></longlink>'),
 ]
@@ -117,7 +121,15 @@ UNSUPPORTED_MARKUP_FRAGMENTS = [
 ]
 
 
-def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
+def element_from_file(tmp_path: Path, content: str, schema: Path) -> Element:
+    """Write XML content to a temporary file for ordinary Element validation."""
+
+    path = tmp_path / "page.xml"
+    path.write_text(content, encoding="utf-8")
+    return Element(path, schema=schema)
+
+
+def test_element_validation_uses_safe_xml_parser(monkeypatch, tmp_path: Path) -> None:
     """Disable DTD loading, network access, and entity resolution during validation."""
 
     # Wrap the real parser factory to capture its security options.
@@ -133,7 +145,7 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
 
     # Validate a document through the instrumented parser.
-    Element.from_content('<longlink version="v1" />', schema=ROOT_SCHEMA).validate()
+    element_from_file(tmp_path, '<longlink version="v1" />', ROOT_SCHEMA).validate()
 
     # Require every parser-hardening option at the XML boundary.
     assert captured_kwargs[0]["load_dtd"] is False
@@ -142,11 +154,11 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
 
 
 @pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])
-def test_element_validation_rejects_unsupported_markup(_name: str, content: str) -> None:
+def test_element_validation_rejects_unsupported_markup(_name: str, content: str, tmp_path: Path) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
-    # Build an in-memory document containing unsupported browser markup.
-    element = Element.from_content(content, schema=ROOT_SCHEMA)
+    # Build a document containing unsupported browser markup.
+    element = element_from_file(tmp_path, content, ROOT_SCHEMA)
 
     # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
@@ -154,20 +166,20 @@ def test_element_validation_rejects_unsupported_markup(_name: str, content: str)
 
 
 @pytest.mark.parametrize(("_name", "schema", "content"), VALID_FRAGMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
-def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, content: str) -> None:
+def test_adapter_schema_accepts_valid_fragments(_name: str, schema: Path, content: str, tmp_path: Path) -> None:
     """Validate representative XML fragments for each adapter schema."""
 
     # Build and validate the fragment against its adapter schema.
-    element = Element.from_content(content, schema=schema)
+    element = element_from_file(tmp_path, content, schema)
     element.validate()
 
 
 @pytest.mark.parametrize(("_name", "schema", "content"), INVALID_FRAGMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
-def test_adapter_schema_rejects_invalid_fragments(_name: str, schema: Path, content: str) -> None:
+def test_adapter_schema_rejects_invalid_fragments(_name: str, schema: Path, content: str, tmp_path: Path) -> None:
     """Reject representative invalid XML fragments through adapter schemas."""
 
     # Build the invalid fragment against its adapter schema.
-    element = Element.from_content(content, schema=schema)
+    element = element_from_file(tmp_path, content, schema)
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):

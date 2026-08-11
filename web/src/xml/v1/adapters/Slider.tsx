@@ -1,8 +1,7 @@
 import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
-import type { Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
+import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
@@ -11,11 +10,12 @@ import {
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
+import type { Props } from '../types';
 
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
     const initialValue = Number(binding.initialValue ?? 0);
     const [localValue, setLocalValue] = useState(initialValue);
@@ -33,7 +33,7 @@ export function Slider({ props }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, 'Slider')}
+            label={resolveXmlLabel(props, ctx, services, 'Slider')}
             max={resolveXmlNumber(props, 'max', ctx, 100)}
             min={resolveXmlNumber(props, 'min', ctx, 0)}
             onChange={(nextValue: number) => {

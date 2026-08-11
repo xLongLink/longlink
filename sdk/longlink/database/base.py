@@ -37,17 +37,11 @@ class AuditTable(Base):
     deleted_by = declared_attr(lambda cls: relationship(AuditUser, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
-_engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
 
 
 def create_engine(env: Envs) -> AsyncEngine:
-    """Create and cache the async SQLModel engine for the current environment."""
-    global _engine
-
-    # Reuse the cached engine once initialized.
-    if _engine is not None:
-        return _engine
+    """Create the async SQLModel engine for the current environment."""
 
     # Testing uses an isolated in-memory SQLite database.
     if env.ENV == "testing":
@@ -81,16 +75,12 @@ def create_engine(env: Envs) -> AsyncEngine:
         engine_kwargs["pool_use_lifo"] = True
 
     # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
-    connect_args = urls.connect_args(
+    engine_kwargs["connect_args"] = urls.connect_args(
         dburl,
         **({"ssl": env.DATABASE_SSLMODE} if dburl.startswith("postgresql+asyncpg") else {}),
     )
-    if connect_args:
-        engine_kwargs["connect_args"] = connect_args
 
-    # Cache the configured engine for subsequent session requests.
-    _engine = create_async_engine(dburl, **engine_kwargs)
-    return _engine
+    return create_async_engine(dburl, **engine_kwargs)
 
 
 @asynccontextmanager
@@ -112,11 +102,11 @@ async def get_session_maker() -> async_sessionmaker[AsyncSession]:
         return Session
 
     # Initialize the engine lazily when sessions are requested first.
-    engine = _engine if _engine is not None else create_engine(Envs())
+    engine = create_engine(Envs())
 
     # Verify connection once before exposing the session factory.
-    async with engine.connect() as connection:
-        await connection.run_sync(lambda _: None)
+    async with engine.connect():
+        pass
 
     # Cache the session factory after the engine connection succeeds.
     Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

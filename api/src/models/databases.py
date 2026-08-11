@@ -10,18 +10,6 @@ class DatabaseRegistryCreate(DatabaseConfiguration):
     # Metadata
     name: str = Field(min_length=1, max_length=128)
 
-
-class OrganizationDatabaseUsageResponse(BaseModel):
-    """Represent live usage for one Organization database."""
-
-    # Database
-    database_name: str
-
-    # Usage
-    space_used: int = Field(ge=0)
-    table_count: int = Field(ge=0)
-
-
 class DatabaseRegistryResponse(BaseModel):
     """Describe one database backend while filtering its administrator password.
 

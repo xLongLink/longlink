@@ -18,19 +18,15 @@ import { useUpdateOrganization } from '@/hooks/use-organization';
 import { useToast } from '@/hooks/use-toast';
 import type {
     OrganizationApplicationSummary,
-    OrganizationDatabaseUsageResponse,
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
     OrganizationStorageUsageResponse,
     OrganizationSummary,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import {
-    zOrganizationDatabaseUsageResponse,
-    zOrganizationStorageUsageResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
+import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
-import { formatBytes, numberFormatter } from '@/lib/utils';
+import { formatBytes } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
 import ApplicationSettings from './ApplicationSettings';
@@ -75,16 +71,16 @@ function ResourceSettings<T extends Record<string, unknown>>({
             retry: false,
         }
     );
-    const resourceError = organizationError ?? error;
-
     return (
         <VStack gap={4}>
             <VStack gap={1}>
                 <Heading level={2}>{title}</Heading>
                 <Text type="supporting">{description}</Text>
             </VStack>
-            {isOrganizationLoading || isLoading ? null : resourceError ? (
-                <Banner status="error" title={resourceError.message} />
+            {isOrganizationLoading || isLoading ? null : organizationError ? (
+                <Banner status="error" title={organizationError.message} />
+            ) : error ? (
+                <Banner status="error" title={error.message} />
             ) : (
                 <Table
                     columns={columns}
@@ -135,6 +131,18 @@ export default function Settings({
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const peopleSection: PeopleSection = location.hash.replace(/^#/, '') === 'invitations' ? 'invitations' : 'members';
     const section = routeSection === 'people' ? peopleSection : routeSection;
+    const {
+        data: databaseUsage,
+        error: databaseError,
+        isLoading: isDatabaseLoading,
+    } = useApiQuery<number | null>(
+        section === 'database' && organizationId ? platformApiPath(`/organizations/${organizationId}/database`) : null,
+        {
+            parse: (value) => z.int().gte(0).nullable().parse(value),
+            retry: false,
+        }
+    );
+    const databaseResourceError = error ?? databaseError;
     const ownerCell = (
         <HStack gap={3} align="center">
             <Avatar src={organizationAvatar} name={organizationName} size="md" />
@@ -144,31 +152,6 @@ export default function Settings({
             </VStack>
         </HStack>
     );
-    const databaseColumns: TableColumn<OrganizationDatabaseUsageResponse>[] = [
-        {
-            key: 'resource',
-            header: t('columns.resource'),
-            width: proportional(1),
-            renderCell: (resource) => (
-                <HStack gap={3} align="center">
-                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{resource.database_name}</Text>
-                        <Text type="supporting">
-                            {formatBytes(resource.space_used)} ·{' '}
-                            {t('resources.tableCount', { count: numberFormatter.format(resource.table_count) })}
-                        </Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'owner',
-            header: t('columns.owner'),
-            width: proportional(1),
-            renderCell: () => ownerCell,
-        },
-    ];
     const storageColumns: TableColumn<OrganizationStorageUsageResponse>[] = [
         {
             key: 'resource',
@@ -332,18 +315,25 @@ export default function Settings({
                 ) : null}
 
                 {section === 'database' ? (
-                    <ResourceSettings<OrganizationDatabaseUsageResponse>
-                        columns={databaseColumns}
-                        description={t('organizationSettings.reviewDatabase')}
-                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
-                        idKey="database_name"
-                        isOrganizationLoading={isLoading}
-                        organizationError={error}
-                        organizationId={organizationId}
-                        parse={(value) => zOrganizationDatabaseUsageResponse.nullable().parse(value)}
-                        resource="database"
-                        title={t('navigation.database')}
-                    />
+                    <VStack gap={4}>
+                        <VStack gap={1}>
+                            <Heading level={2}>{t('navigation.database')}</Heading>
+                            <Text type="supporting">{t('organizationSettings.reviewDatabase')}</Text>
+                        </VStack>
+                        {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
+                            <Banner status="error" title={databaseResourceError.message} />
+                        ) : databaseUsage === null || databaseUsage === undefined ? (
+                            <EmptyState title={t('common.noResults')} isCompact />
+                        ) : (
+                            <HStack gap={3} align="center">
+                                <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
+                                <VStack gap={1}>
+                                    <Text weight="semibold">PostgreSQL</Text>
+                                    <Text type="supporting">{formatBytes(databaseUsage)}</Text>
+                                </VStack>
+                            </HStack>
+                        )}
+                    </VStack>
                 ) : null}
 
                 {section === 'storage' ? (

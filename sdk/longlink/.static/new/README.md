@@ -14,6 +14,7 @@
 
 ```bash
 uv sync
+uv run longlink migrate
 uv run longlink dev
 ```
 

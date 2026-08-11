@@ -7,12 +7,10 @@ import shutil
 import tomllib
 import tempfile
 import subprocess
-import urllib.parse
 from pathlib import Path
 from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
-from longlink.utils.metadata import Metadata
 
 BUILD_CONTEXT_IGNORE_PATTERNS = (
     ".cache",
@@ -86,100 +84,32 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def _validate_registry_prefix(registry_prefix: str) -> None:
-    """Validate a Docker registry prefix before composing the final image tag."""
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str, list[dict[str, object]]]:
+    """Parse the configured Application environment model."""
 
-    # Reject URL-style registry prefixes.
-    if registry_prefix.startswith("//") or "://" in registry_prefix:
-        raise ValueError("Docker registry prefix must not be a URL")
+    # Require the project configuration that selects the environment model.
+    tool_data = pyproject_data.get("tool")
+    longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
+    environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
+    if not isinstance(environment_import, str) or not environment_import.strip():
+        raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
-    # Reject whitespace and control characters.
-    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
-        raise ValueError("Docker registry prefix contains invalid characters")
-
-    registry_host = registry_prefix.split("/", 1)[0]
-    parsed_registry = urllib.parse.urlsplit(f"//{registry_host}")
-
-    # Reject malformed registry hosts or credentials.
-    if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
-        raise ValueError("Docker registry prefix is invalid")
-
-    # Validate the optional registry port.
-    try:
-        parsed_registry.port
-    except ValueError as exc:
-        raise ValueError("Docker registry port is invalid") from exc
-
-
-def _validate_docker_image_path(image_path: str) -> None:
-    """Validate Docker image path components after tag composition."""
-
-    components = image_path.split("/")
-
-    repository_components = (
-        components[1:]
-        if len(components) > 1 and ("." in components[0] or ":" in components[0] or components[0] == "localhost")
-        else components
-    )
-
-    # Reject invalid repository components.
-    if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository_components):
-        raise ValueError(f"Invalid Docker image path '{image_path}'")
-
-
-def read_env_spec(root: Path, pyproject_data: Mapping[str, object] | None = None) -> dict[str, list[dict[str, object]]]:
-    """Parse the configured environment class and return environment specs."""
-
-    # Initialize an empty result and the conventional environment import path.
-    empty_spec: dict[str, list[dict[str, object]]] = {"environments": []}
-    environment_import = "src.envs:Env"
-
-    # Read an explicit environment class location from project configuration.
-    project_data = pyproject_data
-    if project_data is None and (root / "pyproject.toml").is_file():
-        project_data = read_pyproject(root)
-
-    if project_data is not None:
-
-        # Read the tool table while ignoring malformed values.
-        tool_data = project_data.get("tool", {})
-        if not isinstance(tool_data, dict):
-            tool_data = {}
-
-        # Read the LongLink table while ignoring malformed values.
-        longlink_data = tool_data.get("longlink", {})
-        if not isinstance(longlink_data, dict):
-            longlink_data = {}
-
-        # Use the configured environment import string when provided.
-        configured_environment = longlink_data.get("environment")
-        if configured_environment is not None:
-            if not isinstance(configured_environment, str) or not configured_environment.strip():
-                raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
-
-            environment_import = configured_environment.strip()
-
-    # Parse and validate the configured module and class names without importing them.
-    module_name, separator, class_name = environment_import.partition(":")
-    module_name = module_name.strip()
-    class_name = class_name.strip()
+    # Parse the configured module and class names without importing application code.
+    module_name, separator, class_name = environment_import.strip().partition(":")
     module_parts = module_name.split(".")
-
-    # Require a normal Python import string without importing application code.
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
-    # Resolve the configured environment module and return early when it is absent.
-    module_path = root.joinpath(*module_parts)
-    envs_path = module_path.with_suffix(".py")
+    # Resolve the configured environment module.
+    envs_path = root.joinpath(*module_parts).with_suffix(".py")
     if not envs_path.is_file():
-        return empty_spec
+        raise click.ClickException(f"Environment model not found: {envs_path}")
 
     # Locate the configured settings class without executing application code.
     module = ast.parse(envs_path.read_text(encoding="utf-8"))
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
-        return empty_spec
+        raise click.ClickException(f"Environment model must define Env: {envs_path}")
 
     environments: list[dict[str, object]] = []
 
@@ -242,11 +172,10 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
         # Positional Field defaults use ellipsis for required values and any other value as optional.
         if value.args:
             first_argument = value.args[0]
-            required_default = (
+            info["required"] = (
                 isinstance(first_argument, ast.Constant)
                 and first_argument.value is Ellipsis
             )
-            info["required"] = required_default
 
         # Inspect Field keyword arguments.
         for keyword in value.keywords:
@@ -406,7 +335,18 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     source_root, workdir = resolve_docker_paths(root, pyproject_data)
     repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
     env_spec = read_env_spec(root, pyproject_data)
-    project_metadata = Metadata.from_pyproject(pyproject_data)
+    project_data = pyproject_data.get("project")
+    if not isinstance(project_data, dict):
+        raise click.ClickException("[project] metadata is required")
+    project_name = project_data.get("name")
+    project_version = project_data.get("version")
+    project_description = project_data.get("description")
+    if not isinstance(project_name, str) or not project_name.strip():
+        raise click.ClickException("[project].name is required")
+    if not isinstance(project_version, str) or not project_version.strip():
+        raise click.ClickException("[project].version is required")
+    if project_description is not None and not isinstance(project_description, str):
+        raise click.ClickException("[project].description must be a string")
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -415,8 +355,11 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         sdk_version = "0.0.0"
 
     # Resolve the image version and render its metadata labels.
-    version = tag or project_metadata.version
-    labels = render_image_labels(project_metadata.model_dump(), env_spec)
+    version = tag or project_version
+    labels = render_image_labels(
+        {"name": project_name, "version": project_version, "description": project_description},
+        env_spec,
+    )
 
     # Copy the source tree into a throwaway Docker build context.
     shutil.copytree(
@@ -460,7 +403,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, sdk_version), encoding="utf-8")
 
-    return dockerfile_path, version, project_metadata.name
+    return dockerfile_path, version, project_name
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
@@ -468,7 +411,6 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
     registry_prefix = (registry or "").strip().rstrip("/")
-    image_path = image_name
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
@@ -480,12 +422,29 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     # Add a registry prefix when requested.
     if registry_prefix:
-        _validate_registry_prefix(registry_prefix)
-        image_path = f"{registry_prefix}/{image_name}"
+        # Reject URL-style registry prefixes and invalid characters.
+        if registry_prefix.startswith("//") or "://" in registry_prefix:
+            raise ValueError("Docker registry prefix must not be a URL")
+        if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
+            raise ValueError("Docker registry prefix contains invalid characters")
 
-    _validate_docker_image_path(image_path)
+        # Restrict production registries to GHCR while allowing localhost development registries.
+        registry_host = registry_prefix.split("/", 1)[0]
+        if "@" in registry_host:
+            raise ValueError("Docker registry prefix is invalid")
 
-    return f"{image_path}:{version}"
+        host, separator, port = registry_host.partition(":")
+        if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
+            raise ValueError("Docker registry port is invalid")
+        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
+            raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
+
+        # Validate registry namespace components.
+        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
+            raise ValueError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
+        return f"{registry_prefix}/{image_name}:{version}"
+
+    return f"{image_name}:{version}"
 
 
 @click.command(name="build")
@@ -497,19 +456,14 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 @click.option(
     "--registry",
     default=None,
-    help="Docker registry prefix for the image tag, for example localhost:15000.",
+    help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development.",
 )
 @click.option(
     "--push",
     is_flag=True,
     help="Push the built image tag after building.",
 )
-@click.option(
-    "--builder",
-    default=None,
-    help="Optional Docker Buildx builder used to isolate build cache.",
-)
-def build_command(tag: str | None, registry: str | None, push: bool, builder: str | None) -> None:
+def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
     # Build inside a temporary context.
@@ -535,8 +489,6 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
 
             # Build from a context that includes local path dependencies referenced by uv.
             command = [docker_command, "build"]
-            if builder:
-                command = [docker_command, "buildx", "build", "--builder", builder, "--load"]
             command.extend(
                 [
                     "--iidfile",

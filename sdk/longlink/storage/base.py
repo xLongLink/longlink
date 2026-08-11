@@ -12,13 +12,6 @@ def create_fs() -> AbstractFileSystem:
     bucket = env.STORAGE_BUCKET or ""
     prefix = env.STORAGE_PREFIX or ""
 
-    # Production must always use a scoped view of the Organization bucket.
-    if env.ENV == "production":
-        if not bucket:
-            raise ValueError("Production storage settings require a bucket")
-        if not prefix:
-            raise ValueError("Production storage settings require a prefix")
-
     # Normalize only safe relative prefixes so a scoped view cannot escape its bucket.
     prefix_path = PurePosixPath(prefix)
     if prefix and (prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts):
@@ -37,16 +30,6 @@ def create_fs() -> AbstractFileSystem:
     # Production uses remote object storage supplied by the platform.
     else:
 
-        # Require all production storage credentials before constructing the backend.
-        if (
-            env.STORAGE_ENDPOINT_URL is None
-            or env.STORAGE_USERNAME is None
-            or env.STORAGE_PASSWORD is None
-        ):
-            raise ValueError(
-                "Production storage settings require endpoint URL, username, and password"
-            )
-
         # Production runtimes receive S3 connection options from the LongLink Platform.
         options: dict[str, object] = {
             "endpoint_url": env.STORAGE_ENDPOINT_URL,
@@ -61,7 +44,7 @@ def create_fs() -> AbstractFileSystem:
         )
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
-    if prefix or bucket:
+    if bucket:
         return DirFileSystem(path=(PurePosixPath(bucket) / prefix_path).as_posix(), fs=filesystem)
 
     return filesystem

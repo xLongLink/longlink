@@ -1,18 +1,18 @@
 import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
-import { useXmlContext } from '../core/context';
+import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
-import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from './props';
+import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
+import type { ASTNode, Props, RuntimeServices, Scope } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx, services } = useXmlRuntime();
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
-        .map((node) => resolveSideNavItem(node, ctx));
+        .map((node) => resolveSideNavItem(node, ctx, services));
 
     // Side navigation without destinations is not meaningful or accessible.
     if (items.length === 0) {
@@ -20,8 +20,7 @@ export function SideNav({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = String(binding.initialValue ?? items[0].value);
-    const [localValue, setLocalValue] = useState(initialValue);
+    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? items[0].value));
     const value = binding.bound ? String(binding.currentValue ?? items[0].value) : localValue;
     const label = resolveXmlString(props, 'label', ctx, 'Navigation');
     const activeItem = items.find((item) => item.value === value);
@@ -47,7 +46,7 @@ export function SideNav({ props, nodes }: Props) {
                     })}
                 </SideNavSection>
             </AstryxSideNav>
-            <div className="min-w-0">{activeItem ? renderNode(activeItem.nodes, ctx) : null}</div>
+            <div className="min-w-0">{activeItem && renderNode(activeItem.nodes, ctx)}</div>
         </div>
     );
 }
@@ -58,9 +57,9 @@ export function SideNavItem(): never {
 }
 
 /** Resolves a serializable XML side navigation definition. */
-function resolveSideNavItem(node: ASTNode, ctx: ExecutionContext) {
+function resolveSideNavItem(node: ASTNode, ctx: Scope, services: RuntimeServices) {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
-    const label = resolveXmlLabel(props, ctx, 'SideNavItem');
-    return { icon: resolveXmlString(props, 'icon', ctx) || undefined, label, nodes: node.children ?? [], value };
+    const label = resolveXmlLabel(props, ctx, services, 'SideNavItem');
+    return { icon: resolveXmlString(props, 'icon', ctx), label, nodes: node.children, value };
 }

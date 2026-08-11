@@ -4,7 +4,7 @@ from typing import cast
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, joinedload
+from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
@@ -27,22 +27,19 @@ async def active(session: AsyncSession, user_id: UUID) -> User | None:
     """Return one active user through an existing request session."""
 
     # Resolve only the authenticated identity; resource access remains scoped to its target.
-    return (
-        await session.scalars(
-            select(User).where(
-                col(User.id) == user_id,
-                col(User.deleted_at).is_(None),
-            )
+    return await session.scalar(
+        select(User).where(
+            col(User.id) == user_id,
+            col(User.deleted_at).is_(None),
         )
-    ).one_or_none()
+    )
 
 
 async def by_email(session: AsyncSession, email: str) -> User | None:
     """Return one user by email, including soft-deleted accounts."""
 
     # Account-existence checks must include deleted rows because email addresses remain unique.
-    result = await session.scalars(select(User).where(col(User.email) == email))
-    return result.one_or_none()
+    return await session.scalar(select(User).where(col(User.email) == email))
 
 
 async def register(session: AsyncSession, name: str, email: str, password: str) -> User:
@@ -61,14 +58,17 @@ def replace_password(user: User, password: str) -> None:
     user.password = PasswordHash.recommended().hash(password)
 
 
-def update_profile(user: User, payload: UserUpdate) -> None:
-    """Apply changed profile fields."""
+def update_profile(user: User, payload: UserUpdate) -> bool:
+    """Apply changed profile fields and report whether the profile changed."""
 
     # Apply only supplied profile values that differ from their persisted counterparts.
+    changed = False
     for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
         if getattr(user, field) == value:
             continue
         setattr(user, field, value)
+        changed = True
+    return changed
 
 
 async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:
@@ -78,7 +78,7 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
     statement = (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(joinedload(cast(QueryableAttribute[Organization], UserOrganization.organization)))
+        .options(contains_eager(cast(QueryableAttribute[Organization], UserOrganization.organization)))
         .where(
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.deleted_at).is_(None),

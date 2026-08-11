@@ -1,6 +1,7 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { InternationalizationProvider, useTranslator, type MessagesByLocale } from '@astryxdesign/core/i18n';
-import { useEffect, useState, type ReactNode } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { useEffect, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { translationCatalogs } from '@/lib/i18n';
@@ -8,31 +9,25 @@ import { createContext, setupContext, validateSetupNodes, XmlContext } from './c
 import { XmlErrorBoundary } from './core/errors';
 import { validateTranslationCatalog } from './core/i18n';
 import { renderNode } from './core/node';
-import { BaseUrlContext, resolveUrl } from './core/url';
-import type { ASTNode, ExecutionContext } from './types';
+import { resolveUrl } from './core/url';
+import type { ASTNode, XmlRuntime } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];
-    ctx?: ExecutionContext;
+    ctx?: XmlRuntime;
     baseUrl?: string;
-};
-
-type SetupFailure = {
-    ast: ASTNode[];
-    baseUrl: string;
-    error: unknown;
 };
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
-    const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
-    const requiresSetup = hasMatchingNode(ast, (node) => node.name === 'State' || node.name === 'Query');
-    const requiresTranslations = hasMatchingNode(ast, (node) => Boolean(node.params?.i18n));
+export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
+    const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
+    runtimeCtx.services.requestBaseUrl = baseUrl;
+    const { requiresSetup, requiresTranslations } = getRequirements(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
-    const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
+    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode[]; baseUrl: string; error: unknown } | null>(null);
     const [version, setVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
@@ -64,7 +59,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             unsubscribeAll();
 
             // Subscribe to reactive state values in the context.
-            for (const value of Object.values(runtimeCtx.values)) {
+            for (const value of Object.values(runtimeCtx.scope.bindings)) {
                 // Skip non-reactive context values.
                 if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
 
@@ -77,11 +72,11 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
             }
         }
 
-        runtimeCtx.setups = {};
-        runtimeCtx.values = {};
+        runtimeCtx.services.setups = {};
+        runtimeCtx.scope.bindings = { params: runtimeCtx.scope.bindings.params };
 
         // Hydrate translations from the SDK route before localized nodes render.
-        if (waitsForTranslations && runtimeCtx.translations === undefined) {
+        if (waitsForTranslations && runtimeCtx.services.translations === undefined) {
             void fetchApiJson<unknown>(resolveUrl(baseUrl, '/i18n/en.json'), {
                 cache: 'no-cache',
             })
@@ -89,7 +84,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
                     // Ignore translations after cleanup.
                     if (!mounted) return;
 
-                    runtimeCtx.translations = validateTranslationCatalog(translations);
+                    runtimeCtx.services.translations = validateTranslationCatalog(translations);
                     setVersion((current) => current + 1);
                 })
                 .catch((error: unknown) => {
@@ -105,16 +100,16 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
         }
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        runtimeCtx.invalidate = async (ids) => {
+        runtimeCtx.services.invalidate = async (ids) => {
             const list = Array.isArray(ids) ? ids : [ids];
 
             // Refresh each requested setup value.
             for (const id of list) {
                 // Skip unknown invalidation targets.
-                const setup = runtimeCtx.setups[id];
+                const setup = runtimeCtx.services.setups[id];
                 if (!setup) continue;
 
-                delete runtimeCtx.values[id];
+                delete runtimeCtx.scope.bindings[id];
                 await setup();
             }
 
@@ -158,46 +153,57 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode
     if (requiresSetup && initializedAst !== ast) return null;
 
     // Wait for translations before localized nodes render.
-    if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
+    if (waitsForTranslations && runtimeCtx.services.translations === undefined) return null;
 
     const messages: MessagesByLocale = {
         ...translationCatalogs,
         en: {
             ...translationCatalogs.en,
-            ...runtimeCtx.translations,
+            ...runtimeCtx.services.translations,
         },
     };
 
     return (
         <XmlErrorBoundary resetKey={version}>
             <InternationalizationProvider locale="en" messages={messages}>
-                <XmlContent ast={ast} baseUrl={baseUrl} ctx={runtimeCtx} />
+                <XmlContent ast={ast} ctx={runtimeCtx} />
             </InternationalizationProvider>
         </XmlErrorBoundary>
     );
 }
 
-/** Installs the active Astryx translator into the mutable XML execution scope. */
-function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ctx: ExecutionContext }) {
-    ctx.translate = useTranslator();
+/** Installs the active Astryx translator into renderer-owned XML services. */
+function XmlContent({ ast, ctx }: { ast: ASTNode[]; ctx: XmlRuntime }) {
+    ctx.services.translate = useTranslator();
+    const [root] = ast;
 
     return (
-        <BaseUrlContext.Provider value={baseUrl}>
-            <XmlContext.Provider value={ctx}>{renderNode(ast, ctx)}</XmlContext.Provider>
-        </BaseUrlContext.Provider>
+        <XmlContext.Provider value={ctx}>
+            {ast.length === 1 && root?.name === 'longlink' ? (
+                <Stack gap={6}>{renderNode(root.children, ctx.scope)}</Stack>
+            ) : (
+                renderNode(ast, ctx.scope)
+            )}
+        </XmlContext.Provider>
     );
 }
 
-/** Returns whether the AST contains a node matching the supplied predicate. */
-function hasMatchingNode(nodes: ASTNode[], predicate: (node: ASTNode) => boolean): boolean {
-    // Walk the tree until a matching node is found.
-    for (const node of nodes) {
-        // Check this node before visiting descendants.
-        if (predicate(node)) return true;
+/** Returns setup and translation requirements discovered in one AST traversal. */
+function getRequirements(nodes: ASTNode[]): { requiresSetup: boolean; requiresTranslations: boolean } {
+    let requiresSetup = false;
+    let requiresTranslations = false;
 
-        // Search nested nodes for a match.
-        if (hasMatchingNode(node.children ?? [], predicate)) return true;
+    // Walk the tree until both requirements are known.
+    for (const node of nodes) {
+        requiresSetup ||= node.name === 'State' || node.name === 'Query';
+        requiresTranslations ||= node.params?.i18n != null;
+        if (requiresSetup && requiresTranslations) break;
+
+        const nested = getRequirements(node.children);
+        requiresSetup ||= nested.requiresSetup;
+        requiresTranslations ||= nested.requiresTranslations;
+        if (requiresSetup && requiresTranslations) break;
     }
 
-    return false;
+    return { requiresSetup, requiresTranslations };
 }

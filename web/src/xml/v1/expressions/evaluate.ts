@@ -1,18 +1,8 @@
-import { parse, parseExpressionAt } from 'acorn';
-import type { ExecutionContext } from '../types';
-import { hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
+import type { ASTAttribute, Scope } from '../types';
+import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 import type { ExpressionNode } from './types';
-import { isReference } from './utils';
-
-const expressionNodeCache = new Map<string, ExpressionNode>();
 
 type SafeExpressionCall = (...args: unknown[]) => unknown;
-
-type InterpolationSegment = {
-    start: number;
-    end: number;
-    expression: string;
-};
 
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
@@ -29,25 +19,6 @@ const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
     round: (value) => Math.round(Number(value)),
     trunc: (value) => Math.trunc(Number(value)),
 };
-
-/** Parses and caches one JavaScript expression supported by the XML evaluator. */
-function parseExpression(expression: string): ExpressionNode {
-    const cachedNode = expressionNodeCache.get(expression);
-
-    // Reuse cached parses for repeated expressions.
-    if (cachedNode) {
-        return cachedNode;
-    }
-
-    const ast = parse(`(${expression})`, {
-        ecmaVersion: 'latest',
-        sourceType: 'script',
-    }) as unknown as { body: Array<{ expression: ExpressionNode }> };
-    const node = ast.body[0].expression;
-
-    expressionNodeCache.set(expression, node);
-    return node;
-}
 
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
@@ -86,69 +57,8 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     return undefined;
 }
 
-/** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
-function readInterpolationSegment(input: string, start: number): InterpolationSegment {
-    // Parse the interpolation body to find its boundary.
-    try {
-        const node = parseExpressionAt(input, start + 2, {
-            ecmaVersion: 'latest',
-            sourceType: 'script',
-        }) as unknown as ExpressionNode & { end: number };
-        let end = node.end;
-
-        // Skip whitespace before the closing brace.
-        while (end < input.length && /\s/.test(input[end])) {
-            end += 1;
-        }
-
-        // Require the interpolation to close at this point.
-        if (input[end] !== '}') {
-            throw new Error('Unclosed XML expression interpolation');
-        }
-
-        // Reject empty interpolation bodies.
-        const expression = input.slice(start + 2, node.end).trim();
-        if (!expression) {
-            throw new Error('Unclosed XML expression interpolation');
-        }
-
-        expressionNodeCache.set(expression, node);
-
-        return { start, end, expression };
-    } catch {
-        throw new Error('Unclosed XML expression interpolation');
-    }
-}
-
-/** Returns one standalone expression when the entire value is wrapped in `${...}`. */
-function readStandaloneExpression(input: string): string | null {
-    // Only wrapped values can be standalone expressions.
-    if (!input.startsWith('${')) return null;
-
-    const segment = readInterpolationSegment(input, 0);
-
-    return segment.end === input.length - 1 ? segment.expression : null;
-}
-
-/** Reads every `${...}` interpolation segment from a mixed string value. */
-function readInterpolationSegments(input: string): InterpolationSegment[] {
-    const segments: InterpolationSegment[] = [];
-
-    // Scan the string for interpolation starts.
-    for (let index = 0; index < input.length; index += 1) {
-        // Ignore characters that do not start an interpolation.
-        if (input[index] !== '$' || input[index + 1] !== '{') continue;
-
-        const segment = readInterpolationSegment(input, index);
-        segments.push(segment);
-        index = segment.end;
-    }
-
-    return segments;
-}
-
 /** Evaluates a supported AST node against the current scope. */
-function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
+function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
     // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
@@ -210,12 +120,6 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
                 case '!==':
                     return left !== right;
 
-                case '==':
-                    return (left as number) == (right as number);
-
-                case '!=':
-                    return (left as number) != (right as number);
-
                 case '<':
                     return (left as number) < (right as number);
 
@@ -227,27 +131,6 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
 
                 case '>=':
                     return (left as number) >= (right as number);
-
-                case 'in': {
-                    // Support pythonic membership checks against strings, arrays, and objects.
-                    if (typeof right === 'string') {
-                        return right.includes(String(left ?? ''));
-                    }
-
-                    // Check array membership directly.
-                    if (Array.isArray(right)) {
-                        return right.includes(left);
-                    }
-
-                    // Check object membership through safe keys.
-                    if (right != null && typeof right === 'object') {
-                        const key = String(left);
-
-                        return hasSafeProperty(right, key);
-                    }
-
-                    return false;
-                }
 
                 default:
                     throw new Error('Operator not allowed');
@@ -344,48 +227,23 @@ function evaluateNode(node: ExpressionNode, ctx: ExecutionContext): unknown {
     }
 }
 
-/** Evaluates an XML attribute value against the current XML runtime scope. */
-export function evaluate(expr: string, ctx: ExecutionContext): unknown {
-    const input = expr.trim();
-    const standaloneExpression = readStandaloneExpression(input);
+/** Evaluates a compiled XML attribute against the current XML runtime scope. */
+export function evaluate(attribute: ASTAttribute, ctx: Scope): unknown {
+    switch (attribute.kind) {
+        case 'text':
+            return attribute.value;
 
-    /** Runs an expression with XML values exposed as local variables. */
-    function run(expression: string): unknown {
-        return evaluateNode(parseExpression(expression), ctx);
+        case 'path':
+            return resolvePath(ctx, attribute.parts);
+
+        case 'expression':
+            return evaluateNode(attribute.node, ctx);
+
+        case 'interpolation':
+            return attribute.segments
+                .map((segment) =>
+                    segment.kind === 'text' ? segment.value : String(evaluateNode(segment.node, ctx) ?? '')
+                )
+                .join('');
     }
-
-    // Preserve empty attribute values.
-    if (input === '') return '';
-
-    // Treat values that are fully wrapped in `${...}` as typed expressions.
-    if (standaloneExpression != null) {
-        return run(standaloneExpression);
-    }
-
-    // Resolve `$` references directly through the runtime scope.
-    if (isReference(input)) {
-        return resolvePath(ctx, input.slice(1).split('.').filter(Boolean));
-    }
-
-    // Resolve dotted paths like `user.name` against the runtime scope.
-    if (/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+$/.test(input)) {
-        return resolvePath(ctx, input.split('.'));
-    }
-
-    // Interpolate `${...}` expressions inside mixed text values.
-    if (input.includes('${')) {
-        let output = '';
-        let cursor = 0;
-
-        // Append each literal chunk and evaluated segment.
-        for (const segment of readInterpolationSegments(expr)) {
-            output += expr.slice(cursor, segment.start);
-            output += String(run(segment.expression) ?? '');
-            cursor = segment.end + 1;
-        }
-
-        return output + expr.slice(cursor);
-    }
-
-    return expr;
 }

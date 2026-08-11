@@ -14,17 +14,29 @@ describe('Link', () => {
         const navigationOutput = renderXmlToMarkup(
             parseXML('<Link to="/issues/123" i18n="anchors.openIssue" />'),
             {
-                invalidate: async () => {},
-                navigationBaseUrl: '/orgs/acme/apps/tracker',
-                setups: {},
-                translations,
-                values: {},
+                scope: { bindings: {} },
+                services: {
+                    invalidate: async () => {},
+                    navigationBaseUrl: '/orgs/acme/apps/tracker',
+                    requestBaseUrl: '',
+                    setups: {},
+                    translations,
+                },
             },
             '/api/applications/app-1/proxy'
         );
         const anchorOutput = renderXmlToMarkup(
             parseXML('<Link href="/files/document.pdf" i18n="anchors.download" />'),
-            { setups: {}, invalidate: async () => {}, translations, values: {} },
+            {
+                scope: { bindings: {} },
+                services: {
+                    invalidate: async () => {},
+                    navigationBaseUrl: '',
+                    requestBaseUrl: '',
+                    setups: {},
+                    translations,
+                },
+            },
             '/orgs/acme/apps/inventory'
         );
 
@@ -41,10 +53,14 @@ describe('Link', () => {
 
         for (const anchor of unsafeAnchors) {
             const output = renderXmlToMarkup(parseXML(anchor), {
-                setups: {},
-                invalidate: async () => {},
-                translations,
-                values: {},
+                scope: { bindings: {} },
+                services: {
+                    invalidate: async () => {},
+                    navigationBaseUrl: '',
+                    requestBaseUrl: '',
+                    setups: {},
+                    translations,
+                },
             });
 
             expect(output).toContain('Label only');

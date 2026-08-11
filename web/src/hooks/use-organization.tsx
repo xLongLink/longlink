@@ -33,15 +33,16 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
     const { memberships, isLoading: isUserLoading } = useUserOrganizations();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
-    const organizationPath = organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null;
-
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
-    const organizationQuery = useApiQuery<OrganizationDetails>(organizationPath, {
-        parse: (value) => zOrganizationDetails.parse(value),
-        refetchInterval: 5000,
-        retry: false,
-    });
+    const organizationQuery = useApiQuery<OrganizationDetails>(
+        organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null,
+        {
+            parse: (value) => zOrganizationDetails.parse(value),
+            refetchInterval: 5000,
+            retry: false,
+        }
+    );
 
     const error =
         organizationQuery.error ??

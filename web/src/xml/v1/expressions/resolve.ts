@@ -1,4 +1,4 @@
-import type { ExecutionContext } from '../types';
+import type { Scope } from '../types';
 
 const UNSAFE_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 
@@ -22,34 +22,31 @@ export function readSafeProperty(value: unknown, key: string): unknown {
 }
 
 /** Resolves a value from the current XML runtime scope chain. */
-export function resolveValue(ctx: ExecutionContext | null | undefined, key: string): unknown {
+export function resolveValue(scope: Scope | null | undefined, key: string): unknown {
     // Block unsafe top-level scope lookups.
     if (!isSafePropertyName(key)) return undefined;
 
     // Walk lexical scopes from child to parent.
-    for (let scope = ctx; scope; scope = scope.parent) {
-        const values = scope.values;
+    for (let currentScope = scope; currentScope; currentScope = currentScope.parent) {
+        const bindings = currentScope.bindings;
 
-        // Prefer values stored in the scope.
-        if (hasSafeProperty(values, key)) return values[key];
-
-        // Fall back to direct scope properties.
-        if (hasSafeProperty(scope, key)) return scope[key];
+        // Read only bindings declared in the lexical scope.
+        if (hasSafeProperty(bindings, key)) return bindings[key];
     }
 
     return undefined;
 }
 
 /** Resolves a dotted or `$` reference path against the current XML runtime scope chain. */
-export function resolvePath(ctx: ExecutionContext, parts: string[]): unknown {
+export function resolvePath(scope: Scope, parts: string[]): unknown {
     // Empty paths do not resolve to a value.
     if (parts.length === 0) return undefined;
 
-    let current = resolveValue(ctx, parts[0]);
+    let current = resolveValue(scope, parts[0]);
 
     // Walk the remaining path segments directly on the live value.
-    for (const part of parts.slice(1)) {
-        current = readSafeProperty(current, part);
+    for (let index = 1; index < parts.length; index += 1) {
+        current = readSafeProperty(current, parts[index]);
     }
 
     return current;

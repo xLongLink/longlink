@@ -1,31 +1,33 @@
 import { Selector as AstryxSelector, type SelectorOptionType } from '@astryxdesign/core/Selector';
 import { useState } from 'react';
-import { useXmlContext } from '../core/context';
+import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useXmlRuntime } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
-import type { ASTNode, ExecutionContext, Props } from '../types';
-import { setXmlBinding, useBindableValue } from './binding';
 import {
     requireXmlString,
     isVisibleXmlNode,
+    readXmlProp,
     resolveXmlBoolean,
     resolveXmlEnum,
     resolveXmlLabel,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
-} from './props';
+} from '../core/props';
+import type { ASTNode, Props, RuntimeServices, Scope } from '../types';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
-    const ctx = useXmlContext();
+    const { scope: ctx, services } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx);
-    const initialValue = binding.initialValue == null ? null : String(binding.initialValue);
-    const [localValue, setLocalValue] = useState<string | null>(initialValue);
+    const [localValue, setLocalValue] = useState<string | null>(
+        binding.initialValue == null ? null : String(binding.initialValue)
+    );
     const currentValue = binding.currentValue == null ? null : String(binding.currentValue);
     const value = binding.bound ? currentValue : localValue;
     const options = nodes
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
-        .map((node) => resolveOption(node, ctx));
+        .map((node) => resolveOption(node, ctx, services));
 
     // Selectors require at least one serializable option.
     if (options.length === 0) {
@@ -43,7 +45,7 @@ export function Selector({ props, nodes }: Props) {
         isLabelHidden: resolveXmlBoolean(props, 'isLabelHidden', ctx, false),
         isOptional: resolveXmlBoolean(props, 'isOptional', ctx, false),
         isRequired: resolveXmlBoolean(props, 'isRequired', ctx, false),
-        label: resolveXmlLabel(props, ctx, 'Selector'),
+        label: resolveXmlLabel(props, ctx, services, 'Selector'),
         options,
         placeholder: resolveXmlString(props, 'placeholder', ctx) || undefined,
         searchPlaceholder: resolveXmlString(props, 'searchPlaceholder', ctx) || undefined,
@@ -71,9 +73,11 @@ export function SelectorOption(): never {
 }
 
 /** Converts one XML option node into Astryx selector data. */
-function resolveOption(node: ASTNode, ctx: ExecutionContext): SelectorOptionType {
+function resolveOption(node: ASTNode, ctx: Scope, services: RuntimeServices): SelectorOptionType {
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SelectorOption');
-    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx, value);
+    const label = readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx, services)
+        : resolveXmlString(props, 'label', ctx, value);
     return { value, label, disabled: resolveXmlBoolean(props, 'isDisabled', ctx, false) };
 }

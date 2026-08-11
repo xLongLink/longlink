@@ -64,17 +64,6 @@ class Element:
         self._content: str | None = None
 
 
-    @classmethod
-    def from_content(cls, content: str, schema: str | Path | None = None) -> "Element":
-        """Create an element instance from in-memory XML content."""
-
-        instance = cls.__new__(cls)
-        instance.path = Path("<memory>")
-        instance.schema_path = Path(schema) if schema is not None else None
-        instance._content = content
-        return instance
-
-
     @property
     def content(self) -> str:
         """Return the raw XML payload."""
@@ -96,10 +85,9 @@ class Element:
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = create_xml_parser()
-        schema_path = self.schema_path
-        if schema_path is None:
+        if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
-        schema = load_xml_schema((schema_path if schema_path.is_absolute() else ROOT / schema_path).resolve())
+        schema = load_xml_schema((self.schema_path if self.schema_path.is_absolute() else ROOT / self.schema_path).resolve())
 
         # Parse user XML once for validation and downstream metadata extraction.
         try:
@@ -120,15 +108,4 @@ class Element:
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
-        # Paragraphs use i18n placeholders for dynamic text, not a value fallback.
-        for paragraph in xml_doc.iter("P"):
-            if paragraph.get("value") is not None:
-                raise ValueError(f"XML is invalid: Line {paragraph.sourceline}: P does not support the value attribute")
-
         return xml_doc
-
-class Longlink(Element):
-    """Load and validate LongLink XML documents from disk.
-
-    LongLink documents are discovered from XML files and can define custom UI components and interactions.
-    """

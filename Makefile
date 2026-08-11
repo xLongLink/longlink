@@ -44,6 +44,7 @@ sdk\:format: sdk\:install
 # Format web code and repository docs.
 web\:format: web\:install
 	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
+	cd web && vp check
 
 
 # Run API and SDK ty checks.
@@ -78,7 +79,7 @@ sdk\:build: web\:install
 # Remove tracked remote development resources.
 clean:
 	@printf "Removing tracked remote development resources...\n"
-	cd api && DEVELOPMENT=true uv run --locked python cleanup.py
+	cd api && DEVELOPMENT=true uv run --locked python -m scripts.cleanup
 
 
 # Start isolated local services and the cluster, then wait for the local registry.
@@ -150,7 +151,7 @@ seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true uv run --locked python seed.py
+	cd api && DEVELOPMENT=true uv run --locked python -m scripts.seed
 
 
 # Run the Vite web app.

@@ -18,7 +18,7 @@ uv run pytest
 
 The release workflow runs when a GitHub release is published. It builds the LongLink image with the release tag and pushes
 it to `ghcr.io/<repository-owner>/<project-name>:<release-tag>`. Commit `uv.lock` so release builds use the reviewed dependency
-set. GitHub packages are private by default unless the repository or package settings make them public.
+set. Make the GitHub package public so LongLink can inspect and deploy it without registry credentials.
 
 Create and publish a release tag:
 

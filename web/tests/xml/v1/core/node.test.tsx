@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { renderNode } from '@/xml/v1/core/node';
-import type { ExecutionContext } from '@/xml/v1/types';
+import type { XmlRuntime } from '@/xml/v1/types';
+import { compileProps } from '../helpers';
 
 describe('renderNode', () => {
     it('rejects styling and event handler attributes on xml nodes', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ctx: XmlRuntime = {
+            scope: { bindings: {} },
+            services: { invalidate: async () => {}, navigationBaseUrl: '', requestBaseUrl: '', setups: {} },
+        };
         const cases = [
             { name: 'className', expected: 'className is not supported in XML' },
             { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
         ];
 
         for (const testCase of cases) {
-            expect(() => renderNode([{ name: 'Button', params: { [testCase.name]: 'value' } }], ctx)).toThrow(
-                testCase.expected
-            );
+            expect(() =>
+                renderNode(
+                    [{ name: 'Button', params: compileProps({ [testCase.name]: 'value' }), children: [] }],
+                    ctx.scope
+                )
+            ).toThrow(testCase.expected);
         }
     });
 });

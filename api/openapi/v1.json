@@ -1647,7 +1647,7 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/OrganizationDatabaseUsageResponse"
+                      "type": "integer"
                     },
                     {
                       "type": "null"
@@ -2925,32 +2925,6 @@
         ],
         "title": "OrganizationCreate",
         "description": "Validate organization creation payloads."
-      },
-      "OrganizationDatabaseUsageResponse": {
-        "properties": {
-          "database_name": {
-            "type": "string",
-            "title": "Database Name"
-          },
-          "space_used": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Space Used"
-          },
-          "table_count": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Table Count"
-          }
-        },
-        "type": "object",
-        "required": [
-          "database_name",
-          "space_used",
-          "table_count"
-        ],
-        "title": "OrganizationDatabaseUsageResponse",
-        "description": "Represent live usage for one Organization database."
       },
       "OrganizationDetails": {
         "properties": {

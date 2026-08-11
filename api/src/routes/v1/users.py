@@ -35,7 +35,8 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Apply only supplied values that change the persisted profile.
-    users.update_profile(user, payload)
+    if not users.update_profile(user, payload):
+        return user
     await session.commit()
 
     # Keep every organization database synchronized after profile update requests.

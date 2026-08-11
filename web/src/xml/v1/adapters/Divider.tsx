@@ -1,13 +1,15 @@
 import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
-import { useXmlContext } from '../core/context';
+import { useXmlRuntime } from '../core/context';
 import { resolveTranslation } from '../core/i18n';
+import { readXmlProp, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 import type { Props } from '../types';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders an Astryx content divider. */
 export function Divider({ props }: Props) {
-    const ctx = useXmlContext();
-    const label = props.i18n ? resolveTranslation(props, ctx) : resolveXmlString(props, 'label', ctx);
+    const { scope: ctx, services } = useXmlRuntime();
+    const label = readXmlProp(props, 'i18n')
+        ? resolveTranslation(props, ctx, services)
+        : resolveXmlString(props, 'label', ctx);
     const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Divider');
     const variant = resolveXmlEnum(props, 'variant', ctx, ['subtle', 'strong'], 'subtle', 'Divider');
     const isFullBleed = resolveXmlBoolean(props, 'isFullBleed', ctx, false);

@@ -1,3 +1,4 @@
+import httpx2
 import pytest
 from src.utils import images
 from src.models.types import Image
@@ -13,63 +14,31 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     assert await images.metadata(Image("registry.example.com/longlink/dashboard:latest")) is None
 
 
-@pytest.mark.parametrize(
-    ("image", "development", "version", "manifest_digest", "registry_url", "manifest_reference"),
-    [
-        pytest.param(
-            "localhost:15000/longlink/dashboard:dev",
-            True,
-            "dev",
-            "sha256:manifest",
-            "http://localhost:15000",
-            "dev",
-            id="development-tag",
-        ),
-        pytest.param(
-            "ghcr.io/longlink/dashboard@sha256:deadbeef",
-            False,
-            "sha256-deadbeef",
-            "sha256:deadbeef",
-            "https://ghcr.io",
-            "sha256:deadbeef",
-            id="digest",
-        ),
-    ],
-)
-async def test_metadata_fetches_tagged_and_digest_image_references(
+async def test_metadata_fetches_digest_image_references(
     monkeypatch: pytest.MonkeyPatch,
-    image: str,
-    development: bool,
-    version: str,
-    manifest_digest: str,
-    registry_url: str,
-    manifest_reference: str,
 ) -> None:
-    """Inspect supported tagged and digest-pinned image references."""
+    """Inspect public GHCR digest-pinned image references."""
 
     # Arrange
+    image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
+    version = "sha256-deadbeef"
+    manifest_digest = "sha256:deadbeef"
     captured: dict[str, object] = {}
-    monkeypatch.setattr(images.env, "DEVELOPMENT", development)
 
-    async def fake_fetch_manifest(_client: object, registry_url: str, repository: str, reference: str) -> tuple[dict[str, object], str]:
-        """Capture the manifest request and return a minimal OCI manifest."""
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Capture GHCR requests and return the matching public image resource."""
 
-        captured["manifest"] = {
-            "registry_url": registry_url,
-            "repository": repository,
-            "reference": reference,
-        }
-        return {"config": {"digest": "sha256:config"}}, manifest_digest
-
-    class FakeConfigResponse:
-        """Return a successful image config response."""
-
-        is_success = True
-
-        def json(self) -> dict[str, object]:
-            """Return LongLink labels from the image config blob."""
-
-            return {
+        if "/manifests/" in request.url.path:
+            captured["manifest"] = {"url": str(request.url), "accept": request.headers["Accept"]}
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": manifest_digest},
+            )
+        captured["blob"] = {"url": str(request.url)}
+        return httpx2.Response(
+            200,
+            json={
                 "config": {
                     "Labels": {
                         "org.opencontainers.image.title": "dashboard",
@@ -78,30 +47,17 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
                         "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
                     }
                 }
-            }
+            },
+        )
 
-    class FakeAsyncClient:
-        """Capture config blob requests from the image metadata reader."""
+    async_client = httpx2.AsyncClient
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the real async client constructor shape."""
+    def client(*args: object, **kwargs: object) -> httpx2.AsyncClient:
+        """Build an HTTP client backed by the deterministic registry transport."""
 
-        async def __aenter__(self) -> "FakeAsyncClient":
-            """Return the fake registry client."""
+        return async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
 
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Close the fake registry client."""
-
-        async def get(self, url: str, headers: dict[str, str] | None = None) -> FakeConfigResponse:
-            """Capture the config blob request and return image labels."""
-
-            captured["blob"] = {"url": url, "headers": headers}
-            return FakeConfigResponse()
-
-    monkeypatch.setattr(images, "_fetch_manifest", fake_fetch_manifest)
-    monkeypatch.setattr(images.httpx2, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(images.httpx2, "AsyncClient", client)
 
     # Act
     image_metadata = await images.metadata(Image(image))
@@ -121,12 +77,10 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
         "manifest": {
-            "registry_url": registry_url,
-            "repository": "longlink/dashboard",
-            "reference": manifest_reference,
+            "url": "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
+            "accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
         },
         "blob": {
-            "url": f"{registry_url}/v2/longlink/dashboard/blobs/sha256:config",
-            "headers": None,
+            "url": "https://ghcr.io/v2/longlink/dashboard/blobs/sha256:config",
         },
     }
