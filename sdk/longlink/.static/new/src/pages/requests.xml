@@ -1,14 +1,10 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink version="v1" name="Requests" icon="clipboard-list">
     <Query id="requests" path="/api/requests" />
-    <State
-        id="draft"
-        text="Laptop for field audit"
-        amount="1800"
-    />
+    <State id="draft" />
 
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
-        <Stack gap="0">
+        <Stack>
             <Heading level="3" i18n="requests.title" />
             <Text as="p" color="secondary" i18n="requests.description" />
         </Stack>
@@ -34,8 +30,6 @@
             </Stack>
         </Dialog>
     </Stack>
-
-    <Text if="${requests.length !== 0}" i18n="requests.count" count="${requests.length}" />
 
     <Table data="$requests" rowName="request" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
         <TableColumn key="request" i18n="requests.table.request">

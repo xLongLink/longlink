@@ -14,7 +14,7 @@
         "build:api:bundle": "react-router build --mode api",
         "build:sdk": "vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "react-router build --mode sdk",
-        "export:platform-api": "DEVELOPMENT=true uv --directory ../api run python -m scripts.export_openapi",
+        "export:platform-api": "DEVELOPMENT=true uv --directory ../api run python -m scripts.openapi",
         "generate:platform-api": "vp run export:platform-api && openapi-ts --file openapi-ts.config.ts",
         "check:platform-api": "vp run generate:platform-api && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
         "dev": "react-router dev --mode api",

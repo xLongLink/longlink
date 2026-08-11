@@ -1,7 +1,6 @@
-import { parse, parseExpressionAt } from 'acorn';
+import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute, ASTInterpolationSegment } from '../types';
 import type { ExpressionNode } from './types';
-import { isReference } from './utils';
 
 type InterpolationSegment = {
     start: number;
@@ -21,7 +20,7 @@ export function compileAttribute(value: string, literal = false): ASTAttribute {
     if (standaloneExpression) return { kind: 'expression', node: standaloneExpression.node };
 
     // Store reference paths for deferred scope lookup and writable bindings.
-    if (isReference(input)) {
+    if (/^\$[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(input)) {
         return { kind: 'path', parts: input.slice(1).split('.'), isBinding: true };
     }
 
@@ -53,16 +52,6 @@ export function compileAttribute(value: string, literal = false): ASTAttribute {
     return { kind: 'text', value };
 }
 
-/** Parses one supported JavaScript expression into an AST node. */
-function parseExpression(expression: string): ExpressionNode {
-    const ast = parse(`(${expression})`, {
-        ecmaVersion: 'latest',
-        sourceType: 'script',
-    }) as unknown as { body: Array<{ expression: ExpressionNode }> };
-
-    return ast.body[0].expression;
-}
-
 /** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
 function readInterpolationSegment(input: string, start: number): InterpolationSegment {
     // Parse the interpolation body to find its boundary.
@@ -78,15 +67,11 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
             end += 1;
         }
 
-        // Require the interpolation to close at this point.
-        if (input[end] !== '}') {
-            throw new Error('Unclosed XML expression interpolation');
-        }
+        // Return only closed interpolation segments.
+        if (input[end] === '}') return { start, end, node };
+    } catch {}
 
-        return { start, end, node };
-    } catch {
-        throw new Error('Unclosed XML expression interpolation');
-    }
+    throw new Error('Unclosed XML expression interpolation');
 }
 
 /** Returns one standalone expression when the entire value is wrapped in `${...}`. */

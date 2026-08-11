@@ -8,7 +8,7 @@ Run from `api/`:
 uv sync --extra dev                # Create the development environment
 uv run alembic upgrade head        # Apply database migrations
 uv run python -m src.release       # Schedule deployment reconciliation once
-uv run python seed.py              # Seed the database
+uv run python -m scripts.seed      # Seed the database
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run ruff check --fix .           # Format imports and apply safe lint fixes
 ```

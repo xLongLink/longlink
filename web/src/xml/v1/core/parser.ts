@@ -98,7 +98,7 @@ function toNodes(input: unknown): ASTNode[] {
     // Preserve sibling order while stripping parser metadata.
     return Object.entries(record).flatMap(([key, value]) => {
         // Skip attributes and parser metadata.
-        if (key === ':@' || key.startsWith('?') || key.startsWith('!')) {
+        if (key === ':@' || key.startsWith('?')) {
             return [];
         }
 

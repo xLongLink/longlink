@@ -17,7 +17,7 @@ class SeedSettings(BaseSettings):
     """Define development infrastructure registrations."""
 
     # Compute registry
-    KUBECONFIG: Path = Path(__file__).with_name("kubeconfig.yaml")
+    KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
 
     # Database registry
     APPLICATION_DATABASE_URL: str | None = None

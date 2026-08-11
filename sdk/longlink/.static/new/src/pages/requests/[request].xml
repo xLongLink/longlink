@@ -4,8 +4,8 @@
     <Query id="attachments" path="/api/requests/${params.request}/attachments" />
     <State id="attachment" file="${null}" />
 
-    <Stack gap="3">
-        <Heading level="1" i18n="requests.detail.title" />
+    <Stack>
+        <Heading level="3" i18n="requests.detail.title" />
         <Text as="p" color="secondary" i18n="requests.detail.description" />
     </Stack>
 

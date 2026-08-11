@@ -53,7 +53,7 @@ export function TabList({ props, nodes }: Props) {
                     <AstryxTab href={tab.href} key={tab.value} label={tab.label} value={tab.value} />
                 ))}
             </AstryxTabList>
-            {activeTab ? renderNode(activeTab.nodes, ctx) : null}
+            {activeTab && renderNode(activeTab.nodes, ctx)}
         </Stack>
     );
 }

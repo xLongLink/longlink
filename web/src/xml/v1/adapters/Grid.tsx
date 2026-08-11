@@ -37,9 +37,14 @@ export function Grid({ props, nodes }: Props) {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
-    const repeat = resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'fill', 'Grid');
     const columns =
-        minWidth != null ? { minWidth, ...(maxColumns != null && { max: maxColumns }), repeat } : columnCount;
+        minWidth != null
+            ? {
+                  minWidth,
+                  ...(maxColumns != null && { max: maxColumns }),
+                  repeat: resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'fill', 'Grid'),
+              }
+            : columnCount;
     const gap = resolveXmlSpacing(props, 'gap', ctx);
     const rowGap = resolveXmlSpacing(props, 'rowGap', ctx);
     const columnGap = resolveXmlSpacing(props, 'columnGap', ctx);

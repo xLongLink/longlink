@@ -21,7 +21,7 @@ export function Banner({ props, nodes }: Props) {
             status={status}
             title={title}
         >
-            {nodes.length > 0 ? renderNode(nodes, ctx) : undefined}
+            {renderNode(nodes, ctx)}
         </AstryxBanner>
     );
 }

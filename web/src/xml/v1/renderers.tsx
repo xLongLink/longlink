@@ -1,6 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { InternationalizationProvider, useTranslator, type MessagesByLocale } from '@astryxdesign/core/i18n';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { translationCatalogs } from '@/lib/i18n';
@@ -26,10 +26,9 @@ type SetupFailure = {
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
+export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
-    const requiresSetup = hasMatchingNode(ast, (node) => node.name === 'State' || node.name === 'Query');
-    const requiresTranslations = hasMatchingNode(ast, (node) => Boolean(node.params?.i18n));
+    const { requiresSetup, requiresTranslations } = getRequirements(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
     const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
@@ -189,16 +188,22 @@ function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ct
     );
 }
 
-/** Returns whether the AST contains a node matching the supplied predicate. */
-function hasMatchingNode(nodes: ASTNode[], predicate: (node: ASTNode) => boolean): boolean {
-    // Walk the tree until a matching node is found.
-    for (const node of nodes) {
-        // Check this node before visiting descendants.
-        if (predicate(node)) return true;
+/** Returns setup and translation requirements discovered in one AST traversal. */
+function getRequirements(nodes: ASTNode[]): { requiresSetup: boolean; requiresTranslations: boolean } {
+    let requiresSetup = false;
+    let requiresTranslations = false;
 
-        // Search nested nodes for a match.
-        if (hasMatchingNode(node.children ?? [], predicate)) return true;
+    // Walk the tree until both requirements are known.
+    for (const node of nodes) {
+        requiresSetup ||= node.name === 'State' || node.name === 'Query';
+        requiresTranslations ||= node.params?.i18n != null;
+        if (requiresSetup && requiresTranslations) break;
+
+        const nested = getRequirements(node.children ?? []);
+        requiresSetup ||= nested.requiresSetup;
+        requiresTranslations ||= nested.requiresTranslations;
+        if (requiresSetup && requiresTranslations) break;
     }
 
-    return false;
+    return { requiresSetup, requiresTranslations };
 }

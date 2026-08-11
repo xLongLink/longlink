@@ -9,8 +9,8 @@
     <State id="budgetLimit" value="2500" />
     <State id="workflow" owner="manager" risk="medium" />
 
-    <Stack gap="3">
-        <Heading level="1" i18n="settings.title" />
+    <Stack>
+        <Heading level="3" i18n="settings.title" />
         <Text as="p" color="secondary" i18n="settings.description" />
     </Stack>
 

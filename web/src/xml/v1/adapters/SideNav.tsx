@@ -48,7 +48,7 @@ export function SideNav({ props, nodes }: Props) {
                     })}
                 </SideNavSection>
             </AstryxSideNav>
-            <div className="min-w-0">{activeItem ? renderNode(activeItem.nodes, ctx) : null}</div>
+            <div className="min-w-0">{activeItem && renderNode(activeItem.nodes, ctx)}</div>
         </div>
     );
 }
@@ -63,5 +63,5 @@ function resolveSideNavItem(node: ASTNode, ctx: Scope, services: ReturnType<type
     const props = node.params ?? {};
     const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
     const label = resolveXmlLabel(props, ctx, services, 'SideNavItem');
-    return { icon: resolveXmlString(props, 'icon', ctx) || undefined, label, nodes: node.children ?? [], value };
+    return { icon: resolveXmlString(props, 'icon', ctx), label, nodes: node.children ?? [], value };
 }

@@ -119,7 +119,11 @@ function buildColumn(
         key: key.value,
         width,
         renderCell: (row) => {
-            const value = resolveFieldValue(row, field);
+            const value = field.split('.').reduce<unknown>((current, segment) => {
+                if (current == null || typeof current !== 'object') return undefined;
+
+                return readSafeProperty(current, segment);
+            }, row);
 
             // Shorthand columns render the resolved field value directly.
             if (cellNodes.length === 0) return value == null ? '' : String(value);
@@ -136,13 +140,4 @@ function buildColumn(
             );
         },
     };
-}
-
-/** Resolves a dotted field path against one row without unsafe property access. */
-function resolveFieldValue(row: TableRow, field: string): unknown {
-    return field.split('.').reduce<unknown>((current, segment) => {
-        if (current == null || typeof current !== 'object') return undefined;
-
-        return readSafeProperty(current, segment);
-    }, row);
 }

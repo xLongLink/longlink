@@ -58,9 +58,6 @@ export function resolveXmlBoolean(
 
     const value = evaluate(attribute, ctx);
 
-    // Preserve explicit XML boolean literals before falling back to truthiness.
-    if (value === true || value === 'true') return true;
-
     // Preserve explicit false values instead of coercing them through truthiness.
     if (value === false || value === 'false') return false;
 

@@ -113,9 +113,6 @@
     "requests.attachments.upload": {
         "defaultMessage": "Upload attachment"
     },
-    "requests.count": {
-        "defaultMessage": "{count, plural, one {# request in the queue.} other {# requests in the queue.}}"
-    },
     "requests.create.submit": {
         "defaultMessage": "Submit request"
     },

@@ -13,7 +13,6 @@ type MemberExpressionNode = {
     object: ExpressionNode;
     property: ExpressionNode;
     computed: boolean;
-    optional?: boolean;
 };
 
 type ChainExpressionNode = {

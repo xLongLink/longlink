@@ -1,8 +1,8 @@
 import asyncio
-from seed import SeedSettings
 from uuid import UUID
 from pathlib import Path
 from sqlalchemy import text, inspect
+from scripts.seed import SeedSettings
 from src.environments import env
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import make_url

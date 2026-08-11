@@ -19,11 +19,6 @@ class PageResponse(BaseModel):
 def get_pages(request: Request):
     """Return the registered SDK runtime pages."""
 
-    # Development page catalogs are rebuilt from the source tree for every request.
-    refresh_pages = getattr(request.app.state, "refresh_pages", None)
-    if refresh_pages is not None:
-        refresh_pages()
-
     # Page handlers are registered from the SDK pages directory during app startup.
     return [
         {
