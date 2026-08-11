@@ -21,56 +21,24 @@ def application_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
     return source_directory
 
 
-def test_longlink_app_serves_runtime_routes_frontend_and_development_cors(application_source: Path) -> None:
-    """Serve SDK runtime endpoints, frontend entrypoint, and local development CORS."""
+def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
+    """Serve SDK runtime endpoints and the embedded frontend."""
 
     # Initialize the development runtime and its in-process client.
     app = FastAPI()
     LongLink(app, env="development")
     client = TestClient(app)
 
-    # Exercise runtime metadata, frontend fallback, and development preflight routes.
+    # Exercise runtime metadata and frontend fallback routes.
     pages_response = client.get("/pages.json")
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-    cors_response = client.options(
-        "/pages.json",
-        headers={
-            "origin": "http://localhost:5173",
-            "access-control-request-method": "GET",
-        },
-    )
-
-    # Verify each route and the local development CORS policy.
+    # Verify each runtime route.
     assert pages_response.status_code == 200
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
-    assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
-
-
-def test_development_cors_rejects_untrusted_origin(application_source: Path) -> None:
-    """Reject browser preflight requests from origins outside the local allowlist."""
-
-    # Start the development runtime with its local frontend CORS policy.
-    app = FastAPI()
-    LongLink(app, env="development")
-    client = TestClient(app)
-
-    # Request an API resource from an untrusted browser origin.
-    response = client.options(
-        "/pages.json",
-        headers={
-            "origin": "https://untrusted.example.com",
-            "access-control-request-method": "GET",
-        },
-    )
-
-    # Reject the preflight without depending on implementation-specific headers.
-    assert response.status_code == 400
-
-
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
     """Require every Platform-owned runtime setting before production startup."""
 

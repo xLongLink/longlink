@@ -4,6 +4,7 @@ from uuid import UUID
 from typing import ClassVar
 from fastapi import FastAPI
 from datetime import UTC, datetime
+from longlink import context as runtime_context
 from sqlmodel import Field
 from longlink.database import base as database_base
 from longlink.database import audit as database_audit
@@ -52,12 +53,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.session() as session:
             item = AuditLifecycleItem(name="draft", created_at=None, updated_at=None)
-            token = database_audit._current_user_id.set(creator_id)
+            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=creator_id))
             try:
                 session.add(item)
                 await session.commit()
             finally:
-                database_audit._current_user_id.reset(token)
+                runtime_context._current_identity.reset(token)
 
             await session.refresh(item)
             assert item.id is not None
@@ -72,12 +73,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            token = database_audit._current_user_id.set(updater_id)
+            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=updater_id))
             try:
                 item.name = "reviewed"
                 await session.commit()
             finally:
-                database_audit._current_user_id.reset(token)
+                runtime_context._current_identity.reset(token)
 
             await session.refresh(item)
             assert item.updated_at == updated_at
@@ -88,12 +89,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            token = database_audit._current_user_id.set(deleter_id)
+            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=deleter_id))
             try:
                 await session.delete(item)
                 await session.commit()
             finally:
-                database_audit._current_user_id.reset(token)
+                runtime_context._current_identity.reset(token)
 
         # Reload after deletion to prove the row and all persisted audit values remain.
         async with database_base.session() as session:
@@ -130,13 +131,13 @@ def test_audit_middleware_binds_x_user_id_header(
 
     # Install audit middleware around a route that exposes request-local state.
     app = FastAPI()
-    database_audit.install_audit_middleware(app)
+    runtime_context.install_context_middleware(app)
 
     @app.get("/")
     async def current_user() -> dict[str, str | None]:
         """Expose the audit user bound for this request."""
 
-        user_id = database_audit._current_user_id.get()
+        user_id = runtime_context._current_identity.get().user_id
         return {"user_id": str(user_id) if user_id is not None else None}
 
     # Send the candidate audit identity through the HTTP boundary.
@@ -144,7 +145,7 @@ def test_audit_middleware_binds_x_user_id_header(
 
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
-    assert database_audit._current_user_id.get() is None
+    assert runtime_context._current_identity.get().user_id is None
 
 
 async def test_audit_middleware_isolates_concurrent_request_identities() -> None:
@@ -152,14 +153,14 @@ async def test_audit_middleware_isolates_concurrent_request_identities() -> None
 
     # Install the middleware around a route that yields while reading its identity.
     app = FastAPI()
-    database_audit.install_audit_middleware(app)
+    runtime_context.install_context_middleware(app)
 
     @app.get("/")
     async def current_user() -> dict[str, str | None]:
         """Return the request-local audit identity after yielding control."""
 
         await asyncio.sleep(0)
-        user_id = database_audit._current_user_id.get()
+        user_id = runtime_context._current_identity.get().user_id
         return {"user_id": str(user_id) if user_id is not None else None}
 
     client = TestClient(app)

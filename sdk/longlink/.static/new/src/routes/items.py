@@ -1,7 +1,7 @@
 from uuid import uuid4
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
-from longlink import storage
+from longlink import Context, data
 from src.schemas.items import (
     ItemRead,
     ItemCreate,
@@ -40,7 +40,7 @@ async def item_get_endpoint(item_id: int):
 @router.get(
     "/items/{item_id}/attachments", response_model=list[ItemAttachmentRead]
 )
-async def item_attachments_get_endpoint(item_id: int):
+async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(data)):
     """Return files attached to one catalog item."""
 
     # Validate the item before accessing its attachment storage.
@@ -48,7 +48,7 @@ async def item_attachments_get_endpoint(item_id: int):
 
     # Treat an item without a storage directory as having no attachments.
     try:
-        entries = storage.ls(f"{ATTACHMENTS_DIRECTORY}/{item_id}", detail=False)
+        entries = ctx.storage.ls(f"{ATTACHMENTS_DIRECTORY}/{item_id}", detail=False)
     except FileNotFoundError:
         return []
 
@@ -60,7 +60,7 @@ async def item_attachments_get_endpoint(item_id: int):
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
-async def item_attachments_post_endpoint(item_id: int, file: UploadFile):
+async def item_attachments_post_endpoint(item_id: int, file: UploadFile, ctx: Context = Depends(data)):
     """Upload one file attachment for a catalog item."""
 
     # Validate the item before accepting attachment content.
@@ -73,9 +73,9 @@ async def item_attachments_post_endpoint(item_id: int, file: UploadFile):
 
     # Create the attachment directory and close the upload after storage completes.
     try:
-        storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{item_id}", exist_ok=True)
+        ctx.storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{item_id}", exist_ok=True)
 
-        with storage.open(storage_path, "wb") as stored_file:
+        with ctx.storage.open(storage_path, "wb") as stored_file:
             # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)

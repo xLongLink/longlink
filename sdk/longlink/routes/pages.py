@@ -28,5 +28,5 @@ def get_pages(request: Request):
             "name": page.name,
             "icon": page.icon,
         }
-        for page in request.app.state.page_registry
+        for page in request.app.state.longlink.pages
     ]

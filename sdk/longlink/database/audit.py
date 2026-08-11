@@ -1,14 +1,9 @@
-from uuid import UUID
 from .base import AuditTable
-from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
-from contextvars import ContextVar
-from collections.abc import Callable, Awaitable
+from longlink.context import _current_identity
 from longlink.utils.time import utcnow
-from starlette.responses import Response
 
-_current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", default=None)
 # ---------------------------------------------------------------------
 # SQLModel audit hook
 # ---------------------------------------------------------------------
@@ -24,7 +19,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
 
     # Capture one timestamp and actor for every row changed in this flush.
     now = utcnow()
-    user_id = _current_user_id.get()
+    user_id = _current_identity.get().user_id
 
     # Apply audit fields to newly tracked rows.
     for obj in session.new:
@@ -80,40 +75,3 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
         obj.deleted_id = user_id
         obj.updated_at = now
         obj.updated_id = user_id
-
-
-# ---------------------------------------------------------------------
-# Recommended FastAPI middleware version
-# ---------------------------------------------------------------------
-
-
-def install_audit_middleware(app: FastAPI) -> None:
-    """
-    Middleware keeps the user context active for the whole request lifecycle.
-    """
-
-    @app.middleware("http")
-    async def audit_context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        """Bind the request user ID for the duration of the request."""
-
-        user_id: UUID | None = None
-
-        # Read and decode the trusted audit-user header when present.
-        raw_user_id = request.headers.get("x-user-id")
-        if raw_user_id is not None:
-
-            # Parse valid UUID headers into audit user IDs.
-            try:
-                user_id = UUID(raw_user_id)
-
-            # Invalid headers run without an audit user.
-            except ValueError:
-                pass
-
-        # Keep the user bound across downstream request handling.
-        token = _current_user_id.set(user_id)
-        request.state.user_id = user_id
-        try:
-            return await call_next(request)
-        finally:
-            _current_user_id.reset(token)
