@@ -47,7 +47,7 @@ export function Button({ props, nodes }: Props) {
             type={type}
             variant={variant}
         >
-            {renderNode(nodes, ctx)}
+            {nodes.length > 0 ? renderNode(nodes, ctx) : undefined}
         </AstryxButton>
     );
 }

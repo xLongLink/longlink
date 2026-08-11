@@ -26,7 +26,5 @@ class RequestAttachmentRead(BaseModel):
     # File fields
     id: str
     name: str
-    size: int
-    download_url: str
     uploaded_by_name: str
     uploaded_by_avatar: str

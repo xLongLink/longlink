@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'NumberInput',
     slug: 'number-input',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Collects numeric values.',
     usage: 'Use NumberInput for quantities, amounts, percentages, and bounded numeric fields.',
     attributes: [

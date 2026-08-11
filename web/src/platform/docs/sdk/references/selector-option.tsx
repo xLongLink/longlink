@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'SelectorOption',
     slug: 'selector-option',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Defines one option inside a Selector.',
     usage: 'Use SelectorOption only as a direct child of Selector.',
     attributes: [

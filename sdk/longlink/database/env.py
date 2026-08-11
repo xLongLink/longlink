@@ -9,9 +9,8 @@ from longlink.database.migrations import include_object
 # Initialize the migration engine and shared Alembic context options.
 settings = Envs()
 engine = create_engine(settings)
-target_metadata = database_metadata
 migration_context_options: dict[str, Any] = {
-    "target_metadata": target_metadata,
+    "target_metadata": database_metadata,
     "include_object": include_object,
     "compare_type": True,
     "render_as_batch": True,

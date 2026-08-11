@@ -200,11 +200,10 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
         # Positional Field defaults use ellipsis for required values and any other value as optional.
         if value.args:
             first_argument = value.args[0]
-            required_default = (
+            info["required"] = (
                 isinstance(first_argument, ast.Constant)
                 and first_argument.value is Ellipsis
             )
-            info["required"] = required_default
 
         # Inspect Field keyword arguments.
         for keyword in value.keywords:
@@ -426,7 +425,6 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
     registry_prefix = (registry or "").strip().rstrip("/")
-    image_path = image_name
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
@@ -452,19 +450,15 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
             raise ValueError("Docker registry port is invalid")
-        if host == "localhost":
-            pass
-        elif host == "ghcr.io" and not separator and len(registry_prefix.split("/")) == 2:
-            pass
-        else:
+        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
             raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
         if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
             raise ValueError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
-        image_path = f"{registry_prefix}/{image_name}"
+        return f"{registry_prefix}/{image_name}:{version}"
 
-    return f"{image_path}:{version}"
+    return f"{image_name}:{version}"
 
 
 @click.command(name="build")

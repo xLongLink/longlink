@@ -8,7 +8,7 @@
             <Heading level="3" i18n="requests.title" />
             <Text as="p" color="secondary" i18n="requests.description" />
         </Stack>
-        <Dialog i18n="requests.create.title" triggerLabel="New request" purpose="form">
+        <Dialog title="New request" triggerLabel="New request" purpose="form">
             <Stack gap="3">
                 <FormLayout>
                     <TextInput
@@ -25,7 +25,7 @@
                     closeDialog="true"
                     json="${{ text: draft.text, amount: draft.amount }}"
                 >
-                    <Button isDisabled="${draft.text in ['']}" variant="primary" i18n="requests.create.submit" />
+                    <Button isDisabled="${draft.text in ['']}" variant="primary" label="Create purchase request" />
                 </Action>
             </Stack>
         </Dialog>
@@ -34,12 +34,9 @@
     <Table data="$requests" rowName="request" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
         <TableColumn key="request" i18n="requests.table.request">
             <Stack gap="1">
-                <Link to="/requests/${request.id}" i18n="requests.table.open" />
-                <Text value="$request.text" />
+                <Link to="/requests/${request.id}" label="$request.text" />
+                <Text color="secondary" value="${`CHF ${request.amount}`}" hasTabularNumbers="true" />
             </Stack>
-        </TableColumn>
-        <TableColumn key="amount" i18n="requests.amount">
-            <Text value="${`CHF ${request.amount}`}" hasTabularNumbers="true" />
         </TableColumn>
     </Table>
 </longlink>

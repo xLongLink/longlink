@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'CheckboxInput',
     slug: 'checkbox-input',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Captures one boolean value.',
     usage: 'Use CheckboxInput for form-submitted boolean choices such as acceptance or inclusion.',
     attributes: [

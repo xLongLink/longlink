@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Table',
     slug: 'table',
-    category: 'Table & List',
+    category: 'Layout',
     summary: 'Displays tabular data from an array.',
     usage: 'Use Table for row-oriented business data with consistent columns.',
     attributes: [

@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'TextArea',
     slug: 'text-area',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Collects longer text values.',
     usage: 'Use TextArea for comments, notes, descriptions, and other multi-line text.',
     attributes: [

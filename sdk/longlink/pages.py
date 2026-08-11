@@ -19,12 +19,9 @@ class PageDefinition:
 def extract_longlink_metadata(root: etree._Element) -> tuple[str | None, str | None]:
     """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
 
-    # Normalize blank and missing metadata values to the same absent state.
-    name = root.get("name")
-    icon = root.get("icon")
     return (
-        (name or "").strip() or None,
-        (icon or "").strip() or None,
+        (root.get("name") or "").strip() or None,
+        (root.get("icon") or "").strip() or None,
     )
 
 

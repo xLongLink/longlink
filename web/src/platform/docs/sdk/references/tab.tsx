@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Tab',
     slug: 'tab',
-    category: 'Navigation',
+    category: 'Layout',
     summary: 'Defines one tab destination inside a TabList.',
     usage: 'Use Tab only as a child of TabList.',
     attributes: [

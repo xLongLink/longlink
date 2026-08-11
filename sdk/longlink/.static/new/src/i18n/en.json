@@ -1,28 +1,4 @@
 {
-    "dashboard.description": {
-        "defaultMessage": "Track office purchase requests and keep the approval queue visible."
-    },
-    "dashboard.metrics.budget.label": {
-        "defaultMessage": "Monthly budget"
-    },
-    "dashboard.metrics.budget.value": {
-        "defaultMessage": "CHF {amount}"
-    },
-    "dashboard.metrics.requests.count": {
-        "defaultMessage": "{count, plural, one {# request} other {# requests}}"
-    },
-    "dashboard.metrics.requests.label": {
-        "defaultMessage": "Open work"
-    },
-    "dashboard.metrics.target.label": {
-        "defaultMessage": "Review target"
-    },
-    "dashboard.metrics.target.value": {
-        "defaultMessage": "{days} days"
-    },
-    "dashboard.title": {
-        "defaultMessage": "Office operations"
-    },
     "requests.amount": {
         "defaultMessage": "Amount"
     },
@@ -35,20 +11,11 @@
     "requests.attachments.uploadedBy": {
         "defaultMessage": "Uploaded by"
     },
-    "requests.create.submit": {
-        "defaultMessage": "Submit request"
-    },
-    "requests.create.title": {
-        "defaultMessage": "Create purchase request"
-    },
     "requests.description": {
         "defaultMessage": "Track purchase requests and supporting files."
     },
     "requests.fields.text": {
         "defaultMessage": "Text"
-    },
-    "requests.table.open": {
-        "defaultMessage": "Open"
     },
     "requests.table.request": {
         "defaultMessage": "Request"
@@ -113,14 +80,11 @@
     "settings.description": {
         "defaultMessage": "Configure application defaults with local XML state and Astryx form controls."
     },
-    "settings.links.actions": {
-        "defaultMessage": "Links"
-    },
     "settings.links.add": {
         "defaultMessage": "Add"
     },
     "settings.links.description": {
-        "defaultMessage": "Use actions, button groups, loops, and badges for small configurable collections."
+        "defaultMessage": "Use actions, loops, and badges for small configurable collections."
     },
     "settings.links.empty": {
         "defaultMessage": "No quick links added yet."

@@ -95,7 +95,7 @@
                 <Heading level="2" i18n="settings.sections.links" />
                 <Text as="p" i18n="settings.links.description" />
                 <TextInput i18n="settings.links.label" value="$draftLink.label" />
-                <ButtonGroup i18n="settings.links.actions">
+                <Stack direction="horizontal" gap="2">
                     <Button
                         append="${'quickLinks.value'}"
                         item="${{ label: draftLink.label }}"
@@ -106,7 +106,7 @@
                     <Action invalidate='${["quickLinks"]}'>
                         <Button i18n="settings.links.reset" />
                     </Action>
-                </ButtonGroup>
+                </Stack>
                 <Text if="${quickLinks.value.length in [0]}" i18n="settings.links.empty" />
                 <Stack direction="horizontal" wrap="wrap" gap="2">
                     <For each="$quickLinks.value" as="link">

@@ -5,7 +5,6 @@ import * as badgeReference from './badge';
 import * as bannerReference from './banner';
 import * as bindingsReference from './bindings';
 import * as buttonReference from './button';
-import * as buttonGroupReference from './button-group';
 import * as cardReference from './card';
 import * as checkboxInputReference from './checkbox-input';
 import * as codeReference from './code';
@@ -15,7 +14,6 @@ import * as dividerReference from './divider';
 import * as expressionsReference from './expressions';
 import * as fileInputReference from './file-input';
 import * as forReference from './for';
-import * as formLayoutReference from './form-layout';
 import * as gridReference from './grid';
 import * as headingReference from './heading';
 import * as i18nReference from './i18n';
@@ -29,15 +27,12 @@ import * as radioListItemReference from './radio-list-item';
 import * as selectorReference from './selector';
 import * as selectorOptionReference from './selector-option';
 import * as sideNavReference from './side-nav';
-import * as sideNavItemReference from './side-nav-item';
 import * as sliderReference from './slider';
 import * as stackReference from './stack';
 import * as stateReference from './state';
 import * as switchReference from './switch';
 import * as tabReference from './tab';
-import * as tabListReference from './tab-list';
 import * as tableReference from './table';
-import * as tableColumnReference from './table-column';
 import * as textReference from './text';
 import * as textAreaReference from './text-area';
 import * as textInputReference from './text-input';
@@ -55,7 +50,6 @@ const referenceModules = [
     actionReference,
     forReference,
     buttonReference,
-    buttonGroupReference,
     linkReference,
     cardReference,
     avatarReference,
@@ -77,16 +71,12 @@ const referenceModules = [
     badgeReference,
     bannerReference,
     dividerReference,
-    formLayoutReference,
     gridReference,
     stackReference,
     sideNavReference,
-    sideNavItemReference,
     tabReference,
-    tabListReference,
     dialogReference,
     tableReference,
-    tableColumnReference,
 ];
 
 export const pageReferenceDocs = referenceModules.map(({ reference }) => reference);

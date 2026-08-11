@@ -3,7 +3,6 @@ export { Avatar } from './Avatar';
 export { Badge } from './Badge';
 export { Banner } from './Banner';
 export { Button } from './Button';
-export { ButtonGroup } from './ButtonGroup';
 export { Card } from './Card';
 export { CheckboxInput } from './CheckboxInput';
 export { Code } from './Code';

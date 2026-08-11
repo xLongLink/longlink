@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'TextInput',
     slug: 'text-input',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Collects short text values.',
     usage: 'Use TextInput for names, identifiers, emails, search terms, and other single-line values.',
     attributes: [

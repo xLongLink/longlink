@@ -36,8 +36,7 @@ def accepts_gzip(value: str) -> bool:
         else:
             wildcard_quality = normalized_quality
 
-    quality = gzip_quality if gzip_quality is not None else wildcard_quality
-    return quality is not None and quality > 0.0
+    return (gzip_quality if gzip_quality is not None else wildcard_quality or 0.0) > 0.0
 
 
 class FrontendMiddleware:
@@ -62,7 +61,6 @@ class FrontendMiddleware:
         request_headers = Headers(scope=scope)
         path = scope["path"]
         compression_candidate = "range" not in request_headers and not path.lower().endswith(INCOMPRESSIBLE_SUFFIXES)
-        use_gzip = compression_candidate and accepts_gzip(request_headers.get("accept-encoding", ""))
 
         async def send_with_headers(message: Message) -> None:
             """Apply representation and cache headers before the response starts."""
@@ -74,7 +72,6 @@ class FrontendMiddleware:
 
             headers = MutableHeaders(scope=message)
             status = message["status"]
-            content_type = headers.get("content-type", "")
 
             # Shared caches must distinguish identity and gzip-capable requests.
             vary_values = {item.strip().lower() for item in headers.get("vary", "").split(",")}
@@ -88,7 +85,7 @@ class FrontendMiddleware:
 
             # Preserve explicit route policies before applying frontend defaults.
             if "cache-control" not in headers:
-                if content_type.startswith("text/html") and status in {200, 206, 304}:
+                if headers.get("content-type", "").startswith("text/html") and status in {200, 206, 304}:
                     headers["cache-control"] = "no-cache"
                 elif HASHED_ASSET_PATH.fullmatch(path) and status in {200, 206, 304}:
                     headers["cache-control"] = "public, max-age=31536000, immutable"
@@ -100,7 +97,7 @@ class FrontendMiddleware:
             await send(message)
 
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
-        if use_gzip:
+        if compression_candidate and accepts_gzip(request_headers.get("accept-encoding", "")):
             await self.gzip(scope, receive, send_with_headers)
             return
 

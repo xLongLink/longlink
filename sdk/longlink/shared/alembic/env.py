@@ -58,11 +58,10 @@ async def run_async_migrations(database_url: str) -> None:
     """Run shared-schema migrations through an async SQLAlchemy engine."""
 
     # Use an operation-scoped pool because each organization has its own database.
-    connect_args = urls.connect_args(database_url)
     connectable = create_async_engine(
         database_url,
         poolclass=pool.NullPool,
-        **({"connect_args": connect_args} if connect_args else {}),
+        connect_args=urls.connect_args(database_url),
     )
     try:
         async with connectable.connect() as connection:

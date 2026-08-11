@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'RadioListItem',
     slug: 'radio-list-item',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Defines one option inside a RadioList.',
     usage: 'Use RadioListItem only as a direct child of RadioList.',
     attributes: [

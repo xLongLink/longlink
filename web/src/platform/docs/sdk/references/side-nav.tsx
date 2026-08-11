@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'SideNav',
     slug: 'side-nav',
-    category: 'Navigation',
+    category: 'Layout',
     summary: 'Renders application navigation in a sidebar container.',
     usage: 'Use SideNav when an XML page owns a local navigation list.',
     attributes: [

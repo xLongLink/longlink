@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Switch',
     slug: 'switch',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Captures an immediate on/off setting.',
     usage: 'Use Switch for preferences that take effect as soon as they change.',
     attributes: [

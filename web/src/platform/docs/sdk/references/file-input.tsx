@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'FileInput',
     slug: 'file-input',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Collects browser File values for form actions.',
     usage: 'Use FileInput when an Action form payload needs uploaded files.',
     attributes: [

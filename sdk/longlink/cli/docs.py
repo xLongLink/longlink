@@ -58,10 +58,9 @@ def summarize_component_schema(schema_path: Path, component: str) -> ComponentDe
     """Extract props, children support, and descriptions from a component schema."""
 
     schema = load_schema(schema_path)
-    normalized = component.casefold()
 
     # Resolve the requested element, falling back to the schema's first root element.
-    element = next((candidate for name, candidate in schema.elements.items() if name.casefold() == normalized), None)
+    element = next((candidate for name, candidate in schema.elements.items() if name.casefold() == component.casefold()), None)
     if element is None:
         element = next(iter(schema.elements.values()), None)
     if element is None:
@@ -159,14 +158,12 @@ def docs_command(component: str | None) -> None:
         click.echo(render_component_docs(component))
         return
 
-    # Prepare the adapter directory and collected documentation output.
-    adapters = ROOT / ".static" / "xsd" / "adapters"
-    docs = []
-
     # Render every declared component, including data-oriented child tags in grouped schemas.
-    for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold()):
-        schema = load_schema(schema_path)
-        for name in schema.elements:
-            docs.append(render_component_docs(name))
-
-    click.echo("\n\n".join(docs))
+    adapters = ROOT / ".static" / "xsd" / "adapters"
+    click.echo(
+        "\n\n".join(
+            render_component_docs(name)
+            for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold())
+            for name in load_schema(schema_path).elements
+        )
+    )

@@ -2,7 +2,6 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
@@ -10,7 +9,6 @@ import { Code } from '@astryxdesign/core/Code';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Divider } from '@astryxdesign/core/Divider';
 import { FileInput } from '@astryxdesign/core/FileInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Link } from '@astryxdesign/core/Link';
@@ -60,20 +58,12 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
         title: 'Content',
     },
     {
-        id: 'data-input',
-        title: 'Data Input',
+        id: 'form',
+        title: 'Form',
     },
     {
         id: 'layout',
         title: 'Layout',
-    },
-    {
-        id: 'navigation',
-        title: 'Navigation',
-    },
-    {
-        id: 'table-and-list',
-        title: 'Table & List',
     },
 ];
 
@@ -154,13 +144,6 @@ function renderComponentPreview(name: string) {
                     <Button label="Edit" size="sm" variant="secondary" />
                     <Button label="View" size="sm" variant="ghost" />
                 </Stack>
-            );
-        case 'ButtonGroup':
-            return (
-                <ButtonGroup label="Document actions" size="sm">
-                    <Button label="Copy" variant="secondary" />
-                    <Button label="Paste" variant="secondary" />
-                </ButtonGroup>
             );
         case 'Link':
             return (
@@ -277,15 +260,6 @@ function renderComponentPreview(name: string) {
                     <Text type="supporting">After</Text>
                 </Stack>
             );
-        case 'FormLayout':
-            return (
-                <Stack width={150}>
-                    <FormLayout direction="vertical">
-                        <TextInput isLabelHidden label="Title" size="sm" value="Request" onChange={noop} />
-                        <CheckboxInput label="Active" size="sm" value onChange={noop} />
-                    </FormLayout>
-                </Stack>
-            );
         case 'Grid':
             return (
                 <Grid columns={2} gap={2}>
@@ -333,8 +307,6 @@ function renderComponentPreview(name: string) {
                     />
                 </Stack>
             );
-        case 'TableColumn':
-            return <Code>{'<TableColumn />'}</Code>;
         default:
             return <Code>{`<${name} />`}</Code>;
     }

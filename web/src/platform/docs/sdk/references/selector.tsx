@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Selector',
     slug: 'selector',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Presents a dropdown selection control.',
     usage: 'Use Selector when a moderate set of options should stay compact until opened.',
     attributes: [

@@ -6,7 +6,6 @@ from functools import partial
 from dataclasses import dataclass
 from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
 from longlink.utils import Envs
-from fastapi.routing import APIRoute
 from longlink.logger import ApiAccessFilter
 from longlink.routes import routes
 from fastapi.responses import Response, RedirectResponse
@@ -71,7 +70,6 @@ class LongLink:
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
         app.state.page_registry = []
-        app.state.page_routes = {}
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -166,8 +164,11 @@ class LongLink:
             )
             for page in discovered_pages
         ]
-        registered_routes: dict[str, APIRoute] = self.app.state.page_routes
-        stale_route_ids = {id(registered_routes[path]) for path in stale_page_paths}
+        stale_route_ids = {
+            id(route)
+            for route in self.app.router.routes
+            if getattr(route, "path", None) in stale_page_paths
+        }
         replacement_index = next(
             (index for index, route in enumerate(self.app.router.routes) if id(route) in stale_route_ids),
             len(self.app.router.routes),
@@ -180,10 +181,6 @@ class LongLink:
         # Commit the complete catalog and its routes only after all construction has succeeded.
         self.app.router.routes[:] = next_routes
         registered_pages[:] = [*retained_pages, *(page.definition for page in discovered_pages)]
-        self.app.state.page_routes = {
-            **{path: route for path, route in registered_routes.items() if path not in stale_page_paths},
-            **{page.definition.path: route for page, route in zip(discovered_pages, replacement_routes, strict=True)},
-        }
 
     def discover_pages(self, route_prefix: str, pages_directory: Path, registered_pages: list[PageDefinition]) -> list[DiscoveredPage]:
         """Discover and validate all XML pages before registering any route."""

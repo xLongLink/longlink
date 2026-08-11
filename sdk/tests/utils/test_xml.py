@@ -29,11 +29,6 @@ VALID_FRAGMENTS = [
         _adapter_schema("Button.xsd"),
         '<Button append="cart" item="${item}" type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
     ),
-    (
-        "button-group",
-        _adapter_schema("ButtonGroup.xsd"),
-        '<ButtonGroup label="Actions" orientation="horizontal"><Button label="Cancel" /><Button label="Save" variant="primary" /></ButtonGroup>',
-    ),
     ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text i18n="cards.content" /></Card>'),
     (
         "checkbox-input",

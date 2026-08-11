@@ -15,7 +15,6 @@
   <xsd:include schemaLocation="adapters/Badge.xsd" />
   <xsd:include schemaLocation="adapters/Banner.xsd" />
   <xsd:include schemaLocation="adapters/Button.xsd" />
-  <xsd:include schemaLocation="adapters/ButtonGroup.xsd" />
   <xsd:include schemaLocation="adapters/Card.xsd" />
   <xsd:include schemaLocation="adapters/Stack.xsd" />
   <xsd:include schemaLocation="adapters/Grid.xsd" />

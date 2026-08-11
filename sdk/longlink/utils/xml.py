@@ -96,10 +96,9 @@ class Element:
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = create_xml_parser()
-        schema_path = self.schema_path
-        if schema_path is None:
+        if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
-        schema = load_xml_schema((schema_path if schema_path.is_absolute() else ROOT / schema_path).resolve())
+        schema = load_xml_schema((self.schema_path if self.schema_path.is_absolute() else ROOT / self.schema_path).resolve())
 
         # Parse user XML once for validation and downstream metadata extraction.
         try:

@@ -3,7 +3,7 @@ import { ReferenceArticle, referenceToc, type ReferenceDoc } from '../reference'
 export const reference = {
     name: 'Slider',
     slug: 'slider',
-    category: 'Data Input',
+    category: 'Form',
     summary: 'Captures bounded numeric values through a range control.',
     usage: 'Use Slider for approximate values where visual adjustment is faster than typing.',
     attributes: [

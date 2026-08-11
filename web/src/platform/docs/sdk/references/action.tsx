@@ -28,7 +28,7 @@ export const reference = {
             description: 'Setup ids to refresh after a successful request.',
         },
     ],
-    children: 'Usually contains one Button or ButtonGroup entry.',
+    children: 'Usually contains one Button entry.',
     example:
         '<Action action="/api/orders/${order.id}/complete" method="PATCH" invalidate="${[\'orders\']}">\n  <Button label="Complete" />\n</Action>',
 } satisfies ReferenceDoc;
