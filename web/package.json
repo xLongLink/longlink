@@ -37,7 +37,7 @@
         "lucide-react": "^1.30.0",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
-        "react-hook-form": "^7.84.0",
+        "react-hook-form": "^7.85.0",
         "react-router": "8.3.0",
         "tailwindcss": "^4.3.3",
         "topojson-client": "^3.1.0",
