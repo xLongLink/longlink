@@ -1,0 +1,9 @@
+export const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const;
+export const HEADING_COLORS = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'] as const;
+export const HEADING_DISPLAYS = ['inline', 'block'] as const;
+export const HEADING_JUSTIFICATIONS = ['start', 'center', 'end'] as const;
+export const HEADING_TEXT_WRAPS = ['wrap', 'nowrap', 'balance', 'pretty'] as const;
+export const HEADING_TYPES = ['display-1', 'display-2', 'display-3'] as const;
+export const HEADING_WORD_BREAKS = ['break-word', 'break-all'] as const;
+export const TOOLTIP_PLACEMENTS = ['above', 'below', 'start', 'end'] as const;
+export const TOOLTIP_VALUES = [true, false, ...TOOLTIP_PLACEMENTS] as const;

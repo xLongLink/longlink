@@ -38,7 +38,27 @@ export const content = (
                     },
                     {
                         name: 'value',
-                        description: 'Heading text.',
+                        description: 'Heading text. When omitted, nested XML content is rendered.',
+                    },
+                    {
+                        name: 'type',
+                        description: 'Optional display-1, display-2, or display-3 visual scale.',
+                    },
+                    {
+                        name: 'accessibilityLevel',
+                        description: 'Optional semantic heading level from 1 to 6.',
+                    },
+                    {
+                        name: 'color, display, justify',
+                        description: 'Visual color, layout, and alignment properties from Astryx Heading.',
+                    },
+                    {
+                        name: 'maxLines, hasTruncateTooltip, wordBreak, textWrap',
+                        description: 'Truncation and wrapping properties from Astryx Heading.',
+                    },
+                    {
+                        name: 'hasCapsize, hasStrikethrough, id',
+                        description: 'Optical alignment, decoration, and HTML identifier properties.',
                     },
                 ].map((attribute) => (
                     <ListItem
@@ -58,7 +78,7 @@ export const content = (
             <Heading id="children" level={2}>
                 Children
             </Heading>
-            <Text as="p">{'Optional heading text content.'}</Text>
+            <Text as="p">{'Nested XML content is used when value is omitted.'}</Text>
         </Stack>
         <Stack gap={3}>
             <Heading id="example" level={2}>

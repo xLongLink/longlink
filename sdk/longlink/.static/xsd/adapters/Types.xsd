@@ -192,6 +192,37 @@
       <xsd:maxInclusive value="6" />
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="HeadingTypeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="display-1" />
+      <xsd:enumeration value="display-2" />
+      <xsd:enumeration value="display-3" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TruncateTooltipType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="true" />
+      <xsd:enumeration value="false" />
+      <xsd:enumeration value="above" />
+      <xsd:enumeration value="below" />
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="end" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="WordBreakType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="break-word" />
+      <xsd:enumeration value="break-all" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TextWrapType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="wrap" />
+      <xsd:enumeration value="nowrap" />
+      <xsd:enumeration value="balance" />
+      <xsd:enumeration value="pretty" />
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="TextColorType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="primary" />
