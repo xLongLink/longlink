@@ -11,7 +11,6 @@ import type {
 } from '@astryxdesign/core-0-3/Text';
 import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type { Props } from '../types';
-import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { isOptionalXmlValue, resolveXml, resolveXmlValue } from '../core/props';
 import {
@@ -38,7 +37,7 @@ const textWraps: readonly TextWrap[] = TEXT_WRAPS;
 const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
 
 /** Renders semantic Astryx text from a value or nested XML. */
-export function Text({ props, nodes }: Props) {
+export function Text({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const id = resolveXml(props, 'id', ctx);
     const as = resolveXml(props, 'as', ctx);
@@ -119,7 +118,7 @@ export function Text({ props, nodes }: Props) {
             hasTabularNumbers={typeof hasTabularNumbers === 'boolean' ? hasTabularNumbers : undefined}
             hasTruncateTooltip={hasTruncateTooltip}
         >
-            {value != null ? String(value) : renderNode(nodes, ctx)}
+            {String(value)}
         </AstryxText>
     );
 }

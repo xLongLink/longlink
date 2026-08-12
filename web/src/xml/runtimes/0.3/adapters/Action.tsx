@@ -72,7 +72,7 @@ export async function executeAction(
     const normalizedMethod = method.trim().toUpperCase();
 
     // Reject methods outside the supported action set.
-    if (!ACTION_METHODS.some((allowedMethod) => allowedMethod === normalizedMethod)) {
+    if (!ACTION_METHODS.includes(normalizedMethod as (typeof ACTION_METHODS)[number])) {
         toast({ body: `Unsupported action method ${normalizedMethod}`, type: 'error' });
         return;
     }

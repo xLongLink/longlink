@@ -2,17 +2,16 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:attributeGroup name="XmlRuntimeAttributes">
     <xsd:annotation><xsd:documentation>XML runtime attributes. Every other attribute must match the corresponding Astryx component prop.</xsd:documentation></xsd:annotation>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="slot" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:attribute name="slot" type="xsd:string" />
   </xsd:attributeGroup>
   <xsd:simpleType name="NonBlankStringType">
     <xsd:restriction base="xsd:string">
-      <xsd:minLength value="1" />
       <xsd:pattern value=".*[^\s].*" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="FieldPathType">
-    <xsd:restriction base="NonBlankStringType">
+    <xsd:restriction base="xsd:string">
       <xsd:pattern value="[^.\s]+(\.[^.\s]+)*" />
     </xsd:restriction>
   </xsd:simpleType>

@@ -4,26 +4,26 @@
   <xsd:complexType name="RadioListType">
     <xsd:sequence><xsd:element ref="RadioListItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
-    <xsd:attribute name="size" type="CompactSizeType" use="optional" default="md" />
-    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="vertical" />
-    <xsd:attribute name="description" type="xsd:string" use="optional" />
-    <xsd:attribute name="htmlName" type="xsd:string" use="optional" />
-    <xsd:attribute name="width" type="xsd:string" use="optional" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
-    <xsd:attribute name="status" type="InputStatusType" use="optional" />
-    <xsd:attribute name="statusMessage" type="xsd:string" use="optional" />
-    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
-    <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
-    <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" />
+    <xsd:attribute name="size" type="CompactSizeType" default="md" />
+    <xsd:attribute name="orientation" type="OrientationType" default="vertical" />
+    <xsd:attribute name="description" type="xsd:string" />
+    <xsd:attribute name="htmlName" type="xsd:string" />
+    <xsd:attribute name="width" type="xsd:string" />
+    <xsd:attribute name="disabledMessage" type="xsd:string" />
+    <xsd:attribute name="status" type="InputStatusType" />
+    <xsd:attribute name="statusMessage" type="xsd:string" />
+    <xsd:attribute name="isDisabled" type="xsd:string" />
+    <xsd:attribute name="isRequired" type="xsd:string" />
+    <xsd:attribute name="isOptional" type="xsd:string" />
+    <xsd:attribute name="isLabelHidden" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="RadioListItemType">
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="description" type="xsd:string" use="optional" />
-    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="description" type="xsd:string" />
+    <xsd:attribute name="isDisabled" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="RadioList" type="RadioListType">

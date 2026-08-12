@@ -2,23 +2,22 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="TextType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
-    <xsd:attribute name="id" type="xsd:string" use="optional" />
-    <xsd:attribute name="as" type="TextElementType" use="optional" />
-    <xsd:attribute name="type" type="TypographyType" use="optional" />
-    <xsd:attribute name="size" type="TextSizeType" use="optional" />
-    <xsd:attribute name="color" type="TextColorType" use="optional" />
+    <xsd:attribute name="id" type="xsd:string" />
+    <xsd:attribute name="as" type="TextElementType" />
+    <xsd:attribute name="type" type="TypographyType" />
+    <xsd:attribute name="size" type="TextSizeType" />
+    <xsd:attribute name="color" type="TextColorType" />
     <xsd:attribute name="value" type="xsd:string" use="required" />
-    <xsd:attribute name="weight" type="FontWeightType" use="optional" />
-    <xsd:attribute name="display" type="TextDisplayType" use="optional" />
-    <xsd:attribute name="justify" type="AlignType" use="optional" />
-    <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" use="optional" />
-    <xsd:attribute name="textWrap" type="TextWrapType" use="optional" />
-    <xsd:attribute name="wordBreak" type="WordBreakType" use="optional" />
-    <xsd:attribute name="hasCapsize" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="hasStrikethrough" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="hasTabularNumbers" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="hasTruncateTooltip" type="TruncateTooltipType" use="optional" />
+    <xsd:attribute name="weight" type="FontWeightType" />
+    <xsd:attribute name="display" type="TextDisplayType" />
+    <xsd:attribute name="justify" type="AlignType" />
+    <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" />
+    <xsd:attribute name="textWrap" type="TextWrapType" />
+    <xsd:attribute name="wordBreak" type="WordBreakType" />
+    <xsd:attribute name="hasCapsize" type="xsd:boolean" />
+    <xsd:attribute name="hasStrikethrough" type="xsd:boolean" />
+    <xsd:attribute name="hasTabularNumbers" type="xsd:boolean" />
+    <xsd:attribute name="hasTruncateTooltip" type="TruncateTooltipType" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Text" type="TextType">

@@ -91,6 +91,7 @@ function buildColumn(
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
+    const fieldParts = field.split('.');
     const headerValue = resolveXml(props, 'header', ctx);
     const alignValue = resolveXml(props, 'align', ctx);
     const header = typeof headerValue === 'string' ? headerValue : key.value;
@@ -102,7 +103,7 @@ function buildColumn(
         header,
         key: key.value,
         renderCell: (row) => {
-            const value = field.split('.').reduce<unknown>((current, segment) => {
+            const value = fieldParts.reduce<unknown>((current, segment) => {
                 if (current == null || typeof current !== 'object') {
                     return undefined;
                 }

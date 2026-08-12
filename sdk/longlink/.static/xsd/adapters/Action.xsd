@@ -6,11 +6,11 @@
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
     </xsd:sequence>
     <xsd:attribute name="action" type="xsd:string" use="required" />
-    <xsd:attribute name="form" type="xsd:string" use="optional" />
-    <xsd:attribute name="json" type="xsd:string" use="optional" />
-    <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
-    <xsd:attribute name="closeDialog" type="xsd:string" use="optional" />
-    <xsd:attribute name="method" type="ActionMethodType" use="optional" default="POST" />
+    <xsd:attribute name="form" type="xsd:string" />
+    <xsd:attribute name="json" type="xsd:string" />
+    <xsd:attribute name="invalidate" type="xsd:string" />
+    <xsd:attribute name="closeDialog" type="xsd:string" />
+    <xsd:attribute name="method" type="ActionMethodType" default="POST" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">

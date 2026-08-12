@@ -4,14 +4,14 @@
   <xsd:complexType name="DialogType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="title" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
-    <xsd:attribute name="isOpen" type="xsd:string" use="optional" />
-    <xsd:attribute name="triggerLabel" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="purpose" type="DialogPurposeType" use="optional" default="info" />
-    <xsd:attribute name="variant" type="DialogVariantType" use="optional" default="standard" />
-    <xsd:attribute name="width" type="xsd:string" use="optional" />
-    <xsd:attribute name="maxHeight" type="xsd:string" use="optional" />
-    <xsd:attribute name="padding" type="SpacingType" use="optional" />
+    <xsd:attribute name="subtitle" type="xsd:string" />
+    <xsd:attribute name="isOpen" type="xsd:string" />
+    <xsd:attribute name="triggerLabel" type="NonBlankStringType" />
+    <xsd:attribute name="purpose" type="DialogPurposeType" default="info" />
+    <xsd:attribute name="variant" type="DialogVariantType" default="standard" />
+    <xsd:attribute name="width" type="xsd:string" />
+    <xsd:attribute name="maxHeight" type="xsd:string" />
+    <xsd:attribute name="padding" type="SpacingType" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">

@@ -1,6 +1,4 @@
-import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
-import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
-import { Selector as AstryxSelector, type SelectorSize } from '@astryxdesign/core-0-3/Selector';
+import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 import { useXmlRuntime } from '../core/context';
@@ -63,14 +61,10 @@ export function Selector({ props, nodes }: Props) {
     if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
         throw new Error(`Unsupported Selector variant '${String(variant)}'`);
     }
-    const selectorSize: SelectorSize | undefined = isXmlEnum(size, SIZES) ? size : undefined;
-    const selectorPlacement: LayerPlacement | undefined = isXmlEnum(placement, LAYER_PLACEMENTS)
-        ? placement
-        : undefined;
-    const selectorStatusVariant: FieldStatusVariant | undefined = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)
-        ? statusVariant
-        : undefined;
-    const selectorVariant: 'input' | 'ghost' | undefined = isXmlEnum(variant, SELECTOR_VARIANTS) ? variant : undefined;
+    const selectorSize = isXmlEnum(size, SIZES) ? size : undefined;
+    const selectorPlacement = isXmlEnum(placement, LAYER_PLACEMENTS) ? placement : undefined;
+    const selectorStatusVariant = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined;
+    const selectorVariant = isXmlEnum(variant, SELECTOR_VARIANTS) ? variant : undefined;
     const common = {
         size: selectorSize,
         label: requireXmlString(props, 'label', ctx, 'Selector'),

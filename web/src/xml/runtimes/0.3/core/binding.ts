@@ -42,7 +42,6 @@ export function useBindableValue<T>(
     const [localValue, setLocalValue] = useState(() => getInitialValue?.() ?? coerce(value));
 
     return {
-        bound: !!target,
         value: target ? coerce(currentValue) : localValue,
         setValue: (nextValue: T) => {
             if (!target) {

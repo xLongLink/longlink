@@ -2,10 +2,10 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="DividerType">
-    <xsd:attribute name="label" type="xsd:string" use="optional" />
-    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
-    <xsd:attribute name="variant" type="DividerVariantType" use="optional" default="subtle" />
-    <xsd:attribute name="isFullBleed" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="xsd:string" />
+    <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
+    <xsd:attribute name="variant" type="DividerVariantType" default="subtle" />
+    <xsd:attribute name="isFullBleed" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Divider" type="DividerType">

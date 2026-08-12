@@ -22,69 +22,41 @@ export function FileInput({ props }: Props) {
         'file',
         () => null
     );
+    const accept = resolveXml(props, 'accept', ctx);
+    const description = resolveXml(props, 'description', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const isLoading = resolveXml(props, 'isLoading', ctx);
+    const isMultiple = resolveXml(props, 'isMultiple', ctx);
+    const isOptional = resolveXml(props, 'isOptional', ctx);
+    const isRequired = resolveXml(props, 'isRequired', ctx);
+    const maxFiles = resolveXml(props, 'maxFiles', ctx);
+    const maxSize = resolveXml(props, 'maxSize', ctx);
+    const mode = resolveXml(props, 'mode', ctx);
+    const placeholder = resolveXml(props, 'placeholder', ctx);
+    const width = resolveXml(props, 'width', ctx);
 
     return (
         <AstryxFileInput
-            accept={(() => {
-                const value = resolveXml(props, 'accept', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            description={(() => {
-                const value = resolveXml(props, 'description', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            disabledMessage={(() => {
-                const value = resolveXml(props, 'disabledMessage', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            isDisabled={(() => {
-                const value = resolveXml(props, 'isDisabled', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isLabelHidden={(() => {
-                const value = resolveXml(props, 'isLabelHidden', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isLoading={(() => {
-                const value = resolveXml(props, 'isLoading', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isMultiple={(() => {
-                const value = resolveXml(props, 'isMultiple', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isOptional={(() => {
-                const value = resolveXml(props, 'isOptional', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isRequired={(() => {
-                const value = resolveXml(props, 'isRequired', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
+            accept={typeof accept === 'string' ? accept : undefined}
+            description={typeof description === 'string' ? description : undefined}
+            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
+            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
+            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
+            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
+            isMultiple={typeof isMultiple === 'boolean' ? isMultiple : undefined}
+            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
+            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
-            maxFiles={(() => {
-                const value = resolveXml(props, 'maxFiles', ctx);
-                return typeof value === 'number' ? value : undefined;
-            })()}
-            maxSize={(() => {
-                const value = resolveXml(props, 'maxSize', ctx);
-                return typeof value === 'number' ? value : undefined;
-            })()}
-            mode={(() => {
-                const value = resolveXml(props, 'mode', ctx);
-                return isXmlEnum(value, FILE_INPUT_MODES) ? value : 'input';
-            })()}
+            maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}
+            maxSize={typeof maxSize === 'number' ? maxSize : undefined}
+            mode={isXmlEnum(mode, FILE_INPUT_MODES) ? mode : 'input'}
             onChange={binding.setValue}
-            placeholder={(() => {
-                const value = resolveXml(props, 'placeholder', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
+            placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
             value={binding.value}
-            width={(() => {
-                const value = resolveXml(props, 'width', ctx);
-                return typeof value === 'string' || typeof value === 'number' ? value : undefined;
-            })()}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
         />
     );
 }

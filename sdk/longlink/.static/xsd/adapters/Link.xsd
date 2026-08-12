@@ -3,13 +3,13 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="LinkType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
-    <xsd:attribute name="href" type="xsd:string" use="optional" />
-    <xsd:attribute name="to" type="xsd:string" use="optional" />
+    <xsd:attribute name="href" type="xsd:string" />
+    <xsd:attribute name="to" type="xsd:string" />
     <xsd:attribute name="label" type="xsd:string" use="required" />
-    <xsd:attribute name="color" type="TextColorType" use="optional" default="accent" />
-    <xsd:attribute name="hasUnderline" type="xsd:string" use="optional" />
-    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
-    <xsd:attribute name="isExternalLink" type="xsd:string" use="optional" />
+    <xsd:attribute name="color" type="TextColorType" default="accent" />
+    <xsd:attribute name="hasUnderline" type="xsd:string" />
+    <xsd:attribute name="isDisabled" type="xsd:string" />
+    <xsd:attribute name="isExternalLink" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Link" type="LinkType">

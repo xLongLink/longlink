@@ -41,11 +41,10 @@ describe('resolveRequestUrl', () => {
     });
 
     it('rejects encoded paths that could escape the application proxy', () => {
-        const baseUrl = '/api/applications/123/proxy';
         const traversalPaths = ['/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'];
 
         for (const path of traversalPaths) {
-            expect(() => resolveRequestUrl(baseUrl, path)).toThrow(
+            expect(() => resolveRequestUrl('/api/applications/123/proxy', path)).toThrow(
                 'XML request URL must remain within the application'
             );
         }

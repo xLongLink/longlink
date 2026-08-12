@@ -3,18 +3,18 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="TabListType">
     <xsd:sequence><xsd:element ref="Tab" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" default="Tabs" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
-    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
-    <xsd:attribute name="layout" type="TabLayoutType" use="optional" default="hug" />
-    <xsd:attribute name="hasDivider" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="NonBlankStringType" default="Tabs" />
+    <xsd:attribute name="value" type="xsd:string" />
+    <xsd:attribute name="size" type="SizeType" default="md" />
+    <xsd:attribute name="layout" type="TabLayoutType" default="hug" />
+    <xsd:attribute name="hasDivider" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="TabType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="to" type="xsd:string" use="optional" />
+    <xsd:attribute name="to" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="TabList" type="TabListType">

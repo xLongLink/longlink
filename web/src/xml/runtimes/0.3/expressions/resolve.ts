@@ -13,10 +13,8 @@ export function hasSafeProperty(value: unknown, key: string): boolean {
 }
 
 /** Reads one own property without traversing prototypes. */
-export function readSafeProperty<T>(
-    value: T,
-    key: string
-): T extends Record<string, infer Value> ? Value | undefined : unknown;
+export function readSafeProperty<T extends Record<string, unknown>>(value: T, key: string): T[string] | undefined;
+export function readSafeProperty(value: unknown, key: string): unknown;
 export function readSafeProperty(value: unknown, key: string): unknown {
     return hasSafeProperty(value, key) ? (value as Record<string, unknown>)[key] : undefined;
 }

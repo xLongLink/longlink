@@ -1,5 +1,4 @@
-import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
-import { NumberInput as AstryxNumberInput, type NumberInputSize } from '@astryxdesign/core-0-3/NumberInput';
+import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 import { useXmlRuntime } from '../core/context';
@@ -39,10 +38,8 @@ export function NumberInput({ props }: Props) {
     if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
         throw new Error(`Unsupported NumberInput statusVariant '${String(statusVariant)}'`);
     }
-    const inputSize: NumberInputSize | undefined = isXmlEnum(size, SIZES) ? size : undefined;
-    const inputStatusVariant: FieldStatusVariant | undefined = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)
-        ? statusVariant
-        : undefined;
+    const inputSize = isXmlEnum(size, SIZES) ? size : undefined;
+    const inputStatusVariant = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined;
     const common = {
         max: typeof max === 'number' ? max : undefined,
         min: typeof min === 'number' ? min : undefined,

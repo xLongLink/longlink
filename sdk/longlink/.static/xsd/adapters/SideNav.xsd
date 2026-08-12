@@ -3,15 +3,15 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="SideNavType">
     <xsd:sequence><xsd:element ref="SideNavItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" default="Navigation" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="NonBlankStringType" default="Navigation" />
+    <xsd:attribute name="value" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="SideNavItemType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="icon" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="icon" type="NonBlankStringType" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="SideNav" type="SideNavType">

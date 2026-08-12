@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { Stack } from '@astryxdesign/core-0-3/Stack';
 import { Banner } from '@astryxdesign/core-0-3/Banner';
@@ -25,14 +25,15 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     const [version, setVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
-    let setupValidationError: Error | null = null;
-
-    // Validate setup nodes before effects run.
-    try {
-        validateSetupNodes(ast);
-    } catch (error: unknown) {
-        setupValidationError = error instanceof Error ? error : new Error('XML setup validation failed');
-    }
+    const setupValidationError = useMemo(() => {
+        // Validate setup nodes before effects run.
+        try {
+            validateSetupNodes(ast);
+            return null;
+        } catch (error: unknown) {
+            return error instanceof Error ? error : new Error('XML setup validation failed');
+        }
+    }, [ast]);
 
     useEffect(() => {
         let mounted = true;

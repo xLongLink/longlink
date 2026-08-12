@@ -65,8 +65,6 @@ export const CARD_VARIANTS = [
     'teal',
     'yellow',
 ] as const;
-export const DIALOG_PURPOSES = ['required', 'form', 'info'] as const;
-export const DIALOG_VARIANTS = ['standard', 'fullscreen'] as const;
 export const DIVIDER_VARIANTS = ['subtle', 'strong'] as const;
 export const FILE_INPUT_MODES = ['dropzone', 'input'] as const;
 export const FORM_DIRECTIONS = ['vertical', 'horizontal', 'horizontal-labels'] as const;
@@ -103,4 +101,3 @@ export const FONT_WEIGHTS = ['normal', 'medium', 'semibold', 'bold'] as const;
 export const TEXT_DISPLAYS = ['inline', 'block'] as const;
 export const TEXT_ELEMENTS = ['span', 'p', 'div', 'label', 'h1', 'h2', 'h3'] as const;
 export const TEXT_SIZES = ['4xs', '3xs', '2xs', 'xsm', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'] as const;
-export const TEXT_INPUT_KINDS = ['text', 'password', 'email'] as const;
