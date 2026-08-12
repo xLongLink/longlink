@@ -23,14 +23,10 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_ENV", "production")
     for name, value in PRODUCTION_SETTINGS.items():
         monkeypatch.setenv(name, value)
-    if bucket:
-        monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
-    else:
-        monkeypatch.delenv("LONGLINK_STORAGE_BUCKET", raising=False)
-    if prefix:
-        monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
-    else:
-        monkeypatch.delenv("LONGLINK_STORAGE_PREFIX", raising=False)
+    for name, value in {"LONGLINK_STORAGE_BUCKET": bucket, "LONGLINK_STORAGE_PREFIX": prefix}.items():
+        monkeypatch.delenv(name, raising=False)
+        if value:
+            monkeypatch.setenv(name, value)
 
 
 @pytest.mark.parametrize(
@@ -58,6 +54,8 @@ def test_production_storage_requires_safe_bucket_scope(
     # Reject the configured scope before constructing the filesystem.
     with pytest.raises(ValueError, match=message):
         storage_base.create_fs()
+
+
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 

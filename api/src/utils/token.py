@@ -3,9 +3,11 @@ import hmac
 import hashlib
 from uuid import UUID
 from datetime import timedelta
+from pydantic import TypeAdapter
 from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.services import users
+from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -23,7 +25,7 @@ def password_fingerprint(password: str) -> str:
     return hmac.new(env.SESSION_KEY.encode("utf-8"), f"password-reset:{password}".encode(), hashlib.sha256).hexdigest()
 
 
-def create_registration_token(email: str) -> str:
+def create_registration_token(email: Email) -> str:
     """Create one signed, expiring proof of email ownership."""
 
     # Sign the request identity into immutable registration proof.
@@ -38,7 +40,7 @@ def create_registration_token(email: str) -> str:
     )
 
 
-def registration_claims(token: str) -> str:
+def registration_claims(token: str) -> Email:
     """Return the identity carried by one registration token."""
 
     # Reject invalid, expired, or wrong-purpose tokens before account setup.
@@ -47,7 +49,7 @@ def registration_claims(token: str) -> str:
     email = data.get("email")
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
-    return email
+    return TypeAdapter(Email).validate_python(email)
 
 
 def create_password_reset_token(user: User) -> str:

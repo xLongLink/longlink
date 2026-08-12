@@ -19,6 +19,67 @@ async def test_platform_user_cannot_access_administrator_collections(
 
 
 @pytest.mark.parametrize(
+    ("path", "registry", "expected_fields", "secret_fields", "secret_values"),
+    [
+        pytest.param(
+            "computes",
+            "compute",
+            {"gateway_url": "https://gateway.example", "status": "running"},
+            ["kubeconfig", "proxy_secret"],
+            [],
+            id="compute",
+        ),
+        pytest.param(
+            "databases",
+            "database",
+            {"host": "database.example", "sslmode": "disable"},
+            ["password"],
+            [],
+            id="database",
+        ),
+        pytest.param(
+            "storages",
+            "storage",
+            {"endpoint_url": "https://sos-ch-gva-2.exo.io"},
+            ["access_key_id", "secret_access_key"],
+            ["access_key_id", "secret_access_key"],
+            id="storage",
+        ),
+    ],
+)
+async def test_registry_endpoints_return_registered_backend(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    path: str,
+    registry: str,
+    expected_fields: dict[str, str],
+    secret_fields: list[str],
+    secret_values: list[str],
+) -> None:
+    """Return each independently registered backend without its secrets."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    backend = getattr(infrastructure, registry)
+
+    # Act
+    list_response = await clients[0].get(f"/api/v1/{path}")
+    get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
+
+    # Assert
+    assert list_response.status_code == 200
+    assert str(backend.id) in {item["id"] for item in list_response.json()}
+    assert get_response.status_code == 200
+    payload = get_response.json()
+    assert payload["id"] == str(backend.id)
+    assert payload["name"] == backend.name
+    assert {field: payload[field] for field in expected_fields} == expected_fields
+    assert all(field not in payload for field in secret_fields)
+    for secret_field in secret_values:
+        assert str(getattr(backend, secret_field)) not in list_response.text
+        assert str(getattr(backend, secret_field)) not in get_response.text
+
+
+@pytest.mark.parametrize(
     ("path", "payload", "secret_fields", "duplicate_error"),
     [
         pytest.param(

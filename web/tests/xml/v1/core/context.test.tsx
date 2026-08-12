@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, setupContext } from '@/xml/v1/core/context';
 import { compileProps } from '../helpers';
 
+
+function queryAst(path: string) {
+    return [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
+}
+
+
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
@@ -23,13 +29,7 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const ast = [
-            {
-                name: 'Query',
-                params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }),
-                children: [],
-            },
-        ];
+        const ast = queryAst('/api/issues/${params.issue}');
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };
@@ -49,12 +49,11 @@ describe('core/context', () => {
         'rejects unsafe query paths before fetching: %s',
         async (path) => {
             const ctx = createContext();
-            const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
             const fetchImpl = vi.fn();
 
             vi.stubGlobal('fetch', fetchImpl);
 
-            await expect(setupContext(ast, ctx, '/proxy')).rejects.toThrow('XML request URL must be app-relative');
+            await expect(setupContext(queryAst(path), ctx, '/proxy')).rejects.toThrow('XML request URL must be app-relative');
 
             expect(fetchImpl).not.toHaveBeenCalled();
         }

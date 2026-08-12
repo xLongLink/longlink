@@ -2,33 +2,6 @@ from httpx2 import AsyncClient
 from factories import claim_operation, queue_operation, complete_operation, create_ready_infrastructure
 
 
-async def test_compute_registry_endpoints_return_backend(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return an independently registered compute backend."""
-
-    # Arrange
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    registry = infrastructure.compute
-
-    # Act
-    list_response = await client.get("/api/v1/computes")
-    get_response = await client.get(f"/api/v1/computes/{registry.id}")
-
-    # Assert
-    assert list_response.status_code == 200
-    assert str(registry.id) in {item["id"] for item in list_response.json()}
-    assert get_response.status_code == 200
-    payload = get_response.json()
-    assert payload["id"] == str(registry.id)
-    assert payload["name"] == registry.name
-    assert payload["gateway_url"] == registry.gateway_url
-    assert payload["status"] == "running"
-    assert "kubeconfig" not in payload
-    assert "proxy_secret" not in payload
-
-
 async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifecycle_is_pending(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:

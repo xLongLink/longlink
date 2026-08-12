@@ -59,52 +59,59 @@ describe('Action', () => {
         expect(notificationCalls).toBe(1);
     });
 
-    it('reports request failures without invalidating or closing dialogs', async () => {
-        const cases: Array<{ request: () => Promise<Response>; expectedError: string }> = [
-            {
-                request: async () => new Response('', { status: 422 }),
-                expectedError: 'Request failed with status 422',
+    it('reports HTTP failures without invalidating or closing dialogs', async () => {
+        let invalidationCalls = 0;
+        let closeCalls = 0;
+        let errorMessage = '';
+        const ctx = createContext();
+        ctx.services.invalidate = async () => {
+            invalidationCalls += 1;
+        };
+
+        await executeAction(
+            compileProps({ action: '/example/profile', invalidate: '${["profile", "activity"]}' }),
+            ctx.scope,
+            ctx.services,
+            async () => new Response('', { status: 422 }),
+            (options) => {
+                if (options.type === 'error') errorMessage = String(options.body);
+
+                return () => {};
             },
-            {
-                request: async () => {
-                    throw new Error('Network unavailable');
-                },
-                expectedError: 'Network unavailable',
+            () => {
+                closeCalls += 1;
+            }
+        );
+
+        expect(invalidationCalls).toBe(0);
+        expect(closeCalls).toBe(0);
+        expect(errorMessage).toBe('Request failed with status 422');
+    });
+
+    it('reports network failures without invalidating', async () => {
+        let invalidationCalls = 0;
+        let errorMessage = '';
+        const ctx = createContext();
+        ctx.services.invalidate = async () => {
+            invalidationCalls += 1;
+        };
+
+        await executeAction(
+            compileProps({ action: '/example/profile', invalidate: '${["profile", "activity"]}' }),
+            ctx.scope,
+            ctx.services,
+            async () => {
+                throw new Error('Network unavailable');
             },
-        ];
+            (options) => {
+                if (options.type === 'error') errorMessage = String(options.body);
 
-        for (const testCase of cases) {
-            let invalidationCalls = 0;
-            let closeCalls = 0;
-            let errorMessage = '';
-            const ctx = createContext();
-            ctx.services.invalidate = async () => {
-                invalidationCalls += 1;
-            };
-            const fetchImpl = (() => testCase.request()) satisfies typeof fetch;
+                return () => {};
+            }
+        );
 
-            await executeAction(
-                compileProps({
-                    action: '/example/profile',
-                    invalidate: '${["profile", "activity"]}',
-                }),
-                ctx.scope,
-                ctx.services,
-                fetchImpl,
-                (options) => {
-                    if (options.type === 'error') errorMessage = String(options.body);
-
-                    return () => {};
-                },
-                () => {
-                    closeCalls += 1;
-                }
-            );
-
-            expect(invalidationCalls).toBe(0);
-            expect(closeCalls).toBe(0);
-            expect(errorMessage).toBe(testCase.expectedError);
-        }
+        expect(invalidationCalls).toBe(0);
+        expect(errorMessage).toBe('Network unavailable');
     });
 
     it('sends multipart form data with multiple files, primitives, nested values, and nulls', async () => {

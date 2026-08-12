@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate
+from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -35,7 +36,7 @@ async def active(session: AsyncSession, user_id: UUID) -> User | None:
     )
 
 
-async def by_email(session: AsyncSession, email: str) -> User | None:
+async def by_email(session: AsyncSession, email: Email) -> User | None:
     """Return one user by email, including soft-deleted accounts."""
 
     # Account-existence checks must include deleted rows because email addresses remain unique.
