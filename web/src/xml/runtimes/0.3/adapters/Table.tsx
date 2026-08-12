@@ -89,7 +89,7 @@ function buildColumn(
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = resolveXmlString(props, 'header', ctx, key.value);
+    const header = resolveXmlString(props, 'header', ctx) ?? key.value;
     const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'start', 'TableColumn');
     const cellNodes = node.children;
 

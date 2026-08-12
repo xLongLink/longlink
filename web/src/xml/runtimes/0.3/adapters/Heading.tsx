@@ -1,42 +1,54 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
-import {
-    HEADING_COLORS,
-    HEADING_DISPLAYS,
-    HEADING_JUSTIFICATIONS,
-    HEADING_LEVELS,
-    HEADING_TEXT_WRAPS,
-    HEADING_TYPES,
-    HEADING_WORD_BREAKS,
-    TOOLTIP_VALUES,
-} from '../constants';
+import type { ComponentProps } from 'react';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
+type AstryxHeadingProps = ComponentProps<typeof AstryxHeading>;
+
+const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const satisfies readonly AstryxHeadingProps['level'][];
+const HEADING_COLORS = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'] as const satisfies readonly NonNullable<AstryxHeadingProps['color']>[];
+const HEADING_DISPLAYS = ['inline', 'block'] as const satisfies readonly NonNullable<AstryxHeadingProps['display']>[];
+const HEADING_JUSTIFICATIONS = ['start', 'center', 'end'] as const satisfies readonly NonNullable<AstryxHeadingProps['justify']>[];
+const HEADING_TEXT_WRAPS = ['wrap', 'nowrap', 'balance', 'pretty'] as const satisfies readonly NonNullable<AstryxHeadingProps['textWrap']>[];
+const HEADING_TYPES = ['display-1', 'display-2', 'display-3'] as const satisfies readonly NonNullable<AstryxHeadingProps['type']>[];
+const HEADING_WORD_BREAKS = ['break-word', 'break-all'] as const satisfies readonly NonNullable<AstryxHeadingProps['wordBreak']>[];
+const TOOLTIP_VALUES = [true, false, 'above', 'below', 'start', 'end'] as const satisfies readonly NonNullable<AstryxHeadingProps['hasTruncateTooltip']>[];
+
+/** Returns whether a value is one of an Astryx prop's supported values. */
+function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
+    return values.includes(value as T);
+}
+
+/** Returns whether an optional value is absent or supported by an Astryx prop. */
+function isOptionalAstryxValue<T>(value: unknown, values: readonly T[]): value is T | undefined {
+    return value == null || isAstryxValue(value, values);
+}
+
 /** Renders an Astryx heading with explicit semantic level. */
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const id = resolveXmlString(props, 'id', ctx) || undefined;
-    const type = resolveXmlValue(props, 'type', ctx);
-    const color = resolveXmlValue(props, 'color', ctx);
+    const id = resolveXmlString(props, 'id', ctx);
+    const type = resolveXmlString(props, 'type', ctx);
+    const color = resolveXmlString(props, 'color', ctx);
     const level = resolveXmlNumber(props, 'level', ctx);
-    const display = resolveXmlValue(props, 'display', ctx);
-    const justify = resolveXmlValue(props, 'justify', ctx);
-    const hasCapsize = resolveXmlBoolean(props, 'hasCapsize', ctx);
+    const display = resolveXmlString(props, 'display', ctx);
+    const justify = resolveXmlString(props, 'justify', ctx);
+    const textWrap = resolveXmlString(props, 'textWrap', ctx);
     const maxLines = resolveXmlNumber(props, 'maxLines', ctx);
-    const textWrap = resolveXmlValue(props, 'textWrap', ctx);
-    const wordBreak = resolveXmlValue(props, 'wordBreak', ctx);
-    const accessibilityLevel = resolveXmlNumber(props, 'accessibilityLevel', ctx);
+    const wordBreak = resolveXmlString(props, 'wordBreak', ctx);
+    const hasCapsize = resolveXmlBoolean(props, 'hasCapsize', ctx);
     const hasStrikethrough = resolveXmlBoolean(props, 'hasStrikethrough', ctx);
     const hasTruncateTooltip = resolveXmlValue(props, 'hasTruncateTooltip', ctx);
+    const accessibilityLevel = resolveXmlNumber(props, 'accessibilityLevel', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.
-    if (level == null || !HEADING_LEVELS.includes(level as (typeof HEADING_LEVELS)[number])) {
+    if (!isAstryxValue(level, HEADING_LEVELS)) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
-    if (accessibilityLevel != null && !HEADING_LEVELS.includes(accessibilityLevel as (typeof HEADING_LEVELS)[number])) {
+    if (!isOptionalAstryxValue(accessibilityLevel, HEADING_LEVELS)) {
         throw new Error('Heading accessibilityLevel must be from 1 to 6');
     }
 
@@ -44,49 +56,49 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
-    if (color != null && !HEADING_COLORS.includes(color as (typeof HEADING_COLORS)[number])) {
+    if (!isOptionalAstryxValue(color, HEADING_COLORS)) {
         throw new Error(`Unsupported Heading color '${String(color)}'`);
     }
 
-    if (display != null && !HEADING_DISPLAYS.includes(display as (typeof HEADING_DISPLAYS)[number])) {
+    if (!isOptionalAstryxValue(display, HEADING_DISPLAYS)) {
         throw new Error(`Unsupported Heading display '${String(display)}'`);
     }
 
-    if (justify != null && !HEADING_JUSTIFICATIONS.includes(justify as (typeof HEADING_JUSTIFICATIONS)[number])) {
+    if (!isOptionalAstryxValue(justify, HEADING_JUSTIFICATIONS)) {
         throw new Error(`Unsupported Heading justify '${String(justify)}'`);
     }
 
-    if (textWrap != null && !HEADING_TEXT_WRAPS.includes(textWrap as (typeof HEADING_TEXT_WRAPS)[number])) {
+    if (!isOptionalAstryxValue(textWrap, HEADING_TEXT_WRAPS)) {
         throw new Error(`Unsupported Heading textWrap '${String(textWrap)}'`);
     }
 
-    if (type != null && !HEADING_TYPES.includes(type as (typeof HEADING_TYPES)[number])) {
+    if (!isOptionalAstryxValue(type, HEADING_TYPES)) {
         throw new Error(`Unsupported Heading type '${String(type)}'`);
     }
 
-    if (wordBreak != null && !HEADING_WORD_BREAKS.includes(wordBreak as (typeof HEADING_WORD_BREAKS)[number])) {
+    if (!isOptionalAstryxValue(wordBreak, HEADING_WORD_BREAKS)) {
         throw new Error(`Unsupported Heading wordBreak '${String(wordBreak)}'`);
     }
 
-    if (hasTruncateTooltip != null && !TOOLTIP_VALUES.includes(hasTruncateTooltip as (typeof TOOLTIP_VALUES)[number])) {
+    if (!isOptionalAstryxValue(hasTruncateTooltip, TOOLTIP_VALUES)) {
         throw new Error(`Unsupported Heading hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 
     return (
         <AstryxHeading
             id={id}
-            type={type as 'display-1' | 'display-2' | 'display-3' | undefined}
-            color={color as (typeof HEADING_COLORS)[number] | undefined}
-            level={level as (typeof HEADING_LEVELS)[number]}
-            display={display as (typeof HEADING_DISPLAYS)[number] | undefined}
-            justify={justify as (typeof HEADING_JUSTIFICATIONS)[number] | undefined}
+            type={type}
+            color={color}
+            level={level}
+            display={display}
+            justify={justify}
             maxLines={maxLines}
-            textWrap={textWrap as 'wrap' | 'nowrap' | 'balance' | 'pretty' | undefined}
-            wordBreak={wordBreak as 'break-word' | 'break-all' | undefined}
+            textWrap={textWrap}
+            wordBreak={wordBreak}
             hasCapsize={hasCapsize}
             hasStrikethrough={hasStrikethrough}
-            accessibilityLevel={accessibilityLevel as (typeof HEADING_LEVELS)[number] | undefined}
-            hasTruncateTooltip={hasTruncateTooltip as (typeof TOOLTIP_VALUES)[number] | undefined}
+            accessibilityLevel={accessibilityLevel}
+            hasTruncateTooltip={hasTruncateTooltip}
         >
             {renderNode(nodes, ctx)}
         </AstryxHeading>

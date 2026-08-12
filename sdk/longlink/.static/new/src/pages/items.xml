@@ -5,7 +5,7 @@
 
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
         <Stack>
-            <Heading level="3" value="Items" />
+            <Heading level="3">Items</Heading>
             <Text as="p" color="secondary" value="Track catalog items and their supporting files." />
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">

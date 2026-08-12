@@ -19,7 +19,7 @@ export function TabList({ props, nodes }: Props) {
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
-            href: resolveNavigationUrl(services.navigationBaseUrl, resolveXmlString(node.params, 'to', ctx)) || undefined,
+            href: resolveNavigationUrl(services.navigationBaseUrl, resolveXmlString(node.params, 'to', ctx) ?? '') || undefined,
             label: requireXmlString(node.params, 'label', ctx, 'Tab'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'Tab'),
@@ -33,7 +33,7 @@ export function TabList({ props, nodes }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TabList');
     const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'hug', 'TabList');
-    const label = resolveXmlString(props, 'label', ctx, 'Tabs');
+    const label = resolveXmlString(props, 'label', ctx) ?? 'Tabs';
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (

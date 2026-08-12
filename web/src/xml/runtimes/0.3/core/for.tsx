@@ -8,7 +8,7 @@ import { resolveXmlString } from './props';
 export function For({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;
-    const as = resolveXmlString(props, 'as', ctx);
+    const as = resolveXmlString(props, 'as', ctx) ?? '';
     const each = evaluate(props.each, ctx);
 
     // Skip loop rendering when the source is not an array.

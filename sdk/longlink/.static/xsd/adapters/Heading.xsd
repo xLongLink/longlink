@@ -4,7 +4,6 @@
   <xsd:complexType name="HeadingType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="level" type="HeadingLevelType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:attribute name="type" type="HeadingTypeType" use="optional" />
     <xsd:attribute name="accessibilityLevel" type="HeadingLevelType" use="optional" />
     <xsd:attribute name="color" type="TextColorType" use="optional" default="primary" />

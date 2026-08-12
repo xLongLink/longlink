@@ -71,7 +71,7 @@ export const content = (
             </Heading>
             <CodeBlock
                 code={
-                    '<Card variant="muted">\n  <Stack gap="2">\n    <Heading level="3" label="Order" />\n    <Text value="$order.number" />\n  </Stack>\n</Card>'
+                    '<Card variant="muted">\n  <Stack gap="2">\n    <Heading level="3">Order</Heading>\n    <Text value="$order.number" />\n  </Stack>\n</Card>'
                 }
                 language="xml"
             />

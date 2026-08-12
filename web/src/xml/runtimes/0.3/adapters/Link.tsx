@@ -10,8 +10,8 @@ export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const href = resolveXmlString(props, 'href', ctx);
     const to = resolveXmlString(props, 'to', ctx);
-    const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, href);
-    const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, to);
+    const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, href ?? '');
+    const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
     const content = nodes.length > 0 ? renderNode(nodes, ctx) : undefined;
     const label = resolveXmlString(props, 'label', ctx);
     const color = resolveXmlEnum(

@@ -21,7 +21,7 @@ export function Selector({ props, nodes }: Props) {
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => {
             const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
-            const label = resolveXmlString(node.params, 'label', ctx, value);
+            const label = resolveXmlString(node.params, 'label', ctx) ?? value;
 
             return { value, label, disabled: resolveXmlBoolean(node.params, 'isDisabled', ctx, false) };
         });

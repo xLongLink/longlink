@@ -33,14 +33,13 @@ export function requireXmlString(props: ASTProps, name: string, ctx: Scope, comp
 }
 
 /** Resolves a string XML prop. */
-export function resolveXmlString(props: ASTProps, name: string, ctx: Scope, defaultValue = ''): string {
-    // Missing attributes keep the caller-provided default.
+export function resolveXmlString(props: ASTProps, name: string, ctx: Scope): string | undefined {
     const attribute = readXmlProp(props, name);
-    if (attribute == null) return defaultValue;
+    if (attribute == null) return undefined;
 
     const value = evaluate(attribute, ctx);
 
-    return value == null ? defaultValue : String(value);
+    return value == null ? undefined : String(value);
 }
 
 /** Resolves a boolean XML prop. */
@@ -102,7 +101,7 @@ export function resolveXmlEnum<const T extends string>(
     defaultValue: T,
     componentName: string
 ): T {
-    const value = resolveXmlString(props, name, ctx, defaultValue);
+    const value = resolveXmlString(props, name, ctx) ?? defaultValue;
 
     // Keep untrusted XML values out of Astryx lookup maps.
     const matchingValue = values.find((candidate) => candidate === value);

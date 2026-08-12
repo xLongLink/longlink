@@ -37,10 +37,6 @@ export const content = (
                         required: true,
                     },
                     {
-                        name: 'value',
-                        description: 'Heading text. When omitted, nested XML content is rendered.',
-                    },
-                    {
                         name: 'type',
                         description: 'Optional display-1, display-2, or display-3 visual scale.',
                     },
@@ -78,13 +74,13 @@ export const content = (
             <Heading id="children" level={2}>
                 Children
             </Heading>
-            <Text as="p">{'Nested XML content is used when value is omitted.'}</Text>
+            <Text as="p">{'Nested XML content is rendered as the heading.'}</Text>
         </Stack>
         <Stack gap={3}>
             <Heading id="example" level={2}>
                 Example
             </Heading>
-            <CodeBlock code={'<Heading level="1" value="Orders" />'} language="xml" />
+            <CodeBlock code={'<Heading level="1">Orders</Heading>'} language="xml" />
         </Stack>
     </Stack>
 );

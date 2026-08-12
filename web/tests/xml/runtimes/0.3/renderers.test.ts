@@ -43,10 +43,9 @@ describe('renderNode', () => {
                     maxLines: '2',
                     textWrap: 'balance',
                     type: 'display-1',
-                    value: 'Orders',
                     wordBreak: 'break-word',
                 }),
-                children: [],
+                children: [{ name: 'Text', params: compileProps({ value: 'Orders' }), children: [] }],
             },
         ]);
 

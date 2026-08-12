@@ -53,8 +53,8 @@ export async function executeAction(
         }
 
         invalidate = invalidationValue.map((value) => String(value));
-        method = resolveXmlString(props, 'method', ctx, 'POST');
-        actionUrl = resolveXmlString(props, 'action', ctx, '');
+        method = resolveXmlString(props, 'method', ctx) ?? 'POST';
+        actionUrl = resolveXmlString(props, 'action', ctx) ?? '';
         if (!actionUrl) throw new Error('Action requires an action URL');
 
         // Resolve action payloads at click time so they see the latest state.
