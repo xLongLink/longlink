@@ -25,13 +25,9 @@ describe('Table', () => {
     it('renders rich header and cell slots', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
-        ctx.services.translations = {
-            'inventory.item': { defaultMessage: 'Item' },
-            'inventory.name': { defaultMessage: '{name}' },
-        };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: row.name }}" /><Badge variant="neutral" label="$row.sku" /></Stack></TableColumn></Table>'
+                '<Table data="$items"><TableColumn key="item" header="Item"><Stack direction="horizontal" gap="2"><Text value="$row.name" /><Badge variant="neutral" label="$row.sku" /></Stack></TableColumn></Table>'
             ),
             ctx
         );

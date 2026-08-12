@@ -5,18 +5,18 @@
 
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
         <Stack>
-            <Heading level="3" i18n="items.title" />
-            <Text as="p" color="secondary" i18n="items.description" />
+            <Heading level="3" value="Items" />
+            <Text as="p" color="secondary" value="Track catalog items and their supporting files." />
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack gap="3">
                 <FormLayout>
                     <TextInput
-                        i18n="items.fields.name"
+                        label="Name"
                         value="$draft.name"
                         isRequired="true"
                     />
-                    <NumberInput i18n="items.price" units="CHF" value="$draft.price" min="0" isRequired="true" />
+                    <NumberInput label="Price" units="CHF" value="$draft.price" min="0" isRequired="true" />
                 </FormLayout>
                 <Action
                     action="/api/items"
@@ -32,7 +32,7 @@
     </Stack>
 
     <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
-        <TableColumn key="item" i18n="items.table.item">
+        <TableColumn key="item" header="Item">
             <Stack gap="1">
                 <Link to="/items/${row.id}" label="$row.name">
                     <Text value="$row.name" />

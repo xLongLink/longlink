@@ -4,10 +4,7 @@
   <xsd:complexType name="HeadingType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="level" type="HeadingLevelType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="required" />
     <xsd:attribute name="color" type="TextColorType" use="optional" default="primary" />
     <xsd:attribute name="justify" type="AlignType" use="optional" default="start" />
     <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" use="optional" />

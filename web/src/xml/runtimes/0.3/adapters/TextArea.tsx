@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlNumber,
     resolveXmlSizeValue,
     resolveXmlStatus,
@@ -14,7 +14,7 @@ import type { Props } from '../types';
 
 /** Renders an accessible Astryx text area with optional Valtio binding. */
 export function TextArea({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextArea');
 
@@ -29,7 +29,7 @@ export function TextArea({ props }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'TextArea')}
+            label={requireXmlString(props, 'label', ctx, 'TextArea')}
             maxLength={resolveXmlNumber(props, 'maxLength', ctx)}
             onChange={binding.setValue}
             placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}

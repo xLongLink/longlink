@@ -124,12 +124,6 @@ function renderComponentPreview(name: string) {
     switch (name) {
         case 'if':
             return <Code>{'if="${order.open}"'}</Code>;
-        case 'Translations':
-            return <Code>{'i18n="orders.title"'}</Code>;
-        case 'values':
-            return <Code>{'values="${{ name: user.name }}"'}</Code>;
-        case 'count':
-            return <Code>{'values="${{ count: orders.length }}"'}</Code>;
         case 'Expressions':
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':

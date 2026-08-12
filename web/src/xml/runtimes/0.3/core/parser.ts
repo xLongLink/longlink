@@ -18,14 +18,14 @@ const parser = new XMLParser({
  * Parses an XML string into a flat AST structure.
  *
  * Input:
- *   <longlink><Button i18n="actions.save" /></longlink>
+ *   <longlink><Button label="Save" /></longlink>
  *
  * Output:
  *   [
  *     {
  *       name: 'longlink',
  *       children: [
- *         { name: 'Button', params: { i18n: 'actions.save' }, children: [] }
+ *         { name: 'Button', params: { label: 'Save' }, children: [] }
  *       ]
  *     }
  *   ]
@@ -58,14 +58,14 @@ export function parseXML(xml: string): ASTNode[] {
  * Converts parser output into XML AST nodes.
  *
  * Input:
- *   toNodes({ longlink: { Button: { ':@': { '@_i18n': 'actions.save' } } } })
+ *   toNodes({ longlink: { Button: { ':@': { '@_label': 'Save' } } } })
  *
  * Output:
  *   [
  *     {
  *       name: 'longlink',
  *       children: [
- *         { name: 'Button', params: { i18n: 'actions.save' }, children: [] }
+ *         { name: 'Button', params: { label: 'Save' }, children: [] }
  *       ]
  *     }
  *   ]
@@ -83,7 +83,7 @@ function toNodes(input: unknown): ASTNode[] {
     if (typeof input === 'string') {
         // Reject visible literal text.
         if (input.trim()) {
-            throw new Error('Literal text is not supported in XML; use i18n attributes instead');
+            throw new Error('Literal text is not supported in XML; use value attributes or nested components instead');
         }
 
         return [];
@@ -133,7 +133,7 @@ function collectParams(input: unknown): ASTProps {
         // Compile string attributes without resolving runtime values.
         if (typeof entry === 'string') {
             const name = key.replace(/^@_/, '');
-            params[name] = compileAttribute(entry, name === 'field' || name === 'i18n');
+            params[name] = compileAttribute(entry, name === 'field');
         }
     }
 

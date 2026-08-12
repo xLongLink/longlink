@@ -37,7 +37,7 @@ export const content = (
                         required: true,
                     },
                     {
-                        name: 'label or i18n',
+                        name: 'label',
                         description: 'Visible option text.',
                         required: true,
                     },

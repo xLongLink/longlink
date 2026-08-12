@@ -37,8 +37,3 @@ The build command writes an OCI description label when available. It also writes
 ## XML
 
 - Is not html, but similar.
-- Keep `src/i18n/<lang>.json` as a flat Astryx catalog. Each dotted key maps to `{ "defaultMessage": "..." }` with an optional string `description`.
-- Use ICU messages: `{name}` interpolates a value and `{count, plural, =0 {No items} one {# item} other {# items}}` handles plurals.
-- Nested catalogs, bare string entries, `{{name}}` placeholders, and plural-map entries are not supported.
-- Use `longlink translations generate` from an app root to refresh sorted keys in `src/i18n/en.json`. It preserves valid entries by exact key and creates missing entries with an empty `defaultMessage`.
-- The SDK application serves translations at `/i18n/<lang>.json`.

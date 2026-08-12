@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
@@ -13,7 +13,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
     const labelPosition = resolveXmlEnum(props, 'labelPosition', ctx, ['start', 'end'], 'end', 'Switch');
     const labelSpacing = resolveXmlEnum(props, 'labelSpacing', ctx, ['hug', 'spread'], 'hug', 'Switch');
@@ -27,7 +27,7 @@ export function Switch({ props }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'Switch')}
+            label={requireXmlString(props, 'label', ctx, 'Switch')}
             labelPosition={labelPosition}
             labelSpacing={labelSpacing}
             onChange={binding.setValue}

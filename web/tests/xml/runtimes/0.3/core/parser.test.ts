@@ -24,7 +24,7 @@ describe('parseXML', () => {
                 `<?xml version="1.0"?>
                 <longlink>
                     <!-- hidden -->
-                    <Button i18n="actions.save" />
+                    <Button label="Save" />
                     <State id="first" />
                     <State id="second" />
                 </longlink>`
@@ -34,7 +34,7 @@ describe('parseXML', () => {
                 name: 'longlink',
                 params: {},
                 children: [
-                    { name: 'Button', params: { i18n: { kind: 'text', value: 'actions.save' } }, children: [] },
+                    { name: 'Button', params: { label: { kind: 'text', value: 'Save' } }, children: [] },
                     { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },
                     { name: 'State', params: { id: { kind: 'text', value: 'second' } }, children: [] },
                 ],
@@ -44,7 +44,7 @@ describe('parseXML', () => {
 
     it('rejects visible text nodes', () => {
         expect(() => parseXML('<longlink>  Hello, ${user.name}  </longlink>')).toThrow(
-            'Literal text is not supported in XML; use i18n attributes instead'
+            'Literal text is not supported in XML; use value attributes or nested components instead'
         );
     });
 

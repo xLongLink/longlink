@@ -1,14 +1,12 @@
 import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { resolveTranslation } from '../core/i18n';
 import {
     requireXmlString,
     isVisibleXmlNode,
     readXmlProp,
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
@@ -17,15 +15,13 @@ import type { Props } from '../types';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : String(value)));
     const options = nodes
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => {
             const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
-            const label = readXmlProp(node.params, 'i18n')
-                ? resolveTranslation(node.params, ctx, services)
-                : resolveXmlString(node.params, 'label', ctx, value);
+            const label = resolveXmlString(node.params, 'label', ctx, value);
 
             return { value, label, disabled: resolveXmlBoolean(node.params, 'isDisabled', ctx, false) };
         });
@@ -46,7 +42,7 @@ export function Selector({ props, nodes }: Props) {
         isLabelHidden: resolveXmlBoolean(props, 'isLabelHidden', ctx, false),
         isOptional: resolveXmlBoolean(props, 'isOptional', ctx, false),
         isRequired: resolveXmlBoolean(props, 'isRequired', ctx, false),
-        label: resolveXmlLabel(props, ctx, services, 'Selector'),
+        label: requireXmlString(props, 'label', ctx, 'Selector'),
         options,
         placeholder: resolveXmlString(props, 'placeholder', ctx) || undefined,
         searchPlaceholder: resolveXmlString(props, 'searchPlaceholder', ctx) || undefined,

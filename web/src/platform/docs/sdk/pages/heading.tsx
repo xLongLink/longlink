@@ -37,12 +37,8 @@ export const content = (
                         required: true,
                     },
                     {
-                        name: 'label, value, or i18n',
+                        name: 'value',
                         description: 'Heading text.',
-                    },
-                    {
-                        name: 'values',
-                        description: 'Translation interpolation values.',
                     },
                 ].map((attribute) => (
                     <ListItem
@@ -68,7 +64,7 @@ export const content = (
             <Heading id="example" level={2}>
                 Example
             </Heading>
-            <CodeBlock code={'<Heading level="1" i18n="orders.title" />'} language="xml" />
+            <CodeBlock code={'<Heading level="1" value="Orders" />'} language="xml" />
         </Stack>
     </Stack>
 );

@@ -24,9 +24,9 @@ VALID_FRAGMENTS = [
     (
         "button",
         _adapter_schema("Button.xsd"),
-        '<Button type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
+        '<Button label="Save" type="submit" variant="primary" size="sm" if="${canSave}" />',
     ),
-    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text i18n="cards.content" /></Card>'),
+    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text value="Card content" /></Card>'),
     (
         "checkbox-input",
         _adapter_schema("CheckboxInput.xsd"),
@@ -35,20 +35,20 @@ VALID_FRAGMENTS = [
     (
         "dialog",
         _adapter_schema("Dialog.xsd"),
-        '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text i18n="issues.deleteDescription" /></Dialog>',
+        '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text value="This action cannot be undone." /></Dialog>',
     ),
     ("divider", _adapter_schema("Divider.xsd"), '<Divider label="or" variant="strong" />'),
     ("file-input", _adapter_schema("FileInput.xsd"), '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
-    ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><Text i18n="items.name" /></For>'),
+    ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><Text value="$item.name" /></For>'),
     (
         "form-layout",
         _adapter_schema("FormLayout.xsd"),
         '<FormLayout direction="horizontal"><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
     ),
     ("grid", _adapter_schema("Grid.xsd"), '<Grid minColumnWidth="240" maxColumns="3" gap="4"><Card /></Grid>'),
-    ("heading", _adapter_schema("Heading.xsd"), '<Heading level="1" i18n="dashboard.title" />'),
+    ("heading", _adapter_schema("Heading.xsd"), '<Heading level="1" value="Dashboard" />'),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon icon="info" size="sm" if="show" />'),
-    ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" i18n="issues.open" />'),
+    ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" label="Open issue" />'),
     ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
     ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />'),
     ("query", _adapter_schema("Query.xsd"), '<Query id="projects" path="/projects" />'),
@@ -60,7 +60,7 @@ VALID_FRAGMENTS = [
     (
         "selector",
         _adapter_schema("Selector.xsd"),
-        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" /></Selector>',
+        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", _adapter_schema("Slider.xsd"), '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", _adapter_schema("Stack.xsd"), '<Stack direction="horizontal" justify="between" gap="4"><Text value="First" /></Stack>'),
@@ -74,15 +74,15 @@ VALID_FRAGMENTS = [
     (
         "tab-list",
         _adapter_schema("TabList.xsd"),
-        '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview"><Text i18n="tabs.overviewPanel" /></Tab></TabList>',
+        '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview"><Text value="Overview panel" /></Tab></TabList>',
     ),
-    ("text", _adapter_schema("Text.xsd"), '<Text i18n="items.name" values="${{ name: item.name }}" />'),
+    ("text", _adapter_schema("Text.xsd"), '<Text value="$item.name" />'),
     ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />'),
     ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" />'),
 ]
 
 INVALID_FRAGMENTS = [
-    ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button i18n="actions.save" /></Action>'),
+    ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button label="Save" /></Action>'),
     ("removed-avatar-fallback-src", _adapter_schema("Avatar.xsd"), '<Avatar fallbackSrc="/fallback.png" />'),
     ("removed-button-append", _adapter_schema("Button.xsd"), '<Button label="Add" append="cart" item="${item}" />'),
     ("removed-button-item", _adapter_schema("Button.xsd"), '<Button label="Add" item="${item}" />'),
@@ -91,20 +91,20 @@ INVALID_FRAGMENTS = [
     ("removed-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="display-1" value="Title" />'),
     ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
-    ("old-text-interpolation", _adapter_schema("Text.xsd"), '<Text i18n="users.name" name="$user.name" />'),
+    ("removed-text-i18n", _adapter_schema("Text.xsd"), '<Text i18n="users.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
     ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),
     (
         "invalid-child-through-root",
         ROOT_SCHEMA,
-        '<longlink version="0.3"><Action tone="accent"><Button i18n="actions.save" /></Action></longlink>',
+        '<longlink version="0.3"><Action tone="accent"><Button label="Save" /></Action></longlink>',
     ),
     (
         "missing-selector-option-value",
         _adapter_schema("Selector.xsd"),
         '<Selector label="View"><SelectorOption label="Overview" /></Selector>',
     ),
-    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="0.3"><P i18n="items.name" /></longlink>'),
+    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="0.3"><P value="$item.name" /></longlink>'),
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
@@ -120,8 +120,8 @@ INVALID_FRAGMENTS = [
         _adapter_schema("Table.xsd"),
         '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>',
     ),
-    ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text i18n="tabs.overview" /></Tab></TabList>'),
-    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3"><Text i18n="dashboard.title"></longlink>'),
+    ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text value="Overview" /></Tab></TabList>'),
+    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3"><Text value="Dashboard"></longlink>'),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [

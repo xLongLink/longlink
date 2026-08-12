@@ -1,12 +1,12 @@
 import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import { useXmlRuntime } from '../core/context';
-import { resolveXmlEnum, resolveXmlLabel } from '../core/props';
+import { requireXmlString, resolveXmlEnum } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders an Astryx badge with a serializable label. */
 export function Badge({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
-    const label = resolveXmlLabel(props, ctx, services, 'Badge');
+    const { scope: ctx } = useXmlRuntime();
+    const label = requireXmlString(props, 'label', ctx, 'Badge');
     const variant = resolveXmlEnum(
         props,
         'variant',

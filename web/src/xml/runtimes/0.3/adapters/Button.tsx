@@ -2,14 +2,14 @@ import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
 import { useContext } from 'react';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from '../core/props';
+import { requireXmlString, resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 import type { Props } from '../types';
 import { ActionHandlerContext } from './Action';
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
-    const label = resolveXmlLabel(props, ctx, services, 'Button');
+    const { scope: ctx } = useXmlRuntime();
+    const label = requireXmlString(props, 'label', ctx, 'Button');
     const variant = resolveXmlEnum(
         props,
         'variant',

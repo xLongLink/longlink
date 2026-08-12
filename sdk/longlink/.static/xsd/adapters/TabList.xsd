@@ -13,10 +13,7 @@
   <xsd:complexType name="TabType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="to" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
@@ -25,9 +22,5 @@
   </xsd:element>
   <xsd:element name="Tab" type="TabType">
     <xsd:annotation><xsd:documentation>Defines one tab and its panel children.</xsd:documentation></xsd:annotation>
-    <xsd:key name="TabAccessibleLabel">
-      <xsd:selector xpath="." />
-      <xsd:field xpath="@label | @i18n" />
-    </xsd:key>
   </xsd:element>
 </xsd:schema>

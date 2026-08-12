@@ -1,7 +1,6 @@
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core-0-3/Table';
 import { Text } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime, XmlContext } from '../core/context';
-import { resolveTranslation } from '../core/i18n';
 import { renderNode } from '../core/node';
 import {
     readXmlProp,
@@ -90,9 +89,7 @@ function buildColumn(
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = readXmlProp(props, 'i18n')
-        ? resolveTranslation(props, ctx, services)
-        : resolveXmlString(props, 'header', ctx, key.value);
+    const header = resolveXmlString(props, 'header', ctx, key.value);
     const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'start', 'TableColumn');
     const cellNodes = node.children;
 

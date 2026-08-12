@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
@@ -13,9 +13,9 @@ import type { Props } from '../types';
 
 /** Renders an accessible Astryx text input with optional Valtio binding. */
 export function TextInput({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const label = resolveXmlLabel(props, ctx, services, 'TextInput');
+    const label = requireXmlString(props, 'label', ctx, 'TextInput');
     const type = resolveXmlEnum(props, 'type', ctx, ['text', 'password', 'email'], 'text', 'TextInput');
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextInput');
 

@@ -2,10 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="TextAreaType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
     <xsd:attribute name="description" type="xsd:string" use="optional" />
@@ -27,9 +24,5 @@
   </xsd:complexType>
   <xsd:element name="TextArea" type="TextAreaType">
     <xsd:annotation><xsd:documentation>Collects multi-line text with an accessible Astryx field.</xsd:documentation></xsd:annotation>
-    <xsd:key name="TextAreaAccessibleLabel">
-      <xsd:selector xpath="." />
-      <xsd:field xpath="@label | @i18n" />
-    </xsd:key>
   </xsd:element>
 </xsd:schema>

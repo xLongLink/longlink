@@ -14,7 +14,6 @@ from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
-from fastapi.staticfiles import StaticFiles
 from longlink.middleware import install_frontend_middleware
 from longlink.storage.base import create_fs
 
@@ -62,16 +61,11 @@ class LongLink:
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app)
 
-        # Applications always provide translations and pages in the generated source layout.
+        # Applications provide XML pages in the generated source layout.
         source_directory = Path.cwd() / "src"
-        translations_directory = source_directory / "i18n"
         pages_directory = source_directory / "pages"
-        missing_directories = [directory for directory in (translations_directory, pages_directory) if not directory.is_dir()]
-        if missing_directories:
-            raise ValueError(
-                f"Application source directories are required: {', '.join(str(directory) for directory in missing_directories)}"
-            )
-        app.mount("/i18n", StaticFiles(directory=translations_directory), name="translations")
+        if not pages_directory.is_dir():
+            raise ValueError(f"Application source directory is required: {pages_directory}")
         self._register_page_directory(pages_directory)
 
         # Start applications on their first static page instead of an unselected shell.

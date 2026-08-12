@@ -8,7 +8,6 @@ import {
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
     resolveXmlString,
 } from '../core/props';
 import { resolveNavigationUrl } from '../core/url';
@@ -21,7 +20,7 @@ export function TabList({ props, nodes }: Props) {
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
             href: resolveNavigationUrl(services.navigationBaseUrl, resolveXmlString(node.params, 'to', ctx)) || undefined,
-            label: resolveXmlLabel(node.params, ctx, services, 'Tab'),
+            label: requireXmlString(node.params, 'label', ctx, 'Tab'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'Tab'),
         }));

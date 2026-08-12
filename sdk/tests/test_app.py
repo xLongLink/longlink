@@ -1,4 +1,3 @@
-import json
 import pytest
 from pytest import MonkeyPatch
 from fastapi import FastAPI
@@ -43,25 +42,25 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     [
         pytest.param(
             "index.xml",
-            '<longlink version="0.3"><Text i18n="home.title" /></longlink>',
+            '<longlink version="0.3"><Text value="Home" /></longlink>',
             {"tab": "index", "route": ""},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
-            '<longlink version="0.3" name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
+            '<longlink version="0.3" name="Dashboard" icon="layout-dashboard"><Text value="Dashboard" /></longlink>',
             {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink version="0.3"><Text i18n="users.title" /></longlink>',
+            '<longlink version="0.3"><Text value="Users" /></longlink>',
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
-            '<longlink version="0.3" name="Issue"><Text i18n="issues.title" /></longlink>',
+            '<longlink version="0.3" name="Issue"><Text value="Issue" /></longlink>',
             {"tab": "issues", "route": "issues/:issue"},
             id="dynamic",
         ),
@@ -118,7 +117,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
 
     # Create a page whose endpoint is already owned by the Application.
     (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink version="0.3"><Text i18n="dashboard.title" /></longlink>',
+        '<longlink version="0.3"><Text value="Dashboard" /></longlink>',
         encoding="utf-8",
     )
     app = FastAPI()
@@ -132,32 +131,3 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
-
-
-def test_translation_catalog_is_served(application_source: Path) -> None:
-    """Expose the bundled translation catalog from the SDK application."""
-
-    # Create an Application translation catalog in the default source tree.
-    catalog_path = application_source / "i18n" / "en.json"
-    catalog_path.parent.mkdir(parents=True, exist_ok=True)
-    catalog_path.write_text(
-        json.dumps(
-            {
-                "examples": {
-                    "text": {
-                        "title": "Localized text elements",
-                    }
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
-    # Request the catalog through the initialized SDK runtime.
-    app = FastAPI()
-    LongLink(app)
-    client = TestClient(app)
-    response = client.get("/i18n/en.json")
-
-    # Verify the source catalog is returned unchanged.
-    assert response.status_code == 200
-    assert response.json()["examples"]["text"]["title"] == "Localized text elements"

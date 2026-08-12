@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlNumber,
     resolveXmlSizeValue,
     resolveXmlString,
@@ -14,7 +14,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(
         props,
         'value',
@@ -40,7 +40,7 @@ export function FileInput({ props }: Props) {
             isMultiple={resolveXmlBoolean(props, 'isMultiple', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'FileInput')}
+            label={requireXmlString(props, 'label', ctx, 'FileInput')}
             maxFiles={resolveXmlNumber(props, 'maxFiles', ctx)}
             maxSize={resolveXmlNumber(props, 'maxSize', ctx)}
             mode={resolveXmlEnum(props, 'mode', ctx, ['dropzone', 'input'], 'input', 'FileInput')}

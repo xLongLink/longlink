@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
 import { evaluate } from '../expressions';
-import type { ASTNode, ASTProps, RuntimeServices, Scope } from '../types';
-import { resolveTranslation } from './i18n';
+import type { ASTNode, ASTProps, Scope } from '../types';
 
 const XML_SPACING = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 
@@ -88,47 +86,11 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope, defau
     return evaluate(attribute, ctx);
 }
 
-/** Resolves text from translation, value, or rendered XML children. */
-export function resolveXmlContent(
-    props: ASTProps,
-    ctx: Scope,
-    services: RuntimeServices,
-    value: unknown,
-    renderChildren: () => ReactNode
-): ReactNode {
-    return readXmlProp(props, 'i18n')
-        ? resolveTranslation(props, ctx, services)
-        : value != null
-          ? String(value)
-          : renderChildren();
-}
-
 /** Return whether an XML node passes its optional conditional expression. */
 export function isVisibleXmlNode(node: ASTNode, ctx: Scope): boolean {
     if (node.params.if == null) return true;
 
     return Boolean(evaluate(node.params.if, ctx));
-}
-
-/** Resolves an accessible XML label from a translation key or label attribute. */
-export function resolveXmlLabel(
-    props: ASTProps,
-    ctx: Scope,
-    services: RuntimeServices,
-    componentName: string,
-    attribute = 'label'
-): string {
-    const label = readXmlProp(props, attribute);
-    const i18n = readXmlProp(props, 'i18n');
-
-    // Accessible names must have one unambiguous literal or translated source.
-    if ((label == null) === (i18n == null)) {
-        throw new Error(`${componentName} requires exactly one of ${attribute} or i18n`);
-    }
-
-    if (i18n != null) return resolveTranslation(props, ctx, services);
-
-    return requireXmlString(props, attribute, ctx, componentName);
 }
 
 /** Resolves and validates a finite string-valued XML attribute. */

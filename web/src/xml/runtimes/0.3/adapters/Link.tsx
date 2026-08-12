@@ -1,7 +1,7 @@
 import { Link as AstryxLink } from '@astryxdesign/core-0-3/Link';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXmlBoolean, resolveXmlContent, resolveXmlEnum, resolveXmlString } from '../core/props';
+import { resolveXmlBoolean, resolveXmlEnum, resolveXmlString } from '../core/props';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 import type { Props } from '../types';
 
@@ -12,9 +12,7 @@ export function Link({ props, nodes }: Props) {
     const to = resolveXmlString(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, href);
     const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, to);
-    const content = resolveXmlContent(props, ctx, services, undefined, () =>
-        nodes.length > 0 ? renderNode(nodes, ctx) : undefined
-    );
+    const content = nodes.length > 0 ? renderNode(nodes, ctx) : undefined;
     const label = resolveXmlString(props, 'label', ctx);
     const color = resolveXmlEnum(
         props,

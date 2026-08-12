@@ -6,7 +6,6 @@ import {
     requireXmlString,
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
@@ -15,7 +14,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const orientation = resolveXmlEnum(props, 'orientation', ctx, ['vertical', 'horizontal'], 'vertical', 'RadioList');
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'md', 'RadioList');
@@ -29,7 +28,7 @@ export function RadioList({ props, nodes }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'RadioList')}
+            label={requireXmlString(props, 'label', ctx, 'RadioList')}
             onChange={binding.setValue}
             orientation={orientation}
             size={size}
@@ -44,13 +43,13 @@ export function RadioList({ props, nodes }: Props) {
 
 /** Renders one data-oriented Astryx radio option. */
 export function RadioListItem({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
 
     return (
         <AstryxRadioListItem
             description={resolveXmlString(props, 'description', ctx) || undefined}
             isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'RadioListItem')}
+            label={requireXmlString(props, 'label', ctx, 'RadioListItem')}
             value={requireXmlString(props, 'value', ctx, 'RadioListItem')}
         />
     );

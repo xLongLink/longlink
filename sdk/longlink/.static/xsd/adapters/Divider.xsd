@@ -3,9 +3,6 @@
   <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="DividerType">
     <xsd:attribute name="label" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
     <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
     <xsd:attribute name="variant" type="DividerVariantType" use="optional" default="subtle" />
     <xsd:attribute name="isFullBleed" type="xsd:string" use="optional" />

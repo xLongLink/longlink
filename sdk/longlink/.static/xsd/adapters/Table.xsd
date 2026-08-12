@@ -18,10 +18,7 @@
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="key" type="NonBlankStringType" use="required" />
     <xsd:attribute name="field" type="FieldPathType" use="optional" />
-    <xsd:attribute name="header" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="header" type="xsd:string" use="required" />
     <xsd:attribute name="align" type="AlignType" use="optional" default="start" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>

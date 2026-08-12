@@ -3,10 +3,7 @@
   <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="DialogType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
-    <xsd:attribute name="title" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="title" type="NonBlankStringType" use="required" />
     <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
     <xsd:attribute name="isOpen" type="xsd:string" use="optional" />
     <xsd:attribute name="triggerLabel" type="NonBlankStringType" use="optional" />
@@ -19,9 +16,5 @@
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">
     <xsd:annotation><xsd:documentation>Renders a controlled Astryx dialog with an optional trigger.</xsd:documentation></xsd:annotation>
-    <xsd:key name="DialogAccessibleTitle">
-      <xsd:selector xpath="." />
-      <xsd:field xpath="@title | @i18n" />
-    </xsd:key>
   </xsd:element>
 </xsd:schema>

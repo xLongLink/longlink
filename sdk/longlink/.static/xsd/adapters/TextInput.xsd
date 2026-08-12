@@ -2,10 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="TextInputType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:attribute name="type" type="TextInputKindType" use="optional" default="text" />
     <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
@@ -27,9 +24,5 @@
   </xsd:complexType>
   <xsd:element name="TextInput" type="TextInputType">
     <xsd:annotation><xsd:documentation>Collects text with an accessible Astryx field.</xsd:documentation></xsd:annotation>
-    <xsd:key name="TextInputAccessibleLabel">
-      <xsd:selector xpath="." />
-      <xsd:field xpath="@label | @i18n" />
-    </xsd:key>
   </xsd:element>
 </xsd:schema>

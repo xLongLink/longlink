@@ -6,7 +6,6 @@ import { content as bindingsContent, metadata as bindingsMetadata } from './bind
 import { content as buttonContent, metadata as buttonMetadata } from './button';
 import { content as cardContent, metadata as cardMetadata } from './card';
 import { content as checkboxInputContent, metadata as checkboxInputMetadata } from './checkbox-input';
-import { content as countContent, metadata as countMetadata } from './count';
 import { content as dialogContent, metadata as dialogMetadata } from './dialog';
 import { content as dividerContent, metadata as dividerMetadata } from './divider';
 import { content as expressionsContent, metadata as expressionsMetadata } from './expressions';
@@ -14,7 +13,6 @@ import { content as fileInputContent, metadata as fileInputMetadata } from './fi
 import { content as forContent, metadata as forMetadata } from './for';
 import { content as gridContent, metadata as gridMetadata } from './grid';
 import { content as headingContent, metadata as headingMetadata } from './heading';
-import { content as i18nContent, metadata as i18nMetadata } from './i18n';
 import { content as iconContent, metadata as iconMetadata } from './icon';
 import { content as ifContent, metadata as ifMetadata } from './if';
 import { content as linkContent, metadata as linkMetadata } from './link';
@@ -34,7 +32,6 @@ import { content as tableContent, metadata as tableMetadata } from './table';
 import { content as textContent, metadata as textMetadata } from './text';
 import { content as textAreaContent, metadata as textAreaMetadata } from './text-area';
 import { content as textInputContent, metadata as textInputMetadata } from './text-input';
-import { content as valuesContent, metadata as valuesMetadata } from './values';
 
 const pageReferences = [
     {
@@ -44,30 +41,6 @@ const pageReferences = [
         summary: 'Conditionally renders an XML node when its expression evaluates to a truthy value.',
         content: ifContent,
         metadata: ifMetadata,
-    },
-    {
-        name: 'Translations',
-        slug: 'i18n',
-        category: 'Runtime',
-        summary: 'Looks up visible copy from the active XML translation catalog.',
-        content: i18nContent,
-        metadata: i18nMetadata,
-    },
-    {
-        name: 'values',
-        slug: 'values',
-        category: 'Runtime',
-        summary: 'Supplies interpolation values for an ICU message resolved through i18n.',
-        content: valuesContent,
-        metadata: valuesMetadata,
-    },
-    {
-        name: 'count',
-        slug: 'count',
-        category: 'Runtime',
-        summary: 'Passes a numeric count through values into an ICU plural translation.',
-        content: countContent,
-        metadata: countMetadata,
     },
     {
         name: 'Expressions',

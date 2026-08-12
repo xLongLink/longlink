@@ -7,17 +7,17 @@ import { renderIcon } from '@/lib/icons';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
+import { isVisibleXmlNode, requireXmlString, resolveXmlString } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
             icon: resolveXmlString(node.params, 'icon', ctx),
-            label: resolveXmlLabel(node.params, ctx, services, 'SideNavItem'),
+            label: requireXmlString(node.params, 'label', ctx, 'SideNavItem'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'SideNavItem'),
         }));

@@ -40,12 +40,8 @@ export const content = (
                         description: 'body, large, label, supporting, code, display style, or inherit.',
                     },
                     {
-                        name: 'label, value, or i18n',
+                        name: 'value',
                         description: 'Text content.',
-                    },
-                    {
-                        name: 'values',
-                        description: 'Translation interpolation values.',
                     },
                 ].map((attribute) => (
                     <ListItem
@@ -72,7 +68,7 @@ export const content = (
                 Example
             </Heading>
             <CodeBlock
-                code={'<Text as="p" i18n="orders.summary" values="${{ number: order.number }}" />'}
+                code={'<Text as="p" value="${`Order #${order.number}`}" />'}
                 language="xml"
             />
         </Stack>

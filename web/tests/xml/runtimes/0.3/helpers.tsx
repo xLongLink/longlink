@@ -9,7 +9,7 @@ export function compileProps(props: Record<string, string>): ASTProps {
     return Object.fromEntries(
         Object.entries(props).map(([name, value]) => [
             name,
-            compileAttribute(value, name === 'field' || name === 'i18n'),
+            compileAttribute(value, name === 'field'),
         ])
     );
 }

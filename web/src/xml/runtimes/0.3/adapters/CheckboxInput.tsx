@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlSizeValue,
     resolveXmlStatus,
     resolveXmlString,
@@ -13,7 +13,7 @@ import type { Props } from '../types';
 
 /** Renders an Astryx checkbox with boolean Valtio binding. */
 export function CheckboxInput({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'md', 'CheckboxInput');
 
@@ -27,7 +27,7 @@ export function CheckboxInput({ props }: Props) {
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isReadOnly={resolveXmlBoolean(props, 'isReadOnly', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'CheckboxInput')}
+            label={requireXmlString(props, 'label', ctx, 'CheckboxInput')}
             onChange={binding.setValue}
             size={size}
             status={resolveXmlStatus(props, ctx)}

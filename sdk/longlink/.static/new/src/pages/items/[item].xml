@@ -9,9 +9,9 @@
             <Heading level="3" value="$item.name" />
             <Text color="secondary" value="${`CHF ${item.price}`}" />
         </Stack>
-        <Dialog i18n="items.attachments.title" triggerLabel="Upload attachment" purpose="form">
+        <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack gap="3">
-                <FileInput i18n="items.attachments.file" value="$attachment.file" isRequired="true" />
+                <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
                 <Action
                     action="/api/items/${params.item}/attachments"
                     method="POST"

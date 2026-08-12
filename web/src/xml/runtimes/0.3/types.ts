@@ -1,4 +1,3 @@
-import type { Catalog, TranslatorFn } from '@astryxdesign/core-0-3/i18n';
 import type { ExpressionNode } from './expressions/types';
 
 export type ASTAttribute =
@@ -38,8 +37,6 @@ export type RuntimeServices = {
     navigationBaseUrl: string;
     requestBaseUrl: string;
     setups: Record<string, () => Promise<void> | void>;
-    translate?: TranslatorFn;
-    translations?: Catalog;
 };
 
 /** Complete XML runtime with separately-owned lexical and service state. */

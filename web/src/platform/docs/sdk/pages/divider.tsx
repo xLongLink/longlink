@@ -40,7 +40,7 @@ export const content = (
                         description: 'subtle or strong.',
                     },
                     {
-                        name: 'label or i18n',
+                        name: 'label',
                         description: 'Optional divider label.',
                     },
                 ].map((attribute) => (
@@ -61,7 +61,7 @@ export const content = (
             <Heading id="example" level={2}>
                 Example
             </Heading>
-            <CodeBlock code={'<Divider i18n="common.or" variant="strong" />'} language="xml" />
+            <CodeBlock code={'<Divider label="Or" variant="strong" />'} language="xml" />
         </Stack>
     </Stack>
 );

@@ -34,7 +34,7 @@ export const content = (
             <List listStyle="disc">
                 {[
                     {
-                        name: 'label or i18n',
+                        name: 'label',
                         description: 'Accessible field label.',
                         required: true,
                     },

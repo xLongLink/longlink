@@ -40,7 +40,7 @@ export const content = (
                         description: 'URL destination.',
                     },
                     {
-                        name: 'label or i18n',
+                        name: 'label',
                         description: 'Accessible link text.',
                     },
                     {

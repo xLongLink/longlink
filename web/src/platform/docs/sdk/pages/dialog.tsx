@@ -32,7 +32,7 @@ export const content = (
             <List listStyle="disc">
                 {[
                     {
-                        name: 'title or i18n',
+                        name: 'title',
                         description: 'Dialog title.',
                         required: true,
                     },

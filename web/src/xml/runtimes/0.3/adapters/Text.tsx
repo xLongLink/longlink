@@ -4,18 +4,17 @@ import { renderNode } from '../core/node';
 import {
     readXmlProp,
     resolveXmlBoolean,
-    resolveXmlContent,
     resolveXmlEnum,
     resolveXmlNumber,
     resolveXmlValue,
 } from '../core/props';
 import type { Props } from '../types';
 
-/** Renders semantic Astryx text from a value, translation, or nested XML. */
+/** Renders semantic Astryx text from a value or nested XML. */
 export function Text({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const value = resolveXmlValue(props, 'value', ctx);
-    const content = resolveXmlContent(props, ctx, services, value, () => renderNode(nodes, ctx));
+    const content = value != null ? String(value) : renderNode(nodes, ctx);
     const type = resolveXmlEnum(
         props,
         'type',

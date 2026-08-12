@@ -16,11 +16,6 @@
       <xsd:minExclusive value="0" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="TranslationKeyType">
-    <xsd:restriction base="xsd:string">
-      <xsd:pattern value="[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="ActionMethodType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="DELETE" />

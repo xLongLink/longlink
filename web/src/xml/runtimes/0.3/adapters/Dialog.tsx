@@ -9,7 +9,6 @@ import { renderNode } from '../core/node';
 import {
     requireXmlString,
     resolveXmlEnum,
-    resolveXmlLabel,
     resolveXmlSizeValue,
     resolveXmlSpacing,
     resolveXmlString,
@@ -20,9 +19,9 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, toXmlBoolean);
-    const title = resolveXmlLabel(props, ctx, services, 'Dialog', 'title');
+    const title = requireXmlString(props, 'title', ctx, 'Dialog');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const purpose = resolveXmlEnum(props, 'purpose', ctx, ['required', 'form', 'info'], 'info', 'Dialog');

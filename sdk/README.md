@@ -18,7 +18,7 @@
 longlink init
 ```
 
-> See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, translations, routes, tests, and Docker image builds.
+> See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, routes, tests, and Docker image builds.
 
 <br/>
 

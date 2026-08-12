@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
     resolveXmlEnum,
-    resolveXmlLabel,
+    requireXmlString,
     resolveXmlNumber,
     resolveXmlSizeValue,
     resolveXmlStatus,
@@ -14,7 +14,7 @@ import type { Props } from '../types';
 
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
+    const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));
     const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Slider');
     const valueDisplay = resolveXmlEnum(props, 'valueDisplay', ctx, ['tooltip', 'text', 'none'], 'tooltip', 'Slider');
@@ -28,7 +28,7 @@ export function Slider({ props }: Props) {
             isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
-            label={resolveXmlLabel(props, ctx, services, 'Slider')}
+            label={requireXmlString(props, 'label', ctx, 'Slider')}
             max={resolveXmlNumber(props, 'max', ctx, 100)}
             min={resolveXmlNumber(props, 'min', ctx, 0)}
             onChange={binding.setValue}
