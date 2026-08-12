@@ -66,8 +66,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert image == "ghcr.io/longlink/dashboard:latest"
         return LongLinkMetadata(
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-            digest="sha256:test",
-            environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
+            environments=[EnvironmentMetadata(name="API_KEY", required=True)],
         )
 
     monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)

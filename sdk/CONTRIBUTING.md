@@ -28,7 +28,7 @@ uv run pytest tests    # Run tests
 
 ## Docker Labels
 
-The build command writes standard OCI image metadata labels using [OCI annotation keys](https://github.com/opencontainers/image-spec/blob/main/annotations.md) when values are available. It also writes this LongLink-specific label:
+The build command writes OCI version and description labels when available. It also writes this LongLink-specific label:
 
 | Label                   | Value                     | Description                                          |
 | ----------------------- | ------------------------- | ---------------------------------------------------- |

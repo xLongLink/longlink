@@ -50,7 +50,7 @@ async def create_application(
 
     # Resolve immutable image metadata before creating durable Application state.
     metadata = await images.metadata(payload.image)
-    if metadata is None or metadata.digest is None:
+    if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
 
     # Enforce image-declared requirements while the submitted values remain at the API boundary.
@@ -95,7 +95,7 @@ async def release_application(
 
     # Resolve immutable image metadata before changing durable desired state.
     metadata = await images.metadata(payload.image)
-    if metadata is None or metadata.digest is None:
+    if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
     application = await applications.get(session, application_id)
     if application is None:

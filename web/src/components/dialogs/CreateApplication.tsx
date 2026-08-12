@@ -101,7 +101,6 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             );
 
             setDeclaredEnvironments(metadata.environments ?? []);
-            form.setValue('name', metadata.title ?? '', { shouldValidate: true });
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
             form.setValue('envs', {}, { shouldValidate: true });
             setStep('metadata');

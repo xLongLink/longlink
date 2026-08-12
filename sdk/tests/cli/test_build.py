@@ -33,9 +33,9 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
             "    PORT: int = 8080\n",
             [
-                {"name": "LONG_API_KEY", "type": "str", "required": False, "description": "API key"},
-                {"name": "LONG_TOKEN", "type": "str", "required": False},
-                {"name": "PORT", "type": "int", "required": False},
+                {"name": "LONG_API_KEY", "required": False, "description": "API key"},
+                {"name": "LONG_TOKEN", "required": False},
+                {"name": "PORT", "required": False},
             ],
             id="supported-metadata",
         ),
@@ -47,8 +47,8 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
             "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
             [
-                {"name": "OPTIONAL_TOKEN", "type": "str", "required": False},
-                {"name": "REQUIRED_TOKEN", "type": "str", "required": True},
+                {"name": "OPTIONAL_TOKEN", "required": False},
+                {"name": "REQUIRED_TOKEN", "required": True},
             ],
             id="positional-defaults",
         ),
@@ -194,13 +194,12 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
         "version": "0.1.0",
         "description": "Demo app",
     }
-    env_spec = [{"name": "API_KEY", "type": "str", "required": True, "description": "API key"}]
+    env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
 
     # Act
     labels = build.render_image_labels(metadata, env_spec)
 
     # Assert
-    assert 'LABEL org.opencontainers.image.title="demo"' in labels
     assert 'LABEL org.opencontainers.image.version="0.1.0"' in labels
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
     assert "LABEL longlink.environments=" in labels

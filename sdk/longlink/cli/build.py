@@ -96,10 +96,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
         env_name = field_info.pop("env_name") or field_name
-        type_name = ast.unparse(statement.annotation)
         env_entry: dict[str, object] = {
             "name": env_name,
-            "type": type_name,
             "required": bool(field_info.get("required", False)),
         }
 
@@ -203,7 +201,6 @@ def render_image_labels(metadata: Mapping[str, object], environments: Sequence[M
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
     label_items = [
-        ("org.opencontainers.image.title", metadata.get("name")),
         ("org.opencontainers.image.version", metadata.get("version")),
         ("org.opencontainers.image.description", metadata.get("description")),
     ]

@@ -129,7 +129,6 @@ export const zDatabaseRegistryResponse = z.object({
  */
 export const zEnvironmentMetadata = z.object({
     name: z.string(),
-    type: z.string(),
     required: z.boolean(),
     description: z.string().nullish()
 });
@@ -191,8 +190,6 @@ export const zApplicationCreate = z.object({
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export const zLongLinkMetadata = z.object({
-    title: z.string().nullish(),
-    digest: z.string().nullish(),
     version: z.string().nullish(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()

@@ -2767,10 +2767,6 @@
             "type": "string",
             "title": "Name"
           },
-          "type": {
-            "type": "string",
-            "title": "Type"
-          },
           "required": {
             "type": "boolean",
             "title": "Required"
@@ -2790,7 +2786,6 @@
         "type": "object",
         "required": [
           "name",
-          "type",
           "required"
         ],
         "title": "EnvironmentMetadata",
@@ -2848,28 +2843,6 @@
       },
       "LongLinkMetadata": {
         "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "digest": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Digest"
-          },
           "version": {
             "anyOf": [
               {

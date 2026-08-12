@@ -7,7 +7,6 @@ class EnvironmentMetadata(BaseModel):
 
     # Metadata
     name: str
-    type: str
     required: bool
     description: str | None = None
 
@@ -19,8 +18,6 @@ class LongLinkMetadata(BaseModel):
     image: Image = Field(exclude=True)
 
     # Metadata
-    title: str | None = None
-    digest: str | None = None
     version: str | None = None
     description: str | None = None
 

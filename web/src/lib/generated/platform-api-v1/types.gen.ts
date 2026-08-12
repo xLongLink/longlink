@@ -254,10 +254,6 @@ export type EnvironmentMetadata = {
      */
     name: string;
     /**
-     * Type
-     */
-    type: string;
-    /**
      * Required
      */
     required: boolean;
@@ -290,14 +286,6 @@ export type Icon = 'activity' | 'arrow-right' | 'banknote' | 'bell' | 'box' | 'b
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export type LongLinkMetadata = {
-    /**
-     * Title
-     */
-    title?: string | null;
-    /**
-     * Digest
-     */
-    digest?: string | null;
     /**
      * Version
      */

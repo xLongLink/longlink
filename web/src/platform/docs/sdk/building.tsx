@@ -48,14 +48,6 @@ environment = "src.envs:Env"
                 <TableBody>
                     <TableRow>
                         <TableCell>
-                            <Code>name</Code>
-                        </TableCell>
-                        <TableCell>
-                            <Code>org.opencontainers.image.title</Code>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>
                             <Code>version</Code>
                         </TableCell>
                         <TableCell>
