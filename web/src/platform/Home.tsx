@@ -1,18 +1,18 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import type { MetaFunction } from 'react-router';
+import { ArrowRight } from 'lucide-react';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
+import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { ArrowRight } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import type { MetaFunction } from 'react-router';
-import { Footer } from '@/components/Footer';
-import { PublicPage } from '@/layout/PublicPage';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
-import { HeroGlobe } from '@/platform/HeroGlobe';
+import { Footer } from '@/components/Footer';
 import { homePage } from '@/platform/public';
+import { PublicPage } from '@/layout/PublicPage';
+import { HeroGlobe } from '@/platform/HeroGlobe';
 
 export const meta: MetaFunction = () => publicSeoMeta(homePage);
 

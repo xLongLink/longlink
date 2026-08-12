@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
+  <xsd:complexType name="BadgeIconType">
+    <xsd:attribute name="icon" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="size" type="IconSizeType" default="md" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+  </xsd:complexType>
   <xsd:complexType name="BadgeType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
-    <xsd:attribute name="variant" type="BadgeVariantType" use="optional" default="neutral" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:sequence><xsd:element name="Icon" type="BadgeIconType" minOccurs="0" maxOccurs="1" /></xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="variant" type="BadgeVariantType" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">
-    <xsd:annotation><xsd:documentation>Renders an Astryx status or category badge.</xsd:documentation></xsd:annotation>
-    <xsd:key name="BadgeAccessibleLabel">
-      <xsd:selector xpath="." />
-      <xsd:field xpath="@label | @i18n" />
-    </xsd:key>
+    <xsd:annotation><xsd:documentation>Renders an Astryx status or category badge. Its optional Icon child fills the icon slot and may declare slot="icon".</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

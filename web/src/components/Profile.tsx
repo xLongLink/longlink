@@ -1,22 +1,20 @@
+import { useState } from 'react';
+import { Item } from '@astryxdesign/core/Item';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { Item } from '@astryxdesign/core/Item';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Popover } from '@astryxdesign/core/Popover';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useSignOut, useUserProfile } from '@/hooks/use-user';
 import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function UserProfile() {
-    const t = useTranslator();
     const { user } = useUserProfile();
     const signOut = useSignOut();
     const showToast = useToast();
@@ -47,28 +45,28 @@ export function UserProfile() {
                         density="compact"
                         header={
                             <Text color="secondary" type="label">
-                                {t('profile.accountSection')}
+                                Account
                             </Text>
                         }
                     >
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/organizations"
-                            label={t('profile.organizations')}
+                            label="Organizations"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/settings"
-                            label={t('profile.settings')}
+                            label="Settings"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
                             href="/docs"
-                            label={t('common.documentation')}
+                            label="Documentation"
                             onClickCapture={() => setIsOpen(false)}
                             rel="noopener noreferrer"
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
@@ -82,18 +80,18 @@ export function UserProfile() {
                                 density="compact"
                                 header={
                                     <Text color="secondary" type="label">
-                                        {t('profile.adminSection')}
+                                        Administration
                                     </Text>
                                 }
                             >
-                                {ADMIN_NAVIGATION.map(({ href, icon: Icon, profileLabel }) => (
+                                {ADMIN_NAVIGATION.map(({ href, icon: Icon, label }) => (
                                     <ListItem
                                         key={href}
                                         endContent={
                                             <ChevronRight aria-hidden="true" className="text-secondary" size={12} />
                                         }
                                         href={href}
-                                        label={t(profileLabel)}
+                                        label={label}
                                         onClickCapture={() => setIsOpen(false)}
                                         startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
                                     />
@@ -103,11 +101,11 @@ export function UserProfile() {
                         </>
                     ) : null}
                     <Button
-                        label={t('actions.signOut')}
+                        label="Sign out"
                         onClick={() => {
                             setIsOpen(false);
                             void signOut().catch(() => {
-                                showToast({ body: t('profile.signOutFailed'), type: 'error' });
+                                showToast({ body: 'Failed to sign out', type: 'error' });
                             });
                         }}
                         variant="destructive"

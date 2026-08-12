@@ -1,13 +1,13 @@
-import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
-import { useApiQuery } from '@/hooks/use-api';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserOrganizationMembership, UserProfile } from '@/lib/generated/platform-api-v1/types.gen';
-import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
+import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY } from '@/lib/theme';
+import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
 
@@ -44,7 +44,7 @@ export function useUserProfile() {
         throw new Error('useUserProfile must be used within a UserProvider');
     }
 
-    const { data: user, error, isLoading } = context;
+    const { data: user, error, isLoading, refetch } = context;
 
     return {
         user: user ?? null,
@@ -53,6 +53,7 @@ export function useUserProfile() {
         radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,
         error: error ?? null,
+        refetch,
     };
 }
 

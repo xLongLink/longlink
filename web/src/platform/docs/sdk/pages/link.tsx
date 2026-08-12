@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 export const content = (
     <Stack gap={5}>
@@ -40,7 +40,7 @@ export const content = (
                         description: 'URL destination.',
                     },
                     {
-                        name: 'label or i18n',
+                        name: 'label',
                         description: 'Accessible link text.',
                     },
                     {

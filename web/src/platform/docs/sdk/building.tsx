@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 export const metadata = {
     toc: [
@@ -38,7 +38,7 @@ environment = "src.envs:Env"
                 language="toml"
                 title="pyproject.toml"
             />
-            <Table<Record<string, unknown>> density="compact">
+            <Table density="compact">
                 <TableHeader>
                     <TableRow>
                         <TableHeaderCell>Metadata</TableHeaderCell>
@@ -46,22 +46,6 @@ environment = "src.envs:Env"
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow>
-                        <TableCell>
-                            <Code>name</Code>
-                        </TableCell>
-                        <TableCell>
-                            <Code>org.opencontainers.image.title</Code>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>
-                            <Code>version</Code>
-                        </TableCell>
-                        <TableCell>
-                            <Code>org.opencontainers.image.version</Code>
-                        </TableCell>
-                    </TableRow>
                     <TableRow>
                         <TableCell>
                             <Code>description</Code>

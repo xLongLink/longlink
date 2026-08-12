@@ -5,6 +5,7 @@ from factories import create_organization, create_ready_infrastructure
 from sqlalchemy import update
 from src.errors import ConflictError, UnavailableError
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
@@ -84,20 +85,12 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert [organization.id for organization in fetched] == [active_organization.id]
 
 
-async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
     """Update an active organization member role."""
 
     # Arrange
     owner, member, non_member = users
     organization = await create_organization(owner)
-    synchronized: list[UUID] = []
-
-    async def sync_users(_session, organization_id: UUID) -> None:
-        """Record the Organization user projection requested by the service."""
-
-        synchronized.append(organization_id)
-
-    monkeypatch.setattr(organizations, "sync_users", sync_users)
 
     Session = await get_session()
     async with Session() as session:
@@ -126,7 +119,6 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert updated is True
     assert missing is False
     assert updated_membership.role == OrganizationRoles.maintain
-    assert synchronized == [organization.id]
 
 
 async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
@@ -234,7 +226,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             organization.id,
             "Dashboard",
             "dashboard",
-            "ghcr.io/longlink/dashboard@sha256:test",
+            Image("ghcr.io/longlink/dashboard@sha256:test"),
             owner,
             {},
         )

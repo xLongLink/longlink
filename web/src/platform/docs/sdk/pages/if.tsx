@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 export const content = (
     <Stack gap={5}>
@@ -66,7 +66,7 @@ export const content = (
             </Heading>
             <CodeBlock
                 code={
-                    '<Badge if="${order.blocked}" variant="error" i18n="orders.blocked" />\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'
+                    '<Badge if="${order.blocked}" variant="error" label="Blocked" />\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'
                 }
                 language="xml"
             />

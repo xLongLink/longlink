@@ -1,37 +1,35 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { platformApiPath } from '@/lib/platform-api';
 import { dateTimeFormatter } from '@/lib/utils';
+import { platformApiPath } from '@/lib/platform-api';
 import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const t = useTranslator();
     const statusLabels: Record<OperationResponse['status'], string> = {
-        scheduled: t('admin.operationStatus.scheduled'),
-        active: t('admin.operationStatus.active'),
-        completed: t('admin.operationStatus.completed'),
-        failed: t('admin.operationStatus.failed'),
+        scheduled: 'Scheduled',
+        active: 'Active',
+        completed: 'Completed',
+        failed: 'Failed',
     };
     const kindLabels: Record<OperationResponse['kind'], string> = {
-        'compute.create': t('admin.computeCreation'),
-        'application.create': t('admin.applicationCreation'),
-        'application.delete': t('admin.applicationDeletion'),
-        'organization.create': t('admin.organizationCreation'),
-        'organization.delete': t('admin.organizationDeletion'),
+        'compute.create': 'Compute creation',
+        'application.create': 'Application creation',
+        'application.delete': 'Application deletion',
+        'organization.create': 'Organization creation',
+        'organization.delete': 'Organization deletion',
     };
     const columns: TableColumn<OperationResponse>[] = [
         {
             key: 'operation',
-            header: t('columns.operation'),
+            header: 'Operation',
             width: proportional(1),
             renderCell: (operation) => (
                 <VStack gap={1}>
@@ -42,29 +40,28 @@ export default function AdminOperations() {
         },
         {
             key: 'timestamp',
-            header: t('columns.timestamp'),
+            header: 'Timestamp',
             width: pixel(208),
             renderCell: (operation) => dateTimeFormatter.format(new Date(operation.created_at)),
         },
         {
             key: 'finished_at',
-            header: t('columns.finished'),
+            header: 'Finished',
             width: pixel(208),
             renderCell: (operation) =>
                 operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-',
         },
         {
             key: 'metadata',
-            header: t('columns.metadata'),
+            header: 'Metadata',
             width: proportional(2),
             renderCell: (operation) => (
                 <VStack gap={1}>
                     <Text>
-                        <Text type="supporting">{t('columns.id')}</Text> <Text type="code">{operation.id}</Text>
+                        <Text type="supporting">ID</Text> <Text type="code">{operation.id}</Text>
                     </Text>
                     <Text>
-                        <Text type="supporting">{t('columns.target')}</Text>{' '}
-                        <Text type="code">{operation.target_id}</Text>
+                        <Text type="supporting">Target</Text> <Text type="code">{operation.target_id}</Text>
                     </Text>
                 </VStack>
             ),
@@ -83,8 +80,10 @@ export default function AdminOperations() {
     return (
         <VStack gap={6} width="100%">
             <VStack gap={1}>
-                <Heading level={1}>{t('admin.operationsTitle')}</Heading>
-                <Text type="supporting">{t('admin.operationsDescription')}</Text>
+                <Heading level={1}>Operations</Heading>
+                <Text type="supporting">
+                    Track long-running Platform tasks, when they become available, and when they finish.
+                </Text>
             </VStack>
             {isLoading && operations.length === 0 ? null : error && operations.length === 0 ? (
                 <Banner status="error" title={error.message} />
@@ -93,7 +92,7 @@ export default function AdminOperations() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

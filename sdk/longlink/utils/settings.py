@@ -1,6 +1,9 @@
+import re
 from typing import Self, Literal
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DATABASE_SCHEMA_PATTERN = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_]*|[0-9a-f]{32})$")
 
 
 class Envs(BaseSettings):
@@ -56,5 +59,9 @@ class Envs(BaseSettings):
         ]
         if missing_settings:
             raise ValueError(f"Production settings are required: {', '.join(missing_settings)}")
+
+        # PostgreSQL identifiers cannot be safely bound as query parameters.
+        if self.DATABASE_SCHEMA is None or not DATABASE_SCHEMA_PATTERN.fullmatch(self.DATABASE_SCHEMA):
+            raise ValueError("DATABASE_SCHEMA must be a valid PostgreSQL identifier")
 
         return self

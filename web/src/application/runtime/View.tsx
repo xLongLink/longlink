@@ -1,22 +1,29 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
-import { Center } from '@astryxdesign/core/Center';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { Stack } from '@astryxdesign/core/Stack';
-import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
+import { z } from 'zod';
+import startCase from 'lodash/startCase';
+import { Card } from '@astryxdesign/core/Card';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import { z } from 'zod';
-import { useApiQuery } from '@/hooks/use-api';
-import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { getIconComponent } from '@/lib/icons';
+import { fetchApiText } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { createContext as createXmlContext, parseXML, RenderXML, resolveRequestUrl, type ASTNode } from '@/xml';
-import XmlLayout from '@/xml/v1/layout';
+import { useApiQuery } from '@/hooks/use-api';
+import { getIconComponent } from '@/lib/icons';
+import XmlLayout from '@/xml/runtimes/0.3/layout';
+import {
+    createContext as createXmlContext,
+    getXmlRuntimeVersion,
+    parseXML,
+    RenderXML,
+    resolveRequestUrl,
+    type ASTNode,
+    type XmlRuntime,
+} from '@/xml';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -24,6 +31,7 @@ const pageSchema = z.object({
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
     route: z.string().trim(),
+    runtime_version: z.string().trim().min(1),
 });
 
 type RuntimePage = z.infer<typeof pageSchema>;
@@ -47,11 +55,7 @@ type PageState = {
     ast: ASTNode[];
     error: string | null;
     loading: boolean;
-    runtimeContext: ReturnType<typeof createXmlContext>;
-};
-
-type RuntimeRoute = RouteObject & {
-    page: RuntimePage;
+    runtimeContext: XmlRuntime;
 };
 
 const emptyRouteParams: Record<string, string> = {};
@@ -72,7 +76,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
-    const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
+    const routes: Array<RouteObject & { page: RuntimePage }> = (pages ?? []).map((page) => ({
         path: normalizePath(page.route) || '/',
         page,
     }));
@@ -128,15 +132,12 @@ function createPageState(key: string, params: Record<string, string>, navigation
  * Renders registered XML pages for Platform and Application routes.
  */
 export default function View({ applicationStatus, isApplicationLoading = false, pages }: ViewProps) {
-    const t = useTranslator();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
-    const navigationBaseUrl = resolveApplicationHref('', organization, application);
-    const pageCacheKey = pages;
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const {
@@ -162,11 +163,11 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         ? `${activePage.path}\u0000${normalizedRoutePath}\u0000${activePage.tab}`
         : '';
     const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
-    const activePageStateIsCurrent = activePageState?.cacheKey === pageCacheKey;
+    const activePageStateIsCurrent = activePageState?.cacheKey === pages;
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
-        actionLabel: organization ? t('actions.backToOrganization') : t('actions.backToOrganizations'),
+        actionLabel: organization ? 'Back to organization' : 'Back to organizations',
     };
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
@@ -239,21 +240,25 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return;
         }
 
-        const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
+        const pageKey = `${pages}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
         const inFlightPageKeys = inFlightPageKeysRef.current;
 
         // Reuse completed page state for matching route instances.
-        if (existingPageState?.cacheKey === pageCacheKey && !existingPageState.loading) {
+        if (existingPageState?.cacheKey === pages && !existingPageState.loading) {
             return;
         }
 
         // Avoid duplicate requests for the same page state.
-        if (existingPageState?.cacheKey === pageCacheKey && inFlightPageKeys.has(pageKey)) {
+        if (existingPageState?.cacheKey === pages && inFlightPageKeys.has(pageKey)) {
             return;
         }
 
-        const loadingPageState = createPageState(pageCacheKey, activeRouteParams, navigationBaseUrl);
+        const loadingPageState = createPageState(
+            pages,
+            activeRouteParams,
+            resolveApplicationHref('', organization, application)
+        );
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -265,7 +270,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                     ...current,
                     [activePageStateKey]: {
                         ...loadingPageState,
-                        error: urlError instanceof Error ? urlError.message : t('appView.invalidPageUrl'),
+                        error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
                         loading: false,
                     },
                 };
@@ -297,12 +302,18 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
                     const ast = parseXML(content);
+                    const documentRuntimeVersion = getXmlRuntimeVersion(ast);
+
+                    // Refuse a document whose content does not match the catalog compatibility track.
+                    if (documentRuntimeVersion !== activePage.runtime_version) {
+                        throw new Error('Page XML runtime version does not match the page catalog');
+                    }
 
                     setPageStates((current) => {
                         const currentPageState = current[activePageStateKey];
 
                         // Keep stale responses from replacing newer page state.
-                        if (currentPageState?.cacheKey !== pageCacheKey) {
+                        if (currentPageState?.cacheKey !== pages) {
                             return current;
                         }
 
@@ -332,7 +343,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                     const currentPageState = current[activePageStateKey];
 
                     // Keep stale failures from replacing newer page state.
-                    if (currentPageState?.cacheKey !== pageCacheKey) {
+                    if (currentPageState?.cacheKey !== pages) {
                         return current;
                     }
 
@@ -340,7 +351,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                         ...current,
                         [activePageStateKey]: {
                             ...currentPageState,
-                            error: fetchError instanceof Error ? fetchError.message : t('appView.loadPageFailed'),
+                            error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
                             loading: false,
                         },
                     };
@@ -363,10 +374,10 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activePageStateKey,
         activeRouteParams,
         applicationCanLoad,
-        navigationBaseUrl,
-        pageCacheKey,
+        application,
+        organization,
+        pages,
         resolvedPagesBaseUrl,
-        t,
     ]);
 
     // Show deployment loading only while status or access is still resolving.
@@ -390,13 +401,13 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                         isAlert={applicationStatus === 'failed'}
                         message={
                             applicationStatus === 'failed'
-                                ? t('appView.applicationDeploymentFailedDescription')
-                                : t('appView.applicationDeletingDescription')
+                                ? 'LongLink could not deploy this application. Contact an administrator before trying again.'
+                                : 'This application is unavailable while LongLink removes it.'
                         }
                         title={
                             applicationStatus === 'failed'
-                                ? t('appView.applicationDeploymentFailed')
-                                : t('appView.applicationDeleting')
+                                ? 'Application deployment failed'
+                                : 'Application is being deleted'
                         }
                     />
                 </Center>
@@ -411,8 +422,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
                         {...fallbackActionProps}
-                        message={error.message || t('appView.loadApplicationFailed')}
-                        title={t('appView.unableToLoadApplication')}
+                        message={error.message || 'The application definition could not be loaded.'}
+                        title="Unable to load this application"
                     />
                 </Center>
             </XmlLayout>
@@ -426,20 +437,15 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (!pageState.ast.length || pageState.cacheKey !== pageCacheKey || pageState.error) {
+        if (!pageState.ast.length || pageState.cacheKey !== pages || pageState.error) {
             return null;
         }
 
         const pageIsActive = pageStateKey === activePageStateKey;
 
         return (
-            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
-                <RenderXML
-                    key={pageStateKey}
-                    ast={pageState.ast}
-                    baseUrl={resolvedPagesBaseUrl}
-                    ctx={pageState.runtimeContext}
-                />
+            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive}>
+                <RenderXML ast={pageState.ast} baseUrl={resolvedPagesBaseUrl} ctx={pageState.runtimeContext} />
             </Stack>
         );
     });
@@ -451,17 +457,13 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}
-                message={t('appView.emptyApplication')}
-                title={t('appView.unexpectedApplicationResponse')}
+                message="The application did not expose any pages to render."
+                title="Unexpected application response"
             />
         );
     } else if (activePageStateIsCurrent && activePageState?.error) {
         activeFallback = (
-            <ErrorState
-                {...fallbackActionProps}
-                message={activePageState.error}
-                title={t('appView.unableToLoadPage')}
-            />
+            <ErrorState {...fallbackActionProps} message={activePageState.error} title="Unable to load this page" />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;
@@ -469,8 +471,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}
-                message={t('appView.emptyResponse')}
-                title={t('appView.unexpectedApplicationResponse')}
+                message="The application returned an empty response."
+                title="Unexpected application response"
             />
         );
     }
@@ -489,17 +491,15 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
 /** Renders the in-shell loading page while an application is being created. */
 function LoadingState({ status }: { status: 'creating' | 'loading' }) {
-    const t = useTranslator();
-
     // Keep the shell visible while the page manifest or active page is loading.
     if (status === 'loading') return <Spinner label="Loading" />;
 
     return (
         <Card maxWidth={576} padding={6} width="100%">
             <EmptyState
-                description={t('appView.retryLater')}
+                description="Please try again in a moment."
                 headingLevel={1}
-                title={t('appView.applicationIsDeploying')}
+                title="Application is being deployed"
             />
         </Card>
     );

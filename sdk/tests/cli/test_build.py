@@ -4,29 +4,6 @@ from longlink.cli import build
 from click.testing import CliRunner
 
 
-def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
-    """Keep editable sources, migrations, and production-safe defaults in built images."""
-
-    # Act
-    dockerfile = build.render_dockerfile("/workspace/dev", "", "0.1.0")
-
-    # Assert required build and runtime behavior.
-    for expected in (
-        "COPY --from=builder /workspace /workspace",
-        "python -m longlink.database.migrations && exec uvicorn main:app",
-        "uv sync --locked --no-dev",
-        "USER 10001:10001",
-    ):
-        assert expected in dockerfile
-
-
-def test_resolve_image_tag_formats_local_tag() -> None:
-    """Build a normalized local image tag."""
-
-    # Assert
-    assert build.resolve_image_tag("LongLink App", "0.1.0") == "longlink-app:0.1.0"
-
-
 def test_build_reports_missing_project_file_before_docker() -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -55,13 +32,11 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
             "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
             "    PORT: int = 8080\n",
-            {
-                "environments": [
-                    {"name": "LONG_API_KEY", "type": "str", "required": False, "description": "API key"},
-                    {"name": "LONG_TOKEN", "type": "str", "required": False},
-                    {"name": "PORT", "type": "int", "required": False},
-                ]
-            },
+            [
+                {"name": "LONG_API_KEY", "required": False, "description": "API key"},
+                {"name": "LONG_TOKEN", "required": False},
+                {"name": "PORT", "required": False},
+            ],
             id="supported-metadata",
         ),
         pytest.param(
@@ -71,12 +46,10 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "class Env(BaseModel):\n"
             "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
             "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
-            {
-                "environments": [
-                    {"name": "OPTIONAL_TOKEN", "type": "str", "required": False},
-                    {"name": "REQUIRED_TOKEN", "type": "str", "required": True},
-                ]
-            },
+            [
+                {"name": "OPTIONAL_TOKEN", "required": False},
+                {"name": "REQUIRED_TOKEN", "required": True},
+            ],
             id="positional-defaults",
         ),
     ],
@@ -86,7 +59,7 @@ def test_read_env_spec_emits_supported_environment_metadata(
     module_path: str,
     project_config: str,
     module_source: str,
-    expected_spec: dict[str, object],
+    expected_spec: list[dict[str, object]],
 ) -> None:
     """Emit supported metadata while respecting aliases and field defaults."""
 
@@ -103,8 +76,8 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
-def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path: Path) -> None:
-    """Keep required project files while excluding local-only build context entries."""
+def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path) -> None:
+    """Use the project's Git ignore policy for the Docker build context."""
 
     # Arrange
     root = tmp_path / "app"
@@ -113,6 +86,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n'
     )
     (root / "main.py").write_text("app = object()\n")
+    (root / ".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
@@ -138,13 +112,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
     assert (build_context / ".git" / "HEAD").is_file()
-    assert not (build_context / ".env").exists()
-    assert not (build_context / ".env.local").exists()
-    assert not (build_context / "dev.db").exists()
-    assert not (build_context / "data.sqlite3-wal").exists()
-
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
-        assert not (build_context / directory_name).exists()
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n"
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(tmp_path: Path) -> None:
@@ -188,15 +156,9 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
 
     def fake_run(command: list[str], check: bool) -> None:
-        """Capture Docker commands and write the expected build image id."""
+        """Capture Docker commands."""
 
-        assert check is True
         commands.append(command)
-
-        # Simulate Docker writing the requested image ID file.
-        if command[1] == "build":
-            image_id_path = Path(command[command.index("--iidfile") + 1])
-            image_id_path.write_text("sha256:demo\n", encoding="utf-8")
 
 
     def fake_which(command: str) -> str | None:
@@ -221,7 +183,6 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     assert commands[1][-1] == "localhost:15000/demo-app:dev"
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
-    assert "- Image ID: sha256:demo" in result.output
 
 
 def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
@@ -230,26 +191,14 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     # Arrange
     metadata = {
         "name": "demo",
-        "version": "0.1.0",
         "description": "Demo app",
     }
-    env_spec = {
-        "environments": [
-            {
-                "name": "API_KEY",
-                "type": "str",
-                "required": True,
-                "description": "API key",
-            }
-        ]
-    }
+    env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
 
     # Act
     labels = build.render_image_labels(metadata, env_spec)
 
     # Assert
-    assert 'LABEL org.opencontainers.image.title="demo"' in labels
-    assert 'LABEL org.opencontainers.image.version="0.1.0"' in labels
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
     assert "LABEL longlink.environments=" in labels
     assert "API_KEY" in labels

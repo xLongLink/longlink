@@ -1,29 +1,27 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
-import { useDeleteDialog } from '@/lib/utils';
+import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { PostgreSQL } from '@/svg/PostgreSQL';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
@@ -31,7 +29,7 @@ export default function AdminDatabase() {
             fetchApiVoid(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
-            toast({ body: t('admin.databaseDeleted') });
+            toast({ body: 'Database deleted' });
         },
     });
     const {
@@ -43,19 +41,19 @@ export default function AdminDatabase() {
     });
     const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteDatabaseTitle'),
+        title: 'Delete database',
         mutation: deleteDatabase,
         items: databases,
         getId: (database) => database.id,
-        description: (database) => t('admin.deleteDatabaseDescription', { name: database.name }),
-        errorMessage: t('admin.failedDeleteDatabase'),
-        fallbackDescription: t('admin.deleteDatabaseFallback'),
+        description: (database) => `Delete database ${database.name}?`,
+        errorMessage: 'Failed to delete database',
+        fallbackDescription: 'Delete this database?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<DatabaseRegistryResponse>[] = [
         {
             key: 'database',
-            header: t('columns.database'),
+            header: 'Database',
             width: proportional(2),
             renderCell: (database) => (
                 <HStack gap={3} align="center">
@@ -69,14 +67,14 @@ export default function AdminDatabase() {
         },
         {
             key: 'actions',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (database) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: database.name })}
+                    label={`Open actions for ${database.name}`}
                     size="sm"
-                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) }]}
+                    items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(database) }]}
                 />
             ),
         },
@@ -86,8 +84,8 @@ export default function AdminDatabase() {
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
                 <VStack gap={1}>
-                    <Heading level={1}>{t('admin.databaseTitle')}</Heading>
-                    <Text type="supporting">{t('admin.databaseDescription')}</Text>
+                    <Heading level={1}>Database</Heading>
+                    <Text type="supporting">Monitor platform data, schema health, and persistence state.</Text>
                 </VStack>
                 <CreateDatabase />
             </HStack>
@@ -98,7 +96,7 @@ export default function AdminDatabase() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

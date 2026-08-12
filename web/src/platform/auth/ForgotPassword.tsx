@@ -1,17 +1,16 @@
+import { z } from 'zod';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { AuthPage } from '@/components/AuthPage';
-import { useToast } from '@/hooks/use-toast';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
 
 type ForgotPasswordValues = {
@@ -20,10 +19,9 @@ type ForgotPasswordValues = {
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
-    const t = useTranslator();
     const showToast = useToast();
     const schema = z.object({
-        email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
+        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
     });
     const form = useForm<ForgotPasswordValues>({
         defaultValues: { email: '' },
@@ -38,18 +36,24 @@ export default function ForgotPassword() {
             }),
         onError: (error) => {
             showToast({
-                body: error instanceof Error ? error.message : t('appView.retryLater'),
+                body: error instanceof Error ? error.message : 'Please try again in a moment.',
                 type: 'error',
             });
         },
     });
 
     return (
-        <AuthPage title={t('auth.forgotPasswordTitle')} description={t('auth.forgotPasswordDescription')}>
+        <AuthPage
+            title="Reset your password"
+            description="Enter your account email and LongLink will send password reset instructions."
+        >
             {requestReset.isSuccess ? (
                 <Stack gap={4}>
-                    <Banner status="success" title={t('auth.resetEmailSent')} />
-                    <Button href="/organizations" label={t('auth.backToSignIn')} variant="primary" />
+                    <Banner
+                        status="success"
+                        title="If an account exists for that email, password reset instructions are on the way."
+                    />
+                    <Button href="/organizations" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit((values) => requestReset.mutate(values))}>
@@ -62,7 +66,7 @@ export default function ForgotPassword() {
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired
-                                label={t('labels.email')}
+                                label="Email"
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -76,7 +80,7 @@ export default function ForgotPassword() {
                     />
                     <Button
                         isLoading={requestReset.isPending}
-                        label={requestReset.isPending ? t('auth.sendingResetEmail') : t('auth.sendResetEmail')}
+                        label={requestReset.isPending ? 'Sending reset email...' : 'Send reset email'}
                         type="submit"
                         variant="primary"
                     />
@@ -85,7 +89,7 @@ export default function ForgotPassword() {
             {!requestReset.isSuccess ? (
                 <Text as="p" color="secondary" justify="center" type="supporting">
                     <Link href="/organizations" type="inherit" weight="medium">
-                        {t('auth.backToSignIn')}
+                        Back to sign in
                     </Link>
                 </Text>
             ) : null}

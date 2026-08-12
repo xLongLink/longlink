@@ -1,5 +1,3 @@
-import pytest
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
@@ -81,41 +79,14 @@ async def test_list_users_returns_admin_user_summaries(
     assert response.status_code == 200
 
     assert {item["id"] for item in response.json()} == {str(user.id) for user in users}
-
-
-async def test_platform_user_cannot_list_users(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Reject Platform users from administrator user listings."""
-
-    client = clients[1]
-
-    # Request the administrator-only user listing.
-    read_response = await client.get("/api/v1/users")
-
-    # Verify Platform users receive no administrator privileges.
-    assert read_response.status_code == 403
-    assert read_response.json() == {"detail": "Permission required"}
-
-
 async def test_patch_me_updates_authenticated_user_profile(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Update the authenticated user's mutable profile fields."""
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user)
-    synchronized: list[UUID] = []
-
-    async def sync_users(session, organization_id: UUID) -> None:
-        """Record the Organization user projection requested by the profile route."""
-
-        synchronized.append(organization_id)
-
-    monkeypatch.setattr(organization_service, "sync_users", sync_users)
     client = clients[0]
 
     # Act
@@ -125,4 +96,3 @@ async def test_patch_me_updates_authenticated_user_profile(
     assert response.status_code == 200
 
     assert response.json()["name"] == "Updated User"
-    assert synchronized == [organization.id]

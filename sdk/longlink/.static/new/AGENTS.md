@@ -22,7 +22,6 @@ You are working on a LongLink application.
 │   ├── database/     # SQLModel application data layer
 │   │   ├── models/   # SQLModel application tables
 │   │   └── services/ # Database utility services
-│   ├── i18n/         # Translation catalogs registered automatically under /i18n
 │   ├── pages/        # XML pages registered automatically under /pages
 │   ├── routes/       # API route registration
 │   ├── schemas/      # Pydantic request and response schemas

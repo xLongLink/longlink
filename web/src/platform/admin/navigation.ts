@@ -1,26 +1,23 @@
 import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 
 export const ADMIN_NAVIGATION = [
-    { href: '/admin/users', icon: Users, profileLabel: 'profile.users', tabLabel: 'admin.tabs.users' },
+    { href: '/admin/users', icon: Users, label: 'Users' },
     {
         href: '/admin/applications',
         icon: AppWindow,
-        profileLabel: 'profile.applications',
-        tabLabel: 'admin.tabs.applications',
+        label: 'Applications',
     },
     {
         href: '/admin/organizations',
         icon: Building2,
-        profileLabel: 'profile.organizations',
-        tabLabel: 'admin.tabs.organizations',
+        label: 'Organizations',
     },
-    { href: '/admin/database', icon: Database, profileLabel: 'profile.database', tabLabel: 'admin.tabs.database' },
-    { href: '/admin/storage', icon: HardDrive, profileLabel: 'profile.storage', tabLabel: 'admin.tabs.storage' },
-    { href: '/admin/compute', icon: Wrench, profileLabel: 'profile.compute', tabLabel: 'admin.tabs.compute' },
+    { href: '/admin/database', icon: Database, label: 'Database' },
+    { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
+    { href: '/admin/compute', icon: Wrench, label: 'Compute' },
     {
         href: '/admin/operations',
         icon: ArrowUpDown,
-        profileLabel: 'profile.operations',
-        tabLabel: 'admin.tabs.operations',
+        label: 'Operations',
     },
 ] as const;

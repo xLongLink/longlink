@@ -1,9 +1,9 @@
 import { Card } from '@astryxdesign/core/Card';
-import { Center } from '@astryxdesign/core/Center';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
 
 const applicationPaths = ['Use', 'Adapt', 'Create'];
 

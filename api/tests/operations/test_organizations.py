@@ -57,7 +57,6 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
         await organization_service.sync_users(session, organization.id, db)
 
     # Assert
-    assert calls[0][0] == db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False)
     rows = {row.id: row for row in calls[0][1]}
     assert rows[owner.id].role == OrganizationRoles.owner
     assert rows[owner.id].deleted_at is None

@@ -1,5 +1,5 @@
-import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, lazyPlugins, loadEnv } from 'vite-plus';
 
 export default defineConfig(({ mode }) => {
@@ -17,9 +17,7 @@ export default defineConfig(({ mode }) => {
             printWidth: 120,
             semi: true,
             singleQuote: true,
-            sortImports: {
-                newlinesBetween: false,
-            },
+            sortImports: false,
             sortPackageJson: false,
             tabWidth: 4,
             trailingComma: 'es5',
@@ -39,8 +37,17 @@ export default defineConfig(({ mode }) => {
                 typeAware: true,
                 typeCheck: true,
             },
+            jsPlugins: ['eslint-plugin-perfectionist'],
             plugins: ['oxc', 'typescript', 'unicorn', 'react'],
             rules: {
+                'perfectionist/sort-imports': [
+                    'error',
+                    {
+                        fallbackSort: { type: 'alphabetical' },
+                        newlinesBetween: 0,
+                        type: 'line-length',
+                    },
+                ],
                 'react/no-children-prop': 'off',
                 'react/no-did-update-set-state': 'off',
                 'react/exhaustive-deps': 'warn',

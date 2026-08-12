@@ -1,6 +1,7 @@
 import jwt
 from pwdlib import PasswordHash
-from fastapi import Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
+from typing import Annotated
+from fastapi import Body, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
 from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +9,7 @@ from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, Registrat
 from src.environments import env
 from src.models.users import UserProfile
 from src.database.services import users, invitations, organizations
+from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -71,14 +73,14 @@ async def logout(
 
 @router.post("/auth/forgot-password", status_code=202, tags=["auth"])
 async def request_password_reset(
-    payload: EmailPayload,
+    email: Annotated[Email, Body(embed=True)],
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
     """Queue password reset delivery without disclosing account existence."""
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    user = await users.by_email(session, payload.email)
+    user = await users.by_email(session, email)
     if user is None or user.deleted_at is not None:
         return
 
@@ -159,10 +161,10 @@ async def reset_password(
 
 
 @router.post("/auth/register", status_code=202, tags=["auth"])
-async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
+async def request_registration(
+    email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)
+):
     """Send a stateless registration link when the email has no account."""
-
-    email = payload.email
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
     if await users.by_email(session, email) is not None:

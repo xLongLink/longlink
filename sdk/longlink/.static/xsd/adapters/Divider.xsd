@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="DividerType">
-    <xsd:attribute name="label" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-    <xsd:attribute name="values" type="xsd:string" use="optional" />
-    <xsd:attribute name="count" type="xsd:string" use="optional" />
-    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
-    <xsd:attribute name="variant" type="DividerVariantType" use="optional" default="subtle" />
-    <xsd:attribute name="isFullBleed" type="xsd:string" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="xsd:string" />
+    <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
+    <xsd:attribute name="variant" type="DividerVariantType" default="subtle" />
+    <xsd:attribute name="isFullBleed" type="xsd:string" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Divider" type="DividerType">
     <xsd:annotation><xsd:documentation>Renders an Astryx divider.</xsd:documentation></xsd:annotation>

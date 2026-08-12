@@ -14,7 +14,7 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.applications import ApplicationCreate, ApplicationResponse
+from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
 from src.database.models.users import User
 
 router = APIRouter()
@@ -50,7 +50,7 @@ async def create_application(
 
     # Resolve immutable image metadata before creating durable Application state.
     metadata = await images.metadata(payload.image)
-    if metadata is None or metadata.digest is None:
+    if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
 
     # Enforce image-declared requirements while the submitted values remain at the API boundary.
@@ -67,7 +67,6 @@ async def create_application(
         payload.name,
         application_slug,
         image=metadata.image,
-        version=metadata.version,
         description=payload.description,
         icon=payload.icon,
         user=user,
@@ -75,6 +74,51 @@ async def create_application(
     )
     await session.commit()
     return application
+
+
+@router.post("/applications/{application_id}/releases", response_model=ApplicationResponse, status_code=202)
+async def release_application(
+    application_id: UUID,
+    payload: ApplicationRelease,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_session),
+):
+    """Record one desired Application release and queue its deployment."""
+
+    # Application releases require Organization maintenance authority.
+    access = await organizations.application_access(session, user.id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    _, organization, role = access
+    if not roles.atleast(role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    # Resolve immutable image metadata before changing durable desired state.
+    metadata = await images.metadata(payload.image)
+    if metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+    application = await applications.get(session, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    missing_envs = images.missing_envs(metadata, application.secrets)
+    if missing_envs:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
+        )
+
+    logger.info("Creating application release %s/%s", organization.slug, application.slug)
+    result = await applications.release(
+        session,
+        application_id,
+        metadata.image,
+        payload.description,
+        user,
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    await session.commit()
+    return result
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])

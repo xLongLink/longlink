@@ -5,9 +5,9 @@
     "type": "module",
     "scripts": {
         "theme": "vp exec astryx theme build src/theme.ts --out src/lib/generated/stone.css",
-        "build": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
+        "build": "vp run typecheck && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
         "check": "vp check",
-        "typecheck": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b",
+        "typecheck": "vp run typecheck:api && vp run typecheck:sdk",
         "typecheck:api": "react-router typegen --mode api && tsc -b",
         "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
         "build:api": "vp run typecheck:api && react-router build --mode api",
@@ -15,6 +15,7 @@
         "build:sdk": "vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "react-router build --mode sdk",
         "export:platform-api": "DEVELOPMENT=true uv --directory ../api run python -m scripts.openapi",
+        "format": "vp fmt --write && vp lint --fix-suggestions",
         "generate:platform-api": "vp run export:platform-api && openapi-ts --file openapi-ts.config.ts",
         "check:platform-api": "vp run generate:platform-api && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
         "dev": "react-router dev --mode api",
@@ -24,6 +25,7 @@
     },
     "dependencies": {
         "@astryxdesign/core": "0.3.0",
+        "@astryxdesign/core-0-3": "npm:@astryxdesign/core@0.3.0",
         "@fontsource-variable/inter": "^5.3.0",
         "@hookform/resolvers": "^5.7.1",
         "@tailwindcss/vite": "^4.3.3",
@@ -55,6 +57,7 @@
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.4",
         "@types/topojson-client": "^3.1.5",
+        "eslint-plugin-perfectionist": "^5.10.1",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.8",
         "vite-plus": "0.2.8"

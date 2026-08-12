@@ -4,6 +4,7 @@ from sqlmodel import col
 from factories import create_application, create_organization
 from sqlalchemy import update
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
@@ -64,10 +65,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 
         assert image == "ghcr.io/longlink/dashboard:latest"
         return LongLinkMetadata(
-            image="ghcr.io/longlink/dashboard@sha256:test",
-            digest="sha256:test",
-            version="2.0.0",
-            environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
+            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+            environments=[EnvironmentMetadata(name="API_KEY", required=True)],
         )
 
     monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
@@ -92,8 +91,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     payload = response.json()
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
-    assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert payload["version"] == "2.0.0"
+    assert payload["image_desired"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert payload["image_deployed"] is None
     assert "envs" not in payload
     assert "secret-value" not in response.text
 
@@ -132,25 +131,17 @@ async def test_application_responses_do_not_expose_environment_secrets(
     assert str(application.id) in {item["id"] for item in list_response.json()}
 
 
-async def test_invalid_application_payload_makes_no_metadata_or_persistence_calls(
+async def test_invalid_application_payload_makes_no_persistence_changes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Reject malformed Application input before image inspection or durable side effects."""
+    """Reject malformed Application input without durable side effects."""
 
     # Capture durable state before submitting an invalid reserved environment variable.
     owner = users[0]
     organization = await create_organization(owner)
     async with session_scope() as session:
         operation_ids = [operation.id for operation in await operations.fetch(session)]
-
-    async def unexpected_metadata(_image: object) -> LongLinkMetadata:
-        """Fail if invalid input reaches remote image metadata inspection."""
-
-        raise AssertionError("invalid Application input inspected remote image metadata")
-
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
 
     # Submit a model-invalid configuration through the public route.
     response = await clients[0].post(
@@ -162,7 +153,7 @@ async def test_invalid_application_payload_makes_no_metadata_or_persistence_call
         },
     )
 
-    # Validation fails before metadata, Application creation, or Operation enqueueing.
+    # Validation fails before Application creation or Operation enqueueing.
     assert response.status_code == 422
     async with session_scope() as session:
         assert await applications.fetch(session) == []

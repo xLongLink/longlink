@@ -1,25 +1,23 @@
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Building2, Settings2 } from 'lucide-react';
-import { useLocation } from 'react-router';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { PageContainer } from '@/components/PageContainer';
-import { SignInCard } from '@/components/SignInCard';
-import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
+import { SignInCard } from '@/components/SignInCard';
+import { PageContainer } from '@/components/PageContainer';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
-    const t = useTranslator();
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
@@ -38,7 +36,7 @@ export default function Organizations() {
     const columns: TableColumn<UserOrganizationMembership>[] = [
         {
             key: 'name',
-            header: t('columns.name'),
+            header: 'Name',
             width: proportional(1),
             renderCell: (membership) => (
                 <HStack gap={3} align="center">
@@ -59,28 +57,28 @@ export default function Organizations() {
             brandOnly
             brandHref="/"
             tabs={{
-                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
-                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
+                Organizations: { href: '/organizations', icon: Building2 },
+                Settings: { href: '/settings', icon: Settings2 },
             }}
         >
             <PageContainer gap={8}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
-                        <Heading level={1}>{t('organizations.title')}</Heading>
-                        <Text type="supporting">{t('organizations.description')}</Text>
+                        <Heading level={1}>Organizations</Heading>
+                        <Text type="supporting">Manage the workspaces connected to your LongLink account.</Text>
                     </VStack>
                     <CreateOrganization />
                 </HStack>
                 {(isProfileLoading || areOrganizationsLoading) && memberships.length === 0 ? null : (profileError ??
                       organizationsError) &&
                   memberships.length === 0 ? (
-                    <Banner status="error" title={t('errors.loadOrganizations')} />
+                    <Banner status="error" title="Failed to load organizations." />
                 ) : (
                     <Table
                         columns={columns}
                         data={memberships}
                         density="compact"
-                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                        emptyState={<EmptyState title="No results." isCompact />}
                         hasHover
                         idKey={(membership) => membership.organization.id}
                     />

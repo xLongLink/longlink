@@ -54,6 +54,14 @@ class ApplicationCreate(BaseModel):
         return envs
 
 
+class ApplicationRelease(BaseModel):
+    """Validate a requested Application release."""
+
+    # Metadata
+    image: Image
+    description: str | None = Field(default=None, max_length=255)
+
+
 class ApplicationOrganizationResponse(BaseModel):
     """Represent the compact Organization associated with an Application."""
 
@@ -83,9 +91,13 @@ class ApplicationResponse(BaseModel):
     name: str
     slug: str
     icon: Icon | None
-    image: str
-    version: str | None
     description: str | None
+
+    # Desired release
+    image_desired: str
+
+    # Deployed release
+    image_deployed: str | None
 
     # State
     status: Status

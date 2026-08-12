@@ -2,13 +2,14 @@ from uuid import UUID
 from pwdlib import PasswordHash
 from typing import cast
 from sqlmodel import col
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate
+from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -35,7 +36,7 @@ async def active(session: AsyncSession, user_id: UUID) -> User | None:
     )
 
 
-async def by_email(session: AsyncSession, email: str) -> User | None:
+async def by_email(session: AsyncSession, email: Email) -> User | None:
     """Return one user by email, including soft-deleted accounts."""
 
     # Account-existence checks must include deleted rows because email addresses remain unique.
@@ -93,7 +94,7 @@ async def ensure_administrator(session: AsyncSession) -> None:
     """Reconcile the configured account as the sole Platform administrator."""
 
     # Reconcile the persisted administrator before considering an initial account creation.
-    statement = select(User).where(func.lower(col(User.email)) == env.ADMIN_EMAIL)
+    statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
     user = (await session.execute(select(User).where(col(User.role) == PlatformRoles.administrator))).scalar_one_or_none()
     password_hash = PasswordHash.recommended()
 

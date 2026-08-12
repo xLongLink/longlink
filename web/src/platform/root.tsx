@@ -1,14 +1,13 @@
+import { Outlet, type MetaFunction } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useLayoutEffect, useState, type ReactNode } from 'react';
-import { Outlet, type MetaFunction } from 'react-router';
 import '@/index.css';
-import { ThemeBootstrap, THEME_BOOTSTRAP_ID } from '@/components/ThemeBootstrap';
-import { UserProvider, useUserProfile } from '@/hooks/use-user';
-import { Document } from '@/layout/Document';
-import { I18nProvider } from '@/lib/i18n';
-import { createQueryClient } from '@/lib/react-query';
 import { noIndexMeta } from '@/lib/seo';
+import { Document } from '@/layout/Document';
 import { AstryxProvider } from '@/providers';
+import { createQueryClient } from '@/lib/react-query';
+import { UserProvider, useUserProfile } from '@/hooks/use-user';
+import { ThemeBootstrap, THEME_BOOTSTRAP_ID } from '@/components/ThemeBootstrap';
 
 export const meta: MetaFunction = () => noIndexMeta();
 
@@ -31,11 +30,9 @@ function PlatformShell() {
     }, [isLoading]);
 
     return (
-        <I18nProvider>
-            <AstryxProvider accent={accent} mode={theme} radius={radius}>
-                <Outlet />
-            </AstryxProvider>
-        </I18nProvider>
+        <AstryxProvider accent={accent} mode={theme} radius={radius}>
+            <Outlet />
+        </AstryxProvider>
     );
 }
 

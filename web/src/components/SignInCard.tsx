@@ -1,23 +1,22 @@
+import { z } from 'zod';
+import { useNavigate } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router';
-import { z } from 'zod';
-import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { PasswordInput } from '@/components/PasswordInput';
-import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
+import { PasswordInput } from '@/components/PasswordInput';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 
 type LoginValues = {
     email: string;
@@ -26,13 +25,12 @@ type LoginValues = {
 
 /** Renders the shared LongLink sign-in form. */
 export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
-    const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const showToast = useToast();
     const loginSchema = z.object({
-        email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
-        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
+        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+        password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
     });
     const form = useForm<LoginValues>({
         defaultValues: { email: initialEmail, password: '' },
@@ -57,7 +55,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
             navigate('/organizations', { replace: true });
         } catch (loginError) {
             showToast({
-                body: loginError instanceof Error ? loginError.message : t('auth.loginFailed'),
+                body: loginError instanceof Error ? loginError.message : 'Sign in failed',
                 type: 'error',
             });
         }
@@ -69,7 +67,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 <Heading level={1} justify="center">
                     <AuthWelcomeTitle />
                 </Heading>
-                <Divider label={t('auth.signInDescription')} />
+                <Divider label="Sign in with your email and password." />
             </Stack>
 
             <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
@@ -81,7 +79,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                             ref={field.ref}
                             htmlName={field.name}
                             isRequired
-                            label={t('labels.email')}
+                            label="Email"
                             onChange={field.onChange}
                             status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                             type="email"
@@ -92,9 +90,9 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 />
                 <Stack gap={1}>
                     <Stack direction="horizontal" hAlign="between" vAlign="center">
-                        <Text type="label">{t('labels.password')}</Text>
+                        <Text type="label">Password</Text>
                         <Link href="/auth/forgot-password" type="supporting">
-                            {t('auth.forgotPassword')}
+                            Forgot password?
                         </Link>
                     </Stack>
                     <Controller
@@ -107,7 +105,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                                 htmlName={field.name}
                                 isLabelHidden
                                 isRequired
-                                label={t('labels.password')}
+                                label="Password"
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -121,7 +119,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 </Stack>
                 <Button
                     isLoading={login.isPending}
-                    label={login.isPending ? t('auth.signingIn') : t('actions.login')}
+                    label={login.isPending ? 'Signing in...' : 'Sign In'}
                     type="submit"
                     variant="primary"
                     width="100%"
@@ -131,9 +129,9 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
             <Divider
                 label={
                     <>
-                        {t('auth.noAccount')}{' '}
+                        New to LongLink?{' '}
                         <Link href={registerHref} type="inherit" weight="medium">
-                            {t('auth.createAccount')}
+                            Create account
                         </Link>
                     </>
                 }

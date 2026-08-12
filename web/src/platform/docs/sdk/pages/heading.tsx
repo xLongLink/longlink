@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 export const content = (
     <Stack gap={5}>
@@ -37,12 +37,24 @@ export const content = (
                         required: true,
                     },
                     {
-                        name: 'label, value, or i18n',
-                        description: 'Heading text.',
+                        name: 'type',
+                        description: 'Optional display-1, display-2, or display-3 visual scale.',
                     },
                     {
-                        name: 'values',
-                        description: 'Translation interpolation values.',
+                        name: 'accessibilityLevel',
+                        description: 'Optional semantic heading level from 1 to 6.',
+                    },
+                    {
+                        name: 'color, display, justify',
+                        description: 'Visual color, layout, and alignment properties from Astryx Heading.',
+                    },
+                    {
+                        name: 'maxLines, hasTruncateTooltip, wordBreak, textWrap',
+                        description: 'Truncation and wrapping properties from Astryx Heading.',
+                    },
+                    {
+                        name: 'hasCapsize, hasStrikethrough, id',
+                        description: 'Optical alignment, decoration, and HTML identifier properties.',
                     },
                 ].map((attribute) => (
                     <ListItem
@@ -62,13 +74,13 @@ export const content = (
             <Heading id="children" level={2}>
                 Children
             </Heading>
-            <Text as="p">{'Optional heading text content.'}</Text>
+            <Text as="p">{'Nested XML content is rendered as the heading.'}</Text>
         </Stack>
         <Stack gap={3}>
             <Heading id="example" level={2}>
                 Example
             </Heading>
-            <CodeBlock code={'<Heading level="1" i18n="orders.title" />'} language="xml" />
+            <CodeBlock code={'<Heading level="1">Orders</Heading>'} language="xml" />
         </Stack>
     </Stack>
 );

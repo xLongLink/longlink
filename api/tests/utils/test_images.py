@@ -21,7 +21,6 @@ async def test_metadata_fetches_digest_image_references(
 
     # Arrange
     image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
-    version = "sha256-deadbeef"
     manifest_digest = "sha256:deadbeef"
     captured: dict[str, object] = {}
 
@@ -41,10 +40,8 @@ async def test_metadata_fetches_digest_image_references(
             json={
                 "config": {
                     "Labels": {
-                        "org.opencontainers.image.title": "dashboard",
-                        "org.opencontainers.image.version": version,
                         "org.opencontainers.image.description": "Demo app",
-                        "longlink.environments": '[{"name":"API_KEY","type":"string","required":true}]',
+                        "longlink.environments": '[{"name":"API_KEY","required":true}]',
                     }
                 }
             },
@@ -65,12 +62,9 @@ async def test_metadata_fetches_digest_image_references(
     # Assert
     assert image_metadata is not None
     assert image_metadata.model_dump(mode="json") == LongLinkMetadata(
-        image=image,
-        title="dashboard",
-        version=version,
+        image=Image(image),
         description="Demo app",
-        digest=manifest_digest,
-        environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
+        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
     ).model_dump(mode="json")
     assert images.missing_envs(image_metadata, {}) == ["API_KEY"]
     assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]

@@ -1,6 +1,6 @@
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
+import path from 'node:path';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { documentationPublicPages } from './src/platform/docs/pages';
 import { homePage, legalPages, pricingPage, publicRoutePath, SITE_URL } from './src/platform/public';
 

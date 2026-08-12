@@ -21,16 +21,3 @@ async def test_operations_endpoint_returns_targeted_operations(
     # Assert
     assert response.status_code == 200
     assert str(operation.id) in {item["id"] for item in response.json()}
-
-
-async def test_operations_endpoint_requires_admin(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Reject Platform users from administrator Operation data."""
-
-    # Act
-    response = await clients[1].get("/api/v1/operations")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}

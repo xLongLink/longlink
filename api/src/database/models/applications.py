@@ -34,9 +34,13 @@ class Application(PlatformModel, table=True):
     name: str = Field(max_length=100)
     slug: str = Field(max_length=100)
     icon: str | None = Field(default=None, max_length=50)
-    image: str = Field(max_length=512)
-    version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
+
+    # Desired release
+    image_desired: str = Field(max_length=512)
+
+    # Deployed release
+    image_deployed: str | None = Field(default=None, max_length=512)
 
     # Secrets
     secrets: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))

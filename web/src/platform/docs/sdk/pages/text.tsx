@@ -1,9 +1,9 @@
 import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 export const content = (
     <Stack gap={5}>
@@ -40,12 +40,8 @@ export const content = (
                         description: 'body, large, label, supporting, code, display style, or inherit.',
                     },
                     {
-                        name: 'label, value, or i18n',
+                        name: 'value',
                         description: 'Text content.',
-                    },
-                    {
-                        name: 'values',
-                        description: 'Translation interpolation values.',
                     },
                 ].map((attribute) => (
                     <ListItem
@@ -71,10 +67,7 @@ export const content = (
             <Heading id="example" level={2}>
                 Example
             </Heading>
-            <CodeBlock
-                code={'<Text as="p" i18n="orders.summary" values="${{ number: order.number }}" />'}
-                language="xml"
-            />
+            <CodeBlock code={'<Text as="p" value="${`Order #${order.number}`}" />'} language="xml" />
         </Stack>
     </Stack>
 );

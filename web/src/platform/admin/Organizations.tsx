@@ -1,30 +1,28 @@
+import { Copy } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Copy } from 'lucide-react';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
 import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
-import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
@@ -32,7 +30,7 @@ export default function AdminOrganizations() {
             fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
-            toast({ body: t('admin.organizationDeleted') });
+            toast({ body: 'Organization deleted' });
         },
     });
     const {
@@ -44,19 +42,19 @@ export default function AdminOrganizations() {
     });
     const { pageItems, pagination } = useAdminPagination(organizations);
     const deleteDialog = useDeleteDialog({
-        title: t('deleteDialog.deleteOrganizationTitle'),
+        title: 'Delete organization',
         mutation: deleteOrganization,
         items: organizations,
         getId: (organization) => organization.id,
-        description: (organization) => t('admin.deleteOrganizationDescription', { name: organization.name }),
-        errorMessage: t('deleteDialog.failedDeleteOrganization'),
-        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        description: (organization) => `Delete organization ${organization.name}?`,
+        errorMessage: 'Failed to delete organization',
+        fallbackDescription: 'Delete this organization?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<OrganizationSummary>[] = [
         {
             key: 'name',
-            header: t('columns.name'),
+            header: 'Name',
             width: proportional(1),
             renderCell: (organization) => (
                 <HStack gap={3} align="center">
@@ -69,27 +67,27 @@ export default function AdminOrganizations() {
         },
         {
             key: 'actions',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (organization) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: organization.name })}
+                    label={`Open actions for ${organization.name}`}
                     size="sm"
                     items={[
                         {
-                            label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
+                            label: 'Copy organization name',
                             icon: <Copy size={16} />,
                             onClick: async () => {
                                 try {
                                     await navigator.clipboard.writeText(organization.name);
-                                    toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                    toast({ body: 'Organization name: Copied' });
                                 } catch {
-                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                    toast({ body: 'Failed to copy to clipboard', type: 'error' });
                                 }
                             },
                         },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },
+                        { label: 'Delete', onClick: () => deleteDialog.openFor(organization) },
                     ]}
                 />
             ),
@@ -99,8 +97,8 @@ export default function AdminOrganizations() {
     return (
         <VStack gap={6} width="100%">
             <VStack gap={1}>
-                <Heading level={1}>{t('admin.organizationsTitle')}</Heading>
-                <Text type="supporting">{t('admin.organizationsDescription')}</Text>
+                <Heading level={1}>Organizations</Heading>
+                <Text type="supporting">Review organization lifecycle, ownership, and access boundaries.</Text>
             </VStack>
             {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
                 <Banner status="error" title={error.message} />
@@ -109,7 +107,7 @@ export default function AdminOrganizations() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

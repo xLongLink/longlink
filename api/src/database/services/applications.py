@@ -62,17 +62,15 @@ async def create(
     organization_id: UUID,
     name: str,
     slug: str,
-    image: Image | str,
+    image: Image,
     user: User,
     secrets: dict[str, str],
-    version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
     # Validate direct service callers while preserving already-validated API values.
-    image = Image(image)
     if "@" not in image:
         raise ValueError("Application image must be pinned to its resolved digest")
 
@@ -97,8 +95,7 @@ async def create(
         name=name,
         slug=slug,
         description=description,
-        image=str(image),
-        version=version,
+        image_desired=str(image),
         icon=icon,
         secrets=secrets,
     )
@@ -119,6 +116,44 @@ async def create(
     except IntegrityError as exc:
         raise ConflictError("Application slug already exists") from exc
 
+    return application
+
+
+async def release(
+    session: AsyncSession,
+    application_id: UUID,
+    image: Image,
+    description: str | None,
+    user: User,
+) -> Application | None:
+    """Record one desired Application release and queue its deployment."""
+
+    # Resolve parents before taking locks in aggregate order.
+    current = await session.get(Application, application_id)
+    if current is None:
+        return None
+
+    # Lock the Organization and Application before changing its desired release.
+    organization_result = await session.scalars(
+        select(Organization).where(Organization.id == current.organization_id).with_for_update()
+    )
+    organization = organization_result.one_or_none()
+    application_result = await session.scalars(select(Application).where(Application.id == application_id).with_for_update())
+    application = application_result.one_or_none()
+    if organization is None or application is None or application.deleted_at is not None:
+        return None
+
+    # Persist the image-derived desired release before scheduling its convergence.
+    application.image_desired = str(image)
+    application.description = description
+    application.updated_id = user.id
+    application.organization = organization
+    await operations.enqueue(
+        session,
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+    )
     return application
 
 
@@ -151,6 +186,16 @@ async def mark_running(session: AsyncSession, application_id: UUID) -> None:
     if application.status != Status.creating:
         return
     application.status = Status.running
+
+
+async def mark_deployed(session: AsyncSession, application_id: UUID, image: str) -> None:
+    """Publish a successfully applied desired release as deployed."""
+
+    # Promote only the exact desired release applied by the worker.
+    application = await session.get(Application, application_id, with_for_update=True)
+    if application is None or application.deleted_at is not None or application.image_desired != image:
+        return
+    application.image_deployed = application.image_desired
 
 
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:

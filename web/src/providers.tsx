@@ -1,8 +1,8 @@
-import { LayerProvider } from '@astryxdesign/core/Layer';
-import { LinkProvider } from '@astryxdesign/core/Link';
-import { Theme } from '@astryxdesign/core/theme';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { Theme } from '@astryxdesign/core/theme';
 import { Link as RouterLink } from 'react-router';
+import { LinkProvider } from '@astryxdesign/core/Link';
+import { LayerProvider } from '@astryxdesign/core/Layer';
 import { DEFAULT_RADIUS, getAstryxTheme, type Accent, type Theme as ThemeMode } from '@/lib/theme';
 
 type AstryxRouterLinkProps = Omit<ComponentPropsWithoutRef<'a'>, 'href'> & { href: string };

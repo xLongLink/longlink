@@ -1,3 +1,4 @@
+import { createElement, type ReactElement } from 'react';
 import {
     Activity,
     ArrowDown,
@@ -56,7 +57,6 @@ import {
     type LucideIcon,
     type LucideProps,
 } from 'lucide-react';
-import { createElement, type ReactElement } from 'react';
 
 export const ICON_NAMES = [
     'activity',
@@ -166,7 +166,7 @@ export function isIconName(name: string): name is IconName {
 
 /** Resolves supported and legacy icon names to Lucide components. */
 export function getIconComponent(name: string): LucideIcon | undefined {
-    return ICON_COMPONENTS[name as IconName] ?? LEGACY_ICON_COMPONENTS[name];
+    return (isIconName(name) ? ICON_COMPONENTS[name] : undefined) ?? LEGACY_ICON_COMPONENTS[name];
 }
 
 /** Renders a supported icon name with Lucide SVG properties. */

@@ -10,27 +10,24 @@ from longlink.shared.migrations import migrate_database
 
 
 @pytest.mark.integration
-async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(postgresql_url: URL) -> None:
-    """Migrate and synchronize shared users against an isolated PostgreSQL database."""
+async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: URL) -> None:
+    """Migrate shared tables into the isolated PostgreSQL shared schema."""
 
-    # Make an application schema the role default to prove migrations override it.
-    setup_engine = create_async_engine(postgresql_url)
+    # Reuse one connection pool for setup, migration verification, and row verification.
+    engine = create_async_engine(postgresql_url)
     try:
-        async with setup_engine.begin() as connection:
+        # Make an application schema the role default to prove migrations override it.
+        async with engine.begin() as connection:
             await connection.execute(text("CREATE SCHEMA application"))
             await connection.execute(
                 text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = application, public")
             )
-    finally:
-        await setup_engine.dispose()
 
-    # Exercise migration idempotency through the SDK-owned async entrypoint.
-    await migrate_database(postgresql_url)
-    await migrate_database(postgresql_url)
+        # Exercise migration idempotency through the SDK-owned async entrypoint.
+        await migrate_database(postgresql_url)
+        await migrate_database(postgresql_url)
 
-    # Verify both SDK-owned tables exist only in the shared schema.
-    engine = create_async_engine(postgresql_url)
-    try:
+        # Verify both SDK-owned tables exist only in the shared schema.
         async with engine.begin() as connection:
             table_locations = set(
                 (
@@ -48,10 +45,28 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
             await connection.execute(
                 text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = shared")
             )
+
+        assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
     finally:
         await engine.dispose()
 
-    assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
+
+@pytest.mark.integration
+async def test_shared_user_sync_updates_one_postgresql_row(postgresql_url: URL) -> None:
+    """Synchronize active and deactivated users into one shared PostgreSQL row."""
+
+    # Prepare the shared schema through the public migration entrypoint.
+    await migrate_database(postgresql_url)
+
+    # Match the shared schema search path used by the Platform database adapter.
+    engine = create_async_engine(postgresql_url)
+    try:
+        async with engine.begin() as connection:
+            await connection.execute(
+                text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = shared")
+            )
+    finally:
+        await engine.dispose()
 
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = UUID("00000000-0000-0000-0000-000000000001")
@@ -83,9 +98,9 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     await shared_audit.sync(postgresql_url, [deactivated_user])
 
     # Read the persisted row from its qualified shared table and verify no duplicate was created.
-    verification_engine = create_async_engine(postgresql_url)
+    engine = create_async_engine(postgresql_url)
     try:
-        async with verification_engine.connect() as connection:
+        async with engine.connect() as connection:
             result = await connection.execute(
                 text(
                     """
@@ -97,16 +112,16 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
                 {"user_id": user_id},
             )
             row = result.mappings().one()
-    finally:
-        await verification_engine.dispose()
 
-    assert dict(row) == {
-        "id": user_id,
-        "name": "Updated User",
-        "email": "updated@example.com",
-        "avatar": "https://example.com/avatar.png",
-        "role": "read",
-        "created_at": created_at,
-        "updated_at": deactivated_at,
-        "deleted_at": deactivated_at,
-    }
+        assert dict(row) == {
+            "id": user_id,
+            "name": "Updated User",
+            "email": "updated@example.com",
+            "avatar": "https://example.com/avatar.png",
+            "role": "read",
+            "created_at": created_at,
+            "updated_at": deactivated_at,
+            "deleted_at": deactivated_at,
+        }
+    finally:
+        await engine.dispose()

@@ -1,12 +1,7 @@
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import startCase from 'lodash/startCase';
 import { useLocation } from 'react-router';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Wordmark } from '@/components/Wordmark';
-
-type BreadcrumbTrailItem = {
-    href: string;
-    label: string;
-};
 
 const hiddenSegments = new Set(['orgs', 'apps']);
 
@@ -21,10 +16,10 @@ function decodeSegment(segment: string): string {
 }
 
 /** Builds breadcrumbs for organization and application routes. */
-function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
+function buildOrganizationCrumbs(segments: string[]) {
     const organization = segments[1];
     const application = segments[2] === 'apps' ? segments[3] : null;
-    const organizationCrumb: BreadcrumbTrailItem = {
+    const organizationCrumb = {
         label: startCase(decodeSegment(organization)),
         href: `/orgs/${organization}`,
     };
@@ -44,7 +39,7 @@ function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
 }
 
 /** Builds generic breadcrumbs by hiding routing-only path segments. */
-function buildDefaultCrumbs(segments: string[]): BreadcrumbTrailItem[] {
+function buildDefaultCrumbs(segments: string[]) {
     return segments.flatMap((segment, index) => {
         // Drop routing-only segments from default trails.
         if (hiddenSegments.has(segment)) {

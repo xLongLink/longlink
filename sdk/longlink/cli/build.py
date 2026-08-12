@@ -12,37 +12,6 @@ from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 
-BUILD_CONTEXT_IGNORE_PATTERNS = (
-    ".cache",
-    ".coverage",
-    ".dockerignore",
-    ".env",
-    ".env.*",
-    ".envrc",
-    ".git",
-    ".mypy_cache",
-    ".nox",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".tox",
-    ".uv-cache",
-    ".venv",
-    "Dockerfile",
-    "__pycache__",
-    "*.db",
-    "*.db-*",
-    "*.egg-info",
-    "*.pyc",
-    "*.sqlite",
-    "*.sqlite-*",
-    "*.sqlite3",
-    "*.sqlite3-*",
-    "build",
-    "coverage.xml",
-    "dist",
-    "htmlcov",
-    "node_modules",
-)
 SAFE_GIT_DIRECTORY_NAMES = ("objects", "refs")
 SAFE_GIT_FILE_NAMES = ("HEAD", "packed-refs", "shallow")
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
@@ -84,7 +53,7 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str, list[dict[str, object]]]:
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict[str, object]]:
     """Parse the configured Application environment model."""
 
     # Require the project configuration that selects the environment model.
@@ -127,10 +96,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str,
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
         env_name = field_info.pop("env_name") or field_name
-        type_name = ast.unparse(statement.annotation)
         env_entry: dict[str, object] = {
             "name": env_name,
-            "type": type_name,
             "required": bool(field_info.get("required", False)),
         }
 
@@ -140,7 +107,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str,
 
         environments.append(env_entry)
 
-    return {"environments": environments}
+    return environments
 
 
 def read_pyproject(root: Path) -> dict[str, object]:
@@ -229,21 +196,16 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_image_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
+def render_image_labels(metadata: Mapping[str, object], environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    label_items = [
-        ("org.opencontainers.image.title", metadata.get("name")),
-        ("org.opencontainers.image.version", metadata.get("version")),
-        ("org.opencontainers.image.description", metadata.get("description")),
-    ]
+    label_items = [("org.opencontainers.image.description", metadata.get("description"))]
 
     # Encode the available core metadata as Dockerfile label statements.
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
 
     # Include environment requirements only when declared.
-    environments = env_spec.get("environments") or []
     if environments:
         rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
 
@@ -326,6 +288,22 @@ def render_dockerfile(workdir: str, labels: str, sdk_version: str) -> str:
     )
 
 
+def gitignore_path(root: Path) -> Path | None:
+    """Return the closest Git ignore file that applies to one Application root."""
+
+    # Applications can be nested in a shared repository, so inherit its root ignore policy.
+    return next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
+
+
+def write_dockerignore(build_context: Path, root: Path) -> None:
+    """Write Docker ignore rules from the Application's applicable Git ignore file."""
+
+    # Docker needs its own file, but its ignore syntax supports the project's existing Git ignore rules.
+    source = gitignore_path(root)
+    rules = source.read_text(encoding="utf-8") if source is not None else ""
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n", encoding="utf-8")
+
+
 def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
     """Create Docker build artifacts for the current app."""
 
@@ -361,13 +339,10 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         env_spec,
     )
 
-    # Exclude ignored paths and symlinks whose targets escape the build context.
-    ignored_paths = shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS)
-
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
-        """Return ignored paths and symlinks that resolve outside the source root."""
+        """Return symlinks that resolve outside the source root."""
 
-        ignored = ignored_paths(directory, contents)
+        ignored = set()
         for name in contents:
             path = Path(directory, name)
             if path.is_symlink() and not path.resolve().is_relative_to(source_root):
@@ -382,6 +357,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         dirs_exist_ok=True,
         ignore=ignore_out_of_tree_symlinks,
     )
+
+    # Apply the repository's canonical ignore rules when Docker uploads the context.
+    write_dockerignore(build_context, root)
 
     # Copy safe Git metadata when the project is inside a repository.
     if repo_root is not None:
@@ -496,8 +474,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         if docker_command is None:
             raise click.ClickException("Docker is required to build images")
 
-        image_id_path = build_context / "image-id.txt"
-
         # Run the Docker build and optional push.
         try:
 
@@ -505,8 +481,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
             command = [docker_command, "build"]
             command.extend(
                 [
-                    "--iidfile",
-                    str(image_id_path),
                     "-f",
                     str(dockerfile_path),
                     "-t",
@@ -515,7 +489,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
                 ]
             )
             subprocess.run(command, check=True)
-            image_id = image_id_path.read_text(encoding="utf-8").strip()
 
             # Push the tag only when requested.
             if push:
@@ -529,7 +502,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     # Report pushed images only when requested.
     if push:
         click.echo(f"- Pushed image: {image_tag}")
-    click.echo(f"- Image ID: {image_id}")
     click.echo(f"- View it with: docker image inspect {image_tag}")
     click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
     click.echo(f"- Remove it with: docker rmi {image_tag}")

@@ -1,10 +1,10 @@
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Link } from '@astryxdesign/core/Link';
 import { SideNav as AstryxSideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Wordmark } from '@/components/Wordmark';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/platform/catalog';
+import { Wordmark } from '@/components/Wordmark';
 
 type SidebarProps = {
     currentPath: string;

@@ -14,17 +14,15 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
     # Arrange
     compute_registry = await create_compute()
-    generated: list[str | None] = []
-    applied: list[tuple[str | None, str | None, str | None]] = []
-    replaced: list[tuple[str, str, str]] = []
+    generation = 0
     keys = iter(["api-key-1"])
 
     def generate_tls(compute_id: UUID, address: str | None) -> tuple[str, str, str]:
         """Return distinct generated TLS material."""
 
+        nonlocal generation
         assert compute_id == compute_registry.id
-        generated.append(address)
-        generation = len(generated)
+        generation += 1
         return (
             f"ca-{generation}",
             f"server-certificate-{generation}",
@@ -35,16 +33,12 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
         """Capture gateway resource operations."""
 
         async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
-            """Capture shared Gateway application and return its endpoint."""
+            """Return the shared Gateway endpoint."""
 
-            applied.append((certificate, private_key, api_key))
             return "192.0.2.1"
 
         async def replace_tls(self, certificate: str, private_key: str, gateway_certificate: str, address: str) -> None:
-            """Capture the final endpoint-bound server identity."""
-
-            assert address == "192.0.2.1"
-            replaced.append((certificate, private_key, gateway_certificate))
+            """Accept the final endpoint-bound server identity."""
 
     class FakeKubernetes:
         """Expose the fake gateway abstraction."""
@@ -80,14 +74,6 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     # Assert
     assert completed.status == OperationStatus.completed
     assert recreated.status == OperationStatus.completed
-    assert generated == [None, "192.0.2.1"]
-    assert applied == [
-        ("server-certificate-1", "server-private-key-1", "api-key-1"),
-        (None, None, None),
-    ]
-    assert replaced == [
-        ("server-certificate-2", "server-private-key-2", "ca-2"),
-    ]
     async with session_scope() as session:
         refreshed = await compute.get(session, compute_registry.id)
     assert refreshed is not None

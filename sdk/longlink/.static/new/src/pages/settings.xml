@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink version="v1" name="Settings" icon="settings-2">
+<longlink version="0.3" name="Settings" icon="settings-2">
     <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
     <State id="reviewer" name="Mira Tanner" initials="MT" badge="Approver" avatarUrl="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner" />
     <State id="emailUpdates" value="${true}" />
@@ -8,81 +8,81 @@
     <State id="workflow" owner="manager" risk="medium" />
 
     <Stack>
-        <Heading level="3" i18n="settings.title" />
-        <Text as="p" color="secondary" i18n="settings.description" />
+        <Heading level="3">Application settings</Heading>
+        <Text as="p" color="secondary" value="Configure application defaults with local XML state and Astryx form controls." />
     </Stack>
 
     <SideNav label="Settings sections">
-        <SideNavItem value="application" icon="viewColumns" i18n="settings.sections.application">
+        <SideNavItem value="application" icon="viewColumns" label="Application">
             <Stack gap="4">
-                <Heading level="2" i18n="settings.sections.application" />
-                <Text as="p" i18n="settings.application.description" />
+                <Heading level="2">Application</Heading>
+                <Text as="p" value="Edit the sample application's local owner, cost-center, and reviewer note fields." />
                 <Card variant="muted">
                     <Stack direction="horizontal" align="center" gap="3">
                         <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" size="lg" />
                         <Stack gap="1">
-                            <Text weight="semibold" i18n="settings.application.reviewer" />
-                            <Text color="secondary" i18n="settings.application.initials" values="${{ initials: reviewer.initials }}" />
+                            <Text weight="semibold" value="Default reviewer" />
+                            <Text color="secondary" value="$reviewer.initials" />
                         </Stack>
                         <Badge label="$reviewer.badge" variant="info" />
                     </Stack>
                 </Card>
                 <FormLayout>
                     <TextInput
-                        i18n="settings.application.owner"
+                        label="Workflow owner"
                         description="This state is bound directly from XML."
                         value="$profile.owner"
                     />
-                    <TextInput i18n="settings.application.costCenter" value="$profile.costCenter" />
+                    <TextInput label="Cost center" value="$profile.costCenter" />
                     <TextArea
-                        i18n="settings.application.note"
+                        label="Approval note"
                         description="Visible to reviewers"
                         rows="4"
                         value="$profile.note"
                     />
                 </FormLayout>
                 <Divider />
-                <Heading level="3" i18n="settings.application.runbook" />
-                <Text as="p" i18n="settings.application.bold" weight="semibold" />
-                <Text type="code" i18n="settings.application.code" />
+                <Heading level="3">Reviewer note</Heading>
+                <Text as="p" value="Finance owns budget checks." weight="semibold" />
+                <Text type="code" value="PATCH /items/'{id}'/status" />
             </Stack>
         </SideNavItem>
 
-        <SideNavItem value="preferences" icon="wrench" i18n="settings.sections.preferences">
+        <SideNavItem value="preferences" icon="wrench" label="Preferences">
             <Stack gap="4">
-                <Heading level="2" i18n="settings.sections.preferences" />
-                <Text as="p" i18n="settings.preferences.description" />
+                <Heading level="2">Preferences</Heading>
+                <Text as="p" value="Toggle notification controls and adjust a slider-backed approval threshold." />
                 <FormLayout>
                     <CheckboxInput
-                        i18n="settings.preferences.email"
+                        label="Email updates"
                         description="Send a digest when item status changes."
                         value="$emailUpdates"
                     />
                     <Switch
-                        i18n="settings.preferences.notifications"
+                        label="In-app notifications"
                         description="Show reminders for stale items."
                         value="$notifications"
                     />
-                    <Slider i18n="settings.preferences.limit" min="500" max="10000" step="500" value="$budgetLimit" />
+                    <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
                 </FormLayout>
-                <Text i18n="settings.preferences.limitValue" values="${{ limit: budgetLimit.value }}" />
+                <Text value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
             </Stack>
         </SideNavItem>
 
-        <SideNavItem value="workflow" icon="arrowsUpDown" i18n="settings.sections.workflow">
+        <SideNavItem value="workflow" icon="arrowsUpDown" label="Workflow">
             <Stack gap="4">
-                <Heading level="2" i18n="settings.sections.workflow" />
-                <Text as="p" i18n="settings.workflow.description" />
+                <Heading level="2">Workflow</Heading>
+                <Text as="p" value="Use radio lists and selectors to model workflow defaults." />
                 <FormLayout>
-                    <RadioList i18n="settings.workflow.owner" value="$workflow.owner">
-                        <RadioListItem value="manager" i18n="workflow.manager" />
-                        <RadioListItem value="finance" i18n="workflow.finance" />
-                        <RadioListItem value="owner" i18n="workflow.owner" />
+                    <RadioList label="Default approver" value="$workflow.owner">
+                        <RadioListItem value="manager" label="Manager" />
+                        <RadioListItem value="finance" label="Finance" />
+                        <RadioListItem value="owner" label="Owner" />
                     </RadioList>
-                    <Selector i18n="settings.workflow.risk" value="$workflow.risk">
-                        <SelectorOption value="low" i18n="settings.workflow.low" />
-                        <SelectorOption value="medium" i18n="settings.workflow.medium" />
-                        <SelectorOption value="high" i18n="settings.workflow.high" />
+                    <Selector label="Risk level" value="$workflow.risk">
+                        <SelectorOption value="low" label="Low" />
+                        <SelectorOption value="medium" label="Medium" />
+                        <SelectorOption value="high" label="High" />
                     </Selector>
                 </FormLayout>
             </Stack>

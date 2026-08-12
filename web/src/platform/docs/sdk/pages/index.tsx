@@ -1,40 +1,37 @@
 import { FileCode2 } from 'lucide-react';
-import { content as actionContent, metadata as actionMetadata } from './action';
-import { content as avatarContent, metadata as avatarMetadata } from './avatar';
-import { content as badgeContent, metadata as badgeMetadata } from './badge';
-import { content as bindingsContent, metadata as bindingsMetadata } from './bindings';
-import { content as buttonContent, metadata as buttonMetadata } from './button';
-import { content as cardContent, metadata as cardMetadata } from './card';
-import { content as checkboxInputContent, metadata as checkboxInputMetadata } from './checkbox-input';
-import { content as countContent, metadata as countMetadata } from './count';
-import { content as dialogContent, metadata as dialogMetadata } from './dialog';
-import { content as dividerContent, metadata as dividerMetadata } from './divider';
-import { content as expressionsContent, metadata as expressionsMetadata } from './expressions';
-import { content as fileInputContent, metadata as fileInputMetadata } from './file-input';
-import { content as forContent, metadata as forMetadata } from './for';
-import { content as gridContent, metadata as gridMetadata } from './grid';
-import { content as headingContent, metadata as headingMetadata } from './heading';
-import { content as i18nContent, metadata as i18nMetadata } from './i18n';
-import { content as iconContent, metadata as iconMetadata } from './icon';
 import { content as ifContent, metadata as ifMetadata } from './if';
+import { content as forContent, metadata as forMetadata } from './for';
+import { content as tabContent, metadata as tabMetadata } from './tab';
+import { content as cardContent, metadata as cardMetadata } from './card';
+import { content as gridContent, metadata as gridMetadata } from './grid';
+import { content as iconContent, metadata as iconMetadata } from './icon';
 import { content as linkContent, metadata as linkMetadata } from './link';
-import { content as numberInputContent, metadata as numberInputMetadata } from './number-input';
+import { content as textContent, metadata as textMetadata } from './text';
+import { content as badgeContent, metadata as badgeMetadata } from './badge';
 import { content as queryContent, metadata as queryMetadata } from './query';
-import { content as radioListContent, metadata as radioListMetadata } from './radio-list';
-import { content as radioListItemContent, metadata as radioListItemMetadata } from './radio-list-item';
-import { content as selectorContent, metadata as selectorMetadata } from './selector';
-import { content as selectorOptionContent, metadata as selectorOptionMetadata } from './selector-option';
-import { content as sideNavContent, metadata as sideNavMetadata } from './side-nav';
-import { content as sliderContent, metadata as sliderMetadata } from './slider';
 import { content as stackContent, metadata as stackMetadata } from './stack';
 import { content as stateContent, metadata as stateMetadata } from './state';
-import { content as switchContent, metadata as switchMetadata } from './switch';
-import { content as tabContent, metadata as tabMetadata } from './tab';
 import { content as tableContent, metadata as tableMetadata } from './table';
-import { content as textContent, metadata as textMetadata } from './text';
+import { content as actionContent, metadata as actionMetadata } from './action';
+import { content as avatarContent, metadata as avatarMetadata } from './avatar';
+import { content as buttonContent, metadata as buttonMetadata } from './button';
+import { content as dialogContent, metadata as dialogMetadata } from './dialog';
+import { content as sliderContent, metadata as sliderMetadata } from './slider';
+import { content as switchContent, metadata as switchMetadata } from './switch';
+import { content as dividerContent, metadata as dividerMetadata } from './divider';
+import { content as headingContent, metadata as headingMetadata } from './heading';
+import { content as sideNavContent, metadata as sideNavMetadata } from './side-nav';
+import { content as bindingsContent, metadata as bindingsMetadata } from './bindings';
+import { content as selectorContent, metadata as selectorMetadata } from './selector';
 import { content as textAreaContent, metadata as textAreaMetadata } from './text-area';
+import { content as fileInputContent, metadata as fileInputMetadata } from './file-input';
+import { content as radioListContent, metadata as radioListMetadata } from './radio-list';
 import { content as textInputContent, metadata as textInputMetadata } from './text-input';
-import { content as valuesContent, metadata as valuesMetadata } from './values';
+import { content as expressionsContent, metadata as expressionsMetadata } from './expressions';
+import { content as numberInputContent, metadata as numberInputMetadata } from './number-input';
+import { content as checkboxInputContent, metadata as checkboxInputMetadata } from './checkbox-input';
+import { content as radioListItemContent, metadata as radioListItemMetadata } from './radio-list-item';
+import { content as selectorOptionContent, metadata as selectorOptionMetadata } from './selector-option';
 
 const pageReferences = [
     {
@@ -44,30 +41,6 @@ const pageReferences = [
         summary: 'Conditionally renders an XML node when its expression evaluates to a truthy value.',
         content: ifContent,
         metadata: ifMetadata,
-    },
-    {
-        name: 'Translations',
-        slug: 'i18n',
-        category: 'Runtime',
-        summary: 'Looks up visible copy from the active XML translation catalog.',
-        content: i18nContent,
-        metadata: i18nMetadata,
-    },
-    {
-        name: 'values',
-        slug: 'values',
-        category: 'Runtime',
-        summary: 'Supplies interpolation values for an ICU message resolved through i18n.',
-        content: valuesContent,
-        metadata: valuesMetadata,
-    },
-    {
-        name: 'count',
-        slug: 'count',
-        category: 'Runtime',
-        summary: 'Passes a numeric count through values into an ICU plural translation.',
-        content: countContent,
-        metadata: countMetadata,
     },
     {
         name: 'Expressions',

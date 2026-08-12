@@ -11,6 +11,7 @@ class PageDefinition:
 
     path: str
     route: str
+    runtime_version: str
     tab: str
     name: str | None = None
     icon: str | None = None

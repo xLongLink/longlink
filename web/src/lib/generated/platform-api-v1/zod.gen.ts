@@ -45,6 +45,30 @@ export const zApplicationOrganizationResponse = z.object({
 });
 
 /**
+ * ApplicationRelease
+ *
+ * Validate a requested Application release.
+ */
+export const zApplicationRelease = z.object({
+    image: z.string(),
+    description: z.string().max(255).nullish()
+});
+
+/**
+ * Body_request_password_reset_api_v1_auth_forgot_password_post
+ */
+export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
+    email: z.email()
+});
+
+/**
+ * Body_request_registration_api_v1_auth_register_post
+ */
+export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
+    email: z.email()
+});
+
+/**
  * ComputeRegistryCreate
  *
  * Validate one compute registry creation payload.
@@ -101,10 +125,10 @@ export const zDatabaseRegistryResponse = z.object({
 /**
  * EmailPayload
  *
- * Validate one canonical email identity.
+ * Return one verified email address.
  */
 export const zEmailPayload = z.object({
-    email: z.email().max(254)
+    email: z.email()
 });
 
 /**
@@ -114,7 +138,6 @@ export const zEmailPayload = z.object({
  */
 export const zEnvironmentMetadata = z.object({
     name: z.string(),
-    type: z.string(),
     required: z.boolean(),
     description: z.string().nullish()
 });
@@ -176,9 +199,6 @@ export const zApplicationCreate = z.object({
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export const zLongLinkMetadata = z.object({
-    title: z.string().nullish(),
-    digest: z.string().nullish(),
-    version: z.string().nullish(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
 });
@@ -329,9 +349,9 @@ export const zPlatformRoles = z.enum(['user', 'administrator']);
  * Validate profile and password setup after email authentication.
  */
 export const zRegistrationComplete = z.object({
-    email: z.email().max(254),
     name: z.string().min(1).max(127),
     surname: z.string().min(1).max(127),
+    email: z.email().max(254),
     password: z.string().min(1).max(1024)
 });
 
@@ -358,9 +378,9 @@ export const zApplicationResponse = z.object({
     name: z.string(),
     slug: z.string(),
     icon: zIcon.nullable(),
-    image: z.string(),
-    version: z.string().nullable(),
     description: z.string().nullable(),
+    image_desired: z.string(),
+    image_deployed: z.string().nullable(),
     status: zStatus,
     created_at: z.iso.datetime()
 });
@@ -576,7 +596,7 @@ export const zPasswordLoginApiV1AuthPasswordLoginPostBody = zPasswordLogin;
  */
 export const zPasswordLoginApiV1AuthPasswordLoginPostResponse = z.void();
 
-export const zRequestPasswordResetApiV1AuthForgotPasswordPostBody = zEmailPayload;
+export const zRequestPasswordResetApiV1AuthForgotPasswordPostBody = zBodyRequestPasswordResetApiV1AuthForgotPasswordPost;
 
 export const zVerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostBody = zTokenPayload;
 
@@ -597,7 +617,7 @@ export const zResetPasswordApiV1AuthResetPasswordPostBody = zPasswordResetComple
  */
 export const zResetPasswordApiV1AuthResetPasswordPostResponse = z.void();
 
-export const zRequestRegistrationApiV1AuthRegisterPostBody = zEmailPayload;
+export const zRequestRegistrationApiV1AuthRegisterPostBody = zBodyRequestRegistrationApiV1AuthRegisterPost;
 
 export const zVerifyRegistrationTokenApiV1AuthVerifyPostBody = zTokenPayload;
 
@@ -635,6 +655,17 @@ export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostP
  * Successful Response
  */
 export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = zApplicationResponse;
+
+export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostBody = zApplicationRelease;
+
+export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostPath = z.object({
+    application_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = zApplicationResponse;
 
 export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.object({
     application_id: z.uuid()

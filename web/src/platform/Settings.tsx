@@ -1,26 +1,27 @@
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Slider } from '@astryxdesign/core/Slider';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Slider } from '@astryxdesign/core/Slider';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import {
     ACCENT_OPTIONS,
@@ -31,8 +32,6 @@ import {
     type Accent,
     type Theme,
 } from '@/lib/theme';
-import { useDeleteDialog } from '@/lib/utils';
-import PlatformLayout from '@/platform/layout';
 
 const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
     value,
@@ -45,7 +44,6 @@ function formatRadius(value: number): string {
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
     const { user, theme, accent, radius, isLoading: isProfileLoading } = useUserProfile();
@@ -64,7 +62,7 @@ export default function Settings() {
     /** Displays a failed account preference update. */
     function showAccountUpdateError(error: unknown) {
         toast({
-            body: error instanceof Error ? error.message : t('errors.updateAccount'),
+            body: error instanceof Error ? error.message : 'Failed to update account',
             type: 'error',
         });
     }
@@ -80,7 +78,7 @@ export default function Settings() {
 
         // Require a non-empty account name.
         if (!accountName) {
-            setAccountError(t('settings.usernameRequired'));
+            setAccountError('Username is required');
             return;
         }
 
@@ -92,30 +90,29 @@ export default function Settings() {
         // Persist the account name and surface any failure.
         try {
             await updateUser({ name: accountName });
-            toast({ body: t('settings.usernameSaved') });
+            toast({ body: 'Username saved' });
         } catch (error) {
             toast({
-                body: error instanceof Error ? error.message : t('settings.failedUpdateUsername'),
+                body: error instanceof Error ? error.message : 'Failed to update username',
                 type: 'error',
             });
         }
     };
 
     const deleteDialog = useDeleteDialog({
-        title: t('deleteDialog.deleteOrganizationTitle'),
+        title: 'Delete organization',
         mutation: deleteOrganization,
         items: memberships,
         getId: (membership) => membership.organization.id,
-        description: (membership) =>
-            t('deleteDialog.deleteOrganizationDescription', { name: membership.organization.name }),
-        errorMessage: t('deleteDialog.failedDeleteOrganization'),
-        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        description: (membership) => `Delete ${membership.organization.name} from your account?`,
+        errorMessage: 'Failed to delete organization',
+        fallbackDescription: 'Delete this organization?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const organizationColumns: TableColumn<(typeof memberships)[number]>[] = [
         {
             key: 'name',
-            header: t('columns.name'),
+            header: 'Name',
             width: proportional(1),
             renderCell: (membership) => (
                 <HStack gap={3} align="center">
@@ -132,21 +129,21 @@ export default function Settings() {
         },
         {
             key: 'role',
-            header: t('columns.role'),
+            header: 'Role',
             width: pixel(128),
             renderCell: (membership) => <Badge label={membership.role} />,
         },
         {
             key: 'actions',
-            header: t('columns.actions'),
+            header: 'Actions',
             width: pixel(96),
             align: 'end',
             renderCell: (membership) =>
                 membership.role === 'owner' ? (
                     <MoreMenu
-                        label={t('common.openActionsFor', { name: membership.organization.name })}
+                        label={`Open actions for ${membership.organization.name}`}
                         size="sm"
-                        items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(membership) }]}
+                        items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(membership) }]}
                     />
                 ) : null,
         },
@@ -156,36 +153,36 @@ export default function Settings() {
         <PlatformLayout
             brandOnly
             tabs={{
-                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
-                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
+                Organizations: { href: '/organizations', icon: Building2 },
+                Settings: { href: '/settings', icon: Settings2 },
             }}
         >
             <PageContainer gap={8}>
                 <VStack gap={1}>
-                    <Heading level={1}>{t('settings.title')}</Heading>
-                    <Text type="supporting">{t('settings.description')}</Text>
+                    <Heading level={1}>Settings</Heading>
+                    <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
                 </VStack>
 
                 <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
                     <SideNav className="h-auto w-full">
-                        <SideNavSection title={t('navigation.settings')} isHeaderHidden>
+                        <SideNavSection title="Settings" isHeaderHidden>
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#account`}
                                 icon={<UserRound aria-hidden="true" size={16} />}
                                 isSelected={section === 'account'}
-                                label={t('settings.accountTitle')}
+                                label="Account"
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#appearance`}
                                 icon={<Paintbrush aria-hidden="true" size={16} />}
                                 isSelected={section === 'appearance'}
-                                label={t('settings.appearanceTitle')}
+                                label="Appearance"
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#organizations`}
                                 icon={<Building2 aria-hidden="true" size={16} />}
                                 isSelected={section === 'organizations'}
-                                label={t('settings.organizationsTitle')}
+                                label="Organizations"
                             />
                         </SideNavSection>
                     </SideNav>
@@ -194,12 +191,14 @@ export default function Settings() {
                         {section === 'account' ? (
                             <VStack gap={4}>
                                 <VStack gap={1}>
-                                    <Heading level={2}>{t('settings.accountTitle')}</Heading>
-                                    <Text type="supporting">{t('settings.accountDescription')}</Text>
+                                    <Heading level={2}>Account</Heading>
+                                    <Text type="supporting">
+                                        Update your username. Your account email is read-only here.
+                                    </Text>
                                 </VStack>
                                 <HStack gap={4} align="start" wrap="wrap">
                                     <TextInput
-                                        label={t('labels.username')}
+                                        label="Username"
                                         value={name}
                                         width="100%"
                                         isRequired
@@ -214,7 +213,7 @@ export default function Settings() {
                                         }}
                                     />
                                     <TextInput
-                                        label={t('labels.email')}
+                                        label="Email"
                                         type="email"
                                         value={user?.email ?? ''}
                                         width="100%"
@@ -227,23 +226,25 @@ export default function Settings() {
                         {section === 'appearance' ? (
                             <VStack gap={4}>
                                 <VStack gap={1}>
-                                    <Heading level={2}>{t('settings.appearanceTitle')}</Heading>
-                                    <Text type="supporting">{t('settings.appearanceDescription')}</Text>
+                                    <Heading level={2}>Appearance</Heading>
+                                    <Text type="supporting">
+                                        Customize the theme, accent color, and radius for the interface.
+                                    </Text>
                                 </VStack>
                                 <HStack gap={4} align="start" wrap="wrap">
                                     <Selector
-                                        label={t('labels.theme')}
+                                        label="Theme"
                                         options={THEME_OPTIONS}
                                         value={theme}
                                         width={320}
                                         isDisabled={isPending}
-                                        placeholder={t('settings.placeholders.theme')}
+                                        placeholder="Choose a theme"
                                         onChange={(value) => {
                                             void updateUser({ theme: value as Theme }).catch(showAccountUpdateError);
                                         }}
                                     />
                                     <Selector
-                                        label={t('labels.accentColor')}
+                                        label="Accent color"
                                         options={ACCENT_OPTIONS.map((option) => ({
                                             value: option.value,
                                             label: option.label,
@@ -263,13 +264,13 @@ export default function Settings() {
                                         value={accent}
                                         width={320}
                                         isDisabled={isPending}
-                                        placeholder={t('settings.placeholders.color')}
+                                        placeholder="Choose a color"
                                         onChange={(value) => {
                                             void updateUser({ accent: value as Accent }).catch(showAccountUpdateError);
                                         }}
                                     />
                                     <Slider
-                                        label={t('labels.radius')}
+                                        label="Radius"
                                         value={editedRadius ?? radius}
                                         width={320}
                                         min={MIN_RADIUS}
@@ -297,8 +298,10 @@ export default function Settings() {
                             <VStack gap={4}>
                                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                                     <VStack gap={1}>
-                                        <Heading level={2}>{t('settings.organizationsTitle')}</Heading>
-                                        <Text type="supporting">{t('settings.organizationDescription')}</Text>
+                                        <Heading level={2}>Organizations</Heading>
+                                        <Text type="supporting">
+                                            Review the organizations connected to your personal account.
+                                        </Text>
                                     </VStack>
                                     <CreateOrganization />
                                 </HStack>
@@ -307,7 +310,7 @@ export default function Settings() {
                                         columns={organizationColumns}
                                         data={memberships}
                                         density="compact"
-                                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                                        emptyState={<EmptyState title="No results." isCompact />}
                                         hasHover
                                         idKey={(membership) => membership.organization.id}
                                     />

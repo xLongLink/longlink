@@ -1,29 +1,29 @@
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
-import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
-import { Center } from '@astryxdesign/core/Center';
-import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Code } from '@astryxdesign/core/Code';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Divider } from '@astryxdesign/core/Divider';
-import { FileInput } from '@astryxdesign/core/FileInput';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Link } from '@astryxdesign/core/Link';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { Selector } from '@astryxdesign/core/Selector';
-import { Slider } from '@astryxdesign/core/Slider';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Switch } from '@astryxdesign/core/Switch';
-import { Table as AstryxTable } from '@astryxdesign/core/Table';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Text } from '@astryxdesign/core/Text';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Info } from 'lucide-react';
+import { Card } from '@astryxdesign/core/Card';
+import { Code } from '@astryxdesign/core/Code';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Link as RouterLink } from 'react-router';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { Slider } from '@astryxdesign/core/Slider';
+import { Switch } from '@astryxdesign/core/Switch';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { FileInput } from '@astryxdesign/core/FileInput';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Table as AstryxTable } from '@astryxdesign/core/Table';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/sdk/pages/index';
 
 type ComponentSummary = {
@@ -124,18 +124,12 @@ function renderComponentPreview(name: string) {
     switch (name) {
         case 'if':
             return <Code>{'if="${order.open}"'}</Code>;
-        case 'Translations':
-            return <Code>{'i18n="orders.title"'}</Code>;
-        case 'values':
-            return <Code>{'values="${{ name: user.name }}"'}</Code>;
-        case 'count':
-            return <Code>{'values="${{ count: orders.length }}"'}</Code>;
         case 'Expressions':
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':
             return <Code>{'value="$form.name"'}</Code>;
         case 'longlink':
-            return <Code>{'<longlink version="v1" />'}</Code>;
+            return <Code>{'<longlink version="0.3" />'}</Code>;
         case 'Button':
             return (
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
@@ -320,7 +314,7 @@ export const content = (
             . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
             compose the screen with supported XML components.
         </Text>
-        <CodeBlock code={'<longlink version="v1">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
+        <CodeBlock code={'<longlink version="0.3">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
         {componentCategories.map((category) => (
             <ComponentCategorySection key={category.id} category={category} />
         ))}

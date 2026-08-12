@@ -1,11 +1,11 @@
 import { useLocation, type MetaFunction } from 'react-router';
-import { Article } from '@/components/Article';
-import { Sidebar } from '@/components/Sidebar';
-import SideLayout from '@/layout/SideLayout';
-import { noIndexMeta, publicSeoMeta } from '@/lib/seo';
 import type { ArticleNavigationGroup, ArticlePage } from '@/platform/catalog';
 import NotFound from '@/platform/NotFound';
+import SideLayout from '@/layout/SideLayout';
+import { Article } from '@/components/Article';
+import { Sidebar } from '@/components/Sidebar';
 import { normalizePathname } from '@/platform/paths';
+import { noIndexMeta, publicSeoMeta } from '@/lib/seo';
 
 /** Creates route metadata for one article catalog. */
 export function createArticleMeta(pages: ArticlePage[]): MetaFunction {

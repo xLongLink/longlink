@@ -14,19 +14,10 @@ from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
-from fastapi.staticfiles import StaticFiles
 from longlink.middleware import install_frontend_middleware
 from longlink.storage.base import create_fs
 
 Environment = Literal["development", "testing", "production"]
-
-
-@dataclass(slots=True)
-class DiscoveredPage:
-    """Describe one validated XML page ready for route registration."""
-
-    definition: PageDefinition
-    content: str
 
 
 @dataclass(slots=True)
@@ -70,14 +61,11 @@ class LongLink:
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app)
 
-        # Applications always provide translations and pages in the generated source layout.
+        # Applications provide XML pages in the generated source layout.
         source_directory = Path.cwd() / "src"
-        translations_directory = source_directory / "i18n"
         pages_directory = source_directory / "pages"
-        missing_directories = [directory for directory in (translations_directory, pages_directory) if not directory.is_dir()]
-        if missing_directories:
-            raise ValueError(f"Application source directories are required: {', '.join(str(directory) for directory in missing_directories)}")
-        app.mount("/i18n", StaticFiles(directory=translations_directory), name="translations")
+        if not pages_directory.is_dir():
+            raise ValueError(f"Application source directory is required: {pages_directory}")
         self._register_page_directory(pages_directory)
 
         # Start applications on their first static page instead of an unselected shell.
@@ -110,24 +98,24 @@ class LongLink:
         discovered_pages = self._discover_pages(pages_directory)
         page_routes = [
             self.app.router.route_class(
-                page.definition.path,
-                partial(lambda content: Response(content, media_type="application/xml"), page.content),
+                definition.path,
+                partial(lambda content: Response(content, media_type="application/xml"), content),
                 methods=["GET"],
                 include_in_schema=False,
             )
-            for page in discovered_pages
+            for definition, content in discovered_pages
         ]
 
         # Pages are registered once before the frontend mount is installed.
         self.app.router.routes.extend(page_routes)
-        self.app.state.longlink.pages.extend(page.definition for page in discovered_pages)
+        self.app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
 
-    def _discover_pages(self, pages_directory: Path) -> list[DiscoveredPage]:
+    def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
         """Discover and validate all XML pages before registering any route."""
 
         registered_paths: set[str] = set()
         registered_route_keys: set[str] = set()
-        discovered_pages: list[DiscoveredPage] = []
+        discovered_pages: list[tuple[PageDefinition, str]] = []
 
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
@@ -162,15 +150,16 @@ class LongLink:
                     raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
 
             discovered_pages.append(
-                DiscoveredPage(
-                    definition=PageDefinition(
+                (
+                    PageDefinition(
                         path=registered_path,
                         route=page_route,
+                        runtime_version=page_root.get("version", ""),
                         tab=tab,
                         name=page_name,
                         icon=page_icon,
                     ),
-                    content=page.content,
+                    page.content,
                 )
             )
             registered_paths.add(registered_path)

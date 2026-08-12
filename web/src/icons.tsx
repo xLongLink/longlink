@@ -1,4 +1,5 @@
 import type { IconRegistry } from '@astryxdesign/core/Icon';
+import React from 'react';
 import {
     X,
     ChevronDown,
@@ -29,7 +30,6 @@ import {
     Square,
     Mic,
 } from 'lucide-react';
-import React from 'react';
 
 const iconProps = {
     size: '1em',

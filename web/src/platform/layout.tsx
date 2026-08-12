@@ -1,13 +1,12 @@
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Link } from '@astryxdesign/core/Link';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { UserProfile } from '@/components/Profile';
+import { Link } from '@astryxdesign/core/Link';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
+import TopLayout from '@/layout/TopLayout';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import TopLayout from '@/layout/TopLayout';
+import { UserProfile } from '@/components/Profile';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { normalizePathname } from '@/platform/paths';
 
 type PlatformLayoutTab = {
@@ -31,7 +30,6 @@ export default function PlatformLayout({
     fillViewport = false,
     children,
 }: PlatformLayoutProps) {
-    const t = useTranslator();
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
     const tabEntries = Object.entries(tabs).map(([label, tab]) => {
@@ -60,7 +58,7 @@ export default function PlatformLayout({
                 ) : (
                     <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
                         <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                            {t('common.documentation')}
+                            Documentation
                             <ExternalLink aria-hidden="true" className="size-3 shrink-0" />
                         </span>
                     </Link>
@@ -68,7 +66,7 @@ export default function PlatformLayout({
             }
             heading={
                 brandOnly ? (
-                    <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
+                    <Link href={brandHref} label="LongLink home" color="inherit">
                         <Wordmark />
                     </Link>
                 ) : (

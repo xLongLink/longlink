@@ -52,7 +52,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EmailPayload"
+                "$ref": "#/components/schemas/Body_request_password_reset_api_v1_auth_forgot_password_post"
               }
             }
           },
@@ -223,7 +223,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EmailPayload"
+                "$ref": "#/components/schemas/Body_request_registration_api_v1_auth_register_post"
               }
             }
           },
@@ -493,6 +493,73 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ApplicationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/releases": {
+      "post": {
+        "summary": "Release Application",
+        "description": "Record one desired Application release and queue its deployment.",
+        "operationId": "release_application_api_v1_applications__application_id__releases_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationRelease"
               }
             }
           }
@@ -2393,6 +2460,32 @@
         "title": "ApplicationOrganizationResponse",
         "description": "Represent the compact Organization associated with an Application."
       },
+      "ApplicationRelease": {
+        "properties": {
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "title": "ApplicationRelease",
+        "description": "Validate a requested Application release."
+      },
       "ApplicationResponse": {
         "properties": {
           "id": {
@@ -2421,21 +2514,6 @@
               }
             ]
           },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
           "description": {
             "anyOf": [
               {
@@ -2446,6 +2524,21 @@
               }
             ],
             "title": "Description"
+          },
+          "image_desired": {
+            "type": "string",
+            "title": "Image Desired"
+          },
+          "image_deployed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Deployed"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -2463,14 +2556,42 @@
           "name",
           "slug",
           "icon",
-          "image",
-          "version",
           "description",
+          "image_desired",
+          "image_deployed",
           "status",
           "created_at"
         ],
         "title": "ApplicationResponse",
         "description": "Represent one application in API responses."
+      },
+      "Body_request_password_reset_api_v1_auth_forgot_password_post": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "Body_request_password_reset_api_v1_auth_forgot_password_post"
+      },
+      "Body_request_registration_api_v1_auth_register_post": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "Body_request_registration_api_v1_auth_register_post"
       },
       "ComputeRegistryCreate": {
         "properties": {
@@ -2634,7 +2755,6 @@
         "properties": {
           "email": {
             "type": "string",
-            "maxLength": 254,
             "format": "email",
             "title": "Email"
           }
@@ -2644,17 +2764,13 @@
           "email"
         ],
         "title": "EmailPayload",
-        "description": "Validate one canonical email identity."
+        "description": "Return one verified email address."
       },
       "EnvironmentMetadata": {
         "properties": {
           "name": {
             "type": "string",
             "title": "Name"
-          },
-          "type": {
-            "type": "string",
-            "title": "Type"
           },
           "required": {
             "type": "boolean",
@@ -2675,7 +2791,6 @@
         "type": "object",
         "required": [
           "name",
-          "type",
           "required"
         ],
         "title": "EnvironmentMetadata",
@@ -2733,39 +2848,6 @@
       },
       "LongLinkMetadata": {
         "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "digest": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Digest"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
           "description": {
             "anyOf": [
               {
@@ -3227,12 +3309,6 @@
       },
       "RegistrationComplete": {
         "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 254,
-            "format": "email",
-            "title": "Email"
-          },
           "name": {
             "type": "string",
             "maxLength": 127,
@@ -3245,6 +3321,12 @@
             "minLength": 1,
             "title": "Surname"
           },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "title": "Email"
+          },
           "password": {
             "type": "string",
             "maxLength": 1024,
@@ -3254,9 +3336,9 @@
         },
         "type": "object",
         "required": [
-          "email",
           "name",
           "surname",
+          "email",
           "password"
         ],
         "title": "RegistrationComplete",

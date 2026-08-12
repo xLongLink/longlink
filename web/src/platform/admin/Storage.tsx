@@ -1,29 +1,27 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import CreateStorage from '@/components/dialogs/CreateStorage';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { platformApiPath } from '@/lib/platform-api';
-import { storagesQueryKey } from '@/lib/query-keys';
-import { useDeleteDialog } from '@/lib/utils';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { S3 } from '@/svg/S3';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import { storagesQueryKey } from '@/lib/query-keys';
+import { platformApiPath } from '@/lib/platform-api';
+import CreateStorage from '@/components/dialogs/CreateStorage';
+import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
@@ -31,7 +29,7 @@ export default function AdminStorage() {
             fetchApiVoid(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
-            toast({ body: t('admin.storageDeleted') });
+            toast({ body: 'Storage deleted' });
         },
     });
     const {
@@ -43,19 +41,19 @@ export default function AdminStorage() {
     });
     const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteStorageTitle'),
+        title: 'Delete storage',
         mutation: deleteStorage,
         items: storages,
         getId: (storage) => storage.id,
-        description: (storage) => t('admin.deleteStorageDescription', { name: storage.name }),
-        errorMessage: t('admin.failedDeleteStorage'),
-        fallbackDescription: t('admin.deleteStorageFallback'),
+        description: (storage) => `Delete storage ${storage.name}?`,
+        errorMessage: 'Failed to delete storage',
+        fallbackDescription: 'Delete this storage registry?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<StorageRegistryResponse>[] = [
         {
             key: 'storage',
-            header: t('admin.storageTitle'),
+            header: 'Storage',
             width: proportional(2),
             renderCell: (storage) => (
                 <HStack gap={3} align="center">
@@ -69,14 +67,14 @@ export default function AdminStorage() {
         },
         {
             key: 'actions',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (storage) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: storage.name })}
+                    label={`Open actions for ${storage.name}`}
                     size="sm"
-                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) }]}
+                    items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(storage) }]}
                 />
             ),
         },
@@ -86,8 +84,8 @@ export default function AdminStorage() {
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
                 <VStack gap={1}>
-                    <Heading level={1}>{t('admin.storageTitle')}</Heading>
-                    <Text type="supporting">{t('admin.storageDescription')}</Text>
+                    <Heading level={1}>Storage</Heading>
+                    <Text type="supporting">Review Exoscale SOS integrations and object storage configuration.</Text>
                 </VStack>
                 <CreateStorage />
             </HStack>
@@ -98,7 +96,7 @@ export default function AdminStorage() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

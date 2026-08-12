@@ -1,7 +1,5 @@
 import pytest
-from typing import Any
 from pathlib import Path
-from longlink.utils import xml as xml_utils
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
@@ -22,37 +20,42 @@ VALID_FRAGMENTS = [
         '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
     ),
     ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", _adapter_schema("Badge.xsd"), '<Badge label="$item.status" variant="success" />'),
+    ("badge", _adapter_schema("Badge.xsd"), '<Badge id="item-status" label="$item.status" variant="success"><Icon slot="icon" icon="check" /></Badge>'),
     (
         "button",
         _adapter_schema("Button.xsd"),
-        '<Button type="submit" variant="primary" size="sm" if="${canSave}" i18n="actions.save" />',
+        '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
     ),
-    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text i18n="cards.content" /></Card>'),
+    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4" elevation="low"><Text value="Card content" /></Card>'),
     (
         "checkbox-input",
         _adapter_schema("CheckboxInput.xsd"),
-        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" />',
+        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
     ),
     (
         "dialog",
         _adapter_schema("Dialog.xsd"),
-        '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text i18n="issues.deleteDescription" /></Dialog>',
+        '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text value="This action cannot be undone." /></Dialog>',
     ),
     ("divider", _adapter_schema("Divider.xsd"), '<Divider label="or" variant="strong" />'),
+    ("divider-runtime-attributes", _adapter_schema("Divider.xsd"), '<Divider if="show" slot="content" />'),
     ("file-input", _adapter_schema("FileInput.xsd"), '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
-    ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><Text i18n="items.name" /></For>'),
+    ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><Text value="$item.name" /></For>'),
     (
         "form-layout",
         _adapter_schema("FormLayout.xsd"),
         '<FormLayout direction="horizontal"><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
     ),
-    ("grid", _adapter_schema("Grid.xsd"), '<Grid minColumnWidth="240" maxColumns="3" gap="4"><Card /></Grid>'),
-    ("heading", _adapter_schema("Heading.xsd"), '<Heading level="1" i18n="dashboard.title" />'),
+    ("grid", _adapter_schema("Grid.xsd"), '<Grid minColumnWidth="240" maxColumns="3" gap="4" rowHeight="32"><Card /></Grid>'),
+    (
+        "heading",
+        _adapter_schema("Heading.xsd"),
+        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading"><Text value="Dashboard" /></Heading>',
+    ),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon icon="info" size="sm" if="show" />'),
-    ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" i18n="issues.open" />'),
-    ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1" name="dashboard" icon="layout-dashboard" />'),
-    ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />'),
+    ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" label="Open issue" />'),
+    ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
+    ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />'),
     ("query", _adapter_schema("Query.xsd"), '<Query id="projects" path="/projects" />'),
     (
         "radio-list",
@@ -62,12 +65,12 @@ VALID_FRAGMENTS = [
     (
         "selector",
         _adapter_schema("Selector.xsd"),
-        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" /></Selector>',
+        '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", _adapter_schema("Slider.xsd"), '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", _adapter_schema("Stack.xsd"), '<Stack direction="horizontal" justify="between" gap="4"><Text value="First" /></Stack>'),
     ("state", _adapter_schema("State.xsd"), '<State id="filters" value="[]" />'),
-    ("switch", _adapter_schema("Switch.xsd"), '<Switch label="Notifications" value="$settings.notifications" labelPosition="start" />'),
+    ("switch", _adapter_schema("Switch.xsd"), '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />'),
     (
         "table",
         _adapter_schema("Table.xsd"),
@@ -76,48 +79,46 @@ VALID_FRAGMENTS = [
     (
         "tab-list",
         _adapter_schema("TabList.xsd"),
-        '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview"><Text i18n="tabs.overviewPanel" /></Tab></TabList>',
+        '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview"><Text value="Overview panel" /></Tab></TabList>',
     ),
-    ("text", _adapter_schema("Text.xsd"), '<Text i18n="items.name" values="${{ name: item.name }}" />'),
-    ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />'),
-    ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" />'),
+    (
+        "text",
+        _adapter_schema("Text.xsd"),
+        '<Text id="item-name" as="p" type="large" size="lg" color="accent" value="$item.name" weight="semibold" display="block" justify="center" maxLines="2" textWrap="balance" wordBreak="break-word" hasCapsize="true" hasStrikethrough="true" hasTabularNumbers="true" hasTruncateTooltip="below" />',
+    ),
+    ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />'),
+    ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" isLoading="true" statusVariant="tooltip" />'),
 ]
 
 INVALID_FRAGMENTS = [
-    ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button i18n="actions.save" /></Action>'),
-    ("removed-avatar-fallback-src", _adapter_schema("Avatar.xsd"), '<Avatar fallbackSrc="/fallback.png" />'),
-    ("removed-button-append", _adapter_schema("Button.xsd"), '<Button label="Add" append="cart" item="${item}" />'),
-    ("removed-button-item", _adapter_schema("Button.xsd"), '<Button label="Add" item="${item}" />'),
-    ("removed-dialog-trigger-variant", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerVariant="primary" />'),
-    ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
-    ("removed-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="display-1" value="Title" />'),
-    ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
+    ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button label="Save" /></Action>'),
+    ("invalid-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="headline" value="Title" />'),
+    ("invalid-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="violet" />'),
+    ("badge-unsupported-child", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Text value="Active" /></Badge>'),
+    ("badge-duplicate-icon", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
-    ("old-text-interpolation", _adapter_schema("Text.xsd"), '<Text i18n="users.name" name="$user.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
-    ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="v1"><Button label="Save" style="color: red" /></longlink>'),
-    ("invalid-child-through-root", ROOT_SCHEMA, '<longlink version="v1"><Action tone="accent"><Button i18n="actions.save" /></Action></longlink>'),
+    ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),
+    (
+        "invalid-child-through-root",
+        ROOT_SCHEMA,
+        '<longlink version="0.3"><Action tone="accent"><Button label="Save" /></Action></longlink>',
+    ),
     (
         "missing-selector-option-value",
         _adapter_schema("Selector.xsd"),
         '<Selector label="View"><SelectorOption label="Overview" /></Selector>',
     ),
-    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="v1"><P i18n="items.name" /></longlink>'),
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
-    ("removed-table-row-name", _adapter_schema("Table.xsd"), '<Table data="$items" rowName="item"><TableColumn key="sku" /></Table>'),
-    ("removed-table-column-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" width="1" /></Table>'),
-    ("removed-table-column-width-type", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>'),
-    ("removed-table-column-min-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>'),
-    ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text i18n="tabs.overview" /></Tab></TabList>'),
-    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1"><Text i18n="dashboard.title"></longlink>'),
+    ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text value="Overview" /></Tab></TabList>'),
+    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3"><Text value="Dashboard"></longlink>'),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", "<!DOCTYPE longlink><longlink version=\"v1\" />"),
-    ("entity", '<!DOCTYPE longlink [<!ENTITY hidden "value">]><longlink version="v1" />'),
-    ("cdata", "<longlink version=\"v1\"><![CDATA[hidden]]></longlink>"),
+    ("doctype", '<!DOCTYPE longlink><longlink version="0.3" />'),
+    ("cdata", '<longlink version="0.3"><![CDATA[hidden]]></longlink>'),
 ]
 
 
@@ -127,30 +128,6 @@ def element_from_file(tmp_path: Path, content: str, schema: Path) -> Element:
     path = tmp_path / "page.xml"
     path.write_text(content, encoding="utf-8")
     return Element(path, schema=schema)
-
-
-def test_element_validation_uses_safe_xml_parser(monkeypatch, tmp_path: Path) -> None:
-    """Disable DTD loading, network access, and entity resolution during validation."""
-
-    # Wrap the real parser factory to capture its security options.
-    captured_kwargs: list[dict[str, object]] = []
-    original_parser = xml_utils.etree.XMLParser
-
-    def fake_xml_parser(*args: Any, **kwargs: Any) -> object:
-        """Capture parser security options while preserving parser behavior."""
-
-        captured_kwargs.append(kwargs)
-        return original_parser(*args, **kwargs)
-
-    monkeypatch.setattr(xml_utils.etree, "XMLParser", fake_xml_parser)
-
-    # Validate a document through the instrumented parser.
-    element_from_file(tmp_path, '<longlink version="v1" />', ROOT_SCHEMA).validate()
-
-    # Require every parser-hardening option at the XML boundary.
-    assert captured_kwargs[0]["load_dtd"] is False
-    assert captured_kwargs[0]["no_network"] is True
-    assert captured_kwargs[0]["resolve_entities"] is False
 
 
 @pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])

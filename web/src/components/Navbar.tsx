@@ -1,17 +1,15 @@
-import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Center } from '@astryxdesign/core/Center';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { Wordmark } from '@/components/Wordmark';
+import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
-    const t = useTranslator();
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
 
@@ -29,13 +27,13 @@ export function Navbar() {
                                             ? `/orgs/${memberships[0].organization.slug}`
                                             : '/organizations'
                                     }
-                                    label={t('actions.getStarted')}
+                                    label="Get Started"
                                     size="sm"
                                     variant="primary"
                                 />
                             }
                             heading={
-                                <Link href="/" label={t('common.longlinkHome')} color="inherit">
+                                <Link href="/" label="LongLink home" color="inherit">
                                     <Wordmark />
                                 </Link>
                             }

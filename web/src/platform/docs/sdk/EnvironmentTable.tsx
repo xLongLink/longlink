@@ -1,15 +1,15 @@
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 export type EnvironmentRow = { backend: ReactNode; icon: LucideIcon; name: string };
 
 /** Renders the SDK backend selected for each runtime environment. */
 export function EnvironmentTable({ environments }: { environments: EnvironmentRow[] }) {
     return (
-        <Table<Record<string, unknown>> density="compact">
+        <Table density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Environment</TableHeaderCell>

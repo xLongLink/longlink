@@ -1,24 +1,23 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Grid } from '@astryxdesign/core/Grid';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { Selector } from '@astryxdesign/core/Selector';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { PasswordInput } from '@/components/PasswordInput';
-import { useToast } from '@/hooks/use-toast';
+import { useId, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
-import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
+import { PasswordInput } from '@/components/PasswordInput';
+import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -35,7 +34,6 @@ type Values = z.infer<typeof schema>;
 
 /** Registers one database backend. */
 export default function CreateDatabase() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const formId = useId();
@@ -76,7 +74,7 @@ export default function CreateDatabase() {
 
     return (
         <>
-            <Button label={t('dialogs.connectDatabaseTitle')} clickAction={() => setOpen(true)} />
+            <Button label="Connect database" clickAction={() => setOpen(true)} />
             <Dialog
                 isOpen={open}
                 onOpenChange={handleOpenChange}
@@ -87,8 +85,8 @@ export default function CreateDatabase() {
                 <Layout
                     header={
                         <DialogHeader
-                            title={t('dialogs.connectDatabaseTitle')}
-                            subtitle={t('dialogs.connectDatabaseDescription')}
+                            title="Connect database"
+                            subtitle="Register a database backend for the LongLink Platform."
                             onOpenChange={handleOpenChange}
                         />
                     }
@@ -104,7 +102,7 @@ export default function CreateDatabase() {
                                             body:
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : t('dialogs.failedConnectDatabase'),
+                                                    : 'Failed to connect database',
                                             type: 'error',
                                         });
                                     }
@@ -117,7 +115,7 @@ export default function CreateDatabase() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.name')}
+                                                label="Name"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -133,7 +131,7 @@ export default function CreateDatabase() {
                                             render={({ field }) => (
                                                 <TextInput
                                                     ref={field.ref}
-                                                    label={t('labels.host')}
+                                                    label="Host"
                                                     value={field.value}
                                                     htmlName={field.name}
                                                     isRequired
@@ -148,7 +146,7 @@ export default function CreateDatabase() {
                                             render={({ field }) => (
                                                 <NumberInput
                                                     ref={field.ref}
-                                                    label={t('labels.port')}
+                                                    label="Port"
                                                     value={field.value}
                                                     htmlName={field.name}
                                                     isIntegerOnly
@@ -166,7 +164,7 @@ export default function CreateDatabase() {
                                         name="sslmode"
                                         render={({ field }) => (
                                             <Selector
-                                                label={t('labels.sslMode')}
+                                                label="SSL mode"
                                                 options={SSL_MODE_OPTIONS}
                                                 value={field.value}
                                                 htmlName={field.name}
@@ -185,7 +183,7 @@ export default function CreateDatabase() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.username')}
+                                                label="Username"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -201,7 +199,7 @@ export default function CreateDatabase() {
                                             <PasswordInput
                                                 key={open ? 'open' : 'closed'}
                                                 ref={field.ref}
-                                                label={t('labels.password')}
+                                                label="Password"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -218,7 +216,7 @@ export default function CreateDatabase() {
                         <LayoutFooter>
                             <Stack direction="horizontal" gap={2} justify="end">
                                 <Button
-                                    label={t('actions.cancel')}
+                                    label="Cancel"
                                     variant="ghost"
                                     isDisabled={mutation.isPending}
                                     clickAction={() => handleOpenChange(false)}
@@ -226,7 +224,7 @@ export default function CreateDatabase() {
                                 <Button
                                     form={formId}
                                     type="submit"
-                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    label={mutation.isPending ? 'Creating...' : 'Create'}
                                     variant="primary"
                                     isDisabled={!form.formState.isValid}
                                     isLoading={mutation.isPending}
