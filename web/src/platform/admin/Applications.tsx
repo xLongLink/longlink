@@ -71,10 +71,10 @@ export default function AdminApplications() {
             renderCell: (app) => <Badge label={statusLabels[app.status]} variant={statusVariants[app.status]} />,
         },
         {
-            key: 'image',
+            key: 'image_desired',
             header: t('columns.image'),
             width: proportional(2),
-            renderCell: (app) => <Text type="supporting">{app.image}</Text>,
+            renderCell: (app) => <Text type="supporting">{app.image_desired}</Text>,
         },
         {
             key: 'created_at',

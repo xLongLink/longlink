@@ -1,4 +1,5 @@
 from pydantic import Field, BaseModel
+from src.models.types import Image
 
 
 class EnvironmentMetadata(BaseModel):
@@ -15,7 +16,7 @@ class LongLinkMetadata(BaseModel):
     """Structured metadata extracted from OCI and LongLink image labels."""
 
     # Runtime
-    image: str = Field(exclude=True)
+    image: Image = Field(exclude=True)
 
     # Metadata
     title: str | None = None

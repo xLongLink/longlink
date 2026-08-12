@@ -63,6 +63,22 @@ export type ApplicationOrganizationResponse = {
 };
 
 /**
+ * ApplicationRelease
+ *
+ * Validate a requested Application release.
+ */
+export type ApplicationRelease = {
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
  * ApplicationResponse
  *
  * Represent one application in API responses.
@@ -83,22 +99,50 @@ export type ApplicationResponse = {
     slug: string;
     icon: Icon | null;
     /**
-     * Image
-     */
-    image: string;
-    /**
-     * Version
-     */
-    version: string | null;
-    /**
      * Description
      */
     description: string | null;
+    /**
+     * Image Desired
+     */
+    image_desired: string;
+    /**
+     * Version Desired
+     */
+    version_desired: string | null;
+    /**
+     * Image Deployed
+     */
+    image_deployed: string | null;
+    /**
+     * Version Deployed
+     */
+    version_deployed: string | null;
     status: Status;
     /**
      * Created At
      */
     created_at: string;
+};
+
+/**
+ * Body_request_password_reset_api_v1_auth_forgot_password_post
+ */
+export type BodyRequestPasswordResetApiV1AuthForgotPasswordPost = {
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
+ * Body_request_registration_api_v1_auth_register_post
+ */
+export type BodyRequestRegistrationApiV1AuthRegisterPost = {
+    /**
+     * Email
+     */
+    email: string;
 };
 
 /**
@@ -206,18 +250,6 @@ export type DatabaseRegistryResponse = {
  * Supported PostgreSQL SSL modes.
  */
 export type DatabaseSslMode = 'disable' | 'allow' | 'prefer' | 'require' | 'verify-ca' | 'verify-full';
-
-/**
- * EmailPayload
- *
- * Validate one canonical email identity.
- */
-export type EmailPayload = {
-    /**
-     * Email
-     */
-    email: string;
-};
 
 /**
  * EnvironmentMetadata
@@ -566,10 +598,6 @@ export type PlatformRoles = 'user' | 'administrator';
  */
 export type RegistrationComplete = {
     /**
-     * Email
-     */
-    email: string;
-    /**
      * Name
      */
     name: string;
@@ -577,6 +605,10 @@ export type RegistrationComplete = {
      * Surname
      */
     surname: string;
+    /**
+     * Email
+     */
+    email: string;
     /**
      * Password
      */
@@ -843,7 +875,7 @@ export type PasswordLoginApiV1AuthPasswordLoginPostResponses = {
 export type PasswordLoginApiV1AuthPasswordLoginPostResponse = PasswordLoginApiV1AuthPasswordLoginPostResponses[keyof PasswordLoginApiV1AuthPasswordLoginPostResponses];
 
 export type RequestPasswordResetApiV1AuthForgotPasswordPostData = {
-    body: EmailPayload;
+    body: BodyRequestPasswordResetApiV1AuthForgotPasswordPost;
     path?: never;
     query?: never;
     url: '/api/v1/auth/forgot-password';
@@ -941,7 +973,7 @@ export type ResetPasswordApiV1AuthResetPasswordPostResponses = {
 export type ResetPasswordApiV1AuthResetPasswordPostResponse = ResetPasswordApiV1AuthResetPasswordPostResponses[keyof ResetPasswordApiV1AuthResetPasswordPostResponses];
 
 export type RequestRegistrationApiV1AuthRegisterPostData = {
-    body: EmailPayload;
+    body: BodyRequestRegistrationApiV1AuthRegisterPost;
     path?: never;
     query?: never;
     url: '/api/v1/auth/register';
@@ -981,9 +1013,13 @@ export type VerifyRegistrationTokenApiV1AuthVerifyPostError = VerifyRegistration
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostResponses = {
     /**
+     * Response Verify Registration Token Api V1 Auth Verify Post
+     *
      * Successful Response
      */
-    200: EmailPayload;
+    200: {
+        [key: string]: string;
+    };
 };
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostResponse = VerifyRegistrationTokenApiV1AuthVerifyPostResponses[keyof VerifyRegistrationTokenApiV1AuthVerifyPostResponses];
@@ -1006,9 +1042,13 @@ export type GetRegistrationSetupApiV1AuthRegisterSetupGetError = GetRegistration
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponses = {
     /**
+     * Response Get Registration Setup Api V1 Auth Register Setup Get
+     *
      * Successful Response
      */
-    200: EmailPayload;
+    200: {
+        [key: string]: string;
+    };
 };
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponse = GetRegistrationSetupApiV1AuthRegisterSetupGetResponses[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetResponses];
@@ -1094,6 +1134,36 @@ export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostRes
 };
 
 export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
+
+export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostData = {
+    body: ApplicationRelease;
+    path: {
+        /**
+         * Application Id
+         */
+        application_id: string;
+    };
+    query?: never;
+    url: '/api/v1/applications/{application_id}/releases';
+};
+
+export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostError = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors];
+
+export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses = {
+    /**
+     * Successful Response
+     */
+    202: ApplicationResponse;
+};
+
+export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses];
 
 export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetData = {
     body?: never;

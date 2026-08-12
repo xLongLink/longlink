@@ -5,6 +5,7 @@ from factories import create_organization, create_ready_infrastructure
 from sqlalchemy import update
 from src.errors import ConflictError, UnavailableError
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
@@ -225,7 +226,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             organization.id,
             "Dashboard",
             "dashboard",
-            "ghcr.io/longlink/dashboard@sha256:test",
+            Image("ghcr.io/longlink/dashboard@sha256:test"),
             owner,
             {},
         )

@@ -4,6 +4,7 @@ from sqlmodel import col
 from factories import create_application, create_organization
 from sqlalchemy import update
 from src.errors import ConflictError
+from src.models.types import Image
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
 from src.database.services import applications, organizations
@@ -57,7 +58,7 @@ async def test_create_requires_running_organization() -> None:
                 organization.id,
                 "Dashboard",
                 slug="dashboard",
-                image="ghcr.io/longlink/dashboard@sha256:test",
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 user=user,
                 secrets={},
             )
@@ -67,7 +68,7 @@ async def test_create_requires_running_organization() -> None:
             organization.id,
             "Dashboard",
             slug="dashboard",
-            image="ghcr.io/longlink/dashboard@sha256:test",
+            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             version="2.0.0",
             user=user,
             secrets={},
@@ -78,8 +79,10 @@ async def test_create_requires_running_organization() -> None:
     assert str(exc.value) == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
-    assert application.image == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application.version == "2.0.0"
+    assert application.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
+    assert application.image_deployed is None
+    assert application.version_desired == "2.0.0"
+    assert application.version_deployed is None
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
@@ -96,7 +99,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
                 organization.id,
                 "Duplicate dashboard",
                 slug="dashboard",
-                image="ghcr.io/longlink/dashboard@sha256:test",
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 user=user,
                 secrets={},
             )
@@ -116,7 +119,7 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
             organization.id,
             "Reports",
             slug="reports",
-            image="ghcr.io/longlink/reports@sha256:test",
+            image=Image("ghcr.io/longlink/reports@sha256:test"),
             user=user,
             secrets={},
         )

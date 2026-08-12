@@ -72,11 +72,13 @@ async def create(claimed: Operation) -> str | None:
             return None
         application.secrets = persisted_secrets
 
-    # Reapply the workload so creation retries and release reconciliation repair deployment drift.
-    await cluster.applications.apply(application.id, organization.id.hex, application.image, application.secrets)
+    # Apply the captured desired release so reconciliation repairs workload drift.
+    image_desired = application.image_desired
+    await cluster.applications.apply(application.id, organization.id.hex, image_desired, application.secrets)
 
-    # Publish running after workload readiness.
+    # Publish the applied release only after workload readiness.
     async with session_scope() as session:
+        await applications.mark_deployed(session, application.id, image_desired)
         await applications.mark_running(session, application.id)
         await session.commit()
 
