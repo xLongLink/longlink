@@ -4,6 +4,7 @@ from sqlmodel import col
 from factories import create_application, create_organization
 from sqlalchemy import update
 from src.models.roles import OrganizationRoles
+from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
@@ -64,9 +65,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 
         assert image == "ghcr.io/longlink/dashboard:latest"
         return LongLinkMetadata(
-            image="ghcr.io/longlink/dashboard@sha256:test",
+            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             digest="sha256:test",
-            version="2.0.0",
             environments=[EnvironmentMetadata(name="API_KEY", type="string", required=True)],
         )
 
@@ -92,8 +92,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     payload = response.json()
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
-    assert payload["image"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert payload["version"] == "2.0.0"
+    assert payload["image_desired"] == "ghcr.io/longlink/dashboard@sha256:test"
+    assert payload["image_deployed"] is None
     assert "envs" not in payload
     assert "secret-value" not in response.text
 

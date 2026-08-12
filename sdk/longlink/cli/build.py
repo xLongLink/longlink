@@ -53,7 +53,7 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str, list[dict[str, object]]]:
+def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict[str, object]]:
     """Parse the configured Application environment model."""
 
     # Require the project configuration that selects the environment model.
@@ -109,7 +109,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> dict[str,
 
         environments.append(env_entry)
 
-    return {"environments": environments}
+    return environments
 
 
 def read_pyproject(root: Path) -> dict[str, object]:
@@ -198,7 +198,7 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_image_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
+def render_image_labels(metadata: Mapping[str, object], environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
@@ -212,7 +212,6 @@ def render_image_labels(metadata: Mapping[str, object], env_spec: Mapping[str, S
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
 
     # Include environment requirements only when declared.
-    environments = env_spec.get("environments") or []
     if environments:
         rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
 
@@ -481,8 +480,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         if docker_command is None:
             raise click.ClickException("Docker is required to build images")
 
-        image_id_path = build_context / "image-id.txt"
-
         # Run the Docker build and optional push.
         try:
 
@@ -490,8 +487,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
             command = [docker_command, "build"]
             command.extend(
                 [
-                    "--iidfile",
-                    str(image_id_path),
                     "-f",
                     str(dockerfile_path),
                     "-t",
@@ -500,7 +495,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
                 ]
             )
             subprocess.run(command, check=True)
-            image_id = image_id_path.read_text(encoding="utf-8").strip()
 
             # Push the tag only when requested.
             if push:
@@ -514,7 +508,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     # Report pushed images only when requested.
     if push:
         click.echo(f"- Pushed image: {image_tag}")
-    click.echo(f"- Image ID: {image_id}")
     click.echo(f"- View it with: docker image inspect {image_tag}")
     click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
     click.echo(f"- Remove it with: docker rmi {image_tag}")

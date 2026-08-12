@@ -107,17 +107,9 @@ export type ApplicationResponse = {
      */
     image_desired: string;
     /**
-     * Version Desired
-     */
-    version_desired: string | null;
-    /**
      * Image Deployed
      */
     image_deployed: string | null;
-    /**
-     * Version Deployed
-     */
-    version_deployed: string | null;
     status: Status;
     /**
      * Created At

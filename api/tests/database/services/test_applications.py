@@ -69,7 +69,6 @@ async def test_create_requires_running_organization() -> None:
             "Dashboard",
             slug="dashboard",
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-            version="2.0.0",
             user=user,
             secrets={},
         )
@@ -81,8 +80,6 @@ async def test_create_requires_running_organization() -> None:
     assert application.organization_id == organization.id
     assert application.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
     assert application.image_deployed is None
-    assert application.version_desired == "2.0.0"
-    assert application.version_deployed is None
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:

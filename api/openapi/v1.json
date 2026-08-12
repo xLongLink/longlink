@@ -2539,17 +2539,6 @@
             "type": "string",
             "title": "Image Desired"
           },
-          "version_desired": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version Desired"
-          },
           "image_deployed": {
             "anyOf": [
               {
@@ -2560,17 +2549,6 @@
               }
             ],
             "title": "Image Deployed"
-          },
-          "version_deployed": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version Deployed"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -2590,9 +2568,7 @@
           "icon",
           "description",
           "image_desired",
-          "version_desired",
           "image_deployed",
-          "version_deployed",
           "status",
           "created_at"
         ],

@@ -67,7 +67,6 @@ async def create_application(
         payload.name,
         application_slug,
         image=metadata.image,
-        version=metadata.version,
         description=payload.description,
         icon=payload.icon,
         user=user,
@@ -113,7 +112,6 @@ async def release_application(
         session,
         application_id,
         metadata.image,
-        metadata.version,
         payload.description,
         user,
     )

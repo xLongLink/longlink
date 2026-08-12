@@ -5,8 +5,6 @@ from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
-GHCR_URL = "https://ghcr.io"
-
 
 def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
     """Return sorted image-required environment names missing from submitted values."""
@@ -32,7 +30,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
         try:
             # Stop when the registry does not return a manifest.
             manifest_response = await client.get(
-                f"{GHCR_URL}/v2/{image.repository}/manifests/{image.tag_or_digest}",
+                f"https://{image.registry}/v2/{image.repository}/manifests/{image.tag_or_digest}",
                 headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json"},
             )
             if not manifest_response.is_success:
@@ -61,7 +59,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             # Stop when the config blob cannot be fetched.
-            blob_response = await client.get(f"{GHCR_URL}/v2/{image.repository}/blobs/{config_digest}")
+            blob_response = await client.get(f"https://{image.registry}/v2/{image.repository}/blobs/{config_digest}")
             if not blob_response.is_success:
                 return None
 

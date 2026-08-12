@@ -32,13 +32,11 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
             "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
             "    PORT: int = 8080\n",
-            {
-                "environments": [
-                    {"name": "LONG_API_KEY", "type": "str", "required": False, "description": "API key"},
-                    {"name": "LONG_TOKEN", "type": "str", "required": False},
-                    {"name": "PORT", "type": "int", "required": False},
-                ]
-            },
+            [
+                {"name": "LONG_API_KEY", "type": "str", "required": False, "description": "API key"},
+                {"name": "LONG_TOKEN", "type": "str", "required": False},
+                {"name": "PORT", "type": "int", "required": False},
+            ],
             id="supported-metadata",
         ),
         pytest.param(
@@ -48,12 +46,10 @@ def test_build_reports_missing_project_file_before_docker() -> None:
             "class Env(BaseModel):\n"
             "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
             "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
-            {
-                "environments": [
-                    {"name": "OPTIONAL_TOKEN", "type": "str", "required": False},
-                    {"name": "REQUIRED_TOKEN", "type": "str", "required": True},
-                ]
-            },
+            [
+                {"name": "OPTIONAL_TOKEN", "type": "str", "required": False},
+                {"name": "REQUIRED_TOKEN", "type": "str", "required": True},
+            ],
             id="positional-defaults",
         ),
     ],
@@ -63,7 +59,7 @@ def test_read_env_spec_emits_supported_environment_metadata(
     module_path: str,
     project_config: str,
     module_source: str,
-    expected_spec: dict[str, object],
+    expected_spec: list[dict[str, object]],
 ) -> None:
     """Emit supported metadata while respecting aliases and field defaults."""
 
@@ -160,14 +156,9 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
 
     def fake_run(command: list[str], check: bool) -> None:
-        """Capture Docker commands and write the expected build image id."""
+        """Capture Docker commands."""
 
         commands.append(command)
-
-        # Simulate Docker writing the requested image ID file.
-        if command[1] == "build":
-            image_id_path = Path(command[command.index("--iidfile") + 1])
-            image_id_path.write_text("sha256:demo\n", encoding="utf-8")
 
 
     def fake_which(command: str) -> str | None:
@@ -192,7 +183,6 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     assert commands[1][-1] == "localhost:15000/demo-app:dev"
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
-    assert "- Image ID: sha256:demo" in result.output
 
 
 def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
@@ -204,16 +194,7 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
         "version": "0.1.0",
         "description": "Demo app",
     }
-    env_spec = {
-        "environments": [
-            {
-                "name": "API_KEY",
-                "type": "str",
-                "required": True,
-                "description": "API key",
-            }
-        ]
-    }
+    env_spec = [{"name": "API_KEY", "type": "str", "required": True, "description": "API key"}]
 
     # Act
     labels = build.render_image_labels(metadata, env_spec)

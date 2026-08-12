@@ -38,11 +38,9 @@ class Application(PlatformModel, table=True):
 
     # Desired release
     image_desired: str = Field(max_length=512)
-    version_desired: str | None = Field(default=None, max_length=128)
 
     # Deployed release
     image_deployed: str | None = Field(default=None, max_length=512)
-    version_deployed: str | None = Field(default=None, max_length=128)
 
     # Secrets
     secrets: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))

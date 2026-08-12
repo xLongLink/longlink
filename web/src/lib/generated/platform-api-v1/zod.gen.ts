@@ -375,9 +375,7 @@ export const zApplicationResponse = z.object({
     icon: zIcon.nullable(),
     description: z.string().nullable(),
     image_desired: z.string(),
-    version_desired: z.string().nullable(),
     image_deployed: z.string().nullable(),
-    version_deployed: z.string().nullable(),
     status: zStatus,
     created_at: z.iso.datetime()
 });

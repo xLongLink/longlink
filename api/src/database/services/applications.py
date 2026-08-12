@@ -65,7 +65,6 @@ async def create(
     image: Image,
     user: User,
     secrets: dict[str, str],
-    version: str | None = None,
     description: str | None = None,
     icon: str | None = None,
 ) -> Application:
@@ -97,7 +96,6 @@ async def create(
         slug=slug,
         description=description,
         image_desired=str(image),
-        version_desired=version,
         icon=icon,
         secrets=secrets,
     )
@@ -125,7 +123,6 @@ async def release(
     session: AsyncSession,
     application_id: UUID,
     image: Image,
-    version: str | None,
     description: str | None,
     user: User,
 ) -> Application | None:
@@ -148,7 +145,6 @@ async def release(
 
     # Persist the image-derived desired release before scheduling its convergence.
     application.image_desired = str(image)
-    application.version_desired = version
     application.description = description
     application.updated_id = user.id
     application.organization = organization
@@ -200,7 +196,6 @@ async def mark_deployed(session: AsyncSession, application_id: UUID, image: str)
     if application is None or application.deleted_at is not None or application.image_desired != image:
         return
     application.image_deployed = application.image_desired
-    application.version_deployed = application.version_desired
 
 
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:

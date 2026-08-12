@@ -95,11 +95,9 @@ class ApplicationResponse(BaseModel):
 
     # Desired release
     image_desired: str
-    version_desired: str | None
 
     # Deployed release
     image_deployed: str | None
-    version_deployed: str | None
 
     # State
     status: Status
