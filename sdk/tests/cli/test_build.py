@@ -191,7 +191,6 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     # Arrange
     metadata = {
         "name": "demo",
-        "version": "0.1.0",
         "description": "Demo app",
     }
     env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
@@ -200,7 +199,6 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     labels = build.render_image_labels(metadata, env_spec)
 
     # Assert
-    assert 'LABEL org.opencontainers.image.version="0.1.0"' in labels
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
     assert "LABEL longlink.environments=" in labels
     assert "API_KEY" in labels

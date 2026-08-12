@@ -1,4 +1,4 @@
-import { Avatar as AstryxAvatar, type AvatarSize } from '@astryxdesign/core-0-3/Avatar';
+import { Avatar as AstryxAvatar } from '@astryxdesign/core-0-3/Avatar';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlEnum, resolveXmlString } from '../core/props';
 import { resolveAnchorUrl } from '../core/url';
@@ -10,7 +10,7 @@ export function Avatar({ props }: Props) {
     const src = resolveAnchorUrl(services.requestBaseUrl, resolveXmlString(props, 'src', ctx));
     const name = resolveXmlString(props, 'name', ctx);
     const alt = resolveXmlString(props, 'alt', ctx);
-    const size = resolveXmlEnum<Extract<AvatarSize, string>>(
+    const size = resolveXmlEnum(
         props,
         'size',
         ctx,

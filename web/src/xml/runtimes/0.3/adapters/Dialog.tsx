@@ -2,8 +2,8 @@ import { Button } from '@astryxdesign/core-0-3/Button';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core-0-3/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core-0-3/Layout';
 import { Stack } from '@astryxdesign/core-0-3/Stack';
-import { createContext, useState } from 'react';
-import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
+import { createContext } from 'react';
+import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
@@ -21,33 +21,21 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 /** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'isOpen', ctx);
-    const [localOpen, setLocalOpen] = useState(toXmlBoolean(binding.initialValue));
-    const isOpen = binding.bound ? toXmlBoolean(binding.currentValue) : localOpen;
+    const binding = useBindableValue(props, 'isOpen', ctx, toXmlBoolean);
     const title = resolveXmlLabel(props, ctx, services, 'Dialog', 'title');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const purpose = resolveXmlEnum(props, 'purpose', ctx, ['required', 'form', 'info'], 'info', 'Dialog');
     const variant = resolveXmlEnum(props, 'variant', ctx, ['standard', 'fullscreen'], 'standard', 'Dialog');
 
-    /** Writes open-state changes to bound or local state. */
-    function setOpen(nextOpen: boolean) {
-        setXmlBinding(binding, setLocalOpen, nextOpen);
-    }
-
-    /** Closes this dialog after a nested action succeeds. */
-    function close() {
-        setOpen(false);
-    }
-
     return (
         <>
-            {triggerLabel && <Button clickAction={() => setOpen(true)} label={triggerLabel} />}
-            <DialogCloseContext.Provider value={close}>
+            {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
+            <DialogCloseContext.Provider value={() => binding.setValue(false)}>
                 <AstryxDialog
-                    isOpen={isOpen}
+                    isOpen={binding.value}
                     maxHeight={resolveXmlSizeValue(props, 'maxHeight', ctx)}
-                    onOpenChange={setOpen}
+                    onOpenChange={binding.setValue}
                     padding={resolveXmlSpacing(props, 'padding', ctx)}
                     purpose={purpose}
                     variant={variant}
@@ -56,7 +44,7 @@ export function Dialog({ props, nodes }: Props) {
                     <Layout
                         header={
                             <DialogHeader
-                                onOpenChange={purpose === 'required' ? undefined : setOpen}
+                                onOpenChange={purpose === 'required' ? undefined : binding.setValue}
                                 subtitle={resolveXmlString(props, 'subtitle', ctx) || undefined}
                                 title={title}
                             />

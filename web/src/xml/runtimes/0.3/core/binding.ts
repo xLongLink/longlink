@@ -26,47 +26,37 @@ export function toXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue(props: ASTProps, name: string, ctx: Scope, type?: BindingType) {
+export function useBindableValue<T>(
+    props: ASTProps,
+    name: string,
+    ctx: Scope,
+    coerce: (value: unknown) => T,
+    type?: BindingType,
+    getInitialValue?: () => T
+) {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
-    const [initialValue] = useState(value);
     const target = resolveBindableTarget(rawValue, value, ctx);
     const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
+    const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
+    const [localValue, setLocalValue] = useState(() => getInitialValue?.() ?? coerce(value));
 
     return {
         bound: !!target,
-        initialValue,
-        currentValue: target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '',
-        setValue: (nextValue: unknown) => {
-            // Skip writes when the value is not bound.
-            if (!target) return;
-
-            const normalizedValue = normalizeBindableValue(type, nextValue);
+        value: target ? coerce(currentValue) : localValue,
+        setValue: (nextValue: T) => {
+            if (!target) {
+                setLocalValue(nextValue);
+                return;
+            }
 
             // Write named properties or the direct binding value slot.
-            if (target.key || 'value' in target.state) target.state[target.key ?? 'value'] = normalizedValue;
+            if (target.key || 'value' in target.state) {
+                target.state[target.key ?? 'value'] =
+                    type === 'file' && nextValue !== null && typeof nextValue === 'object' ? ref(nextValue) : nextValue;
+            }
         },
     };
-}
-
-/** Writes a control value to bound XML state or local component state. */
-export function setXmlBinding<T>(
-    binding: ReturnType<typeof useBindableValue>,
-    setLocalValue: (value: T) => void,
-    value: T
-): void {
-    if (binding.bound) binding.setValue(value);
-    else setLocalValue(value);
-}
-
-/** Normalizes control values before writing them into XML state. */
-function normalizeBindableValue(type: BindingType | undefined, value: unknown): unknown {
-    // Keep file objects outside proxy conversion.
-    if (type === 'file' && value !== null && typeof value === 'object') {
-        return ref(value);
-    }
-
-    return value;
 }
 
 /** Resolves a writable state target from a raw XML binding expression. */

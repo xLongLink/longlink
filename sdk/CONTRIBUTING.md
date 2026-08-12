@@ -28,7 +28,7 @@ uv run pytest tests    # Run tests
 
 ## Docker Labels
 
-The build command writes OCI version and description labels when available. It also writes this LongLink-specific label:
+The build command writes an OCI description label when available. It also writes this LongLink-specific label:
 
 | Label                   | Value                     | Description                                          |
 | ----------------------- | ------------------------- | ---------------------------------------------------- |

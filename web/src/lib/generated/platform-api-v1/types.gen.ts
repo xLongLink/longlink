@@ -287,10 +287,6 @@ export type Icon = 'activity' | 'arrow-right' | 'banknote' | 'bell' | 'box' | 'b
  */
 export type LongLinkMetadata = {
     /**
-     * Version
-     */
-    version?: string | null;
-    /**
      * Description
      */
     description?: string | null;

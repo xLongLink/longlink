@@ -1,6 +1,5 @@
 import { TextInput as AstryxTextInput } from '@astryxdesign/core-0-3/TextInput';
-import { useState } from 'react';
-import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
@@ -15,9 +14,7 @@ import type { Props } from '../types';
 /** Renders an accessible Astryx text input with optional Valtio binding. */
 export function TextInput({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
-    const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
+    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const label = resolveXmlLabel(props, ctx, services, 'TextInput');
     const type = resolveXmlEnum(props, 'type', ctx, ['text', 'password', 'email'], 'text', 'TextInput');
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextInput');
@@ -35,14 +32,12 @@ export function TextInput({ props }: Props) {
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
             label={label}
             labelTooltip={resolveXmlString(props, 'labelTooltip', ctx) || undefined}
-            onChange={(nextValue) => {
-                setXmlBinding(binding, setLocalValue, nextValue);
-            }}
+            onChange={binding.setValue}
             placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
             size={size}
             status={resolveXmlStatus(props, ctx)}
             type={type}
-            value={value}
+            value={binding.value}
             width={resolveXmlSizeValue(props, 'width', ctx)}
         />
     );

@@ -12,7 +12,7 @@ export type ASTInterpolationSegment = { kind: 'text'; value: string } | { kind: 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {
     name: string;
-    params?: ASTProps;
+    params: ASTProps;
     children: ASTNode[];
 };
 

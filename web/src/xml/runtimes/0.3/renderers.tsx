@@ -196,7 +196,7 @@ function getRequirements(nodes: ASTNode[]): { requiresSetup: boolean; requiresTr
     // Walk the tree until both requirements are known.
     for (const node of nodes) {
         requiresSetup ||= node.name === 'State' || node.name === 'Query';
-        requiresTranslations ||= node.params?.i18n != null;
+        requiresTranslations ||= node.params.i18n != null;
         if (requiresSetup && requiresTranslations) break;
 
         const nested = getRequirements(node.children);

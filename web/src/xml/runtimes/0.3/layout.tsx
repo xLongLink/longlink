@@ -2,7 +2,6 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useLocation } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { Wordmark } from '@/components/Wordmark';
 import TopLayout from '@/layout/TopLayout';
@@ -18,20 +17,15 @@ export default function XmlLayout({
     tabs,
     children,
 }: {
-    tabs: Record<string, string | XmlLayoutTab>;
+    tabs: Record<string, XmlLayoutTab>;
     children: ReactNode;
 }) {
     const t = useTranslator();
-    const location = useLocation();
-
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
-        const { href, active, icon } = typeof tab === 'string' ? { href: tab } : tab;
-        const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
-        const isActive =
-            active ?? `${targetUrl.pathname}${targetUrl.search}` === `${location.pathname}${location.search}`;
+        const { href, active, icon } = tab;
 
-        if (!activeHref && isActive) activeHref = href;
+        if (!activeHref && active) activeHref = href;
 
         return {
             href,

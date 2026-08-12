@@ -43,7 +43,7 @@ export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl:
 
             // Seed state and queries before rendering the component tree.
             if (node.name === 'State') {
-                const params = node.params!;
+                const params = node.params;
                 const id = params.id.kind === 'text' ? params.id.value.trim() : '';
                 const entries = Object.entries(params).filter(([key]) => key !== 'id');
 
@@ -72,7 +72,7 @@ export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl:
 
             // Seed query data before rendering the component tree.
             if (node.name === 'Query') {
-                const params = node.params!;
+                const params = node.params;
                 const id = params.id.kind === 'text' ? params.id.value.trim() : '';
                 const pathAttribute = params.path;
 
@@ -116,7 +116,7 @@ export function validateSetupNodes(nodes: ASTNode[]): void {
 function validateSetupNode(node: ASTNode): void {
     // LongLink roots accept optional metadata-only attributes.
     if (node.name === 'longlink') {
-        const params = node.params ?? {};
+        const params = node.params;
         const unsupported = Object.keys(params).filter(
             (name) => name !== 'name' && name !== 'icon' && name !== 'version'
         );
@@ -130,7 +130,7 @@ function validateSetupNode(node: ASTNode): void {
     // Validate state declarations.
     if (node.name === 'State') {
         // Require a declared state key.
-        if (!node.params?.id) throw new Error('State requires a string id');
+        if (!node.params.id) throw new Error('State requires a string id');
 
         // Keep state keys static.
         if (node.params.id.kind !== 'text') throw new Error('State id must be literal text');
@@ -153,10 +153,10 @@ function validateSetupNode(node: ASTNode): void {
     // Validate query declarations.
     if (node.name === 'Query') {
         // Require a declared query key.
-        if (!node.params?.id) throw new Error('Query requires a string id');
+        if (!node.params.id) throw new Error('Query requires a string id');
 
         // Require a query source path.
-        if (!node.params?.path) throw new Error('Query requires a string path');
+        if (!node.params.path) throw new Error('Query requires a string path');
 
         // Keep Query declarations leaf-only.
         if (node.children.length > 0) throw new Error('Query cannot have children');

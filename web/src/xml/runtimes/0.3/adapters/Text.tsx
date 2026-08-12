@@ -1,4 +1,4 @@
-import { Text as AstryxText, type TextProps } from '@astryxdesign/core-0-3/Text';
+import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
@@ -16,7 +16,7 @@ export function Text({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const value = resolveXmlValue(props, 'value', ctx);
     const content = resolveXmlContent(props, ctx, services, value, () => renderNode(nodes, ctx));
-    const type = resolveXmlEnum<Extract<TextProps['type'], string>>(
+    const type = resolveXmlEnum(
         props,
         'type',
         ctx,

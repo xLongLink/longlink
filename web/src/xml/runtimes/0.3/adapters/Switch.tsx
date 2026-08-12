@@ -1,6 +1,5 @@
 import { Switch as AstryxSwitch } from '@astryxdesign/core-0-3/Switch';
-import { useState } from 'react';
-import { setXmlBinding, toXmlBoolean, useBindableValue } from '../core/binding';
+import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
@@ -15,9 +14,7 @@ import type { Props } from '../types';
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState(toXmlBoolean(binding.initialValue));
-    const value = binding.bound ? toXmlBoolean(binding.currentValue) : localValue;
+    const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
     const labelPosition = resolveXmlEnum(props, 'labelPosition', ctx, ['start', 'end'], 'end', 'Switch');
     const labelSpacing = resolveXmlEnum(props, 'labelSpacing', ctx, ['hug', 'spread'], 'hug', 'Switch');
 
@@ -33,11 +30,9 @@ export function Switch({ props }: Props) {
             label={resolveXmlLabel(props, ctx, services, 'Switch')}
             labelPosition={labelPosition}
             labelSpacing={labelSpacing}
-            onChange={(nextValue) => {
-                setXmlBinding(binding, setLocalValue, nextValue);
-            }}
+            onChange={binding.setValue}
             status={resolveXmlStatus(props, ctx)}
-            value={value}
+            value={binding.value}
             width={resolveXmlSizeValue(props, 'width', ctx)}
         />
     );

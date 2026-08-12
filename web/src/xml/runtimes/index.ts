@@ -12,7 +12,7 @@ const runtimes: Record<string, XmlRuntime> = {
 /** Returns the declared XML runtime version from a complete document AST. */
 export function getXmlRuntimeVersion(ast: ASTNode[]): string {
     const [root] = ast;
-    const version = root?.params?.version;
+    const version = root?.params.version;
 
     if (ast.length !== 1 || root?.name !== 'longlink' || version?.kind !== 'text') {
         throw new Error('XML pages must contain exactly one versioned longlink root');

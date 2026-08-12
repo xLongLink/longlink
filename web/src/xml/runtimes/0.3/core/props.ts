@@ -105,7 +105,7 @@ export function resolveXmlContent(
 
 /** Return whether an XML node passes its optional conditional expression. */
 export function isVisibleXmlNode(node: ASTNode, ctx: Scope): boolean {
-    if (node.params?.if == null) return true;
+    if (node.params.if == null) return true;
 
     return Boolean(evaluate(node.params.if, ctx));
 }

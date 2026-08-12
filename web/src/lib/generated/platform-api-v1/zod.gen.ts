@@ -190,7 +190,6 @@ export const zApplicationCreate = z.object({
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export const zLongLinkMetadata = z.object({
-    version: z.string().nullish(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
 });

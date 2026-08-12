@@ -10,7 +10,7 @@ describe('renderNode', () => {
     });
 
     it('throws on unknown component', () => {
-        expect(() => renderXmlToMarkup([{ name: 'Unknown', children: [] }])).toThrow('Unknown component "Unknown"');
+        expect(() => renderXmlToMarkup([{ name: 'Unknown', params: {}, children: [] }])).toThrow('Unknown component "Unknown"');
     });
 
     it('resolves input props from expressions', () => {

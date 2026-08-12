@@ -3,31 +3,33 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection,
 } from '@astryxdesign/core-0-3/SideNav';
-import { useState } from 'react';
 import { renderIcon } from '@/lib/icons';
-import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { isVisibleXmlNode, requireXmlString, resolveXmlLabel, resolveXmlString } from '../core/props';
-import type { ASTNode, Props, RuntimeServices, Scope } from '../types';
+import type { Props } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
-        .map((node) => resolveSideNavItem(node, ctx, services));
+        .map((node) => ({
+            icon: resolveXmlString(node.params, 'icon', ctx),
+            label: resolveXmlLabel(node.params, ctx, services, 'SideNavItem'),
+            nodes: node.children,
+            value: requireXmlString(node.params, 'value', ctx, 'SideNavItem'),
+        }));
 
     // Side navigation without destinations is not meaningful or accessible.
     if (items.length === 0) {
         throw new Error('SideNav requires at least one SideNavItem');
     }
 
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? items[0].value));
-    const value = binding.bound ? String(binding.currentValue ?? items[0].value) : localValue;
+    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? items[0].value));
     const label = resolveXmlString(props, 'label', ctx, 'Navigation');
-    const activeItem = items.find((item) => item.value === value);
+    const activeItem = items.find((item) => item.value === binding.value);
 
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
@@ -39,12 +41,10 @@ export function SideNav({ props, nodes }: Props) {
                         return (
                             <AstryxSideNavItem
                                 icon={icon}
-                                isSelected={item.value === value}
+                                isSelected={item.value === binding.value}
                                 key={item.value}
                                 label={item.label}
-                                onClick={() => {
-                                    setXmlBinding(binding, setLocalValue, item.value);
-                                }}
+                                onClick={() => binding.setValue(item.value)}
                             />
                         );
                     })}
@@ -58,12 +58,4 @@ export function SideNav({ props, nodes }: Props) {
 /** Marks one side navigation definition consumed by its nearest SideNav. */
 export function SideNavItem(): never {
     throw new Error('SideNavItem must be used inside SideNav');
-}
-
-/** Resolves a serializable XML side navigation definition. */
-function resolveSideNavItem(node: ASTNode, ctx: Scope, services: RuntimeServices) {
-    const props = node.params ?? {};
-    const value = requireXmlString(props, 'value', ctx, 'SideNavItem');
-    const label = resolveXmlLabel(props, ctx, services, 'SideNavItem');
-    return { icon: resolveXmlString(props, 'icon', ctx), label, nodes: node.children, value };
 }

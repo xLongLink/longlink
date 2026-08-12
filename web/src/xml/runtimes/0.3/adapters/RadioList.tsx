@@ -1,6 +1,5 @@
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core-0-3/RadioList';
-import { useState } from 'react';
-import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
@@ -17,9 +16,7 @@ import type { Props } from '../types';
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
-    const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
+    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const orientation = resolveXmlEnum(props, 'orientation', ctx, ['vertical', 'horizontal'], 'vertical', 'RadioList');
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'md', 'RadioList');
 
@@ -33,13 +30,11 @@ export function RadioList({ props, nodes }: Props) {
             isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
             label={resolveXmlLabel(props, ctx, services, 'RadioList')}
-            onChange={(nextValue) => {
-                setXmlBinding(binding, setLocalValue, nextValue);
-            }}
+            onChange={binding.setValue}
             orientation={orientation}
             size={size}
             status={resolveXmlStatus(props, ctx)}
-            value={value}
+            value={binding.value}
             width={resolveXmlSizeValue(props, 'width', ctx)}
         >
             {renderNode(nodes, ctx)}

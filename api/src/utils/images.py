@@ -86,7 +86,6 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
             result = LongLinkMetadata(
                 image=Image(f"{image.registry}/{image.repository}@{digest}"),
-                version=labels.get("org.opencontainers.image.version"),
                 description=labels.get("org.opencontainers.image.description"),
             )
 

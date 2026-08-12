@@ -143,8 +143,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
-    const navigationBaseUrl = resolveApplicationHref('', organization, application);
-    const pageCacheKey = pages;
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const {
@@ -170,7 +168,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         ? `${activePage.path}\u0000${normalizedRoutePath}\u0000${activePage.tab}`
         : '';
     const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
-    const activePageStateIsCurrent = activePageState?.cacheKey === pageCacheKey;
+    const activePageStateIsCurrent = activePageState?.cacheKey === pages;
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
@@ -247,21 +245,25 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return;
         }
 
-        const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
+        const pageKey = `${pages}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
         const inFlightPageKeys = inFlightPageKeysRef.current;
 
         // Reuse completed page state for matching route instances.
-        if (existingPageState?.cacheKey === pageCacheKey && !existingPageState.loading) {
+        if (existingPageState?.cacheKey === pages && !existingPageState.loading) {
             return;
         }
 
         // Avoid duplicate requests for the same page state.
-        if (existingPageState?.cacheKey === pageCacheKey && inFlightPageKeys.has(pageKey)) {
+        if (existingPageState?.cacheKey === pages && inFlightPageKeys.has(pageKey)) {
             return;
         }
 
-        const loadingPageState = createPageState(pageCacheKey, activeRouteParams, navigationBaseUrl);
+        const loadingPageState = createPageState(
+            pages,
+            activeRouteParams,
+            resolveApplicationHref('', organization, application)
+        );
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -316,7 +318,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                         const currentPageState = current[activePageStateKey];
 
                         // Keep stale responses from replacing newer page state.
-                        if (currentPageState?.cacheKey !== pageCacheKey) {
+                        if (currentPageState?.cacheKey !== pages) {
                             return current;
                         }
 
@@ -346,7 +348,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                     const currentPageState = current[activePageStateKey];
 
                     // Keep stale failures from replacing newer page state.
-                    if (currentPageState?.cacheKey !== pageCacheKey) {
+                    if (currentPageState?.cacheKey !== pages) {
                         return current;
                     }
 
@@ -377,8 +379,9 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activePageStateKey,
         activeRouteParams,
         applicationCanLoad,
-        navigationBaseUrl,
-        pageCacheKey,
+        application,
+        organization,
+        pages,
         resolvedPagesBaseUrl,
         t,
     ]);
@@ -440,20 +443,15 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (!pageState.ast.length || pageState.cacheKey !== pageCacheKey || pageState.error) {
+        if (!pageState.ast.length || pageState.cacheKey !== pages || pageState.error) {
             return null;
         }
 
         const pageIsActive = pageStateKey === activePageStateKey;
 
         return (
-            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
-                <RenderXML
-                    key={pageStateKey}
-                    ast={pageState.ast}
-                    baseUrl={resolvedPagesBaseUrl}
-                    ctx={pageState.runtimeContext}
-                />
+            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive}>
+                <RenderXML ast={pageState.ast} baseUrl={resolvedPagesBaseUrl} ctx={pageState.runtimeContext} />
             </Stack>
         );
     });

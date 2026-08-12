@@ -1,6 +1,5 @@
 import { TextArea as AstryxTextArea } from '@astryxdesign/core-0-3/TextArea';
-import { useState } from 'react';
-import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
@@ -16,9 +15,7 @@ import type { Props } from '../types';
 /** Renders an accessible Astryx text area with optional Valtio binding. */
 export function TextArea({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState(String(binding.initialValue ?? ''));
-    const value = binding.bound ? String(binding.currentValue ?? '') : localValue;
+    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextArea');
 
     return (
@@ -34,14 +31,12 @@ export function TextArea({ props }: Props) {
             isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
             label={resolveXmlLabel(props, ctx, services, 'TextArea')}
             maxLength={resolveXmlNumber(props, 'maxLength', ctx)}
-            onChange={(nextValue) => {
-                setXmlBinding(binding, setLocalValue, nextValue);
-            }}
+            onChange={binding.setValue}
             placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
             rows={resolveXmlNumber(props, 'rows', ctx, 3)}
             size={size}
             status={resolveXmlStatus(props, ctx)}
-            value={value}
+            value={binding.value}
             width={resolveXmlSizeValue(props, 'width', ctx)}
         />
     );

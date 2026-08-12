@@ -1,6 +1,5 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
-import { useState } from 'react';
-import { setXmlBinding, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import {
     resolveXmlBoolean,
@@ -16,12 +15,7 @@ import type { Props } from '../types';
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx);
-    const [localValue, setLocalValue] = useState<number | null>(
-        binding.initialValue == null ? null : Number(binding.initialValue)
-    );
-    const currentValue = binding.currentValue == null ? null : Number(binding.currentValue);
-    const value = binding.bound ? currentValue : localValue;
+    const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : Number(value)));
     const hasClear = resolveXmlBoolean(props, 'hasClear', ctx, false);
     const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'NumberInput');
     const common = {
@@ -42,19 +36,14 @@ export function NumberInput({ props }: Props) {
         status: resolveXmlStatus(props, ctx),
         step: resolveXmlNumber(props, 'step', ctx),
         units: resolveXmlString(props, 'units', ctx) || undefined,
-        value,
+        value: binding.value,
         width: resolveXmlSizeValue(props, 'width', ctx),
     };
 
-    /** Writes a valid numeric value to bound or local state. */
-    function setValue(nextValue: number | null) {
-        setXmlBinding(binding, setLocalValue, nextValue);
-    }
-
     // Astryx uses a discriminated callback type for clearable fields.
     if (hasClear) {
-        return <AstryxNumberInput {...common} hasClear onChange={setValue} />;
+        return <AstryxNumberInput {...common} hasClear onChange={binding.setValue} />;
     }
 
-    return <AstryxNumberInput {...common} onChange={setValue} />;
+    return <AstryxNumberInput {...common} onChange={binding.setValue} />;
 }

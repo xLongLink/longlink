@@ -7,7 +7,7 @@ import { xmlComponentRegistry } from './registry';
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
-        const props = node.params ?? {};
+        const props = node.params;
 
         // Reject consumer styling and callbacks so adapters retain control of behavior.
         for (const name of Object.keys(props)) {

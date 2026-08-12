@@ -2843,17 +2843,6 @@
       },
       "LongLinkMetadata": {
         "properties": {
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
           "description": {
             "anyOf": [
               {
