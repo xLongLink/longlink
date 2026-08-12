@@ -12,37 +12,6 @@ from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 
-BUILD_CONTEXT_IGNORE_PATTERNS = (
-    ".cache",
-    ".coverage",
-    ".dockerignore",
-    ".env",
-    ".env.*",
-    ".envrc",
-    ".git",
-    ".mypy_cache",
-    ".nox",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".tox",
-    ".uv-cache",
-    ".venv",
-    "Dockerfile",
-    "__pycache__",
-    "*.db",
-    "*.db-*",
-    "*.egg-info",
-    "*.pyc",
-    "*.sqlite",
-    "*.sqlite-*",
-    "*.sqlite3",
-    "*.sqlite3-*",
-    "build",
-    "coverage.xml",
-    "dist",
-    "htmlcov",
-    "node_modules",
-)
 SAFE_GIT_DIRECTORY_NAMES = ("objects", "refs")
 SAFE_GIT_FILE_NAMES = ("HEAD", "packed-refs", "shallow")
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
@@ -326,6 +295,22 @@ def render_dockerfile(workdir: str, labels: str, sdk_version: str) -> str:
     )
 
 
+def gitignore_path(root: Path) -> Path | None:
+    """Return the closest Git ignore file that applies to one Application root."""
+
+    # Applications can be nested in a shared repository, so inherit its root ignore policy.
+    return next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
+
+
+def write_dockerignore(build_context: Path, root: Path) -> None:
+    """Write Docker ignore rules from the Application's applicable Git ignore file."""
+
+    # Docker needs its own file, but its ignore syntax supports the project's existing Git ignore rules.
+    source = gitignore_path(root)
+    rules = source.read_text(encoding="utf-8") if source is not None else ""
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n", encoding="utf-8")
+
+
 def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
     """Create Docker build artifacts for the current app."""
 
@@ -361,13 +346,10 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         env_spec,
     )
 
-    # Exclude ignored paths and symlinks whose targets escape the build context.
-    ignored_paths = shutil.ignore_patterns(*BUILD_CONTEXT_IGNORE_PATTERNS)
-
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
-        """Return ignored paths and symlinks that resolve outside the source root."""
+        """Return symlinks that resolve outside the source root."""
 
-        ignored = ignored_paths(directory, contents)
+        ignored = set()
         for name in contents:
             path = Path(directory, name)
             if path.is_symlink() and not path.resolve().is_relative_to(source_root):
@@ -382,6 +364,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         dirs_exist_ok=True,
         ignore=ignore_out_of_tree_symlinks,
     )
+
+    # Apply the repository's canonical ignore rules when Docker uploads the context.
+    write_dockerignore(build_context, root)
 
     # Copy safe Git metadata when the project is inside a repository.
     if repo_root is not None:

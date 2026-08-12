@@ -80,8 +80,8 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
-def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path: Path) -> None:
-    """Keep required project files while excluding local-only build context entries."""
+def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path) -> None:
+    """Use the project's Git ignore policy for the Docker build context."""
 
     # Arrange
     root = tmp_path / "app"
@@ -90,6 +90,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n'
     )
     (root / "main.py").write_text("app = object()\n")
+    (root / ".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
@@ -115,13 +116,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
     assert (build_context / ".git" / "HEAD").is_file()
-    assert not (build_context / ".env").exists()
-    assert not (build_context / ".env.local").exists()
-    assert not (build_context / "dev.db").exists()
-    assert not (build_context / "data.sqlite3-wal").exists()
-
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
-        assert not (build_context / directory_name).exists()
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n"
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(tmp_path: Path) -> None:

@@ -77,6 +77,7 @@ def create_engine(env: Envs) -> AsyncEngine:
     # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
     engine_kwargs["connect_args"] = urls.connect_args(
         dburl,
+        schema=env.DATABASE_SCHEMA if dburl.startswith("postgresql+asyncpg") else None,
         **({"ssl": env.DATABASE_SSLMODE} if dburl.startswith("postgresql+asyncpg") else {}),
     )
 

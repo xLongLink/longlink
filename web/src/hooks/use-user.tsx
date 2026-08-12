@@ -44,7 +44,7 @@ export function useUserProfile() {
         throw new Error('useUserProfile must be used within a UserProvider');
     }
 
-    const { data: user, error, isLoading } = context;
+    const { data: user, error, isLoading, refetch } = context;
 
     return {
         user: user ?? null,
@@ -53,6 +53,7 @@ export function useUserProfile() {
         radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,
         error: error ?? null,
+        refetch,
     };
 }
 
