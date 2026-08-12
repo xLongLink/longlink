@@ -4,7 +4,7 @@ import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from '../core/props';
+import { isXmlBoolean, isXmlNumber, isXmlString, resolveXml, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
@@ -18,7 +18,7 @@ const TOOLTIP_VALUES: readonly (boolean | LayerPlacement)[] = [true, false, 'abo
 
 /** Returns whether a value is one of an Astryx prop's supported values. */
 function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
-    return values.includes(value as T);
+    return values.some((candidate) => candidate === value);
 }
 
 /** Returns whether an optional value is absent or supported by an Astryx prop. */
@@ -29,19 +29,19 @@ function isOptionalAstryxValue<T>(value: unknown, values: readonly T[]): value i
 /** Renders an Astryx heading with explicit semantic level. */
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const id = resolveXmlString(props, 'id', ctx);
-    const type = resolveXmlString(props, 'type', ctx);
-    const color = resolveXmlString(props, 'color', ctx);
-    const level = resolveXmlNumber(props, 'level', ctx);
-    const display = resolveXmlString(props, 'display', ctx);
-    const justify = resolveXmlString(props, 'justify', ctx);
-    const textWrap = resolveXmlString(props, 'textWrap', ctx);
-    const maxLines = resolveXmlNumber(props, 'maxLines', ctx);
-    const wordBreak = resolveXmlString(props, 'wordBreak', ctx);
-    const hasCapsize = resolveXmlBoolean(props, 'hasCapsize', ctx);
-    const hasStrikethrough = resolveXmlBoolean(props, 'hasStrikethrough', ctx);
+    const id = resolveXml(props, 'id', ctx);
+    const type = resolveXml(props, 'type', ctx);
+    const color = resolveXml(props, 'color', ctx);
+    const level = resolveXml(props, 'level', ctx);
+    const display = resolveXml(props, 'display', ctx);
+    const justify = resolveXml(props, 'justify', ctx);
+    const textWrap = resolveXml(props, 'textWrap', ctx);
+    const maxLines = resolveXml(props, 'maxLines', ctx);
+    const wordBreak = resolveXml(props, 'wordBreak', ctx);
+    const hasCapsize = resolveXml(props, 'hasCapsize', ctx);
+    const hasStrikethrough = resolveXml(props, 'hasStrikethrough', ctx);
     const hasTruncateTooltip = resolveXmlValue(props, 'hasTruncateTooltip', ctx);
-    const accessibilityLevel = resolveXmlNumber(props, 'accessibilityLevel', ctx);
+    const accessibilityLevel = resolveXml(props, 'accessibilityLevel', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.
     if (!isAstryxValue(level, HEADING_LEVELS)) {
@@ -52,7 +52,7 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading accessibilityLevel must be from 1 to 6');
     }
 
-    if (maxLines != null && (!Number.isInteger(maxLines) || maxLines < 0)) {
+    if (maxLines != null && (!isXmlNumber(maxLines) || !Number.isInteger(maxLines) || maxLines < 0)) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
@@ -86,17 +86,17 @@ export function Heading({ props, nodes }: Props) {
 
     return (
         <AstryxHeading
-            id={id}
+            id={isXmlString(id) ? id : undefined}
             type={type}
             color={color}
             level={level}
             display={display}
             justify={justify}
-            maxLines={maxLines}
+            maxLines={isXmlNumber(maxLines) ? maxLines : undefined}
             textWrap={textWrap}
             wordBreak={wordBreak}
-            hasCapsize={hasCapsize}
-            hasStrikethrough={hasStrikethrough}
+            hasCapsize={isXmlBoolean(hasCapsize) ? hasCapsize : undefined}
+            hasStrikethrough={isXmlBoolean(hasStrikethrough) ? hasStrikethrough : undefined}
             accessibilityLevel={accessibilityLevel}
             hasTruncateTooltip={hasTruncateTooltip}
         >

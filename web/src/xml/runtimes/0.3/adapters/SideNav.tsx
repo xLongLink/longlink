@@ -7,7 +7,7 @@ import { renderIcon } from '@/lib/icons';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isVisibleXmlNode, requireXmlString, resolveXmlString } from '../core/props';
+import { isXmlString, isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
@@ -16,7 +16,7 @@ export function SideNav({ props, nodes }: Props) {
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
-            icon: resolveXmlString(node.params, 'icon', ctx),
+            icon: resolveXml(node.params, 'icon', ctx),
             label: requireXmlString(node.params, 'label', ctx, 'SideNavItem'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'SideNavItem'),
@@ -28,7 +28,8 @@ export function SideNav({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? items[0].value));
-    const label = resolveXmlString(props, 'label', ctx) ?? 'Navigation';
+    const labelValue = resolveXml(props, 'label', ctx);
+    const label = isXmlString(labelValue) ? labelValue : 'Navigation';
     const activeItem = items.find((item) => item.value === binding.value);
 
     return (
@@ -36,7 +37,7 @@ export function SideNav({ props, nodes }: Props) {
             <AstryxSideNav className="h-auto w-full">
                 <SideNavSection title={label} isHeaderHidden>
                     {items.map((item) => {
-                        const icon = item.icon ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 }) : undefined;
+                        const icon = isXmlString(item.icon) ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 }) : undefined;
 
                         return (
                             <AstryxSideNavItem

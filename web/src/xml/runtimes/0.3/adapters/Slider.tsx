@@ -1,43 +1,38 @@
 import { Slider as AstryxSlider } from '@astryxdesign/core-0-3/Slider';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import {
-    resolveXmlBoolean,
-    resolveXmlEnum,
-    requireXmlString,
-    resolveXmlNumber,
-    resolveXmlSizeValue,
-    resolveXmlStatus,
-    resolveXmlString,
-} from '../core/props';
+import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
+import { resolveInputStatus } from './input';
 import type { Props } from '../types';
 
 /** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));
-    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'Slider') ?? 'horizontal';
-    const valueDisplay = resolveXmlEnum(props, 'valueDisplay', ctx, ['tooltip', 'text', 'none'], 'Slider') ?? 'tooltip';
+    const orientationValue = resolveXml(props, 'orientation', ctx);
+    const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
+    const orientation = isXmlEnum(orientationValue, ['horizontal', 'vertical']) ? orientationValue : 'horizontal';
+    const valueDisplay = isXmlEnum(valueDisplayValue, ['tooltip', 'text', 'none']) ? valueDisplayValue : 'tooltip';
 
     return (
         <AstryxSlider
-            description={resolveXmlString(props, 'description', ctx) || undefined}
-            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
-            htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
+            description={(() => { const value = resolveXml(props, 'description', ctx); return isXmlString(value) ? value : undefined; })()}
+            disabledMessage={(() => { const value = resolveXml(props, 'disabledMessage', ctx); return isXmlString(value) ? value : undefined; })()}
+            htmlName={(() => { const value = resolveXml(props, 'htmlName', ctx); return isXmlString(value) ? value : undefined; })()}
+            isDisabled={(() => { const value = resolveXml(props, 'isDisabled', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isLabelHidden={(() => { const value = resolveXml(props, 'isLabelHidden', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isOptional={(() => { const value = resolveXml(props, 'isOptional', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isRequired={(() => { const value = resolveXml(props, 'isRequired', ctx); return isXmlBoolean(value) ? value : undefined; })()}
             label={requireXmlString(props, 'label', ctx, 'Slider')}
-            max={resolveXmlNumber(props, 'max', ctx) ?? 100}
-            min={resolveXmlNumber(props, 'min', ctx) ?? 0}
+            max={(() => { const value = resolveXml(props, 'max', ctx); return isXmlNumber(value) ? value : 100; })()}
+            min={(() => { const value = resolveXml(props, 'min', ctx); return isXmlNumber(value) ? value : 0; })()}
             onChange={binding.setValue}
             orientation={orientation}
-            status={resolveXmlStatus(props, ctx)}
-            step={resolveXmlNumber(props, 'step', ctx) ?? 1}
+            status={resolveInputStatus(props, ctx)}
+            step={(() => { const value = resolveXml(props, 'step', ctx); return isXmlNumber(value) ? value : 1; })()}
             value={binding.value}
             valueDisplay={valueDisplay}
-            width={resolveXmlSizeValue(props, 'width', ctx)}
+            width={(() => { const value = resolveXml(props, 'width', ctx); return isXmlString(value) || isXmlNumber(value) ? value : undefined; })()}
         />
     );
 }

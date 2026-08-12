@@ -13,9 +13,7 @@ import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import {
-    resolveXmlBoolean,
-    resolveXmlNumber,
-    resolveXmlString,
+    isXmlBoolean, isXmlNumber, isXmlString, resolveXml,
     resolveXmlValue,
 } from '../core/props';
 import type { Props } from '../types';
@@ -33,7 +31,7 @@ const TOOLTIP_VALUES: readonly (boolean | LayerPlacement)[] = [true, false, 'abo
 
 /** Returns whether a value is one of an Astryx prop's supported values. */
 function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
-    return values.includes(value as T);
+    return values.some((candidate) => candidate === value);
 }
 
 /** Returns whether an optional value is absent or supported by an Astryx prop. */
@@ -44,24 +42,24 @@ function isOptionalAstryxValue<T>(value: unknown, values: readonly T[]): value i
 /** Renders semantic Astryx text from a value or nested XML. */
 export function Text({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const id = resolveXmlString(props, 'id', ctx);
-    const as = resolveXmlString(props, 'as', ctx);
-    const type = resolveXmlString(props, 'type', ctx);
-    const size = resolveXmlString(props, 'size', ctx);
-    const color = resolveXmlString(props, 'color', ctx);
+    const id = resolveXml(props, 'id', ctx);
+    const as = resolveXml(props, 'as', ctx);
+    const type = resolveXml(props, 'type', ctx);
+    const size = resolveXml(props, 'size', ctx);
+    const color = resolveXml(props, 'color', ctx);
     const value = resolveXmlValue(props, 'value', ctx);
-    const weight = resolveXmlString(props, 'weight', ctx);
-    const display = resolveXmlString(props, 'display', ctx);
-    const justify = resolveXmlString(props, 'justify', ctx);
-    const maxLines = resolveXmlNumber(props, 'maxLines', ctx);
-    const textWrap = resolveXmlString(props, 'textWrap', ctx);
-    const wordBreak = resolveXmlString(props, 'wordBreak', ctx);
-    const hasCapsize = resolveXmlBoolean(props, 'hasCapsize', ctx);
-    const hasStrikethrough = resolveXmlBoolean(props, 'hasStrikethrough', ctx);
-    const hasTabularNumbers = resolveXmlBoolean(props, 'hasTabularNumbers', ctx);
+    const weight = resolveXml(props, 'weight', ctx);
+    const display = resolveXml(props, 'display', ctx);
+    const justify = resolveXml(props, 'justify', ctx);
+    const maxLines = resolveXml(props, 'maxLines', ctx);
+    const textWrap = resolveXml(props, 'textWrap', ctx);
+    const wordBreak = resolveXml(props, 'wordBreak', ctx);
+    const hasCapsize = resolveXml(props, 'hasCapsize', ctx);
+    const hasStrikethrough = resolveXml(props, 'hasStrikethrough', ctx);
+    const hasTabularNumbers = resolveXml(props, 'hasTabularNumbers', ctx);
     const hasTruncateTooltip = resolveXmlValue(props, 'hasTruncateTooltip', ctx);
 
-    if (maxLines != null && (!Number.isInteger(maxLines) || maxLines < 0)) {
+    if (maxLines != null && (!isXmlNumber(maxLines) || !Number.isInteger(maxLines) || maxLines < 0)) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
@@ -107,7 +105,7 @@ export function Text({ props, nodes }: Props) {
 
     return (
         <AstryxText
-            id={id}
+            id={isXmlString(id) ? id : undefined}
             type={type}
             size={size}
             color={color}
@@ -115,12 +113,12 @@ export function Text({ props, nodes }: Props) {
             display={display}
             as={as}
             justify={justify}
-            maxLines={maxLines}
+            maxLines={isXmlNumber(maxLines) ? maxLines : undefined}
             textWrap={textWrap}
             wordBreak={wordBreak}
-            hasCapsize={hasCapsize}
-            hasStrikethrough={hasStrikethrough}
-            hasTabularNumbers={hasTabularNumbers}
+            hasCapsize={isXmlBoolean(hasCapsize) ? hasCapsize : undefined}
+            hasStrikethrough={isXmlBoolean(hasStrikethrough) ? hasStrikethrough : undefined}
+            hasTabularNumbers={isXmlBoolean(hasTabularNumbers) ? hasTabularNumbers : undefined}
             hasTruncateTooltip={hasTruncateTooltip}
         >
             {value != null ? String(value) : renderNode(nodes, ctx)}

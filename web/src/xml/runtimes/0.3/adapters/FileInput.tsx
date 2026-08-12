@@ -1,15 +1,8 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import {
-    resolveXmlBoolean,
-    resolveXmlEnum,
-    requireXmlString,
-    resolveXmlNumber,
-    resolveXmlSizeValue,
-    resolveXmlString,
-    resolveXmlStatus,
-} from '../core/props';
+import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
+import { resolveInputStatus } from './input';
 import type { Props } from '../types';
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
@@ -31,24 +24,24 @@ export function FileInput({ props }: Props) {
 
     return (
         <AstryxFileInput
-            accept={resolveXmlString(props, 'accept', ctx) || undefined}
-            description={resolveXmlString(props, 'description', ctx) || undefined}
-            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
-            isLoading={resolveXmlBoolean(props, 'isLoading', ctx)}
-            isMultiple={resolveXmlBoolean(props, 'isMultiple', ctx)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
+            accept={(() => { const value = resolveXml(props, 'accept', ctx); return isXmlString(value) ? value : undefined; })()}
+            description={(() => { const value = resolveXml(props, 'description', ctx); return isXmlString(value) ? value : undefined; })()}
+            disabledMessage={(() => { const value = resolveXml(props, 'disabledMessage', ctx); return isXmlString(value) ? value : undefined; })()}
+            isDisabled={(() => { const value = resolveXml(props, 'isDisabled', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isLabelHidden={(() => { const value = resolveXml(props, 'isLabelHidden', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isLoading={(() => { const value = resolveXml(props, 'isLoading', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isMultiple={(() => { const value = resolveXml(props, 'isMultiple', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isOptional={(() => { const value = resolveXml(props, 'isOptional', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            isRequired={(() => { const value = resolveXml(props, 'isRequired', ctx); return isXmlBoolean(value) ? value : undefined; })()}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
-            maxFiles={resolveXmlNumber(props, 'maxFiles', ctx)}
-            maxSize={resolveXmlNumber(props, 'maxSize', ctx)}
-            mode={resolveXmlEnum(props, 'mode', ctx, ['dropzone', 'input'], 'FileInput') ?? 'input'}
+            maxFiles={(() => { const value = resolveXml(props, 'maxFiles', ctx); return isXmlNumber(value) ? value : undefined; })()}
+            maxSize={(() => { const value = resolveXml(props, 'maxSize', ctx); return isXmlNumber(value) ? value : undefined; })()}
+            mode={(() => { const value = resolveXml(props, 'mode', ctx); return isXmlEnum(value, ['input', 'dropzone']) ? value : 'input'; })()}
             onChange={binding.setValue}
-            placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
-            status={resolveXmlStatus(props, ctx)}
+            placeholder={(() => { const value = resolveXml(props, 'placeholder', ctx); return isXmlString(value) ? value : undefined; })()}
+            status={resolveInputStatus(props, ctx)}
             value={binding.value}
-            width={resolveXmlSizeValue(props, 'width', ctx)}
+            width={(() => { const value = resolveXml(props, 'width', ctx); return isXmlString(value) || isXmlNumber(value) ? value : undefined; })()}
         />
     );
 }

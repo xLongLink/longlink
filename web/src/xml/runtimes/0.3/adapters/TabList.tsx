@@ -3,13 +3,7 @@ import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core-0
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import {
-    isVisibleXmlNode,
-    requireXmlString,
-    resolveXmlBoolean,
-    resolveXmlEnum,
-    resolveXmlString,
-} from '../core/props';
+import { isXmlBoolean, isXmlEnum, isXmlString, isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import { resolveNavigationUrl } from '../core/url';
 import type { Props } from '../types';
 
@@ -19,7 +13,7 @@ export function TabList({ props, nodes }: Props) {
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
-            href: resolveNavigationUrl(services.navigationBaseUrl, resolveXmlString(node.params, 'to', ctx) ?? '') || undefined,
+            href: (() => { const value = resolveXml(node.params, 'to', ctx); return resolveNavigationUrl(services.navigationBaseUrl, isXmlString(value) ? value : '') || undefined; })(),
             label: requireXmlString(node.params, 'label', ctx, 'Tab'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'Tab'),
@@ -31,16 +25,19 @@ export function TabList({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'TabList') ?? 'md';
-    const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'TabList') ?? 'hug';
-    const label = resolveXmlString(props, 'label', ctx) ?? 'Tabs';
+    const sizeValue = resolveXml(props, 'size', ctx);
+    const layoutValue = resolveXml(props, 'layout', ctx);
+    const size = isXmlEnum(sizeValue, ['sm', 'md', 'lg']) ? sizeValue : 'md';
+    const layout = isXmlEnum(layoutValue, ['hug', 'fill']) ? layoutValue : 'hug';
+    const labelValue = resolveXml(props, 'label', ctx);
+    const label = isXmlString(labelValue) ? labelValue : 'Tabs';
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
         <Stack gap={4}>
             <AstryxTabList
                 aria-label={label}
-                hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx)}
+                hasDivider={(() => { const value = resolveXml(props, 'hasDivider', ctx); return isXmlBoolean(value) ? value : undefined; })()}
                 layout={layout}
                 onChange={binding.setValue}
                 size={size}

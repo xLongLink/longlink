@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from '../core/props';
+import { isXmlString, resolveXml, resolveXmlValue } from '../core/props';
 import { resolveRequestUrl } from '../core/url';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { DialogCloseContext } from './Dialog';
@@ -53,8 +53,10 @@ export async function executeAction(
         }
 
         invalidate = invalidationValue.map((value) => String(value));
-        method = resolveXmlString(props, 'method', ctx) ?? 'POST';
-        actionUrl = resolveXmlString(props, 'action', ctx) ?? '';
+        const methodValue = resolveXml(props, 'method', ctx);
+        const actionValue = resolveXml(props, 'action', ctx);
+        method = isXmlString(methodValue) ? methodValue : 'POST';
+        actionUrl = isXmlString(actionValue) ? actionValue : '';
         if (!actionUrl) throw new Error('Action requires an action URL');
 
         // Resolve action payloads at click time so they see the latest state.
@@ -130,7 +132,7 @@ export async function executeAction(
     await services.invalidate(invalidate);
 
     // Close the containing dialog only after the request and invalidation succeed.
-    if (resolveXmlBoolean(props, 'closeDialog', ctx)) closeDialog?.();
+    if (resolveXml(props, 'closeDialog', ctx)) closeDialog?.();
 
     toast({ body: `Request completed with status ${response.status}` });
 }
@@ -141,18 +143,23 @@ function createActionFormData(value: unknown): FormData {
     if (typeof FormData !== 'undefined' && value instanceof FormData) return value;
 
     // Require object-shaped form expressions.
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    if (!isRecord(value)) {
         throw new Error('form must evaluate to an object');
     }
 
     const formData = new FormData();
 
     // Append each object entry to the multipart payload.
-    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, entry] of Object.entries(value)) {
         appendActionFormValue(formData, key, entry);
     }
 
     return formData;
+}
+
+/** Returns whether a value is a non-array object with string keys. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /** Appends one XML action form value to a multipart payload. */

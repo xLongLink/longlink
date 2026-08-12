@@ -3,12 +3,7 @@ import { Text } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { renderNode } from '../core/node';
 import {
-    readXmlProp,
-    isVisibleXmlNode,
-    requireXmlString,
-    resolveXmlBoolean,
-    resolveXmlEnum,
-    resolveXmlString,
+    isXmlBoolean, isXmlEnum, isXmlString, readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml,
     resolveXmlValue,
 } from '../core/props';
 import { readSafeProperty } from '../expressions';
@@ -39,10 +34,17 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    const density = resolveXmlEnum(props, 'density', ctx, ['compact', 'balanced', 'spacious'], 'Table') ?? 'balanced';
-    const dividers = resolveXmlEnum(props, 'dividers', ctx, ['rows', 'columns', 'grid', 'none'], 'Table') ?? 'rows';
-    const verticalAlign = resolveXmlEnum(props, 'verticalAlign', ctx, ['middle', 'top', 'bottom'], 'Table') ?? 'middle';
-    const textOverflow = resolveXmlEnum(props, 'textOverflow', ctx, ['wrap', 'truncate'], 'Table') ?? 'wrap';
+    const densityValue = resolveXml(props, 'density', ctx);
+    const dividersValue = resolveXml(props, 'dividers', ctx);
+    const verticalAlignValue = resolveXml(props, 'verticalAlign', ctx);
+    const textOverflowValue = resolveXml(props, 'textOverflow', ctx);
+    const hasHover = resolveXml(props, 'hasHover', ctx);
+    const idKey = resolveXml(props, 'idKey', ctx);
+    const isStriped = resolveXml(props, 'isStriped', ctx);
+    const density = isXmlEnum(densityValue, ['compact', 'balanced', 'spacious']) ? densityValue : 'balanced';
+    const dividers = isXmlEnum(dividersValue, ['rows', 'columns', 'grid', 'none']) ? dividersValue : 'rows';
+    const verticalAlign = isXmlEnum(verticalAlignValue, ['middle', 'top', 'bottom']) ? verticalAlignValue : 'middle';
+    const textOverflow = isXmlEnum(textOverflowValue, ['wrap', 'truncate']) ? textOverflowValue : 'wrap';
     return (
         <AstryxTable
             columns={columns}
@@ -54,9 +56,9 @@ export function Table({ props, nodes }: Props) {
                     {props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table')}
                 </Text>
             }
-            hasHover={resolveXmlBoolean(props, 'hasHover', ctx)}
-            idKey={resolveXmlString(props, 'idKey', ctx) || undefined}
-            isStriped={resolveXmlBoolean(props, 'isStriped', ctx)}
+            hasHover={isXmlBoolean(hasHover) ? hasHover : undefined}
+            idKey={isXmlString(idKey) ? idKey : undefined}
+            isStriped={isXmlBoolean(isStriped) ? isStriped : undefined}
             textOverflow={textOverflow}
             verticalAlign={verticalAlign}
         />
@@ -89,8 +91,10 @@ function buildColumn(
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const header = resolveXmlString(props, 'header', ctx) ?? key.value;
-    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'TableColumn') ?? 'start';
+    const headerValue = resolveXml(props, 'header', ctx);
+    const alignValue = resolveXml(props, 'align', ctx);
+    const header = isXmlString(headerValue) ? headerValue : key.value;
+    const align = isXmlEnum(alignValue, ['start', 'center', 'end']) ? alignValue : 'start';
     const cellNodes = node.children;
 
     return {

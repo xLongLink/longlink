@@ -1,16 +1,8 @@
 import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import {
-    requireXmlString,
-    isVisibleXmlNode,
-    readXmlProp,
-    resolveXmlBoolean,
-    resolveXmlEnum,
-    resolveXmlSizeValue,
-    resolveXmlStatus,
-    resolveXmlString,
-} from '../core/props';
+import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { resolveInputStatus } from './input';
 import type { Props } from '../types';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
@@ -21,9 +13,11 @@ export function Selector({ props, nodes }: Props) {
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => {
             const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
-            const label = resolveXmlString(node.params, 'label', ctx) ?? value;
+            const labelValue = resolveXml(node.params, 'label', ctx);
+            const label = isXmlString(labelValue) ? labelValue : value;
+            const disabledValue = resolveXml(node.params, 'isDisabled', ctx);
 
-            return { value, label, disabled: resolveXmlBoolean(node.params, 'isDisabled', ctx) };
+            return { value, label, disabled: isXmlBoolean(disabledValue) ? disabledValue : undefined };
         });
 
     // Selectors require at least one serializable option.
@@ -31,24 +25,36 @@ export function Selector({ props, nodes }: Props) {
         throw new Error('Selector requires at least one SelectorOption');
     }
 
-    const hasClear = resolveXmlBoolean(props, 'hasClear', ctx);
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'Selector') ?? 'md';
+    const hasClear = resolveXml(props, 'hasClear', ctx) === true;
+    const sizeValue = resolveXml(props, 'size', ctx);
+    const description = resolveXml(props, 'description', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
+    const hasSearch = resolveXml(props, 'hasSearch', ctx);
+    const htmlName = resolveXml(props, 'htmlName', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const isOptional = resolveXml(props, 'isOptional', ctx);
+    const isRequired = resolveXml(props, 'isRequired', ctx);
+    const placeholder = resolveXml(props, 'placeholder', ctx);
+    const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
+    const width = resolveXml(props, 'width', ctx);
+    const size = isXmlEnum(sizeValue, ['sm', 'md', 'lg']) ? sizeValue : 'md';
     const common = {
-        description: resolveXmlString(props, 'description', ctx) || undefined,
-        disabledMessage: resolveXmlString(props, 'disabledMessage', ctx) || undefined,
-        hasSearch: resolveXmlBoolean(props, 'hasSearch', ctx),
-        htmlName: resolveXmlString(props, 'htmlName', ctx) || undefined,
-        isDisabled: resolveXmlBoolean(props, 'isDisabled', ctx),
-        isLabelHidden: resolveXmlBoolean(props, 'isLabelHidden', ctx),
-        isOptional: resolveXmlBoolean(props, 'isOptional', ctx),
-        isRequired: resolveXmlBoolean(props, 'isRequired', ctx),
+        description: isXmlString(description) ? description : undefined,
+        disabledMessage: isXmlString(disabledMessage) ? disabledMessage : undefined,
+        hasSearch: isXmlBoolean(hasSearch) ? hasSearch : undefined,
+        htmlName: isXmlString(htmlName) ? htmlName : undefined,
+        isDisabled: isXmlBoolean(isDisabled) ? isDisabled : undefined,
+        isLabelHidden: isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined,
+        isOptional: isXmlBoolean(isOptional) ? isOptional : undefined,
+        isRequired: isXmlBoolean(isRequired) ? isRequired : undefined,
         label: requireXmlString(props, 'label', ctx, 'Selector'),
         options,
-        placeholder: resolveXmlString(props, 'placeholder', ctx) || undefined,
-        searchPlaceholder: resolveXmlString(props, 'searchPlaceholder', ctx) || undefined,
+        placeholder: isXmlString(placeholder) ? placeholder : undefined,
+        searchPlaceholder: isXmlString(searchPlaceholder) ? searchPlaceholder : undefined,
         size,
-        status: resolveXmlStatus(props, ctx),
-        width: resolveXmlSizeValue(props, 'width', ctx),
+        status: resolveInputStatus(props, ctx),
+        width: isXmlString(width) || isXmlNumber(width) ? width : undefined,
     };
 
     // Astryx uses a discriminated value contract for clearable selectors.
