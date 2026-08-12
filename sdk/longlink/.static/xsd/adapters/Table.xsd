@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="TableType">
     <xsd:sequence><xsd:element ref="TableColumn" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
     <xsd:attribute name="data" type="NonBlankStringType" use="required" />
@@ -12,7 +12,7 @@
     <xsd:attribute name="textOverflow" type="TableTextOverflowType" use="optional" default="wrap" />
     <xsd:attribute name="isStriped" type="xsd:string" use="optional" />
     <xsd:attribute name="hasHover" type="xsd:string" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
@@ -20,7 +20,7 @@
     <xsd:attribute name="field" type="FieldPathType" use="optional" />
     <xsd:attribute name="header" type="xsd:string" use="required" />
     <xsd:attribute name="align" type="AlignType" use="optional" default="start" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Table" type="TableType">
     <xsd:annotation><xsd:documentation>Renders row data with the Astryx Table API.</xsd:documentation></xsd:annotation>

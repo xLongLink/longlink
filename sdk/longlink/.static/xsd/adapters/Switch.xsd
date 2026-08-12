@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="SwitchType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
@@ -19,7 +19,7 @@
     <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
     <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
     <xsd:attribute name="isLoading" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">
     <xsd:annotation><xsd:documentation>Collects an on or off setting with Astryx Switch.</xsd:documentation></xsd:annotation>

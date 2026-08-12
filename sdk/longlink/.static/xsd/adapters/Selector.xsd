@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="SelectorType">
     <xsd:sequence><xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
@@ -26,13 +26,13 @@
     <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
     <xsd:attribute name="isLoading" type="xsd:boolean" use="optional" />
     <xsd:attribute name="isDefaultOpen" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="SelectorOptionType">
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Selector" type="SelectorType">
     <xsd:annotation><xsd:documentation>Collects one value from data-oriented Astryx options.</xsd:documentation></xsd:annotation>

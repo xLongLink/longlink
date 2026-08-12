@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="AvatarType">
     <xsd:attribute name="src" type="xsd:string" use="optional" />
     <xsd:attribute name="name" type="xsd:string" use="optional" />
     <xsd:attribute name="alt" type="xsd:string" use="optional" />
     <xsd:attribute name="size" type="AvatarSizeType" use="optional" default="md" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Avatar" type="AvatarType">
     <xsd:annotation><xsd:documentation>Renders a data-oriented Astryx avatar.</xsd:documentation></xsd:annotation>

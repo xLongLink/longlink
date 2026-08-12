@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:attributeGroup name="XmlRuntimeAttributes">
+    <xsd:annotation><xsd:documentation>XML runtime attributes. Every other attribute must match the corresponding Astryx component prop.</xsd:documentation></xsd:annotation>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attribute name="slot" type="xsd:string" use="optional" />
+  </xsd:attributeGroup>
   <xsd:simpleType name="NonBlankStringType">
     <xsd:restriction base="xsd:string">
       <xsd:minLength value="1" />
@@ -76,6 +81,29 @@
       <xsd:enumeration value="sm" />
       <xsd:enumeration value="md" />
       <xsd:enumeration value="lg" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="IconColorType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary" />
+      <xsd:enumeration value="secondary" />
+      <xsd:enumeration value="tertiary" />
+      <xsd:enumeration value="disabled" />
+      <xsd:enumeration value="accent" />
+      <xsd:enumeration value="success" />
+      <xsd:enumeration value="error" />
+      <xsd:enumeration value="warning" />
+      <xsd:enumeration value="inherit" />
+      <xsd:enumeration value="blue" />
+      <xsd:enumeration value="red" />
+      <xsd:enumeration value="green" />
+      <xsd:enumeration value="gray" />
+      <xsd:enumeration value="cyan" />
+      <xsd:enumeration value="teal" />
+      <xsd:enumeration value="yellow" />
+      <xsd:enumeration value="orange" />
+      <xsd:enumeration value="pink" />
+      <xsd:enumeration value="purple" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="CompactSizeType">

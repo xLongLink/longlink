@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="StateType">
     <xsd:attribute name="id" type="xsd:string" use="required" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
   <xsd:element name="State" type="StateType">

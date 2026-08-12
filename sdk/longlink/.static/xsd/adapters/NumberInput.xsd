@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="NumberInputType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
@@ -26,7 +26,7 @@
     <xsd:attribute name="isIntegerOnly" type="xsd:string" use="optional" />
     <xsd:attribute name="hasClear" type="xsd:string" use="optional" />
     <xsd:attribute name="hasAutoFocus" type="xsd:boolean" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="NumberInput" type="NumberInputType">
     <xsd:annotation><xsd:documentation>Collects a numeric value with Astryx validation.</xsd:documentation></xsd:annotation>

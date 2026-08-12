@@ -38,6 +38,7 @@ VALID_FRAGMENTS = [
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text value="This action cannot be undone." /></Dialog>',
     ),
     ("divider", _adapter_schema("Divider.xsd"), '<Divider label="or" variant="strong" />'),
+    ("divider-runtime-attributes", _adapter_schema("Divider.xsd"), '<Divider if="show" slot="content" />'),
     ("file-input", _adapter_schema("FileInput.xsd"), '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
     ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><Text value="$item.name" /></For>'),
     (
@@ -97,8 +98,7 @@ INVALID_FRAGMENTS = [
     ("removed-dialog-trigger-variant", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerVariant="primary" />'),
     ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
     ("invalid-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="headline" value="Title" />'),
-    ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
-    ("badge-unknown-slot", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Icon slot="endContent" icon="check" /></Badge>'),
+    ("invalid-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="violet" />'),
     ("badge-unsupported-child", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Text value="Active" /></Badge>'),
     ("badge-duplicate-icon", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),

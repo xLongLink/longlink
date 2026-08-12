@@ -33,7 +33,9 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
 
         // Render registered XML components directly.
         if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={props} nodes={node.children} />;
+            const { slot: _slot, ...adapterProps } = props;
+
+            return <RegisteredComponent key={index} props={adapterProps} nodes={node.children} />;
         }
 
         // Delegate loop nodes to the scoped core renderer.

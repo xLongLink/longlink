@@ -60,11 +60,7 @@ export function useBindableValue<T>(
 }
 
 /** Resolves a writable state target from a raw XML binding expression. */
-function resolveBindableTarget(
-    attribute: ASTProps[string] | undefined,
-    value: unknown,
-    ctx: Scope
-): BindingTarget | undefined {
+function resolveBindableTarget(attribute: ASTProps[string] | undefined, value: unknown, ctx: Scope): BindingTarget | undefined {
     // Use resolved proxy values directly.
     if (isBindableValue(value)) return { state: value };
 

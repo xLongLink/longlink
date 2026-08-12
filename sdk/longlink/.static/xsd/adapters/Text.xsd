@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="TextType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="id" type="xsd:string" use="optional" />
@@ -19,7 +19,7 @@
     <xsd:attribute name="hasStrikethrough" type="xsd:boolean" use="optional" />
     <xsd:attribute name="hasTabularNumbers" type="xsd:boolean" use="optional" />
     <xsd:attribute name="hasTruncateTooltip" type="TruncateTooltipType" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Text" type="TextType">
     <xsd:annotation><xsd:documentation>Renders semantic Astryx text.</xsd:documentation></xsd:annotation>

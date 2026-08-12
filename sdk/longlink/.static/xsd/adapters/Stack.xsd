@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="StackType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="direction" type="OrientationType" use="optional" default="vertical" />
@@ -16,7 +16,7 @@
     <xsd:attribute name="height" type="xsd:string" use="optional" />
     <xsd:attribute name="maxWidth" type="xsd:string" use="optional" />
     <xsd:attribute name="minHeight" type="xsd:string" use="optional" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Stack" type="StackType">
     <xsd:annotation><xsd:documentation>Arranges XML children with Astryx Stack.</xsd:documentation></xsd:annotation>

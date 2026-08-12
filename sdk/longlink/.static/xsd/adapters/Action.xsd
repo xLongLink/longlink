@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="ActionType">
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
@@ -11,7 +11,7 @@
     <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
     <xsd:attribute name="closeDialog" type="xsd:string" use="optional" />
     <xsd:attribute name="method" type="ActionMethodType" use="optional" default="POST" />
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">
     <xsd:annotation><xsd:documentation>Runs an app-relative request from its child trigger.</xsd:documentation></xsd:annotation>
