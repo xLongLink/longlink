@@ -81,7 +81,9 @@ function buildColumn(
     const key = readXmlProp(props, 'key');
 
     // Column keys and field paths are literal identifiers, not expressions.
-    if (key?.kind !== 'text' || !key.value.trim()) throw new Error('TableColumn requires a string key');
+    if (key?.kind !== 'text' || !key.value.trim()) {
+        throw new Error('TableColumn requires a string key');
+    }
 
     const fieldAttribute = readXmlProp(props, 'field');
     if (fieldAttribute != null && fieldAttribute.kind !== 'text') {
@@ -103,13 +105,17 @@ function buildColumn(
         key: key.value,
         renderCell: (row) => {
             const value = field.split('.').reduce<unknown>((current, segment) => {
-                if (current == null || typeof current !== 'object') return undefined;
+                if (current == null || typeof current !== 'object') {
+                    return undefined;
+                }
 
                 return readSafeProperty(current, segment);
             }, row);
 
             // Shorthand columns render the resolved field value directly.
-            if (cellNodes.length === 0) return value == null ? '' : String(value);
+            if (cellNodes.length === 0) {
+                return value == null ? '' : String(value);
+            }
 
             const rowCtx: Scope = {
                 parent: ctx,

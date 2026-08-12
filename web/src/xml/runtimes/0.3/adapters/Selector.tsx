@@ -16,6 +16,7 @@ export function Selector({ props, nodes }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : String(value)));
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
+    const variant = resolveXml(props, 'variant', ctx);
     const options = nodes
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => {
@@ -33,54 +34,65 @@ export function Selector({ props, nodes }: Props) {
     }
 
     const hasClear = resolveXml(props, 'hasClear', ctx) === true;
-    const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
-    const hasSearch = resolveXml(props, 'hasSearch', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
+    const hasSearch = resolveXml(props, 'hasSearch', ctx);
+    const isLoading = resolveXml(props, 'isLoading', ctx);
+    const placement = resolveXml(props, 'placement', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
-    const isLoading = resolveXml(props, 'isLoading', ctx);
-    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
-    const placement = resolveXml(props, 'placement', ctx);
+    const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
-    const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
-    const variant = resolveXml(props, 'variant', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
+    const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
-    if (size != null && !isXmlEnum(size, SELECTOR_SIZES)) throw new Error(`Unsupported Selector size '${String(size)}'`);
-    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) throw new Error(`Unsupported Selector placement '${String(placement)}'`);
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
-    if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) throw new Error(`Unsupported Selector variant '${String(variant)}'`);
+    if (size != null && !isXmlEnum(size, SELECTOR_SIZES)) {
+        throw new Error(`Unsupported Selector size '${String(size)}'`);
+    }
+
+    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) {
+        throw new Error(`Unsupported Selector placement '${String(placement)}'`);
+    }
+
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+        throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
+    }
+
+    if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
+        throw new Error(`Unsupported Selector variant '${String(variant)}'`);
+    }
     const common = {
-        description: isXmlString(description) ? description : undefined,
-        disabledMessage: isXmlString(disabledMessage) ? disabledMessage : undefined,
-        hasSearch: isXmlBoolean(hasSearch) ? hasSearch : undefined,
+        size,
+        label: requireXmlString(props, 'label', ctx, 'Selector'),
+        value: binding.value,
+        width: isXmlString(width) || isXmlNumber(width) ? width : undefined,
+        status: resolveInputStatus(props, ctx),
+        options,
+        variant,
         htmlName: isXmlString(htmlName) ? htmlName : undefined,
-        isDisabled: isXmlBoolean(isDisabled) ? isDisabled : undefined,
-        isDefaultOpen: isXmlBoolean(isDefaultOpen) ? isDefaultOpen : undefined,
-        isLabelHidden: isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined,
+        hasSearch: isXmlBoolean(hasSearch) ? hasSearch : undefined,
         isLoading: isXmlBoolean(isLoading) ? isLoading : undefined,
+        placement,
+        isDisabled: isXmlBoolean(isDisabled) ? isDisabled : undefined,
         isOptional: isXmlBoolean(isOptional) ? isOptional : undefined,
         isRequired: isXmlBoolean(isRequired) ? isRequired : undefined,
-        label: requireXmlString(props, 'label', ctx, 'Selector'),
-        labelTooltip: isXmlString(labelTooltip) ? labelTooltip : undefined,
-        options,
-        placement,
+        description: isXmlString(description) ? description : undefined,
         placeholder: isXmlString(placeholder) ? placeholder : undefined,
-        searchPlaceholder: isXmlString(searchPlaceholder) ? searchPlaceholder : undefined,
-        size,
-        status: resolveInputStatus(props, ctx),
+        labelTooltip: isXmlString(labelTooltip) ? labelTooltip : undefined,
+        isDefaultOpen: isXmlBoolean(isDefaultOpen) ? isDefaultOpen : undefined,
+        isLabelHidden: isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined,
         statusVariant,
-        variant,
-        width: isXmlString(width) || isXmlNumber(width) ? width : undefined,
+        disabledMessage: isXmlString(disabledMessage) ? disabledMessage : undefined,
+        searchPlaceholder: isXmlString(searchPlaceholder) ? searchPlaceholder : undefined,
     };
 
     // Astryx uses a discriminated value contract for clearable selectors.
     if (hasClear) {
-        return <AstryxSelector {...common} hasClear onChange={binding.setValue} value={binding.value} />;
+        return <AstryxSelector {...common} hasClear onChange={binding.setValue} />;
     }
 
     return <AstryxSelector {...common} onChange={binding.setValue} value={binding.value ?? undefined} />;

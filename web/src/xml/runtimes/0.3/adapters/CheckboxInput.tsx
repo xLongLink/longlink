@@ -13,35 +13,37 @@ export function CheckboxInput({ props }: Props) {
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
-    const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isReadOnly = resolveXml(props, 'isReadOnly', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
+    const description = resolveXml(props, 'description', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && !isXmlEnum(size, CHECKBOX_SIZES)) throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
+    if (size != null && !isXmlEnum(size, CHECKBOX_SIZES)) {
+        throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
+    }
 
     return (
         <AstryxCheckboxInput
-            description={isXmlString(description) ? description : undefined}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
+            size={size}
+            label={requireXmlString(props, 'label', ctx, 'CheckboxInput')}
+            value={binding.value}
+            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            status={resolveInputStatus(props, ctx)}
             htmlName={isXmlString(htmlName) ? htmlName : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            onChange={binding.setValue}
             isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
+            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
             isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
             isReadOnly={isXmlBoolean(isReadOnly) ? isReadOnly : undefined}
             isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            label={requireXmlString(props, 'label', ctx, 'CheckboxInput')}
-            onChange={binding.setValue}
-            size={size}
-            status={resolveInputStatus(props, ctx)}
-            value={binding.value}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            description={isXmlString(description) ? description : undefined}
+            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
         />
     );
 }

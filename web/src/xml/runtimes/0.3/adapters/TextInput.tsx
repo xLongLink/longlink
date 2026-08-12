@@ -16,24 +16,32 @@ export function TextInput({ props }: Props) {
     const type = resolveXml(props, 'type', ctx);
     const size = resolveXml(props, 'size', ctx);
     const label = requireXmlString(props, 'label', ctx, 'TextInput');
-    const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
-    const hasAutoFocus = resolveXml(props, 'hasAutoFocus', ctx);
+    const width = resolveXml(props, 'width', ctx);
     const hasClear = resolveXml(props, 'hasClear', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
-    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
-    const width = resolveXml(props, 'width', ctx);
+    const hasAutoFocus = resolveXml(props, 'hasAutoFocus', ctx);
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (type != null && !isXmlEnum(type, TEXT_INPUT_TYPES)) throw new Error(`Unsupported TextInput type '${String(type)}'`);
-    if (size != null && !isXmlEnum(size, TEXT_INPUT_SIZES)) throw new Error(`Unsupported TextInput size '${String(size)}'`);
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) throw new Error(`Unsupported TextInput statusVariant '${String(statusVariant)}'`);
+    if (type != null && !isXmlEnum(type, TEXT_INPUT_TYPES)) {
+        throw new Error(`Unsupported TextInput type '${String(type)}'`);
+    }
+
+    if (size != null && !isXmlEnum(size, TEXT_INPUT_SIZES)) {
+        throw new Error(`Unsupported TextInput size '${String(size)}'`);
+    }
+
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+        throw new Error(`Unsupported TextInput statusVariant '${String(statusVariant)}'`);
+    }
 
     return (
         <AstryxTextInput
@@ -41,22 +49,22 @@ export function TextInput({ props }: Props) {
             size={size}
             label={label}
             value={binding.value}
-            description={isXmlString(description) ? description : undefined}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
-            hasAutoFocus={isXmlBoolean(hasAutoFocus) ? hasAutoFocus : undefined}
+            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            status={resolveInputStatus(props, ctx)}
             hasClear={isXmlBoolean(hasClear) ? hasClear : undefined}
             htmlName={isXmlString(htmlName) ? htmlName : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            onChange={binding.setValue}
             isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
+            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
             isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
             isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
-            onChange={binding.setValue}
+            description={isXmlString(description) ? description : undefined}
             placeholder={isXmlString(placeholder) ? placeholder : undefined}
-            status={resolveInputStatus(props, ctx)}
+            hasAutoFocus={isXmlBoolean(hasAutoFocus) ? hasAutoFocus : undefined}
+            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
+            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
             statusVariant={statusVariant}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
         />
     );
 }

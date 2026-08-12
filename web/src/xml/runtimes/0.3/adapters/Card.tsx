@@ -11,26 +11,34 @@ const SPACING_VALUES = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 /** Renders an Astryx card container. */
 export function Card({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const padding = resolveXml(props, 'padding', ctx);
-    const elevation = resolveXml(props, 'elevation', ctx);
-    const variant = resolveXml(props, 'variant', ctx);
     const width = resolveXml(props, 'width', ctx);
     const height = resolveXml(props, 'height', ctx);
+    const padding = resolveXml(props, 'padding', ctx);
+    const variant = resolveXml(props, 'variant', ctx);
     const maxWidth = resolveXml(props, 'maxWidth', ctx);
+    const elevation = resolveXml(props, 'elevation', ctx);
     const minHeight = resolveXml(props, 'minHeight', ctx);
 
-    if (padding != null && !isXmlEnum(padding, SPACING_VALUES)) throw new Error(`Unsupported Card padding '${String(padding)}'`);
-    if (elevation != null && !isXmlEnum(elevation, CARD_ELEVATIONS)) throw new Error(`Unsupported Card elevation '${String(elevation)}'`);
-    if (variant != null && !isXmlEnum(variant, CARD_VARIANTS)) throw new Error(`Unsupported Card variant '${String(variant)}'`);
+    if (padding != null && !isXmlEnum(padding, SPACING_VALUES)) {
+        throw new Error(`Unsupported Card padding '${String(padding)}'`);
+    }
+
+    if (elevation != null && !isXmlEnum(elevation, CARD_ELEVATIONS)) {
+        throw new Error(`Unsupported Card elevation '${String(elevation)}'`);
+    }
+
+    if (variant != null && !isXmlEnum(variant, CARD_VARIANTS)) {
+        throw new Error(`Unsupported Card variant '${String(variant)}'`);
+    }
 
     return (
         <AstryxCard
             width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
-            elevation={elevation}
             height={isXmlString(height) || isXmlNumber(height) ? height : undefined}
             padding={padding}
             variant={variant}
             maxWidth={isXmlString(maxWidth) || isXmlNumber(maxWidth) ? maxWidth : undefined}
+            elevation={elevation}
             minHeight={isXmlString(minHeight) || isXmlNumber(minHeight) ? minHeight : undefined}
         >
             {renderNode(nodes, ctx)}

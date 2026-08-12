@@ -15,41 +15,49 @@ export function Switch({ props }: Props) {
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
-    const labelPosition = resolveXml(props, 'labelPosition', ctx);
-    const labelSpacing = resolveXml(props, 'labelSpacing', ctx);
-    const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
+    const description = resolveXml(props, 'description', ctx);
+    const labelSpacing = resolveXml(props, 'labelSpacing', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const labelPosition = resolveXml(props, 'labelPosition', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (labelPosition != null && !isXmlEnum(labelPosition, SWITCH_LABEL_POSITIONS)) throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
-    if (labelSpacing != null && !isXmlEnum(labelSpacing, SWITCH_LABEL_SPACINGS)) throw new Error(`Unsupported Switch labelSpacing '${String(labelSpacing)}'`);
-    if (size != null && !isXmlEnum(size, SWITCH_SIZES)) throw new Error(`Unsupported Switch size '${String(size)}'`);
+    if (labelPosition != null && !isXmlEnum(labelPosition, SWITCH_LABEL_POSITIONS)) {
+        throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
+    }
+
+    if (labelSpacing != null && !isXmlEnum(labelSpacing, SWITCH_LABEL_SPACINGS)) {
+        throw new Error(`Unsupported Switch labelSpacing '${String(labelSpacing)}'`);
+    }
+
+    if (size != null && !isXmlEnum(size, SWITCH_SIZES)) {
+        throw new Error(`Unsupported Switch size '${String(size)}'`);
+    }
 
     return (
         <AstryxSwitch
-            description={isXmlString(description) ? description : undefined}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
-            htmlName={isXmlString(htmlName) ? htmlName : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
-            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
-            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
-            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            label={requireXmlString(props, 'label', ctx, 'Switch')}
-            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
-            labelPosition={labelPosition}
-            labelSpacing={labelSpacing}
-            onChange={binding.setValue}
-            status={resolveInputStatus(props, ctx)}
             size={size}
+            label={requireXmlString(props, 'label', ctx, 'Switch')}
             value={binding.value}
             width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            status={resolveInputStatus(props, ctx)}
+            htmlName={isXmlString(htmlName) ? htmlName : undefined}
+            onChange={binding.setValue}
+            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
+            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
+            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
+            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
+            description={isXmlString(description) ? description : undefined}
+            labelSpacing={labelSpacing}
+            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
+            labelPosition={labelPosition}
+            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
         />
     );
 }

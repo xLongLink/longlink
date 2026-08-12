@@ -57,7 +57,9 @@ export async function executeAction(
         const actionValue = resolveXml(props, 'action', ctx);
         method = isXmlString(methodValue) ? methodValue : 'POST';
         actionUrl = isXmlString(actionValue) ? actionValue : '';
-        if (!actionUrl) throw new Error('Action requires an action URL');
+        if (!actionUrl) {
+            throw new Error('Action requires an action URL');
+        }
 
         // Resolve action payloads at click time so they see the latest state.
         formValue = resolveXmlValue(props, 'form', ctx);
@@ -140,7 +142,9 @@ export async function executeAction(
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
     // Preserve prebuilt form data payloads.
-    if (typeof FormData !== 'undefined' && value instanceof FormData) return value;
+    if (typeof FormData !== 'undefined' && value instanceof FormData) {
+        return value;
+    }
 
     // Require object-shaped form expressions.
     if (!isRecord(value)) {
@@ -165,7 +169,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Appends one XML action form value to a multipart payload. */
 function appendActionFormValue(formData: FormData, key: string, value: unknown): void {
     // Ignore empty optional form values.
-    if (value == null) return;
+    if (value == null) {
+        return;
+    }
 
     // Expand arrays into repeated form keys.
     if (Array.isArray(value)) {

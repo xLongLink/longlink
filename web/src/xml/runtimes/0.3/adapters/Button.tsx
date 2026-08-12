@@ -14,22 +14,33 @@ const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as cons
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const variant = resolveXml(props, 'variant', ctx);
     const type = resolveXml(props, 'type', ctx);
     const size = resolveXml(props, 'size', ctx);
     const label = requireXmlString(props, 'label', ctx, 'Button');
+    const variant = resolveXml(props, 'variant', ctx);
+    const tooltip = resolveXml(props, 'tooltip', ctx);
+    const isLoading = resolveXml(props, 'isLoading', ctx);
+    const elevation = resolveXml(props, 'elevation', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isIconOnly = resolveXml(props, 'isIconOnly', ctx);
-    const isLoading = resolveXml(props, 'isLoading', ctx);
-    const tooltip = resolveXml(props, 'tooltip', ctx);
-    const elevation = resolveXml(props, 'elevation', ctx);
     const isInterruptible = resolveXml(props, 'isInterruptible', ctx);
     const actionHandler = useContext(ActionHandlerContext);
 
-    if (variant != null && !isXmlEnum(variant, BUTTON_VARIANTS)) throw new Error(`Unsupported Button variant '${String(variant)}'`);
-    if (size != null && !isXmlEnum(size, BUTTON_SIZES)) throw new Error(`Unsupported Button size '${String(size)}'`);
-    if (type != null && !isXmlEnum(type, BUTTON_TYPES)) throw new Error(`Unsupported Button type '${String(type)}'`);
-    if (elevation != null && !isXmlEnum(elevation, BUTTON_ELEVATIONS)) throw new Error(`Unsupported Button elevation '${String(elevation)}'`);
+    if (variant != null && !isXmlEnum(variant, BUTTON_VARIANTS)) {
+        throw new Error(`Unsupported Button variant '${String(variant)}'`);
+    }
+
+    if (size != null && !isXmlEnum(size, BUTTON_SIZES)) {
+        throw new Error(`Unsupported Button size '${String(size)}'`);
+    }
+
+    if (type != null && !isXmlEnum(type, BUTTON_TYPES)) {
+        throw new Error(`Unsupported Button type '${String(type)}'`);
+    }
+
+    if (elevation != null && !isXmlEnum(elevation, BUTTON_ELEVATIONS)) {
+        throw new Error(`Unsupported Button elevation '${String(elevation)}'`);
+    }
 
     return (
         <AstryxButton
@@ -37,6 +48,11 @@ export function Button({ props, nodes }: Props) {
             size={size}
             label={label}
             variant={variant}
+            tooltip={isXmlString(tooltip) ? tooltip : undefined}
+            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
+            elevation={elevation}
+            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
+            isIconOnly={isXmlBoolean(isIconOnly) ? isIconOnly : undefined}
             clickAction={
                 actionHandler
                     ? () => {
@@ -44,12 +60,7 @@ export function Button({ props, nodes }: Props) {
                       }
                     : undefined
             }
-            elevation={elevation}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isIconOnly={isXmlBoolean(isIconOnly) ? isIconOnly : undefined}
             isInterruptible={isXmlBoolean(isInterruptible) ? isInterruptible : undefined}
-            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
-            tooltip={isXmlString(tooltip) ? tooltip : undefined}
         >
             {renderNode(nodes, ctx)}
         </AstryxButton>
