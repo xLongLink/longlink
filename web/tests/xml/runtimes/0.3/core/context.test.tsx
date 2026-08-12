@@ -2,10 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, setupContext } from '@/xml/runtimes/0.3/core/context';
 import { compileProps } from '../helpers';
 
-function queryAst(path: string) {
-    return [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
-}
-
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
@@ -14,10 +10,11 @@ describe('core/context', () => {
         const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }), children: [] }];
 
         await setupContext(ast, ctx, '/api');
-        (ctx.scope.bindings.filter as { value: string }).value = 'week';
+        const filter = ctx.scope.bindings.filter as { value: string };
+        filter.value = 'week';
         await setupContext(ast, ctx, '/api');
 
-        expect((ctx.scope.bindings.filter as { value: string }).value).toBe('week');
+        expect(filter.value).toBe('week');
 
         delete ctx.scope.bindings.filter;
         await ctx.services.setups.filter();
@@ -27,7 +24,9 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const ast = queryAst('/api/issues/${params.issue}');
+        const ast = [
+            { name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] },
+        ];
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };
@@ -51,9 +50,13 @@ describe('core/context', () => {
 
             vi.stubGlobal('fetch', fetchImpl);
 
-            await expect(setupContext(queryAst(path), ctx, '/proxy')).rejects.toThrow(
-                'XML request URL must be app-relative'
-            );
+            await expect(
+                setupContext(
+                    [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }],
+                    ctx,
+                    '/proxy'
+                )
+            ).rejects.toThrow('XML request URL must be app-relative');
 
             expect(fetchImpl).not.toHaveBeenCalled();
         }

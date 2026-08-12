@@ -58,10 +58,6 @@ type PageState = {
     runtimeContext: XmlRuntime;
 };
 
-type RuntimeRoute = RouteObject & {
-    page: RuntimePage;
-};
-
 const emptyRouteParams: Record<string, string> = {};
 
 /**
@@ -80,7 +76,7 @@ function pageRouteIsDynamic(page: RuntimePage): boolean {
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
-    const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
+    const routes: Array<RouteObject & { page: RuntimePage }> = (pages ?? []).map((page) => ({
         path: normalizePath(page.route) || '/',
         page,
     }));

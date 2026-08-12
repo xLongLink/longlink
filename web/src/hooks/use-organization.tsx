@@ -10,7 +10,7 @@ import type {
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { useUserOrganizations } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import {
     zApplicationResponse,
@@ -44,11 +44,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
         }
     );
 
-    const error =
-        organizationQuery.error ??
-        (missingOrganization
-            ? (Object.assign(new Error('Organization not found'), { status: 404 }) as Error & { status?: number })
-            : null);
+    const error = organizationQuery.error ?? (missingOrganization ? new ApiError('Organization not found', 404) : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {

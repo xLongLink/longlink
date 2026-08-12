@@ -33,7 +33,7 @@ export type Scope = {
 
 /** Renderer and host services available to the XML runtime. */
 export type RuntimeServices = {
-    invalidate: (ids: string | string[]) => Promise<void>;
+    invalidate: (ids: string[]) => Promise<void>;
     navigationBaseUrl: string;
     requestBaseUrl: string;
     setups: Record<string, () => Promise<void> | void>;

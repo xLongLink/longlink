@@ -7,7 +7,7 @@
         "theme": "vp exec astryx theme build src/theme.ts --out src/lib/generated/stone.css",
         "build": "vp run typecheck && react-router build --mode api --logLevel warn && react-router build --mode sdk --logLevel warn",
         "check": "vp check",
-        "typecheck": "react-router typegen --mode api && tsc -b && react-router typegen --mode sdk && tsc -b",
+        "typecheck": "vp run typecheck:api && vp run typecheck:sdk",
         "typecheck:api": "react-router typegen --mode api && tsc -b",
         "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
         "build:api": "vp run typecheck:api && react-router build --mode api",

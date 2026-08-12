@@ -1,8 +1,8 @@
 import type { BadgeVariant } from '@astryxdesign/core-0-3/Badge';
 import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import type { Props } from '../types';
-import { BADGE_VARIANTS } from '../constants';
 import { renderNode } from '../core/node';
+import { BADGE_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 

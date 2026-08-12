@@ -24,14 +24,9 @@ export type DeleteConfirmationProps = {
     onOpenChange: (open: boolean) => void;
 };
 
-type DeleteMutation = {
-    isPending: boolean;
-    mutateAsync: (id: string) => Promise<unknown>;
-};
-
 type UseDeleteDialogOptions<TItem> = {
     title: string;
-    mutation: DeleteMutation;
+    mutation: { isPending: boolean; mutateAsync: (id: string) => Promise<unknown> };
     items: TItem[];
     getId: (item: TItem) => string;
     description: (item: TItem) => ReactNode;

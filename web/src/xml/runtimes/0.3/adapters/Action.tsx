@@ -9,7 +9,7 @@ import { useXmlRuntime } from '../core/context';
 import { resolveRequestUrl } from '../core/url';
 import { resolveXml, resolveXmlValue } from '../core/props';
 
-export const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
+export const ActionHandlerContext = createContext<(() => Promise<void>) | null>(null);
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {

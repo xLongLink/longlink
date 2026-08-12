@@ -9,11 +9,6 @@ type ApiErrorPayload = {
           };
 } | null;
 
-type ApiErrorResponse = {
-    code?: string;
-    message: string;
-};
-
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
     code?: string;
@@ -67,7 +62,7 @@ function apiUrl(path: string): string {
 }
 
 /** Reads the API error detail from a failed response. */
-async function readApiError(response: Response): Promise<ApiErrorResponse> {
+async function readApiError(response: Response) {
     const payload = (await response.json().catch(() => null)) as ApiErrorPayload;
     const fallback = `API request failed (${response.status})`;
 

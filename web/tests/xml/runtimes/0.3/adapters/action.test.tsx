@@ -6,7 +6,7 @@ import { compileProps } from '../helpers';
 
 describe('Action', () => {
     it('sends a request and invalidates after success', async () => {
-        const invalidations: Array<string | string[]> = [];
+        const invalidations: string[][] = [];
         let notificationCalls = 0;
         const ctx = createContext();
         ctx.scope.bindings = {

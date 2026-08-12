@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
 import { Stack } from '@astryxdesign/core-0-3/Stack';
+import { useEffect, useMemo, useState } from 'react';
 import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
@@ -72,10 +72,8 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         runtimeCtx.services.invalidate = async (ids) => {
-            const list = Array.isArray(ids) ? ids : [ids];
-
             // Refresh each requested setup value.
-            for (const id of list) {
+            for (const id of ids) {
                 // Skip unknown invalidation targets.
                 const setup = runtimeCtx.services.setups[id];
                 if (!setup) continue;
