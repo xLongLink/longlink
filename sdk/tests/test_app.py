@@ -26,6 +26,8 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
+
+
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
     """Require every Platform-owned runtime setting before production startup."""
 
@@ -43,25 +45,25 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     [
         pytest.param(
             "index.xml",
-            '<longlink version="v1"><Text i18n="home.title" /></longlink>',
+            '<longlink version="0.3"><Text i18n="home.title" /></longlink>',
             {"tab": "index", "route": ""},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
-            '<longlink version="v1" name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
+            '<longlink version="0.3" name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
             {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink version="v1"><Text i18n="users.title" /></longlink>',
+            '<longlink version="0.3"><Text i18n="users.title" /></longlink>',
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
-            '<longlink version="v1" name="Issue"><Text i18n="issues.title" /></longlink>',
+            '<longlink version="0.3" name="Issue"><Text i18n="issues.title" /></longlink>',
             {"tab": "issues", "route": "issues/:issue"},
             id="dynamic",
         ),
@@ -94,7 +96,22 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     pages = pages_response.json()
     page = next(item for item in pages if item["path"] == f"pages/{page_path_without_suffix}")
     assert {key: page[key] for key in expected_metadata} == expected_metadata
+    assert page["runtime_version"] == "0.3"
     assert all("content" not in item for item in pages)
+
+
+def test_xml_page_catalog_includes_astryx_runtime_version(application_source: Path) -> None:
+    """Expose the XML compatibility runtime selected by each page."""
+
+    (application_source / "pages" / "dashboard.xml").write_text(
+        '<longlink version="0.3"><Text i18n="dashboard.title" /></longlink>',
+        encoding="utf-8",
+    )
+
+    client = TestClient(LongLink(FastAPI()).app)
+
+    page = next(item for item in client.get("/pages.json").json() if item["path"] == "pages/dashboard")
+    assert page["runtime_version"] == "0.3"
 
 
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
@@ -117,7 +134,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
 
     # Create a page whose endpoint is already owned by the Application.
     (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink version="v1"><Text i18n="dashboard.title" /></longlink>',
+        '<longlink version="0.3"><Text i18n="dashboard.title" /></longlink>',
         encoding="utf-8",
     )
     app = FastAPI()

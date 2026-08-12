@@ -2,16 +2,22 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:complexType name="LonglinkType">
     <xsd:annotation>
-      <xsd:documentation>Contains one LongLink XML v1 page. Page name and icon are metadata.</xsd:documentation>
+      <xsd:documentation>Contains one versioned LongLink XML page. Page name and icon are metadata.</xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="optional" />
     <xsd:attribute name="icon" type="xsd:string" use="optional" />
-    <xsd:attribute name="version" use="required" fixed="v1" />
+    <xsd:attribute name="version" use="required">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="0.3" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
   </xsd:complexType>
   <xsd:element name="longlink" type="LonglinkType">
-    <xsd:annotation><xsd:documentation>Defines a LongLink XML v1 page.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Defines a versioned LongLink XML page.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

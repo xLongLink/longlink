@@ -15,8 +15,15 @@ import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { getIconComponent } from '@/lib/icons';
 import NotFound from '@/platform/NotFound';
-import { createContext as createXmlContext, parseXML, RenderXML, resolveRequestUrl, type ASTNode } from '@/xml';
-import XmlLayout from '@/xml/v1/layout';
+import {
+    createContext as createXmlContext,
+    getXmlRuntimeVersion,
+    parseXML,
+    RenderXML,
+    resolveRequestUrl,
+    type ASTNode,
+} from '@/xml';
+import XmlLayout from '@/xml/runtimes/0.3/layout';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -24,6 +31,7 @@ const pageSchema = z.object({
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
     route: z.string().trim(),
+    runtime_version: z.string().trim().min(1),
 });
 
 type RuntimePage = z.infer<typeof pageSchema>;
@@ -297,6 +305,12 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
                     const ast = parseXML(content);
+                    const documentRuntimeVersion = getXmlRuntimeVersion(ast);
+
+                    // Refuse a document whose content does not match the catalog compatibility track.
+                    if (documentRuntimeVersion !== activePage.runtime_version) {
+                        throw new Error('Page XML runtime version does not match the page catalog');
+                    }
 
                     setPageStates((current) => {
                         const currentPageState = current[activePageStateKey];

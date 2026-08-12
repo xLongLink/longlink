@@ -13,6 +13,7 @@ class PageResponse(BaseModel):
     name: str | None = None
     path: str
     route: str
+    runtime_version: str
 
 
 @router.get("/pages.json", response_model=list[PageResponse], response_model_exclude_none=True)
@@ -25,6 +26,7 @@ def get_pages(request: Request):
             "tab": page.tab,
             "path": page.path.lstrip("/"),
             "route": page.route,
+            "runtime_version": page.runtime_version,
             "name": page.name,
             "icon": page.icon,
         }

@@ -135,7 +135,7 @@ function renderComponentPreview(name: string) {
         case 'Bindings':
             return <Code>{'value="$form.name"'}</Code>;
         case 'longlink':
-            return <Code>{'<longlink version="v1" />'}</Code>;
+            return <Code>{'<longlink version="0.3" />'}</Code>;
         case 'Button':
             return (
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
@@ -320,7 +320,7 @@ export const content = (
             . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
             compose the screen with supported XML components.
         </Text>
-        <CodeBlock code={'<longlink version="v1">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
+        <CodeBlock code={'<longlink version="0.3">\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
         {componentCategories.map((category) => (
             <ComponentCategorySection key={category.id} category={category} />
         ))}

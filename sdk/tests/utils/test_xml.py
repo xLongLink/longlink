@@ -49,7 +49,7 @@ VALID_FRAGMENTS = [
     ("heading", _adapter_schema("Heading.xsd"), '<Heading level="1" i18n="dashboard.title" />'),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon icon="info" size="sm" if="show" />'),
     ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" i18n="issues.open" />'),
-    ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1" name="dashboard" icon="layout-dashboard" />'),
+    ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
     ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />'),
     ("query", _adapter_schema("Query.xsd"), '<Query id="projects" path="/projects" />'),
     (
@@ -93,29 +93,41 @@ INVALID_FRAGMENTS = [
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
     ("old-text-interpolation", _adapter_schema("Text.xsd"), '<Text i18n="users.name" name="$user.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
-    ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="v1"><Button label="Save" style="color: red" /></longlink>'),
-    ("invalid-child-through-root", ROOT_SCHEMA, '<longlink version="v1"><Action tone="accent"><Button i18n="actions.save" /></Action></longlink>'),
+    ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),
+    (
+        "invalid-child-through-root",
+        ROOT_SCHEMA,
+        '<longlink version="0.3"><Action tone="accent"><Button i18n="actions.save" /></Action></longlink>',
+    ),
     (
         "missing-selector-option-value",
         _adapter_schema("Selector.xsd"),
         '<Selector label="View"><SelectorOption label="Overview" /></Selector>',
     ),
-    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="v1"><P i18n="items.name" /></longlink>'),
+    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="0.3"><P i18n="items.name" /></longlink>'),
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
     ("removed-table-row-name", _adapter_schema("Table.xsd"), '<Table data="$items" rowName="item"><TableColumn key="sku" /></Table>'),
     ("removed-table-column-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" width="1" /></Table>'),
-    ("removed-table-column-width-type", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>'),
-    ("removed-table-column-min-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>'),
+    (
+        "removed-table-column-width-type",
+        _adapter_schema("Table.xsd"),
+        '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>',
+    ),
+    (
+        "removed-table-column-min-width",
+        _adapter_schema("Table.xsd"),
+        '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>',
+    ),
     ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text i18n="tabs.overview" /></Tab></TabList>'),
-    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="v1"><Text i18n="dashboard.title"></longlink>'),
+    ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3"><Text i18n="dashboard.title"></longlink>'),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", "<!DOCTYPE longlink><longlink version=\"v1\" />"),
-    ("entity", '<!DOCTYPE longlink [<!ENTITY hidden "value">]><longlink version="v1" />'),
-    ("cdata", "<longlink version=\"v1\"><![CDATA[hidden]]></longlink>"),
+    ("doctype", '<!DOCTYPE longlink><longlink version="0.3" />'),
+    ("entity", '<!DOCTYPE longlink [<!ENTITY hidden "value">]><longlink version="0.3" />'),
+    ("cdata", '<longlink version="0.3"><![CDATA[hidden]]></longlink>'),
 ]
 
 

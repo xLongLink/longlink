@@ -6,6 +6,7 @@
       "name": "web",
       "dependencies": {
         "@astryxdesign/core": "0.3.0",
+        "@astryxdesign/core-0-3": "npm:@astryxdesign/core@0.3.0",
         "@fontsource-variable/inter": "^5.3.0",
         "@hookform/resolvers": "^5.7.1",
         "@tailwindcss/vite": "^4.3.3",
@@ -51,6 +52,8 @@
     "@astryxdesign/cli": ["@astryxdesign/cli@0.3.0", "", { "dependencies": { "commander": "^12.1.0", "jiti": "^2.7.0", "jscodeshift": "^17.3.0", "zod": "^4.4.3" }, "peerDependencies": { "@astryxdesign/charts": "*", "@astryxdesign/core": "*", "@astryxdesign/lab": "*", "@astryxdesign/theme-neutral": "*", "gpt-tokenizer": "^3.4.0" }, "optionalPeers": ["@astryxdesign/charts", "@astryxdesign/core", "@astryxdesign/lab", "@astryxdesign/theme-neutral"], "bin": { "cli": "./clients/cli/bin/astryx.mjs", "astryx": "./clients/cli/bin/astryx.mjs" } }, "sha512-iLFJsBlZUb66GskA1r3AmuodW72yu0PhCRAorcGPMuwHbGYn54pXGb/EnnWSdHf3Yuw4E3OuN7r4dY0TYJuYmQ=="],
 
     "@astryxdesign/core": ["@astryxdesign/core@0.3.0", "", { "dependencies": { "intl-messageformat": "^11.2.9" }, "peerDependencies": { "@stylexjs/stylex": "^0.19.0", "react": ">=19.0.0", "react-dom": ">=19.0.0" } }, "sha512-t2hHvR7AcwW0oKrnxCwbdEEE5Ytgy0Ug61DcYAl9BxAuV5z4XL0/kMo5DiPvX9jbDxzysmOa8ClnXqzxouRUVQ=="],
+
+    "@astryxdesign/core-0-3": ["@astryxdesign/core@0.3.0", "", { "dependencies": { "intl-messageformat": "^11.2.9" }, "peerDependencies": { "@stylexjs/stylex": "^0.19.0", "react": ">=19.0.0", "react-dom": ">=19.0.0" } }, "sha512-t2hHvR7AcwW0oKrnxCwbdEEE5Ytgy0Ug61DcYAl9BxAuV5z4XL0/kMo5DiPvX9jbDxzysmOa8ClnXqzxouRUVQ=="],
 
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
