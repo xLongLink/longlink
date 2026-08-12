@@ -1,5 +1,4 @@
 import { AppShell } from '@astryxdesign/core/AppShell';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { TopNav } from '@astryxdesign/core/TopNav';
@@ -37,7 +36,6 @@ function TopLayout({
     tabs = [],
     topNavClassName,
 }: TopLayoutProps) {
-    const t = useTranslator();
 
     // Preserve the existing top navigation and optional tab-strip structure.
     const hasTabs = tabs.length > 0;
@@ -71,7 +69,7 @@ function TopLayout({
                         className={topNavClassName}
                         endContent={endContent}
                         heading={heading}
-                        label={t('common.mainNavigation')}
+                        label="Main navigation"
                     />
 
                     {hasTabs || reserveTabSpace ? (

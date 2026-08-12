@@ -3,7 +3,6 @@ import { useState, type ReactNode } from 'react';
 import { Outlet } from 'react-router';
 import '@/index.css';
 import { Document } from '@/layout/Document';
-import { I18nProvider } from '@/lib/i18n';
 import { createQueryClient } from '@/lib/react-query';
 import { AstryxProvider } from '@/providers';
 
@@ -20,11 +19,9 @@ export default function ApplicationRoot() {
 
     return (
         <QueryClientProvider client={client}>
-            <I18nProvider>
-                <AstryxProvider mode="dark">
-                    <Outlet />
-                </AstryxProvider>
-            </I18nProvider>
+            <AstryxProvider mode="dark">
+                <Outlet />
+            </AstryxProvider>
         </QueryClientProvider>
     );
 }

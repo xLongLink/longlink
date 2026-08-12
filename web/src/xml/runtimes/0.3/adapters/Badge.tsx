@@ -1,8 +1,8 @@
 import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import type { BadgeVariant } from '@astryxdesign/core-0-3/Badge';
 import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
 import { isXmlEnum, isXmlString, requireXmlString, resolveXml } from '../core/props';
+import { renderXmlSlot } from '../core/slots';
 import type { Props } from '../types';
 
 const BADGE_VARIANTS: readonly BadgeVariant[] = [
@@ -33,5 +33,12 @@ export function Badge({ props, nodes }: Props) {
         throw new Error(`Unsupported Badge variant '${variant}'`);
     }
 
-    return <AstryxBadge icon={renderNode(nodes, ctx)} id={isXmlString(id) ? id : undefined} label={label} variant={variant} />;
+    return (
+        <AstryxBadge
+            icon={renderXmlSlot(nodes, ctx, { allowedNodes: ['Icon'], componentName: 'Badge', name: 'icon' })}
+            id={isXmlString(id) ? id : undefined}
+            label={label}
+            variant={variant}
+        />
+    );
 }

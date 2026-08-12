@@ -1,7 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -27,7 +26,6 @@ type Values = z.infer<typeof schema>;
 
 /** Registers one Exoscale SOS backend. */
 export default function CreateStorage() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const formId = useId();
@@ -73,7 +71,7 @@ export default function CreateStorage() {
 
     return (
         <>
-            <Button label={t('dialogs.connectStorageTitle')} clickAction={() => setOpen(true)} />
+            <Button label="Connect storage" clickAction={() => setOpen(true)} />
             <Dialog
                 isOpen={open}
                 onOpenChange={handleOpenChange}
@@ -84,8 +82,8 @@ export default function CreateStorage() {
                 <Layout
                     header={
                         <DialogHeader
-                            title={t('dialogs.connectStorageTitle')}
-                            subtitle={t('dialogs.connectStorageDescription')}
+                            title="Connect storage"
+                            subtitle="Register an Exoscale SOS backend."
                             onOpenChange={handleOpenChange}
                         />
                     }
@@ -101,7 +99,7 @@ export default function CreateStorage() {
                                             body:
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : t('dialogs.failedConnectStorage'),
+                                                    : 'Failed to connect storage',
                                             type: 'error',
                                         });
                                     }
@@ -114,7 +112,7 @@ export default function CreateStorage() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.name')}
+                                                label="Name"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -129,7 +127,7 @@ export default function CreateStorage() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.endpointUrl')}
+                                                label="Endpoint URL"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -145,7 +143,7 @@ export default function CreateStorage() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.accessKeyId')}
+                                                label="Access key ID"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -160,7 +158,7 @@ export default function CreateStorage() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.secretAccessKey')}
+                                                label="Secret access key"
                                                 type="password"
                                                 value={field.value}
                                                 htmlName={field.name}
@@ -178,7 +176,7 @@ export default function CreateStorage() {
                         <LayoutFooter>
                             <Stack direction="horizontal" gap={2} justify="end">
                                 <Button
-                                    label={t('actions.cancel')}
+                                    label="Cancel"
                                     variant="ghost"
                                     isDisabled={mutation.isPending}
                                     clickAction={() => handleOpenChange(false)}
@@ -186,7 +184,7 @@ export default function CreateStorage() {
                                 <Button
                                     form={formId}
                                     type="submit"
-                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    label={mutation.isPending ? 'Creating...' : 'Create'}
                                     variant="primary"
                                     isDisabled={!form.formState.isValid}
                                     isLoading={mutation.isPending}

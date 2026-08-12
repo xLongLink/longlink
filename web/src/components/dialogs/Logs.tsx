@@ -1,7 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -28,7 +27,6 @@ export default function Logs({
     applicationName: string;
     onOpenChange: (open: boolean) => void;
 }) {
-    const t = useTranslator();
     const {
         data: logLines = [],
         error,
@@ -42,8 +40,8 @@ export default function Logs({
             <Layout
                 header={
                     <DialogHeader
-                        title={t('dialogs.podLogsTitle')}
-                        subtitle={t('appView.logsDescription', { applicationName })}
+                        title="Pod logs"
+                        subtitle={`Recent logs for ${applicationName}.`}
                         onOpenChange={onOpenChange}
                     />
                 }
@@ -54,10 +52,10 @@ export default function Logs({
                                 <Spinner />
                             </Stack>
                         ) : error ? (
-                            <Banner status="error" title={error.message || t('appView.loadLogsFailed')} />
+                            <Banner status="error" title={error.message || 'Failed to load logs'} />
                         ) : (
                             <CodeBlock
-                                code={logLines.length > 0 ? logLines.join('\n') : t('appView.emptyLogs')}
+                                code={logLines.length > 0 ? logLines.join('\n') : 'No logs available.'}
                                 hasCopyButton={false}
                                 hasLanguageLabel={false}
                                 isWrapped

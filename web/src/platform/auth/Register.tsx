@@ -1,6 +1,5 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -21,11 +20,10 @@ type RegisterValues = {
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
-    const t = useTranslator();
     const showToast = useToast();
     const initialEmail = new URLSearchParams(useLocation().search).get('email') ?? '';
     const schema = z.object({
-        email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
+        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
     });
     const form = useForm<RegisterValues>({
         defaultValues: { email: initialEmail },
@@ -41,15 +39,15 @@ export default function Register() {
                 body: JSON.stringify(payload),
             }),
         onSuccess: () => {
-            showToast({ body: t('auth.verificationEmailSent'), type: 'info' });
+            showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },
         onError: () => {
-            showToast({ body: t('auth.registrationRequestFailed'), type: 'error' });
+            showToast({ body: 'Could not send the registration link. Try again shortly.', type: 'error' });
         },
     });
 
     return (
-        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label={t('auth.registerDescription')} />}>
+        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label="Please enter your email" />}>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller
@@ -61,7 +59,7 @@ export default function Register() {
                                 ref={field.ref}
                                 htmlName={field.name}
                                 isRequired
-                                label={t('labels.email')}
+                                label="Email"
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -77,8 +75,8 @@ export default function Register() {
                         isLoading={registration.isPending}
                         label={
                             registration.isPending
-                                ? t('auth.sendingVerificationEmail')
-                                : t('auth.sendVerificationEmail')
+                                ? 'Sending registration link...'
+                                : 'Send registration link'
                         }
                         type="submit"
                         variant="primary"
@@ -87,9 +85,9 @@ export default function Register() {
                 <Divider
                     label={
                         <>
-                            {t('auth.haveAccount')}{' '}
+                            Already have an account?{' '}
                             <Link href={signInHref} type="inherit" weight="medium">
-                                {t('actions.login')}
+                                Sign In
                             </Link>
                         </>
                     }

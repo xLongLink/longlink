@@ -3,7 +3,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -117,7 +116,6 @@ export default function Settings({
     isLoading: boolean;
     error: Error | null;
 }) {
-    const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
     const organizationName = organizationDetails?.name ?? organization;
@@ -148,14 +146,14 @@ export default function Settings({
             <Avatar src={organizationAvatar} name={organizationName} size="md" />
             <VStack gap={1}>
                 <Text weight="semibold">{organizationName}</Text>
-                <Text type="supporting">{t('columns.organization')}</Text>
+                <Text type="supporting">Organization</Text>
             </VStack>
         </HStack>
     );
     const storageColumns: TableColumn<OrganizationStorageUsageResponse>[] = [
         {
             key: 'resource',
-            header: t('columns.resource'),
+            header: 'Resource',
             width: proportional(1),
             renderCell: (resource) => (
                 <HStack gap={3} align="center">
@@ -169,7 +167,7 @@ export default function Settings({
         },
         {
             key: 'owner',
-            header: t('columns.owner'),
+            header: 'Owner',
             width: proportional(1),
             renderCell: () => ownerCell,
         },
@@ -190,7 +188,7 @@ export default function Settings({
 
         // Require an empty value or an HTTP(S) URL.
         if (!organizationAvatarSchema.safeParse(normalizedAvatar).success) {
-            setAvatarError(t('organizationSettings.avatarInvalid'));
+            setAvatarError('Enter a valid HTTP(S) avatar URL.');
             return;
         }
 
@@ -198,13 +196,13 @@ export default function Settings({
         try {
             const updated = await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
             setEditedAvatar(updated.avatar);
-            toast({ body: t('organizationSettings.avatarSaved') });
+            toast({ body: 'Avatar saved' });
         } catch (mutationError) {
             toast({
                 body:
                     mutationError instanceof Error
                         ? mutationError.message
-                        : t('organizationSettings.failedUpdateAvatar'),
+                        : 'Failed to update avatar',
                 type: 'error',
             });
         }
@@ -213,35 +211,35 @@ export default function Settings({
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
             <SideNav className="h-auto w-full">
-                <SideNavSection title={t('navigation.settings')} isHeaderHidden>
+                <SideNavSection title="Settings" isHeaderHidden>
                     <SideNavItem
                         href={`/orgs/${organization}/settings`}
                         icon={<Building2 aria-hidden="true" size={16} />}
                         isSelected={section === 'organization'}
-                        label={t('columns.organization')}
+                        label="Organization"
                     />
                     <SideNavItem
                         collapsible
                         icon={<Users aria-hidden="true" size={16} />}
                         isSelected={section === 'members' || section === 'invitations'}
-                        label={t('navigation.people')}
+                        label="People"
                     >
                         <SideNavItem
                             href={`/orgs/${organization}/settings/people#members`}
                             isSelected={section === 'members'}
-                            label={t('people.membersTitle')}
+                            label="Members"
                         />
                         <SideNavItem
                             href={`/orgs/${organization}/settings/people#invitations`}
                             isSelected={section === 'invitations'}
-                            label={t('people.invitationsTitle')}
+                            label="Invitations"
                         />
                     </SideNavItem>
                     <SideNavItem
                         href={`/orgs/${organization}/settings/applications`}
                         icon={<Boxes aria-hidden="true" size={16} />}
                         isSelected={section === 'applications'}
-                        label={t('navigation.applications')}
+                        label="Applications"
                     />
                     {hasOrganizationApplicationAccess ? (
                         <>
@@ -249,13 +247,13 @@ export default function Settings({
                                 href={`/orgs/${organization}/settings/database`}
                                 icon={<Database aria-hidden="true" size={16} />}
                                 isSelected={section === 'database'}
-                                label={t('navigation.database')}
+                                label="Database"
                             />
                             <SideNavItem
                                 href={`/orgs/${organization}/settings/storage`}
                                 icon={<HardDrive aria-hidden="true" size={16} />}
                                 isSelected={section === 'storage'}
-                                label={t('navigation.storage')}
+                                label="Storage"
                             />
                         </>
                     ) : null}
@@ -266,18 +264,18 @@ export default function Settings({
                 {section === 'organization' ? (
                     <VStack gap={4}>
                         <VStack gap={1}>
-                            <Heading level={2}>{t('columns.organization')}</Heading>
-                            <Text type="supporting">{t('organizationSettings.organizationDescription')}</Text>
+                            <Heading level={2}>Organization</Heading>
+                            <Text type="supporting">View and manage organization details.</Text>
                         </VStack>
                         <HStack gap={4} align="center" wrap="wrap">
                             <Avatar src={avatar || undefined} name={organizationName} size="lg" />
                             <TextInput
-                                label={t('organizationSettings.avatarLabel')}
+                                label="Avatar URL"
                                 value={avatar}
                                 width="100%"
                                 isOptional
                                 isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
-                                placeholder={t('organizationSettings.avatarPlaceholder')}
+                                placeholder="https://example.com/org.png"
                                 status={avatarError ? { type: 'error', message: avatarError } : undefined}
                                 onChange={(value) => {
                                     setEditedAvatar(value);
@@ -317,13 +315,13 @@ export default function Settings({
                 {section === 'database' ? (
                     <VStack gap={4}>
                         <VStack gap={1}>
-                            <Heading level={2}>{t('navigation.database')}</Heading>
-                            <Text type="supporting">{t('organizationSettings.reviewDatabase')}</Text>
+                            <Heading level={2}>Database</Heading>
+                            <Text type="supporting">Review database usage for this organization.</Text>
                         </VStack>
                         {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
                             <Banner status="error" title={databaseResourceError.message} />
                         ) : databaseUsage === null || databaseUsage === undefined ? (
-                            <EmptyState title={t('common.noResults')} isCompact />
+                            <EmptyState title="No results." isCompact />
                         ) : (
                             <HStack gap={3} align="center">
                                 <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
@@ -339,15 +337,15 @@ export default function Settings({
                 {section === 'storage' ? (
                     <ResourceSettings<OrganizationStorageUsageResponse>
                         columns={storageColumns}
-                        description={t('organizationSettings.reviewStorage')}
-                        emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
+                        description="Review storage usage for this organization."
+                        emptyState={<EmptyState title="No storage resources found." isCompact />}
                         idKey="bucket_name"
                         isOrganizationLoading={isLoading}
                         organizationError={error}
                         organizationId={organizationId}
                         parse={(value) => zOrganizationStorageUsageResponse.nullable().parse(value)}
                         resource="storage"
-                        title={t('navigation.storage')}
+                        title="Storage"
                     />
                 ) : null}
             </div>

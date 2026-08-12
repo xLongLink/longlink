@@ -2,7 +2,6 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { Link } from '@astryxdesign/core/Link';
 import { Outline } from '@astryxdesign/core/Outline';
@@ -24,7 +23,6 @@ export function Article({
     previousPage?: ArticlePage;
     nextPage?: ArticlePage;
 }) {
-    const t = useTranslator();
     const { user } = useUserProfile();
     const { memberships } = useUserOrganizations();
     const { content, metadata } = page;
@@ -59,7 +57,7 @@ export function Article({
                                         ? `/orgs/${memberships[0].organization.slug}`
                                         : '/organizations'
                                 }
-                                label={t('actions.getStarted')}
+                                label="Get Started"
                                 size="sm"
                                 variant="primary"
                             />
@@ -107,13 +105,11 @@ export function Article({
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">
-                                            {t('common.lastUpdated', {
-                                                date: dateFormatter.format(new Date(metadata.lastUpdated)),
-                                            })}
+                                            {`Last updated: ${dateFormatter.format(new Date(metadata.lastUpdated))}`}
                                         </Text>
                                         {metadata.editUrl ? (
                                             <Link href={metadata.editUrl} hasUnderline isExternalLink type="supporting">
-                                                {t('docs.editInGithub')}
+                                                Edit this page in GitHub
                                             </Link>
                                         ) : null}
                                     </Stack>
@@ -123,16 +119,16 @@ export function Article({
                         {metadata.toc?.length ? (
                             <Stack
                                 as="aside"
-                                aria-label={t('common.onThisPage')}
+                                aria-label="On this page"
                                 className="sticky top-20 hidden shrink-0 self-start lg:flex"
                                 gap={3}
                                 padding={5}
                                 width={224}
                             >
                                 <Text type="label" weight="semibold">
-                                    {t('common.onThisPage')}
+                                    On this page
                                 </Text>
-                                <Outline items={metadata.toc} density="compact" label={t('common.onThisPage')} />
+                                <Outline items={metadata.toc} density="compact" label="On this page" />
                             </Stack>
                         ) : null}
                     </Stack>

@@ -2,7 +2,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -31,25 +30,24 @@ export default function ApplicationSettings({
     isLoading: boolean;
     error: Error | null;
 }) {
-    const t = useTranslator();
     const toast = useToast();
     const [logsTarget, setLogsTarget] = useState<OrganizationApplicationSummary | null>(null);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
     const deleteDialog = useDeleteDialog({
-        title: t('organizationSettings.deleteApplicationTitle'),
+        title: 'Delete application',
         mutation: deleteApplication,
         items: applications,
         getId: (application) => application.id,
         description: (application) =>
-            t('organizationSettings.deleteApplicationDescription', { name: application.name }),
-        errorMessage: t('organizationSettings.failedDeleteApplication'),
-        fallbackDescription: t('organizationSettings.deleteApplicationFallback'),
+            `Delete ${application.name} from this organization?`,
+        errorMessage: 'Failed to delete application',
+        fallbackDescription: 'Delete this application?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const appColumns: TableColumn<OrganizationApplicationSummary>[] = [
         {
             key: 'name',
-            header: t('columns.application'),
+            header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
                 <HStack gap={3} align="center">
@@ -66,16 +64,16 @@ export default function ApplicationSettings({
     if (canManageApplications) {
         appColumns.push({
             key: 'action',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (application) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: application.name })}
+                    label={`Open actions for ${application.name}`}
                     size="sm"
                     items={[
-                        { label: t('organizationSettings.logs'), onClick: () => setLogsTarget(application) },
-                        { label: t('actions.delete'), onClick: () => deleteDialog.openFor(application) },
+                        { label: 'Logs', onClick: () => setLogsTarget(application) },
+                        { label: 'Delete', onClick: () => deleteDialog.openFor(application) },
                     ]}
                 />
             ),
@@ -87,20 +85,20 @@ export default function ApplicationSettings({
             <VStack gap={4}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
-                        <Heading level={2}>{t('navigation.applications')}</Heading>
-                        <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
+                        <Heading level={2}>Applications</Heading>
+                        <Text type="supporting">Review applications connected to this organization.</Text>
                     </VStack>
                     {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
                 </HStack>
 
                 {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
-                    <Banner status="error" title={t('organizationSettings.loadApplicationsFailed')} />
+                    <Banner status="error" title="Failed to load applications." />
                 ) : (
                     <Table
                         columns={appColumns}
                         data={applications}
                         density="compact"
-                        emptyState={<EmptyState title={t('organizationSettings.noApplications')} isCompact />}
+                        emptyState={<EmptyState title="No applications found." isCompact />}
                         hasHover
                         idKey="id"
                     />

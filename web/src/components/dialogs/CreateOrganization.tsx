@@ -1,7 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -24,7 +23,6 @@ const defaultCreateOrganizationValues = {
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
-    const t = useTranslator();
     const toast = useToast();
     const createOrganization = useCreateOrganization();
     const formId = useId();
@@ -48,7 +46,7 @@ export default function CreateOrganization() {
 
     return (
         <>
-            <Button label={t('actions.createOrganization')} clickAction={() => setOpen(true)} />
+            <Button label="Create Organization" clickAction={() => setOpen(true)} />
 
             <Dialog
                 isOpen={open}
@@ -60,8 +58,8 @@ export default function CreateOrganization() {
                 <Layout
                     header={
                         <DialogHeader
-                            title={t('createOrganization.title')}
-                            subtitle={t('createOrganization.description')}
+                            title="New organization"
+                            subtitle="Create a new workspace for your account."
                             onOpenChange={handleOpenChange}
                         />
                     }
@@ -80,7 +78,7 @@ export default function CreateOrganization() {
                                             body:
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : t('createOrganization.error'),
+                                                    : 'Failed to create organization',
                                             type: 'error',
                                         });
                                     }
@@ -93,11 +91,11 @@ export default function CreateOrganization() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('createOrganization.nameLabel')}
+                                                label="Name"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
-                                                placeholder={t('createOrganization.namePlaceholder')}
+                                                placeholder="Example LongLink"
                                                 onBlur={field.onBlur}
                                                 onChange={field.onChange}
                                             />
@@ -111,7 +109,7 @@ export default function CreateOrganization() {
                         <LayoutFooter>
                             <Stack direction="horizontal" gap={2} justify="end">
                                 <Button
-                                    label={t('actions.cancel')}
+                                    label="Cancel"
                                     variant="ghost"
                                     isDisabled={createOrganization.isPending}
                                     clickAction={() => handleOpenChange(false)}
@@ -119,7 +117,7 @@ export default function CreateOrganization() {
                                 <Button
                                     form={formId}
                                     type="submit"
-                                    label={createOrganization.isPending ? t('actions.creating') : t('actions.create')}
+                                    label={createOrganization.isPending ? 'Creating...' : 'Create'}
                                     variant="primary"
                                     isDisabled={!form.formState.isValid}
                                     isLoading={createOrganization.isPending}

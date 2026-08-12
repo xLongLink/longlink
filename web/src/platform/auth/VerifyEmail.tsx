@@ -2,7 +2,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,7 +34,6 @@ const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
-    const t = useTranslator();
     const showToast = useToast();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -44,9 +42,9 @@ export default function VerifyEmail() {
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const schema = z.object({
-        name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),
-        surname: z.string().trim().min(1, t('auth.surnameRequired')).max(127, t('auth.surnameTooLong')),
-        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
+        name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
+        surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
+        password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
     });
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', surname: '', password: '' },
@@ -115,10 +113,10 @@ export default function VerifyEmail() {
 
             const message =
                 error instanceof ApiError && error.code === 'REGISTER_USER_ALREADY_EXISTS'
-                    ? t('auth.accountAlreadyExists')
+                    ? 'An account with this email already exists. Sign in or reset your password to continue.'
                     : error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN'
-                      ? t('auth.invalidVerificationLink')
-                      : t('auth.registrationFailed');
+                      ? 'This registration link is invalid or expired. Request a new link to continue.'
+                      : 'Could not create the account. Check your details and try again.';
 
             showToast({ body: message, type: 'error' });
         }
@@ -143,20 +141,20 @@ export default function VerifyEmail() {
 
         return (
             <AuthPage
-                title={t('auth.verifyEmailTitle')}
-                description={invalidToken ? t('auth.invalidVerificationLink') : t('auth.verificationFailed')}
+                title="Verify your email"
+                description={invalidToken ? 'This registration link is invalid or expired. Request a new link to continue.' : 'LongLink could not verify this registration link.'}
             >
                 <Stack gap={3}>
-                    <Banner status="error" title={t('auth.verificationFailed')} />
+                    <Banner status="error" title="LongLink could not verify this registration link." />
                     {invalidToken ? null : (
                         <Button
                             isLoading={verification.isPending}
-                            label={t('actions.retry')}
+                            label="Retry"
                             onClick={() => verification.mutate(token)}
                             variant="primary"
                         />
                     )}
-                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
             </AuthPage>
         );
@@ -165,8 +163,8 @@ export default function VerifyEmail() {
     // Wait for the server to authenticate the signed email claim.
     if (!verification.data) {
         return (
-            <AuthPage title={t('auth.verifyEmailTitle')} description={t('auth.verifyingEmail')}>
-                <Button isLoading label={t('auth.verifyingEmail')} variant="primary" />
+            <AuthPage title="Verify your email" description="Verifying your email...">
+                <Button isLoading label="Verifying your email..." variant="primary" />
             </AuthPage>
         );
     }
@@ -175,14 +173,14 @@ export default function VerifyEmail() {
     if (accountExists || setupMismatch) {
         return (
             <AuthPage
-                title={t('auth.completeRegistrationTitle')}
-                description={setupMismatch ? t('auth.registrationSetupMismatch') : t('auth.accountAlreadyExists')}
+                title="Complete your account"
+                description={setupMismatch ? 'Another registration was verified in this browser. Reopen the link for this email to continue safely.' : 'An account with this email already exists. Sign in or reset your password to continue.'}
             >
                 <Stack gap={3}>
                     {accountExists ? (
-                        <Button href={recoverySignInHref} label={t('auth.backToSignIn')} variant="primary" />
+                        <Button href={recoverySignInHref} label="Back to sign in" variant="primary" />
                     ) : null}
-                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
             </AuthPage>
         );
@@ -191,7 +189,7 @@ export default function VerifyEmail() {
     return (
         <AuthPage
             title={<AuthWelcomeTitle />}
-            description={<Divider label={t('auth.completeRegistrationDescription')} />}
+            description={<Divider label="Email verified. Complete your profile." />}
         >
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
@@ -206,7 +204,7 @@ export default function VerifyEmail() {
                                     hasAutoFocus
                                     htmlName={field.name}
                                     isRequired
-                                    label={t('labels.name')}
+                                    label="Name"
                                     onBlur={field.onBlur}
                                     onChange={field.onChange}
                                     status={
@@ -228,7 +226,7 @@ export default function VerifyEmail() {
                                     ref={field.ref}
                                     htmlName={field.name}
                                     isRequired
-                                    label={t('labels.surname')}
+                                    label="Surname"
                                     onBlur={field.onBlur}
                                     onChange={field.onChange}
                                     status={
@@ -251,7 +249,7 @@ export default function VerifyEmail() {
                                 autoComplete="new-password"
                                 htmlName={field.name}
                                 isRequired
-                                label={t('labels.password')}
+                                label="Password"
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -264,7 +262,7 @@ export default function VerifyEmail() {
                     />
                     <Button
                         isLoading={completion.isPending}
-                        label={completion.isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
+                        label={completion.isPending ? 'Creating account...' : 'Create account'}
                         type="submit"
                         variant="primary"
                     />

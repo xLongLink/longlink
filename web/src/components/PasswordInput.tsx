@@ -1,4 +1,3 @@
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
 import { TextInput, type TextInputProps } from '@astryxdesign/core/TextInput';
@@ -23,9 +22,8 @@ export function PasswordInput({
     status,
     ...props
 }: PasswordInputProps) {
-    const t = useTranslator();
     const [visible, setVisible] = useState(false);
-    const toggleLabel = visible ? t('auth.hidePassword') : t('auth.showPassword');
+    const toggleLabel = visible ? 'Hide password' : 'Show password';
 
     return (
         <InputGroup

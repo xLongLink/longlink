@@ -20,7 +20,7 @@ VALID_FRAGMENTS = [
         '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
     ),
     ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", _adapter_schema("Badge.xsd"), '<Badge id="item-status" label="$item.status" variant="success"><Icon icon="check" /></Badge>'),
+    ("badge", _adapter_schema("Badge.xsd"), '<Badge id="item-status" label="$item.status" variant="success"><Icon slot="icon" icon="check" /></Badge>'),
     (
         "button",
         _adapter_schema("Button.xsd"),
@@ -98,6 +98,9 @@ INVALID_FRAGMENTS = [
     ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
     ("invalid-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="headline" value="Title" />'),
     ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
+    ("badge-unknown-slot", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Icon slot="endContent" icon="check" /></Badge>'),
+    ("badge-unsupported-child", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Text value="Active" /></Badge>'),
+    ("badge-duplicate-icon", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
     ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),

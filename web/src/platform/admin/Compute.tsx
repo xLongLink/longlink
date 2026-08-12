@@ -2,7 +2,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -23,7 +22,6 @@ import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
@@ -31,7 +29,7 @@ export default function AdminCompute() {
             fetchApiVoid(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey });
-            toast({ body: t('admin.computeDeleted') });
+            toast({ body: 'Compute deleted' });
         },
     });
     const {
@@ -44,19 +42,19 @@ export default function AdminCompute() {
     });
     const { pageItems, pagination } = useAdminPagination(computes);
     const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteComputeTitle'),
+        title: 'Delete compute',
         mutation: deleteCompute,
         items: computes,
         getId: (compute) => compute.id,
-        description: (compute) => t('admin.deleteComputeDescription', { name: compute.name }),
-        errorMessage: t('admin.failedDeleteCompute'),
-        fallbackDescription: t('admin.deleteComputeFallback'),
+        description: (compute) => `Remove compute ${compute.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
+        errorMessage: 'Failed to delete compute',
+        fallbackDescription: 'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<ComputeRegistryResponse>[] = [
         {
             key: 'compute',
-            header: t('admin.computeTitle'),
+            header: 'Compute',
             width: proportional(2),
             renderCell: (compute) => (
                 <HStack gap={3} align="center">
@@ -70,14 +68,14 @@ export default function AdminCompute() {
         },
         {
             key: 'actions',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (compute) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: compute.name })}
+                    label={`Open actions for ${compute.name}`}
                     size="sm"
-                    items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) }]}
+                    items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(compute) }]}
                 />
             ),
         },
@@ -87,8 +85,8 @@ export default function AdminCompute() {
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
                 <VStack gap={1}>
-                    <Heading level={1}>{t('admin.computeTitle')}</Heading>
-                    <Text type="supporting">{t('admin.computeDescription')}</Text>
+                    <Heading level={1}>Compute</Heading>
+                    <Text type="supporting">Inspect runtime workloads, node capacity, and orchestration status.</Text>
                 </VStack>
                 <CreateCompute />
             </HStack>
@@ -99,7 +97,7 @@ export default function AdminCompute() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

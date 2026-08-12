@@ -1,6 +1,5 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -15,7 +14,6 @@ export function DeleteConfirmation({
     onConfirm,
     onOpenChange,
 }: DeleteConfirmationProps) {
-    const t = useTranslator();
 
     return (
         <Dialog
@@ -50,13 +48,13 @@ export function DeleteConfirmation({
                     <LayoutFooter>
                         <Stack direction="horizontal" gap={2} justify="end">
                             <Button
-                                label={t('actions.cancel')}
+                                label="Cancel"
                                 variant="ghost"
                                 isDisabled={isPending}
                                 clickAction={() => onOpenChange(false)}
                             />
                             <Button
-                                label={t('actions.delete')}
+                                label="Delete"
                                 variant="destructive"
                                 isLoading={isPending}
                                 clickAction={onConfirm}

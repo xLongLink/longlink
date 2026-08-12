@@ -1,7 +1,6 @@
 import { Center } from '@astryxdesign/core/Center';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { VStack } from '@astryxdesign/core/VStack';
 import type { ReactElement } from 'react';
 import { SignInCard } from '@/components/SignInCard';
@@ -18,7 +17,6 @@ export function Auth({
     children: ReactElement;
     requiresAdministrator?: boolean;
 }) {
-    const t = useTranslator();
     const { user, isLoading, error, refetch } = useUserProfile();
 
     // Wait for profile loading before deciding access.
@@ -33,7 +31,7 @@ export function Auth({
                 <Center height="100%" width="100%">
                     <VStack gap={4} align="center">
                         <Banner status="error" title={error.message} />
-                        <Button label={t('actions.retry')} onClick={() => void refetch()} variant="primary" />
+                        <Button label="Retry" onClick={() => void refetch()} variant="primary" />
                     </VStack>
                 </Center>
             </PlatformLayout>

@@ -9,7 +9,6 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -56,7 +55,6 @@ export default function People({
     isLoading: boolean;
     error: Error | null;
 }) {
-    const t = useTranslator();
     const toast = useToast();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -72,7 +70,7 @@ export default function People({
     const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [
         {
             key: 'member',
-            header: t('columns.user'),
+            header: 'User',
             width: proportional(1),
             renderCell: (member) => (
                 <HStack gap={3} align="center">
@@ -86,22 +84,22 @@ export default function People({
         },
         {
             key: 'membership',
-            header: t('columns.role'),
+            header: 'Role',
             width: pixel(128),
             renderCell: (member) => <Badge label={member.role} />,
         },
         {
             key: 'actions',
-            header: t('columns.action'),
+            header: 'Action',
             width: pixel(96),
             align: 'end',
             renderCell: (member) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: member.user.name })}
+                    label={`Open actions for ${member.user.name}`}
                     size="sm"
                     isDisabled={!canManageMembers}
                     items={ROLE_NAMES.filter((role) => role !== member.role).map((role) => ({
-                        label: t('people.grantPermission', { role: ORGANIZATION_ROLE_LABELS[role] }),
+                        label: `Grant ${ORGANIZATION_ROLE_LABELS[role]} permission`,
                         onClick: () => {
                             setRoleChangeTarget({ member, role });
                         },
@@ -113,19 +111,19 @@ export default function People({
     const invitationColumns: TableColumn<OrganizationInvitationResponse>[] = [
         {
             key: 'email',
-            header: t('columns.email'),
+            header: 'Email',
             width: proportional(1),
             renderCell: (invitation) => <Text weight="semibold">{invitation.email}</Text>,
         },
         {
             key: 'role',
-            header: t('columns.role'),
+            header: 'Role',
             width: pixel(128),
             renderCell: (invitation) => invitation.role,
         },
         {
             key: 'created_at',
-            header: t('columns.created'),
+            header: 'Created',
             width: pixel(144),
             renderCell: (invitation) => dateFormatter.format(new Date(invitation.created_at)),
         },
@@ -135,18 +133,18 @@ export default function People({
             {activeSection === 'members' ? (
                 <VStack gap={4}>
                     <VStack gap={1}>
-                        <Heading level={2}>{t('people.membersTitle')}</Heading>
-                        <Text type="supporting">{t('people.membersDescription')}</Text>
+                        <Heading level={2}>Members</Heading>
+                        <Text type="supporting">Users who have access to this organization.</Text>
                     </VStack>
                     <Divider />
                     {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
-                        <Banner status="error" title={t('errors.loadPeople')} />
+                        <Banner status="error" title="Failed to load people." />
                     ) : (
                         <Table
                             columns={memberColumns}
                             data={members}
                             density="compact"
-                            emptyState={<EmptyState title={t('people.noPeople')} isCompact />}
+                            emptyState={<EmptyState title="No people found." isCompact />}
                             hasHover
                             idKey={(member) => member.user.id}
                         />
@@ -156,14 +154,14 @@ export default function People({
                 <VStack gap={4}>
                     <HStack gap={4} justify="between" align="end" wrap="wrap">
                         <VStack gap={1}>
-                            <Heading level={2}>{t('people.invitationsTitle')}</Heading>
-                            <Text type="supporting">{t('people.invitationsDescription')}</Text>
+                            <Heading level={2}>Invitations</Heading>
+                            <Text type="supporting">Pending invitations to join this organization.</Text>
                             {canInviteMembers ? null : (
-                                <Text type="supporting">{t('people.invitationsPermissionHint')}</Text>
+                                <Text type="supporting">Only maintainers, admins, and owners can send invitations.</Text>
                             )}
                         </VStack>
                         <Button
-                            label={t('actions.invite')}
+                            label="Invite"
                             variant="primary"
                             isDisabled={organizationId.length === 0}
                             onClick={() => setInviteOpen(true)}
@@ -171,13 +169,13 @@ export default function People({
                     </HStack>
                     <Divider />
                     {isLoading && invitations.length === 0 ? null : error && invitations.length === 0 ? (
-                        <Banner status="error" title={t('errors.loadInvitations')} />
+                        <Banner status="error" title="Failed to load invitations." />
                     ) : (
                         <Table
                             columns={invitationColumns}
                             data={invitations}
                             density="compact"
-                            emptyState={<EmptyState title={t('people.noInvitations')} isCompact />}
+                            emptyState={<EmptyState title="No invitations yet." isCompact />}
                             hasHover
                             idKey="id"
                         />
@@ -193,17 +191,14 @@ export default function People({
                         setRoleChangeTarget(null);
                     }
                 }}
-                title={t('people.changeRoleTitle')}
+                title="Change member role"
                 description={
                     roleChangeTarget
-                        ? t('people.changeRoleDescription', {
-                              name: roleChangeTarget.member.user.name,
-                              role: roleChangeTargetLabel,
-                          })
-                        : t('people.changeRoleFallback')
+                        ? `Grant ${roleChangeTargetLabel} permission to ${roleChangeTarget.member.user.name} in this organization?`
+                        : 'Change this member role?'
                 }
-                cancelLabel={t('actions.cancel')}
-                actionLabel={t('actions.changeRole')}
+                cancelLabel="Cancel"
+                actionLabel="Change role"
                 actionVariant="primary"
                 isActionLoading={changeMemberRole.isPending}
                 onAction={async () => {
@@ -219,10 +214,7 @@ export default function People({
                             role: roleChangeTarget.role,
                         });
                         toast({
-                            body: t('people.roleChanged', {
-                                name: roleChangeTarget.member.user.name,
-                                role: roleChangeTargetLabel,
-                            }),
+                            body: `${roleChangeTarget.member.user.name} now has ${roleChangeTargetLabel} permission`,
                         });
                         setRoleChangeTarget(null);
                     } catch (mutationError) {
@@ -230,7 +222,7 @@ export default function People({
                             body:
                                 mutationError instanceof Error
                                     ? mutationError.message
-                                    : t('people.failedChangeMemberRole'),
+                                    : 'Failed to change member role',
                             type: 'error',
                         });
                     }
@@ -242,8 +234,8 @@ export default function People({
                     height="auto"
                     header={
                         <DialogHeader
-                            title={t('people.inviteTitle')}
-                            subtitle={t('people.inviteDescription')}
+                            title="Invite user"
+                            subtitle="Send an invitation to join this organization."
                             onOpenChange={setInviteOpen}
                         />
                     }
@@ -265,7 +257,7 @@ export default function People({
                                             body:
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : t('people.failedInviteUser'),
+                                                    : 'Failed to invite user',
                                             type: 'error',
                                         });
                                     }
@@ -273,11 +265,11 @@ export default function People({
                             >
                                 <VStack gap={4}>
                                     {canInviteMembers ? null : (
-                                        <Text type="supporting">{t('people.invitePermissionHint')}</Text>
+                                        <Text type="supporting">You need maintainer, admin, or owner access to invite members.</Text>
                                     )}
                                     <FormLayout>
                                         <TextInput
-                                            label={t('labels.email')}
+                                            label="Email"
                                             type="email"
                                             value={inviteEmail}
                                             placeholder="user@example.com"
@@ -286,16 +278,16 @@ export default function People({
                                         />
                                         <Selector
                                             isRequired
-                                            label={t('columns.role')}
+                                            label="Role"
                                             options={[...ROLE_NAMES]}
                                             value={inviteRole}
                                             onChange={(value) => setInviteRole(value as Role)}
                                         />
                                     </FormLayout>
                                     <HStack gap={2} justify="end" wrap="wrap">
-                                        <Button label={t('actions.cancel')} onClick={() => setInviteOpen(false)} />
+                                        <Button label="Cancel" onClick={() => setInviteOpen(false)} />
                                         <Button
-                                            label={inviteMember.isPending ? t('actions.inviting') : t('actions.invite')}
+                                            label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
                                             type="submit"
                                             variant="primary"
                                             isLoading={inviteMember.isPending}

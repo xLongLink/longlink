@@ -1,7 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -21,11 +20,10 @@ export default function Applications({
     isLoading: boolean;
     error: Error | null;
 }) {
-    const t = useTranslator();
     const columns: TableColumn<OrganizationApplicationSummary>[] = [
         {
             key: 'name',
-            header: t('columns.application'),
+            header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
                 <HStack gap={3} align="center">
@@ -47,7 +45,7 @@ export default function Applications({
 
     // Surface application lookup failures when no stale data is available.
     if (error && applications.length === 0) {
-        return <Banner status="error" title={t('errors.loadApplications')} />;
+        return <Banner status="error" title="Failed to load applications." />;
     }
 
     return (
@@ -55,7 +53,7 @@ export default function Applications({
             columns={columns}
             data={applications}
             density="compact"
-            emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+            emptyState={<EmptyState title="No results." isCompact />}
             hasHover
             idKey="id"
         />

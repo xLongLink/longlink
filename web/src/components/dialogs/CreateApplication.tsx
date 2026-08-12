@@ -2,7 +2,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -55,7 +54,6 @@ const defaultCreateApplicationValues = {
 
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organizationId }: { organizationId: string }) {
-    const t = useTranslator();
     const toast = useToast();
     const createApplication = useCreateOrganizationApplication(organizationId);
     const formId = useId();
@@ -117,7 +115,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 setError(inspectError.message);
             } else {
                 toast({
-                    body: inspectError instanceof Error ? inspectError.message : t('dialogs.inspectImageFailed'),
+                    body: inspectError instanceof Error ? inspectError.message : 'Failed to inspect image',
                     type: 'error',
                 });
             }
@@ -133,7 +131,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         const application = createApplicationSubmitSchema.safeParse(payload);
         // Stop before submission when required fields are invalid.
         if (!application.success) {
-            setError(t('dialogs.createApplicationFailed'));
+            setError('Failed to create application');
             return;
         }
 
@@ -153,7 +151,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             resetDialogState();
         } catch (mutationError) {
             toast({
-                body: mutationError instanceof Error ? mutationError.message : t('dialogs.createApplicationFailed'),
+                body: mutationError instanceof Error ? mutationError.message : 'Failed to create application',
                 type: 'error',
             });
         }
@@ -173,7 +171,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     return (
         <>
             <Button
-                label={t('actions.create')}
+                label="Create"
                 isDisabled={organizationId.length === 0}
                 clickAction={() => setOpen(true)}
             />
@@ -190,14 +188,12 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                         <DialogHeader
                             title={
                                 step === 'image'
-                                    ? t('dialogs.inspectImage')
+                                    ? 'Inspect image'
                                     : step === 'metadata'
-                                      ? t('dialogs.reviewMetadata')
-                                      : t('dialogs.reviewEnvs')
+                                      ? 'Review metadata'
+                                      : 'Review envs'
                             }
-                            subtitle={`${t('dialogs.stepImage')} / ${t('dialogs.stepMetadata')} / ${t(
-                                'dialogs.stepEnvs'
-                            )}`}
+                            subtitle="1. Image / 2. Metadata / 3. Envs"
                             onOpenChange={handleOpenChange}
                         />
                     }
@@ -212,7 +208,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             render={({ field }) => (
                                                 <TextInput
                                                     ref={field.ref}
-                                                    label={t('labels.image')}
+                                                    label="Image"
                                                     value={field.value}
                                                     htmlName={field.name}
                                                     isRequired
@@ -244,7 +240,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             render={({ field }) => (
                                                 <TextInput
                                                     ref={field.ref}
-                                                    label={t('labels.name')}
+                                                    label="Name"
                                                     value={field.value}
                                                     htmlName={field.name}
                                                     isRequired
@@ -260,7 +256,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             render={({ field }) => (
                                                 <TextInput
                                                     ref={field.ref}
-                                                    label={t('labels.description')}
+                                                    label="Description"
                                                     value={field.value}
                                                     htmlName={field.name}
                                                     isOptional
@@ -271,13 +267,13 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             )}
                                         />
                                         <Selector
-                                            label={t('labels.icon')}
+                                            label="Icon"
                                             options={[
-                                                { value: '__none__', label: t('dialogs.none') },
+                                                { value: '__none__', label: 'None' },
                                                 ...(iconCatalog ?? []).map((name) => ({ value: name, label: name })),
                                             ]}
                                             value={icon}
-                                            placeholder={t('dialogs.chooseIcon')}
+                                            placeholder="Choose an icon"
                                             isOptional
                                             onChange={(value) =>
                                                 form.setValue('icon', isIconName(value) ? value : '', {
@@ -308,7 +304,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         isRequired={env.required}
                                                         placeholder={
                                                             env.description ??
-                                                            t('dialogs.enterEnvironment', { name: env.name })
+                                                            `Enter ${env.name}`
                                                         }
                                                         onBlur={field.onBlur}
                                                         onChange={field.onChange}
@@ -327,7 +323,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                             {step === 'image' ? (
                                 <Stack direction="horizontal" gap={2} justify="end">
                                     <Button
-                                        label={t('actions.cancel')}
+                                        label="Cancel"
                                         variant="ghost"
                                         isDisabled={isInspecting}
                                         clickAction={() => handleOpenChange(false)}
@@ -335,7 +331,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                     <Button
                                         form={formId}
                                         type="submit"
-                                        label={isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
+                                        label={isInspecting ? 'Inspecting...' : 'Inspect image'}
                                         variant="primary"
                                         isDisabled={!hasImage}
                                         isLoading={isInspecting}
@@ -344,7 +340,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                             ) : step === 'metadata' ? (
                                 <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                                     <Button
-                                        label={t('actions.back')}
+                                        label="Back"
                                         variant="ghost"
                                         clickAction={() => {
                                             setStep('image');
@@ -353,14 +349,14 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                     />
                                     <Stack direction="horizontal" gap={2}>
                                         <Button
-                                            label={t('actions.cancel')}
+                                            label="Cancel"
                                             variant="ghost"
                                             clickAction={() => handleOpenChange(false)}
                                         />
                                         <Button
                                             form={formId}
                                             type="submit"
-                                            label={t('actions.next')}
+                                            label="Next"
                                             variant="primary"
                                             isDisabled={!hasRequiredMetadata}
                                         />
@@ -369,7 +365,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                             ) : (
                                 <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                                     <Button
-                                        label={t('actions.back')}
+                                        label="Back"
                                         variant="ghost"
                                         isDisabled={createApplication.isPending}
                                         clickAction={() => {
@@ -379,7 +375,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                     />
                                     <Stack direction="horizontal" gap={2}>
                                         <Button
-                                            label={t('actions.cancel')}
+                                            label="Cancel"
                                             variant="ghost"
                                             isDisabled={createApplication.isPending}
                                             clickAction={() => handleOpenChange(false)}
@@ -389,8 +385,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                             type="submit"
                                             label={
                                                 createApplication.isPending
-                                                    ? t('actions.creating')
-                                                    : t('actions.create')
+                                                    ? 'Creating...'
+                                                    : 'Create'
                                             }
                                             variant="primary"
                                             isDisabled={!hasRequiredMetadata || !form.formState.isValid}

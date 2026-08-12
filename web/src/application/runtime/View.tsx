@@ -2,7 +2,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Stack } from '@astryxdesign/core/Stack';
 import startCase from 'lodash/startCase';
@@ -136,7 +135,6 @@ function createPageState(key: string, params: Record<string, string>, navigation
  * Renders registered XML pages for Platform and Application routes.
  */
 export default function View({ applicationStatus, isApplicationLoading = false, pages }: ViewProps) {
-    const t = useTranslator();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
@@ -172,7 +170,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
-        actionLabel: organization ? t('actions.backToOrganization') : t('actions.backToOrganizations'),
+        actionLabel: organization ? 'Back to organization' : 'Back to organizations',
     };
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
@@ -275,7 +273,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                     ...current,
                     [activePageStateKey]: {
                         ...loadingPageState,
-                        error: urlError instanceof Error ? urlError.message : t('appView.invalidPageUrl'),
+                        error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
                         loading: false,
                     },
                 };
@@ -356,7 +354,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                         ...current,
                         [activePageStateKey]: {
                             ...currentPageState,
-                            error: fetchError instanceof Error ? fetchError.message : t('appView.loadPageFailed'),
+                            error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
                             loading: false,
                         },
                     };
@@ -383,7 +381,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         organization,
         pages,
         resolvedPagesBaseUrl,
-        t,
     ]);
 
     // Show deployment loading only while status or access is still resolving.
@@ -407,13 +404,13 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                         isAlert={applicationStatus === 'failed'}
                         message={
                             applicationStatus === 'failed'
-                                ? t('appView.applicationDeploymentFailedDescription')
-                                : t('appView.applicationDeletingDescription')
+                                ? 'LongLink could not deploy this application. Contact an administrator before trying again.'
+                                : 'This application is unavailable while LongLink removes it.'
                         }
                         title={
                             applicationStatus === 'failed'
-                                ? t('appView.applicationDeploymentFailed')
-                                : t('appView.applicationDeleting')
+                                ? 'Application deployment failed'
+                                : 'Application is being deleted'
                         }
                     />
                 </Center>
@@ -428,8 +425,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
                         {...fallbackActionProps}
-                        message={error.message || t('appView.loadApplicationFailed')}
-                        title={t('appView.unableToLoadApplication')}
+                        message={error.message || 'The application definition could not be loaded.'}
+                        title="Unable to load this application"
                     />
                 </Center>
             </XmlLayout>
@@ -463,8 +460,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}
-                message={t('appView.emptyApplication')}
-                title={t('appView.unexpectedApplicationResponse')}
+                message="The application did not expose any pages to render."
+                title="Unexpected application response"
             />
         );
     } else if (activePageStateIsCurrent && activePageState?.error) {
@@ -472,7 +469,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             <ErrorState
                 {...fallbackActionProps}
                 message={activePageState.error}
-                title={t('appView.unableToLoadPage')}
+                title="Unable to load this page"
             />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
@@ -481,8 +478,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activeFallback = (
             <ErrorState
                 {...fallbackActionProps}
-                message={t('appView.emptyResponse')}
-                title={t('appView.unexpectedApplicationResponse')}
+                message="The application returned an empty response."
+                title="Unexpected application response"
             />
         );
     }
@@ -501,7 +498,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
 /** Renders the in-shell loading page while an application is being created. */
 function LoadingState({ status }: { status: 'creating' | 'loading' }) {
-    const t = useTranslator();
 
     // Keep the shell visible while the page manifest or active page is loading.
     if (status === 'loading') return <Spinner label="Loading" />;
@@ -509,9 +505,9 @@ function LoadingState({ status }: { status: 'creating' | 'loading' }) {
     return (
         <Card maxWidth={576} padding={6} width="100%">
             <EmptyState
-                description={t('appView.retryLater')}
+                description="Please try again in a moment."
                 headingLevel={1}
-                title={t('appView.applicationIsDeploying')}
+                title="Application is being deployed"
             />
         </Card>
     );

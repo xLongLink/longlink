@@ -1,7 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -26,7 +25,6 @@ type Values = z.infer<typeof schema>;
 
 /** Registers one compute target. */
 export default function CreateCompute() {
-    const t = useTranslator();
     const toast = useToast();
     const queryClient = useQueryClient();
     const formId = useId();
@@ -67,7 +65,7 @@ export default function CreateCompute() {
 
     return (
         <>
-            <Button label={t('dialogs.connectComputeTitle')} clickAction={() => setOpen(true)} />
+            <Button label="Connect compute" clickAction={() => setOpen(true)} />
             <Dialog
                 isOpen={open}
                 onOpenChange={handleOpenChange}
@@ -78,8 +76,8 @@ export default function CreateCompute() {
                 <Layout
                     header={
                         <DialogHeader
-                            title={t('dialogs.connectComputeTitle')}
-                            subtitle={t('dialogs.connectComputeDescription')}
+                            title="Connect compute"
+                            subtitle="Register a compute backend for orchestration."
                             onOpenChange={handleOpenChange}
                         />
                     }
@@ -95,7 +93,7 @@ export default function CreateCompute() {
                                             body:
                                                 mutationError instanceof Error
                                                     ? mutationError.message
-                                                    : t('dialogs.failedConnectCompute'),
+                                                    : 'Failed to connect compute',
                                             type: 'error',
                                         });
                                     }
@@ -108,7 +106,7 @@ export default function CreateCompute() {
                                         render={({ field }) => (
                                             <TextInput
                                                 ref={field.ref}
-                                                label={t('labels.name')}
+                                                label="Name"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -123,7 +121,7 @@ export default function CreateCompute() {
                                         render={({ field }) => (
                                             <TextArea
                                                 ref={field.ref}
-                                                label={t('labels.kubeconfig')}
+                                                label="Kubeconfig"
                                                 value={field.value}
                                                 htmlName={field.name}
                                                 isRequired
@@ -141,7 +139,7 @@ export default function CreateCompute() {
                         <LayoutFooter>
                             <Stack direction="horizontal" gap={2} justify="end">
                                 <Button
-                                    label={t('actions.cancel')}
+                                    label="Cancel"
                                     variant="ghost"
                                     isDisabled={mutation.isPending}
                                     clickAction={() => handleOpenChange(false)}
@@ -149,7 +147,7 @@ export default function CreateCompute() {
                                 <Button
                                     form={formId}
                                     type="submit"
-                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    label={mutation.isPending ? 'Creating...' : 'Create'}
                                     variant="primary"
                                     isDisabled={!form.formState.isValid}
                                     isLoading={mutation.isPending}

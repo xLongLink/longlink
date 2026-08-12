@@ -1,5 +1,4 @@
 import { Heading } from '@astryxdesign/core/Heading';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { AppWindow, Settings2 } from 'lucide-react';
@@ -13,7 +12,6 @@ import OrganizationSettings, { type SettingsRouteSection } from './org/Settings'
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {
-    const t = useTranslator();
     const { organization = '' } = useParams();
     const {
         organization: organizationDetails,
@@ -35,17 +33,19 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
     return (
         <PlatformLayout
             tabs={{
-                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: AppWindow },
-                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
+                Applications: { href: `/orgs/${organization}`, icon: AppWindow },
+                Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
                     <Heading level={1}>
-                        {isSettings ? t('organization.settingsTitle') : t('organization.applicationsTitle')}
+                        {isSettings ? 'Settings' : 'Applications'}
                     </Heading>
                     <Text as="p" color="secondary">
-                        {isSettings ? t('organization.settingsDescription') : t('organization.applicationsDescription')}
+                        {isSettings
+                            ? 'Configure the organization and its runtime defaults.'
+                            : 'Manage the applications attached to this organization.'}
                     </Text>
                 </Stack>
                 {isSettings ? (

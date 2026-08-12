@@ -4,7 +4,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -27,17 +26,13 @@ const statusVariants = {
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const t = useTranslator();
     const statusLabels: Record<Status, string> = {
-        creating: t('status.creating'),
-        running: t('status.running'),
-        failed: t('status.failed'),
-        deleting: t('status.deleting'),
+        creating: 'Creating', running: 'Running', failed: 'Failed', deleting: 'Deleting',
     };
     const columns: TableColumn<ApplicationResponse>[] = [
         {
             key: 'name',
-            header: t('columns.application'),
+            header: 'Application',
             width: proportional(2),
             renderCell: (app) => (
                 <HStack gap={3} align="start">
@@ -53,7 +48,7 @@ export default function AdminApplications() {
         },
         {
             key: 'organization',
-            header: t('columns.organization'),
+            header: 'Organization',
             width: proportional(1),
             renderCell: (app) => (
                 <HStack gap={3} align="center">
@@ -66,19 +61,19 @@ export default function AdminApplications() {
         },
         {
             key: 'status',
-            header: t('columns.status'),
+            header: 'Status',
             width: pixel(128),
             renderCell: (app) => <Badge label={statusLabels[app.status]} variant={statusVariants[app.status]} />,
         },
         {
             key: 'image_desired',
-            header: t('columns.image'),
+            header: 'Image',
             width: proportional(2),
             renderCell: (app) => <Text type="supporting">{app.image_desired}</Text>,
         },
         {
             key: 'created_at',
-            header: t('columns.created'),
+            header: 'Created',
             width: pixel(208),
             renderCell: (app) => dateTimeFormatter.format(new Date(app.created_at)),
         },
@@ -96,8 +91,8 @@ export default function AdminApplications() {
     return (
         <VStack gap={6} width="100%">
             <VStack gap={1}>
-                <Heading level={1}>{t('admin.applicationsTitle')}</Heading>
-                <Text type="supporting">{t('admin.applicationsDescription')}</Text>
+                <Heading level={1}>Applications</Heading>
+                <Text type="supporting">Review all applications across organizations and deployment states.</Text>
             </VStack>
             {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
                 <Banner status="error" title={error.message} />
@@ -106,7 +101,7 @@ export default function AdminApplications() {
                     columns={columns}
                     data={pageItems}
                     density="compact"
-                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}

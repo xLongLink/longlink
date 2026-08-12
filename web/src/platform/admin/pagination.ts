@@ -1,4 +1,3 @@
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { paginateData, useTablePagination } from '@astryxdesign/core/Table';
 import { useState } from 'react';
 
@@ -9,7 +8,6 @@ export function useAdminPagination<T extends Record<string, unknown>>(
     items: T[],
     controls: 'compact' | 'default' = 'compact'
 ) {
-    const t = useTranslator();
     const [page, setPage] = useState(1);
     const currentPage = Math.min(page, Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
 
@@ -20,7 +18,7 @@ export function useAdminPagination<T extends Record<string, unknown>>(
         pageSize: PAGE_SIZE,
         ...(controls === 'compact'
             ? {
-                  label: `${t('actions.previous')} / ${t('actions.next')}`,
+                   label: 'Previous / Next',
                   size: 'sm' as const,
               }
             : {}),
