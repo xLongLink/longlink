@@ -1,11 +1,9 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core-0-3/CheckboxInput';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const CHECKBOX_SIZES = ['sm', 'md'] as const;
+import { resolveInputStatus } from './input';
 
 /** Renders an Astryx checkbox with boolean Valtio binding. */
 export function CheckboxInput({ props }: Props) {
@@ -23,7 +21,7 @@ export function CheckboxInput({ props }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && !isXmlEnum(size, CHECKBOX_SIZES)) {
+    if (size != null && size !== 'sm' && size !== 'md') {
         throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
     }
 
@@ -32,18 +30,18 @@ export function CheckboxInput({ props }: Props) {
             size={size}
             label={requireXmlString(props, 'label', ctx, 'CheckboxInput')}
             value={binding.value}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
             status={resolveInputStatus(props, ctx)}
-            htmlName={isXmlString(htmlName) ? htmlName : undefined}
+            htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
-            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
-            isReadOnly={isXmlBoolean(isReadOnly) ? isReadOnly : undefined}
-            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            description={isXmlString(description) ? description : undefined}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
+            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
+            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
+            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
+            isReadOnly={typeof isReadOnly === 'boolean' ? isReadOnly : undefined}
+            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
+            description={typeof description === 'string' ? description : undefined}
+            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
+            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
         />
     );
 }

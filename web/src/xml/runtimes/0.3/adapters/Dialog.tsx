@@ -6,7 +6,7 @@ import { createContext } from 'react';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
@@ -20,8 +20,9 @@ export function Dialog({ props, nodes }: Props) {
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const purposeValue = resolveXml(props, 'purpose', ctx);
     const variantValue = resolveXml(props, 'variant', ctx);
-    const purpose = isXmlEnum(purposeValue, ['required', 'form', 'info']) ? purposeValue : 'info';
-    const variant = isXmlEnum(variantValue, ['standard', 'fullscreen']) ? variantValue : 'standard';
+    const purpose =
+        purposeValue === 'required' || purposeValue === 'form' || purposeValue === 'info' ? purposeValue : 'info';
+    const variant = variantValue === 'standard' || variantValue === 'fullscreen' ? variantValue : 'standard';
     const maxHeight = resolveXml(props, 'maxHeight', ctx);
     const padding = resolveXml(props, 'padding', ctx);
     const width = resolveXml(props, 'width', ctx);
@@ -33,18 +34,32 @@ export function Dialog({ props, nodes }: Props) {
             <DialogCloseContext.Provider value={() => binding.setValue(false)}>
                 <AstryxDialog
                     isOpen={binding.value}
-                    maxHeight={isXmlString(maxHeight) || isXmlNumber(maxHeight) ? maxHeight : undefined}
+                    maxHeight={typeof maxHeight === 'string' || typeof maxHeight === 'number' ? maxHeight : undefined}
                     onOpenChange={binding.setValue}
-                    padding={isXmlEnum(padding, [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10]) ? padding : undefined}
+                    padding={
+                        padding === 0 ||
+                        padding === 0.5 ||
+                        padding === 1 ||
+                        padding === 1.5 ||
+                        padding === 2 ||
+                        padding === 3 ||
+                        padding === 4 ||
+                        padding === 5 ||
+                        padding === 6 ||
+                        padding === 8 ||
+                        padding === 10
+                            ? padding
+                            : undefined
+                    }
                     purpose={purpose}
                     variant={variant}
-                    width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+                    width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
                 >
                     <Layout
                         header={
                             <DialogHeader
                                 onOpenChange={purpose === 'required' ? undefined : binding.setValue}
-                                subtitle={isXmlString(subtitle) ? subtitle : undefined}
+                                subtitle={typeof subtitle === 'string' ? subtitle : undefined}
                                 title={title}
                             />
                         }

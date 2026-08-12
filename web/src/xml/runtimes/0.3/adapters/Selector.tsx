@@ -1,14 +1,11 @@
-import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
+import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
+import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
+import { Selector as AstryxSelector, type SelectorSize } from '@astryxdesign/core-0-3/Selector';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const FIELD_STATUS_VARIANTS = ['attached', 'detached', 'tooltip'] as const;
-const LAYER_PLACEMENTS = ['above', 'below', 'start', 'end'] as const;
-const SELECTOR_SIZES = ['sm', 'md', 'lg'] as const;
-const SELECTOR_VARIANTS = ['input', 'ghost'] as const;
+import { resolveInputStatus } from './input';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {
@@ -22,10 +19,10 @@ export function Selector({ props, nodes }: Props) {
         .map((node) => {
             const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
             const labelValue = resolveXml(node.params, 'label', ctx);
-            const label = isXmlString(labelValue) ? labelValue : value;
+            const label = typeof labelValue === 'string' ? labelValue : value;
             const disabledValue = resolveXml(node.params, 'isDisabled', ctx);
 
-            return { value, label, disabled: isXmlBoolean(disabledValue) ? disabledValue : undefined };
+            return { value, label, disabled: typeof disabledValue === 'boolean' ? disabledValue : undefined };
         });
 
     // Selectors require at least one serializable option.
@@ -50,44 +47,66 @@ export function Selector({ props, nodes }: Props) {
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
-    if (size != null && !isXmlEnum(size, SELECTOR_SIZES)) {
+    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
         throw new Error(`Unsupported Selector size '${String(size)}'`);
     }
 
-    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) {
+    if (
+        placement != null &&
+        placement !== 'above' &&
+        placement !== 'below' &&
+        placement !== 'start' &&
+        placement !== 'end'
+    ) {
         throw new Error(`Unsupported Selector placement '${String(placement)}'`);
     }
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (
+        statusVariant != null &&
+        statusVariant !== 'attached' &&
+        statusVariant !== 'detached' &&
+        statusVariant !== 'tooltip'
+    ) {
         throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
     }
 
-    if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
+    if (variant != null && variant !== 'input' && variant !== 'ghost') {
         throw new Error(`Unsupported Selector variant '${String(variant)}'`);
     }
+    const selectorSize: SelectorSize | undefined = size === 'sm' || size === 'md' || size === 'lg' ? size : undefined;
+    const selectorPlacement: LayerPlacement | undefined =
+        placement === 'above' || placement === 'below' || placement === 'start' || placement === 'end'
+            ? placement
+            : undefined;
+    const selectorStatusVariant: FieldStatusVariant | undefined =
+        statusVariant === 'attached' || statusVariant === 'detached' || statusVariant === 'tooltip'
+            ? statusVariant
+            : undefined;
+    const selectorVariant: 'input' | 'ghost' | undefined =
+        variant === 'input' || variant === 'ghost' ? variant : undefined;
     const common = {
-        size,
+        size: selectorSize,
         label: requireXmlString(props, 'label', ctx, 'Selector'),
         value: binding.value,
-        width: isXmlString(width) || isXmlNumber(width) ? width : undefined,
+        width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
         status: resolveInputStatus(props, ctx),
         options,
-        variant,
-        htmlName: isXmlString(htmlName) ? htmlName : undefined,
-        hasSearch: isXmlBoolean(hasSearch) ? hasSearch : undefined,
-        isLoading: isXmlBoolean(isLoading) ? isLoading : undefined,
-        placement,
-        isDisabled: isXmlBoolean(isDisabled) ? isDisabled : undefined,
-        isOptional: isXmlBoolean(isOptional) ? isOptional : undefined,
-        isRequired: isXmlBoolean(isRequired) ? isRequired : undefined,
-        description: isXmlString(description) ? description : undefined,
-        placeholder: isXmlString(placeholder) ? placeholder : undefined,
-        labelTooltip: isXmlString(labelTooltip) ? labelTooltip : undefined,
-        isDefaultOpen: isXmlBoolean(isDefaultOpen) ? isDefaultOpen : undefined,
-        isLabelHidden: isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined,
-        statusVariant,
-        disabledMessage: isXmlString(disabledMessage) ? disabledMessage : undefined,
-        searchPlaceholder: isXmlString(searchPlaceholder) ? searchPlaceholder : undefined,
+        variant: selectorVariant,
+        htmlName: typeof htmlName === 'string' ? htmlName : undefined,
+        hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
+        isLoading: typeof isLoading === 'boolean' ? isLoading : undefined,
+        placement: selectorPlacement,
+        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
+        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
+        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
+        description: typeof description === 'string' ? description : undefined,
+        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
+        labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
+        isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
+        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
+        statusVariant: selectorStatusVariant,
+        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
+        searchPlaceholder: typeof searchPlaceholder === 'string' ? searchPlaceholder : undefined,
     };
 
     // Astryx uses a discriminated value contract for clearable selectors.

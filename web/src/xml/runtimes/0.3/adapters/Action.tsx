@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { resolveXml, resolveXmlValue } from '../core/props';
 import { resolveRequestUrl } from '../core/url';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { DialogCloseContext } from './Dialog';
@@ -55,8 +55,8 @@ export async function executeAction(
         invalidate = invalidationValue.map((value) => String(value));
         const methodValue = resolveXml(props, 'method', ctx);
         const actionValue = resolveXml(props, 'action', ctx);
-        method = isXmlString(methodValue) ? methodValue : 'POST';
-        actionUrl = isXmlString(actionValue) ? actionValue : '';
+        method = typeof methodValue === 'string' ? methodValue : 'POST';
+        actionUrl = typeof actionValue === 'string' ? actionValue : '';
         if (!actionUrl) {
             throw new Error('Action requires an action URL');
         }

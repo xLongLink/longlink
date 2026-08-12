@@ -4,7 +4,7 @@ import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlBoolean, isXmlNumber, isXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { resolveXml, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
@@ -52,7 +52,7 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading accessibilityLevel must be from 1 to 6');
     }
 
-    if (maxLines != null && (!isXmlNumber(maxLines) || !Number.isInteger(maxLines) || maxLines < 0)) {
+    if (maxLines != null && (typeof maxLines !== 'number' || !Number.isInteger(maxLines) || maxLines < 0)) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
@@ -86,17 +86,17 @@ export function Heading({ props, nodes }: Props) {
 
     return (
         <AstryxHeading
-            id={isXmlString(id) ? id : undefined}
+            id={typeof id === 'string' ? id : undefined}
             type={type}
             color={color}
             level={level}
             display={display}
             justify={justify}
-            maxLines={isXmlNumber(maxLines) ? maxLines : undefined}
+            maxLines={typeof maxLines === 'number' ? maxLines : undefined}
             textWrap={textWrap}
             wordBreak={wordBreak}
-            hasCapsize={isXmlBoolean(hasCapsize) ? hasCapsize : undefined}
-            hasStrikethrough={isXmlBoolean(hasStrikethrough) ? hasStrikethrough : undefined}
+            hasCapsize={typeof hasCapsize === 'boolean' ? hasCapsize : undefined}
+            hasStrikethrough={typeof hasStrikethrough === 'boolean' ? hasStrikethrough : undefined}
             accessibilityLevel={accessibilityLevel}
             hasTruncateTooltip={hasTruncateTooltip}
         >

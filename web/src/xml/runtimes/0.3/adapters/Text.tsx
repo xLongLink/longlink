@@ -1,3 +1,4 @@
+import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type {
     TextColor,
@@ -9,13 +10,9 @@ import type {
     TextWrap,
     WordBreak,
 } from '@astryxdesign/core-0-3/Text';
-import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import {
-    isXmlBoolean, isXmlNumber, isXmlString, resolveXml,
-    resolveXmlValue,
-} from '../core/props';
+import { resolveXml, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
 const TEXT_COLORS: readonly TextColor[] = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'];
@@ -23,7 +20,17 @@ const TEXT_DISPLAYS: readonly TextDisplay[] = ['inline', 'block'];
 const TEXT_ELEMENTS = ['span', 'p', 'div', 'label', 'h1', 'h2', 'h3'] as const;
 const TEXT_JUSTIFICATIONS: readonly TextJustify[] = ['start', 'center', 'end'];
 const TEXT_SIZES: readonly TextSize[] = ['4xs', '3xs', '2xs', 'xsm', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
-const TEXT_TYPES: readonly TextType[] = ['body', 'large', 'label', 'supporting', 'code', 'display-1', 'display-2', 'display-3', 'inherit'];
+const TEXT_TYPES: readonly TextType[] = [
+    'body',
+    'large',
+    'label',
+    'supporting',
+    'code',
+    'display-1',
+    'display-2',
+    'display-3',
+    'inherit',
+];
 const TEXT_WEIGHTS: readonly TextWeight[] = ['normal', 'medium', 'semibold', 'bold'];
 const TEXT_WORD_BREAKS: readonly WordBreak[] = ['break-word', 'break-all'];
 const TEXT_WRAPS: readonly TextWrap[] = ['wrap', 'nowrap', 'balance', 'pretty'];
@@ -59,7 +66,7 @@ export function Text({ props, nodes }: Props) {
     const hasTabularNumbers = resolveXml(props, 'hasTabularNumbers', ctx);
     const hasTruncateTooltip = resolveXmlValue(props, 'hasTruncateTooltip', ctx);
 
-    if (maxLines != null && (!isXmlNumber(maxLines) || !Number.isInteger(maxLines) || maxLines < 0)) {
+    if (maxLines != null && (typeof maxLines !== 'number' || !Number.isInteger(maxLines) || maxLines < 0)) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
@@ -105,7 +112,7 @@ export function Text({ props, nodes }: Props) {
 
     return (
         <AstryxText
-            id={isXmlString(id) ? id : undefined}
+            id={typeof id === 'string' ? id : undefined}
             type={type}
             size={size}
             color={color}
@@ -113,12 +120,12 @@ export function Text({ props, nodes }: Props) {
             display={display}
             as={as}
             justify={justify}
-            maxLines={isXmlNumber(maxLines) ? maxLines : undefined}
+            maxLines={typeof maxLines === 'number' ? maxLines : undefined}
             textWrap={textWrap}
             wordBreak={wordBreak}
-            hasCapsize={isXmlBoolean(hasCapsize) ? hasCapsize : undefined}
-            hasStrikethrough={isXmlBoolean(hasStrikethrough) ? hasStrikethrough : undefined}
-            hasTabularNumbers={isXmlBoolean(hasTabularNumbers) ? hasTabularNumbers : undefined}
+            hasCapsize={typeof hasCapsize === 'boolean' ? hasCapsize : undefined}
+            hasStrikethrough={typeof hasStrikethrough === 'boolean' ? hasStrikethrough : undefined}
+            hasTabularNumbers={typeof hasTabularNumbers === 'boolean' ? hasTabularNumbers : undefined}
             hasTruncateTooltip={hasTruncateTooltip}
         >
             {value != null ? String(value) : renderNode(nodes, ctx)}

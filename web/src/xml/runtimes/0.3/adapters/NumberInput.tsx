@@ -1,12 +1,10 @@
-import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
+import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
+import { NumberInput as AstryxNumberInput, type NumberInputSize } from '@astryxdesign/core-0-3/NumberInput';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const FIELD_STATUS_VARIANTS = ['attached', 'detached', 'tooltip'] as const;
-const NUMBER_INPUT_SIZES = ['sm', 'md', 'lg'] as const;
+import { resolveInputStatus } from './input';
 
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {
@@ -33,36 +31,46 @@ export function NumberInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && !isXmlEnum(size, NUMBER_INPUT_SIZES)) {
+    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
         throw new Error(`Unsupported NumberInput size '${String(size)}'`);
     }
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (
+        statusVariant != null &&
+        statusVariant !== 'attached' &&
+        statusVariant !== 'detached' &&
+        statusVariant !== 'tooltip'
+    ) {
         throw new Error(`Unsupported NumberInput statusVariant '${String(statusVariant)}'`);
     }
+    const inputSize: NumberInputSize | undefined = size === 'sm' || size === 'md' || size === 'lg' ? size : undefined;
+    const inputStatusVariant: FieldStatusVariant | undefined =
+        statusVariant === 'attached' || statusVariant === 'detached' || statusVariant === 'tooltip'
+            ? statusVariant
+            : undefined;
     const common = {
-        max: isXmlNumber(max) ? max : undefined,
-        min: isXmlNumber(min) ? min : undefined,
-        size,
-        step: isXmlNumber(step) ? step : undefined,
+        max: typeof max === 'number' ? max : undefined,
+        min: typeof min === 'number' ? min : undefined,
+        size: inputSize,
+        step: typeof step === 'number' ? step : undefined,
         label: requireXmlString(props, 'label', ctx, 'NumberInput'),
-        units: isXmlString(units) ? units : undefined,
+        units: typeof units === 'string' ? units : undefined,
         value: binding.value,
-        width: isXmlString(width) || isXmlNumber(width) ? width : undefined,
+        width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
         status: resolveInputStatus(props, ctx),
-        htmlName: isXmlString(htmlName) ? htmlName : undefined,
-        isDisabled: isXmlBoolean(isDisabled) ? isDisabled : undefined,
-        isOptional: isXmlBoolean(isOptional) ? isOptional : undefined,
-        isRequired: isXmlBoolean(isRequired) ? isRequired : undefined,
-        description: isXmlString(description) ? description : undefined,
-        placeholder: isXmlString(placeholder) ? placeholder : undefined,
-        autoComplete: isXmlString(autoComplete) ? autoComplete : undefined,
-        hasAutoFocus: isXmlBoolean(hasAutoFocus) ? hasAutoFocus : undefined,
-        labelTooltip: isXmlString(labelTooltip) ? labelTooltip : undefined,
-        isIntegerOnly: isXmlBoolean(isIntegerOnly) ? isIntegerOnly : undefined,
-        isLabelHidden: isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined,
-        statusVariant,
-        disabledMessage: isXmlString(disabledMessage) ? disabledMessage : undefined,
+        htmlName: typeof htmlName === 'string' ? htmlName : undefined,
+        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
+        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
+        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
+        description: typeof description === 'string' ? description : undefined,
+        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
+        autoComplete: typeof autoComplete === 'string' ? autoComplete : undefined,
+        hasAutoFocus: typeof hasAutoFocus === 'boolean' ? hasAutoFocus : undefined,
+        labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
+        isIntegerOnly: typeof isIntegerOnly === 'boolean' ? isIntegerOnly : undefined,
+        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
+        statusVariant: inputStatusVariant,
+        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
     };
 
     // Astryx uses a discriminated callback type for clearable fields.

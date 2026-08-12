@@ -7,7 +7,7 @@ import { renderIcon } from '@/lib/icons';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlString, isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders Astryx side navigation and the selected XML panel. */
@@ -29,7 +29,7 @@ export function SideNav({ props, nodes }: Props) {
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? items[0].value));
     const labelValue = resolveXml(props, 'label', ctx);
-    const label = isXmlString(labelValue) ? labelValue : 'Navigation';
+    const label = typeof labelValue === 'string' ? labelValue : 'Navigation';
     const activeItem = items.find((item) => item.value === binding.value);
 
     return (
@@ -37,7 +37,10 @@ export function SideNav({ props, nodes }: Props) {
             <AstryxSideNav className="h-auto w-full">
                 <SideNavSection title={label} isHeaderHidden>
                     {items.map((item) => {
-                        const icon = isXmlString(item.icon) ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 }) : undefined;
+                        const icon =
+                            typeof item.icon === 'string'
+                                ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 })
+                                : undefined;
 
                         return (
                             <AstryxSideNavItem

@@ -1,13 +1,9 @@
 import { TextInput as AstryxTextInput } from '@astryxdesign/core-0-3/TextInput';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const FIELD_STATUS_VARIANTS = ['attached', 'detached', 'tooltip'] as const;
-const TEXT_INPUT_SIZES = ['sm', 'md', 'lg'] as const;
-const TEXT_INPUT_TYPES = ['text', 'password', 'email'] as const;
+import { resolveInputStatus } from './input';
 
 /** Renders an accessible Astryx text input with optional Valtio binding. */
 export function TextInput({ props }: Props) {
@@ -31,15 +27,20 @@ export function TextInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (type != null && !isXmlEnum(type, TEXT_INPUT_TYPES)) {
+    if (type != null && type !== 'text' && type !== 'password' && type !== 'email') {
         throw new Error(`Unsupported TextInput type '${String(type)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, TEXT_INPUT_SIZES)) {
+    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
         throw new Error(`Unsupported TextInput size '${String(size)}'`);
     }
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (
+        statusVariant != null &&
+        statusVariant !== 'attached' &&
+        statusVariant !== 'detached' &&
+        statusVariant !== 'tooltip'
+    ) {
         throw new Error(`Unsupported TextInput statusVariant '${String(statusVariant)}'`);
     }
 
@@ -49,22 +50,22 @@ export function TextInput({ props }: Props) {
             size={size}
             label={label}
             value={binding.value}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
             status={resolveInputStatus(props, ctx)}
-            hasClear={isXmlBoolean(hasClear) ? hasClear : undefined}
-            htmlName={isXmlString(htmlName) ? htmlName : undefined}
+            hasClear={typeof hasClear === 'boolean' ? hasClear : undefined}
+            htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
-            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
-            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            description={isXmlString(description) ? description : undefined}
-            placeholder={isXmlString(placeholder) ? placeholder : undefined}
-            hasAutoFocus={isXmlBoolean(hasAutoFocus) ? hasAutoFocus : undefined}
-            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
+            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
+            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
+            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
+            description={typeof description === 'string' ? description : undefined}
+            placeholder={typeof placeholder === 'string' ? placeholder : undefined}
+            hasAutoFocus={typeof hasAutoFocus === 'boolean' ? hasAutoFocus : undefined}
+            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
+            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
             statusVariant={statusVariant}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
+            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
         />
     );
 }

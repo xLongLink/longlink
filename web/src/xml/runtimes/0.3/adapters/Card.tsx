@@ -1,12 +1,8 @@
 import { Card as AstryxCard } from '@astryxdesign/core-0-3/Card';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlEnum, isXmlNumber, isXmlString, resolveXml } from '../core/props';
+import { resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const CARD_ELEVATIONS = ['none', 'low', 'med', 'high'] as const;
-const CARD_VARIANTS = ['default', 'transparent', 'muted', 'blue', 'cyan', 'gray', 'green', 'orange', 'pink', 'purple', 'red', 'teal', 'yellow'] as const;
-const SPACING_VALUES = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 
 /** Renders an Astryx card container. */
 export function Card({ props, nodes }: Props) {
@@ -19,27 +15,61 @@ export function Card({ props, nodes }: Props) {
     const elevation = resolveXml(props, 'elevation', ctx);
     const minHeight = resolveXml(props, 'minHeight', ctx);
 
-    if (padding != null && !isXmlEnum(padding, SPACING_VALUES)) {
+    if (
+        padding != null &&
+        padding !== 0 &&
+        padding !== 0.5 &&
+        padding !== 1 &&
+        padding !== 1.5 &&
+        padding !== 2 &&
+        padding !== 3 &&
+        padding !== 4 &&
+        padding !== 5 &&
+        padding !== 6 &&
+        padding !== 8 &&
+        padding !== 10
+    ) {
         throw new Error(`Unsupported Card padding '${String(padding)}'`);
     }
 
-    if (elevation != null && !isXmlEnum(elevation, CARD_ELEVATIONS)) {
+    if (
+        elevation != null &&
+        elevation !== 'none' &&
+        elevation !== 'low' &&
+        elevation !== 'med' &&
+        elevation !== 'high'
+    ) {
         throw new Error(`Unsupported Card elevation '${String(elevation)}'`);
     }
 
-    if (variant != null && !isXmlEnum(variant, CARD_VARIANTS)) {
+    if (
+        variant != null &&
+        variant !== 'default' &&
+        variant !== 'transparent' &&
+        variant !== 'muted' &&
+        variant !== 'blue' &&
+        variant !== 'cyan' &&
+        variant !== 'gray' &&
+        variant !== 'green' &&
+        variant !== 'orange' &&
+        variant !== 'pink' &&
+        variant !== 'purple' &&
+        variant !== 'red' &&
+        variant !== 'teal' &&
+        variant !== 'yellow'
+    ) {
         throw new Error(`Unsupported Card variant '${String(variant)}'`);
     }
 
     return (
         <AstryxCard
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
-            height={isXmlString(height) || isXmlNumber(height) ? height : undefined}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
+            height={typeof height === 'string' || typeof height === 'number' ? height : undefined}
             padding={padding}
             variant={variant}
-            maxWidth={isXmlString(maxWidth) || isXmlNumber(maxWidth) ? maxWidth : undefined}
+            maxWidth={typeof maxWidth === 'string' || typeof maxWidth === 'number' ? maxWidth : undefined}
             elevation={elevation}
-            minHeight={isXmlString(minHeight) || isXmlNumber(minHeight) ? minHeight : undefined}
+            minHeight={typeof minHeight === 'string' || typeof minHeight === 'number' ? minHeight : undefined}
         >
             {renderNode(nodes, ctx)}
         </AstryxCard>

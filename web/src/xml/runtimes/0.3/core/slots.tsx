@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ASTNode, Scope } from '../types';
 import { renderNode } from './node';
-import { isXmlString, resolveXml } from './props';
+import { resolveXml } from './props';
 
 type SlotOptions = {
     allowedNodes: readonly string[];
@@ -16,7 +16,7 @@ export function renderXmlSlot(nodes: ASTNode[], ctx: Scope, options: SlotOptions
     // Assign direct children to the sole unambiguous slot and validate explicit slot declarations.
     for (const node of nodes) {
         const slot = resolveXml(node.params, 'slot', ctx);
-        if (slot != null && (!isXmlString(slot) || slot !== options.name)) {
+        if (slot != null && (typeof slot !== 'string' || slot !== options.name)) {
             throw new Error(`${options.componentName} does not support the ${String(slot)} slot`);
         }
 

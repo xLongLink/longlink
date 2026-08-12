@@ -1,7 +1,6 @@
 import { Divider as AstryxDivider } from '@astryxdesign/core-0-3/Divider';
-import { xmlTypeValues } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlString, resolveXml } from '../core/props';
+import { resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders an Astryx content divider. */
@@ -12,20 +11,22 @@ export function Divider({ props }: Props) {
     const isFullBleed = resolveXml(props, 'isFullBleed', ctx);
     const orientationValue = resolveXml(props, 'orientation', ctx);
 
-    if (orientationValue != null && !isXmlEnum(orientationValue, xmlTypeValues.orientation)) {
+    if (orientationValue != null && orientationValue !== 'horizontal' && orientationValue !== 'vertical') {
         throw new Error(`Unsupported Divider orientation '${String(orientationValue)}'`);
     }
 
-    if (variantValue != null && !isXmlEnum(variantValue, xmlTypeValues.dividerVariant)) {
+    if (variantValue != null && variantValue !== 'subtle' && variantValue !== 'strong') {
         throw new Error(`Unsupported Divider variant '${String(variantValue)}'`);
     }
 
     return (
         <AstryxDivider
-            label={isXmlString(label) ? label : undefined}
-            variant={variantValue}
-            isFullBleed={isXmlBoolean(isFullBleed) ? isFullBleed : undefined}
-            orientation={orientationValue}
+            label={typeof label === 'string' ? label : undefined}
+            variant={variantValue === 'subtle' || variantValue === 'strong' ? variantValue : undefined}
+            isFullBleed={typeof isFullBleed === 'boolean' ? isFullBleed : undefined}
+            orientation={
+                orientationValue === 'horizontal' || orientationValue === 'vertical' ? orientationValue : undefined
+            }
         />
     );
 }

@@ -1,13 +1,9 @@
 import { Switch as AstryxSwitch } from '@astryxdesign/core-0-3/Switch';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const SWITCH_LABEL_POSITIONS = ['start', 'end'] as const;
-const SWITCH_LABEL_SPACINGS = ['hug', 'spread'] as const;
-const SWITCH_SIZES = ['sm', 'md'] as const;
+import { resolveInputStatus } from './input';
 
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
@@ -27,15 +23,15 @@ export function Switch({ props }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (labelPosition != null && !isXmlEnum(labelPosition, SWITCH_LABEL_POSITIONS)) {
+    if (labelPosition != null && labelPosition !== 'start' && labelPosition !== 'end') {
         throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
     }
 
-    if (labelSpacing != null && !isXmlEnum(labelSpacing, SWITCH_LABEL_SPACINGS)) {
+    if (labelSpacing != null && labelSpacing !== 'hug' && labelSpacing !== 'spread') {
         throw new Error(`Unsupported Switch labelSpacing '${String(labelSpacing)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, SWITCH_SIZES)) {
+    if (size != null && size !== 'sm' && size !== 'md') {
         throw new Error(`Unsupported Switch size '${String(size)}'`);
     }
 
@@ -44,20 +40,20 @@ export function Switch({ props }: Props) {
             size={size}
             label={requireXmlString(props, 'label', ctx, 'Switch')}
             value={binding.value}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
             status={resolveInputStatus(props, ctx)}
-            htmlName={isXmlString(htmlName) ? htmlName : undefined}
+            htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
-            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
-            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
-            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
-            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
-            description={isXmlString(description) ? description : undefined}
+            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
+            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
+            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
+            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
+            description={typeof description === 'string' ? description : undefined}
             labelSpacing={labelSpacing}
-            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
+            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             labelPosition={labelPosition}
-            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
-            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
+            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
+            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
         />
     );
 }

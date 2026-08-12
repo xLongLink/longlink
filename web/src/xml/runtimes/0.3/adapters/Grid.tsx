@@ -1,12 +1,8 @@
-import { Grid as AstryxGrid } from '@astryxdesign/core-0-3/Grid';
+import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core-0-3/Grid';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlEnum, isXmlNumber, isXmlString, readXmlProp, resolveXml } from '../core/props';
+import { readXmlProp, resolveXml } from '../core/props';
 import type { Props } from '../types';
-
-const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
-const GRID_REPEATS = ['fill', 'fit'] as const;
-const SPACING_VALUES = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
 
 /** Renders a fixed or responsive Astryx grid. */
 export function Grid({ props, nodes }: Props) {
@@ -27,43 +23,82 @@ export function Grid({ props, nodes }: Props) {
     const maxColumns = resolveXml(props, 'maxColumns', ctx);
 
     // Keep the XML attributes aligned with Astryx's fixed or responsive column union.
-    if (columnCount != null && !isXmlNumber(columnCount)) {
+    if (columnCount != null && typeof columnCount !== 'number') {
         throw new Error('Grid columns must be a positive integer');
     }
 
-    if (minWidth != null && !isXmlNumber(minWidth)) {
+    if (minWidth != null && typeof minWidth !== 'number') {
         throw new Error('Grid minColumnWidth must be a positive number');
     }
 
-    if (maxColumns != null && !isXmlNumber(maxColumns)) {
+    if (maxColumns != null && typeof maxColumns !== 'number') {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
-    if (repeat != null && !isXmlEnum(repeat, GRID_REPEATS)) {
+    if (repeat != null && repeat !== 'fill' && repeat !== 'fit') {
         throw new Error(`Unsupported Grid repeat '${String(repeat)}'`);
     }
 
-    if (gap != null && !isXmlEnum(gap, SPACING_VALUES)) {
+    if (
+        gap != null &&
+        gap !== 0 &&
+        gap !== 0.5 &&
+        gap !== 1 &&
+        gap !== 1.5 &&
+        gap !== 2 &&
+        gap !== 3 &&
+        gap !== 4 &&
+        gap !== 5 &&
+        gap !== 6 &&
+        gap !== 8 &&
+        gap !== 10
+    ) {
         throw new Error(`Unsupported Grid gap '${String(gap)}'`);
     }
 
-    if (rowGap != null && !isXmlEnum(rowGap, SPACING_VALUES)) {
+    if (
+        rowGap != null &&
+        rowGap !== 0 &&
+        rowGap !== 0.5 &&
+        rowGap !== 1 &&
+        rowGap !== 1.5 &&
+        rowGap !== 2 &&
+        rowGap !== 3 &&
+        rowGap !== 4 &&
+        rowGap !== 5 &&
+        rowGap !== 6 &&
+        rowGap !== 8 &&
+        rowGap !== 10
+    ) {
         throw new Error(`Unsupported Grid rowGap '${String(rowGap)}'`);
     }
 
-    if (columnGap != null && !isXmlEnum(columnGap, SPACING_VALUES)) {
+    if (
+        columnGap != null &&
+        columnGap !== 0 &&
+        columnGap !== 0.5 &&
+        columnGap !== 1 &&
+        columnGap !== 1.5 &&
+        columnGap !== 2 &&
+        columnGap !== 3 &&
+        columnGap !== 4 &&
+        columnGap !== 5 &&
+        columnGap !== 6 &&
+        columnGap !== 8 &&
+        columnGap !== 10
+    ) {
         throw new Error(`Unsupported Grid columnGap '${String(columnGap)}'`);
     }
 
-    if (align != null && !isXmlEnum(align, BOX_ALIGNS)) {
+    if (align != null && align !== 'start' && align !== 'center' && align !== 'end' && align !== 'stretch') {
         throw new Error(`Unsupported Grid align '${String(align)}'`);
     }
 
-    if (justify != null && !isXmlEnum(justify, BOX_ALIGNS)) {
+    if (justify != null && justify !== 'start' && justify !== 'center' && justify !== 'end' && justify !== 'stretch') {
         throw new Error(`Unsupported Grid justify '${String(justify)}'`);
     }
 
-    if (rowHeight != null && (!isXmlNumber(rowHeight) || rowHeight <= 0)) {
+    if (rowHeight != null && (typeof rowHeight !== 'number' || rowHeight <= 0)) {
         throw new Error('Grid rowHeight must be a positive number');
     }
 
@@ -92,28 +127,32 @@ export function Grid({ props, nodes }: Props) {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
-    const columns =
+    const columns: GridColumns | undefined =
         minWidth != null
-            ? {
+            ? ({
                   minWidth,
                   ...(maxColumns != null && { max: maxColumns }),
-                  ...(repeat != null && { repeat }),
-               }
+                  ...(repeat === 'fill'
+                      ? { repeat: 'fill' as const }
+                      : repeat === 'fit'
+                        ? { repeat: 'fit' as const }
+                        : {}),
+              } as const)
             : columnCount;
 
     return (
         <AstryxGrid
             gap={gap}
             align={align}
-            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
-            height={isXmlString(height) || isXmlNumber(height) ? height : undefined}
+            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
+            height={typeof height === 'string' || typeof height === 'number' ? height : undefined}
             rowGap={rowGap}
             justify={justify}
             columns={columns}
-            maxWidth={isXmlString(maxWidth) || isXmlNumber(maxWidth) ? maxWidth : undefined}
+            maxWidth={typeof maxWidth === 'string' || typeof maxWidth === 'number' ? maxWidth : undefined}
             columnGap={columnGap}
-            rowHeight={isXmlNumber(rowHeight) ? rowHeight : undefined}
-            minHeight={isXmlString(minHeight) || isXmlNumber(minHeight) ? minHeight : undefined}
+            rowHeight={typeof rowHeight === 'number' ? rowHeight : undefined}
+            minHeight={typeof minHeight === 'string' || typeof minHeight === 'number' ? minHeight : undefined}
         >
             {renderNode(nodes, ctx)}
         </AstryxGrid>

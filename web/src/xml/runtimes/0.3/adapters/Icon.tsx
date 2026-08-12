@@ -2,7 +2,7 @@ import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
 import type { IconColor, IconSize } from '@astryxdesign/core-0-3/Icon';
 import type { IconName } from '@astryxdesign/core-0-3/Icon';
 import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, isXmlString, requireXmlString, resolveXml } from '../core/props';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 const ICON_COLORS: readonly IconColor[] = [
@@ -66,17 +66,67 @@ export function Icon({ props }: Props) {
     const color = resolveXml(props, 'color', ctx);
     const label = resolveXml(props, 'label', ctx);
 
-    if (!isXmlEnum(icon, ICON_NAMES)) {
+    if (
+        icon !== 'close' &&
+        icon !== 'chevronDown' &&
+        icon !== 'chevronLeft' &&
+        icon !== 'chevronRight' &&
+        icon !== 'chevronsLeft' &&
+        icon !== 'chevronsRight' &&
+        icon !== 'check' &&
+        icon !== 'success' &&
+        icon !== 'error' &&
+        icon !== 'warning' &&
+        icon !== 'info' &&
+        icon !== 'calendar' &&
+        icon !== 'clock' &&
+        icon !== 'externalLink' &&
+        icon !== 'menu' &&
+        icon !== 'moreHorizontal' &&
+        icon !== 'search' &&
+        icon !== 'arrowUp' &&
+        icon !== 'arrowDown' &&
+        icon !== 'arrowsUpDown' &&
+        icon !== 'funnel' &&
+        icon !== 'eyeSlash' &&
+        icon !== 'viewColumns' &&
+        icon !== 'copy' &&
+        icon !== 'checkDouble' &&
+        icon !== 'wrench' &&
+        icon !== 'stop' &&
+        icon !== 'microphone'
+    ) {
         throw new Error(`Unsupported Icon icon '${icon}'`);
     }
 
-    if (color != null && !isXmlEnum(color, ICON_COLORS)) {
+    if (
+        color != null &&
+        color !== 'primary' &&
+        color !== 'secondary' &&
+        color !== 'tertiary' &&
+        color !== 'disabled' &&
+        color !== 'accent' &&
+        color !== 'success' &&
+        color !== 'error' &&
+        color !== 'warning' &&
+        color !== 'inherit' &&
+        color !== 'blue' &&
+        color !== 'red' &&
+        color !== 'green' &&
+        color !== 'gray' &&
+        color !== 'cyan' &&
+        color !== 'teal' &&
+        color !== 'yellow' &&
+        color !== 'orange' &&
+        color !== 'pink' &&
+        color !== 'purple'
+    ) {
         throw new Error(`Unsupported Icon color '${String(color)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, ICON_SIZES)) {
+    if (size != null && size !== 'xsm' && size !== 'sm' && size !== 'md' && size !== 'lg') {
         throw new Error(`Unsupported Icon size '${String(size)}'`);
     }
 
-    return <AstryxIcon icon={icon} size={size} color={color} label={isXmlString(label) ? label : undefined} />;
+    return <AstryxIcon icon={icon} size={size} color={color} label={typeof label === 'string' ? label : undefined} />;
 }

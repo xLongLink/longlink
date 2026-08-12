@@ -2,9 +2,9 @@ import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } fr
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, resolveXml } from '../core/props';
-import { resolveInputStatus } from './input';
+import { requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { resolveInputStatus } from './input';
 
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {
@@ -12,25 +12,50 @@ export function RadioList({ props, nodes }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const sizeValue = resolveXml(props, 'size', ctx);
-    const orientation = isXmlEnum(orientationValue, ['vertical', 'horizontal']) ? orientationValue : 'vertical';
-    const size = isXmlEnum(sizeValue, ['sm', 'md']) ? sizeValue : 'md';
+    const orientation =
+        orientationValue === 'vertical' || orientationValue === 'horizontal' ? orientationValue : 'vertical';
+    const size = sizeValue === 'sm' || sizeValue === 'md' ? sizeValue : 'md';
 
     return (
         <AstryxRadioList
-            description={(() => { const value = resolveXml(props, 'description', ctx); return isXmlString(value) ? value : undefined; })()}
-            disabledMessage={(() => { const value = resolveXml(props, 'disabledMessage', ctx); return isXmlString(value) ? value : undefined; })()}
-            htmlName={(() => { const value = resolveXml(props, 'htmlName', ctx); return isXmlString(value) ? value : undefined; })()}
-            isDisabled={(() => { const value = resolveXml(props, 'isDisabled', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isLabelHidden={(() => { const value = resolveXml(props, 'isLabelHidden', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isOptional={(() => { const value = resolveXml(props, 'isOptional', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isRequired={(() => { const value = resolveXml(props, 'isRequired', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            description={(() => {
+                const value = resolveXml(props, 'description', ctx);
+                return typeof value === 'string' ? value : undefined;
+            })()}
+            disabledMessage={(() => {
+                const value = resolveXml(props, 'disabledMessage', ctx);
+                return typeof value === 'string' ? value : undefined;
+            })()}
+            htmlName={(() => {
+                const value = resolveXml(props, 'htmlName', ctx);
+                return typeof value === 'string' ? value : undefined;
+            })()}
+            isDisabled={(() => {
+                const value = resolveXml(props, 'isDisabled', ctx);
+                return typeof value === 'boolean' ? value : undefined;
+            })()}
+            isLabelHidden={(() => {
+                const value = resolveXml(props, 'isLabelHidden', ctx);
+                return typeof value === 'boolean' ? value : undefined;
+            })()}
+            isOptional={(() => {
+                const value = resolveXml(props, 'isOptional', ctx);
+                return typeof value === 'boolean' ? value : undefined;
+            })()}
+            isRequired={(() => {
+                const value = resolveXml(props, 'isRequired', ctx);
+                return typeof value === 'boolean' ? value : undefined;
+            })()}
             label={requireXmlString(props, 'label', ctx, 'RadioList')}
             onChange={binding.setValue}
             orientation={orientation}
             size={size}
             status={resolveInputStatus(props, ctx)}
             value={binding.value}
-            width={(() => { const value = resolveXml(props, 'width', ctx); return isXmlString(value) || isXmlNumber(value) ? value : undefined; })()}
+            width={(() => {
+                const value = resolveXml(props, 'width', ctx);
+                return typeof value === 'string' || typeof value === 'number' ? value : undefined;
+            })()}
         >
             {renderNode(nodes, ctx)}
         </AstryxRadioList>
@@ -43,8 +68,14 @@ export function RadioListItem({ props }: Props) {
 
     return (
         <AstryxRadioListItem
-            description={(() => { const value = resolveXml(props, 'description', ctx); return isXmlString(value) ? value : undefined; })()}
-            isDisabled={(() => { const value = resolveXml(props, 'isDisabled', ctx); return isXmlBoolean(value) ? value : undefined; })()}
+            description={(() => {
+                const value = resolveXml(props, 'description', ctx);
+                return typeof value === 'string' ? value : undefined;
+            })()}
+            isDisabled={(() => {
+                const value = resolveXml(props, 'isDisabled', ctx);
+                return typeof value === 'boolean' ? value : undefined;
+            })()}
             label={requireXmlString(props, 'label', ctx, 'RadioListItem')}
             value={requireXmlString(props, 'value', ctx, 'RadioListItem')}
         />
