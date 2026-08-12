@@ -15,9 +15,8 @@ export function Avatar({ props }: Props) {
         'size',
         ctx,
         ['xsm', 'sm', 'md', 'lg', 'xl'],
-        'md',
         'Avatar'
-    );
+    ) ?? 'md';
 
     return <AstryxAvatar alt={alt || undefined} name={name || undefined} size={size} src={src || undefined} />;
 }

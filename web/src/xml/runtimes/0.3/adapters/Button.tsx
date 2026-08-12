@@ -15,14 +15,13 @@ export function Button({ props, nodes }: Props) {
         'variant',
         ctx,
         ['primary', 'secondary', 'ghost', 'destructive'],
-        'secondary',
         'Button'
-    );
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'Button');
-    const type = resolveXmlEnum(props, 'type', ctx, ['button', 'submit', 'reset'], 'button', 'Button');
-    const isDisabled = resolveXmlBoolean(props, 'isDisabled', ctx, false);
-    const isIconOnly = resolveXmlBoolean(props, 'isIconOnly', ctx, false);
-    const isLoading = resolveXmlBoolean(props, 'isLoading', ctx, false);
+    ) ?? 'secondary';
+    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'Button') ?? 'md';
+    const type = resolveXmlEnum(props, 'type', ctx, ['button', 'submit', 'reset'], 'Button') ?? 'button';
+    const isDisabled = resolveXmlBoolean(props, 'isDisabled', ctx);
+    const isIconOnly = resolveXmlBoolean(props, 'isIconOnly', ctx);
+    const isLoading = resolveXmlBoolean(props, 'isLoading', ctx);
     const tooltip = resolveXmlString(props, 'tooltip', ctx);
     const actionHandler = useContext(ActionHandlerContext);
 

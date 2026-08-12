@@ -42,14 +42,14 @@ export function Grid({ props, nodes }: Props) {
             ? {
                   minWidth,
                   ...(maxColumns != null && { max: maxColumns }),
-                  repeat: resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'fill', 'Grid'),
+                   repeat: resolveXmlEnum(props, 'repeat', ctx, ['fill', 'fit'], 'Grid') ?? 'fill',
               }
             : columnCount;
     const gap = resolveXmlSpacing(props, 'gap', ctx);
     const rowGap = resolveXmlSpacing(props, 'rowGap', ctx);
     const columnGap = resolveXmlSpacing(props, 'columnGap', ctx);
-    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end', 'stretch'], 'stretch', 'Grid');
-    const justify = resolveXmlEnum(props, 'justify', ctx, ['start', 'center', 'end', 'stretch'], 'stretch', 'Grid');
+    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end', 'stretch'], 'Grid') ?? 'stretch';
+    const justify = resolveXmlEnum(props, 'justify', ctx, ['start', 'center', 'end', 'stretch'], 'Grid') ?? 'stretch';
 
     return (
         <AstryxGrid

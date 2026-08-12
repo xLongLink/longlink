@@ -1,20 +1,20 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
-import type { ComponentProps } from 'react';
+import type { HeadingLevel, HeadingType } from '@astryxdesign/core-0-3/Heading';
+import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
+import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
-type AstryxHeadingProps = ComponentProps<typeof AstryxHeading>;
-
-const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const satisfies readonly AstryxHeadingProps['level'][];
-const HEADING_COLORS = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'] as const satisfies readonly NonNullable<AstryxHeadingProps['color']>[];
-const HEADING_DISPLAYS = ['inline', 'block'] as const satisfies readonly NonNullable<AstryxHeadingProps['display']>[];
-const HEADING_JUSTIFICATIONS = ['start', 'center', 'end'] as const satisfies readonly NonNullable<AstryxHeadingProps['justify']>[];
-const HEADING_TEXT_WRAPS = ['wrap', 'nowrap', 'balance', 'pretty'] as const satisfies readonly NonNullable<AstryxHeadingProps['textWrap']>[];
-const HEADING_TYPES = ['display-1', 'display-2', 'display-3'] as const satisfies readonly NonNullable<AstryxHeadingProps['type']>[];
-const HEADING_WORD_BREAKS = ['break-word', 'break-all'] as const satisfies readonly NonNullable<AstryxHeadingProps['wordBreak']>[];
-const TOOLTIP_VALUES = [true, false, 'above', 'below', 'start', 'end'] as const satisfies readonly NonNullable<AstryxHeadingProps['hasTruncateTooltip']>[];
+const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
+const HEADING_COLORS: readonly TextColor[] = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'];
+const HEADING_DISPLAYS: readonly TextDisplay[] = ['inline', 'block'];
+const HEADING_JUSTIFICATIONS: readonly TextJustify[] = ['start', 'center', 'end'];
+const HEADING_TEXT_WRAPS: readonly TextWrap[] = ['wrap', 'nowrap', 'balance', 'pretty'];
+const HEADING_TYPES: readonly HeadingType[] = ['display-1', 'display-2', 'display-3'];
+const HEADING_WORD_BREAKS: readonly WordBreak[] = ['break-word', 'break-all'];
+const TOOLTIP_VALUES: readonly (boolean | LayerPlacement)[] = [true, false, 'above', 'below', 'start', 'end'];
 
 /** Returns whether a value is one of an Astryx prop's supported values. */
 function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {

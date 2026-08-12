@@ -20,7 +20,7 @@ VALID_FRAGMENTS = [
         '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
     ),
     ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", _adapter_schema("Badge.xsd"), '<Badge label="$item.status" variant="success" />'),
+    ("badge", _adapter_schema("Badge.xsd"), '<Badge id="item-status" label="$item.status" variant="success"><Icon icon="check" /></Badge>'),
     (
         "button",
         _adapter_schema("Button.xsd"),
@@ -80,7 +80,11 @@ VALID_FRAGMENTS = [
         _adapter_schema("TabList.xsd"),
         '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview"><Text value="Overview panel" /></Tab></TabList>',
     ),
-    ("text", _adapter_schema("Text.xsd"), '<Text value="$item.name" />'),
+    (
+        "text",
+        _adapter_schema("Text.xsd"),
+        '<Text id="item-name" as="p" type="large" size="lg" color="accent" value="$item.name" weight="semibold" display="block" justify="center" maxLines="2" textWrap="balance" wordBreak="break-word" hasCapsize="true" hasStrikethrough="true" hasTabularNumbers="true" hasTruncateTooltip="below" />',
+    ),
     ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />'),
     ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" />'),
 ]

@@ -15,18 +15,18 @@ import type { Props } from '../types';
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'md', 'CheckboxInput');
+    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'CheckboxInput') ?? 'md';
 
     return (
         <AstryxCheckboxInput
             description={resolveXmlString(props, 'description', ctx) || undefined}
             disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
             htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
-            isReadOnly={resolveXmlBoolean(props, 'isReadOnly', ctx, false)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
+            isReadOnly={resolveXmlBoolean(props, 'isReadOnly', ctx)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'CheckboxInput')}
             onChange={binding.setValue}
             size={size}

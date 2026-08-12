@@ -16,24 +16,24 @@ import type { Props } from '../types';
 export function TextArea({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TextArea');
+    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'TextArea') ?? 'md';
 
     return (
         <AstryxTextArea
             description={resolveXmlString(props, 'description', ctx) || undefined}
             disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
-            hasAutoFocus={resolveXmlBoolean(props, 'hasAutoFocus', ctx, false)}
-            hasSpellCheck={resolveXmlBoolean(props, 'hasSpellCheck', ctx, true)}
+            hasAutoFocus={resolveXmlBoolean(props, 'hasAutoFocus', ctx)}
+            hasSpellCheck={resolveXmlBoolean(props, 'hasSpellCheck', ctx) ?? true}
             htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'TextArea')}
             maxLength={resolveXmlNumber(props, 'maxLength', ctx)}
             onChange={binding.setValue}
             placeholder={resolveXmlString(props, 'placeholder', ctx) || undefined}
-            rows={resolveXmlNumber(props, 'rows', ctx, 3)}
+            rows={resolveXmlNumber(props, 'rows', ctx) ?? 3}
             size={size}
             status={resolveXmlStatus(props, ctx)}
             value={binding.value}

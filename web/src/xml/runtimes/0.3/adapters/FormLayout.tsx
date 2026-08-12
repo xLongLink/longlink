@@ -12,9 +12,8 @@ export function FormLayout({ props, nodes }: Props) {
         'direction',
         ctx,
         ['vertical', 'horizontal', 'horizontal-labels'],
-        'vertical',
         'FormLayout'
-    );
+    ) ?? 'vertical';
 
     return <AstryxFormLayout direction={direction}>{renderNode(nodes, ctx)}</AstryxFormLayout>;
 }

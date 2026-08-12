@@ -2,8 +2,10 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="BadgeType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string" use="optional" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="variant" type="BadgeVariantType" use="optional" default="neutral" />
+    <xsd:attribute name="variant" type="BadgeVariantType" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">

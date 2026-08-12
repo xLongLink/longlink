@@ -16,25 +16,25 @@ import type { Props } from '../types';
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));
-    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Slider');
-    const valueDisplay = resolveXmlEnum(props, 'valueDisplay', ctx, ['tooltip', 'text', 'none'], 'tooltip', 'Slider');
+    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'Slider') ?? 'horizontal';
+    const valueDisplay = resolveXmlEnum(props, 'valueDisplay', ctx, ['tooltip', 'text', 'none'], 'Slider') ?? 'tooltip';
 
     return (
         <AstryxSlider
             description={resolveXmlString(props, 'description', ctx) || undefined}
             disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
             htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'Slider')}
-            max={resolveXmlNumber(props, 'max', ctx, 100)}
-            min={resolveXmlNumber(props, 'min', ctx, 0)}
+            max={resolveXmlNumber(props, 'max', ctx) ?? 100}
+            min={resolveXmlNumber(props, 'min', ctx) ?? 0}
             onChange={binding.setValue}
             orientation={orientation}
             status={resolveXmlStatus(props, ctx)}
-            step={resolveXmlNumber(props, 'step', ctx, 1)}
+            step={resolveXmlNumber(props, 'step', ctx) ?? 1}
             value={binding.value}
             valueDisplay={valueDisplay}
             width={resolveXmlSizeValue(props, 'width', ctx)}

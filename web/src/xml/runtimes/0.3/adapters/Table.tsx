@@ -39,10 +39,10 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    const density = resolveXmlEnum(props, 'density', ctx, ['compact', 'balanced', 'spacious'], 'balanced', 'Table');
-    const dividers = resolveXmlEnum(props, 'dividers', ctx, ['rows', 'columns', 'grid', 'none'], 'rows', 'Table');
-    const verticalAlign = resolveXmlEnum(props, 'verticalAlign', ctx, ['middle', 'top', 'bottom'], 'middle', 'Table');
-    const textOverflow = resolveXmlEnum(props, 'textOverflow', ctx, ['wrap', 'truncate'], 'wrap', 'Table');
+    const density = resolveXmlEnum(props, 'density', ctx, ['compact', 'balanced', 'spacious'], 'Table') ?? 'balanced';
+    const dividers = resolveXmlEnum(props, 'dividers', ctx, ['rows', 'columns', 'grid', 'none'], 'Table') ?? 'rows';
+    const verticalAlign = resolveXmlEnum(props, 'verticalAlign', ctx, ['middle', 'top', 'bottom'], 'Table') ?? 'middle';
+    const textOverflow = resolveXmlEnum(props, 'textOverflow', ctx, ['wrap', 'truncate'], 'Table') ?? 'wrap';
     return (
         <AstryxTable
             columns={columns}
@@ -54,9 +54,9 @@ export function Table({ props, nodes }: Props) {
                     {props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table')}
                 </Text>
             }
-            hasHover={resolveXmlBoolean(props, 'hasHover', ctx, false)}
+            hasHover={resolveXmlBoolean(props, 'hasHover', ctx)}
             idKey={resolveXmlString(props, 'idKey', ctx) || undefined}
-            isStriped={resolveXmlBoolean(props, 'isStriped', ctx, false)}
+            isStriped={resolveXmlBoolean(props, 'isStriped', ctx)}
             textOverflow={textOverflow}
             verticalAlign={verticalAlign}
         />
@@ -90,7 +90,7 @@ function buildColumn(
         throw new Error('TableColumn requires a usable field path');
     }
     const header = resolveXmlString(props, 'header', ctx) ?? key.value;
-    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'start', 'TableColumn');
+    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end'], 'TableColumn') ?? 'start';
     const cellNodes = node.children;
 
     return {

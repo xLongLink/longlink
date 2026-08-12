@@ -43,44 +43,39 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: Scope): str
 }
 
 /** Resolves a boolean XML prop. */
-export function resolveXmlBoolean(
-    props: ASTProps,
-    name: string,
-    ctx: Scope,
-    defaultValue?: boolean
-): boolean | undefined {
-    // Missing attributes keep the caller-provided default.
+export function resolveXmlBoolean(props: ASTProps, name: string, ctx: Scope): boolean | undefined {
+    // Missing attributes remain undefined.
     const attribute = readXmlProp(props, name);
-    if (attribute == null) return defaultValue;
+    if (attribute == null) return undefined;
 
     const value = evaluate(attribute, ctx);
 
     // Preserve explicit false values instead of coercing them through truthiness.
     if (value === false || value === 'false') return false;
 
-    // Nullish or empty values keep the caller-provided default.
-    if (value == null || value === '') return defaultValue;
+    // Nullish or empty values remain undefined.
+    if (value == null || value === '') return undefined;
 
     return Boolean(value);
 }
 
 /** Resolves a numeric XML prop. */
-export function resolveXmlNumber(props: ASTProps, name: string, ctx: Scope, defaultValue?: number): number | undefined {
-    // Missing attributes keep the caller-provided default.
+export function resolveXmlNumber(props: ASTProps, name: string, ctx: Scope): number | undefined {
+    // Missing attributes remain undefined.
     const attribute = readXmlProp(props, name);
-    if (attribute == null) return defaultValue;
+    if (attribute == null) return undefined;
 
     const value = evaluate(attribute, ctx);
     const numberValue = Number(value);
 
-    return Number.isNaN(numberValue) ? defaultValue : numberValue;
+    return Number.isNaN(numberValue) ? undefined : numberValue;
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */
-export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope, defaultValue?: unknown): unknown {
-    // Missing attributes keep the caller-provided default.
+export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope): unknown {
+    // Missing attributes remain undefined.
     const attribute = readXmlProp(props, name);
-    if (attribute == null) return defaultValue;
+    if (attribute == null) return undefined;
 
     return evaluate(attribute, ctx);
 }
@@ -98,10 +93,10 @@ export function resolveXmlEnum<const T extends string>(
     name: string,
     ctx: Scope,
     values: readonly T[],
-    defaultValue: T,
     componentName: string
-): T {
-    const value = resolveXmlString(props, name, ctx) ?? defaultValue;
+): T | undefined {
+    const value = resolveXmlString(props, name, ctx);
+    if (value == null) return undefined;
 
     // Keep untrusted XML values out of Astryx lookup maps.
     const matchingValue = values.find((candidate) => candidate === value);
@@ -120,7 +115,7 @@ export function resolveXmlStatus(
     // Omit status when the XML attribute is absent.
     if (readXmlProp(props, 'status') == null) return undefined;
 
-    const type = resolveXmlEnum(props, 'status', ctx, ['warning', 'error', 'success'], 'error', 'input');
+    const type = resolveXmlEnum(props, 'status', ctx, ['warning', 'error', 'success'], 'input') ?? 'error';
     const message = resolveXmlString(props, 'statusMessage', ctx);
 
     return { type, ...(message && { message }) };
@@ -130,10 +125,9 @@ export function resolveXmlStatus(
 export function resolveXmlSpacing(
     props: ASTProps,
     name: string,
-    ctx: Scope,
-    defaultValue?: XmlSpacing
+    ctx: Scope
 ): XmlSpacing | undefined {
-    const value = resolveXmlNumber(props, name, ctx, defaultValue);
+    const value = resolveXmlNumber(props, name, ctx);
     // Missing optional spacing attributes stay absent.
     if (value == null) return undefined;
 

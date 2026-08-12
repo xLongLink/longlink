@@ -47,7 +47,7 @@ export async function executeAction(
 
     // Resolve action inputs before building the request.
     try {
-        const invalidationValue = resolveXmlValue(props, 'invalidate', ctx, []);
+        const invalidationValue = resolveXmlValue(props, 'invalidate', ctx) ?? [];
         if (!Array.isArray(invalidationValue)) {
             throw new Error('invalidate must evaluate to an array');
         }
@@ -130,7 +130,7 @@ export async function executeAction(
     await services.invalidate(invalidate);
 
     // Close the containing dialog only after the request and invalidation succeed.
-    if (resolveXmlBoolean(props, 'closeDialog', ctx, false)) closeDialog?.();
+    if (resolveXmlBoolean(props, 'closeDialog', ctx)) closeDialog?.();
 
     toast({ body: `Request completed with status ${response.status}` });
 }

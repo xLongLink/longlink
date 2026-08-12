@@ -31,8 +31,8 @@ export function TabList({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'md', 'TabList');
-    const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'hug', 'TabList');
+    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md', 'lg'], 'TabList') ?? 'md';
+    const layout = resolveXmlEnum(props, 'layout', ctx, ['hug', 'fill'], 'TabList') ?? 'hug';
     const label = resolveXmlString(props, 'label', ctx) ?? 'Tabs';
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
@@ -40,7 +40,7 @@ export function TabList({ props, nodes }: Props) {
         <Stack gap={4}>
             <AstryxTabList
                 aria-label={label}
-                hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx, false)}
+                hasDivider={resolveXmlBoolean(props, 'hasDivider', ctx)}
                 layout={layout}
                 onChange={binding.setValue}
                 size={size}

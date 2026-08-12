@@ -15,18 +15,18 @@ import type { Props } from '../types';
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
-    const labelPosition = resolveXmlEnum(props, 'labelPosition', ctx, ['start', 'end'], 'end', 'Switch');
-    const labelSpacing = resolveXmlEnum(props, 'labelSpacing', ctx, ['hug', 'spread'], 'hug', 'Switch');
+    const labelPosition = resolveXmlEnum(props, 'labelPosition', ctx, ['start', 'end'], 'Switch') ?? 'end';
+    const labelSpacing = resolveXmlEnum(props, 'labelSpacing', ctx, ['hug', 'spread'], 'Switch') ?? 'hug';
 
     return (
         <AstryxSwitch
             description={resolveXmlString(props, 'description', ctx) || undefined}
             disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
             htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'Switch')}
             labelPosition={labelPosition}
             labelSpacing={labelSpacing}

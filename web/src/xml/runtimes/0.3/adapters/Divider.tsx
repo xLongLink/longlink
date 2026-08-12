@@ -7,9 +7,9 @@ import type { Props } from '../types';
 export function Divider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const label = resolveXmlString(props, 'label', ctx);
-    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Divider');
-    const variant = resolveXmlEnum(props, 'variant', ctx, ['subtle', 'strong'], 'subtle', 'Divider');
-    const isFullBleed = resolveXmlBoolean(props, 'isFullBleed', ctx, false);
+    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'Divider') ?? 'horizontal';
+    const variant = resolveXmlEnum(props, 'variant', ctx, ['subtle', 'strong'], 'Divider') ?? 'subtle';
+    const isFullBleed = resolveXmlBoolean(props, 'isFullBleed', ctx);
 
     return (
         <AstryxDivider

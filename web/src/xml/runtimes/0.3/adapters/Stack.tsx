@@ -7,22 +7,21 @@ import type { Props } from '../types';
 /** Renders an Astryx stack for horizontal or vertical layout. */
 export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const direction = resolveXmlEnum(props, 'direction', ctx, ['horizontal', 'vertical'], 'vertical', 'Stack');
+    const direction = resolveXmlEnum(props, 'direction', ctx, ['horizontal', 'vertical'], 'Stack') ?? 'vertical';
     const justify = resolveXmlEnum(
         props,
         'justify',
         ctx,
         ['start', 'center', 'end', 'between', 'around', 'evenly'],
-        'start',
         'Stack'
-    );
-    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end', 'stretch'], 'stretch', 'Stack');
-    const wrap = resolveXmlEnum(props, 'wrap', ctx, ['nowrap', 'wrap', 'wrap-reverse'], 'nowrap', 'Stack');
+    ) ?? 'start';
+    const align = resolveXmlEnum(props, 'align', ctx, ['start', 'center', 'end', 'stretch'], 'Stack') ?? 'stretch';
+    const wrap = resolveXmlEnum(props, 'wrap', ctx, ['nowrap', 'wrap', 'wrap-reverse'], 'Stack') ?? 'nowrap';
     const gap = resolveXmlSpacing(props, 'gap', ctx);
     const padding = resolveXmlSpacing(props, 'padding', ctx);
     const paddingInline = resolveXmlSpacing(props, 'paddingInline', ctx);
     const paddingBlock = resolveXmlSpacing(props, 'paddingBlock', ctx);
-    const isScrollable = resolveXmlBoolean(props, 'isScrollable', ctx, false);
+    const isScrollable = resolveXmlBoolean(props, 'isScrollable', ctx);
     const width = resolveXmlSizeValue(props, 'width', ctx);
     const height = resolveXmlSizeValue(props, 'height', ctx);
     const maxWidth = resolveXmlSizeValue(props, 'maxWidth', ctx);

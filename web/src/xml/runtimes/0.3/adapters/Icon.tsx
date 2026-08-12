@@ -9,7 +9,7 @@ const ICON_SIZES = { xsm: 12, sm: 16, md: 20, lg: 24 } as const;
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const icon = requireXmlString(props, 'icon', ctx, 'Icon');
-    const size = resolveXmlEnum(props, 'size', ctx, ['xsm', 'sm', 'md', 'lg'], 'md', 'Icon');
+    const size = resolveXmlEnum(props, 'size', ctx, ['xsm', 'sm', 'md', 'lg'], 'Icon') ?? 'md';
     const renderedIcon = renderIcon(icon, {
         'aria-hidden': true,
         size: ICON_SIZES[size],

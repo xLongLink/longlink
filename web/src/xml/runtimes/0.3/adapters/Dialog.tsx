@@ -24,8 +24,8 @@ export function Dialog({ props, nodes }: Props) {
     const title = requireXmlString(props, 'title', ctx, 'Dialog');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
-    const purpose = resolveXmlEnum(props, 'purpose', ctx, ['required', 'form', 'info'], 'info', 'Dialog');
-    const variant = resolveXmlEnum(props, 'variant', ctx, ['standard', 'fullscreen'], 'standard', 'Dialog');
+    const purpose = resolveXmlEnum(props, 'purpose', ctx, ['required', 'form', 'info'], 'Dialog') ?? 'info';
+    const variant = resolveXmlEnum(props, 'variant', ctx, ['standard', 'fullscreen'], 'Dialog') ?? 'standard';
 
     return (
         <>

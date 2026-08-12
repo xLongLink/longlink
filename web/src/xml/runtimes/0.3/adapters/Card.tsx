@@ -26,9 +26,8 @@ export function Card({ props, nodes }: Props) {
             'teal',
             'yellow',
         ],
-        'default',
         'Card'
-    );
+    ) ?? 'default';
     const padding = resolveXmlSpacing(props, 'padding', ctx);
     const width = resolveXmlSizeValue(props, 'width', ctx);
     const height = resolveXmlSizeValue(props, 'height', ctx);

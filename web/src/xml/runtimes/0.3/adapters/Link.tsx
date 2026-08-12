@@ -19,12 +19,11 @@ export function Link({ props, nodes }: Props) {
         'color',
         ctx,
         ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'],
-        'accent',
         'Link'
-    );
-    const hasUnderline = resolveXmlBoolean(props, 'hasUnderline', ctx, false);
-    const isDisabled = resolveXmlBoolean(props, 'isDisabled', ctx, false);
-    const isExternalLink = resolveXmlBoolean(props, 'isExternalLink', ctx, false);
+    ) ?? 'accent';
+    const hasUnderline = resolveXmlBoolean(props, 'hasUnderline', ctx);
+    const isDisabled = resolveXmlBoolean(props, 'isDisabled', ctx);
+    const isExternalLink = resolveXmlBoolean(props, 'isExternalLink', ctx);
 
     return (
         <AstryxLink

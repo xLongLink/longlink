@@ -16,18 +16,18 @@ import type { Props } from '../types';
 export function RadioList({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['vertical', 'horizontal'], 'vertical', 'RadioList');
-    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'md', 'RadioList');
+    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['vertical', 'horizontal'], 'RadioList') ?? 'vertical';
+    const size = resolveXmlEnum(props, 'size', ctx, ['sm', 'md'], 'RadioList') ?? 'md';
 
     return (
         <AstryxRadioList
             description={resolveXmlString(props, 'description', ctx) || undefined}
             disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
             htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
-            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
-            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
-            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'RadioList')}
             onChange={binding.setValue}
             orientation={orientation}
@@ -48,7 +48,7 @@ export function RadioListItem({ props }: Props) {
     return (
         <AstryxRadioListItem
             description={resolveXmlString(props, 'description', ctx) || undefined}
-            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx)}
             label={requireXmlString(props, 'label', ctx, 'RadioListItem')}
             value={requireXmlString(props, 'value', ctx, 'RadioListItem')}
         />
