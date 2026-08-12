@@ -1,8 +1,9 @@
 import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
 import { NumberInput as AstryxNumberInput, type NumberInputSize } from '@astryxdesign/core-0-3/NumberInput';
+import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -31,23 +32,17 @@ export function NumberInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (size != null && !isXmlEnum(size, SIZES)) {
         throw new Error(`Unsupported NumberInput size '${String(size)}'`);
     }
 
-    if (
-        statusVariant != null &&
-        statusVariant !== 'attached' &&
-        statusVariant !== 'detached' &&
-        statusVariant !== 'tooltip'
-    ) {
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
         throw new Error(`Unsupported NumberInput statusVariant '${String(statusVariant)}'`);
     }
-    const inputSize: NumberInputSize | undefined = size === 'sm' || size === 'md' || size === 'lg' ? size : undefined;
-    const inputStatusVariant: FieldStatusVariant | undefined =
-        statusVariant === 'attached' || statusVariant === 'detached' || statusVariant === 'tooltip'
-            ? statusVariant
-            : undefined;
+    const inputSize: NumberInputSize | undefined = isXmlEnum(size, SIZES) ? size : undefined;
+    const inputStatusVariant: FieldStatusVariant | undefined = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)
+        ? statusVariant
+        : undefined;
     const common = {
         max: typeof max === 'number' ? max : undefined,
         min: typeof min === 'number' ? min : undefined,

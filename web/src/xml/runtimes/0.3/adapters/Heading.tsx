@@ -2,19 +2,28 @@ import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
 import type { HeadingLevel, HeadingType } from '@astryxdesign/core-0-3/Heading';
 import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
+import {
+    ALIGNS,
+    HEADING_TYPES,
+    TEXT_COLORS,
+    TEXT_DISPLAYS,
+    TEXT_WRAPS,
+    TRUNCATE_TOOLTIPS,
+    WORD_BREAKS,
+} from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXml, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
-const HEADING_COLORS: readonly TextColor[] = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'];
-const HEADING_DISPLAYS: readonly TextDisplay[] = ['inline', 'block'];
-const HEADING_JUSTIFICATIONS: readonly TextJustify[] = ['start', 'center', 'end'];
-const HEADING_TEXT_WRAPS: readonly TextWrap[] = ['wrap', 'nowrap', 'balance', 'pretty'];
-const HEADING_TYPES: readonly HeadingType[] = ['display-1', 'display-2', 'display-3'];
-const HEADING_WORD_BREAKS: readonly WordBreak[] = ['break-word', 'break-all'];
-const TOOLTIP_VALUES: readonly (boolean | LayerPlacement)[] = [true, false, 'above', 'below', 'start', 'end'];
+const headingColors: readonly TextColor[] = TEXT_COLORS;
+const headingDisplays: readonly TextDisplay[] = TEXT_DISPLAYS;
+const headingJustifications: readonly TextJustify[] = ALIGNS;
+const headingTextWraps: readonly TextWrap[] = TEXT_WRAPS;
+const headingTypes: readonly HeadingType[] = HEADING_TYPES;
+const headingWordBreaks: readonly WordBreak[] = WORD_BREAKS;
+const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
 
 /** Returns whether a value is one of an Astryx prop's supported values. */
 function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
@@ -56,31 +65,31 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalAstryxValue(color, HEADING_COLORS)) {
+    if (!isOptionalAstryxValue(color, headingColors)) {
         throw new Error(`Unsupported Heading color '${String(color)}'`);
     }
 
-    if (!isOptionalAstryxValue(display, HEADING_DISPLAYS)) {
+    if (!isOptionalAstryxValue(display, headingDisplays)) {
         throw new Error(`Unsupported Heading display '${String(display)}'`);
     }
 
-    if (!isOptionalAstryxValue(justify, HEADING_JUSTIFICATIONS)) {
+    if (!isOptionalAstryxValue(justify, headingJustifications)) {
         throw new Error(`Unsupported Heading justify '${String(justify)}'`);
     }
 
-    if (!isOptionalAstryxValue(textWrap, HEADING_TEXT_WRAPS)) {
+    if (!isOptionalAstryxValue(textWrap, headingTextWraps)) {
         throw new Error(`Unsupported Heading textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalAstryxValue(type, HEADING_TYPES)) {
+    if (!isOptionalAstryxValue(type, headingTypes)) {
         throw new Error(`Unsupported Heading type '${String(type)}'`);
     }
 
-    if (!isOptionalAstryxValue(wordBreak, HEADING_WORD_BREAKS)) {
+    if (!isOptionalAstryxValue(wordBreak, headingWordBreaks)) {
         throw new Error(`Unsupported Heading wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalAstryxValue(hasTruncateTooltip, TOOLTIP_VALUES)) {
+    if (!isOptionalAstryxValue(hasTruncateTooltip, truncateTooltips)) {
         throw new Error(`Unsupported Heading hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 

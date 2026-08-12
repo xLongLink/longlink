@@ -1,7 +1,8 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core-0-3/CheckboxInput';
+import { COMPACT_SIZES } from '../constants';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -21,7 +22,7 @@ export function CheckboxInput({ props }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && size !== 'sm' && size !== 'md') {
+    if (size != null && !isXmlEnum(size, COMPACT_SIZES)) {
         throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
     }
 

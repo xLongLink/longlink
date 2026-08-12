@@ -1,8 +1,9 @@
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core-0-3/Table';
 import { Text } from '@astryxdesign/core-0-3/Text';
+import { ALIGNS, TABLE_DENSITIES, TABLE_DIVIDERS, TABLE_TEXT_OVERFLOWS, TABLE_VERTICAL_ALIGNS } from '../constants';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { renderNode } from '../core/node';
-import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 import { readSafeProperty } from '../expressions';
 import type { ASTNode, Props, Scope } from '../types';
 
@@ -38,19 +39,10 @@ export function Table({ props, nodes }: Props) {
     const hasHover = resolveXml(props, 'hasHover', ctx);
     const idKey = resolveXml(props, 'idKey', ctx);
     const isStriped = resolveXml(props, 'isStriped', ctx);
-    const density =
-        densityValue === 'compact' || densityValue === 'balanced' || densityValue === 'spacious'
-            ? densityValue
-            : 'balanced';
-    const dividers =
-        dividersValue === 'rows' || dividersValue === 'columns' || dividersValue === 'grid' || dividersValue === 'none'
-            ? dividersValue
-            : 'rows';
-    const verticalAlign =
-        verticalAlignValue === 'middle' || verticalAlignValue === 'top' || verticalAlignValue === 'bottom'
-            ? verticalAlignValue
-            : 'middle';
-    const textOverflow = textOverflowValue === 'wrap' || textOverflowValue === 'truncate' ? textOverflowValue : 'wrap';
+    const density = isXmlEnum(densityValue, TABLE_DENSITIES) ? densityValue : 'balanced';
+    const dividers = isXmlEnum(dividersValue, TABLE_DIVIDERS) ? dividersValue : 'rows';
+    const verticalAlign = isXmlEnum(verticalAlignValue, TABLE_VERTICAL_ALIGNS) ? verticalAlignValue : 'middle';
+    const textOverflow = isXmlEnum(textOverflowValue, TABLE_TEXT_OVERFLOWS) ? textOverflowValue : 'wrap';
     return (
         <AstryxTable
             columns={columns}
@@ -102,7 +94,7 @@ function buildColumn(
     const headerValue = resolveXml(props, 'header', ctx);
     const alignValue = resolveXml(props, 'align', ctx);
     const header = typeof headerValue === 'string' ? headerValue : key.value;
-    const align = alignValue === 'start' || alignValue === 'center' || alignValue === 'end' ? alignValue : 'start';
+    const align = isXmlEnum(alignValue, ALIGNS) ? alignValue : 'start';
     const cellNodes = node.children;
 
     return {

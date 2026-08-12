@@ -1,7 +1,8 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
+import { FILE_INPUT_MODES } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -71,7 +72,7 @@ export function FileInput({ props }: Props) {
             })()}
             mode={(() => {
                 const value = resolveXml(props, 'mode', ctx);
-                return value === 'input' || value === 'dropzone' ? value : 'input';
+                return isXmlEnum(value, FILE_INPUT_MODES) ? value : 'input';
             })()}
             onChange={binding.setValue}
             placeholder={(() => {

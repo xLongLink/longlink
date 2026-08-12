@@ -1,7 +1,8 @@
 import { Slider as AstryxSlider } from '@astryxdesign/core-0-3/Slider';
+import { ORIENTATIONS, SLIDER_VALUE_DISPLAYS } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -11,12 +12,8 @@ export function Slider({ props }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
-    const orientation =
-        orientationValue === 'horizontal' || orientationValue === 'vertical' ? orientationValue : 'horizontal';
-    const valueDisplay =
-        valueDisplayValue === 'tooltip' || valueDisplayValue === 'text' || valueDisplayValue === 'none'
-            ? valueDisplayValue
-            : 'tooltip';
+    const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'horizontal';
+    const valueDisplay = isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS) ? valueDisplayValue : 'tooltip';
 
     return (
         <AstryxSlider

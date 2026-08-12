@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
+import { ACTION_METHODS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXml, resolveXmlValue } from '../core/props';
@@ -9,7 +10,6 @@ import type { Props, RuntimeServices, Scope } from '../types';
 import { DialogCloseContext } from './Dialog';
 
 export const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
-const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
@@ -72,7 +72,7 @@ export async function executeAction(
     const normalizedMethod = method.trim().toUpperCase();
 
     // Reject methods outside the supported action set.
-    if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
+    if (!ACTION_METHODS.some((allowedMethod) => allowedMethod === normalizedMethod)) {
         toast({ body: `Unsupported action method ${normalizedMethod}`, type: 'error' });
         return;
     }

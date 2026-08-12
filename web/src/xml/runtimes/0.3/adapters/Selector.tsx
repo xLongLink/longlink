@@ -1,9 +1,10 @@
 import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
 import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
 import { Selector as AstryxSelector, type SelectorSize } from '@astryxdesign/core-0-3/Selector';
+import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -47,43 +48,29 @@ export function Selector({ props, nodes }: Props) {
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
-    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (size != null && !isXmlEnum(size, SIZES)) {
         throw new Error(`Unsupported Selector size '${String(size)}'`);
     }
 
-    if (
-        placement != null &&
-        placement !== 'above' &&
-        placement !== 'below' &&
-        placement !== 'start' &&
-        placement !== 'end'
-    ) {
+    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) {
         throw new Error(`Unsupported Selector placement '${String(placement)}'`);
     }
 
-    if (
-        statusVariant != null &&
-        statusVariant !== 'attached' &&
-        statusVariant !== 'detached' &&
-        statusVariant !== 'tooltip'
-    ) {
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
         throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
     }
 
-    if (variant != null && variant !== 'input' && variant !== 'ghost') {
+    if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
         throw new Error(`Unsupported Selector variant '${String(variant)}'`);
     }
-    const selectorSize: SelectorSize | undefined = size === 'sm' || size === 'md' || size === 'lg' ? size : undefined;
-    const selectorPlacement: LayerPlacement | undefined =
-        placement === 'above' || placement === 'below' || placement === 'start' || placement === 'end'
-            ? placement
-            : undefined;
-    const selectorStatusVariant: FieldStatusVariant | undefined =
-        statusVariant === 'attached' || statusVariant === 'detached' || statusVariant === 'tooltip'
-            ? statusVariant
-            : undefined;
-    const selectorVariant: 'input' | 'ghost' | undefined =
-        variant === 'input' || variant === 'ghost' ? variant : undefined;
+    const selectorSize: SelectorSize | undefined = isXmlEnum(size, SIZES) ? size : undefined;
+    const selectorPlacement: LayerPlacement | undefined = isXmlEnum(placement, LAYER_PLACEMENTS)
+        ? placement
+        : undefined;
+    const selectorStatusVariant: FieldStatusVariant | undefined = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)
+        ? statusVariant
+        : undefined;
+    const selectorVariant: 'input' | 'ghost' | undefined = isXmlEnum(variant, SELECTOR_VARIANTS) ? variant : undefined;
     const common = {
         size: selectorSize,
         label: requireXmlString(props, 'label', ctx, 'Selector'),

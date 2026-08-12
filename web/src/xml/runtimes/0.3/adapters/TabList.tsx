@@ -1,9 +1,10 @@
 import { Stack } from '@astryxdesign/core-0-3/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core-0-3/TabList';
+import { SIZES, TAB_LAYOUTS } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { resolveNavigationUrl } from '../core/url';
 import type { Props } from '../types';
 
@@ -33,8 +34,8 @@ export function TabList({ props, nodes }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
     const sizeValue = resolveXml(props, 'size', ctx);
     const layoutValue = resolveXml(props, 'layout', ctx);
-    const size = sizeValue === 'sm' || sizeValue === 'md' || sizeValue === 'lg' ? sizeValue : 'md';
-    const layout = layoutValue === 'hug' || layoutValue === 'fill' ? layoutValue : 'hug';
+    const size = isXmlEnum(sizeValue, SIZES) ? sizeValue : 'md';
+    const layout = isXmlEnum(layoutValue, TAB_LAYOUTS) ? layoutValue : 'hug';
     const labelValue = resolveXml(props, 'label', ctx);
     const label = typeof labelValue === 'string' ? labelValue : 'Tabs';
     const activeTab = tabs.find((tab) => tab.value === binding.value);

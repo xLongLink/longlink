@@ -1,4 +1,5 @@
 import type { InputStatus } from '@astryxdesign/core-0-3/Field';
+import { INPUT_STATUSES } from '../constants';
 import { resolveXml } from '../core/props';
 import type { ASTProps, Scope } from '../types';
 
@@ -6,19 +7,19 @@ import type { ASTProps, Scope } from '../types';
 export function resolveInputStatus(props: ASTProps, ctx: Scope): InputStatus | undefined {
     const status = resolveXml(props, 'status', ctx);
 
-    if (status === 'warning') {
+    if (status === INPUT_STATUSES[0]) {
         const message = resolveXml(props, 'statusMessage', ctx);
 
         return { type: 'warning', ...(typeof message === 'string' ? { message } : {}) };
     }
 
-    if (status === 'error') {
+    if (status === INPUT_STATUSES[1]) {
         const message = resolveXml(props, 'statusMessage', ctx);
 
         return { type: 'error', ...(typeof message === 'string' ? { message } : {}) };
     }
 
-    if (status === 'success') {
+    if (status === INPUT_STATUSES[2]) {
         const message = resolveXml(props, 'statusMessage', ctx);
 
         return { type: 'success', ...(typeof message === 'string' ? { message } : {}) };

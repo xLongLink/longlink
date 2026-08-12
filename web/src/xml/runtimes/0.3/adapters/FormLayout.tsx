@@ -1,17 +1,15 @@
 import { FormLayout as AstryxFormLayout } from '@astryxdesign/core-0-3/FormLayout';
+import { FORM_DIRECTIONS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { resolveXml } from '../core/props';
+import { isXmlEnum, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 /** Arranges Astryx fields with consistent form spacing. */
 export function FormLayout({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const directionValue = resolveXml(props, 'direction', ctx);
-    const direction =
-        directionValue === 'vertical' || directionValue === 'horizontal' || directionValue === 'horizontal-labels'
-            ? directionValue
-            : 'vertical';
+    const direction = isXmlEnum(directionValue, FORM_DIRECTIONS) ? directionValue : 'vertical';
 
     return <AstryxFormLayout direction={direction}>{renderNode(nodes, ctx)}</AstryxFormLayout>;
 }

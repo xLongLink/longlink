@@ -1,8 +1,9 @@
 import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
 import { useContext } from 'react';
+import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { ActionHandlerContext } from './Action';
 
@@ -21,31 +22,19 @@ export function Button({ props, nodes }: Props) {
     const isInterruptible = resolveXml(props, 'isInterruptible', ctx);
     const actionHandler = useContext(ActionHandlerContext);
 
-    if (
-        variant != null &&
-        variant !== 'primary' &&
-        variant !== 'secondary' &&
-        variant !== 'ghost' &&
-        variant !== 'destructive'
-    ) {
+    if (variant != null && !isXmlEnum(variant, BUTTON_VARIANTS)) {
         throw new Error(`Unsupported Button variant '${String(variant)}'`);
     }
 
-    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (size != null && !isXmlEnum(size, SIZES)) {
         throw new Error(`Unsupported Button size '${String(size)}'`);
     }
 
-    if (type != null && type !== 'button' && type !== 'submit' && type !== 'reset') {
+    if (type != null && !isXmlEnum(type, BUTTON_HTML_TYPES)) {
         throw new Error(`Unsupported Button type '${String(type)}'`);
     }
 
-    if (
-        elevation != null &&
-        elevation !== 'none' &&
-        elevation !== 'low' &&
-        elevation !== 'med' &&
-        elevation !== 'high'
-    ) {
+    if (elevation != null && !isXmlEnum(elevation, ELEVATIONS)) {
         throw new Error(`Unsupported Button elevation '${String(elevation)}'`);
     }
 

@@ -1,7 +1,8 @@
 import { Switch as AstryxSwitch } from '@astryxdesign/core-0-3/Switch';
+import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 
@@ -23,15 +24,15 @@ export function Switch({ props }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (labelPosition != null && labelPosition !== 'start' && labelPosition !== 'end') {
+    if (labelPosition != null && !isXmlEnum(labelPosition, SWITCH_LABEL_POSITIONS)) {
         throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
     }
 
-    if (labelSpacing != null && labelSpacing !== 'hug' && labelSpacing !== 'spread') {
+    if (labelSpacing != null && !isXmlEnum(labelSpacing, SWITCH_LABEL_SPACINGS)) {
         throw new Error(`Unsupported Switch labelSpacing '${String(labelSpacing)}'`);
     }
 
-    if (size != null && size !== 'sm' && size !== 'md') {
+    if (size != null && !isXmlEnum(size, COMPACT_SIZES)) {
         throw new Error(`Unsupported Switch size '${String(size)}'`);
     }
 

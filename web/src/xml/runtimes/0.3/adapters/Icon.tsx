@@ -1,32 +1,13 @@
 import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
 import type { IconColor, IconSize } from '@astryxdesign/core-0-3/Icon';
 import type { IconName } from '@astryxdesign/core-0-3/Icon';
+import { ICON_COLORS, ICON_SIZES } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
-const ICON_COLORS: readonly IconColor[] = [
-    'primary',
-    'secondary',
-    'tertiary',
-    'disabled',
-    'accent',
-    'success',
-    'error',
-    'warning',
-    'inherit',
-    'blue',
-    'red',
-    'green',
-    'gray',
-    'cyan',
-    'teal',
-    'yellow',
-    'orange',
-    'pink',
-    'purple',
-];
-const ICON_SIZES: readonly IconSize[] = ['xsm', 'sm', 'md', 'lg'];
+const iconColors: readonly IconColor[] = ICON_COLORS;
+const iconSizes: readonly IconSize[] = ICON_SIZES;
 const ICON_NAMES: readonly IconName[] = [
     'close',
     'chevronDown',
@@ -99,32 +80,11 @@ export function Icon({ props }: Props) {
         throw new Error(`Unsupported Icon icon '${icon}'`);
     }
 
-    if (
-        color != null &&
-        color !== 'primary' &&
-        color !== 'secondary' &&
-        color !== 'tertiary' &&
-        color !== 'disabled' &&
-        color !== 'accent' &&
-        color !== 'success' &&
-        color !== 'error' &&
-        color !== 'warning' &&
-        color !== 'inherit' &&
-        color !== 'blue' &&
-        color !== 'red' &&
-        color !== 'green' &&
-        color !== 'gray' &&
-        color !== 'cyan' &&
-        color !== 'teal' &&
-        color !== 'yellow' &&
-        color !== 'orange' &&
-        color !== 'pink' &&
-        color !== 'purple'
-    ) {
+    if (color != null && !isXmlEnum(color, iconColors)) {
         throw new Error(`Unsupported Icon color '${String(color)}'`);
     }
 
-    if (size != null && size !== 'xsm' && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (size != null && !isXmlEnum(size, iconSizes)) {
         throw new Error(`Unsupported Icon size '${String(size)}'`);
     }
 

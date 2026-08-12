@@ -1,7 +1,8 @@
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core-0-3/Grid';
+import { BOX_ALIGNS, GRID_REPEATS, SPACINGS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
-import { readXmlProp, resolveXml } from '../core/props';
+import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 import type { Props } from '../types';
 
 /** Renders a fixed or responsive Astryx grid. */
@@ -35,66 +36,27 @@ export function Grid({ props, nodes }: Props) {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
-    if (repeat != null && repeat !== 'fill' && repeat !== 'fit') {
+    if (repeat != null && !isXmlEnum(repeat, GRID_REPEATS)) {
         throw new Error(`Unsupported Grid repeat '${String(repeat)}'`);
     }
 
-    if (
-        gap != null &&
-        gap !== 0 &&
-        gap !== 0.5 &&
-        gap !== 1 &&
-        gap !== 1.5 &&
-        gap !== 2 &&
-        gap !== 3 &&
-        gap !== 4 &&
-        gap !== 5 &&
-        gap !== 6 &&
-        gap !== 8 &&
-        gap !== 10
-    ) {
+    if (gap != null && !isXmlEnum(gap, SPACINGS)) {
         throw new Error(`Unsupported Grid gap '${String(gap)}'`);
     }
 
-    if (
-        rowGap != null &&
-        rowGap !== 0 &&
-        rowGap !== 0.5 &&
-        rowGap !== 1 &&
-        rowGap !== 1.5 &&
-        rowGap !== 2 &&
-        rowGap !== 3 &&
-        rowGap !== 4 &&
-        rowGap !== 5 &&
-        rowGap !== 6 &&
-        rowGap !== 8 &&
-        rowGap !== 10
-    ) {
+    if (rowGap != null && !isXmlEnum(rowGap, SPACINGS)) {
         throw new Error(`Unsupported Grid rowGap '${String(rowGap)}'`);
     }
 
-    if (
-        columnGap != null &&
-        columnGap !== 0 &&
-        columnGap !== 0.5 &&
-        columnGap !== 1 &&
-        columnGap !== 1.5 &&
-        columnGap !== 2 &&
-        columnGap !== 3 &&
-        columnGap !== 4 &&
-        columnGap !== 5 &&
-        columnGap !== 6 &&
-        columnGap !== 8 &&
-        columnGap !== 10
-    ) {
+    if (columnGap != null && !isXmlEnum(columnGap, SPACINGS)) {
         throw new Error(`Unsupported Grid columnGap '${String(columnGap)}'`);
     }
 
-    if (align != null && align !== 'start' && align !== 'center' && align !== 'end' && align !== 'stretch') {
+    if (align != null && !isXmlEnum(align, BOX_ALIGNS)) {
         throw new Error(`Unsupported Grid align '${String(align)}'`);
     }
 
-    if (justify != null && justify !== 'start' && justify !== 'center' && justify !== 'end' && justify !== 'stretch') {
+    if (justify != null && !isXmlEnum(justify, BOX_ALIGNS)) {
         throw new Error(`Unsupported Grid justify '${String(justify)}'`);
     }
 

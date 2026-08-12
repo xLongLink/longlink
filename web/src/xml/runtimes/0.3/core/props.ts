@@ -48,6 +48,21 @@ export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar
     return String(value);
 }
 
+/** Returns whether a scalar is one of an adapter's supported XML values. */
+export function isXmlEnum<const T extends string | number>(value: XmlScalar, values: readonly T[]): value is T {
+    return (typeof value === 'string' || typeof value === 'number') && values.some((candidate) => candidate === value);
+}
+
+/** Returns whether a scalar is a string. */
+export function isXmlString(value: XmlScalar): value is string {
+    return typeof value === 'string';
+}
+
+/** Returns whether a scalar is a boolean. */
+export function isXmlBoolean(value: XmlScalar): value is boolean {
+    return typeof value === 'boolean';
+}
+
 /** Resolves a raw value XML prop for bindings and object literals. */
 export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope): unknown {
     // Missing attributes remain undefined.

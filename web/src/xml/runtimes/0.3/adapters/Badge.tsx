@@ -1,26 +1,12 @@
 import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import type { BadgeVariant } from '@astryxdesign/core-0-3/Badge';
+import { BADGE_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { renderXmlSlot } from '../core/slots';
 import type { Props } from '../types';
 
-const BADGE_VARIANTS: readonly BadgeVariant[] = [
-    'neutral',
-    'info',
-    'success',
-    'warning',
-    'error',
-    'blue',
-    'cyan',
-    'green',
-    'orange',
-    'pink',
-    'purple',
-    'red',
-    'teal',
-    'yellow',
-];
+const badgeVariants: readonly BadgeVariant[] = BADGE_VARIANTS;
 
 /** Renders an Astryx badge with a serializable label. */
 export function Badge({ props, nodes }: Props) {
@@ -29,23 +15,7 @@ export function Badge({ props, nodes }: Props) {
     const label = requireXmlString(props, 'label', ctx, 'Badge');
     const variant = resolveXml(props, 'variant', ctx);
 
-    if (
-        variant != null &&
-        variant !== 'neutral' &&
-        variant !== 'info' &&
-        variant !== 'success' &&
-        variant !== 'warning' &&
-        variant !== 'error' &&
-        variant !== 'blue' &&
-        variant !== 'cyan' &&
-        variant !== 'green' &&
-        variant !== 'orange' &&
-        variant !== 'pink' &&
-        variant !== 'purple' &&
-        variant !== 'red' &&
-        variant !== 'teal' &&
-        variant !== 'yellow'
-    ) {
+    if (variant != null && !isXmlEnum(variant, badgeVariants)) {
         throw new Error(`Unsupported Badge variant '${variant}'`);
     }
 

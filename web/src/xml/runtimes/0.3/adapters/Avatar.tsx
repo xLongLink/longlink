@@ -1,6 +1,7 @@
 import { Avatar as AstryxAvatar } from '@astryxdesign/core-0-3/Avatar';
+import { AVATAR_SIZES } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { resolveXml } from '../core/props';
+import { isXmlEnum, resolveXml } from '../core/props';
 import { resolveAnchorUrl } from '../core/url';
 import type { Props } from '../types';
 
@@ -12,10 +13,7 @@ export function Avatar({ props }: Props) {
     const name = resolveXml(props, 'name', ctx);
     const alt = resolveXml(props, 'alt', ctx);
     const sizeValue = resolveXml(props, 'size', ctx);
-    const size =
-        sizeValue === 'xsm' || sizeValue === 'sm' || sizeValue === 'md' || sizeValue === 'lg' || sizeValue === 'xl'
-            ? sizeValue
-            : 'md';
+    const size = isXmlEnum(sizeValue, AVATAR_SIZES) ? sizeValue : 'md';
 
     return (
         <AstryxAvatar

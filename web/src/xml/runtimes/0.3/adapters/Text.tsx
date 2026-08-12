@@ -10,31 +10,32 @@ import type {
     TextWrap,
     WordBreak,
 } from '@astryxdesign/core-0-3/Text';
+import {
+    ALIGNS,
+    FONT_WEIGHTS,
+    TEXT_COLORS,
+    TEXT_DISPLAYS,
+    TEXT_ELEMENTS,
+    TEXT_SIZES,
+    TEXT_WRAPS,
+    TRUNCATE_TOOLTIPS,
+    TYPOGRAPHIES,
+    WORD_BREAKS,
+} from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXml, resolveXmlValue } from '../core/props';
 import type { Props } from '../types';
 
-const TEXT_COLORS: readonly TextColor[] = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'];
-const TEXT_DISPLAYS: readonly TextDisplay[] = ['inline', 'block'];
-const TEXT_ELEMENTS = ['span', 'p', 'div', 'label', 'h1', 'h2', 'h3'] as const;
-const TEXT_JUSTIFICATIONS: readonly TextJustify[] = ['start', 'center', 'end'];
-const TEXT_SIZES: readonly TextSize[] = ['4xs', '3xs', '2xs', 'xsm', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
-const TEXT_TYPES: readonly TextType[] = [
-    'body',
-    'large',
-    'label',
-    'supporting',
-    'code',
-    'display-1',
-    'display-2',
-    'display-3',
-    'inherit',
-];
-const TEXT_WEIGHTS: readonly TextWeight[] = ['normal', 'medium', 'semibold', 'bold'];
-const TEXT_WORD_BREAKS: readonly WordBreak[] = ['break-word', 'break-all'];
-const TEXT_WRAPS: readonly TextWrap[] = ['wrap', 'nowrap', 'balance', 'pretty'];
-const TOOLTIP_VALUES: readonly (boolean | LayerPlacement)[] = [true, false, 'above', 'below', 'start', 'end'];
+const textColors: readonly TextColor[] = TEXT_COLORS;
+const textDisplays: readonly TextDisplay[] = TEXT_DISPLAYS;
+const textJustifications: readonly TextJustify[] = ALIGNS;
+const textSizes: readonly TextSize[] = TEXT_SIZES;
+const textTypes: readonly TextType[] = TYPOGRAPHIES;
+const textWeights: readonly TextWeight[] = FONT_WEIGHTS;
+const textWordBreaks: readonly WordBreak[] = WORD_BREAKS;
+const textWraps: readonly TextWrap[] = TEXT_WRAPS;
+const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
 
 /** Returns whether a value is one of an Astryx prop's supported values. */
 function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
@@ -70,23 +71,23 @@ export function Text({ props, nodes }: Props) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalAstryxValue(type, TEXT_TYPES)) {
+    if (!isOptionalAstryxValue(type, textTypes)) {
         throw new Error(`Unsupported Text type '${String(type)}'`);
     }
 
-    if (!isOptionalAstryxValue(size, TEXT_SIZES)) {
+    if (!isOptionalAstryxValue(size, textSizes)) {
         throw new Error(`Unsupported Text size '${String(size)}'`);
     }
 
-    if (!isOptionalAstryxValue(color, TEXT_COLORS)) {
+    if (!isOptionalAstryxValue(color, textColors)) {
         throw new Error(`Unsupported Text color '${String(color)}'`);
     }
 
-    if (!isOptionalAstryxValue(weight, TEXT_WEIGHTS)) {
+    if (!isOptionalAstryxValue(weight, textWeights)) {
         throw new Error(`Unsupported Text weight '${String(weight)}'`);
     }
 
-    if (!isOptionalAstryxValue(display, TEXT_DISPLAYS)) {
+    if (!isOptionalAstryxValue(display, textDisplays)) {
         throw new Error(`Unsupported Text display '${String(display)}'`);
     }
 
@@ -94,19 +95,19 @@ export function Text({ props, nodes }: Props) {
         throw new Error(`Unsupported Text as '${String(as)}'`);
     }
 
-    if (!isOptionalAstryxValue(hasTruncateTooltip, TOOLTIP_VALUES)) {
+    if (!isOptionalAstryxValue(hasTruncateTooltip, truncateTooltips)) {
         throw new Error(`Unsupported Text hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 
-    if (!isOptionalAstryxValue(wordBreak, TEXT_WORD_BREAKS)) {
+    if (!isOptionalAstryxValue(wordBreak, textWordBreaks)) {
         throw new Error(`Unsupported Text wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalAstryxValue(textWrap, TEXT_WRAPS)) {
+    if (!isOptionalAstryxValue(textWrap, textWraps)) {
         throw new Error(`Unsupported Text textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalAstryxValue(justify, TEXT_JUSTIFICATIONS)) {
+    if (!isOptionalAstryxValue(justify, textJustifications)) {
         throw new Error(`Unsupported Text justify '${String(justify)}'`);
     }
 
