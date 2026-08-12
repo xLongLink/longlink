@@ -1,11 +1,11 @@
-import { Banner } from '@astryxdesign/core-0-3/Banner';
-import { Stack } from '@astryxdesign/core-0-3/Stack';
 import { useEffect, useState } from 'react';
 import { getVersion, subscribe } from 'valtio';
-import { createContext, setupContext, validateSetupNodes, XmlContext } from './core/context';
-import { XmlErrorBoundary } from './core/errors';
-import { renderNode } from './core/node';
+import { Stack } from '@astryxdesign/core-0-3/Stack';
+import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
+import { renderNode } from './core/node';
+import { XmlErrorBoundary } from './core/errors';
+import { createContext, setupContext, validateSetupNodes, XmlContext } from './core/context';
 
 type RenderXMLProps = {
     ast: ASTNode[];

@@ -1,5 +1,5 @@
-import { paginateData, useTablePagination } from '@astryxdesign/core/Table';
 import { useState } from 'react';
+import { paginateData, useTablePagination } from '@astryxdesign/core/Table';
 
 const PAGE_SIZE = 25;
 
@@ -18,7 +18,7 @@ export function useAdminPagination<T extends Record<string, unknown>>(
         pageSize: PAGE_SIZE,
         ...(controls === 'compact'
             ? {
-                   label: 'Previous / Next',
+                  label: 'Previous / Next',
                   size: 'sm' as const,
               }
             : {}),

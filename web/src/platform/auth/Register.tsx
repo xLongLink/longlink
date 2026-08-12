@@ -1,18 +1,18 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
+import { z } from 'zod';
+import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
+import { Divider } from '@astryxdesign/core/Divider';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { useLocation } from 'react-router';
-import { z } from 'zod';
-import { AuthPage } from '@/components/AuthPage';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 
 type RegisterValues = {
     email: string;
@@ -73,11 +73,7 @@ export default function Register() {
                     />
                     <Button
                         isLoading={registration.isPending}
-                        label={
-                            registration.isPending
-                                ? 'Sending registration link...'
-                                : 'Send registration link'
-                        }
+                        label={registration.isPending ? 'Sending registration link...' : 'Send registration link'}
                         type="submit"
                         variant="primary"
                     />

@@ -1,10 +1,10 @@
-import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
-import type { IconColor, IconSize } from '@astryxdesign/core-0-3/Icon';
 import type { IconName } from '@astryxdesign/core-0-3/Icon';
-import { ICON_COLORS, ICON_SIZES } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import type { IconColor, IconSize } from '@astryxdesign/core-0-3/Icon';
+import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
 import type { Props } from '../types';
+import { useXmlRuntime } from '../core/context';
+import { ICON_COLORS, ICON_SIZES } from '../constants';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 const iconColors: readonly IconColor[] = ICON_COLORS;
 const iconSizes: readonly IconSize[] = ICON_SIZES;

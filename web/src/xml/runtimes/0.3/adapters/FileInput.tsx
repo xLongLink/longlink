@@ -1,10 +1,10 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
-import { FILE_INPUT_MODES } from '../constants';
-import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
+import { FILE_INPUT_MODES } from '../constants';
+import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders an Astryx file field while keeping File values available to FormData actions. */
 export function FileInput({ props }: Props) {

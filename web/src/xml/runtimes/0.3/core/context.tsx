@@ -1,9 +1,9 @@
-import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { proxy } from 'valtio';
+import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { fetchApiJson } from '@/lib/api';
-import { evaluate, isSafePropertyName } from '../expressions';
 import type { ASTNode, XmlRuntime } from '../types';
 import { resolveRequestUrl } from './url';
+import { evaluate, isSafePropertyName } from '../expressions';
 
 export const XmlContext = createReactContext<XmlRuntime | null>(null);
 

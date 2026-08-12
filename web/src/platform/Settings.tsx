@@ -1,25 +1,27 @@
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Link } from '@astryxdesign/core/Link';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Slider } from '@astryxdesign/core/Slider';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Slider } from '@astryxdesign/core/Slider';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import {
     ACCENT_OPTIONS,
@@ -30,8 +32,6 @@ import {
     type Accent,
     type Theme,
 } from '@/lib/theme';
-import { useDeleteDialog } from '@/lib/utils';
-import PlatformLayout from '@/platform/layout';
 
 const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
     value,
@@ -104,8 +104,7 @@ export default function Settings() {
         mutation: deleteOrganization,
         items: memberships,
         getId: (membership) => membership.organization.id,
-        description: (membership) =>
-            `Delete ${membership.organization.name} from your account?`,
+        description: (membership) => `Delete ${membership.organization.name} from your account?`,
         errorMessage: 'Failed to delete organization',
         fallbackDescription: 'Delete this organization?',
         onError: (message) => toast({ body: message, type: 'error' }),
@@ -193,7 +192,9 @@ export default function Settings() {
                             <VStack gap={4}>
                                 <VStack gap={1}>
                                     <Heading level={2}>Account</Heading>
-                                    <Text type="supporting">Update your username. Your account email is read-only here.</Text>
+                                    <Text type="supporting">
+                                        Update your username. Your account email is read-only here.
+                                    </Text>
                                 </VStack>
                                 <HStack gap={4} align="start" wrap="wrap">
                                     <TextInput
@@ -226,7 +227,9 @@ export default function Settings() {
                             <VStack gap={4}>
                                 <VStack gap={1}>
                                     <Heading level={2}>Appearance</Heading>
-                                    <Text type="supporting">Customize the theme, accent color, and radius for the interface.</Text>
+                                    <Text type="supporting">
+                                        Customize the theme, accent color, and radius for the interface.
+                                    </Text>
                                 </VStack>
                                 <HStack gap={4} align="start" wrap="wrap">
                                     <Selector
@@ -296,7 +299,9 @@ export default function Settings() {
                                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                                     <VStack gap={1}>
                                         <Heading level={2}>Organizations</Heading>
-                                        <Text type="supporting">Review the organizations connected to your personal account.</Text>
+                                        <Text type="supporting">
+                                            Review the organizations connected to your personal account.
+                                        </Text>
                                     </VStack>
                                     <CreateOrganization />
                                 </HStack>

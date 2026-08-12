@@ -1,8 +1,8 @@
-import { Heading } from '@astryxdesign/core/Heading';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },

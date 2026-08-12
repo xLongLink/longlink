@@ -1,20 +1,17 @@
+import { z } from 'zod';
+import { useLocation } from 'react-router';
+import { Text } from '@astryxdesign/core/Text';
+import { useState, type ReactNode } from 'react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Boxes, Building2, Database, HardDrive, Users } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { useLocation } from 'react-router';
-import { z } from 'zod';
-import { useApiQuery } from '@/hooks/use-api';
-import { useUpdateOrganization } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type {
     OrganizationApplicationSummary,
     OrganizationInvitationResponse,
@@ -22,14 +19,17 @@ import type {
     OrganizationStorageUsageResponse,
     OrganizationSummary,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { S3 } from '@/svg/S3';
+import { formatBytes } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
-import { formatBytes } from '@/lib/utils';
-import { PostgreSQL } from '@/svg/PostgreSQL';
-import { S3 } from '@/svg/S3';
-import ApplicationSettings from './ApplicationSettings';
+import { useUpdateOrganization } from '@/hooks/use-organization';
+import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import People from './People';
+import ApplicationSettings from './ApplicationSettings';
 
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
@@ -199,10 +199,7 @@ export default function Settings({
             toast({ body: 'Avatar saved' });
         } catch (mutationError) {
             toast({
-                body:
-                    mutationError instanceof Error
-                        ? mutationError.message
-                        : 'Failed to update avatar',
+                body: mutationError instanceof Error ? mutationError.message : 'Failed to update avatar',
                 type: 'error',
             });
         }

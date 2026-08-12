@@ -1,23 +1,23 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { Selector } from '@astryxdesign/core/Selector';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { PasswordInput } from '@/components/PasswordInput';
-import { useToast } from '@/hooks/use-toast';
+import { useId, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
-import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
+import { PasswordInput } from '@/components/PasswordInput';
+import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const schema = z.object({
     name: z.string().trim().min(1),

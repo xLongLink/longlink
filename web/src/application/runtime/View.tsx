@@ -1,19 +1,20 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
-import { Center } from '@astryxdesign/core/Center';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { Stack } from '@astryxdesign/core/Stack';
-import startCase from 'lodash/startCase';
 import type { LucideIcon } from 'lucide-react';
+import { z } from 'zod';
+import startCase from 'lodash/startCase';
+import { Card } from '@astryxdesign/core/Card';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import { z } from 'zod';
-import { useApiQuery } from '@/hooks/use-api';
-import { fetchApiText } from '@/lib/api';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { getIconComponent } from '@/lib/icons';
+import { fetchApiText } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
+import { useApiQuery } from '@/hooks/use-api';
+import { getIconComponent } from '@/lib/icons';
+import XmlLayout from '@/xml/runtimes/0.3/layout';
 import {
     createContext as createXmlContext,
     getXmlRuntimeVersion,
@@ -22,7 +23,6 @@ import {
     resolveRequestUrl,
     type ASTNode,
 } from '@/xml';
-import XmlLayout from '@/xml/runtimes/0.3/layout';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -466,11 +466,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         );
     } else if (activePageStateIsCurrent && activePageState?.error) {
         activeFallback = (
-            <ErrorState
-                {...fallbackActionProps}
-                message={activePageState.error}
-                title="Unable to load this page"
-            />
+            <ErrorState {...fallbackActionProps} message={activePageState.error} title="Unable to load this page" />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <LoadingState status="loading" />;
@@ -498,7 +494,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
 /** Renders the in-shell loading page while an application is being created. */
 function LoadingState({ status }: { status: 'creating' | 'loading' }) {
-
     // Keep the shell visible while the page manifest or active page is loading.
     if (status === 'loading') return <Spinner label="Loading" />;
 

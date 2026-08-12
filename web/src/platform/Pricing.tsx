@@ -1,15 +1,15 @@
+import type { MetaFunction } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
-import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
-import type { MetaFunction } from 'react-router';
-import { PublicPage } from '@/layout/PublicPage';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { publicSeoMeta } from '@/lib/seo';
 import { pricingPage } from '@/platform/public';
+import { PublicPage } from '@/layout/PublicPage';
 
 export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
 

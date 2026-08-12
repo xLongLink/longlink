@@ -1,13 +1,13 @@
-import { Button } from '@astryxdesign/core-0-3/Button';
-import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core-0-3/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core-0-3/Layout';
-import { Stack } from '@astryxdesign/core-0-3/Stack';
 import { createContext } from 'react';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { requireXmlString, resolveXml } from '../core/props';
+import { Stack } from '@astryxdesign/core-0-3/Stack';
+import { Button } from '@astryxdesign/core-0-3/Button';
+import { Layout, LayoutContent } from '@astryxdesign/core-0-3/Layout';
+import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core-0-3/Dialog';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { requireXmlString, resolveXml } from '../core/props';
+import { toXmlBoolean, useBindableValue } from '../core/binding';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 

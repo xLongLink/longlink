@@ -1,9 +1,9 @@
 import { Stack as AstryxStack } from '@astryxdesign/core-0-3/Stack';
-import { BOX_ALIGNS, ORIENTATIONS, SPACINGS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isXmlEnum, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { isXmlEnum, resolveXml } from '../core/props';
+import { BOX_ALIGNS, ORIENTATIONS, SPACINGS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
 /** Renders an Astryx stack for horizontal or vertical layout. */
 export function Stack({ props, nodes }: Props) {

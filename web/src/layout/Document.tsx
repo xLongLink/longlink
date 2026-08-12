@@ -1,6 +1,6 @@
-import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import type { ReactNode } from 'react';
 import { Links, Meta, Scripts, ScrollRestoration } from 'react-router';
+import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 /** Renders the common LongLink HTML document shell. */
 export function Document({ children, headContent }: { children: ReactNode; headContent?: ReactNode }) {

@@ -1,5 +1,5 @@
-import * as v0_3 from './0.3';
 import type { ASTNode } from './0.3/types';
+import * as v0_3 from './0.3';
 
 type XmlRuntime = {
     render: typeof v0_3.RenderXML;

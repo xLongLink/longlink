@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createContext } from '@/xml/runtimes/0.3/core/context';
 import type { ASTNode } from '@/xml/runtimes/0.3/types';
+import { createContext } from '@/xml/runtimes/0.3/core/context';
 import { compileProps, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
@@ -10,7 +10,9 @@ describe('renderNode', () => {
     });
 
     it('throws on unknown component', () => {
-        expect(() => renderXmlToMarkup([{ name: 'Unknown', params: {}, children: [] }])).toThrow('Unknown component "Unknown"');
+        expect(() => renderXmlToMarkup([{ name: 'Unknown', params: {}, children: [] }])).toThrow(
+            'Unknown component "Unknown"'
+        );
     });
 
     it('resolves input props from expressions', () => {

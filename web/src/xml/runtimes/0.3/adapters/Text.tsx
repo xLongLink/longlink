@@ -1,5 +1,4 @@
 import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
-import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type {
     TextColor,
     TextDisplay,
@@ -10,6 +9,11 @@ import type {
     TextWrap,
     WordBreak,
 } from '@astryxdesign/core-0-3/Text';
+import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
+import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     FONT_WEIGHTS,
@@ -22,10 +26,6 @@ import {
     TYPOGRAPHIES,
     WORD_BREAKS,
 } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { resolveXml, resolveXmlValue } from '../core/props';
-import type { Props } from '../types';
 
 const textColors: readonly TextColor[] = TEXT_COLORS;
 const textDisplays: readonly TextDisplay[] = TEXT_DISPLAYS;

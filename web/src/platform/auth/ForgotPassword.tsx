@@ -1,16 +1,16 @@
+import { z } from 'zod';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { AuthPage } from '@/components/AuthPage';
-import { useToast } from '@/hooks/use-toast';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
 
 type ForgotPasswordValues = {
@@ -43,10 +43,16 @@ export default function ForgotPassword() {
     });
 
     return (
-        <AuthPage title="Reset your password" description="Enter your account email and LongLink will send password reset instructions.">
+        <AuthPage
+            title="Reset your password"
+            description="Enter your account email and LongLink will send password reset instructions."
+        >
             {requestReset.isSuccess ? (
                 <Stack gap={4}>
-                    <Banner status="success" title="If an account exists for that email, password reset instructions are on the way." />
+                    <Banner
+                        status="success"
+                        title="If an account exists for that email, password reset instructions are on the way."
+                    />
                     <Button href="/organizations" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (

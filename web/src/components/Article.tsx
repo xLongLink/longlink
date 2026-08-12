@@ -1,17 +1,17 @@
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import { Link } from '@astryxdesign/core/Link';
 import { Outline } from '@astryxdesign/core/Outline';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
+import type { ArticlePage } from '@/platform/catalog';
+import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import { dateFormatter } from '@/lib/utils';
-import type { ArticlePage } from '@/platform/catalog';
 
 /** Renders shared documentation and legal article content. */
 export function Article({

@@ -1,24 +1,24 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import CreateStorage from '@/components/dialogs/CreateStorage';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { platformApiPath } from '@/lib/platform-api';
-import { storagesQueryKey } from '@/lib/query-keys';
-import { useDeleteDialog } from '@/lib/utils';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { S3 } from '@/svg/S3';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import { storagesQueryKey } from '@/lib/query-keys';
+import { platformApiPath } from '@/lib/platform-api';
+import CreateStorage from '@/components/dialogs/CreateStorage';
+import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {

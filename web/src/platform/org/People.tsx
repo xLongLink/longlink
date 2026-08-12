@@ -1,31 +1,31 @@
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { Avatar } from '@astryxdesign/core/Avatar';
+import { useState } from 'react';
+import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { Divider } from '@astryxdesign/core/Divider';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { VStack } from '@astryxdesign/core/VStack';
-import { useState } from 'react';
-import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import type { Role } from '@/lib/roles';
 import type {
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     read: 'read',
@@ -157,7 +157,9 @@ export default function People({
                             <Heading level={2}>Invitations</Heading>
                             <Text type="supporting">Pending invitations to join this organization.</Text>
                             {canInviteMembers ? null : (
-                                <Text type="supporting">Only maintainers, admins, and owners can send invitations.</Text>
+                                <Text type="supporting">
+                                    Only maintainers, admins, and owners can send invitations.
+                                </Text>
                             )}
                         </VStack>
                         <Button
@@ -220,9 +222,7 @@ export default function People({
                     } catch (mutationError) {
                         toast({
                             body:
-                                mutationError instanceof Error
-                                    ? mutationError.message
-                                    : 'Failed to change member role',
+                                mutationError instanceof Error ? mutationError.message : 'Failed to change member role',
                             type: 'error',
                         });
                     }
@@ -265,7 +265,9 @@ export default function People({
                             >
                                 <VStack gap={4}>
                                     {canInviteMembers ? null : (
-                                        <Text type="supporting">You need maintainer, admin, or owner access to invite members.</Text>
+                                        <Text type="supporting">
+                                            You need maintainer, admin, or owner access to invite members.
+                                        </Text>
                                     )}
                                     <FormLayout>
                                         <TextInput

@@ -1,6 +1,6 @@
-import { geoOrthographic, geoPath, type GeoPermissibleObjects } from 'd3-geo';
 import { feature } from 'topojson-client';
 import worldAtlas from 'world-atlas/land-110m.json';
+import { geoOrthographic, geoPath, type GeoPermissibleObjects } from 'd3-geo';
 
 const centerX = 700;
 const centerY = 720;

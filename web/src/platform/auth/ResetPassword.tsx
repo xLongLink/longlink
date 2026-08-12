@@ -1,16 +1,16 @@
+import { z } from 'zod';
+import { useEffect, useRef } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Stack } from '@astryxdesign/core/Stack';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { AuthPage } from '@/components/AuthPage';
-import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
+import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiVoid } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
+import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from './use-fragment-token';
 
 type ResetPasswordValues = {
@@ -97,9 +97,15 @@ export default function ResetPassword() {
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {
         return (
-            <AuthPage title="Set a new password" description="This password reset link is invalid or expired. Request a new link to continue.">
+            <AuthPage
+                title="Set a new password"
+                description="This password reset link is invalid or expired. Request a new link to continue."
+            >
                 <Stack gap={4}>
-                    <Banner status="error" title="This password reset link is invalid or expired. Request a new link to continue." />
+                    <Banner
+                        status="error"
+                        title="This password reset link is invalid or expired. Request a new link to continue."
+                    />
                     <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
                 </Stack>
             </AuthPage>

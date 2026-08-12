@@ -1,25 +1,25 @@
+import { z } from 'zod';
+import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router';
-import { z } from 'zod';
-import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
-import { AuthPage } from '@/components/AuthPage';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { PasswordInput } from '@/components/PasswordInput';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { zEmailPayload, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
+import { PasswordInput } from '@/components/PasswordInput';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
+import { zEmailPayload, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useFragmentToken } from './use-fragment-token';
 
 type RegistrationCompleteValues = {
@@ -142,7 +142,11 @@ export default function VerifyEmail() {
         return (
             <AuthPage
                 title="Verify your email"
-                description={invalidToken ? 'This registration link is invalid or expired. Request a new link to continue.' : 'LongLink could not verify this registration link.'}
+                description={
+                    invalidToken
+                        ? 'This registration link is invalid or expired. Request a new link to continue.'
+                        : 'LongLink could not verify this registration link.'
+                }
             >
                 <Stack gap={3}>
                     <Banner status="error" title="LongLink could not verify this registration link." />
@@ -174,7 +178,11 @@ export default function VerifyEmail() {
         return (
             <AuthPage
                 title="Complete your account"
-                description={setupMismatch ? 'Another registration was verified in this browser. Reopen the link for this email to continue safely.' : 'An account with this email already exists. Sign in or reset your password to continue.'}
+                description={
+                    setupMismatch
+                        ? 'Another registration was verified in this browser. Reopen the link for this email to continue safely.'
+                        : 'An account with this email already exists. Sign in or reset your password to continue.'
+                }
             >
                 <Stack gap={3}>
                     {accountExists ? (
@@ -187,10 +195,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage
-            title={<AuthWelcomeTitle />}
-            description={<Divider label="Email verified. Complete your profile." />}
-        >
+        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">

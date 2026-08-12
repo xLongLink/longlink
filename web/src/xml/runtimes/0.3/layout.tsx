@@ -1,9 +1,9 @@
-import { Link } from '@astryxdesign/core/Link';
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { PageContainer } from '@/components/PageContainer';
-import { Wordmark } from '@/components/Wordmark';
+import type { LucideIcon } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
 import TopLayout from '@/layout/TopLayout';
+import { Wordmark } from '@/components/Wordmark';
+import { PageContainer } from '@/components/PageContainer';
 
 type XmlLayoutTab = {
     href: string;
@@ -12,13 +12,7 @@ type XmlLayoutTab = {
 };
 
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({
-    tabs,
-    children,
-}: {
-    tabs: Record<string, XmlLayoutTab>;
-    children: ReactNode;
-}) {
+export default function XmlLayout({ tabs, children }: { tabs: Record<string, XmlLayoutTab>; children: ReactNode }) {
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
         const { href, active, icon } = tab;

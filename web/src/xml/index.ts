@@ -1,7 +1,7 @@
 import { createElement } from 'react';
-import { getXmlRuntime, getXmlRuntimeVersion } from './runtimes';
-import * as v0_3 from './runtimes/0.3';
 import type { ASTNode } from './runtimes/0.3/types';
+import * as v0_3 from './runtimes/0.3';
+import { getXmlRuntime, getXmlRuntimeVersion } from './runtimes';
 
 /** Parses one XML document and verifies its declared runtime syntax. */
 export function parseXML(xml: string): ASTNode[] {

@@ -1,5 +1,5 @@
-import { Stack } from '@astryxdesign/core/Stack';
 import type { ReactNode } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 

@@ -1,25 +1,5 @@
 import type { ExpressionNode } from './expressions/types';
 
-/** Returns whether a value satisfies NonBlankStringType. */
-export function isNonBlankXmlString(value: unknown): value is string {
-    return typeof value === 'string' && /\S/.test(value);
-}
-
-/** Returns whether a value satisfies FieldPathType. */
-export function isXmlFieldPath(value: unknown): value is string {
-    return isNonBlankXmlString(value) && /^[^.\s]+(?:\.[^.\s]+)*$/.test(value);
-}
-
-/** Returns whether a value satisfies PositiveDecimalType. */
-export function isPositiveXmlDecimal(value: unknown): value is number {
-    return typeof value === 'number' && Number.isFinite(value) && value > 0;
-}
-
-/** Returns whether a value satisfies HeadingLevelType. */
-export function isXmlHeadingLevel(value: unknown): value is number {
-    return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 6;
-}
-
 export type ASTAttribute =
     | { kind: 'text'; value: string }
     | { kind: 'path'; parts: string[]; isBinding: boolean }

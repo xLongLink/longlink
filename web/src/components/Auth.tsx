@@ -1,13 +1,13 @@
-import { Center } from '@astryxdesign/core/Center';
+import type { ReactElement } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
-import type { ReactElement } from 'react';
-import { SignInCard } from '@/components/SignInCard';
-import { useUserProfile } from '@/hooks/use-user';
 import { ApiError } from '@/lib/api';
-import PlatformLayout from '@/platform/layout';
 import NotFound from '@/platform/NotFound';
+import PlatformLayout from '@/platform/layout';
+import { useUserProfile } from '@/hooks/use-user';
+import { SignInCard } from '@/components/SignInCard';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
 export function Auth({

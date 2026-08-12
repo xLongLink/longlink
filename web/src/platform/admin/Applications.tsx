@@ -1,21 +1,21 @@
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Link } from '@astryxdesign/core/Link';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { Wrench } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { platformApiPath } from '@/lib/platform-api';
 import { dateTimeFormatter } from '@/lib/utils';
+import { platformApiPath } from '@/lib/platform-api';
 import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const statusVariants = {
     creating: 'info',
@@ -27,7 +27,10 @@ const statusVariants = {
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const statusLabels: Record<Status, string> = {
-        creating: 'Creating', running: 'Running', failed: 'Failed', deleting: 'Deleting',
+        creating: 'Creating',
+        running: 'Running',
+        failed: 'Failed',
+        deleting: 'Deleting',
     };
     const columns: TableColumn<ApplicationResponse>[] = [
         {

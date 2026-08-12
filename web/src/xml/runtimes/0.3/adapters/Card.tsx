@@ -1,9 +1,9 @@
 import { Card as AstryxCard } from '@astryxdesign/core-0-3/Card';
-import { CARD_VARIANTS, ELEVATIONS, SPACINGS } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isXmlEnum, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { isXmlEnum, resolveXml } from '../core/props';
+import { CARD_VARIANTS, ELEVATIONS, SPACINGS } from '../constants';
 
 /** Renders an Astryx card container. */
 export function Card({ props, nodes }: Props) {

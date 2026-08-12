@@ -15,6 +15,7 @@
         "build:sdk": "vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "react-router build --mode sdk",
         "export:platform-api": "DEVELOPMENT=true uv --directory ../api run python -m scripts.openapi",
+        "format": "vp fmt --write && vp lint --fix-suggestions",
         "generate:platform-api": "vp run export:platform-api && openapi-ts --file openapi-ts.config.ts",
         "check:platform-api": "vp run generate:platform-api && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
         "dev": "react-router dev --mode api",
@@ -56,6 +57,7 @@
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.4",
         "@types/topojson-client": "^3.1.5",
+        "eslint-plugin-perfectionist": "^5.10.1",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.8",
         "vite-plus": "0.2.8"

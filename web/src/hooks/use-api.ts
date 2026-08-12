@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
+import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
 type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
     UseQueryOptions<TQueryFnData, Error, TData, Array<string>>,

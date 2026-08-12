@@ -1,6 +1,6 @@
-import { AppShell } from '@astryxdesign/core/AppShell';
-import { Stack } from '@astryxdesign/core/Stack';
 import type { ReactNode } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { AppShell } from '@astryxdesign/core/AppShell';
 import { ContentFrame } from '@/layout/ContentFrame';
 
 /** Renders the shared application shell with side navigation. */

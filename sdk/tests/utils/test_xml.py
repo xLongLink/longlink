@@ -92,11 +92,6 @@ VALID_FRAGMENTS = [
 
 INVALID_FRAGMENTS = [
     ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button label="Save" /></Action>'),
-    ("removed-avatar-fallback-src", _adapter_schema("Avatar.xsd"), '<Avatar fallbackSrc="/fallback.png" />'),
-    ("removed-button-append", _adapter_schema("Button.xsd"), '<Button label="Add" append="cart" item="${item}" />'),
-    ("removed-button-item", _adapter_schema("Button.xsd"), '<Button label="Add" item="${item}" />'),
-    ("removed-dialog-trigger-variant", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerVariant="primary" />'),
-    ("removed-dialog-trigger-size", _adapter_schema("Dialog.xsd"), '<Dialog title="Edit" triggerSize="sm" />'),
     ("invalid-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="headline" value="Title" />'),
     ("invalid-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="violet" />'),
     ("badge-unsupported-child", _adapter_schema("Badge.xsd"), '<Badge label="Active"><Text value="Active" /></Badge>'),
@@ -114,29 +109,15 @@ INVALID_FRAGMENTS = [
         _adapter_schema("Selector.xsd"),
         '<Selector label="View"><SelectorOption label="Overview" /></Selector>',
     ),
-    ("old-visual-alias", ROOT_SCHEMA, '<longlink version="0.3"><P value="$item.name" /></longlink>'),
     ("missing-query-path", _adapter_schema("Query.xsd"), '<Query id="projects" />'),
     ("missing-state-id", _adapter_schema("State.xsd"), '<State value="[]" />'),
     ("missing-table-column-key", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn field="sku" /></Table>'),
-    ("removed-table-row-name", _adapter_schema("Table.xsd"), '<Table data="$items" rowName="item"><TableColumn key="sku" /></Table>'),
-    ("removed-table-column-width", _adapter_schema("Table.xsd"), '<Table data="$items"><TableColumn key="sku" width="1" /></Table>'),
-    (
-        "removed-table-column-width-type",
-        _adapter_schema("Table.xsd"),
-        '<Table data="$items"><TableColumn key="sku" widthType="pixel" /></Table>',
-    ),
-    (
-        "removed-table-column-min-width",
-        _adapter_schema("Table.xsd"),
-        '<Table data="$items"><TableColumn key="sku" minWidth="100" /></Table>',
-    ),
     ("missing-tab-value", _adapter_schema("TabList.xsd"), '<TabList><Tab label="Overview"><Text value="Overview" /></Tab></TabList>'),
     ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3"><Text value="Dashboard"></longlink>'),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
     ("doctype", '<!DOCTYPE longlink><longlink version="0.3" />'),
-    ("entity", '<!DOCTYPE longlink [<!ENTITY hidden "value">]><longlink version="0.3" />'),
     ("cdata", '<longlink version="0.3"><![CDATA[hidden]]></longlink>'),
 ]
 

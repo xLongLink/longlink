@@ -1,24 +1,24 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useDeleteDialog } from '@/lib/utils';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
-import { useDeleteDialog } from '@/lib/utils';
+import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { PostgreSQL } from '@/svg/PostgreSQL';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {

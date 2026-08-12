@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
-import { isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, Scope } from '../types';
 import { resolveXmlValue } from './props';
+import { isSafePropertyName, resolvePath } from '../expressions';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});
 
@@ -60,7 +60,11 @@ export function useBindableValue<T>(
 }
 
 /** Resolves a writable state target from a raw XML binding expression. */
-function resolveBindableTarget(attribute: ASTProps[string] | undefined, value: unknown, ctx: Scope): BindingTarget | undefined {
+function resolveBindableTarget(
+    attribute: ASTProps[string] | undefined,
+    value: unknown,
+    ctx: Scope
+): BindingTarget | undefined {
     // Use resolved proxy values directly.
     if (isBindableValue(value)) return { state: value };
 

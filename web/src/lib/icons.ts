@@ -1,3 +1,4 @@
+import { createElement, type ReactElement } from 'react';
 import {
     Activity,
     ArrowDown,
@@ -56,7 +57,6 @@ import {
     type LucideIcon,
     type LucideProps,
 } from 'lucide-react';
-import { createElement, type ReactElement } from 'react';
 
 export const ICON_NAMES = [
     'activity',

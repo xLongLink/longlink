@@ -1,6 +1,6 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
-import { compileAttribute } from '../expressions';
 import type { ASTNode, ASTProps } from '../types';
+import { compileAttribute } from '../expressions';
 
 const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
 

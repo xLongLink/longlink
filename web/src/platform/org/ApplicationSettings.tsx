@@ -1,20 +1,20 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Wrench } from 'lucide-react';
 import { useState } from 'react';
-import CreateApplication from '@/components/dialogs/CreateApplication';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import Logs from '@/components/dialogs/Logs';
-import { useDeleteOrganizationApplication } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
+import { Wrench } from 'lucide-react';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import Logs from '@/components/dialogs/Logs';
+import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
+import CreateApplication from '@/components/dialogs/CreateApplication';
+import { useDeleteOrganizationApplication } from '@/hooks/use-organization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
@@ -38,8 +38,7 @@ export default function ApplicationSettings({
         mutation: deleteApplication,
         items: applications,
         getId: (application) => application.id,
-        description: (application) =>
-            `Delete ${application.name} from this organization?`,
+        description: (application) => `Delete ${application.name} from this organization?`,
         errorMessage: 'Failed to delete application',
         fallbackDescription: 'Delete this application?',
         onError: (message) => toast({ body: message, type: 'error' }),

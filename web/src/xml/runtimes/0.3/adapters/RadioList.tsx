@@ -1,11 +1,11 @@
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core-0-3/RadioList';
-import { COMPACT_SIZES, ORIENTATIONS } from '../constants';
-import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
 import { resolveInputStatus } from './input';
+import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
+import { COMPACT_SIZES, ORIENTATIONS } from '../constants';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders an Astryx radio list with a controlled XML value. */
 export function RadioList({ props, nodes }: Props) {

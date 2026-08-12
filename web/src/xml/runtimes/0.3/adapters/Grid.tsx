@@ -1,9 +1,9 @@
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core-0-3/Grid';
-import { BOX_ALIGNS, GRID_REPEATS, SPACINGS } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { BOX_ALIGNS, GRID_REPEATS, SPACINGS } from '../constants';
+import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 
 /** Renders a fixed or responsive Astryx grid. */
 export function Grid({ props, nodes }: Props) {
@@ -23,16 +23,28 @@ export function Grid({ props, nodes }: Props) {
     const minHeight = resolveXml(props, 'minHeight', ctx);
     const maxColumns = resolveXml(props, 'maxColumns', ctx);
 
-    // Keep the XML attributes aligned with Astryx's fixed or responsive column union.
-    if (columnCount != null && typeof columnCount !== 'number') {
+    // Reject dynamic values that cannot produce valid CSS grid tracks.
+    if (
+        columnCount != null &&
+        (typeof columnCount !== 'number' ||
+            !Number.isFinite(columnCount) ||
+            !Number.isInteger(columnCount) ||
+            columnCount <= 0)
+    ) {
         throw new Error('Grid columns must be a positive integer');
     }
 
-    if (minWidth != null && typeof minWidth !== 'number') {
+    if (minWidth != null && (typeof minWidth !== 'number' || !Number.isFinite(minWidth) || minWidth <= 0)) {
         throw new Error('Grid minColumnWidth must be a positive number');
     }
 
-    if (maxColumns != null && typeof maxColumns !== 'number') {
+    if (
+        maxColumns != null &&
+        (typeof maxColumns !== 'number' ||
+            !Number.isFinite(maxColumns) ||
+            !Number.isInteger(maxColumns) ||
+            maxColumns <= 0)
+    ) {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
@@ -74,19 +86,6 @@ export function Grid({ props, nodes }: Props) {
 
     if (readXmlProp(props, 'repeat') != null && minWidth == null) {
         throw new Error('Grid repeat requires minColumnWidth');
-    }
-
-    // Reject dynamic values that cannot produce valid CSS grid tracks.
-    if (columnCount != null && (!Number.isFinite(columnCount) || !Number.isInteger(columnCount) || columnCount <= 0)) {
-        throw new Error('Grid columns must be a positive integer');
-    }
-
-    if (minWidth != null && (!Number.isFinite(minWidth) || minWidth <= 0)) {
-        throw new Error('Grid minColumnWidth must be a positive number');
-    }
-
-    if (maxColumns != null && (!Number.isFinite(maxColumns) || !Number.isInteger(maxColumns) || maxColumns <= 0)) {
-        throw new Error('Grid maxColumns must be a positive integer');
     }
 
     const columns: GridColumns | undefined =

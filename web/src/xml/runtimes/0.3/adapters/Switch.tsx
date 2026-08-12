@@ -1,10 +1,10 @@
 import { Switch as AstryxSwitch } from '@astryxdesign/core-0-3/Switch';
-import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
+import { useXmlRuntime } from '../core/context';
+import { toXmlBoolean, useBindableValue } from '../core/binding';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 
 /** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {

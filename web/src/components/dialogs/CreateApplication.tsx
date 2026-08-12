@@ -1,23 +1,23 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { Selector } from '@astryxdesign/core/Selector';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useId, useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
-import { useApiQuery } from '@/hooks/use-api';
-import { useCreateOrganizationApplication } from '@/hooks/use-organization';
-import { useToast } from '@/hooks/use-toast';
-import { ApiError, fetchApiJson } from '@/lib/api';
+import { useId, useState } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
-import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
-import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
+import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
+import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { useCreateOrganizationApplication } from '@/hooks/use-organization';
+import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -170,11 +170,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
 
     return (
         <>
-            <Button
-                label="Create"
-                isDisabled={organizationId.length === 0}
-                clickAction={() => setOpen(true)}
-            />
+            <Button label="Create" isDisabled={organizationId.length === 0} clickAction={() => setOpen(true)} />
 
             <Dialog
                 isOpen={open}
@@ -302,10 +298,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         htmlName={field.name}
                                                         isOptional={!env.required}
                                                         isRequired={env.required}
-                                                        placeholder={
-                                                            env.description ??
-                                                            `Enter ${env.name}`
-                                                        }
+                                                        placeholder={env.description ?? `Enter ${env.name}`}
                                                         onBlur={field.onBlur}
                                                         onChange={field.onChange}
                                                     />
@@ -383,11 +376,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                         <Button
                                             form={formId}
                                             type="submit"
-                                            label={
-                                                createApplication.isPending
-                                                    ? 'Creating...'
-                                                    : 'Create'
-                                            }
+                                            label={createApplication.isPending ? 'Creating...' : 'Create'}
                                             variant="primary"
                                             isDisabled={!hasRequiredMetadata || !form.formState.isValid}
                                             isLoading={createApplication.isPending}

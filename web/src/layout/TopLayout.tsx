@@ -1,11 +1,11 @@
-import { AppShell } from '@astryxdesign/core/AppShell';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { TopNav } from '@astryxdesign/core/TopNav';
 import type { LucideIcon } from 'lucide-react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import { AppShell } from '@astryxdesign/core/AppShell';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useEffect, useState, type ReactNode } from 'react';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { ContentFrame } from '@/layout/ContentFrame';
+import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 type TopLayoutTab = {
     href: string;
@@ -36,7 +36,6 @@ function TopLayout({
     tabs = [],
     topNavClassName,
 }: TopLayoutProps) {
-
     // Preserve the existing top navigation and optional tab-strip structure.
     const hasTabs = tabs.length > 0;
     const [isTabFrameExpanded, setIsTabFrameExpanded] = useState(false);

@@ -1,9 +1,9 @@
+import { Store } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Section } from '@astryxdesign/core/Section';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Store } from 'lucide-react';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PublicPage } from '@/layout/PublicPage';
 
 /** Renders the marketplace placeholder. */

@@ -1,7 +1,11 @@
-import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
-import type { HeadingLevel, HeadingType } from '@astryxdesign/core-0-3/Heading';
 import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
+import type { HeadingLevel, HeadingType } from '@astryxdesign/core-0-3/Heading';
 import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
+import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
+import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     HEADING_TYPES,
@@ -11,10 +15,6 @@ import {
     TRUNCATE_TOOLTIPS,
     WORD_BREAKS,
 } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { resolveXml, resolveXmlValue } from '../core/props';
-import type { Props } from '../types';
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
 const headingColors: readonly TextColor[] = TEXT_COLORS;

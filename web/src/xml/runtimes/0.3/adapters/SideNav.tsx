@@ -4,11 +4,11 @@ import {
     SideNavSection,
 } from '@astryxdesign/core-0-3/SideNav';
 import { renderIcon } from '@/lib/icons';
-import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
+import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders Astryx side navigation and the selected XML panel. */
 export function SideNav({ props, nodes }: Props) {

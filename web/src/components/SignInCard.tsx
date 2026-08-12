@@ -1,22 +1,22 @@
+import { z } from 'zod';
+import { useNavigate } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router';
-import { z } from 'zod';
-import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { PasswordInput } from '@/components/PasswordInput';
-import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
+import { PasswordInput } from '@/components/PasswordInput';
+import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
+import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 
 type LoginValues = {
     email: string;

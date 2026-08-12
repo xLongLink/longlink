@@ -1,14 +1,13 @@
+import { Search } from 'lucide-react';
+import { useLocation } from 'react-router';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Search } from 'lucide-react';
-import { useLocation } from 'react-router';
 import PlatformLayout from '@/platform/layout';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {
-
     return (
         <PlatformLayout brandOnly>
             <Center minHeight="70dvh" width="100%">

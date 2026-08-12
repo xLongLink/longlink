@@ -1,7 +1,7 @@
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useState } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 
 type CodeTabItem = {
     code: string;

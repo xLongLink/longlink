@@ -60,7 +60,7 @@ class Element:
         """Store file paths and defer parsing until needed."""
 
         self.path = Path(path)
-        self.schema_path: Path | None = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
+        self.schema_path = Path(schema) if schema is not None else ROOT / ".static" / "xsd" / "schema.xsd"
         self._content: str | None = None
 
 
@@ -85,8 +85,6 @@ class Element:
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = create_xml_parser()
-        if self.schema_path is None:
-            raise ValueError("No XSD schema path configured")
         schema = load_xml_schema((self.schema_path if self.schema_path.is_absolute() else ROOT / self.schema_path).resolve())
 
         # Parse user XML once for validation and downstream metadata extraction.

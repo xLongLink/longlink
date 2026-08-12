@@ -1,11 +1,11 @@
-import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
 import { useContext } from 'react';
-import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
 import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
 import { ActionHandlerContext } from './Action';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {

@@ -1,11 +1,11 @@
-import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core-0-3/Table';
 import { Text } from '@astryxdesign/core-0-3/Text';
-import { ALIGNS, TABLE_DENSITIES, TABLE_DIVIDERS, TABLE_TEXT_OVERFLOWS, TABLE_VERTICAL_ALIGNS } from '../constants';
-import { useXmlRuntime, XmlContext } from '../core/context';
-import { renderNode } from '../core/node';
-import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
-import { readSafeProperty } from '../expressions';
+import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core-0-3/Table';
 import type { ASTNode, Props, Scope } from '../types';
+import { renderNode } from '../core/node';
+import { readSafeProperty } from '../expressions';
+import { useXmlRuntime, XmlContext } from '../core/context';
+import { ALIGNS, TABLE_DENSITIES, TABLE_DIVIDERS, TABLE_TEXT_OVERFLOWS, TABLE_VERTICAL_ALIGNS } from '../constants';
+import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
 type TableRow = Record<string, unknown>;
 
@@ -75,7 +75,7 @@ function buildColumn(
     services: ReturnType<typeof useXmlRuntime>['services'],
     rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
-    const props = node.params ?? {};
+    const props = node.params;
     const key = readXmlProp(props, 'key');
 
     // Column keys and field paths are literal identifiers, not expressions.

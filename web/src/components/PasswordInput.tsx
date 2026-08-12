@@ -1,8 +1,8 @@
+import { Eye, EyeOff } from 'lucide-react';
+import { useState, type ComponentProps } from 'react';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
 import { TextInput, type TextInputProps } from '@astryxdesign/core/TextInput';
-import { Eye, EyeOff } from 'lucide-react';
-import { useState, type ComponentProps } from 'react';
 
 type PasswordInputProps = Omit<TextInputProps, 'isLabelHidden' | 'type'> &
     Pick<ComponentProps<'input'>, 'autoComplete'> & {

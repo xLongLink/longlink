@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { renderNode } from '@/xml/runtimes/0.3/core/node';
 import type { XmlRuntime } from '@/xml/runtimes/0.3/types';
+import { renderNode } from '@/xml/runtimes/0.3/core/node';
 import { compileProps } from '../helpers';
 
 describe('renderNode', () => {

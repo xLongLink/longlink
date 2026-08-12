@@ -1,12 +1,12 @@
-import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
 import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
+import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
 import { Selector as AstryxSelector, type SelectorSize } from '@astryxdesign/core-0-3/Selector';
-import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
-import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
+import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
+import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 
 /** Renders a data-oriented Astryx selector from SelectorOption children. */
 export function Selector({ props, nodes }: Props) {

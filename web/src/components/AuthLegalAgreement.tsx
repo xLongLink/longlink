@@ -3,7 +3,6 @@ import { Text } from '@astryxdesign/core/Text';
 
 /** Renders the shared account legal-agreement copy. */
 export function AuthLegalAgreement() {
-
     return (
         <Text as="p" color="secondary" justify="center" type="supporting">
             By continuing, you agree to our <br />

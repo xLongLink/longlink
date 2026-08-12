@@ -1,6 +1,6 @@
+import type { ExpressionNode } from './types';
 import type { ASTAttribute, Scope } from '../types';
 import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
-import type { ExpressionNode } from './types';
 
 type SafeExpressionCall = (...args: unknown[]) => unknown;
 

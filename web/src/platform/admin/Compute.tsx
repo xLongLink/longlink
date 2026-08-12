@@ -1,24 +1,24 @@
-import { Banner } from '@astryxdesign/core/Banner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { VStack } from '@astryxdesign/core/VStack';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Wrench } from 'lucide-react';
-import CreateCompute from '@/components/dialogs/CreateCompute';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { useToast } from '@/hooks/use-toast';
-import { fetchApiVoid } from '@/lib/api';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import { platformApiPath } from '@/lib/platform-api';
-import { computesQueryKey } from '@/lib/query-keys';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
+import { computesQueryKey } from '@/lib/query-keys';
+import { platformApiPath } from '@/lib/platform-api';
+import CreateCompute from '@/components/dialogs/CreateCompute';
 import { useAdminPagination } from '@/platform/admin/pagination';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
@@ -46,9 +46,11 @@ export default function AdminCompute() {
         mutation: deleteCompute,
         items: computes,
         getId: (compute) => compute.id,
-        description: (compute) => `Remove compute ${compute.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
+        description: (compute) =>
+            `Remove compute ${compute.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
         errorMessage: 'Failed to delete compute',
-        fallbackDescription: 'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
+        fallbackDescription:
+            'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns: TableColumn<ComputeRegistryResponse>[] = [

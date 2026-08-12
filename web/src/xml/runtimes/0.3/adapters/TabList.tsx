@@ -1,12 +1,12 @@
 import { Stack } from '@astryxdesign/core-0-3/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core-0-3/TabList';
+import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { useXmlRuntime } from '../core/context';
 import { SIZES, TAB_LAYOUTS } from '../constants';
 import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { renderNode } from '../core/node';
-import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { resolveNavigationUrl } from '../core/url';
-import type { Props } from '../types';
+import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders controlled Astryx tab navigation and its selected XML panel. */
 export function TabList({ props, nodes }: Props) {

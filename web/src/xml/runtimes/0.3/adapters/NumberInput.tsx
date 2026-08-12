@@ -1,11 +1,11 @@
 import type { FieldStatusVariant } from '@astryxdesign/core-0-3/Field';
 import { NumberInput as AstryxNumberInput, type NumberInputSize } from '@astryxdesign/core-0-3/NumberInput';
-import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
-import { useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
+import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
+import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders an Astryx numeric field with numeric Valtio writes. */
 export function NumberInput({ props }: Props) {

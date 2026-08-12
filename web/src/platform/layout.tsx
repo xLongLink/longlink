@@ -1,12 +1,12 @@
-import { Link } from '@astryxdesign/core/Link';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { UserProfile } from '@/components/Profile';
+import { Link } from '@astryxdesign/core/Link';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
+import TopLayout from '@/layout/TopLayout';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import TopLayout from '@/layout/TopLayout';
+import { UserProfile } from '@/components/Profile';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { normalizePathname } from '@/platform/paths';
 
 type PlatformLayoutTab = {

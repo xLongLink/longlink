@@ -1,10 +1,10 @@
-import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import type { BadgeVariant } from '@astryxdesign/core-0-3/Badge';
+import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
+import type { Props } from '../types';
 import { BADGE_VARIANTS } from '../constants';
+import { renderXmlSlot } from '../core/slots';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
-import { renderXmlSlot } from '../core/slots';
-import type { Props } from '../types';
 
 const badgeVariants: readonly BadgeVariant[] = BADGE_VARIANTS;
 

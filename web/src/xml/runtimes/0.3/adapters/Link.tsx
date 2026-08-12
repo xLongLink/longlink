@@ -1,9 +1,9 @@
 import { Link as AstryxLink } from '@astryxdesign/core-0-3/Link';
-import { useXmlRuntime } from '../core/context';
+import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { resolveXml } from '../core/props';
+import { useXmlRuntime } from '../core/context';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
-import type { Props } from '../types';
 
 /** Renders an Astryx link while keeping navigation destinations URL-safe. */
 export function Link({ props, nodes }: Props) {

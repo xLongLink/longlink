@@ -1,10 +1,10 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core-0-3/CheckboxInput';
-import { COMPACT_SIZES } from '../constants';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
-import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import type { Props } from '../types';
+import { COMPACT_SIZES } from '../constants';
 import { resolveInputStatus } from './input';
+import { useXmlRuntime } from '../core/context';
+import { toXmlBoolean, useBindableValue } from '../core/binding';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /** Renders an Astryx checkbox with boolean Valtio binding. */
 export function CheckboxInput({ props }: Props) {
