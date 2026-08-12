@@ -17,11 +17,9 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     client = TestClient(app)
 
     # Exercise runtime metadata and frontend fallback routes.
-    pages_response = client.get("/pages.json")
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
     # Verify each runtime route.
-    assert pages_response.status_code == 200
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
@@ -98,20 +96,6 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     assert {key: page[key] for key in expected_metadata} == expected_metadata
     assert page["runtime_version"] == "0.3"
     assert all("content" not in item for item in pages)
-
-
-def test_xml_page_catalog_includes_astryx_runtime_version(application_source: Path) -> None:
-    """Expose the XML compatibility runtime selected by each page."""
-
-    (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink version="0.3"><Text i18n="dashboard.title" /></longlink>',
-        encoding="utf-8",
-    )
-
-    client = TestClient(LongLink(FastAPI()).app)
-
-    page = next(item for item in client.get("/pages.json").json() if item["path"] == "pages/dashboard")
-    assert page["runtime_version"] == "0.3"
 
 
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:

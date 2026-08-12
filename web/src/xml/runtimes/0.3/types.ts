@@ -5,9 +5,10 @@ export type ASTAttribute =
     | { kind: 'text'; value: string }
     | { kind: 'path'; parts: string[]; isBinding: boolean }
     | { kind: 'expression'; node: ExpressionNode }
-    | { kind: 'interpolation'; segments: ASTInterpolationSegment[] };
-
-export type ASTInterpolationSegment = { kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode };
+    | {
+          kind: 'interpolation';
+          segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }>;
+      };
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {

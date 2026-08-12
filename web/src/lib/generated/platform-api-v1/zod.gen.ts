@@ -123,6 +123,15 @@ export const zDatabaseRegistryResponse = z.object({
 });
 
 /**
+ * EmailPayload
+ *
+ * Return one verified email address.
+ */
+export const zEmailPayload = z.object({
+    email: z.email()
+});
+
+/**
  * EnvironmentMetadata
  *
  * Typed metadata for a single environment variable.
@@ -613,18 +622,14 @@ export const zRequestRegistrationApiV1AuthRegisterPostBody = zBodyRequestRegistr
 export const zVerifyRegistrationTokenApiV1AuthVerifyPostBody = zTokenPayload;
 
 /**
- * Response Verify Registration Token Api V1 Auth Verify Post
- *
  * Successful Response
  */
-export const zVerifyRegistrationTokenApiV1AuthVerifyPostResponse = z.record(z.string(), z.email());
+export const zVerifyRegistrationTokenApiV1AuthVerifyPostResponse = zEmailPayload;
 
 /**
- * Response Get Registration Setup Api V1 Auth Register Setup Get
- *
  * Successful Response
  */
-export const zGetRegistrationSetupApiV1AuthRegisterSetupGetResponse = z.record(z.string(), z.email());
+export const zGetRegistrationSetupApiV1AuthRegisterSetupGetResponse = zEmailPayload;
 
 export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrationComplete;
 

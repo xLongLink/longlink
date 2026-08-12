@@ -244,6 +244,18 @@ export type DatabaseRegistryResponse = {
 export type DatabaseSslMode = 'disable' | 'allow' | 'prefer' | 'require' | 'verify-ca' | 'verify-full';
 
 /**
+ * EmailPayload
+ *
+ * Return one verified email address.
+ */
+export type EmailPayload = {
+    /**
+     * Email
+     */
+    email: string;
+};
+
+/**
  * EnvironmentMetadata
  *
  * Typed metadata for a single environment variable.
@@ -989,13 +1001,9 @@ export type VerifyRegistrationTokenApiV1AuthVerifyPostError = VerifyRegistration
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostResponses = {
     /**
-     * Response Verify Registration Token Api V1 Auth Verify Post
-     *
      * Successful Response
      */
-    200: {
-        [key: string]: string;
-    };
+    200: EmailPayload;
 };
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostResponse = VerifyRegistrationTokenApiV1AuthVerifyPostResponses[keyof VerifyRegistrationTokenApiV1AuthVerifyPostResponses];
@@ -1018,13 +1026,9 @@ export type GetRegistrationSetupApiV1AuthRegisterSetupGetError = GetRegistration
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponses = {
     /**
-     * Response Get Registration Setup Api V1 Auth Register Setup Get
-     *
      * Successful Response
      */
-    200: {
-        [key: string]: string;
-    };
+    200: EmailPayload;
 };
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetResponse = GetRegistrationSetupApiV1AuthRegisterSetupGetResponses[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetResponses];

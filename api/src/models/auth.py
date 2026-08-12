@@ -9,6 +9,13 @@ class TokenPayload(BaseModel):
     token: str = Field(min_length=1, max_length=4096)
 
 
+class EmailPayload(BaseModel):
+    """Return one verified email address."""
+
+    # Identity
+    email: Email
+
+
 class PasswordLogin(BaseModel):
     """Validate one local password login request."""
 

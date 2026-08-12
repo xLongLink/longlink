@@ -1,5 +1,5 @@
 import { parseExpressionAt } from 'acorn';
-import type { ASTAttribute, ASTInterpolationSegment } from '../types';
+import type { ASTAttribute } from '../types';
 import type { ExpressionNode } from './types';
 
 type InterpolationSegment = {
@@ -28,7 +28,7 @@ export function compileAttribute(value: string, literal = false): ASTAttribute {
 
     // Compile mixed text and expressions into segments that render as text.
     if (input.includes('${')) {
-        const segments: ASTInterpolationSegment[] = [];
+        const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }> = [];
         let cursor = 0;
 
         for (const segment of readInterpolationSegments(value)) {

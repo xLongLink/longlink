@@ -275,12 +275,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "type": "object",
-                  "title": "Response Verify Registration Token Api V1 Auth Verify Post"
+                  "$ref": "#/components/schemas/EmailPayload"
                 }
               }
             }
@@ -330,12 +325,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "title": "Response Get Registration Setup Api V1 Auth Register Setup Get"
+                  "$ref": "#/components/schemas/EmailPayload"
                 }
               }
             }
@@ -2760,6 +2750,21 @@
         ],
         "title": "DatabaseSSLMode",
         "description": "Supported PostgreSQL SSL modes."
+      },
+      "EmailPayload": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EmailPayload",
+        "description": "Return one verified email address."
       },
       "EnvironmentMetadata": {
         "properties": {

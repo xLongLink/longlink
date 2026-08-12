@@ -8,13 +8,8 @@ import { resolveRequestUrl } from '../core/url';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { DialogCloseContext } from './Dialog';
 
-const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
+export const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
-
-/** Returns the action handler provided by the nearest XML Action wrapper. */
-export function useActionHandler() {
-    return useContext(ActionHandlerContext);
-}
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {

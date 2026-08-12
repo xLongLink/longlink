@@ -5,7 +5,7 @@ from fastapi import Body, Cookie, Header, Depends, Response, APIRouter, HTTPExce
 from src.auth import get_session
 from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
-from src.models.auth import TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
+from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserProfile
 from src.database.services import users, invitations, organizations
@@ -175,7 +175,7 @@ async def request_registration(
     background_tasks.add_task(mail.send_signup_verification_email, email, credential)
 
 
-@router.post("/auth/verify", response_model=dict[str, Email], tags=["auth"])
+@router.post("/auth/verify", response_model=EmailPayload, tags=["auth"])
 async def verify_registration_token(payload: TokenPayload, response: Response):
     """Validate an emailed registration token without creating an account."""
 
@@ -197,7 +197,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     return {"email": email}
 
 
-@router.get("/auth/register/setup", response_model=dict[str, Email], tags=["auth"])
+@router.get("/auth/register/setup", response_model=EmailPayload, tags=["auth"])
 async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
     """Restore verified registration state from its browser-only cookie."""
 

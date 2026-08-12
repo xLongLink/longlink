@@ -1,9 +1,10 @@
 import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
+import { useContext } from 'react';
 import { useXmlRuntime } from '../core/context';
 import { renderNode } from '../core/node';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from '../core/props';
 import type { Props } from '../types';
-import { useActionHandler } from './Action';
+import { ActionHandlerContext } from './Action';
 
 /** Renders an Astryx button with adapter-owned action behavior. */
 export function Button({ props, nodes }: Props) {
@@ -23,7 +24,7 @@ export function Button({ props, nodes }: Props) {
     const isIconOnly = resolveXmlBoolean(props, 'isIconOnly', ctx, false);
     const isLoading = resolveXmlBoolean(props, 'isLoading', ctx, false);
     const tooltip = resolveXmlString(props, 'tooltip', ctx);
-    const actionHandler = useActionHandler();
+    const actionHandler = useContext(ActionHandlerContext);
 
     return (
         <AstryxButton
