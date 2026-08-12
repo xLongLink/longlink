@@ -1,4 +1,3 @@
-import type { IconName } from '@astryxdesign/core-0-3/Icon';
 import type { IconColor, IconSize } from '@astryxdesign/core-0-3/Icon';
 import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
 import type { Props } from '../types';
@@ -8,37 +7,6 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 const iconColors: readonly IconColor[] = ICON_COLORS;
 const iconSizes: readonly IconSize[] = ICON_SIZES;
-const ICON_NAMES: readonly IconName[] = [
-    'close',
-    'chevronDown',
-    'chevronLeft',
-    'chevronRight',
-    'chevronsLeft',
-    'chevronsRight',
-    'check',
-    'success',
-    'error',
-    'warning',
-    'info',
-    'calendar',
-    'clock',
-    'externalLink',
-    'menu',
-    'moreHorizontal',
-    'search',
-    'arrowUp',
-    'arrowDown',
-    'arrowsUpDown',
-    'funnel',
-    'eyeSlash',
-    'viewColumns',
-    'copy',
-    'checkDouble',
-    'wrench',
-    'stop',
-    'microphone',
-];
-
 /** Renders an Astryx semantic icon from the active theme registry. */
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
