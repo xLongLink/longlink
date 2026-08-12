@@ -5,33 +5,60 @@ import { isXmlBoolean, isXmlEnum, isXmlNumber, isXmlString, requireXmlString, re
 import { resolveInputStatus } from './input';
 import type { Props } from '../types';
 
+const FIELD_STATUS_VARIANTS = ['attached', 'detached', 'tooltip'] as const;
+const TEXT_AREA_SIZES = ['sm', 'md', 'lg'] as const;
+
 /** Renders an accessible Astryx text area with optional Valtio binding. */
 export function TextArea({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const sizeValue = resolveXml(props, 'size', ctx);
-    const size = isXmlEnum(sizeValue, ['sm', 'md', 'lg']) ? sizeValue : 'md';
+    const size = resolveXml(props, 'size', ctx);
+    const label = requireXmlString(props, 'label', ctx, 'TextArea');
+    const description = resolveXml(props, 'description', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
+    const hasAutoFocus = resolveXml(props, 'hasAutoFocus', ctx);
+    const hasSpellCheck = resolveXml(props, 'hasSpellCheck', ctx);
+    const htmlName = resolveXml(props, 'htmlName', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const isLoading = resolveXml(props, 'isLoading', ctx);
+    const isOptional = resolveXml(props, 'isOptional', ctx);
+    const isRequired = resolveXml(props, 'isRequired', ctx);
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const maxLength = resolveXml(props, 'maxLength', ctx);
+    const placeholder = resolveXml(props, 'placeholder', ctx);
+    const rows = resolveXml(props, 'rows', ctx);
+    const statusVariant = resolveXml(props, 'statusVariant', ctx);
+    const width = resolveXml(props, 'width', ctx);
+
+    if (size != null && !isXmlEnum(size, TEXT_AREA_SIZES)) throw new Error(`Unsupported TextArea size '${String(size)}'`);
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) throw new Error(`Unsupported TextArea statusVariant '${String(statusVariant)}'`);
+    if (maxLength != null && (!isXmlNumber(maxLength) || !Number.isInteger(maxLength) || maxLength < 0)) throw new Error('TextArea maxLength must be a non-negative integer');
+    if (rows != null && (!isXmlNumber(rows) || !Number.isInteger(rows) || rows <= 0)) throw new Error('TextArea rows must be a positive integer');
 
     return (
         <AstryxTextArea
-            description={(() => { const value = resolveXml(props, 'description', ctx); return isXmlString(value) ? value : undefined; })()}
-            disabledMessage={(() => { const value = resolveXml(props, 'disabledMessage', ctx); return isXmlString(value) ? value : undefined; })()}
-            hasAutoFocus={(() => { const value = resolveXml(props, 'hasAutoFocus', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            hasSpellCheck={(() => { const value = resolveXml(props, 'hasSpellCheck', ctx); return isXmlBoolean(value) ? value : true; })()}
-            htmlName={(() => { const value = resolveXml(props, 'htmlName', ctx); return isXmlString(value) ? value : undefined; })()}
-            isDisabled={(() => { const value = resolveXml(props, 'isDisabled', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isLabelHidden={(() => { const value = resolveXml(props, 'isLabelHidden', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isOptional={(() => { const value = resolveXml(props, 'isOptional', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            isRequired={(() => { const value = resolveXml(props, 'isRequired', ctx); return isXmlBoolean(value) ? value : undefined; })()}
-            label={requireXmlString(props, 'label', ctx, 'TextArea')}
-            maxLength={(() => { const value = resolveXml(props, 'maxLength', ctx); return isXmlNumber(value) ? value : undefined; })()}
-            onChange={binding.setValue}
-            placeholder={(() => { const value = resolveXml(props, 'placeholder', ctx); return isXmlString(value) ? value : undefined; })()}
-            rows={(() => { const value = resolveXml(props, 'rows', ctx); return isXmlNumber(value) ? value : 3; })()}
             size={size}
-            status={resolveInputStatus(props, ctx)}
+            label={label}
+            rows={isXmlNumber(rows) ? rows : undefined}
             value={binding.value}
-            width={(() => { const value = resolveXml(props, 'width', ctx); return isXmlString(value) || isXmlNumber(value) ? value : undefined; })()}
+            description={isXmlString(description) ? description : undefined}
+            disabledMessage={isXmlString(disabledMessage) ? disabledMessage : undefined}
+            hasAutoFocus={isXmlBoolean(hasAutoFocus) ? hasAutoFocus : undefined}
+            hasSpellCheck={isXmlBoolean(hasSpellCheck) ? hasSpellCheck : undefined}
+            htmlName={isXmlString(htmlName) ? htmlName : undefined}
+            isDisabled={isXmlBoolean(isDisabled) ? isDisabled : undefined}
+            isLabelHidden={isXmlBoolean(isLabelHidden) ? isLabelHidden : undefined}
+            isLoading={isXmlBoolean(isLoading) ? isLoading : undefined}
+            isOptional={isXmlBoolean(isOptional) ? isOptional : undefined}
+            isRequired={isXmlBoolean(isRequired) ? isRequired : undefined}
+            labelTooltip={isXmlString(labelTooltip) ? labelTooltip : undefined}
+            maxLength={isXmlNumber(maxLength) ? maxLength : undefined}
+            onChange={binding.setValue}
+            placeholder={isXmlString(placeholder) ? placeholder : undefined}
+            status={resolveInputStatus(props, ctx)}
+            statusVariant={statusVariant}
+            width={isXmlString(width) || isXmlNumber(width) ? width : undefined}
         />
     );
 }

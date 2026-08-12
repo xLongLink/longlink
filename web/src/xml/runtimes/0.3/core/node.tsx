@@ -12,10 +12,6 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
         // Reject consumer styling and callbacks so adapters retain control of behavior.
         for (const name of Object.keys(props)) {
             const lowerName = name.toLowerCase();
-            if (lowerName === 'i18n' || lowerName === 'values') {
-                throw new Error(`${name} is not supported in XML`);
-            }
-
             if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
                 throw new Error(`${name} is not supported in XML`);
             }

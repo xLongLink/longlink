@@ -7,6 +7,8 @@
     <xsd:attribute name="description" type="xsd:string" use="optional" />
     <xsd:attribute name="htmlName" type="xsd:string" use="optional" />
     <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="size" type="CompactSizeType" use="optional" />
+    <xsd:attribute name="labelTooltip" type="xsd:string" use="optional" />
     <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
     <xsd:attribute name="labelPosition" type="SwitchLabelPositionType" use="optional" default="end" />
     <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType" use="optional" default="hug" />
@@ -16,6 +18,7 @@
     <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
     <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
     <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLoading" type="xsd:boolean" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">

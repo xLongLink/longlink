@@ -9,6 +9,7 @@
     <xsd:attribute name="repeat" type="GridRepeatType" use="optional" default="fill" />
     <xsd:attribute name="gap" type="SpacingType" use="optional" />
     <xsd:attribute name="rowGap" type="SpacingType" use="optional" />
+    <xsd:attribute name="rowHeight" type="xsd:decimal" use="optional" />
     <xsd:attribute name="columnGap" type="SpacingType" use="optional" />
     <xsd:attribute name="align" type="BoxAlignType" use="optional" default="stretch" />
     <xsd:attribute name="justify" type="BoxAlignType" use="optional" default="stretch" />

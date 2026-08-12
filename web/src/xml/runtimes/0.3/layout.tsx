@@ -1,4 +1,3 @@
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -20,7 +19,6 @@ export default function XmlLayout({
     tabs: Record<string, XmlLayoutTab>;
     children: ReactNode;
 }) {
-    const t = useTranslator();
     let activeHref = '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
         const { href, active, icon } = tab;
@@ -41,14 +39,14 @@ export default function XmlLayout({
             activeTab={activeHref}
             endContent={
                 <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                    {t('common.documentation')}
+                    Documentation
                 </Link>
             }
             heading={
                 <Link
                     as="a"
                     href="https://longlink.dev"
-                    label={t('common.longlinkHome')}
+                    label="LongLink home"
                     color="inherit"
                     target="_blank"
                     rel="noopener noreferrer"

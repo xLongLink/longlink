@@ -11,6 +11,8 @@
     <xsd:attribute name="isLoading" type="xsd:string" use="optional" />
     <xsd:attribute name="isIconOnly" type="xsd:string" use="optional" />
     <xsd:attribute name="tooltip" type="xsd:string" use="optional" />
+    <xsd:attribute name="elevation" type="ElevationType" use="optional" />
+    <xsd:attribute name="isInterruptible" type="xsd:boolean" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
   <xsd:element name="Button" type="ButtonType">

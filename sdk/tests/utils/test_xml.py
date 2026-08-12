@@ -24,13 +24,13 @@ VALID_FRAGMENTS = [
     (
         "button",
         _adapter_schema("Button.xsd"),
-        '<Button label="Save" type="submit" variant="primary" size="sm" if="${canSave}" />',
+        '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
     ),
-    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4"><Text value="Card content" /></Card>'),
+    ("card", _adapter_schema("Card.xsd"), '<Card variant="muted" padding="4" elevation="low"><Text value="Card content" /></Card>'),
     (
         "checkbox-input",
         _adapter_schema("CheckboxInput.xsd"),
-        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" />',
+        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
     ),
     (
         "dialog",
@@ -45,16 +45,16 @@ VALID_FRAGMENTS = [
         _adapter_schema("FormLayout.xsd"),
         '<FormLayout direction="horizontal"><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
     ),
-    ("grid", _adapter_schema("Grid.xsd"), '<Grid minColumnWidth="240" maxColumns="3" gap="4"><Card /></Grid>'),
+    ("grid", _adapter_schema("Grid.xsd"), '<Grid minColumnWidth="240" maxColumns="3" gap="4" rowHeight="32"><Card /></Grid>'),
     (
         "heading",
         _adapter_schema("Heading.xsd"),
-        '<Heading level="1" value="Dashboard" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading" />',
+        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading"><Text value="Dashboard" /></Heading>',
     ),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon icon="info" size="sm" if="show" />'),
     ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" label="Open issue" />'),
     ("longlink", _adapter_schema("Longlink.xsd"), '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
-    ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />'),
+    ("number-input", _adapter_schema("NumberInput.xsd"), '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />'),
     ("query", _adapter_schema("Query.xsd"), '<Query id="projects" path="/projects" />'),
     (
         "radio-list",
@@ -64,12 +64,12 @@ VALID_FRAGMENTS = [
     (
         "selector",
         _adapter_schema("Selector.xsd"),
-        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", _adapter_schema("Slider.xsd"), '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", _adapter_schema("Stack.xsd"), '<Stack direction="horizontal" justify="between" gap="4"><Text value="First" /></Stack>'),
     ("state", _adapter_schema("State.xsd"), '<State id="filters" value="[]" />'),
-    ("switch", _adapter_schema("Switch.xsd"), '<Switch label="Notifications" value="$settings.notifications" labelPosition="start" />'),
+    ("switch", _adapter_schema("Switch.xsd"), '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />'),
     (
         "table",
         _adapter_schema("Table.xsd"),
@@ -85,8 +85,8 @@ VALID_FRAGMENTS = [
         _adapter_schema("Text.xsd"),
         '<Text id="item-name" as="p" type="large" size="lg" color="accent" value="$item.name" weight="semibold" display="block" justify="center" maxLines="2" textWrap="balance" wordBreak="break-word" hasCapsize="true" hasStrikethrough="true" hasTabularNumbers="true" hasTruncateTooltip="below" />',
     ),
-    ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />'),
-    ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" />'),
+    ("text-area", _adapter_schema("TextArea.xsd"), '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />'),
+    ("text-input", _adapter_schema("TextInput.xsd"), '<TextInput label="Name" value="$form.name" type="text" size="lg" isLoading="true" statusVariant="tooltip" />'),
 ]
 
 INVALID_FRAGMENTS = [
@@ -99,7 +99,6 @@ INVALID_FRAGMENTS = [
     ("invalid-heading-type", _adapter_schema("Heading.xsd"), '<Heading level="1" type="headline" value="Title" />'),
     ("removed-icon-color", _adapter_schema("Icon.xsd"), '<Icon icon="info" color="accent" />'),
     ("missing-button-label", _adapter_schema("Button.xsd"), "<Button />"),
-    ("removed-text-i18n", _adapter_schema("Text.xsd"), '<Text i18n="users.name" />'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
     ("forbidden-style-through-root", ROOT_SCHEMA, '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),
     (

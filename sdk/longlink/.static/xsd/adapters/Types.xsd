@@ -16,6 +16,35 @@
       <xsd:minExclusive value="0" />
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="ElevationType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="none" />
+      <xsd:enumeration value="low" />
+      <xsd:enumeration value="med" />
+      <xsd:enumeration value="high" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="FieldStatusVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="attached" />
+      <xsd:enumeration value="detached" />
+      <xsd:enumeration value="tooltip" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="LayerPlacementType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="above" />
+      <xsd:enumeration value="below" />
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="end" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SelectorVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="input" />
+      <xsd:enumeration value="ghost" />
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="ActionMethodType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="DELETE" />

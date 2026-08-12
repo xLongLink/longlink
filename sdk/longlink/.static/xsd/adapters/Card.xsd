@@ -5,6 +5,7 @@
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="variant" type="CardVariantType" use="optional" default="default" />
     <xsd:attribute name="padding" type="SpacingType" use="optional" />
+    <xsd:attribute name="elevation" type="ElevationType" use="optional" />
     <xsd:attribute name="width" type="xsd:string" use="optional" />
     <xsd:attribute name="height" type="xsd:string" use="optional" />
     <xsd:attribute name="maxWidth" type="xsd:string" use="optional" />
