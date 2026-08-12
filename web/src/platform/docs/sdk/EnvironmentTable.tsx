@@ -9,7 +9,7 @@ export type EnvironmentRow = { backend: ReactNode; icon: LucideIcon; name: strin
 /** Renders the SDK backend selected for each runtime environment. */
 export function EnvironmentTable({ environments }: { environments: EnvironmentRow[] }) {
     return (
-        <Table<Record<string, unknown>> density="compact">
+        <Table density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Environment</TableHeaderCell>

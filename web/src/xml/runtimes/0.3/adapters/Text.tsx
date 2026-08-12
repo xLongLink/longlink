@@ -13,7 +13,7 @@ import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { resolveXml, resolveXmlValue } from '../core/props';
+import { isOptionalXmlValue, resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     FONT_WEIGHTS,
@@ -36,16 +36,6 @@ const textWeights: readonly TextWeight[] = FONT_WEIGHTS;
 const textWordBreaks: readonly WordBreak[] = WORD_BREAKS;
 const textWraps: readonly TextWrap[] = TEXT_WRAPS;
 const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
-
-/** Returns whether a value is one of an Astryx prop's supported values. */
-function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
-    return values.some((candidate) => candidate === value);
-}
-
-/** Returns whether an optional value is absent or supported by an Astryx prop. */
-function isOptionalAstryxValue<T>(value: unknown, values: readonly T[]): value is T | undefined {
-    return value == null || isAstryxValue(value, values);
-}
 
 /** Renders semantic Astryx text from a value or nested XML. */
 export function Text({ props, nodes }: Props) {
@@ -71,43 +61,43 @@ export function Text({ props, nodes }: Props) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalAstryxValue(type, textTypes)) {
+    if (!isOptionalXmlValue(type, textTypes)) {
         throw new Error(`Unsupported Text type '${String(type)}'`);
     }
 
-    if (!isOptionalAstryxValue(size, textSizes)) {
+    if (!isOptionalXmlValue(size, textSizes)) {
         throw new Error(`Unsupported Text size '${String(size)}'`);
     }
 
-    if (!isOptionalAstryxValue(color, textColors)) {
+    if (!isOptionalXmlValue(color, textColors)) {
         throw new Error(`Unsupported Text color '${String(color)}'`);
     }
 
-    if (!isOptionalAstryxValue(weight, textWeights)) {
+    if (!isOptionalXmlValue(weight, textWeights)) {
         throw new Error(`Unsupported Text weight '${String(weight)}'`);
     }
 
-    if (!isOptionalAstryxValue(display, textDisplays)) {
+    if (!isOptionalXmlValue(display, textDisplays)) {
         throw new Error(`Unsupported Text display '${String(display)}'`);
     }
 
-    if (!isOptionalAstryxValue(as, TEXT_ELEMENTS)) {
+    if (!isOptionalXmlValue(as, TEXT_ELEMENTS)) {
         throw new Error(`Unsupported Text as '${String(as)}'`);
     }
 
-    if (!isOptionalAstryxValue(hasTruncateTooltip, truncateTooltips)) {
+    if (!isOptionalXmlValue(hasTruncateTooltip, truncateTooltips)) {
         throw new Error(`Unsupported Text hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 
-    if (!isOptionalAstryxValue(wordBreak, textWordBreaks)) {
+    if (!isOptionalXmlValue(wordBreak, textWordBreaks)) {
         throw new Error(`Unsupported Text wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalAstryxValue(textWrap, textWraps)) {
+    if (!isOptionalXmlValue(textWrap, textWraps)) {
         throw new Error(`Unsupported Text textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalAstryxValue(justify, textJustifications)) {
+    if (!isOptionalXmlValue(justify, textJustifications)) {
         throw new Error(`Unsupported Text justify '${String(justify)}'`);
     }
 

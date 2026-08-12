@@ -3,22 +3,22 @@ import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
-type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
-    UseQueryOptions<TQueryFnData, Error, TData, Array<string>>,
+type UseApiQueryOptions<TQueryFnData> = Omit<
+    UseQueryOptions<TQueryFnData, Error, TQueryFnData, string[]>,
     'queryKey' | 'queryFn'
 > & {
     parse: (value: unknown) => TQueryFnData;
 };
 
 /** Fetches one API resource through the shared transport and React Query cache. */
-export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
+export function useApiQuery<TQueryFnData>(
     path: string | null,
-    options: UseApiQueryOptions<TQueryFnData, TData>
-): UseQueryResult<TData, Error> {
+    options: UseApiQueryOptions<TQueryFnData>
+): UseQueryResult<TQueryFnData, Error> {
     const { parse, ...queryOptions } = options;
     const queryClient = useQueryClient();
 
-    return useQuery<TQueryFnData, Error, TData, Array<string>>({
+    return useQuery<TQueryFnData, Error, TQueryFnData, string[]>({
         ...queryOptions,
         enabled: path !== null && (queryOptions.enabled ?? true),
         queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],

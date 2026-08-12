@@ -38,7 +38,7 @@ environment = "src.envs:Env"
                 language="toml"
                 title="pyproject.toml"
             />
-            <Table<Record<string, unknown>> density="compact">
+            <Table density="compact">
                 <TableHeader>
                     <TableRow>
                         <TableHeaderCell>Metadata</TableHeaderCell>

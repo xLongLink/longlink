@@ -53,6 +53,11 @@ export function isXmlEnum<const T extends string | number>(value: XmlScalar, val
     return (typeof value === 'string' || typeof value === 'number') && values.some((candidate) => candidate === value);
 }
 
+/** Returns whether an optional value is absent or one of an adapter's supported values. */
+export function isOptionalXmlValue<T>(value: unknown, values: readonly T[]): value is T | undefined {
+    return value == null || values.some((candidate) => candidate === value);
+}
+
 /** Returns whether a scalar is a string. */
 export function isXmlString(value: XmlScalar): value is string {
     return typeof value === 'string';

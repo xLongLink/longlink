@@ -59,7 +59,7 @@ export const content = (
             LongLink manages users and their access across the organization. Applications can access the users
             authorized to use them.
         </Text>
-        <Table<Record<string, unknown>> density="compact">
+        <Table density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Roles</TableHeaderCell>

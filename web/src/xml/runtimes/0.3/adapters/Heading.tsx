@@ -5,7 +5,7 @@ import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { resolveXml, resolveXmlValue } from '../core/props';
+import { isOptionalXmlValue, isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     HEADING_TYPES,
@@ -25,16 +25,6 @@ const headingTypes: readonly HeadingType[] = HEADING_TYPES;
 const headingWordBreaks: readonly WordBreak[] = WORD_BREAKS;
 const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
 
-/** Returns whether a value is one of an Astryx prop's supported values. */
-function isAstryxValue<T>(value: unknown, values: readonly T[]): value is T {
-    return values.some((candidate) => candidate === value);
-}
-
-/** Returns whether an optional value is absent or supported by an Astryx prop. */
-function isOptionalAstryxValue<T>(value: unknown, values: readonly T[]): value is T | undefined {
-    return value == null || isAstryxValue(value, values);
-}
-
 /** Renders an Astryx heading with explicit semantic level. */
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -53,11 +43,11 @@ export function Heading({ props, nodes }: Props) {
     const accessibilityLevel = resolveXml(props, 'accessibilityLevel', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.
-    if (!isAstryxValue(level, HEADING_LEVELS)) {
+    if (!isXmlEnum(level, HEADING_LEVELS)) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
-    if (!isOptionalAstryxValue(accessibilityLevel, HEADING_LEVELS)) {
+    if (!isOptionalXmlValue(accessibilityLevel, HEADING_LEVELS)) {
         throw new Error('Heading accessibilityLevel must be from 1 to 6');
     }
 
@@ -65,31 +55,31 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalAstryxValue(color, headingColors)) {
+    if (!isOptionalXmlValue(color, headingColors)) {
         throw new Error(`Unsupported Heading color '${String(color)}'`);
     }
 
-    if (!isOptionalAstryxValue(display, headingDisplays)) {
+    if (!isOptionalXmlValue(display, headingDisplays)) {
         throw new Error(`Unsupported Heading display '${String(display)}'`);
     }
 
-    if (!isOptionalAstryxValue(justify, headingJustifications)) {
+    if (!isOptionalXmlValue(justify, headingJustifications)) {
         throw new Error(`Unsupported Heading justify '${String(justify)}'`);
     }
 
-    if (!isOptionalAstryxValue(textWrap, headingTextWraps)) {
+    if (!isOptionalXmlValue(textWrap, headingTextWraps)) {
         throw new Error(`Unsupported Heading textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalAstryxValue(type, headingTypes)) {
+    if (!isOptionalXmlValue(type, headingTypes)) {
         throw new Error(`Unsupported Heading type '${String(type)}'`);
     }
 
-    if (!isOptionalAstryxValue(wordBreak, headingWordBreaks)) {
+    if (!isOptionalXmlValue(wordBreak, headingWordBreaks)) {
         throw new Error(`Unsupported Heading wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalAstryxValue(hasTruncateTooltip, truncateTooltips)) {
+    if (!isOptionalXmlValue(hasTruncateTooltip, truncateTooltips)) {
         throw new Error(`Unsupported Heading hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 

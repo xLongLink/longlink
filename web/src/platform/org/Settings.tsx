@@ -40,7 +40,7 @@ const organizationAvatarSchema = z.union([
 ]);
 
 /** Renders a resource usage table in common Organization settings framing. */
-function ResourceSettings<T extends Record<string, unknown>>({
+function ResourceSettings({
     columns,
     description,
     emptyState,
@@ -52,18 +52,18 @@ function ResourceSettings<T extends Record<string, unknown>>({
     resource,
     title,
 }: {
-    columns: TableColumn<T>[];
+    columns: TableColumn<OrganizationStorageUsageResponse>[];
     description: string;
     emptyState: ReactNode;
-    idKey: keyof T & string;
+    idKey: keyof OrganizationStorageUsageResponse & string;
     isOrganizationLoading: boolean;
     organizationError: Error | null;
     organizationId: string;
-    parse: (value: unknown) => T | null;
-    resource: 'database' | 'storage';
+    parse: (value: unknown) => OrganizationStorageUsageResponse | null;
+    resource: 'storage';
     title: string;
 }) {
-    const { data, error, isLoading } = useApiQuery<T | null>(
+    const { data, error, isLoading } = useApiQuery<OrganizationStorageUsageResponse | null>(
         organizationId ? platformApiPath(`/organizations/${organizationId}/${resource}`) : null,
         {
             parse,
@@ -332,7 +332,7 @@ export default function Settings({
                 ) : null}
 
                 {section === 'storage' ? (
-                    <ResourceSettings<OrganizationStorageUsageResponse>
+                    <ResourceSettings
                         columns={storageColumns}
                         description="Review storage usage for this organization."
                         emptyState={<EmptyState title="No storage resources found." isCompact />}

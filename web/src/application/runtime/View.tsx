@@ -22,6 +22,7 @@ import {
     RenderXML,
     resolveRequestUrl,
     type ASTNode,
+    type XmlRuntime,
 } from '@/xml';
 
 const pageSchema = z.object({
@@ -54,7 +55,7 @@ type PageState = {
     ast: ASTNode[];
     error: string | null;
     loading: boolean;
-    runtimeContext: ReturnType<typeof createXmlContext>;
+    runtimeContext: XmlRuntime;
 };
 
 type RuntimeRoute = RouteObject & {
