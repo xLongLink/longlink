@@ -3,24 +3,15 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
-import { BOX_ALIGNS, ORIENTATIONS, SPACINGS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
+import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/Stack?tab=properties
  * - direction: str
  * - justify: str
  * - align: str
  * - wrap: str
- * - gap: int | float
- * - padding: int | float
- * - paddingBlock: int | float
- * - paddingInline: int | float
- * - width: str | int
- * - height: str | int
- * - maxWidth: str | int
- * - minHeight: str | int
- * - isScrollable: bool
  * - children: ReactNode
  */
 export function Stack({ props, nodes }: Props) {
@@ -33,32 +24,9 @@ export function Stack({ props, nodes }: Props) {
     const justify = isXmlEnum(justifyValue, STACK_JUSTIFICATIONS) ? justifyValue : 'start';
     const align = isXmlEnum(alignValue, BOX_ALIGNS) ? alignValue : 'stretch';
     const wrap = isXmlEnum(wrapValue, STACK_WRAPS) ? wrapValue : 'nowrap';
-    const gap = resolveXml(props, 'gap', ctx);
-    const padding = resolveXml(props, 'padding', ctx);
-    const paddingInline = resolveXml(props, 'paddingInline', ctx);
-    const paddingBlock = resolveXml(props, 'paddingBlock', ctx);
-    const isScrollable = resolveXml(props, 'isScrollable', ctx);
-    const width = resolveXml(props, 'width', ctx);
-    const height = resolveXml(props, 'height', ctx);
-    const maxWidth = resolveXml(props, 'maxWidth', ctx);
-    const minHeight = resolveXml(props, 'minHeight', ctx);
 
     return (
-        <AstryxStack
-            align={align}
-            direction={direction}
-            gap={isXmlEnum(gap, SPACINGS) ? gap : undefined}
-            height={typeof height === 'string' || typeof height === 'number' ? height : undefined}
-            isScrollable={typeof isScrollable === 'boolean' ? isScrollable : undefined}
-            justify={justify}
-            maxWidth={typeof maxWidth === 'string' || typeof maxWidth === 'number' ? maxWidth : undefined}
-            minHeight={typeof minHeight === 'string' || typeof minHeight === 'number' ? minHeight : undefined}
-            padding={isXmlEnum(padding, SPACINGS) ? padding : undefined}
-            paddingBlock={isXmlEnum(paddingBlock, SPACINGS) ? paddingBlock : undefined}
-            paddingInline={isXmlEnum(paddingInline, SPACINGS) ? paddingInline : undefined}
-            width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
-            wrap={wrap}
-        >
+        <AstryxStack align={align} direction={direction} justify={justify} wrap={wrap}>
             {renderNode(nodes, ctx)}
         </AstryxStack>
     );

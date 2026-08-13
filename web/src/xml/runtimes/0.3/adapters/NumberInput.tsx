@@ -1,101 +1,47 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
 import type { Props } from '../types';
-import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { requireXmlString, resolveXml } from '../core/props';
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/NumberInput?tab=properties
  * - label: string
  * - units: string
- * - htmlName: string
  * - description: string
- * - placeholder: string
- * - autoComplete: string
- * - labelTooltip: string
- * - disabledMessage: string
  * - value: int | float | undefined
  * - min: int | float
  * - max: int | float
  * - step: int | float
- * - size: str
- * - hasClear: bool
  * - isDisabled: bool
- * - isOptional: bool
  * - isRequired: bool
- * - hasAutoFocus: bool
  * - isIntegerOnly: bool
- * - isLabelHidden: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - statusVariant: str
  */
 export function NumberInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : Number(value)));
     const max = resolveXml(props, 'max', ctx);
     const min = resolveXml(props, 'min', ctx);
-    const size = resolveXml(props, 'size', ctx);
     const step = resolveXml(props, 'step', ctx);
     const units = resolveXml(props, 'units', ctx);
-    const width = resolveXml(props, 'width', ctx);
-    const hasClear = resolveXml(props, 'hasClear', ctx) === true;
-    const htmlName = resolveXml(props, 'htmlName', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const placeholder = resolveXml(props, 'placeholder', ctx);
-    const autoComplete = resolveXml(props, 'autoComplete', ctx);
-    const hasAutoFocus = resolveXml(props, 'hasAutoFocus', ctx);
-    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const isIntegerOnly = resolveXml(props, 'isIntegerOnly', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const statusVariant = resolveXml(props, 'statusVariant', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
-
-    if (!isXmlEnum(size, [undefined, ...SIZES])) {
-        throw new Error(`Unsupported NumberInput size '${String(size)}'`);
-    }
-
-    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
-        throw new Error(`Unsupported NumberInput statusVariant '${String(statusVariant)}'`);
-    }
-    const inputSize = isXmlEnum(size, SIZES) ? size : undefined;
-    const inputStatusVariant = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined;
-    const common = {
-        max: typeof max === 'number' ? max : undefined,
-        min: typeof min === 'number' ? min : undefined,
-        size: inputSize,
-        step: typeof step === 'number' ? step : undefined,
-        label: requireXmlString(props, 'label', ctx, 'NumberInput'),
-        units: typeof units === 'string' ? units : undefined,
-        value: binding.value,
-        width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
-        status: resolveInputStatus(props, ctx),
-        htmlName: typeof htmlName === 'string' ? htmlName : undefined,
-        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
-        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
-        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
-        description: typeof description === 'string' ? description : undefined,
-        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
-        autoComplete: typeof autoComplete === 'string' ? autoComplete : undefined,
-        hasAutoFocus: typeof hasAutoFocus === 'boolean' ? hasAutoFocus : undefined,
-        labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-        isIntegerOnly: typeof isIntegerOnly === 'boolean' ? isIntegerOnly : undefined,
-        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
-        statusVariant: inputStatusVariant,
-        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
-    };
-
-    // Astryx uses a discriminated callback type for clearable fields.
-    if (hasClear) {
-        return <AstryxNumberInput {...common} hasClear onChange={(value) => binding.setValue(value ?? undefined)} />;
-    }
-
-    return <AstryxNumberInput {...common} onChange={binding.setValue} />;
+    return (
+        <AstryxNumberInput
+            max: typeof max === 'number' ? max : undefined,
+            min: typeof min === 'number' ? min : undefined,
+            step: typeof step === 'number' ? step : undefined,
+            label: requireXmlString(props, 'label', ctx, 'NumberInput'),
+            units: typeof units === 'string' ? units : undefined,
+            value: binding.value,
+            onChange={binding.setValue}
+            isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
+            isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
+            description: typeof description === 'string' ? description : undefined,
+            isIntegerOnly: typeof isIntegerOnly === 'boolean' ? isIntegerOnly : undefined,
+        />
+    );
 }

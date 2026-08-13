@@ -6,24 +6,19 @@ import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core-0-3/Dia
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { requireXmlString, resolveXml } from '../core/props';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
-import { SPACINGS } from '../constants';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/Dialog?tab=properties
  * - title: string
  * - subtitle: string
  * - triggerLabel: string
  * - isOpen: bool
  * - purpose: str
- * - variant: str
- * - maxHeight: str | int
- * - padding: int | float
- * - width: str | int
  * - children: ReactNode
  */
 export function Dialog({ props, nodes }: Props) {
@@ -33,28 +28,15 @@ export function Dialog({ props, nodes }: Props) {
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');
     const purposeValue = resolveXml(props, 'purpose', ctx);
-    const variantValue = resolveXml(props, 'variant', ctx);
     const purpose =
         purposeValue === 'required' || purposeValue === 'form' || purposeValue === 'info' ? purposeValue : 'info';
-    const variant = variantValue === 'standard' || variantValue === 'fullscreen' ? variantValue : 'standard';
-    const maxHeight = resolveXml(props, 'maxHeight', ctx);
-    const padding = resolveXml(props, 'padding', ctx);
-    const width = resolveXml(props, 'width', ctx);
     const subtitle = resolveXml(props, 'subtitle', ctx);
 
     return (
         <>
             {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
             <DialogCloseContext.Provider value={() => binding.setValue(false)}>
-                <AstryxDialog
-                    isOpen={binding.value}
-                    maxHeight={typeof maxHeight === 'string' || typeof maxHeight === 'number' ? maxHeight : undefined}
-                    onOpenChange={binding.setValue}
-                    padding={isXmlEnum(padding, SPACINGS) ? padding : undefined}
-                    purpose={purpose}
-                    variant={variant}
-                    width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
-                >
+                <AstryxDialog isOpen={binding.value} onOpenChange={binding.setValue} purpose={purpose}>
                     <Layout
                         header={
                             <DialogHeader

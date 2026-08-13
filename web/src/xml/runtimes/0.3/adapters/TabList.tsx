@@ -3,19 +3,15 @@ import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core-0
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { SIZES, TAB_LAYOUTS } from '../constants';
 import { useBindableValue } from '../core/binding';
 import { resolveNavigationUrl } from '../core/url';
-import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/TabList?tab=properties
  * - label: string
  * - value: string
- * - size: str
- * - layout: str
- * - hasDivider: bool
  * - children: Tab
  */
 export function TabList({ props, nodes }: Props) {
@@ -39,25 +35,13 @@ export function TabList({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const sizeValue = resolveXml(props, 'size', ctx);
-    const layoutValue = resolveXml(props, 'layout', ctx);
-    const size = isXmlEnum(sizeValue, SIZES) ? sizeValue : 'md';
-    const layout = isXmlEnum(layoutValue, TAB_LAYOUTS) ? layoutValue : 'hug';
     const labelValue = resolveXml(props, 'label', ctx);
     const label = typeof labelValue === 'string' ? labelValue : 'Tabs';
-    const hasDivider = resolveXml(props, 'hasDivider', ctx);
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
         <Stack gap={4}>
-            <AstryxTabList
-                aria-label={label}
-                hasDivider={typeof hasDivider === 'boolean' ? hasDivider : undefined}
-                layout={layout}
-                onChange={binding.setValue}
-                size={size}
-                value={binding.value}
-            >
+            <AstryxTabList aria-label={label} onChange={binding.setValue} value={binding.value}>
                 {tabs.map((tab) => (
                     <AstryxTab href={tab.href} key={tab.value} label={tab.label} value={tab.value} />
                 ))}

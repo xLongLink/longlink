@@ -19,36 +19,36 @@
     />
     <Query id="items" path="/api/items" />
 
-    <Stack gap="6" padding="4" paddingInline="2" paddingBlock="3" width="full" maxWidth="full" minHeight="0">
-        <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
-            <Stack gap="1">
-                <Heading id="xml-test" level="1" type="display-1" color="primary" display="block" justify="start" textWrap="balance" maxLines="2" wordBreak="break-word" hasCapsize="true" hasStrikethrough="false" hasTruncateTooltip="above" accessibilityLevel="1">XML component test page</Heading>
-                <Text id="description" as="p" type="body" size="base" color="secondary" weight="normal" display="block" justify="start" maxLines="2" textWrap="wrap" wordBreak="break-word" hasCapsize="true" hasStrikethrough="false" hasTabularNumbers="true" hasTruncateTooltip="true" value="One example of every XML element and supported property." />
+    <Stack>
+        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+            <Stack>
+                <Heading level="1">XML component test page</Heading>
+                <Text as="p" value="One example of every XML element and supported property." />
             </Stack>
-            <Avatar name="Test User" alt="Test User avatar" size="lg" />
+            <Avatar name="Test User" alt="Test User avatar" />
         </Stack>
 
-        <Card width="full" height="auto" minHeight="0" maxWidth="full" padding="4" variant="muted" elevation="low">
-            <Stack gap="3">
+        <Card>
+            <Stack>
                 <Heading level="2">Display elements</Heading>
-                <Stack direction="horizontal" align="center" wrap="wrap" gap="2">
-                    <Badge id="status" label="Active" variant="success"><Icon slot="icon" icon="success" size="sm" /></Badge>
-                    <Icon icon="info" size="md" color="accent" label="Information" />
-                    <Link href="https://longlink.dev" color="accent" hasUnderline="true" isExternalLink="true"><Text value="External link" /></Link>
+                <Stack direction="horizontal" align="center" wrap="wrap">
+                    <Badge label="Active"><Icon slot="icon" icon="success" /></Badge>
+                    <Icon icon="info" label="Information" />
+                    <Link href="https://longlink.dev"><Text value="External link" /></Link>
                     <Link to="/test"><Text value="Internal link" /></Link>
-                    <Button label="Example button" type="button" size="md" variant="secondary" tooltip="Button tooltip" isLoading="false" elevation="none" isDisabled="false" isIconOnly="false" isInterruptible="true"><Icon icon="check" /></Button>
+                    <Button label="Example button" variant="secondary" />
                 </Stack>
-                <Divider label="Layout" variant="strong" isFullBleed="false" orientation="horizontal" />
-                <Grid minColumnWidth="240" repeat="fit" maxColumns="3" gap="3" rowGap="2" columnGap="3" align="stretch" justify="start" width="full" height="auto" minHeight="0" maxWidth="full" rowHeight="120">
-                    <Card padding="3" variant="blue" elevation="none"><Text value="Responsive grid item" /></Card>
-                    <Card padding="3" variant="transparent" elevation="med"><Text value="Another grid item" /></Card>
+                <Divider label="Layout" />
+                <Grid minColumnWidth="240" repeat="fit" maxColumns="3">
+                    <Card><Text value="Responsive grid item" /></Card>
+                    <Card><Text value="Another grid item" /></Card>
                 </Grid>
-                <Grid columns="2" gap="2"><Text value="Fixed column grid" /><Text value="Second column" /></Grid>
+                <Grid columns="2"><Text value="Fixed column grid" /><Text value="Second column" /></Grid>
             </Stack>
         </Card>
 
-        <Card padding="4">
-            <Stack gap="3">
+        <Card>
+            <Stack>
                 <Heading level="2">Form controls</Heading>
                 <FormLayout>
                     <TextInput label="Text input" value="$test.text" type="text" size="md" width="full" hasClear="true" htmlName="text" isLoading="false" isDisabled="false" isOptional="false" isRequired="true" description="Text input description" placeholder="Enter text" hasAutoFocus="false" labelTooltip="Text input help" isLabelHidden="false" status="success" statusMessage="Valid value" statusVariant="attached" disabledMessage="Disabled text input" />
@@ -73,31 +73,31 @@
             </Stack>
         </Card>
 
-        <Card padding="4">
-            <Stack gap="3">
+        <Card>
+            <Stack>
                 <Heading level="2">Collections and navigation</Heading>
                 <For each="$test.rows" as="entry">
                     <Text value="${`${index + 1}. ${entry.name} (${entry.details.code})`}" />
                 </For>
-                <Table data="$test.rows" density="compact" dividers="grid" verticalAlign="top" textOverflow="truncate" hasHover="true" idKey="id" isStriped="true" emptyLabel="No local rows.">
-                    <TableColumn key="name" field="name" header="Name" align="start" />
-                    <TableColumn key="code" field="details.code" header="Code" align="end"><Text value="${`${index}: ${value}`}" /></TableColumn>
+                <Table data="$test.rows" idKey="id" emptyLabel="No local rows.">
+                    <TableColumn key="name" field="name" header="Name" />
+                    <TableColumn key="code" field="details.code" header="Code"><Text value="${`${index}: ${value}`}" /></TableColumn>
                 </Table>
                 <Table data="$items" emptyLabel="No API items.">
                     <TableColumn key="name" />
                 </Table>
-                <TabList value="$test.tab" label="Test tabs" layout="fill" hasDivider="true">
+                <TabList value="$test.tab" label="Test tabs">
                     <Tab value="details" label="Details"><Text value="The selected tab panel." /></Tab>
                     <Tab value="other" label="Other"><Text value="Another tab panel." /></Tab>
                 </TabList>
                 <SideNav value="$test.section" label="Test sections">
-                    <SideNavItem value="components" icon="viewColumns" label="Components"><Text value="The selected side navigation panel." /></SideNavItem>
-                    <SideNavItem value="data" icon="arrowsUpDown" label="Data"><Text value="Data section panel." /></SideNavItem>
+                    <SideNavItem value="components" label="Components"><Text value="The selected side navigation panel." /></SideNavItem>
+                    <SideNavItem value="data" label="Data"><Text value="Data section panel." /></SideNavItem>
                 </SideNav>
             </Stack>
         </Card>
 
-        <Dialog title="Test dialog" isOpen="false" triggerLabel="Open test dialog" maxHeight="full" padding="4" width="lg" subtitle="Dialog subtitle">
+        <Dialog title="Test dialog" isOpen="false" triggerLabel="Open test dialog" subtitle="Dialog subtitle">
             <Text value="Dialog content." />
             <Action action="/api/items" method="POST" json="${{ name: test.text, price: Number(test.amount) }}" invalidate="${['items']}" closeDialog="true">
                 <Button label="Disabled action" variant="primary" isDisabled="true" />

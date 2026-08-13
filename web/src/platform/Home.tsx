@@ -11,7 +11,7 @@ import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
 import { homePage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
-import { HeroGlobe } from '@/platform/HeroGlobe';
+import { Globe } from '@/components/Globe';
 
 export const meta: MetaFunction = () => publicSeoMeta(homePage);
 
@@ -178,7 +178,7 @@ export default function Home() {
         <PublicPage className="overflow-x-clip">
             <main className="relative -mt-21 flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
-                    <HeroGlobe />
+                    <Globe />
                 </div>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <Stack gap={5}>

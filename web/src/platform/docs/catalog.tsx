@@ -64,7 +64,7 @@ function docPage(
             ? parentBreadcrumbs
             : [...parentBreadcrumbs, { title: page.title, path: page.path }];
     const childPages = children?.map((child) => docPage(group, child, breadcrumbs)) ?? [];
-    const resolvedHiddenPages = hiddenPages?.map((hiddenPage) => ({ ...hiddenPage, breadcrumbs })) ?? [];
+    const resolvedHiddenPages = hiddenPages?.map((hiddenPage) => docPage(group, hiddenPage, breadcrumbs)) ?? [];
 
     return {
         ...page,

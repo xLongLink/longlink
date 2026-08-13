@@ -3,7 +3,6 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection,
 } from '@astryxdesign/core-0-3/SideNav';
-import { renderIcon } from '@/lib/icons';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
@@ -11,7 +10,7 @@ import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/SideNav?tab=properties
  * - label: string
  * - value: string
@@ -22,7 +21,6 @@ export function SideNav({ props, nodes }: Props) {
     const items = nodes
         .filter((node) => node.name === 'SideNavItem' && isVisibleXmlNode(node, ctx))
         .map((node) => ({
-            icon: resolveXml(node.params, 'icon', ctx),
             label: requireXmlString(node.params, 'label', ctx, 'SideNavItem'),
             nodes: node.children,
             value: requireXmlString(node.params, 'value', ctx, 'SideNavItem'),
@@ -42,22 +40,14 @@ export function SideNav({ props, nodes }: Props) {
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
             <AstryxSideNav className="h-auto w-full">
                 <SideNavSection title={label} isHeaderHidden>
-                    {items.map((item) => {
-                        const icon =
-                            typeof item.icon === 'string'
-                                ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 })
-                                : undefined;
-
-                        return (
-                            <AstryxSideNavItem
-                                icon={icon}
-                                isSelected={item.value === binding.value}
-                                key={item.value}
-                                label={item.label}
-                                onClick={() => binding.setValue(item.value)}
-                            />
-                        );
-                    })}
+                    {items.map((item) => (
+                        <AstryxSideNavItem
+                            isSelected={item.value === binding.value}
+                            key={item.value}
+                            label={item.label}
+                            onClick={() => binding.setValue(item.value)}
+                        />
+                    ))}
                 </SideNavSection>
             </AstryxSideNav>
             <div className="min-w-0">{activeItem && renderNode(activeItem.nodes, ctx)}</div>
@@ -66,11 +56,10 @@ export function SideNav({ props, nodes }: Props) {
 }
 
 /**
- * checked: false
+ * checked: 2026-08-13
  * https://astryx.atmeta.com/components/SideNavItem?tab=properties
  * - label: string
  * - value: string
- * - icon: string
  * - children: ReactNode
  */
 export function SideNavItem(): never {
