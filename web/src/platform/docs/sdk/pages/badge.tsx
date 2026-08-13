@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>{'Badge'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Badge'}
+            </Heading>
         </Stack>
         <Text as="p">{'Displays a compact status or enumerated label.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Badge label="$order.status" variant="info" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Badge label="$order.status" variant="info" />'} language="xml" />
     </Stack>
 );
 

@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>{'Icon'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Icon'}
+            </Heading>
         </Stack>
         <Text as="p">{'Displays a Lucide icon.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Icon icon="info" size="sm" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Icon icon="info" size="sm" />'} language="xml" />
     </Stack>
 );
 

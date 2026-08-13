@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>{'Heading'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Heading'}
+            </Heading>
         </Stack>
         <Text as="p">{'Creates semantic section headings.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Heading level="1">Orders</Heading>'}
-            language="xml"
-        />
+        <CodeBlock code={'<Heading level="1">Orders</Heading>'} language="xml" />
     </Stack>
 );
 

@@ -1,8 +1,8 @@
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core-0-3/Grid';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { useXmlRuntime } from '../core/context';
 import { GRID_REPEATS } from '../constants';
+import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 
 /**

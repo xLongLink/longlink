@@ -9,9 +9,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
+import { Globe } from '@/components/Globe';
 import { homePage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
-import { Globe } from '@/components/Globe';
 
 export const meta: MetaFunction = () => publicSeoMeta(homePage);
 

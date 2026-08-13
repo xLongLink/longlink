@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Action'}</Text>
-            <Heading id="introduction" level={1}>{'Button'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Button'}
+            </Heading>
         </Stack>
         <Text as="p">{'Renders a labeled command, submit trigger, or action trigger.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'}
+                '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
+            }
             language="xml"
         />
     </Stack>

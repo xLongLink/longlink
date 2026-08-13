@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Runtime'}</Text>
-            <Heading id="introduction" level={1}>{'Expressions'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Expressions'}
+            </Heading>
         </Stack>
         <Text as="p">{'Evaluates a safe JavaScript expression subset against the XML runtime scope.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<TextInput label="Name" value="$form.name" />\n<Button isDisabled="${!form.name || form.saving}" label="Save" />\n<Link to="/orders/${params.order}" label="Open order" />'}
+                '<TextInput label="Name" value="$form.name" />\n<Button isDisabled="${!form.name || form.saving}" label="Save" />\n<Link to="/orders/${params.order}" label="Open order" />'
+            }
             language="xml"
         />
     </Stack>

@@ -1,7 +1,7 @@
 import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type { Props } from '../types';
-import { useXmlRuntime } from '../core/context';
 import { TEXT_ELEMENTS } from '../constants';
+import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 
 /**

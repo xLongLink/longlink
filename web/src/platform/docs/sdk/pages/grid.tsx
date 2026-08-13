@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>{'Grid'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Grid'}
+            </Heading>
         </Stack>
         <Text as="p">{'Creates fixed or responsive multi-column layouts.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Grid minColumnWidth="240" maxColumns="3" repeat="fit" gap="4">\n  <Card><Text value="First" /></Card>\n  <Card><Text value="Second" /></Card>\n</Grid>'}
+                '<Grid minColumnWidth="240" maxColumns="3" repeat="fit" gap="4">\n  <Card><Text value="First" /></Card>\n  <Card><Text value="Second" /></Card>\n</Grid>'
+            }
             language="xml"
         />
     </Stack>

@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>{'RadioListItem'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'RadioListItem'}
+            </Heading>
         </Stack>
         <Text as="p">{'Defines one option inside a RadioList.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<RadioListItem value="team" label="Team" description="Shared workspace" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<RadioListItem value="team" label="Team" description="Shared workspace" />'} language="xml" />
     </Stack>
 );
 

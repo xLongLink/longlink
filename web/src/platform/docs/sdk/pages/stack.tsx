@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>{'Stack'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Stack'}
+            </Heading>
         </Stack>
         <Text as="p">{'Arranges children vertically or horizontally.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Stack direction="horizontal" justify="between" align="center" gap="3">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'}
+                '<Stack direction="horizontal" justify="between" align="center" gap="3">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
+            }
             language="xml"
         />
     </Stack>

@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'State'}</Text>
-            <Heading id="introduction" level={1}>{'Query'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Query'}
+            </Heading>
         </Stack>
         <Text as="p">{'Fetches JSON data before rendering and stores it in the XML runtime scope.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Query id="orders" path="/api/orders" />\n\n<For each="$orders.items" as="order">\n  <Text value="$order.number" />\n</For>'}
+                '<Query id="orders" path="/api/orders" />\n\n<For each="$orders.items" as="order">\n  <Text value="$order.number" />\n</For>'
+            }
             language="xml"
         />
     </Stack>

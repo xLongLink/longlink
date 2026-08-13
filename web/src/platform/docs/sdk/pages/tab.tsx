@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>{'Tab'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Tab'}
+            </Heading>
         </Stack>
         <Text as="p">{'Defines one tab destination inside a TabList.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Tab value="overview" label="Overview" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Tab value="overview" label="Overview" />'} language="xml" />
     </Stack>
 );
 

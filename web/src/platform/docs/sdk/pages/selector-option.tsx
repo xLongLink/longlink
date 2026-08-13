@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>{'SelectorOption'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'SelectorOption'}
+            </Heading>
         </Stack>
         <Text as="p">{'Defines one option inside a Selector.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<SelectorOption value="open" label="Open" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<SelectorOption value="open" label="Open" />'} language="xml" />
     </Stack>
 );
 

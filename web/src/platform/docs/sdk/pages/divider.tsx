@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>{'Divider'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Divider'}
+            </Heading>
         </Stack>
         <Text as="p">{'Separates related regions with a rule.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Divider label="Or" variant="strong" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Divider label="Or" variant="strong" />'} language="xml" />
     </Stack>
 );
 

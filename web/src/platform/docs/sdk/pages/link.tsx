@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Action'}</Text>
-            <Heading id="introduction" level={1}>{'Link'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Link'}
+            </Heading>
         </Stack>
         <Text as="p">{'Navigates inside a LongLink Application or opens an external URL.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Link to="/orders/${order.id}" label="Open order" hasUnderline="true" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Link to="/orders/${order.id}" label="Open order" hasUnderline="true" />'} language="xml" />
     </Stack>
 );
 

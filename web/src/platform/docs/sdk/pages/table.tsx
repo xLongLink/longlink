@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>{'Table'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Table'}
+            </Heading>
         </Stack>
         <Text as="p">{'Displays tabular data from an array.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Table data="$orders.items">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>'}
+                '<Table data="$orders.items">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>'
+            }
             language="xml"
         />
     </Stack>

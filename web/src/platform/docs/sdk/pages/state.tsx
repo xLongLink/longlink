@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'State'}</Text>
-            <Heading id="introduction" level={1}>{'State'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'State'}
+            </Heading>
         </Stack>
         <Text as="p">{'Declares local reactive page state before the page renders.'}</Text>
         <Heading id="usage" level={2}>

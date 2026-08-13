@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>{'Avatar'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Avatar'}
+            </Heading>
         </Stack>
         <Text as="p">{'Shows a user or team identity from an image or name.'}</Text>
         <Heading id="usage" level={2}>

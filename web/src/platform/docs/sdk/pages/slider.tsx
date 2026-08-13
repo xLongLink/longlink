@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>{'Slider'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Slider'}
+            </Heading>
         </Stack>
         <Text as="p">{'Captures bounded numeric values through a range control.'}</Text>
         <Heading id="usage" level={2}>

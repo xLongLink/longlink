@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>{'FileInput'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'FileInput'}
+            </Heading>
         </Stack>
         <Text as="p">{'Collects browser File values for form actions.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<FileInput label="Attachment" value="$form.file" accept=".pdf" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<FileInput label="Attachment" value="$form.file" accept=".pdf" />'} language="xml" />
     </Stack>
 );
 

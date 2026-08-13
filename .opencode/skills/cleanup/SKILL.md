@@ -20,6 +20,7 @@ Return a numeric list of cleanup options:
 Read and follow the `Python Guidelines` section in `AGENTS.md`.
 
 Find violations or unnecessary deviations involving:
+
 - naming, typing, imports, logging, exceptions;
 - async/sync patterns;
 - database/ORM usage;

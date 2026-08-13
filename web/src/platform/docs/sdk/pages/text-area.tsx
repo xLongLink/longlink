@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>{'TextArea'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'TextArea'}
+            </Heading>
         </Stack>
         <Text as="p">{'Collects longer text values.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<TextArea label="Notes" value="$form.notes" rows="4" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<TextArea label="Notes" value="$form.notes" rows="4" />'} language="xml" />
     </Stack>
 );
 

@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Runtime'}</Text>
-            <Heading id="introduction" level={1}>{'if'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'if'}
+            </Heading>
         </Stack>
         <Text as="p">{'Conditionally renders an XML node when its expression evaluates to a truthy value.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<Badge if="${order.blocked}" variant="error" label="Blocked" />\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'}
+                '<Badge if="${order.blocked}" variant="error" label="Blocked" />\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'
+            }
             language="xml"
         />
     </Stack>

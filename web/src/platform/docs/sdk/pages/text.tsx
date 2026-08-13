@@ -7,16 +7,15 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>{'Text'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'Text'}
+            </Heading>
         </Stack>
         <Text as="p">{'Renders paragraph, label, span, and supporting text content.'}</Text>
         <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <CodeBlock
-            code={'<Text as="p" value="${`Order #${order.number}`}" />'}
-            language="xml"
-        />
+        <CodeBlock code={'<Text as="p" value="${`Order #${order.number}`}" />'} language="xml" />
     </Stack>
 );
 

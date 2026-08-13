@@ -7,7 +7,9 @@ export const content = (
     <Stack gap={5}>
         <Stack gap={2}>
             <Text type="supporting">{'State'}</Text>
-            <Heading id="introduction" level={1}>{'For'}</Heading>
+            <Heading id="introduction" level={1}>
+                {'For'}
+            </Heading>
         </Stack>
         <Text as="p">{'Repeats child XML for every item in an array.'}</Text>
         <Heading id="usage" level={2}>
@@ -15,7 +17,8 @@ export const content = (
         </Heading>
         <CodeBlock
             code={
-                    '<For each="$orders.items" as="order">\n  <Card>\n    <Text value="$order.number" />\n  </Card>\n</For>'}
+                '<For each="$orders.items" as="order">\n  <Card>\n    <Text value="$order.number" />\n  </Card>\n</For>'
+            }
             language="xml"
         />
     </Stack>
