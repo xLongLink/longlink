@@ -47,7 +47,7 @@ VALID_FRAGMENTS = [
         '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',
     ),
     ("icon", ADAPTERS / "Icon.xsd", '<Icon icon="info" size="sm" if="show" />'),
-    ("link", ADAPTERS / "Link.xsd", '<Link to="/issues/123" label="Open issue" />'),
+    ("link", ADAPTERS / "Link.xsd", '<Link to="/issues/123"><Text value="Open issue" /></Link>'),
     ("longlink", ADAPTERS / "Longlink.xsd", '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
     ("number-input", ADAPTERS / "NumberInput.xsd", '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />'),
     ("query", ADAPTERS / "Query.xsd", '<Query id="projects" path="/projects" />'),

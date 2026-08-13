@@ -3,8 +3,8 @@ import type { Props } from '../types';
 import { resolveInputStatus } from './input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { FIELD_STATUS_VARIANTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 
 /**
  * https://astryx.atmeta.com/components/Selector?tab=properties
@@ -19,12 +19,15 @@ import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../co
  * - options: SelectorOption[]
  * - size: str
  * - variant: str
+ * - placement: str
  * - hasClear: bool
  * - hasSearch: bool
+ * - isLoading: bool
  * - isDisabled: bool
  * - isOptional: bool
  * - isRequired: bool
  * - isLabelHidden: bool
+ * - isDefaultOpen: bool
  * - width: str | int
  * - status: str
  * - statusMessage: string
@@ -55,12 +58,15 @@ export function Selector({ props, nodes }: Props) {
     const hasClear = resolveXml(props, 'hasClear', ctx) === true;
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const hasSearch = resolveXml(props, 'hasSearch', ctx);
+    const isLoading = resolveXml(props, 'isLoading', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const placement = resolveXml(props, 'placement', ctx);
+    const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
@@ -72,6 +78,10 @@ export function Selector({ props, nodes }: Props) {
 
     if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
         throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
+    }
+
+    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) {
+        throw new Error(`Unsupported Selector placement '${String(placement)}'`);
     }
 
     if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
@@ -90,12 +100,15 @@ export function Selector({ props, nodes }: Props) {
         variant: selectorVariant,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
+        isLoading: typeof isLoading === 'boolean' ? isLoading : undefined,
         isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
         isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
         isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
+        placement: isXmlEnum(placement, LAYER_PLACEMENTS) ? placement : undefined,
+        isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
         isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
         statusVariant: selectorStatusVariant,
         disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,

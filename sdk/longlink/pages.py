@@ -17,15 +17,6 @@ class PageDefinition:
     icon: str | None = None
 
 
-def extract_longlink_metadata(root: etree._Element) -> tuple[str | None, str | None]:
-    """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
-
-    return (
-        (root.get("name") or "").strip() or None,
-        (root.get("icon") or "").strip() or None,
-    )
-
-
 def page_file_route(relative_path: str) -> str:
     """Return the browser route pattern for one page file path."""
 

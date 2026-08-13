@@ -17,6 +17,11 @@ import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
  */
 export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
+
+    if (nodes.length === 0) {
+        throw new Error('Link requires child content');
+    }
+
     const href = resolveXml(props, 'href', ctx);
     const to = resolveXml(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');

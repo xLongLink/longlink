@@ -36,6 +36,11 @@ import {
  */
 export function Text({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
+
+    if (props.value == null) {
+        throw new Error('Text requires a value');
+    }
+
     const id = resolveXml(props, 'id', ctx);
     const as = resolveXml(props, 'as', ctx);
     const type = resolveXml(props, 'type', ctx);

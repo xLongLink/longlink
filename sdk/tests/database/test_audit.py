@@ -53,7 +53,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.session() as session:
             item = AuditLifecycleItem(name="draft", created_at=None, updated_at=None)
-            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=creator_id))
+            token = runtime_context._current_identity.set(creator_id)
             try:
                 session.add(item)
                 await session.commit()
@@ -71,7 +71,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=updater_id))
+            token = runtime_context._current_identity.set(updater_id)
             try:
                 item.name = "reviewed"
                 await session.commit()
@@ -87,7 +87,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
 
-            token = runtime_context._current_identity.set(runtime_context._Identity(user_id=deleter_id))
+            token = runtime_context._current_identity.set(deleter_id)
             try:
                 await session.delete(item)
                 await session.commit()
@@ -135,7 +135,7 @@ def test_audit_middleware_binds_x_user_id_header(
     async def current_user() -> dict[str, str | None]:
         """Expose the audit user bound for this request."""
 
-        user_id = runtime_context._current_identity.get().user_id
+        user_id = runtime_context._current_identity.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
     # Send the candidate audit identity through the HTTP boundary.
@@ -143,7 +143,7 @@ def test_audit_middleware_binds_x_user_id_header(
 
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
-    assert runtime_context._current_identity.get().user_id is None
+    assert runtime_context._current_identity.get() is None
 
 
 async def test_audit_middleware_isolates_concurrent_request_identities() -> None:
@@ -158,7 +158,7 @@ async def test_audit_middleware_isolates_concurrent_request_identities() -> None
         """Return the request-local audit identity after yielding control."""
 
         await asyncio.sleep(0)
-        user_id = runtime_context._current_identity.get().user_id
+        user_id = runtime_context._current_identity.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
     client = TestClient(app)

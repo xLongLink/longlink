@@ -28,6 +28,7 @@ type SliderValue = number | [number, number];
  * - status: str
  * - statusMessage: string
  * - labelTooltip: string
+ * - minStepsBetweenThumbs: int
  */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -43,6 +44,24 @@ export function Slider({ props }: Props) {
     const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'horizontal';
     const valueDisplay = isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS) ? valueDisplayValue : 'tooltip';
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+    const minStepsBetweenThumbs = resolveXml(props, 'minStepsBetweenThumbs', ctx);
+
+    if (orientationValue != null && !isXmlEnum(orientationValue, ORIENTATIONS)) {
+        throw new Error(`Unsupported Slider orientation '${String(orientationValue)}'`);
+    }
+
+    if (valueDisplayValue != null && !isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS)) {
+        throw new Error(`Unsupported Slider valueDisplay '${String(valueDisplayValue)}'`);
+    }
+
+    if (
+        minStepsBetweenThumbs != null &&
+        (typeof minStepsBetweenThumbs !== 'number' ||
+            !Number.isInteger(minStepsBetweenThumbs) ||
+            minStepsBetweenThumbs < 0)
+    ) {
+        throw new Error('Slider minStepsBetweenThumbs must be a non-negative integer');
+    }
 
     if (Array.isArray(binding.value)) {
         return (
@@ -58,6 +77,7 @@ export function Slider({ props }: Props) {
                 labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
                 max={resolveNumberProp(props, 'max', ctx, 100)}
                 min={resolveNumberProp(props, 'min', ctx, 0)}
+                minStepsBetweenThumbs={minStepsBetweenThumbs}
                 onChange={binding.setValue}
                 orientation={orientation}
                 status={resolveInputStatus(props, ctx)}

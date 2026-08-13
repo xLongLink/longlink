@@ -4,12 +4,12 @@
   <xsd:complexType name="GridType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="columns" type="xsd:positiveInteger" />
-    <xsd:attribute name="minColumnWidth" type="xsd:positiveInteger" />
+    <xsd:attribute name="minColumnWidth" type="PositiveDecimalType" />
     <xsd:attribute name="maxColumns" type="xsd:positiveInteger" />
     <xsd:attribute name="repeat" type="GridRepeatType" default="fill" />
     <xsd:attribute name="gap" type="SpacingType" />
     <xsd:attribute name="rowGap" type="SpacingType" />
-    <xsd:attribute name="rowHeight" type="xsd:decimal" />
+    <xsd:attribute name="rowHeight" type="PositiveDecimalType" />
     <xsd:attribute name="columnGap" type="SpacingType" />
     <xsd:attribute name="align" type="BoxAlignType" default="stretch" />
     <xsd:attribute name="justify" type="BoxAlignType" default="stretch" />

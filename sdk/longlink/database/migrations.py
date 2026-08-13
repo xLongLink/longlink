@@ -17,21 +17,14 @@ def include_object(_object: object, name: str | None, type_: str, _reflected: bo
     return not (type_ == "table" and name == "audit")
 
 
-def iter_application_model_files() -> list[Path]:
-    """Return application model files that should be loaded for metadata."""
-
-    model_path = Path.cwd() / "src" / "database" / "models"
-
-    return [py_file for py_file in sorted(model_path.rglob("*.py")) if not py_file.name.startswith("__")]
-
-
 def load_application_models() -> None:
     """Load application model modules so metadata includes table definitions."""
 
     root = Path.cwd()
 
     # Load each discovered model module exactly once.
-    for py_file in iter_application_model_files():
+    model_path = root / "src" / "database" / "models"
+    for py_file in sorted(py_file for py_file in model_path.rglob("*.py") if not py_file.name.startswith("__")):
         module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
 
         # Skip modules already loaded by the application.

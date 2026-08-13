@@ -5,7 +5,7 @@ from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
+from longlink.pages import PageDefinition, page_route_key, page_file_route
 from longlink.utils import Envs
 from longlink.logger import ApiAccessFilter
 from longlink.context import install_context_middleware
@@ -113,7 +113,6 @@ class LongLink:
     def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
         """Discover and validate all XML pages before registering any route."""
 
-        registered_paths: set[str] = set()
         registered_route_keys: set[str] = set()
         discovered_pages: list[tuple[PageDefinition, str]] = []
 
@@ -131,15 +130,14 @@ class LongLink:
             # Validate XML pages and extract optional display metadata.
             page = Element(page_file)
             page_root = page.validate()
-            page_name, page_icon = extract_longlink_metadata(page_root)
+            page_name = (page_root.get("name") or "").strip() or None
+            page_icon = (page_root.get("icon") or "").strip() or None
 
             page_route = page_file_route(relative_path)
             route_key = page_route_key(page_route)
             tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
-            if registered_path in registered_paths:
-                raise ValueError(f"Page endpoint '{registered_path}' is already registered")
             if route_key in registered_route_keys:
                 raise ValueError(f"Browser route '{page_route}' is already registered")
 
@@ -162,7 +160,6 @@ class LongLink:
                     page.content,
                 )
             )
-            registered_paths.add(registered_path)
             registered_route_keys.add(route_key)
 
         return discovered_pages
