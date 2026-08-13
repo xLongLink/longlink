@@ -40,9 +40,7 @@ export function resolveUrl(baseUrl: string, path: string): string {
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
 export function isAppRelativeUrl(path: string): boolean {
-    // Empty paths are safe app-relative requests.
     const value = path.trim();
-    if (!value) return true;
 
     // Block Windows separators and explicit protocols.
     if (value.includes('\\') || hasProtocol(value)) return false;

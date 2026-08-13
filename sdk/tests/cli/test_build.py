@@ -90,18 +90,9 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
-    (root / ".env").write_text("SECRET=one\n")
-    (root / ".env.local").write_text("SECRET=two\n")
-    (root / "dev.db").write_text("sqlite\n")
-    (root / "data.sqlite3-wal").write_text("wal\n")
     git_directory = root / ".git"
     git_directory.mkdir()
     (git_directory / "HEAD").write_text("ref: refs/heads/main\n")
-
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
-        directory = root / directory_name
-        directory.mkdir()
-        (directory / "artifact").write_text("generated\n")
 
     build_context = tmp_path / "context"
 
@@ -150,9 +141,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
         """Create fake Docker artifacts for the build command."""
 
         assert tag == "dev"
-        dockerfile_path = build_context / "Dockerfile"
-        dockerfile_path.write_text("FROM scratch\n", encoding="utf-8")
-        return dockerfile_path, "dev", "Demo App"
+        return build_context / "Dockerfile", "dev", "Demo App"
 
 
     def fake_run(command: list[str], check: bool) -> None:

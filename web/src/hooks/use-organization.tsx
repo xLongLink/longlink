@@ -1,11 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Role } from '@/lib/roles';
 import type {
+    ApplicationCreate,
     OrganizationApplicationSummary,
+    OrganizationCreate,
     OrganizationDetails,
+    OrganizationInvitationCreate,
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
+    OrganizationMemberUpdate,
     OrganizationSummary,
+    OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
@@ -64,7 +69,7 @@ export function useInviteOrganizationMember(organizationId: string) {
     const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
-        mutationFn: async ({ email, role }: { email: string; role: Role }) => {
+        mutationFn: async ({ email, role }: OrganizationInvitationCreate) => {
             // Require a resolved organization before mutating.
             if (!organizationId) {
                 throw new Error('Organization not found');
@@ -94,13 +99,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
             description,
             icon,
             envs,
-        }: {
-            name: string;
-            image: string;
-            description?: string | null;
-            icon?: string | null;
-            envs: Record<string, string>;
-        }) => {
+        }: ApplicationCreate & { envs: Record<string, string> }) => {
             // Require a resolved organization before creating apps.
             if (!organizationId) {
                 throw new Error('Organization not found');
@@ -129,7 +128,7 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
     const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
-        mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
+        mutationFn: async ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) => {
             // Require a resolved organization before mutating.
             if (!organizationId) {
                 throw new Error('Organization not found');
@@ -179,7 +178,7 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ name }: { name: string }) =>
+        mutationFn: ({ name }: OrganizationCreate) =>
             fetchApiJson(
                 platformApiPath('/organizations'),
                 {
@@ -201,7 +200,7 @@ export function useUpdateOrganization(organizationId: string) {
     const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
-        mutationFn: async ({ avatar }: { avatar: string }) => {
+        mutationFn: async ({ avatar }: OrganizationUpdate) => {
             // Require a resolved organization before updating its settings.
             if (!organizationId) {
                 throw new Error('Organization not found');

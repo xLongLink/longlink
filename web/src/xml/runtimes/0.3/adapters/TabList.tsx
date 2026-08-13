@@ -21,18 +21,16 @@ export function TabList({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
-        .map((node) => ({
-            href: (() => {
-                const value = resolveXml(node.params, 'to', ctx);
-                return (
-                    resolveNavigationUrl(services.navigationBaseUrl, typeof value === 'string' ? value : '') ||
-                    undefined
-                );
-            })(),
-            label: requireXmlString(node.params, 'label', ctx, 'Tab'),
-            nodes: node.children,
-            value: requireXmlString(node.params, 'value', ctx, 'Tab'),
-        }));
+        .map((node) => {
+            const to = resolveXml(node.params, 'to', ctx);
+
+            return {
+                href: resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '') || undefined,
+                label: requireXmlString(node.params, 'label', ctx, 'Tab'),
+                nodes: node.children,
+                value: requireXmlString(node.params, 'value', ctx, 'Tab'),
+            };
+        });
 
     // Tab navigation without options is not meaningful or accessible.
     if (tabs.length === 0) {
@@ -46,16 +44,14 @@ export function TabList({ props, nodes }: Props) {
     const layout = isXmlEnum(layoutValue, TAB_LAYOUTS) ? layoutValue : 'hug';
     const labelValue = resolveXml(props, 'label', ctx);
     const label = typeof labelValue === 'string' ? labelValue : 'Tabs';
+    const hasDivider = resolveXml(props, 'hasDivider', ctx);
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
         <Stack gap={4}>
             <AstryxTabList
                 aria-label={label}
-                hasDivider={(() => {
-                    const value = resolveXml(props, 'hasDivider', ctx);
-                    return typeof value === 'boolean' ? value : undefined;
-                })()}
+                hasDivider={typeof hasDivider === 'boolean' ? hasDivider : undefined}
                 layout={layout}
                 onChange={binding.setValue}
                 size={size}

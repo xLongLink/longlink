@@ -2,7 +2,7 @@ import { Divider as AstryxDivider } from '@astryxdesign/core-0-3/Divider';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { DIVIDER_VARIANTS, ORIENTATIONS } from '../constants';
-import { isXmlBoolean, isXmlEnum, isXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, resolveXml } from '../core/props';
 
 /**
  * https://astryx.atmeta.com/components/Divider?tab=properties
@@ -28,9 +28,9 @@ export function Divider({ props }: Props) {
 
     return (
         <AstryxDivider
-            label={isXmlString(label) ? label : undefined}
+            label={typeof label === 'string' ? label : undefined}
             variant={isXmlEnum(variantValue, DIVIDER_VARIANTS) ? variantValue : undefined}
-            isFullBleed={isXmlBoolean(isFullBleed) ? isFullBleed : undefined}
+            isFullBleed={typeof isFullBleed === 'boolean' ? isFullBleed : undefined}
             orientation={isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : undefined}
         />
     );

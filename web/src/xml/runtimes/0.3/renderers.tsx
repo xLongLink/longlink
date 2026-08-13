@@ -144,16 +144,6 @@ function XmlContent({ ast, ctx }: { ast: ASTNode[]; ctx: XmlRuntime }) {
 
 /** Returns whether setup nodes occur in an AST traversal. */
 function getRequirements(nodes: ASTNode[]): boolean {
-    let requiresSetup = false;
-
     // Walk the tree until a setup node is found.
-    for (const node of nodes) {
-        requiresSetup ||= node.name === 'State' || node.name === 'Query';
-        if (requiresSetup) break;
-
-        requiresSetup ||= getRequirements(node.children);
-        if (requiresSetup) break;
-    }
-
-    return requiresSetup;
+    return nodes.some((node) => node.name === 'State' || node.name === 'Query' || getRequirements(node.children));
 }

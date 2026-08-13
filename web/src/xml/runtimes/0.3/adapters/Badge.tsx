@@ -1,12 +1,9 @@
-import type { BadgeVariant } from '@astryxdesign/core-0-3/Badge';
 import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { BADGE_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
-
-const badgeVariants: readonly BadgeVariant[] = BADGE_VARIANTS;
 
 /**
  * https://astryx.atmeta.com/components/Badge?tab=properties
@@ -21,7 +18,7 @@ export function Badge({ props, nodes }: Props) {
     const label = requireXmlString(props, 'label', ctx, 'Badge');
     const variant = resolveXml(props, 'variant', ctx);
 
-    if (variant != null && !isXmlEnum(variant, badgeVariants)) {
+    if (variant != null && !isXmlEnum(variant, BADGE_VARIANTS)) {
         throw new Error(`Unsupported Badge variant '${variant}'`);
     }
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { UserOrganizationMembership, UserProfile } from '@/lib/generated/platform-api-v1/types.gen';
+import type { UserOrganizationMembership, UserProfile, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
@@ -91,7 +91,7 @@ export function useUpdateUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: Partial<Pick<UserProfile, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>) =>
+        mutationFn: (payload: UserUpdate) =>
             fetchApiJson(
                 platformApiPath('/me'),
                 {

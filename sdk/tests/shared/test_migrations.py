@@ -42,10 +42,6 @@ async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: UR
                     )
                 ).tuples()
             )
-            await connection.execute(
-                text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = shared")
-            )
-
         assert table_locations == {("shared", "audit"), ("shared", "alembic_version")}
     finally:
         await engine.dispose()

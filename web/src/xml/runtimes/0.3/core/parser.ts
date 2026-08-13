@@ -14,22 +14,7 @@ const parser = new XMLParser({
     preserveOrder: true,
 });
 
-/**
- * Parses an XML string into a flat AST structure.
- *
- * Input:
- *   <longlink><Button label="Save" /></longlink>
- *
- * Output:
- *   [
- *     {
- *       name: 'longlink',
- *       children: [
- *         { name: 'Button', params: { label: 'Save' }, children: [] }
- *       ]
- *     }
- *   ]
- */
+/** Parses an XML string into a flat AST structure. */
 export function parseXML(xml: string): ASTNode[] {
     // Reject XML constructs outside the supported subset.
     if (UNSUPPORTED_XML_MARKUP_PATTERN.test(xml)) {
@@ -54,22 +39,7 @@ export function parseXML(xml: string): ASTNode[] {
     return toNodes(parser.parse(xml));
 }
 
-/**
- * Converts parser output into XML AST nodes.
- *
- * Input:
- *   toNodes({ longlink: { Button: { ':@': { '@_label': 'Save' } } } })
- *
- * Output:
- *   [
- *     {
- *       name: 'longlink',
- *       children: [
- *         { name: 'Button', params: { label: 'Save' }, children: [] }
- *       ]
- *     }
- *   ]
- */
+/** Converts parser output into XML AST nodes. */
 function toNodes(input: unknown): ASTNode[] {
     // Flatten preserve-order arrays into sibling nodes.
     if (Array.isArray(input)) {
@@ -117,7 +87,7 @@ function toNodes(input: unknown): ASTNode[] {
 /** Collects parser attributes into plain XML params. */
 function collectParams(input: unknown): ASTProps {
     // Ignore malformed attribute containers.
-    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    if (!input || typeof input !== 'object') {
         return {};
     }
 

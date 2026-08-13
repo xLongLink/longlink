@@ -7,16 +7,13 @@ export function isSafePropertyName(key: string): boolean {
     return !UNSAFE_PROPERTY_NAMES.has(key);
 }
 
-/** Returns whether a value owns a readable XML runtime property. */
-export function hasSafeProperty(value: unknown, key: string): boolean {
-    return isSafePropertyName(key) && value != null && Object.prototype.hasOwnProperty.call(value, key);
-}
-
 /** Reads one own property without traversing prototypes. */
 export function readSafeProperty<T extends Record<string, unknown>>(value: T, key: string): T[string] | undefined;
 export function readSafeProperty(value: unknown, key: string): unknown;
 export function readSafeProperty(value: unknown, key: string): unknown {
-    return hasSafeProperty(value, key) ? (value as Record<string, unknown>)[key] : undefined;
+    return isSafePropertyName(key) && value != null && Object.prototype.hasOwnProperty.call(value, key)
+        ? (value as Record<string, unknown>)[key]
+        : undefined;
 }
 
 /** Resolves a value from the current XML runtime scope chain. */
@@ -29,7 +26,7 @@ export function resolveValue(scope: Scope | null | undefined, key: string): unkn
         const bindings = currentScope.bindings;
 
         // Read only bindings declared in the lexical scope.
-        if (hasSafeProperty(bindings, key)) return bindings[key];
+        if (Object.prototype.hasOwnProperty.call(bindings, key)) return bindings[key];
     }
 
     return undefined;
