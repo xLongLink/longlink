@@ -1,5 +1,4 @@
 import re
-from lxml import etree
 from dataclasses import dataclass
 
 PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")

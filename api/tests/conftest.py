@@ -55,10 +55,8 @@ async def reset_db(
     """Create a fresh SQLite database for each test."""
 
     if request.node.get_closest_marker("no_db"):
-        try:
-            yield
-        finally:
-            session.Session = None
+        yield
+        session.Session = None
         return
 
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"

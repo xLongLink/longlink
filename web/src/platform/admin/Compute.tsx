@@ -11,12 +11,12 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
 import { computesQueryKey } from '@/lib/query-keys';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -33,10 +33,10 @@ export default function AdminCompute() {
         },
     });
     const {
-        items: computes,
+        data: computes = [],
         error,
         isLoading,
-    } = useCollectionQuery<ComputeRegistryResponse>(platformApiPath('/computes'), {
+    } = useApiQuery<ComputeRegistryResponse[]>(platformApiPath('/computes'), {
         refetchInterval: 5000,
         parse: (value) => zComputeRegistryResponse.array().parse(value),
     });

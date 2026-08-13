@@ -128,19 +128,18 @@ async def release(
 ) -> Application | None:
     """Record one desired Application release and queue its deployment."""
 
-    # Resolve parents before taking locks in aggregate order.
-    current = await session.get(Application, application_id)
-    if current is None:
-        return None
-
     # Lock the Organization and Application before changing its desired release.
-    organization_result = await session.scalars(
-        select(Organization).where(Organization.id == current.organization_id).with_for_update()
+    result = await session.execute(
+        select(Organization, Application)
+        .join(Application, Application.organization_id == Organization.id)
+        .where(Application.id == application_id)
+        .with_for_update()
     )
-    organization = organization_result.one_or_none()
-    application_result = await session.scalars(select(Application).where(Application.id == application_id).with_for_update())
-    application = application_result.one_or_none()
-    if organization is None or application is None or application.deleted_at is not None:
+    row = result.one_or_none()
+    if row is None:
+        return None
+    organization, application = row
+    if application.deleted_at is not None:
         return None
 
     # Persist the image-derived desired release before scheduling its convergence.

@@ -152,10 +152,10 @@ export default function Settings() {
     return (
         <PlatformLayout
             brandOnly
-            tabs={{
-                Organizations: { href: '/organizations', icon: Building2 },
-                Settings: { href: '/settings', icon: Settings2 },
-            }}
+            tabs={[
+                { href: '/organizations', icon: Building2, label: 'Organizations' },
+                { href: '/settings', icon: Settings2, label: 'Settings' },
+            ]}
         >
             <PageContainer gap={8}>
                 <VStack gap={1}>

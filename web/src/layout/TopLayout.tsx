@@ -7,11 +7,10 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ContentFrame } from '@/layout/ContentFrame';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
-type TopLayoutTab = {
+export type TopLayoutTab = {
     href: string;
     icon?: LucideIcon;
     label: string;
-    value: string;
 };
 
 type TopLayoutProps = {
@@ -20,7 +19,6 @@ type TopLayoutProps = {
     endContent: ReactNode;
     heading: ReactNode;
     height?: 'auto' | 'fill';
-    reserveTabSpace?: boolean;
     tabs?: TopLayoutTab[];
     topNavClassName: string;
 };
@@ -32,7 +30,6 @@ function TopLayout({
     endContent,
     heading,
     height = 'auto',
-    reserveTabSpace = false,
     tabs = [],
     topNavClassName,
 }: TopLayoutProps) {
@@ -71,38 +68,29 @@ function TopLayout({
                         label="Main navigation"
                     />
 
-                    {hasTabs || reserveTabSpace ? (
+                    {hasTabs ? (
                         <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                            {hasTabs ? (
-                                <TabList
-                                    aria-label="Section navigation"
-                                    hasDivider
-                                    onChange={() => undefined}
-                                    size="sm"
-                                    value={activeTab}
-                                >
-                                    {tabs.map((tab) => {
-                                        const TabIcon = tab.icon;
+                            <TabList
+                                aria-label="Section navigation"
+                                hasDivider
+                                onChange={() => undefined}
+                                size="sm"
+                                value={activeTab}
+                            >
+                                {tabs.map((tab) => {
+                                    const TabIcon = tab.icon;
 
-                                        return (
-                                            <Tab
-                                                key={tab.label}
-                                                href={tab.href}
-                                                icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
-                                                label={tab.label}
-                                                value={tab.value}
-                                            />
-                                        );
-                                    })}
-                                </TabList>
-                            ) : (
-                                <Stack
-                                    aria-hidden="true"
-                                    className="border-b border-border"
-                                    height="var(--size-element-sm)"
-                                    width="100%"
-                                />
-                            )}
+                                    return (
+                                        <Tab
+                                            key={tab.label}
+                                            href={tab.href}
+                                            icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
+                                            label={tab.label}
+                                            value={tab.href}
+                                        />
+                                    );
+                                })}
+                            </TabList>
                         </Stack>
                     ) : null}
                 </Stack>

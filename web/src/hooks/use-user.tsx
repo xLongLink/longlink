@@ -5,7 +5,6 @@ import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY } from '@/lib/theme';
 import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -60,7 +59,7 @@ export function useUserProfile() {
 /** Reads organization memberships only when a user is authenticated. */
 export function useUserOrganizations() {
     const profile = useUserProfile();
-    const query = useCollectionQuery<UserOrganizationMembership>(
+    const query = useApiQuery<UserOrganizationMembership[]>(
         profile.user ? platformApiPath('/me/organizations') : null,
         {
             parse: (value) => zUserOrganizationMembership.array().parse(value),
@@ -68,7 +67,7 @@ export function useUserOrganizations() {
     );
 
     return {
-        memberships: query.items,
+        memberships: query.data ?? [],
         isLoading: profile.isLoading || query.isLoading,
         error: profile.error ?? query.error ?? null,
     };

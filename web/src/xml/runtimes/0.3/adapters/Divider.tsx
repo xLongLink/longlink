@@ -1,8 +1,8 @@
 import { Divider as AstryxDivider } from '@astryxdesign/core-0-3/Divider';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
-import { DIVIDER_VARIANTS, ORIENTATIONS } from '../constants';
 import { isXmlEnum, resolveXml } from '../core/props';
+import { DIVIDER_VARIANTS, ORIENTATIONS } from '../constants';
 
 /**
  * checked: false

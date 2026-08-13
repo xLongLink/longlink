@@ -32,10 +32,10 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PlatformLayout
-            tabs={{
-                Applications: { href: `/orgs/${organization}`, icon: AppWindow },
-                Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
-            }}
+            tabs={[
+                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
+                { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
+            ]}
         >
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">

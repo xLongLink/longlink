@@ -12,7 +12,7 @@ import { Wordmark } from '@/components/Wordmark';
 /** Renders the public landing page footer. */
 export function Footer() {
     return (
-        <Stack as="footer" padding={4} paddingBlock={6}>
+        <Stack as="footer" className="relative z-10" padding={4} paddingBlock={6}>
             <Center axis="horizontal" width="100%">
                 <Card maxWidth={620} padding={4} width="100%">
                     <Stack gap={3}>

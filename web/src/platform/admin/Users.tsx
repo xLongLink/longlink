@@ -10,19 +10,19 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
     const toast = useToast();
     const {
-        items: users,
+        data: users = [],
         error,
         isLoading,
-    } = useCollectionQuery<UserSummary>(platformApiPath('/users'), {
+    } = useApiQuery<UserSummary[]>(platformApiPath('/users'), {
         parse: (value) => zUserSummary.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(users);

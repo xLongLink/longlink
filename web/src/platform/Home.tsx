@@ -9,7 +9,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
-import { Footer } from '@/components/Footer';
 import { homePage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
 import { HeroGlobe } from '@/platform/HeroGlobe';
@@ -176,14 +175,7 @@ export default function Home() {
     }, []);
 
     return (
-        <PublicPage
-            className="overflow-x-clip"
-            footer={
-                <Stack className="relative z-10" gap={0}>
-                    <Footer />
-                </Stack>
-            }
-        >
+        <PublicPage className="overflow-x-clip">
             <main className="relative -mt-21 flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <HeroGlobe />
