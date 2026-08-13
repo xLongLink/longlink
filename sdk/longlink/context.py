@@ -36,7 +36,6 @@ async def data(request: Request) -> AsyncIterator[Context]:
         identity = request.state.longlink_identity
         user = await database.get(Audit, identity.user_id) if identity.user_id is not None else None
         context = Context(user=user, storage=request.app.state.longlink.storage, database=database)
-        request.state.ctx = context
         yield context
 
 

@@ -13,7 +13,6 @@
     <xsd:attribute name="htmlName" type="xsd:string" />
     <xsd:attribute name="width" type="xsd:string" />
     <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="placement" type="LayerPlacementType" />
     <xsd:attribute name="disabledMessage" type="xsd:string" />
     <xsd:attribute name="status" type="InputStatusType" />
     <xsd:attribute name="statusMessage" type="xsd:string" />
@@ -24,8 +23,6 @@
     <xsd:attribute name="isRequired" type="xsd:string" />
     <xsd:attribute name="isOptional" type="xsd:string" />
     <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:boolean" />
-    <xsd:attribute name="isDefaultOpen" type="xsd:boolean" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="SelectorOptionType">

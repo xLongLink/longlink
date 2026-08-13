@@ -196,11 +196,11 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_image_labels(metadata: Mapping[str, object], environments: Sequence[Mapping[str, object]]) -> str:
+def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    label_items = [("org.opencontainers.image.description", metadata.get("description"))]
+    label_items = [("org.opencontainers.image.description", description)]
 
     # Encode the available core metadata as Dockerfile label statements.
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
@@ -335,7 +335,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     # Resolve the image version and render its metadata labels.
     version = tag or project_version
     labels = render_image_labels(
-        {"name": project_name, "version": project_version, "description": project_description},
+        project_description,
         env_spec,
     )
 

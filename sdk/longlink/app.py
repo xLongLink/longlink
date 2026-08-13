@@ -8,14 +8,15 @@ from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_route_key, page_file_route, extract_longlink_metadata
 from longlink.utils import Envs
 from longlink.logger import ApiAccessFilter
-from longlink.routes import routes
 from longlink.context import install_context_middleware
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 from longlink.middleware import install_frontend_middleware
+from longlink.routes.pages import router as pages_router
 from longlink.storage.base import create_fs
+from longlink.routes.health import router as health_router
 
 Environment = Literal["development", "testing", "production"]
 
@@ -55,15 +56,14 @@ class LongLink:
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        for router in routes:
-            app.include_router(router)
+        app.include_router(health_router)
+        app.include_router(pages_router)
 
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app)
 
         # Applications provide XML pages in the generated source layout.
-        source_directory = Path.cwd() / "src"
-        pages_directory = source_directory / "pages"
+        pages_directory = Path.cwd() / "src" / "pages"
         if not pages_directory.is_dir():
             raise ValueError(f"Application source directory is required: {pages_directory}")
         self._register_page_directory(pages_directory)

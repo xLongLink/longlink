@@ -23,6 +23,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
  * - width: str | int
  * - status: str
  * - statusMessage: string
+ * - labelTooltip: string
  * - children: RadioListItem
  */
 export function RadioList({ props, nodes }: Props) {
@@ -39,6 +40,7 @@ export function RadioList({ props, nodes }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const width = resolveXml(props, 'width', ctx);
 
     return (
@@ -51,6 +53,7 @@ export function RadioList({ props, nodes }: Props) {
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             label={requireXmlString(props, 'label', ctx, 'RadioList')}
+            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             onChange={binding.setValue}
             orientation={orientation}
             size={size}

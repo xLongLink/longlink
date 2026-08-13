@@ -189,14 +189,10 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     """Render OCI metadata and LongLink environment definitions as Docker labels."""
 
     # Arrange
-    metadata = {
-        "name": "demo",
-        "description": "Demo app",
-    }
     env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
 
     # Act
-    labels = build.render_image_labels(metadata, env_spec)
+    labels = build.render_image_labels("Demo app", env_spec)
 
     # Assert
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels

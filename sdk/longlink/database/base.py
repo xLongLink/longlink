@@ -105,18 +105,19 @@ async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     # Initialize the engine lazily when sessions are requested first.
     engine = create_engine(Envs())
 
-    # Verify connection once before exposing the session factory.
-    async with engine.connect():
-        pass
-
-    # Cache the session factory after the engine connection succeeds.
-    Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
     # Auto-create tables for SQLite only.
     if str(engine.url).startswith("sqlite+"):
 
         # Create tables through a transactional SQLite connection.
         async with engine.begin() as conn:
             await conn.run_sync(database_metadata.create_all)
+    else:
+
+        # Verify non-SQLite connections before exposing the session factory.
+        async with engine.connect():
+            pass
+
+    # Cache the session factory after the engine connection succeeds.
+    Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     return Session

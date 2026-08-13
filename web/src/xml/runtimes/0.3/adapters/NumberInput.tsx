@@ -16,7 +16,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
  * - autoComplete: string
  * - labelTooltip: string
  * - disabledMessage: string
- * - value: int | float | null
+ * - value: int | float | undefined
  * - min: int | float
  * - max: int | float
  * - step: int | float
@@ -35,7 +35,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
  */
 export function NumberInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : Number(value)));
+    const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : Number(value)));
     const max = resolveXml(props, 'max', ctx);
     const min = resolveXml(props, 'min', ctx);
     const size = resolveXml(props, 'size', ctx);
@@ -93,7 +93,7 @@ export function NumberInput({ props }: Props) {
 
     // Astryx uses a discriminated callback type for clearable fields.
     if (hasClear) {
-        return <AstryxNumberInput {...common} hasClear onChange={binding.setValue} />;
+        return <AstryxNumberInput {...common} hasClear onChange={(value) => binding.setValue(value ?? undefined)} />;
     }
 
     return <AstryxNumberInput {...common} onChange={binding.setValue} />;

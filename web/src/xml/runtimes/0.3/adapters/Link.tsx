@@ -9,7 +9,6 @@ import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
  * https://astryx.atmeta.com/components/Link?tab=properties
  * - href: string
  * - to: string
- * - label: string
  * - color: str
  * - hasUnderline: bool
  * - isDisabled: bool
@@ -22,8 +21,7 @@ export function Link({ props, nodes }: Props) {
     const to = resolveXml(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
     const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
-    const content = nodes.length > 0 ? renderNode(nodes, ctx) : undefined;
-    const label = resolveXml(props, 'label', ctx);
+    const content = renderNode(nodes, ctx);
     const colorValue = resolveXml(props, 'color', ctx);
     const color =
         colorValue === 'primary' ||
@@ -45,7 +43,6 @@ export function Link({ props, nodes }: Props) {
             href={resolvedTo || resolvedHref || undefined}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isExternalLink={typeof isExternalLink === 'boolean' ? isExternalLink && Boolean(resolvedHref) : undefined}
-            label={typeof label === 'string' ? label : undefined}
         >
             {content}
         </AstryxLink>

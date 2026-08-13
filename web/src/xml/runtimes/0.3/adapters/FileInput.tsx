@@ -1,9 +1,9 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
 import type { Props } from '../types';
 import { resolveInputStatus } from './input';
-import { FILE_INPUT_MODES } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
+import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
@@ -26,6 +26,8 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
  * - width: str | int
  * - status: str
  * - statusMessage: string
+ * - statusVariant: str
+ * - labelTooltip: string
  */
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -53,8 +55,14 @@ export function FileInput({ props }: Props) {
     const maxFiles = resolveXml(props, 'maxFiles', ctx);
     const maxSize = resolveXml(props, 'maxSize', ctx);
     const mode = resolveXml(props, 'mode', ctx);
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
+    const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const width = resolveXml(props, 'width', ctx);
+
+    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+        throw new Error(`Unsupported FileInput statusVariant '${String(statusVariant)}'`);
+    }
 
     return (
         <AstryxFileInput
@@ -68,12 +76,14 @@ export function FileInput({ props }: Props) {
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
+            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}
             maxSize={typeof maxSize === 'number' ? maxSize : undefined}
             mode={isXmlEnum(mode, FILE_INPUT_MODES) ? mode : 'input'}
             onChange={binding.setValue}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
+            statusVariant={isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined}
             value={binding.value}
             width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
         />

@@ -6,13 +6,15 @@ import { useBindableValue } from '../core/binding';
 import { ORIENTATIONS, SLIDER_VALUE_DISPLAYS } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
+type SliderValue = number | [number, number];
+
 /**
  * https://astryx.atmeta.com/components/Slider?tab=properties
  * - label: string
  * - description: string
  * - disabledMessage: string
  * - htmlName: string
- * - value: int | float
+ * - value: int | float | [int | float, int | float]
  * - min: int | float
  * - max: int | float
  * - step: int | float
@@ -25,67 +27,97 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
  * - width: str | int
  * - status: str
  * - statusMessage: string
+ * - labelTooltip: string
  */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));
+    const binding = useBindableValue<SliderValue>(props, 'value', ctx, (value) => {
+        if (Array.isArray(value) && value.length === 2 && value.every((entry) => typeof entry === 'number')) {
+            return [value[0], value[1]];
+        }
+
+        return typeof value === 'number' ? value : 0;
+    });
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
     const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'horizontal';
     const valueDisplay = isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS) ? valueDisplayValue : 'tooltip';
+    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
+
+    if (Array.isArray(binding.value)) {
+        return (
+            <AstryxSlider
+                description={resolveStringProp(props, 'description', ctx)}
+                disabledMessage={resolveStringProp(props, 'disabledMessage', ctx)}
+                htmlName={resolveStringProp(props, 'htmlName', ctx)}
+                isDisabled={resolveBooleanProp(props, 'isDisabled', ctx)}
+                isLabelHidden={resolveBooleanProp(props, 'isLabelHidden', ctx)}
+                isOptional={resolveBooleanProp(props, 'isOptional', ctx)}
+                isRequired={resolveBooleanProp(props, 'isRequired', ctx)}
+                label={requireXmlString(props, 'label', ctx, 'Slider')}
+                labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
+                max={resolveNumberProp(props, 'max', ctx, 100)}
+                min={resolveNumberProp(props, 'min', ctx, 0)}
+                onChange={binding.setValue}
+                orientation={orientation}
+                status={resolveInputStatus(props, ctx)}
+                step={resolveNumberProp(props, 'step', ctx, 1)}
+                value={binding.value}
+                valueDisplay={valueDisplay}
+                width={resolveSizeProp(props, 'width', ctx)}
+            />
+        );
+    }
 
     return (
         <AstryxSlider
-            description={(() => {
-                const value = resolveXml(props, 'description', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            disabledMessage={(() => {
-                const value = resolveXml(props, 'disabledMessage', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            htmlName={(() => {
-                const value = resolveXml(props, 'htmlName', ctx);
-                return typeof value === 'string' ? value : undefined;
-            })()}
-            isDisabled={(() => {
-                const value = resolveXml(props, 'isDisabled', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isLabelHidden={(() => {
-                const value = resolveXml(props, 'isLabelHidden', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isOptional={(() => {
-                const value = resolveXml(props, 'isOptional', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
-            isRequired={(() => {
-                const value = resolveXml(props, 'isRequired', ctx);
-                return typeof value === 'boolean' ? value : undefined;
-            })()}
+            description={resolveStringProp(props, 'description', ctx)}
+            disabledMessage={resolveStringProp(props, 'disabledMessage', ctx)}
+            htmlName={resolveStringProp(props, 'htmlName', ctx)}
+            isDisabled={resolveBooleanProp(props, 'isDisabled', ctx)}
+            isLabelHidden={resolveBooleanProp(props, 'isLabelHidden', ctx)}
+            isOptional={resolveBooleanProp(props, 'isOptional', ctx)}
+            isRequired={resolveBooleanProp(props, 'isRequired', ctx)}
             label={requireXmlString(props, 'label', ctx, 'Slider')}
-            max={(() => {
-                const value = resolveXml(props, 'max', ctx);
-                return typeof value === 'number' ? value : 100;
-            })()}
-            min={(() => {
-                const value = resolveXml(props, 'min', ctx);
-                return typeof value === 'number' ? value : 0;
-            })()}
+            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
+            max={resolveNumberProp(props, 'max', ctx, 100)}
+            min={resolveNumberProp(props, 'min', ctx, 0)}
             onChange={binding.setValue}
             orientation={orientation}
             status={resolveInputStatus(props, ctx)}
-            step={(() => {
-                const value = resolveXml(props, 'step', ctx);
-                return typeof value === 'number' ? value : 1;
-            })()}
+            step={resolveNumberProp(props, 'step', ctx, 1)}
             value={binding.value}
             valueDisplay={valueDisplay}
-            width={(() => {
-                const value = resolveXml(props, 'width', ctx);
-                return typeof value === 'string' || typeof value === 'number' ? value : undefined;
-            })()}
+            width={resolveSizeProp(props, 'width', ctx)}
         />
     );
+}
+
+/** Resolves an optional XML boolean prop. */
+function resolveBooleanProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
+    const value = resolveXml(props, name, ctx);
+    return typeof value === 'boolean' ? value : undefined;
+}
+
+/** Resolves an optional XML number prop with a component default. */
+function resolveNumberProp(
+    props: Props['props'],
+    name: string,
+    ctx: ReturnType<typeof useXmlRuntime>['scope'],
+    fallback: number
+) {
+    const value = resolveXml(props, name, ctx);
+    return typeof value === 'number' ? value : fallback;
+}
+
+/** Resolves an optional XML size prop. */
+function resolveSizeProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
+    const value = resolveXml(props, name, ctx);
+    return typeof value === 'string' || typeof value === 'number' ? value : undefined;
+}
+
+/** Resolves an optional XML string prop. */
+function resolveStringProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
+    const value = resolveXml(props, name, ctx);
+    return typeof value === 'string' ? value : undefined;
 }
