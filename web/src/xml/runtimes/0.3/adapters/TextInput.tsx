@@ -1,9 +1,10 @@
 import { TextInput as AstryxTextInput } from '@astryxdesign/core-0-3/TextInput';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { requireXmlString, resolveXml } from '../core/props';
+import { FIELD_STATUS_VARIANTS, SIZES, TEXT_INPUT_TYPES } from '../constants';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
  * checked: false
@@ -50,20 +51,15 @@ export function TextInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (type != null && type !== 'text' && type !== 'password' && type !== 'email') {
+    if (!isXmlEnum(type, [undefined, ...TEXT_INPUT_TYPES])) {
         throw new Error(`Unsupported TextInput type '${String(type)}'`);
     }
 
-    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported TextInput size '${String(size)}'`);
     }
 
-    if (
-        statusVariant != null &&
-        statusVariant !== 'attached' &&
-        statusVariant !== 'detached' &&
-        statusVariant !== 'tooltip'
-    ) {
+    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported TextInput statusVariant '${String(statusVariant)}'`);
     }
 

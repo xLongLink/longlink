@@ -1,9 +1,10 @@
 import { TextArea as AstryxTextArea } from '@astryxdesign/core-0-3/TextArea';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { requireXmlString, resolveXml } from '../core/props';
+import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
  * checked: false
@@ -52,16 +53,11 @@ export function TextArea({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && size !== 'sm' && size !== 'md' && size !== 'lg') {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported TextArea size '${String(size)}'`);
     }
 
-    if (
-        statusVariant != null &&
-        statusVariant !== 'attached' &&
-        statusVariant !== 'detached' &&
-        statusVariant !== 'tooltip'
-    ) {
+    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported TextArea statusVariant '${String(statusVariant)}'`);
     }
 

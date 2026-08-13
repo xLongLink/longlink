@@ -3,7 +3,7 @@ import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { isOptionalXmlValue, isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
+import { isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     HEADING_TYPES,
@@ -55,7 +55,7 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
-    if (!isOptionalXmlValue(accessibilityLevel, HEADING_LEVELS)) {
+    if (!isXmlEnum(accessibilityLevel, [undefined, ...HEADING_LEVELS])) {
         throw new Error('Heading accessibilityLevel must be from 1 to 6');
     }
 
@@ -63,31 +63,31 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalXmlValue(color, TEXT_COLORS)) {
+    if (!isXmlEnum(color, [undefined, ...TEXT_COLORS])) {
         throw new Error(`Unsupported Heading color '${String(color)}'`);
     }
 
-    if (!isOptionalXmlValue(display, TEXT_DISPLAYS)) {
+    if (!isXmlEnum(display, [undefined, ...TEXT_DISPLAYS])) {
         throw new Error(`Unsupported Heading display '${String(display)}'`);
     }
 
-    if (!isOptionalXmlValue(justify, ALIGNS)) {
+    if (!isXmlEnum(justify, [undefined, ...ALIGNS])) {
         throw new Error(`Unsupported Heading justify '${String(justify)}'`);
     }
 
-    if (!isOptionalXmlValue(textWrap, TEXT_WRAPS)) {
+    if (!isXmlEnum(textWrap, [undefined, ...TEXT_WRAPS])) {
         throw new Error(`Unsupported Heading textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalXmlValue(type, HEADING_TYPES)) {
+    if (!isXmlEnum(type, [undefined, ...HEADING_TYPES])) {
         throw new Error(`Unsupported Heading type '${String(type)}'`);
     }
 
-    if (!isOptionalXmlValue(wordBreak, WORD_BREAKS)) {
+    if (!isXmlEnum(wordBreak, [undefined, ...WORD_BREAKS])) {
         throw new Error(`Unsupported Heading wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalXmlValue(hasTruncateTooltip, TRUNCATE_TOOLTIPS)) {
+    if (!isXmlEnum(hasTruncateTooltip, [undefined, ...TRUNCATE_TOOLTIPS])) {
         throw new Error(`Unsupported Heading hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 

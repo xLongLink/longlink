@@ -1,6 +1,6 @@
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
@@ -58,11 +58,11 @@ export function NumberInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && !isXmlEnum(size, SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported NumberInput size '${String(size)}'`);
     }
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported NumberInput statusVariant '${String(statusVariant)}'`);
     }
     const inputSize = isXmlEnum(size, SIZES) ? size : undefined;

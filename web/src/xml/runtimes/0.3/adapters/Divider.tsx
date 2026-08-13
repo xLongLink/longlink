@@ -19,11 +19,11 @@ export function Divider({ props }: Props) {
     const isFullBleed = resolveXml(props, 'isFullBleed', ctx);
     const orientationValue = resolveXml(props, 'orientation', ctx);
 
-    if (orientationValue != null && !isXmlEnum(orientationValue, ORIENTATIONS)) {
+    if (!isXmlEnum(orientationValue, [undefined, ...ORIENTATIONS])) {
         throw new Error(`Unsupported Divider orientation '${String(orientationValue)}'`);
     }
 
-    if (variantValue != null && !isXmlEnum(variantValue, DIVIDER_VARIANTS)) {
+    if (!isXmlEnum(variantValue, [undefined, ...DIVIDER_VARIANTS])) {
         throw new Error(`Unsupported Divider variant '${String(variantValue)}'`);
     }
 

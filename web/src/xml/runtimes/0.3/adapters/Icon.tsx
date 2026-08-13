@@ -1,7 +1,7 @@
 import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
-import { ICON_COLORS, ICON_SIZES } from '../constants';
+import { ICON_COLORS, ICON_NAMES, ICON_SIZES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
@@ -19,44 +19,15 @@ export function Icon({ props }: Props) {
     const color = resolveXml(props, 'color', ctx);
     const label = resolveXml(props, 'label', ctx);
 
-    if (
-        icon !== 'close' &&
-        icon !== 'chevronDown' &&
-        icon !== 'chevronLeft' &&
-        icon !== 'chevronRight' &&
-        icon !== 'chevronsLeft' &&
-        icon !== 'chevronsRight' &&
-        icon !== 'check' &&
-        icon !== 'success' &&
-        icon !== 'error' &&
-        icon !== 'warning' &&
-        icon !== 'info' &&
-        icon !== 'calendar' &&
-        icon !== 'clock' &&
-        icon !== 'externalLink' &&
-        icon !== 'menu' &&
-        icon !== 'moreHorizontal' &&
-        icon !== 'search' &&
-        icon !== 'arrowUp' &&
-        icon !== 'arrowDown' &&
-        icon !== 'arrowsUpDown' &&
-        icon !== 'funnel' &&
-        icon !== 'eyeSlash' &&
-        icon !== 'viewColumns' &&
-        icon !== 'copy' &&
-        icon !== 'checkDouble' &&
-        icon !== 'wrench' &&
-        icon !== 'stop' &&
-        icon !== 'microphone'
-    ) {
+    if (!isXmlEnum(icon, [undefined, ...ICON_NAMES])) {
         throw new Error(`Unsupported Icon icon '${icon}'`);
     }
 
-    if (color != null && !isXmlEnum(color, ICON_COLORS)) {
+    if (!isXmlEnum(color, [undefined, ...ICON_COLORS])) {
         throw new Error(`Unsupported Icon color '${String(color)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, ICON_SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...ICON_SIZES])) {
         throw new Error(`Unsupported Icon size '${String(size)}'`);
     }
 

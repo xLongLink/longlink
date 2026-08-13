@@ -1,7 +1,7 @@
 import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
-import { isOptionalXmlValue, resolveXml, resolveXmlValue } from '../core/props';
+import { isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 import {
     ALIGNS,
     FONT_WEIGHTS,
@@ -63,43 +63,43 @@ export function Text({ props }: Props) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalXmlValue(type, TYPOGRAPHIES)) {
+    if (!isXmlEnum(type, [undefined, ...TYPOGRAPHIES])) {
         throw new Error(`Unsupported Text type '${String(type)}'`);
     }
 
-    if (!isOptionalXmlValue(size, TEXT_SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...TEXT_SIZES])) {
         throw new Error(`Unsupported Text size '${String(size)}'`);
     }
 
-    if (!isOptionalXmlValue(color, TEXT_COLORS)) {
+    if (!isXmlEnum(color, [undefined, ...TEXT_COLORS])) {
         throw new Error(`Unsupported Text color '${String(color)}'`);
     }
 
-    if (!isOptionalXmlValue(weight, FONT_WEIGHTS)) {
+    if (!isXmlEnum(weight, [undefined, ...FONT_WEIGHTS])) {
         throw new Error(`Unsupported Text weight '${String(weight)}'`);
     }
 
-    if (!isOptionalXmlValue(display, TEXT_DISPLAYS)) {
+    if (!isXmlEnum(display, [undefined, ...TEXT_DISPLAYS])) {
         throw new Error(`Unsupported Text display '${String(display)}'`);
     }
 
-    if (!isOptionalXmlValue(as, TEXT_ELEMENTS)) {
+    if (!isXmlEnum(as, [undefined, ...TEXT_ELEMENTS])) {
         throw new Error(`Unsupported Text as '${String(as)}'`);
     }
 
-    if (!isOptionalXmlValue(hasTruncateTooltip, TRUNCATE_TOOLTIPS)) {
+    if (!isXmlEnum(hasTruncateTooltip, [undefined, ...TRUNCATE_TOOLTIPS])) {
         throw new Error(`Unsupported Text hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 
-    if (!isOptionalXmlValue(wordBreak, WORD_BREAKS)) {
+    if (!isXmlEnum(wordBreak, [undefined, ...WORD_BREAKS])) {
         throw new Error(`Unsupported Text wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalXmlValue(textWrap, TEXT_WRAPS)) {
+    if (!isXmlEnum(textWrap, [undefined, ...TEXT_WRAPS])) {
         throw new Error(`Unsupported Text textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalXmlValue(justify, ALIGNS)) {
+    if (!isXmlEnum(justify, [undefined, ...ALIGNS])) {
         throw new Error(`Unsupported Text justify '${String(justify)}'`);
     }
 

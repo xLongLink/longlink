@@ -5,8 +5,39 @@ export const LAYER_PLACEMENTS = ['above', 'below', 'start', 'end'] as const;
 export const SELECTOR_VARIANTS = ['input', 'ghost'] as const;
 export const ACTION_METHODS = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'] as const;
 export const SIZES = ['sm', 'md', 'lg'] as const;
+export const TEXT_INPUT_TYPES = ['text', 'password', 'email'] as const;
 export const AVATAR_SIZES = ['xsm', 'sm', 'md', 'lg', 'xl'] as const;
 export const ICON_SIZES = ['xsm', 'sm', 'md', 'lg'] as const;
+export const ICON_NAMES = [
+    'close',
+    'chevronDown',
+    'chevronLeft',
+    'chevronRight',
+    'chevronsLeft',
+    'chevronsRight',
+    'check',
+    'success',
+    'error',
+    'warning',
+    'info',
+    'calendar',
+    'clock',
+    'externalLink',
+    'menu',
+    'moreHorizontal',
+    'search',
+    'arrowUp',
+    'arrowDown',
+    'arrowsUpDown',
+    'funnel',
+    'eyeSlash',
+    'viewColumns',
+    'copy',
+    'checkDouble',
+    'wrench',
+    'stop',
+    'microphone',
+] as const;
 export const ICON_COLORS = [
     'primary',
     'secondary',

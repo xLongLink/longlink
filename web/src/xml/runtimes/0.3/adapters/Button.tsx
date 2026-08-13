@@ -36,19 +36,19 @@ export function Button({ props, nodes }: Props) {
     const isInterruptible = resolveXml(props, 'isInterruptible', ctx);
     const actionHandler = useContext(ActionHandlerContext);
 
-    if (variant != null && !isXmlEnum(variant, BUTTON_VARIANTS)) {
+    if (!isXmlEnum(variant, [undefined, ...BUTTON_VARIANTS])) {
         throw new Error(`Unsupported Button variant '${String(variant)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported Button size '${String(size)}'`);
     }
 
-    if (type != null && !isXmlEnum(type, BUTTON_HTML_TYPES)) {
+    if (!isXmlEnum(type, [undefined, ...BUTTON_HTML_TYPES])) {
         throw new Error(`Unsupported Button type '${String(type)}'`);
     }
 
-    if (elevation != null && !isXmlEnum(elevation, ELEVATIONS)) {
+    if (!isXmlEnum(elevation, [undefined, ...ELEVATIONS])) {
         throw new Error(`Unsupported Button elevation '${String(elevation)}'`);
     }
 

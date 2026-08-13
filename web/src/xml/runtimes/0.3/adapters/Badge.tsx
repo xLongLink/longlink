@@ -19,7 +19,7 @@ export function Badge({ props, nodes }: Props) {
     const label = requireXmlString(props, 'label', ctx, 'Badge');
     const variant = resolveXml(props, 'variant', ctx);
 
-    if (variant != null && !isXmlEnum(variant, BADGE_VARIANTS)) {
+    if (!isXmlEnum(variant, [undefined, ...BADGE_VARIANTS])) {
         throw new Error(`Unsupported Badge variant '${variant}'`);
     }
 

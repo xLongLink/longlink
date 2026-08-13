@@ -1,7 +1,7 @@
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core-0-3/RadioList';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { COMPACT_SIZES, ORIENTATIONS } from '../constants';

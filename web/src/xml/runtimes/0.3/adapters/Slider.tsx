@@ -1,6 +1,6 @@
 import { Slider as AstryxSlider } from '@astryxdesign/core-0-3/Slider';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { ORIENTATIONS, SLIDER_VALUE_DISPLAYS } from '../constants';
@@ -47,11 +47,11 @@ export function Slider({ props }: Props) {
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const minStepsBetweenThumbs = resolveXml(props, 'minStepsBetweenThumbs', ctx);
 
-    if (orientationValue != null && !isXmlEnum(orientationValue, ORIENTATIONS)) {
+    if (!isXmlEnum(orientationValue, [undefined, ...ORIENTATIONS])) {
         throw new Error(`Unsupported Slider orientation '${String(orientationValue)}'`);
     }
 
-    if (valueDisplayValue != null && !isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS)) {
+    if (!isXmlEnum(valueDisplayValue, [undefined, ...SLIDER_VALUE_DISPLAYS])) {
         throw new Error(`Unsupported Slider valueDisplay '${String(valueDisplayValue)}'`);
     }
 

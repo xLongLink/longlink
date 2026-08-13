@@ -1,6 +1,6 @@
 import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
@@ -73,19 +73,19 @@ export function Selector({ props, nodes }: Props) {
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
-    if (size != null && !isXmlEnum(size, SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported Selector size '${String(size)}'`);
     }
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
     }
 
-    if (placement != null && !isXmlEnum(placement, LAYER_PLACEMENTS)) {
+    if (!isXmlEnum(placement, [undefined, ...LAYER_PLACEMENTS])) {
         throw new Error(`Unsupported Selector placement '${String(placement)}'`);
     }
 
-    if (variant != null && !isXmlEnum(variant, SELECTOR_VARIANTS)) {
+    if (!isXmlEnum(variant, [undefined, ...SELECTOR_VARIANTS])) {
         throw new Error(`Unsupported Selector variant '${String(variant)}'`);
     }
     const selectorSize = isXmlEnum(size, SIZES) ? size : undefined;

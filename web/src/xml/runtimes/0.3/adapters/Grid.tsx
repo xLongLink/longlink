@@ -66,27 +66,27 @@ export function Grid({ props, nodes }: Props) {
         throw new Error('Grid maxColumns must be a positive integer');
     }
 
-    if (repeat != null && !isXmlEnum(repeat, GRID_REPEATS)) {
+    if (!isXmlEnum(repeat, [undefined, ...GRID_REPEATS])) {
         throw new Error(`Unsupported Grid repeat '${String(repeat)}'`);
     }
 
-    if (gap != null && !isXmlEnum(gap, SPACINGS)) {
+    if (!isXmlEnum(gap, [undefined, ...SPACINGS])) {
         throw new Error(`Unsupported Grid gap '${String(gap)}'`);
     }
 
-    if (rowGap != null && !isXmlEnum(rowGap, SPACINGS)) {
+    if (!isXmlEnum(rowGap, [undefined, ...SPACINGS])) {
         throw new Error(`Unsupported Grid rowGap '${String(rowGap)}'`);
     }
 
-    if (columnGap != null && !isXmlEnum(columnGap, SPACINGS)) {
+    if (!isXmlEnum(columnGap, [undefined, ...SPACINGS])) {
         throw new Error(`Unsupported Grid columnGap '${String(columnGap)}'`);
     }
 
-    if (align != null && !isXmlEnum(align, BOX_ALIGNS)) {
+    if (!isXmlEnum(align, [undefined, ...BOX_ALIGNS])) {
         throw new Error(`Unsupported Grid align '${String(align)}'`);
     }
 
-    if (justify != null && !isXmlEnum(justify, BOX_ALIGNS)) {
+    if (!isXmlEnum(justify, [undefined, ...BOX_ALIGNS])) {
         throw new Error(`Unsupported Grid justify '${String(justify)}'`);
     }
 

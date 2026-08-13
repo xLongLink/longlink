@@ -27,15 +27,15 @@ export function Card({ props, nodes }: Props) {
     const elevation = resolveXml(props, 'elevation', ctx);
     const minHeight = resolveXml(props, 'minHeight', ctx);
 
-    if (padding != null && !isXmlEnum(padding, SPACINGS)) {
+    if (!isXmlEnum(padding, [undefined, ...SPACINGS])) {
         throw new Error(`Unsupported Card padding '${String(padding)}'`);
     }
 
-    if (elevation != null && !isXmlEnum(elevation, ELEVATIONS)) {
+    if (!isXmlEnum(elevation, [undefined, ...ELEVATIONS])) {
         throw new Error(`Unsupported Card elevation '${String(elevation)}'`);
     }
 
-    if (variant != null && !isXmlEnum(variant, CARD_VARIANTS)) {
+    if (!isXmlEnum(variant, [undefined, ...CARD_VARIANTS])) {
         throw new Error(`Unsupported Card variant '${String(variant)}'`);
     }
 

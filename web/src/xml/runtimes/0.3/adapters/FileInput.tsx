@@ -1,6 +1,6 @@
 import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
 import type { Props } from '../types';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
@@ -61,7 +61,7 @@ export function FileInput({ props }: Props) {
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const width = resolveXml(props, 'width', ctx);
 
-    if (statusVariant != null && !isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS)) {
+    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported FileInput statusVariant '${String(statusVariant)}'`);
     }
 
