@@ -60,7 +60,7 @@ fallback_version = '0.0.0'
 py-modules = ['main']
 
 [tool.setuptools.packages.find]
-include = ['src*']
+include = ['scripts*', 'src*']
 
 [tool.setuptools.package-data]
 "src.kubernetes.templates" = ["application/*.yml", "platform/*.yml"]
