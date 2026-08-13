@@ -6,8 +6,9 @@ import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core-0-3/Dia
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
+import { SPACINGS } from '../constants';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
@@ -49,21 +50,7 @@ export function Dialog({ props, nodes }: Props) {
                     isOpen={binding.value}
                     maxHeight={typeof maxHeight === 'string' || typeof maxHeight === 'number' ? maxHeight : undefined}
                     onOpenChange={binding.setValue}
-                    padding={
-                        padding === 0 ||
-                        padding === 0.5 ||
-                        padding === 1 ||
-                        padding === 1.5 ||
-                        padding === 2 ||
-                        padding === 3 ||
-                        padding === 4 ||
-                        padding === 5 ||
-                        padding === 6 ||
-                        padding === 8 ||
-                        padding === 10
-                            ? padding
-                            : undefined
-                    }
+                    padding={isXmlEnum(padding, SPACINGS) ? padding : undefined}
                     purpose={purpose}
                     variant={variant}
                     width={typeof width === 'string' || typeof width === 'number' ? width : undefined}

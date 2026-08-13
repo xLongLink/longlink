@@ -1,9 +1,10 @@
 import { Link as AstryxLink } from '@astryxdesign/core-0-3/Link';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveXml } from '../core/props';
+import { isXmlEnum, resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
+import { TEXT_COLORS } from '../constants';
 
 /**
  * checked: false
@@ -29,15 +30,7 @@ export function Link({ props, nodes }: Props) {
     const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
     const content = renderNode(nodes, ctx);
     const colorValue = resolveXml(props, 'color', ctx);
-    const color =
-        colorValue === 'primary' ||
-        colorValue === 'secondary' ||
-        colorValue === 'disabled' ||
-        colorValue === 'placeholder' ||
-        colorValue === 'accent' ||
-        colorValue === 'inherit'
-            ? colorValue
-            : 'accent';
+    const color = isXmlEnum(colorValue, TEXT_COLORS) ? colorValue : 'accent';
     const hasUnderline = resolveXml(props, 'hasUnderline', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isExternalLink = resolveXml(props, 'isExternalLink', ctx);

@@ -47,7 +47,7 @@ export function isAppRelativeUrl(path: string): boolean {
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const base = new URL('http://longlink.local');
+        const base = new URL(RELATIVE_URL_ORIGIN);
         const url = new URL(value, base);
 
         return url.origin === base.origin;

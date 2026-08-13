@@ -2,7 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="GridType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="columns" type="xsd:positiveInteger" />
     <xsd:attribute name="minColumnWidth" type="PositiveDecimalType" />
     <xsd:attribute name="maxColumns" type="xsd:positiveInteger" />

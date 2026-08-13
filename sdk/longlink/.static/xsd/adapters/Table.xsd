@@ -15,7 +15,7 @@
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="key" type="NonBlankStringType" use="required" />
     <xsd:attribute name="field" type="FieldPathType" />
     <xsd:attribute name="header" type="xsd:string" />

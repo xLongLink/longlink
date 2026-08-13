@@ -2,7 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="StackType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="direction" type="OrientationType" default="vertical" />
     <xsd:attribute name="justify" type="StackJustifyType" default="start" />
     <xsd:attribute name="align" type="BoxAlignType" default="stretch" />

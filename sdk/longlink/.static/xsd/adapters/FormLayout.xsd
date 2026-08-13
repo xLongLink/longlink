@@ -2,7 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="FormLayoutType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="direction" type="FormDirectionType" default="vertical" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>

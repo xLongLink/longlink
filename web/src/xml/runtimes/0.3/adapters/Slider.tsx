@@ -64,54 +64,37 @@ export function Slider({ props }: Props) {
         throw new Error('Slider minStepsBetweenThumbs must be a non-negative integer');
     }
 
+    const commonProps = {
+        description: resolveStringProp(props, 'description', ctx),
+        disabledMessage: resolveStringProp(props, 'disabledMessage', ctx),
+        htmlName: resolveStringProp(props, 'htmlName', ctx),
+        isDisabled: resolveBooleanProp(props, 'isDisabled', ctx),
+        isLabelHidden: resolveBooleanProp(props, 'isLabelHidden', ctx),
+        isOptional: resolveBooleanProp(props, 'isOptional', ctx),
+        isRequired: resolveBooleanProp(props, 'isRequired', ctx),
+        label: requireXmlString(props, 'label', ctx, 'Slider'),
+        labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
+        max: resolveNumberProp(props, 'max', ctx, 100),
+        min: resolveNumberProp(props, 'min', ctx, 0),
+        orientation,
+        status: resolveInputStatus(props, ctx),
+        step: resolveNumberProp(props, 'step', ctx, 1),
+        valueDisplay,
+        width: resolveSizeProp(props, 'width', ctx),
+    };
+
     if (Array.isArray(binding.value)) {
         return (
             <AstryxSlider
-                description={resolveStringProp(props, 'description', ctx)}
-                disabledMessage={resolveStringProp(props, 'disabledMessage', ctx)}
-                htmlName={resolveStringProp(props, 'htmlName', ctx)}
-                isDisabled={resolveBooleanProp(props, 'isDisabled', ctx)}
-                isLabelHidden={resolveBooleanProp(props, 'isLabelHidden', ctx)}
-                isOptional={resolveBooleanProp(props, 'isOptional', ctx)}
-                isRequired={resolveBooleanProp(props, 'isRequired', ctx)}
-                label={requireXmlString(props, 'label', ctx, 'Slider')}
-                labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
-                max={resolveNumberProp(props, 'max', ctx, 100)}
-                min={resolveNumberProp(props, 'min', ctx, 0)}
+                {...commonProps}
                 minStepsBetweenThumbs={minStepsBetweenThumbs}
                 onChange={binding.setValue}
-                orientation={orientation}
-                status={resolveInputStatus(props, ctx)}
-                step={resolveNumberProp(props, 'step', ctx, 1)}
                 value={binding.value}
-                valueDisplay={valueDisplay}
-                width={resolveSizeProp(props, 'width', ctx)}
             />
         );
     }
 
-    return (
-        <AstryxSlider
-            description={resolveStringProp(props, 'description', ctx)}
-            disabledMessage={resolveStringProp(props, 'disabledMessage', ctx)}
-            htmlName={resolveStringProp(props, 'htmlName', ctx)}
-            isDisabled={resolveBooleanProp(props, 'isDisabled', ctx)}
-            isLabelHidden={resolveBooleanProp(props, 'isLabelHidden', ctx)}
-            isOptional={resolveBooleanProp(props, 'isOptional', ctx)}
-            isRequired={resolveBooleanProp(props, 'isRequired', ctx)}
-            label={requireXmlString(props, 'label', ctx, 'Slider')}
-            labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
-            max={resolveNumberProp(props, 'max', ctx, 100)}
-            min={resolveNumberProp(props, 'min', ctx, 0)}
-            onChange={binding.setValue}
-            orientation={orientation}
-            status={resolveInputStatus(props, ctx)}
-            step={resolveNumberProp(props, 'step', ctx, 1)}
-            value={binding.value}
-            valueDisplay={valueDisplay}
-            width={resolveSizeProp(props, 'width', ctx)}
-        />
-    );
+    return <AstryxSlider {...commonProps} onChange={binding.setValue} value={binding.value} />;
 }
 
 /** Resolves an optional XML boolean prop. */
