@@ -6,6 +6,7 @@ import { BOX_ALIGNS, GRID_REPEATS, SPACINGS } from '../constants';
 import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Grid?tab=properties
  * - columns: positive integer
  * - maxColumns: positive integer

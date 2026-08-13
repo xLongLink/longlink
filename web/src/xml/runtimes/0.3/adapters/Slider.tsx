@@ -9,6 +9,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 type SliderValue = number | [number, number];
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Slider?tab=properties
  * - label: string
  * - description: string

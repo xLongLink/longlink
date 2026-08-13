@@ -6,6 +6,7 @@ import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/FormLayout?tab=properties
  * - direction: str
  * - children: ReactNode

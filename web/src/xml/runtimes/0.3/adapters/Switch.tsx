@@ -7,6 +7,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Switch?tab=properties
  * - label: string
  * - description: string

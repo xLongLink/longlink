@@ -6,6 +6,7 @@ import { isXmlEnum, resolveXml } from '../core/props';
 import { BOX_ALIGNS, ORIENTATIONS, SPACINGS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Stack?tab=properties
  * - direction: str
  * - justify: str

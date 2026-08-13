@@ -11,6 +11,7 @@ import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/SideNav?tab=properties
  * - label: string
  * - value: string
@@ -65,6 +66,7 @@ export function SideNav({ props, nodes }: Props) {
 }
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/SideNavItem?tab=properties
  * - label: string
  * - value: string

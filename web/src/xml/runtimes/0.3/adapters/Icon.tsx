@@ -5,6 +5,7 @@ import { ICON_COLORS, ICON_SIZES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Icon?tab=properties
  * - icon: str
  * - label: string

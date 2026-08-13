@@ -6,6 +6,7 @@ import { isXmlEnum, resolveXml } from '../core/props';
 import { CARD_VARIANTS, ELEVATIONS, SPACINGS } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Card?tab=properties
  * - width: str | int
  * - height: str | int

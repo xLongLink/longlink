@@ -17,6 +17,7 @@ import {
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Heading?tab=properties
  * - children: ReactNode
  * - level: int

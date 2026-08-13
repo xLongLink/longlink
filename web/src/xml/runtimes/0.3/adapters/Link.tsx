@@ -6,6 +6,7 @@ import { useXmlRuntime } from '../core/context';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Link?tab=properties
  * - href: string
  * - to: string

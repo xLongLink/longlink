@@ -16,6 +16,7 @@ import {
 } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Text?tab=properties
  * - value: str | int | float | bool
  * - id: string

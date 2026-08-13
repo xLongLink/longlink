@@ -7,6 +7,7 @@ import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/NumberInput?tab=properties
  * - label: string
  * - units: string

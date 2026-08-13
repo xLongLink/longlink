@@ -7,6 +7,7 @@ import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/CheckboxInput?tab=properties
  * - label: string
  * - description: string

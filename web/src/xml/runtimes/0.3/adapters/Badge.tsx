@@ -6,6 +6,7 @@ import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Badge?tab=properties
  * - label: string
  * - id: string

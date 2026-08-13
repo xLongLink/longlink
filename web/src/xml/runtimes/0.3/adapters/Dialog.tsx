@@ -12,6 +12,7 @@ import { toXmlBoolean, useBindableValue } from '../core/binding';
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Dialog?tab=properties
  * - title: string
  * - subtitle: string

@@ -10,6 +10,7 @@ import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml,
 type TableRow = Record<string, unknown>;
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Table?tab=properties
  * - data: object[]
  * - idKey: string

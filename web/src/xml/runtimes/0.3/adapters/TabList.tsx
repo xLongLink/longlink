@@ -9,6 +9,7 @@ import { resolveNavigationUrl } from '../core/url';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/TabList?tab=properties
  * - label: string
  * - value: string
@@ -67,6 +68,7 @@ export function TabList({ props, nodes }: Props) {
 }
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Tab?tab=properties
  * - label: string
  * - value: string

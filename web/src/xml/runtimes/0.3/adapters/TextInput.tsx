@@ -6,6 +6,7 @@ import { useBindableValue } from '../core/binding';
 import { requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/TextInput?tab=properties
  * - label: string
  * - htmlName: string

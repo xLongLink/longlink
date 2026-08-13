@@ -7,6 +7,7 @@ import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../co
 import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Selector?tab=properties
  * - label: string
  * - htmlName: string
@@ -131,6 +132,7 @@ export function Selector({ props, nodes }: Props) {
 }
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/SelectorOption?tab=properties
  * - value: string
  * - label: string

@@ -8,6 +8,7 @@ import { COMPACT_SIZES, ORIENTATIONS } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/RadioList?tab=properties
  * - label: string
  * - description: string
@@ -67,6 +68,7 @@ export function RadioList({ props, nodes }: Props) {
 }
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/RadioListItem?tab=properties
  * - label: string
  * - value: string

@@ -7,6 +7,7 @@ import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/FileInput?tab=properties
  * - label: string
  * - accept: string

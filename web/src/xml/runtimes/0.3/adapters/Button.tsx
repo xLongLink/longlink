@@ -8,6 +8,7 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Button?tab=properties
  * - label: string
  * - tooltip: string

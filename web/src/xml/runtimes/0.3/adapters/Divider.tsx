@@ -5,6 +5,7 @@ import { DIVIDER_VARIANTS, ORIENTATIONS } from '../constants';
 import { isXmlEnum, resolveXml } from '../core/props';
 
 /**
+ * checked: false
  * https://astryx.atmeta.com/components/Divider?tab=properties
  * - label: string
  * - variant: str
