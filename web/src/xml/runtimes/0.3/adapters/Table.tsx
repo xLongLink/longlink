@@ -9,7 +9,19 @@ import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml,
 
 type TableRow = Record<string, unknown>;
 
-/** Renders XML row data through the Astryx data-driven Table API. */
+/**
+ * https://astryx.atmeta.com/components/Table?tab=properties
+ * - data: object[]
+ * - idKey: string
+ * - emptyLabel: string
+ * - density: str
+ * - dividers: str
+ * - verticalAlign: str
+ * - textOverflow: str
+ * - hasHover: bool
+ * - isStriped: bool
+ * - children: TableColumn
+ */
 export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;
@@ -63,7 +75,13 @@ export function Table({ props, nodes }: Props) {
     );
 }
 
-/** Marks a data column consumed by its nearest Table. */
+/**
+ * - key: string
+ * - field: string
+ * - header: string
+ * - align: str
+ * - children: ReactNode
+ */
 export function TableColumn(): never {
     throw new Error('TableColumn must be used inside Table');
 }

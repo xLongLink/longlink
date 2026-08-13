@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="HeadingType">
+  <xsd:complexType name="HeadingType" mixed="true">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
     <xsd:attribute name="level" type="HeadingLevelType" use="required" />
     <xsd:attribute name="type" type="HeadingTypeType" />

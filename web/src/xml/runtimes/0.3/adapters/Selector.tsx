@@ -6,7 +6,33 @@ import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 
-/** Renders a data-oriented Astryx selector from SelectorOption children. */
+/**
+ * https://astryx.atmeta.com/components/Selector?tab=properties
+ * - label: string
+ * - htmlName: string
+ * - description: string
+ * - placeholder: string
+ * - labelTooltip: string
+ * - disabledMessage: string
+ * - searchPlaceholder: string
+ * - value: str | null
+ * - options: SelectorOption[]
+ * - size: str
+ * - variant: str
+ * - placement: str
+ * - hasClear: bool
+ * - hasSearch: bool
+ * - isLoading: bool
+ * - isDisabled: bool
+ * - isOptional: bool
+ * - isRequired: bool
+ * - isDefaultOpen: bool
+ * - isLabelHidden: bool
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ * - statusVariant: str
+ */
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : String(value)));
@@ -98,7 +124,12 @@ export function Selector({ props, nodes }: Props) {
     return <AstryxSelector {...common} onChange={binding.setValue} value={binding.value ?? undefined} />;
 }
 
-/** Marks a data option consumed by its nearest Selector. */
+/**
+ * https://astryx.atmeta.com/components/SelectorOption?tab=properties
+ * - value: string
+ * - label: string
+ * - isDisabled: bool
+ */
 export function SelectorOption(): never {
     throw new Error('SelectorOption must be used inside Selector');
 }

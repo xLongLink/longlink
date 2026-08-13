@@ -6,7 +6,27 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders an Astryx file field while keeping File values available to FormData actions. */
+/**
+ * https://astryx.atmeta.com/components/FileInput?tab=properties
+ * - label: string
+ * - accept: string
+ * - description: string
+ * - disabledMessage: string
+ * - placeholder: string
+ * - value: File | File[] | null
+ * - maxFiles: int
+ * - maxSize: int | float
+ * - mode: str
+ * - isDisabled: bool
+ * - isLabelHidden: bool
+ * - isLoading: bool
+ * - isMultiple: bool
+ * - isOptional: bool
+ * - isRequired: bool
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ */
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(
@@ -19,8 +39,7 @@ export function FileInput({ props }: Props) {
             (!(value instanceof File) && !(Array.isArray(value) && value.every((entry) => entry instanceof File)))
                 ? null
                 : value,
-        'file',
-        () => null
+        'file'
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);

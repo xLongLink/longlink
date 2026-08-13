@@ -77,7 +77,6 @@ export function useInviteOrganizationMember(organizationId: string) {
             });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
@@ -144,7 +143,6 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });

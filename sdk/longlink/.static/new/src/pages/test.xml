@@ -1,0 +1,109 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink version="0.3" name="XML component test" icon="wrench">
+    <State
+        id="test"
+        text="Example text"
+        password="secret"
+        email="test@example.com"
+        note="A multiline value for the text area."
+        amount="12"
+        accepted="${true}"
+        enabled="${true}"
+        upload="${null}"
+        choice="first"
+        selection="medium"
+        range="40"
+        tab="details"
+        section="components"
+        rows="${[{ id: 1, name: 'First row', details: { code: 'A-1' } }, { id: 2, name: 'Second row', details: { code: 'B-2' } }]}"
+    />
+    <Query id="items" path="/api/items" />
+
+    <Stack direction="vertical" justify="start" align="stretch" wrap="nowrap" gap="6" padding="4" paddingInline="2" paddingBlock="3" width="full" maxWidth="full" minHeight="0">
+        <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
+            <Stack gap="1">
+                <Heading id="xml-test" level="1" type="display-1" color="primary" display="block" justify="start" textWrap="balance" maxLines="2" wordBreak="break-word" hasCapsize="true" hasStrikethrough="false" hasTruncateTooltip="above" accessibilityLevel="1">XML component test page</Heading>
+                <Text id="description" as="p" type="body" size="base" color="secondary" weight="normal" display="block" justify="start" maxLines="2" textWrap="wrap" wordBreak="break-word" hasCapsize="true" hasStrikethrough="false" hasTabularNumbers="true" hasTruncateTooltip="true" value="One example of every XML element and supported property." />
+            </Stack>
+            <Avatar name="Test User" alt="Test User avatar" size="lg" />
+        </Stack>
+
+        <Card width="full" height="auto" minHeight="0" maxWidth="full" padding="4" variant="muted" elevation="low">
+            <Stack gap="3">
+                <Heading level="2">Display elements</Heading>
+                <Stack direction="horizontal" align="center" wrap="wrap" gap="2">
+                    <Badge id="status" label="Active" variant="success"><Icon slot="icon" icon="success" size="sm" /></Badge>
+                    <Icon icon="info" size="md" color="accent" label="Information" />
+                    <Link href="https://longlink.dev" label="External link" color="accent" hasUnderline="true" isDisabled="false" isExternalLink="true" />
+                    <Link to="/test" label="Internal link"><Text value="Internal link child" /></Link>
+                    <Button label="Example button" type="button" size="md" variant="secondary" tooltip="Button tooltip" isLoading="false" elevation="none" isDisabled="false" isIconOnly="false" isInterruptible="true"><Icon icon="check" /></Button>
+                </Stack>
+                <Divider label="Layout" variant="strong" isFullBleed="false" orientation="horizontal" />
+                <Grid minColumnWidth="240" repeat="fit" maxColumns="3" gap="3" rowGap="2" columnGap="3" align="stretch" justify="start" width="full" height="auto" minHeight="0" maxWidth="full" rowHeight="120">
+                    <Card padding="3" variant="blue" elevation="none"><Text value="Responsive grid item" /></Card>
+                    <Card padding="3" variant="transparent" elevation="med"><Text value="Another grid item" /></Card>
+                </Grid>
+                <Grid columns="2" gap="2"><Text value="Fixed column grid" /><Text value="Second column" /></Grid>
+            </Stack>
+        </Card>
+
+        <Card padding="4">
+            <Stack gap="3">
+                <Heading level="2">Form controls</Heading>
+                <FormLayout direction="vertical">
+                    <TextInput label="Text input" value="$test.text" type="text" size="md" width="full" hasClear="true" htmlName="text" isLoading="false" isDisabled="false" isOptional="false" isRequired="true" description="Text input description" placeholder="Enter text" hasAutoFocus="false" labelTooltip="Text input help" isLabelHidden="false" status="success" statusMessage="Valid value" statusVariant="attached" disabledMessage="Disabled text input" />
+                    <TextInput label="Password input" value="$test.password" type="password" />
+                    <TextInput label="Email input" value="$test.email" type="email" />
+                    <TextArea label="Text area" value="$test.note" size="lg" rows="4" width="full" htmlName="note" isLoading="false" maxLength="200" isDisabled="false" isOptional="false" isRequired="true" description="Text area description" placeholder="Enter a note" hasAutoFocus="false" labelTooltip="Text area help" hasSpellCheck="true" isLabelHidden="false" status="warning" statusMessage="Review this value" statusVariant="tooltip" disabledMessage="Disabled text area" />
+                    <NumberInput label="Number input" value="$test.amount" min="0" max="100" step="1" units="USD" width="full" size="lg" hasClear="true" htmlName="amount" status="error" statusMessage="Example validation" statusVariant="detached" isDisabled="false" isOptional="false" isRequired="true" description="Number input description" placeholder="0" autoComplete="off" hasAutoFocus="false" labelTooltip="Number input help" isIntegerOnly="true" isLabelHidden="false" disabledMessage="Disabled number input" />
+                    <CheckboxInput label="Checkbox input" value="$test.accepted" size="md" width="full" htmlName="accepted" status="success" statusMessage="Checkbox status" isLoading="false" isDisabled="false" isOptional="false" isReadOnly="false" isRequired="true" description="Checkbox description" isLabelHidden="false" disabledMessage="Disabled checkbox" />
+                    <Switch label="Switch" value="$test.enabled" size="md" width="full" htmlName="enabled" status="warning" statusMessage="Switch status" isLoading="false" isDisabled="false" isOptional="false" isRequired="true" description="Switch description" labelSpacing="spread" labelTooltip="Switch help" labelPosition="end" isLabelHidden="false" disabledMessage="Disabled switch" />
+                    <Slider label="Slider" value="$test.range" min="0" max="100" step="5" orientation="horizontal" valueDisplay="text" width="full" htmlName="range" status="success" statusMessage="Slider status" isDisabled="false" isOptional="false" isRequired="true" description="Slider description" isLabelHidden="false" disabledMessage="Disabled slider" />
+                    <FileInput label="File input" value="$test.upload" accept=".txt,.pdf" description="File input description" disabledMessage="Disabled file input" isDisabled="false" isLabelHidden="false" isLoading="false" isMultiple="true" isOptional="false" isRequired="true" maxFiles="3" maxSize="1000000" mode="input" placeholder="Select files" status="warning" statusMessage="File input status" width="full" />
+                    <RadioList label="Radio list" value="$test.choice" orientation="horizontal" size="md" description="Radio list description" disabledMessage="Disabled radio list" htmlName="choice" isDisabled="false" isLabelHidden="false" isOptional="false" isRequired="true" status="success" statusMessage="Radio list status" width="full">
+                        <RadioListItem value="first" label="First choice" description="First option" isDisabled="false" />
+                        <RadioListItem value="second" label="Second choice" description="Second option" isDisabled="true" />
+                    </RadioList>
+                    <Selector label="Selector" value="$test.selection" size="md" width="full" variant="input" hasClear="true" htmlName="selection" hasSearch="true" isLoading="false" placement="below" isDisabled="false" isOptional="false" isRequired="true" description="Selector description" placeholder="Choose an option" labelTooltip="Selector help" isDefaultOpen="false" isLabelHidden="false" status="success" statusMessage="Selector status" statusVariant="attached" disabledMessage="Disabled selector" searchPlaceholder="Search options">
+                        <SelectorOption value="low" label="Low" isDisabled="false" />
+                        <SelectorOption value="medium" label="Medium" isDisabled="false" />
+                        <SelectorOption value="high" label="High" isDisabled="true" />
+                    </Selector>
+                </FormLayout>
+            </Stack>
+        </Card>
+
+        <Card padding="4">
+            <Stack gap="3">
+                <Heading level="2">Collections and navigation</Heading>
+                <For each="$test.rows" as="entry">
+                    <Text value="${`${index + 1}. ${entry.name} (${entry.details.code})`}" />
+                </For>
+                <Table data="$test.rows" density="compact" dividers="grid" verticalAlign="top" textOverflow="truncate" hasHover="true" idKey="id" isStriped="true" emptyLabel="No local rows.">
+                    <TableColumn key="name" field="name" header="Name" align="start" />
+                    <TableColumn key="code" field="details.code" header="Code" align="end"><Text value="${`${index}: ${value}`}" /></TableColumn>
+                </Table>
+                <Table data="$items" density="balanced" dividers="rows" verticalAlign="middle" textOverflow="wrap" emptyLabel="No API items.">
+                    <TableColumn key="name" header="API item" />
+                </Table>
+                <TabList value="$test.tab" label="Test tabs" size="md" layout="fill" hasDivider="true">
+                    <Tab value="details" label="Details"><Text value="The selected tab panel." /></Tab>
+                    <Tab value="other" label="Other"><Text value="Another tab panel." /></Tab>
+                </TabList>
+                <SideNav value="$test.section" label="Test sections">
+                    <SideNavItem value="components" icon="viewColumns" label="Components"><Text value="The selected side navigation panel." /></SideNavItem>
+                    <SideNavItem value="data" icon="arrowsUpDown" label="Data"><Text value="Data section panel." /></SideNavItem>
+                </SideNav>
+            </Stack>
+        </Card>
+
+        <Dialog title="Test dialog" isOpen="false" triggerLabel="Open test dialog" purpose="info" variant="standard" maxHeight="full" padding="4" width="lg" subtitle="Dialog subtitle">
+            <Stack gap="3">
+                <Text value="Dialog content." />
+                <Action action="/api/items" method="POST" json="${{ name: test.text, price: Number(test.amount) }}" invalidate="${['items']}" closeDialog="true">
+                    <Button label="Disabled action" variant="primary" isDisabled="true" />
+                </Action>
+            </Stack>
+        </Dialog>
+    </Stack>
+</longlink>

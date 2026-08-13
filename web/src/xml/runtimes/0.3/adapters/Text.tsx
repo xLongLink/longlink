@@ -1,14 +1,3 @@
-import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
-import type {
-    TextColor,
-    TextDisplay,
-    TextJustify,
-    TextSize,
-    TextType,
-    TextWeight,
-    TextWrap,
-    WordBreak,
-} from '@astryxdesign/core-0-3/Text';
 import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
@@ -26,17 +15,25 @@ import {
     WORD_BREAKS,
 } from '../constants';
 
-const textColors: readonly TextColor[] = TEXT_COLORS;
-const textDisplays: readonly TextDisplay[] = TEXT_DISPLAYS;
-const textJustifications: readonly TextJustify[] = ALIGNS;
-const textSizes: readonly TextSize[] = TEXT_SIZES;
-const textTypes: readonly TextType[] = TYPOGRAPHIES;
-const textWeights: readonly TextWeight[] = FONT_WEIGHTS;
-const textWordBreaks: readonly WordBreak[] = WORD_BREAKS;
-const textWraps: readonly TextWrap[] = TEXT_WRAPS;
-const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
-
-/** Renders semantic Astryx text from a value or nested XML. */
+/**
+ * https://astryx.atmeta.com/components/Text?tab=properties
+ * - value: str | int | float | bool
+ * - id: string
+ * - as: str
+ * - type: str
+ * - size: str
+ * - color: str
+ * - weight: str
+ * - display: str
+ * - justify: str
+ * - textWrap: str
+ * - wordBreak: str
+ * - maxLines: non-negative integer
+ * - hasCapsize: bool
+ * - hasStrikethrough: bool
+ * - hasTabularNumbers: bool
+ * - hasTruncateTooltip: bool | str
+ */
 export function Text({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const id = resolveXml(props, 'id', ctx);
@@ -60,23 +57,23 @@ export function Text({ props }: Props) {
         throw new Error('Text maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalXmlValue(type, textTypes)) {
+    if (!isOptionalXmlValue(type, TYPOGRAPHIES)) {
         throw new Error(`Unsupported Text type '${String(type)}'`);
     }
 
-    if (!isOptionalXmlValue(size, textSizes)) {
+    if (!isOptionalXmlValue(size, TEXT_SIZES)) {
         throw new Error(`Unsupported Text size '${String(size)}'`);
     }
 
-    if (!isOptionalXmlValue(color, textColors)) {
+    if (!isOptionalXmlValue(color, TEXT_COLORS)) {
         throw new Error(`Unsupported Text color '${String(color)}'`);
     }
 
-    if (!isOptionalXmlValue(weight, textWeights)) {
+    if (!isOptionalXmlValue(weight, FONT_WEIGHTS)) {
         throw new Error(`Unsupported Text weight '${String(weight)}'`);
     }
 
-    if (!isOptionalXmlValue(display, textDisplays)) {
+    if (!isOptionalXmlValue(display, TEXT_DISPLAYS)) {
         throw new Error(`Unsupported Text display '${String(display)}'`);
     }
 
@@ -84,19 +81,19 @@ export function Text({ props }: Props) {
         throw new Error(`Unsupported Text as '${String(as)}'`);
     }
 
-    if (!isOptionalXmlValue(hasTruncateTooltip, truncateTooltips)) {
+    if (!isOptionalXmlValue(hasTruncateTooltip, TRUNCATE_TOOLTIPS)) {
         throw new Error(`Unsupported Text hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 
-    if (!isOptionalXmlValue(wordBreak, textWordBreaks)) {
+    if (!isOptionalXmlValue(wordBreak, WORD_BREAKS)) {
         throw new Error(`Unsupported Text wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalXmlValue(textWrap, textWraps)) {
+    if (!isOptionalXmlValue(textWrap, TEXT_WRAPS)) {
         throw new Error(`Unsupported Text textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalXmlValue(justify, textJustifications)) {
+    if (!isOptionalXmlValue(justify, ALIGNS)) {
         throw new Error(`Unsupported Text justify '${String(justify)}'`);
     }
 

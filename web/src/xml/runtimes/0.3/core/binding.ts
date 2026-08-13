@@ -6,8 +6,6 @@ import { isSafePropertyName, resolvePath } from '../expressions';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});
 
-type BindingType = 'file';
-
 type BindingTarget = {
     state: Record<string, unknown>;
     key?: string;
@@ -31,15 +29,14 @@ export function useBindableValue<T>(
     name: string,
     ctx: Scope,
     coerce: (value: unknown) => T,
-    type?: BindingType,
-    getInitialValue?: () => T
+    type?: 'file'
 ) {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
     const target = resolveBindableTarget(rawValue, value, ctx);
     const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
     const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
-    const [localValue, setLocalValue] = useState(() => getInitialValue?.() ?? coerce(value));
+    const [localValue, setLocalValue] = useState(() => coerce(value));
 
     return {
         value: target ? coerce(currentValue) : localValue,

@@ -5,7 +5,17 @@ import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
-/** Renders an Astryx link while keeping navigation destinations URL-safe. */
+/**
+ * https://astryx.atmeta.com/components/Link?tab=properties
+ * - href: string
+ * - to: string
+ * - label: string
+ * - color: str
+ * - hasUnderline: bool
+ * - isDisabled: bool
+ * - isExternalLink: bool
+ * - children: ReactNode
+ */
 export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const href = resolveXml(props, 'href', ctx);

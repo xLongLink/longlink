@@ -6,7 +6,33 @@ import { useBindableValue } from '../core/binding';
 import { FIELD_STATUS_VARIANTS, SIZES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders an Astryx numeric field with numeric Valtio writes. */
+/**
+ * https://astryx.atmeta.com/components/NumberInput?tab=properties
+ * - label: string
+ * - units: string
+ * - htmlName: string
+ * - description: string
+ * - placeholder: string
+ * - autoComplete: string
+ * - labelTooltip: string
+ * - disabledMessage: string
+ * - value: int | float | null
+ * - min: int | float
+ * - max: int | float
+ * - step: int | float
+ * - size: str
+ * - hasClear: bool
+ * - isDisabled: bool
+ * - isOptional: bool
+ * - isRequired: bool
+ * - hasAutoFocus: bool
+ * - isIntegerOnly: bool
+ * - isLabelHidden: bool
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ * - statusVariant: str
+ */
 export function NumberInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? null : Number(value)));

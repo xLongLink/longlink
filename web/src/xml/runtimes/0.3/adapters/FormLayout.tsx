@@ -5,7 +5,11 @@ import { FORM_DIRECTIONS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
 
-/** Arranges Astryx fields with consistent form spacing. */
+/**
+ * https://astryx.atmeta.com/components/FormLayout?tab=properties
+ * - direction: str
+ * - children: ReactNode
+ */
 export function FormLayout({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const directionValue = resolveXml(props, 'direction', ctx);

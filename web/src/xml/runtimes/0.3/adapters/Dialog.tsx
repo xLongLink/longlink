@@ -11,7 +11,19 @@ import { toXmlBoolean, useBindableValue } from '../core/binding';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
-/** Renders a controlled Astryx dialog with an optional adapter-owned trigger. */
+/**
+ * https://astryx.atmeta.com/components/Dialog?tab=properties
+ * - title: string
+ * - subtitle: string
+ * - triggerLabel: string
+ * - isOpen: bool
+ * - purpose: str
+ * - variant: str
+ * - maxHeight: str | int
+ * - padding: int | float
+ * - width: str | int
+ * - children: ReactNode
+ */
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, toXmlBoolean);

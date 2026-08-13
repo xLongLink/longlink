@@ -8,7 +8,13 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 const badgeVariants: readonly BadgeVariant[] = BADGE_VARIANTS;
 
-/** Renders an Astryx badge with a serializable label. */
+/**
+ * https://astryx.atmeta.com/components/Badge?tab=properties
+ * - label: string
+ * - id: string
+ * - variant: str
+ * - children: Icon
+ */
 export function Badge({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const id = resolveXml(props, 'id', ctx);

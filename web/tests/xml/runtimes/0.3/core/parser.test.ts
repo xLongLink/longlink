@@ -42,10 +42,20 @@ describe('parseXML', () => {
         ]);
     });
 
-    it('rejects visible text nodes', () => {
-        expect(() => parseXML('<longlink>  Hello, ${user.name}  </longlink>')).toThrow(
-            'Literal text is not supported in XML; use value attributes or nested components instead'
-        );
+    it('compiles visible text nodes as Text components', () => {
+        expect(parseXML('<Heading level="1">  Hello, world  </Heading>')).toEqual([
+            {
+                name: 'Heading',
+                params: { level: { kind: 'text', value: '1' } },
+                children: [
+                    {
+                        name: 'Text',
+                        params: { value: { kind: 'text', value: 'Hello, world' } },
+                        children: [],
+                    },
+                ],
+            },
+        ]);
     });
 
     it('rejects malformed XML', () => {

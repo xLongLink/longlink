@@ -8,7 +8,15 @@ import { useBindableValue } from '../core/binding';
 import { resolveNavigationUrl } from '../core/url';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders controlled Astryx tab navigation and its selected XML panel. */
+/**
+ * https://astryx.atmeta.com/components/TabList?tab=properties
+ * - label: string
+ * - value: string
+ * - size: str
+ * - layout: str
+ * - hasDivider: bool
+ * - children: Tab
+ */
 export function TabList({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const tabs = nodes
@@ -62,7 +70,13 @@ export function TabList({ props, nodes }: Props) {
     );
 }
 
-/** Marks one tab definition consumed by its nearest TabList. */
+/**
+ * https://astryx.atmeta.com/components/Tab?tab=properties
+ * - label: string
+ * - value: string
+ * - to: string
+ * - children: ReactNode
+ */
 export function Tab(): never {
     throw new Error('Tab must be used inside TabList');
 }

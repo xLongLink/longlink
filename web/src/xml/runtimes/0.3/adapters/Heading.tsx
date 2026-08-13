@@ -1,6 +1,4 @@
-import type { LayerPlacement } from '@astryxdesign/core-0-3/Layer';
-import type { HeadingLevel, HeadingType } from '@astryxdesign/core-0-3/Heading';
-import type { TextColor, TextDisplay, TextJustify, TextWrap, WordBreak } from '@astryxdesign/core-0-3/Text';
+import type { HeadingLevel } from '@astryxdesign/core-0-3/Heading';
 import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
@@ -17,15 +15,24 @@ import {
 } from '../constants';
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
-const headingColors: readonly TextColor[] = TEXT_COLORS;
-const headingDisplays: readonly TextDisplay[] = TEXT_DISPLAYS;
-const headingJustifications: readonly TextJustify[] = ALIGNS;
-const headingTextWraps: readonly TextWrap[] = TEXT_WRAPS;
-const headingTypes: readonly HeadingType[] = HEADING_TYPES;
-const headingWordBreaks: readonly WordBreak[] = WORD_BREAKS;
-const truncateTooltips: readonly (boolean | LayerPlacement)[] = TRUNCATE_TOOLTIPS;
 
-/** Renders an Astryx heading with explicit semantic level. */
+/**
+ * https://astryx.atmeta.com/components/Heading?tab=properties
+ * - children: ReactNode
+ * - level: int
+ * - accessibilityLevel: int
+ * - id: string
+ * - type: str
+ * - color: str
+ * - display: str
+ * - justify: str
+ * - textWrap: str
+ * - wordBreak: str
+ * - maxLines: non-negative integer
+ * - hasCapsize: bool
+ * - hasStrikethrough: bool
+ * - hasTruncateTooltip: bool | str
+ */
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const id = resolveXml(props, 'id', ctx);
@@ -55,31 +62,31 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading maxLines must be a non-negative integer');
     }
 
-    if (!isOptionalXmlValue(color, headingColors)) {
+    if (!isOptionalXmlValue(color, TEXT_COLORS)) {
         throw new Error(`Unsupported Heading color '${String(color)}'`);
     }
 
-    if (!isOptionalXmlValue(display, headingDisplays)) {
+    if (!isOptionalXmlValue(display, TEXT_DISPLAYS)) {
         throw new Error(`Unsupported Heading display '${String(display)}'`);
     }
 
-    if (!isOptionalXmlValue(justify, headingJustifications)) {
+    if (!isOptionalXmlValue(justify, ALIGNS)) {
         throw new Error(`Unsupported Heading justify '${String(justify)}'`);
     }
 
-    if (!isOptionalXmlValue(textWrap, headingTextWraps)) {
+    if (!isOptionalXmlValue(textWrap, TEXT_WRAPS)) {
         throw new Error(`Unsupported Heading textWrap '${String(textWrap)}'`);
     }
 
-    if (!isOptionalXmlValue(type, headingTypes)) {
+    if (!isOptionalXmlValue(type, HEADING_TYPES)) {
         throw new Error(`Unsupported Heading type '${String(type)}'`);
     }
 
-    if (!isOptionalXmlValue(wordBreak, headingWordBreaks)) {
+    if (!isOptionalXmlValue(wordBreak, WORD_BREAKS)) {
         throw new Error(`Unsupported Heading wordBreak '${String(wordBreak)}'`);
     }
 
-    if (!isOptionalXmlValue(hasTruncateTooltip, truncateTooltips)) {
+    if (!isOptionalXmlValue(hasTruncateTooltip, TRUNCATE_TOOLTIPS)) {
         throw new Error(`Unsupported Heading hasTruncateTooltip '${String(hasTruncateTooltip)}'`);
     }
 

@@ -5,7 +5,17 @@ import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
 import { CARD_VARIANTS, ELEVATIONS, SPACINGS } from '../constants';
 
-/** Renders an Astryx card container. */
+/**
+ * https://astryx.atmeta.com/components/Card?tab=properties
+ * - width: str | int
+ * - height: str | int
+ * - maxWidth: str | int
+ * - minHeight: str | int
+ * - padding: int | float
+ * - variant: str
+ * - elevation: str
+ * - children: ReactNode
+ */
 export function Card({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const width = resolveXml(props, 'width', ctx);

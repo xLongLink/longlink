@@ -5,7 +5,23 @@ import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
 import { BOX_ALIGNS, ORIENTATIONS, SPACINGS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
-/** Renders an Astryx stack for horizontal or vertical layout. */
+/**
+ * https://astryx.atmeta.com/components/Stack?tab=properties
+ * - direction: str
+ * - justify: str
+ * - align: str
+ * - wrap: str
+ * - gap: int | float
+ * - padding: int | float
+ * - paddingBlock: int | float
+ * - paddingInline: int | float
+ * - width: str | int
+ * - height: str | int
+ * - maxWidth: str | int
+ * - minHeight: str | int
+ * - isScrollable: bool
+ * - children: ReactNode
+ */
 export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const directionValue = resolveXml(props, 'direction', ctx);

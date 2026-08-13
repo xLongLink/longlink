@@ -7,7 +7,13 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 const iconColors: readonly IconColor[] = ICON_COLORS;
 const iconSizes: readonly IconSize[] = ICON_SIZES;
-/** Renders an Astryx semantic icon from the active theme registry. */
+/**
+ * https://astryx.atmeta.com/components/Icon?tab=properties
+ * - icon: str
+ * - label: string
+ * - size: str
+ * - color: str
+ */
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const icon = requireXmlString(props, 'icon', ctx, 'Icon');

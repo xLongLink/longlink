@@ -6,7 +6,24 @@ import { useXmlRuntime } from '../core/context';
 import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders an Astryx checkbox with boolean Valtio binding. */
+/**
+ * https://astryx.atmeta.com/components/CheckboxInput?tab=properties
+ * - label: string
+ * - description: string
+ * - disabledMessage: string
+ * - htmlName: string
+ * - value: bool
+ * - isLoading: bool
+ * - isDisabled: bool
+ * - isOptional: bool
+ * - isReadOnly: bool
+ * - isRequired: bool
+ * - isLabelHidden: bool
+ * - size: str
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ */
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);

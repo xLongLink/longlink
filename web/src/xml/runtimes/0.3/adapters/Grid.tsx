@@ -5,7 +5,24 @@ import { useXmlRuntime } from '../core/context';
 import { BOX_ALIGNS, GRID_REPEATS, SPACINGS } from '../constants';
 import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 
-/** Renders a fixed or responsive Astryx grid. */
+/**
+ * https://astryx.atmeta.com/components/Grid?tab=properties
+ * - columns: positive integer
+ * - maxColumns: positive integer
+ * - minColumnWidth: positive number
+ * - rowHeight: positive number
+ * - repeat: 'fill' | 'fit'
+ * - gap: int | float
+ * - rowGap: int | float
+ * - columnGap: int | float
+ * - align: str
+ * - justify: str
+ * - width: str | int
+ * - height: str | int
+ * - minHeight: str | int
+ * - maxWidth: str | int
+ * - children: ReactNode
+ */
 export function Grid({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const gap = resolveXml(props, 'gap', ctx);

@@ -10,7 +10,12 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders Astryx side navigation and the selected XML panel. */
+/**
+ * https://astryx.atmeta.com/components/SideNav?tab=properties
+ * - label: string
+ * - value: string
+ * - children: SideNavItem
+ */
 export function SideNav({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const items = nodes
@@ -59,7 +64,13 @@ export function SideNav({ props, nodes }: Props) {
     );
 }
 
-/** Marks one side navigation definition consumed by its nearest SideNav. */
+/**
+ * https://astryx.atmeta.com/components/SideNavItem?tab=properties
+ * - label: string
+ * - value: string
+ * - icon: string
+ * - children: ReactNode
+ */
 export function SideNavItem(): never {
     throw new Error('SideNavItem must be used inside SideNav');
 }

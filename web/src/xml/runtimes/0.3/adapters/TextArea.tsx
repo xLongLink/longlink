@@ -5,7 +5,30 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { requireXmlString, resolveXml } from '../core/props';
 
-/** Renders an accessible Astryx text area with optional Valtio binding. */
+/**
+ * https://astryx.atmeta.com/components/TextArea?tab=properties
+ * - label: string
+ * - htmlName: string
+ * - description: string
+ * - placeholder: string
+ * - labelTooltip: string
+ * - disabledMessage: string
+ * - value: string
+ * - rows: positive integer
+ * - maxLength: non-negative integer
+ * - size: 'sm' | 'md' | 'lg'
+ * - isLoading: bool
+ * - isDisabled: bool
+ * - isOptional: bool
+ * - isRequired: bool
+ * - hasAutoFocus: bool
+ * - hasSpellCheck: bool
+ * - isLabelHidden: bool
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ * - statusVariant: str
+ */
 export function TextArea({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));

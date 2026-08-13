@@ -50,7 +50,7 @@ VALID_FRAGMENTS = [
     (
         "heading",
         _adapter_schema("Heading.xsd"),
-        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading"><Text value="Dashboard" /></Heading>',
+        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',
     ),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon icon="info" size="sm" if="show" />'),
     ("link", _adapter_schema("Link.xsd"), '<Link to="/issues/123" label="Open issue" />'),

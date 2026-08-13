@@ -6,7 +6,26 @@ import { useBindableValue } from '../core/binding';
 import { ORIENTATIONS, SLIDER_VALUE_DISPLAYS } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders a single-value Astryx slider with numeric Valtio binding. */
+/**
+ * https://astryx.atmeta.com/components/Slider?tab=properties
+ * - label: string
+ * - description: string
+ * - disabledMessage: string
+ * - htmlName: string
+ * - value: int | float
+ * - min: int | float
+ * - max: int | float
+ * - step: int | float
+ * - orientation: str
+ * - valueDisplay: str
+ * - isDisabled: bool
+ * - isLabelHidden: bool
+ * - isOptional: bool
+ * - isRequired: bool
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => Number(value ?? 0));

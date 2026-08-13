@@ -79,14 +79,11 @@ function toNodes(input: unknown): ASTNode[] {
     // Treat empty parser output as no nodes.
     if (!input) return [];
 
-    // Ignore whitespace-only text nodes.
+    // Compile visible text into the existing Text adapter so XML elements can use natural text children.
     if (typeof input === 'string') {
-        // Reject visible literal text.
-        if (input.trim()) {
-            throw new Error('Literal text is not supported in XML; use value attributes or nested components instead');
-        }
+        const value = input.trim();
 
-        return [];
+        return value ? [{ name: 'Text', params: { value: compileAttribute(value) }, children: [] }] : [];
     }
 
     // Ignore unsupported primitive parser values.
