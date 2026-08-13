@@ -1,37 +1,18 @@
-import { createElement, type ReactElement } from 'react';
 import {
     Activity,
-    ArrowDown,
     ArrowRight,
-    ArrowUp,
-    ArrowUpDown,
     Banknote,
     Bell,
     Box,
     Boxes,
     Building2,
-    Calendar,
     Check,
-    CheckCheck,
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    CircleCheck,
-    CircleX,
     ClipboardList,
-    Clock,
-    Columns3,
     Container,
-    Copy,
     Cpu,
     Database,
     Download,
-    Ellipsis,
-    ExternalLink,
-    EyeOff,
-    Funnel,
     HardDrive,
-    Info,
     Layers,
     LayoutDashboard,
     LayoutGrid,
@@ -39,23 +20,16 @@ import {
     List as ListIcon,
     ListChecks,
     MapPin,
-    Menu,
-    Mic,
     Plus,
     Rocket,
     RotateCcw,
-    Search,
     Settings2,
     ShieldCheck,
     SlidersHorizontal,
-    Square,
     Timer,
-    TriangleAlert,
     Users,
-    Wrench,
     X,
     type LucideIcon,
-    type LucideProps,
 } from 'lucide-react';
 
 export const ICON_NAMES = [
@@ -128,50 +102,12 @@ const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
     x: X,
 };
 
-const LEGACY_ICON_COMPONENTS: Record<string, LucideIcon> = {
-    arrowDown: ArrowDown,
-    arrowsUpDown: ArrowUpDown,
-    arrowUp: ArrowUp,
-    calendar: Calendar,
-    checkDouble: CheckCheck,
-    chevronDown: ChevronDown,
-    chevronLeft: ChevronLeft,
-    chevronRight: ChevronRight,
-    'circle-check': CircleCheck,
-    'circle-x': CircleX,
-    clock: Clock,
-    close: X,
-    copy: Copy,
-    error: CircleX,
-    externalLink: ExternalLink,
-    eyeSlash: EyeOff,
-    funnel: Funnel,
-    info: Info,
-    menu: Menu,
-    microphone: Mic,
-    moreHorizontal: Ellipsis,
-    search: Search,
-    stop: Square,
-    success: CircleCheck,
-    'triangle-alert': TriangleAlert,
-    viewColumns: Columns3,
-    warning: TriangleAlert,
-    wrench: Wrench,
-};
-
 /** Returns whether a string is a supported icon slug. */
 export function isIconName(name: string): name is IconName {
     return ICON_NAME_SET.has(name);
 }
 
-/** Resolves supported and legacy icon names to Lucide components. */
+/** Resolves supported icon names to Lucide components. */
 export function getIconComponent(name: string): LucideIcon | undefined {
-    return (isIconName(name) ? ICON_COMPONENTS[name] : undefined) ?? LEGACY_ICON_COMPONENTS[name];
-}
-
-/** Renders a supported icon name with Lucide SVG properties. */
-export function renderIcon(name: string, props: LucideProps): ReactElement | null {
-    const IconComponent = getIconComponent(name);
-
-    return IconComponent ? createElement(IconComponent, props) : null;
+    return isIconName(name) ? ICON_COMPONENTS[name] : undefined;
 }

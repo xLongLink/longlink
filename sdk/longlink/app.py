@@ -21,6 +21,12 @@ from longlink.routes.health import router as health_router
 Environment = Literal["development", "testing", "production"]
 
 
+def render_page(content: str) -> Response:
+    """Return one static XML page."""
+
+    return Response(content, media_type="application/xml")
+
+
 @dataclass(slots=True)
 class RuntimeState:
     """Hold mutable SDK state for one FastAPI application."""
@@ -99,7 +105,7 @@ class LongLink:
         page_routes = [
             self.app.router.route_class(
                 definition.path,
-                partial(lambda content: Response(content, media_type="application/xml"), content),
+                partial(render_page, content),
                 methods=["GET"],
                 include_in_schema=False,
             )

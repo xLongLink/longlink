@@ -17,18 +17,18 @@ class PageResponse(BaseModel):
 
 
 @router.get("/pages.json", response_model=list[PageResponse], response_model_exclude_none=True)
-def get_pages(request: Request):
+def get_pages(request: Request) -> list[PageResponse]:
     """Return the registered SDK runtime pages."""
 
     # Page handlers are registered from the SDK pages directory during app startup.
     return [
-        {
-            "tab": page.tab,
-            "path": page.path.lstrip("/"),
-            "route": page.route,
-            "runtime_version": page.runtime_version,
-            "name": page.name,
-            "icon": page.icon,
-        }
+        PageResponse(
+            tab=page.tab,
+            path=page.path.lstrip("/"),
+            route=page.route,
+            runtime_version=page.runtime_version,
+            name=page.name,
+            icon=page.icon,
+        )
         for page in request.app.state.longlink.pages
     ]

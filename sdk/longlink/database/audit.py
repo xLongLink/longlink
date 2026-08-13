@@ -1,7 +1,6 @@
 from .base import AuditTable
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
-from longlink.context import _current_identity
 from longlink.utils.time import utcnow
 
 # ---------------------------------------------------------------------
@@ -16,6 +15,9 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
 
     Works for AsyncSession because AsyncSession uses an internal sync Session.
     """
+
+    # Resolve the request-local actor after database package initialization completes.
+    from longlink.context import _current_identity
 
     # Capture one timestamp and actor for every row changed in this flush.
     now = utcnow()

@@ -63,22 +63,19 @@ async def delete(claimed: Operation) -> str | None:
     organization = infrastructure.organization
     if organization.deleted_at is None:
         return "Active Organizations cannot be deleted by lifecycle cleanup"
-    compute_registry = infrastructure.compute
-    database_registry = infrastructure.database
-    storage_registry = infrastructure.storage
-    cluster = Kubernetes(compute_registry.kubeconfig)
+    cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
     db = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
+        infrastructure.database.host,
+        infrastructure.database.port,
+        infrastructure.database.username,
+        infrastructure.database.password,
+        infrastructure.database.sslmode,
     )
     object_storage = Exoscale(
-        storage_registry.endpoint_url,
-        storage_registry.access_key_id,
-        storage_registry.secret_access_key,
+        infrastructure.storage.endpoint_url,
+        infrastructure.storage.access_key_id,
+        infrastructure.storage.secret_access_key,
     )
 
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.

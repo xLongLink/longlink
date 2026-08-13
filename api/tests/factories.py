@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
+from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -62,11 +63,11 @@ async def fail_operation(operation_id: UUID) -> Operation | None:
         return operation
 
 
-async def fetch_operations() -> list[Operation]:
+async def fetch_operations() -> Sequence[Operation]:
     """Fetch queued Operations through an explicit test session."""
 
     async with session_scope() as session:
-        return list(await operations.fetch(session))
+        return await operations.fetch(session)
 
 
 async def create_compute(name: str = "Local compute") -> ComputeRegistry:

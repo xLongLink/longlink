@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlmodel import col
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
@@ -41,7 +41,7 @@ async def purge(session: AsyncSession, application_id: UUID) -> None:
         return
     if application.deleted_at is None:
         raise RuntimeError("Active applications cannot be purged")
-    await session.execute(delete(Application).where(Application.id == application_id))
+    await session.delete(application)
 
 
 async def get(session: AsyncSession, application_id: UUID, include_deleted: bool = False) -> Application | None:

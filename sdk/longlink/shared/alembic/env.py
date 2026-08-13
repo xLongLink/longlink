@@ -32,9 +32,7 @@ def do_run_migrations(connection: Connection) -> None:
 
     # Alembic creates its version table before revisions, so create the schema first.
     connection.execute(text("CREATE SCHEMA IF NOT EXISTS shared"))
-    connection.commit()
     connection.execute(text("SET search_path TO shared"))
-    connection.commit()
     context.configure(connection=connection, version_table_schema="shared")
 
     # Keep Alembic in charge of the migration transaction.

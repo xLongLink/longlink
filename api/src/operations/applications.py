@@ -97,26 +97,23 @@ async def delete(claimed: Operation) -> str | None:
     if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization
-    registry = infrastructure.compute
-    database_registry = infrastructure.database
-    storage_registry = infrastructure.storage
-    cluster = Kubernetes(registry.kubeconfig)
+    cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
     # Remove Application Kubernetes resources before revoking provider credentials.
     await cluster.applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
+        infrastructure.database.host,
+        infrastructure.database.port,
+        infrastructure.database.username,
+        infrastructure.database.password,
+        infrastructure.database.sslmode,
     )
     object_storage = Exoscale(
-        storage_registry.endpoint_url,
-        storage_registry.access_key_id,
-        storage_registry.secret_access_key,
+        infrastructure.storage.endpoint_url,
+        infrastructure.storage.access_key_id,
+        infrastructure.storage.secret_access_key,
     )
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)

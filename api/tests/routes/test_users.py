@@ -79,6 +79,8 @@ async def test_list_users_returns_admin_user_summaries(
     assert response.status_code == 200
 
     assert {item["id"] for item in response.json()} == {str(user.id) for user in users}
+
+
 async def test_patch_me_updates_authenticated_user_profile(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -86,7 +88,6 @@ async def test_patch_me_updates_authenticated_user_profile(
     """Update the authenticated user's mutable profile fields."""
 
     # Arrange
-    user = users[0]
     client = clients[0]
 
     # Act
