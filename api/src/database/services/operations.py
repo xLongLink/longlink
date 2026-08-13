@@ -104,8 +104,8 @@ async def claim(session: AsyncSession) -> Operation | None:
         .where(Operation.finished_at.is_(None))
         .order_by(
             case(
-                (Operation.lease_expires_at > now, 0),
-                (Operation.lease_expires_at.is_not(None), 1),
+                (col(Operation.lease_expires_at).is_not(None) & (col(Operation.lease_expires_at) > now), 0),
+                (col(Operation.lease_expires_at).is_not(None), 1),
                 else_=2,
             ),
             Operation.created_at.asc(),
@@ -145,7 +145,8 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
         update(Operation)
         .where(
             Operation.id == operation_id,
-            Operation.lease_expires_at > now,
+            col(Operation.lease_expires_at).is_not(None),
+            col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )
         .values(finished_at=now, lease_expires_at=None)

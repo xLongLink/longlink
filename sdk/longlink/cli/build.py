@@ -198,10 +198,7 @@ def render_image_labels(description: str | None, environments: Sequence[Mapping[
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    label_items = [("org.opencontainers.image.description", description)]
-
-    # Encode the available core metadata as Dockerfile label statements.
-    rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
+    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={encode_label_value(description)}"]
 
     # Include environment requirements only when declared.
     if environments:

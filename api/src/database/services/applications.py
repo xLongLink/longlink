@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import delete, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -131,8 +132,8 @@ async def release(
     # Lock the Organization and Application before changing its desired release.
     result = await session.execute(
         select(Organization, Application)
-        .join(Application, Application.organization_id == Organization.id)
-        .where(Application.id == application_id)
+        .join(Application, col(Application.organization_id) == col(Organization.id))
+        .where(col(Application.id) == application_id)
         .with_for_update()
     )
     row = result.one_or_none()
@@ -200,21 +201,17 @@ async def mark_deployed(session: AsyncSession, application_id: UUID, image: str)
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
     """Tombstone a LongLink Application."""
 
-    # Soft-delete the application state.
-    # Resolve parents before taking locks in aggregate order.
-    current = await session.get(Application, application_id)
-    if current is None:
-        return None
-
     # Lock the Organization and Application state before tombstoning.
-    organization_result = await session.scalars(
-        select(Organization).where(Organization.id == current.organization_id).with_for_update()
+    result = await session.execute(
+        select(Organization, Application)
+        .join(Application, col(Application.organization_id) == col(Organization.id))
+        .where(col(Application.id) == application_id)
+        .with_for_update()
     )
-    organization = organization_result.one_or_none()
-    application_result = await session.scalars(select(Application).where(Application.id == application_id).with_for_update())
-    application = application_result.one_or_none()
-    if organization is None or application is None:
+    row = result.one_or_none()
+    if row is None:
         return None
+    organization, application = row
 
     # Record the tombstone once; repeated requests only ensure cleanup remains queued.
     if application.deleted_at is None:

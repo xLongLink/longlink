@@ -27,8 +27,7 @@ async def data(request: Request) -> AsyncIterator[Context]:
     async with session() as database:
         user_id = request.state.longlink_identity
         user = await database.get(Audit, user_id) if user_id is not None else None
-        context = Context(user=user, storage=request.app.state.longlink.storage, database=database)
-        yield context
+        yield Context(user=user, storage=request.app.state.longlink.storage, database=database)
 
 
 def install_context_middleware(app: FastAPI) -> None:
