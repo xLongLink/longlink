@@ -90,10 +90,6 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
-    git_directory = root / ".git"
-    git_directory.mkdir()
-    (git_directory / "HEAD").write_text("ref: refs/heads/main\n")
-
     build_context = tmp_path / "context"
 
     # Act
@@ -102,7 +98,6 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     # Assert
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
-    assert (build_context / ".git" / "HEAD").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n"
 
 

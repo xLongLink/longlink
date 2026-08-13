@@ -19,7 +19,7 @@
     />
     <Query id="items" path="/api/items" />
 
-    <Stack direction="vertical" justify="start" align="stretch" wrap="nowrap" gap="6" padding="4" paddingInline="2" paddingBlock="3" width="full" maxWidth="full" minHeight="0">
+    <Stack gap="6" padding="4" paddingInline="2" paddingBlock="3" width="full" maxWidth="full" minHeight="0">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
             <Stack gap="1">
                 <Heading id="xml-test" level="1" type="display-1" color="primary" display="block" justify="start" textWrap="balance" maxLines="2" wordBreak="break-word" hasCapsize="true" hasStrikethrough="false" hasTruncateTooltip="above" accessibilityLevel="1">XML component test page</Heading>
@@ -34,8 +34,8 @@
                 <Stack direction="horizontal" align="center" wrap="wrap" gap="2">
                     <Badge id="status" label="Active" variant="success"><Icon slot="icon" icon="success" size="sm" /></Badge>
                     <Icon icon="info" size="md" color="accent" label="Information" />
-                    <Link href="https://longlink.dev" label="External link" color="accent" hasUnderline="true" isDisabled="false" isExternalLink="true" />
-                    <Link to="/test" label="Internal link"><Text value="Internal link child" /></Link>
+                    <Link href="https://longlink.dev" color="accent" hasUnderline="true" isExternalLink="true"><Text value="External link" /></Link>
+                    <Link to="/test"><Text value="Internal link" /></Link>
                     <Button label="Example button" type="button" size="md" variant="secondary" tooltip="Button tooltip" isLoading="false" elevation="none" isDisabled="false" isIconOnly="false" isInterruptible="true"><Icon icon="check" /></Button>
                 </Stack>
                 <Divider label="Layout" variant="strong" isFullBleed="false" orientation="horizontal" />
@@ -50,7 +50,7 @@
         <Card padding="4">
             <Stack gap="3">
                 <Heading level="2">Form controls</Heading>
-                <FormLayout direction="vertical">
+                <FormLayout>
                     <TextInput label="Text input" value="$test.text" type="text" size="md" width="full" hasClear="true" htmlName="text" isLoading="false" isDisabled="false" isOptional="false" isRequired="true" description="Text input description" placeholder="Enter text" hasAutoFocus="false" labelTooltip="Text input help" isLabelHidden="false" status="success" statusMessage="Valid value" statusVariant="attached" disabledMessage="Disabled text input" />
                     <TextInput label="Password input" value="$test.password" type="password" />
                     <TextInput label="Email input" value="$test.email" type="email" />
@@ -83,10 +83,10 @@
                     <TableColumn key="name" field="name" header="Name" align="start" />
                     <TableColumn key="code" field="details.code" header="Code" align="end"><Text value="${`${index}: ${value}`}" /></TableColumn>
                 </Table>
-                <Table data="$items" density="balanced" dividers="rows" verticalAlign="middle" textOverflow="wrap" emptyLabel="No API items.">
-                    <TableColumn key="name" header="API item" />
+                <Table data="$items" emptyLabel="No API items.">
+                    <TableColumn key="name" />
                 </Table>
-                <TabList value="$test.tab" label="Test tabs" size="md" layout="fill" hasDivider="true">
+                <TabList value="$test.tab" label="Test tabs" layout="fill" hasDivider="true">
                     <Tab value="details" label="Details"><Text value="The selected tab panel." /></Tab>
                     <Tab value="other" label="Other"><Text value="Another tab panel." /></Tab>
                 </TabList>
@@ -97,13 +97,11 @@
             </Stack>
         </Card>
 
-        <Dialog title="Test dialog" isOpen="false" triggerLabel="Open test dialog" purpose="info" variant="standard" maxHeight="full" padding="4" width="lg" subtitle="Dialog subtitle">
-            <Stack gap="3">
-                <Text value="Dialog content." />
-                <Action action="/api/items" method="POST" json="${{ name: test.text, price: Number(test.amount) }}" invalidate="${['items']}" closeDialog="true">
-                    <Button label="Disabled action" variant="primary" isDisabled="true" />
-                </Action>
-            </Stack>
+        <Dialog title="Test dialog" isOpen="false" triggerLabel="Open test dialog" maxHeight="full" padding="4" width="lg" subtitle="Dialog subtitle">
+            <Text value="Dialog content." />
+            <Action action="/api/items" method="POST" json="${{ name: test.text, price: Number(test.amount) }}" invalidate="${['items']}" closeDialog="true">
+                <Button label="Disabled action" variant="primary" isDisabled="true" />
+            </Action>
         </Dialog>
     </Stack>
 </longlink>

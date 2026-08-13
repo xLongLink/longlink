@@ -3,7 +3,6 @@ from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context, data
 from src.schemas.items import (
-    ItemRead,
     ItemCreate,
     ItemAttachmentRead,
 )
@@ -15,21 +14,21 @@ router = APIRouter(prefix="/api")
 ATTACHMENTS_DIRECTORY = "item-attachments"
 
 
-@router.get("/items", response_model=list[ItemRead])
+@router.get("/items", response_model=list[Item])
 async def items_get_endpoint() -> list[Item]:
     """Return catalog items."""
 
     return await items.list_items()
 
 
-@router.post("/items", response_model=ItemRead)
+@router.post("/items", response_model=Item)
 async def items_post_endpoint(payload: ItemCreate) -> Item:
     """Create a catalog item."""
 
     return await items.create_item(name=payload.name, price=payload.price)
 
 
-@router.get("/items/{item_id}", response_model=ItemRead)
+@router.get("/items/{item_id}", response_model=Item)
 async def item_get_endpoint(item_id: int) -> Item:
     """Return one catalog item for a dynamic XML detail page."""
 
