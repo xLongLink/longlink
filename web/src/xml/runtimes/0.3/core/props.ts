@@ -42,30 +42,15 @@ export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar
     const numberValue = Number(value);
 
     if (!Number.isNaN(numberValue)) return numberValue;
-    if (value === true || value === 'true') return true;
-    if (value === false || value === 'false') return false;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
 
     return String(value);
 }
 
-/** Returns whether a scalar is one of an adapter's supported XML values. */
-export function isXmlEnum<const T extends string | number>(value: XmlScalar, values: readonly T[]): value is T {
-    return (typeof value === 'string' || typeof value === 'number') && values.includes(value as T);
-}
-
-/** Returns whether an optional value is absent or one of an adapter's supported values. */
-export function isOptionalXmlValue<T>(value: unknown, values: readonly T[]): value is T | undefined {
-    return value == null || values.some((candidate) => candidate === value);
-}
-
-/** Returns whether a scalar is a string. */
-export function isXmlString(value: XmlScalar): value is string {
-    return typeof value === 'string';
-}
-
-/** Returns whether a scalar is a boolean. */
-export function isXmlBoolean(value: XmlScalar): value is boolean {
-    return typeof value === 'boolean';
+/** Returns whether a value is one of an adapter's supported XML values. */
+export function isXmlEnum<const T extends XmlScalar>(value: unknown, values: readonly T[]): value is T {
+    return values.includes(value as T);
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */

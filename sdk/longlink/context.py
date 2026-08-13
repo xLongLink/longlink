@@ -8,15 +8,7 @@ from longlink.database import Audit, session
 from starlette.responses import Response
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-
-@dataclass(frozen=True, slots=True)
-class _Identity:
-    """Hold the trusted Platform identity for one request."""
-
-    user_id: UUID | None
-
-
-_current_identity: ContextVar[_Identity] = ContextVar("current_identity", default=_Identity(user_id=None))
+_current_identity: ContextVar[UUID | None] = ContextVar("current_identity", default=None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,11 +25,9 @@ async def data(request: Request) -> AsyncIterator[Context]:
 
     # Open one database session and resolve the authenticated shared user for this request.
     async with session() as database:
-        identity = request.state.longlink_identity
-        user = await database.get(Audit, identity.user_id) if identity.user_id is not None else None
-        context = Context(user=user, storage=request.app.state.longlink.storage, database=database)
-        request.state.ctx = context
-        yield context
+        user_id = request.state.longlink_identity
+        user = await database.get(Audit, user_id) if user_id is not None else None
+        yield Context(user=user, storage=request.app.state.longlink.storage, database=database)
 
 
 def install_context_middleware(app: FastAPI) -> None:
@@ -54,10 +44,9 @@ def install_context_middleware(app: FastAPI) -> None:
         except ValueError:
             user_id = None
 
-        # Keep one identity object available to both FastAPI and database audit hooks.
-        identity = _Identity(user_id=user_id)
-        request.state.longlink_identity = identity
-        token = _current_identity.set(identity)
+        # Keep the request identity available to both FastAPI and database audit hooks.
+        request.state.longlink_identity = user_id
+        token = _current_identity.set(user_id)
         try:
             return await call_next(request)
         finally:

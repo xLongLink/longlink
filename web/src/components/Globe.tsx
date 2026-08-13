@@ -17,7 +17,7 @@ const landPath =
     )(land) ?? '';
 
 /** Renders the projected world landmass inside the landing-page globe. */
-export function HeroGlobe() {
+export function Globe() {
     return (
         <svg
             aria-hidden="true"

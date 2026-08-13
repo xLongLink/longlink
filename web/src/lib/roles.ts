@@ -1,6 +1,8 @@
+import type { OrganizationRoles } from '@/lib/generated/platform-api-v1/types.gen';
+
 export const ROLE_NAMES = ['read', 'write', 'maintain', 'admin', 'owner'] as const;
 
-export type Role = (typeof ROLE_NAMES)[number];
+export type Role = OrganizationRoles;
 
 const ROLE_RANKS = {
     read: 1,

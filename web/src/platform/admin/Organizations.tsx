@@ -13,11 +13,11 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
 import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -34,10 +34,10 @@ export default function AdminOrganizations() {
         },
     });
     const {
-        items: organizations,
+        data: organizations = [],
         error,
         isLoading,
-    } = useCollectionQuery<OrganizationSummary>(platformApiPath('/organizations'), {
+    } = useApiQuery<OrganizationSummary[]>(platformApiPath('/organizations'), {
         parse: (value) => zOrganizationSummary.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(organizations);

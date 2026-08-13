@@ -25,7 +25,7 @@ export function useApiQuery<TQueryFnData>(
         queryFn: async ({ signal }) => {
             // Normalize known API errors before React Query stores them.
             try {
-                return await fetchApiJson<TQueryFnData>(path!, { signal }, parse);
+                return await fetchApiJson(path!, { signal }, parse);
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {

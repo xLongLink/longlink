@@ -11,7 +11,7 @@
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="TabType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="to" type="xsd:string" />

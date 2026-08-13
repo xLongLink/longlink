@@ -3,7 +3,6 @@ from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context, data
 from src.schemas.items import (
-    ItemRead,
     ItemCreate,
     ItemAttachmentRead,
 )
@@ -13,25 +12,24 @@ from src.database.models.items import Item
 router = APIRouter(prefix="/api")
 
 ATTACHMENTS_DIRECTORY = "item-attachments"
-UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
-@router.get("/items", response_model=list[ItemRead])
-async def items_get_endpoint():
+@router.get("/items", response_model=list[Item])
+async def items_get_endpoint() -> list[Item]:
     """Return catalog items."""
 
     return await items.list_items()
 
 
-@router.post("/items", response_model=ItemRead)
-async def items_post_endpoint(payload: ItemCreate):
+@router.post("/items", response_model=Item)
+async def items_post_endpoint(payload: ItemCreate) -> Item:
     """Create a catalog item."""
 
     return await items.create_item(name=payload.name, price=payload.price)
 
 
-@router.get("/items/{item_id}", response_model=ItemRead)
-async def item_get_endpoint(item_id: int):
+@router.get("/items/{item_id}", response_model=Item)
+async def item_get_endpoint(item_id: int) -> Item:
     """Return one catalog item for a dynamic XML detail page."""
 
     return await _require_item(item_id)
@@ -77,7 +75,7 @@ async def item_attachments_post_endpoint(item_id: int, file: UploadFile, ctx: Co
 
         with ctx.storage.open(storage_path, "wb") as stored_file:
             # Stream the upload through LongLink storage in every runtime environment.
-            while chunk := await file.read(UPLOAD_CHUNK_SIZE):
+            while chunk := await file.read(1024 * 1024):
                 stored_file.write(chunk)
     finally:
         await file.close()

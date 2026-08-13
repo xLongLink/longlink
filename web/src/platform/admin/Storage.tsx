@@ -11,12 +11,12 @@ import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/ty
 import { S3 } from '@/svg/S3';
 import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
 import { storagesQueryKey } from '@/lib/query-keys';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -33,10 +33,10 @@ export default function AdminStorage() {
         },
     });
     const {
-        items: storages,
+        data: storages = [],
         error,
         isLoading,
-    } = useCollectionQuery<StorageRegistryResponse>(platformApiPath('/storages'), {
+    } = useApiQuery<StorageRegistryResponse[]>(platformApiPath('/storages'), {
         parse: (value) => zStorageRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(storages);

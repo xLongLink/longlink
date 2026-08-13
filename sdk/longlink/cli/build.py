@@ -12,8 +12,6 @@ from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 
-SAFE_GIT_DIRECTORY_NAMES = ("objects", "refs")
-SAFE_GIT_FILE_NAMES = ("HEAD", "packed-refs", "shallow")
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 
@@ -196,14 +194,11 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_image_labels(metadata: Mapping[str, object], environments: Sequence[Mapping[str, object]]) -> str:
+def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    label_items = [("org.opencontainers.image.description", metadata.get("description"))]
-
-    # Encode the available core metadata as Dockerfile label statements.
-    rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
+    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={encode_label_value(description)}"]
 
     # Include environment requirements only when declared.
     if environments:
@@ -311,7 +306,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     root = (base_path or Path.cwd()).resolve()
     pyproject_data = read_pyproject(root)
     source_root, workdir = resolve_docker_paths(root, pyproject_data)
-    repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
     env_spec = read_env_spec(root, pyproject_data)
     project_data = pyproject_data.get("project")
     if not isinstance(project_data, dict):
@@ -335,7 +329,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     # Resolve the image version and render its metadata labels.
     version = tag or project_version
     labels = render_image_labels(
-        {"name": project_name, "version": project_version, "description": project_description},
+        project_description,
         env_spec,
     )
 
@@ -360,36 +354,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
 
     # Apply the repository's canonical ignore rules when Docker uploads the context.
     write_dockerignore(build_context, root)
-
-    # Copy safe Git metadata when the project is inside a repository.
-    if repo_root is not None:
-
-        # Preserve only the VCS metadata needed for version resolution, not local Git config or hooks.
-        try:
-            git_target = build_context / repo_root.relative_to(source_root) / ".git"
-        except ValueError:
-            git_target = build_context / ".git"
-
-        # Copy safe metadata from real Git directories.
-        git_source = repo_root / ".git"
-        if git_source.is_dir():
-            git_target.mkdir(parents=True, exist_ok=True)
-
-            # Copy allowed Git files.
-            for file_name in SAFE_GIT_FILE_NAMES:
-
-                # Skip Git files that are absent.
-                source_file = git_source / file_name
-                if source_file.is_file():
-                    shutil.copy2(source_file, git_target / file_name)
-
-            # Copy allowed Git directories.
-            for directory_name in SAFE_GIT_DIRECTORY_NAMES:
-
-                # Skip Git directories that are absent.
-                source_directory = git_source / directory_name
-                if source_directory.is_dir():
-                    shutil.copytree(source_directory, git_target / directory_name, dirs_exist_ok=True)
 
     # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"

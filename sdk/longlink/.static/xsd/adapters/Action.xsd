@@ -3,7 +3,7 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="ActionType">
     <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
     </xsd:sequence>
     <xsd:attribute name="action" type="xsd:string" use="required" />
     <xsd:attribute name="form" type="xsd:string" />

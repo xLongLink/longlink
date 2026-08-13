@@ -1,4 +1,4 @@
-from longlink.database import urls
+from longlink.database import urls, registry
 from sqlalchemy.engine import URL
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -22,7 +22,7 @@ async def sync(database_url: str | URL, rows: list[Audit]) -> None:
     try:
         async with engine.begin() as conn:
             # Build one PostgreSQL upsert for the SDK-owned shared audit table.
-            statement = postgres_insert(getattr(Audit, "__table__"))
+            statement = postgres_insert(registry.database_metadata.tables[Audit.__tablename__])
             # Preserve creation time while updating the current profile, role, and activation state.
             await conn.execute(
                 statement.on_conflict_do_update(

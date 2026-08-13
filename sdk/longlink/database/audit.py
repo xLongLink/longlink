@@ -19,7 +19,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
 
     # Capture one timestamp and actor for every row changed in this flush.
     now = utcnow()
-    user_id = _current_identity.get().user_id
+    user_id = _current_identity.get()
 
     # Apply audit fields to newly tracked rows.
     for obj in session.new:

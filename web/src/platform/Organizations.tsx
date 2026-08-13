@@ -56,10 +56,10 @@ export default function Organizations() {
         <PlatformLayout
             brandOnly
             brandHref="/"
-            tabs={{
-                Organizations: { href: '/organizations', icon: Building2 },
-                Settings: { href: '/settings', icon: Settings2 },
-            }}
+            tabs={[
+                { href: '/organizations', icon: Building2, label: 'Organizations' },
+                { href: '/settings', icon: Settings2, label: 'Settings' },
+            ]}
         >
             <PageContainer gap={8}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">

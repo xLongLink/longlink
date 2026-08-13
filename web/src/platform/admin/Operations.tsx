@@ -5,10 +5,10 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { platformApiPath } from '@/lib/platform-api';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin operations page. */
@@ -68,10 +68,10 @@ export default function AdminOperations() {
         },
     ];
     const {
-        items: operations,
+        data: operations = [],
         error,
         isLoading,
-    } = useCollectionQuery<OperationResponse>(platformApiPath('/operations'), {
+    } = useApiQuery<OperationResponse[]>(platformApiPath('/operations'), {
         refetchInterval: 5000,
         parse: (value) => zOperationResponse.array().parse(value),
     });

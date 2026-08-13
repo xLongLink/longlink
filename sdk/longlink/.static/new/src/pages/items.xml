@@ -34,7 +34,7 @@
     <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
         <TableColumn key="item" header="Item">
             <Stack gap="1">
-                <Link to="/items/${row.id}" label="$row.name">
+                <Link to="/items/${row.id}">
                     <Text value="$row.name" />
                 </Link>
                 <Text color="secondary" value="${`CHF ${row.price}`}" hasTabularNumbers="true" />

@@ -7,7 +7,7 @@ import { ACTION_METHODS } from '../constants';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
 import { resolveRequestUrl } from '../core/url';
-import { resolveXml, resolveXmlValue } from '../core/props';
+import { isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 
 export const ActionHandlerContext = createContext<(() => Promise<void>) | null>(null);
 
@@ -72,7 +72,7 @@ export async function executeAction(
     const normalizedMethod = method.trim().toUpperCase();
 
     // Reject methods outside the supported action set.
-    if (!ACTION_METHODS.includes(normalizedMethod as (typeof ACTION_METHODS)[number])) {
+    if (!isXmlEnum(normalizedMethod, ACTION_METHODS)) {
         toast({ body: `Unsupported action method ${normalizedMethod}`, type: 'error' });
         return;
     }

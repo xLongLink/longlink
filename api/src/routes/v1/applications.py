@@ -89,7 +89,7 @@ async def release_application(
     access = await organizations.application_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    _, organization, role = access
+    application, organization, role = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
@@ -97,9 +97,6 @@ async def release_application(
     metadata = await images.metadata(payload.image)
     if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
-    application = await applications.get(session, application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
     missing_envs = images.missing_envs(metadata, application.secrets)
     if missing_envs:
         raise HTTPException(

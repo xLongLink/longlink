@@ -10,6 +10,7 @@
     <xsd:attribute name="description" type="xsd:string" />
     <xsd:attribute name="htmlName" type="xsd:string" />
     <xsd:attribute name="width" type="xsd:string" />
+    <xsd:attribute name="labelTooltip" type="xsd:string" />
     <xsd:attribute name="disabledMessage" type="xsd:string" />
     <xsd:attribute name="status" type="InputStatusType" />
     <xsd:attribute name="statusMessage" type="xsd:string" />

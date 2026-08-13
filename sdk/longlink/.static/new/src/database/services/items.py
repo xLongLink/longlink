@@ -16,11 +16,9 @@ async def list_items() -> list[Item]:
 async def get_item(item_id: int) -> Item | None:
     """Return one catalog item."""
 
-    # Query the item by id.
+    # Retrieve the item by its primary key.
     async with database.session() as session:
-        statement = select(Item).where(Item.id == item_id)
-        result = await session.exec(statement)
-        return result.first()
+        return await session.get(Item, item_id)
 
 
 async def create_item(name: str, price: float) -> Item:

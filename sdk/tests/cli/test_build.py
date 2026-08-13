@@ -90,19 +90,6 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
-    (root / ".env").write_text("SECRET=one\n")
-    (root / ".env.local").write_text("SECRET=two\n")
-    (root / "dev.db").write_text("sqlite\n")
-    (root / "data.sqlite3-wal").write_text("wal\n")
-    git_directory = root / ".git"
-    git_directory.mkdir()
-    (git_directory / "HEAD").write_text("ref: refs/heads/main\n")
-
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
-        directory = root / directory_name
-        directory.mkdir()
-        (directory / "artifact").write_text("generated\n")
-
     build_context = tmp_path / "context"
 
     # Act
@@ -111,7 +98,6 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     # Assert
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
-    assert (build_context / ".git" / "HEAD").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n"
 
 
@@ -150,9 +136,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
         """Create fake Docker artifacts for the build command."""
 
         assert tag == "dev"
-        dockerfile_path = build_context / "Dockerfile"
-        dockerfile_path.write_text("FROM scratch\n", encoding="utf-8")
-        return dockerfile_path, "dev", "Demo App"
+        return build_context / "Dockerfile", "dev", "Demo App"
 
 
     def fake_run(command: list[str], check: bool) -> None:
@@ -189,14 +173,10 @@ def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
     """Render OCI metadata and LongLink environment definitions as Docker labels."""
 
     # Arrange
-    metadata = {
-        "name": "demo",
-        "description": "Demo app",
-    }
     env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
 
     # Act
-    labels = build.render_image_labels(metadata, env_spec)
+    labels = build.render_image_labels("Demo app", env_spec)
 
     # Assert
     assert 'LABEL org.opencontainers.image.description="Demo app"' in labels

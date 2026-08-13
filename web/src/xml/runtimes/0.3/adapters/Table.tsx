@@ -4,12 +4,18 @@ import type { ASTNode, Props, Scope } from '../types';
 import { renderNode } from '../core/node';
 import { readSafeProperty } from '../expressions';
 import { useXmlRuntime, XmlContext } from '../core/context';
-import { ALIGNS, TABLE_DENSITIES, TABLE_DIVIDERS, TABLE_TEXT_OVERFLOWS, TABLE_VERTICAL_ALIGNS } from '../constants';
-import { readXmlProp, isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
 type TableRow = Record<string, unknown>;
 
-/** Renders XML row data through the Astryx data-driven Table API. */
+/**
+ * checked: 2026-08-13
+ * https://astryx.atmeta.com/components/Table?tab=properties
+ * - data: object[]
+ * - idKey: string
+ * - emptyLabel: string
+ * - children: TableColumn
+ */
 export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;
@@ -32,38 +38,27 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    const densityValue = resolveXml(props, 'density', ctx);
-    const dividersValue = resolveXml(props, 'dividers', ctx);
-    const verticalAlignValue = resolveXml(props, 'verticalAlign', ctx);
-    const textOverflowValue = resolveXml(props, 'textOverflow', ctx);
-    const hasHover = resolveXml(props, 'hasHover', ctx);
     const idKey = resolveXml(props, 'idKey', ctx);
-    const isStriped = resolveXml(props, 'isStriped', ctx);
-    const density = isXmlEnum(densityValue, TABLE_DENSITIES) ? densityValue : 'balanced';
-    const dividers = isXmlEnum(dividersValue, TABLE_DIVIDERS) ? dividersValue : 'rows';
-    const verticalAlign = isXmlEnum(verticalAlignValue, TABLE_VERTICAL_ALIGNS) ? verticalAlignValue : 'middle';
-    const textOverflow = isXmlEnum(textOverflowValue, TABLE_TEXT_OVERFLOWS) ? textOverflowValue : 'wrap';
     return (
         <AstryxTable
             columns={columns}
             data={rows}
-            density={density}
-            dividers={dividers}
             emptyState={
                 <Text type="supporting">
                     {props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table')}
                 </Text>
             }
-            hasHover={typeof hasHover === 'boolean' ? hasHover : undefined}
             idKey={typeof idKey === 'string' ? idKey : undefined}
-            isStriped={typeof isStriped === 'boolean' ? isStriped : undefined}
-            textOverflow={textOverflow}
-            verticalAlign={verticalAlign}
         />
     );
 }
 
-/** Marks a data column consumed by its nearest Table. */
+/**
+ * - key: string
+ * - field: string
+ * - header: string
+ * - children: ReactNode
+ */
 export function TableColumn(): never {
     throw new Error('TableColumn must be used inside Table');
 }
@@ -93,13 +88,10 @@ function buildColumn(
     }
     const fieldParts = field.split('.');
     const headerValue = resolveXml(props, 'header', ctx);
-    const alignValue = resolveXml(props, 'align', ctx);
     const header = typeof headerValue === 'string' ? headerValue : key.value;
-    const align = isXmlEnum(alignValue, ALIGNS) ? alignValue : 'start';
     const cellNodes = node.children;
 
     return {
-        align,
         header,
         key: key.value,
         renderCell: (row) => {

@@ -87,7 +87,7 @@ export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl:
 
                     const url = resolveRequestUrl(baseUrl, String(path));
 
-                    scope.bindings[id] = await fetchApiJson<unknown>(url);
+                    scope.bindings[id] = await fetchApiJson(url);
                 };
                 await services.setups[id]();
             }

@@ -3,6 +3,7 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="AvatarType">
     <xsd:attribute name="src" type="xsd:string" />
+    <xsd:attribute name="fallbackSrc" type="xsd:string" />
     <xsd:attribute name="name" type="xsd:string" />
     <xsd:attribute name="alt" type="xsd:string" />
     <xsd:attribute name="size" type="AvatarSizeType" default="md" />

@@ -29,7 +29,7 @@ longlink/
 ## Python Guidelines
 
 - Avoid renaming imports.
-- Channel YAGNI principle.
+- Channel YAGNI and KISS principle.
 - Inline single use constants.
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.

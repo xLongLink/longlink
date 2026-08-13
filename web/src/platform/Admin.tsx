@@ -8,11 +8,7 @@ import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 export default function Admin() {
     return (
         <Auth requiresAdministrator>
-            <PlatformLayout
-                tabs={Object.fromEntries(
-                    ADMIN_NAVIGATION.map((item) => [item.label, { href: item.href, icon: item.icon }])
-                )}
-            >
+            <PlatformLayout tabs={[...ADMIN_NAVIGATION]}>
                 <PageContainer gap={8}>
                     <Outlet />
                 </PageContainer>

@@ -39,8 +39,8 @@ const organizationAvatarSchema = z.union([
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
 
-/** Renders a resource usage table in common Organization settings framing. */
-function ResourceSettings({
+/** Renders the organization storage usage table. */
+function StorageSettings({
     columns,
     description,
     emptyState,
@@ -48,8 +48,6 @@ function ResourceSettings({
     isOrganizationLoading,
     organizationError,
     organizationId,
-    parse,
-    resource,
     title,
 }: {
     columns: TableColumn<OrganizationStorageUsageResponse>[];
@@ -59,14 +57,12 @@ function ResourceSettings({
     isOrganizationLoading: boolean;
     organizationError: Error | null;
     organizationId: string;
-    parse: (value: unknown) => OrganizationStorageUsageResponse | null;
-    resource: 'storage';
     title: string;
 }) {
     const { data, error, isLoading } = useApiQuery<OrganizationStorageUsageResponse | null>(
-        organizationId ? platformApiPath(`/organizations/${organizationId}/${resource}`) : null,
+        organizationId ? platformApiPath(`/organizations/${organizationId}/storage`) : null,
         {
-            parse,
+            parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
             retry: false,
         }
     );
@@ -332,7 +328,7 @@ export default function Settings({
                 ) : null}
 
                 {section === 'storage' ? (
-                    <ResourceSettings
+                    <StorageSettings
                         columns={storageColumns}
                         description="Review storage usage for this organization."
                         emptyState={<EmptyState title="No storage resources found." isCompact />}
@@ -340,8 +336,6 @@ export default function Settings({
                         isOrganizationLoading={isLoading}
                         organizationError={error}
                         organizationId={organizationId}
-                        parse={(value) => zOrganizationStorageUsageResponse.nullable().parse(value)}
-                        resource="storage"
                         title="Storage"
                     />
                 ) : null}

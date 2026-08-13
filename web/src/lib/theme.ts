@@ -1,8 +1,9 @@
 import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
+import type { Accent, Theme } from '@/lib/generated/platform-api-v1/types.gen';
 import { stoneTheme } from '@/theme';
 
 /** Theme mode values supported by the API and UI. */
-export const THEME_VALUES = ['light', 'dark', 'system'] as const;
+export const THEME_VALUES = ['light', 'dark', 'system'] as const satisfies readonly Theme[];
 
 /** Accent values supported by the API and UI. */
 export const ACCENT_VALUES = [
@@ -28,7 +29,7 @@ export const ACCENT_VALUES = [
     'fuchsia',
     'pink',
     'rose',
-] as const;
+] as const satisfies readonly Accent[];
 
 /** Radius multiplier bounds supported by the API and UI. */
 export const MIN_RADIUS = 0;
@@ -36,9 +37,7 @@ export const MAX_RADIUS = 1.5;
 export const DEFAULT_RADIUS = 1;
 export const THEME_PREFERENCES_KEY = 'longlink-theme';
 
-export type Theme = (typeof THEME_VALUES)[number];
-
-export type Accent = (typeof ACCENT_VALUES)[number];
+export type { Accent, Theme };
 
 const THEME_LABELS: Record<Theme, string> = {
     light: 'Light',

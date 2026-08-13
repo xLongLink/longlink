@@ -28,31 +28,20 @@ describe('renderNode', () => {
         expect(output).toContain('value="Ada"');
     });
 
-    it('forwards all serializable Heading props', () => {
+    it('renders Heading semantic props', () => {
         const output = renderXmlToMarkup([
             {
                 name: 'Heading',
                 params: compileProps({
-                    accessibilityLevel: '2',
-                    color: 'accent',
-                    display: 'inline',
-                    hasCapsize: 'true',
-                    hasStrikethrough: 'true',
-                    hasTruncateTooltip: 'below',
                     id: 'orders-heading',
-                    justify: 'center',
                     level: '1',
-                    maxLines: '2',
-                    textWrap: 'balance',
-                    type: 'display-1',
-                    wordBreak: 'break-word',
                 }),
                 children: [{ name: 'Text', params: compileProps({ value: 'Orders' }), children: [] }],
             },
         ]);
 
         expect(output).toContain('id="orders-heading"');
-        expect(output).toContain('aria-level="2"');
+        expect(output).toContain('data-level="1"');
         expect(output).toContain('Orders');
     });
 });

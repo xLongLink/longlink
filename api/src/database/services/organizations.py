@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
@@ -203,11 +204,19 @@ async def members(session: AsyncSession, organization_id: UUID, include_deleted:
 async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres | None = None) -> None:
     """Project Platform-owned users and memberships into one Organization database."""
 
-    # Ignore removed Organizations that no longer own a shared database projection.
-    assigned = await infrastructure(session, organization_id)
-    if assigned is None or assigned.organization.deleted_at is not None:
+    # Load only the Organization and database assignment needed for user projection.
+    result = await session.execute(
+        select(Organization, DatabaseRegistry)
+        .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
+        .where(col(Organization.id) == organization_id)
+    )
+    assigned = result.tuples().one_or_none()
+    if assigned is None:
         return
-    if assigned.organization.status != Status.running and db is None:
+    organization, database = assigned
+    if organization.deleted_at is not None:
+        return
+    if organization.status != Status.running and db is None:
         return
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
@@ -232,7 +241,6 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
 
     # The Platform is authoritative; reuse the prepared client during Organization creation.
     if db is None:
-        database = assigned.database
         db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
     await shared_audit.sync(db.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 

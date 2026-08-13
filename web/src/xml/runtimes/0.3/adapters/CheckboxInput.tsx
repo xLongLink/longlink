@@ -1,15 +1,35 @@
 import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core-0-3/CheckboxInput';
 import type { Props } from '../types';
 import { COMPACT_SIZES } from '../constants';
-import { resolveInputStatus } from './input';
+import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/** Renders an Astryx checkbox with boolean Valtio binding. */
+/**
+ * checked: false
+ * https://astryx.atmeta.com/components/CheckboxInput?tab=properties
+ * - label: string
+ * - description: string
+ * - disabledMessage: string
+ * - htmlName: string
+ * - value: bool | str
+ * - isLoading: bool
+ * - isDisabled: bool
+ * - isOptional: bool
+ * - isReadOnly: bool
+ * - isRequired: bool
+ * - isLabelHidden: bool
+ * - size: str
+ * - width: str | int
+ * - status: str
+ * - statusMessage: string
+ */
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
+    const binding = useBindableValue<boolean | 'indeterminate'>(props, 'value', ctx, (value) =>
+        value === 'indeterminate' ? value : value === true || value === 'true'
+    );
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
@@ -22,7 +42,7 @@ export function CheckboxInput({ props }: Props) {
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
-    if (size != null && !isXmlEnum(size, COMPACT_SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...COMPACT_SIZES])) {
         throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
     }
 
@@ -34,7 +54,7 @@ export function CheckboxInput({ props }: Props) {
             width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
             status={resolveInputStatus(props, ctx)}
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
-            onChange={binding.setValue}
+            onChange={(value) => binding.setValue(value)}
             isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}

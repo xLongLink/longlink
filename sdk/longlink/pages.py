@@ -1,5 +1,4 @@
 import re
-from lxml import etree
 from dataclasses import dataclass
 
 PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -15,15 +14,6 @@ class PageDefinition:
     tab: str
     name: str | None = None
     icon: str | None = None
-
-
-def extract_longlink_metadata(root: etree._Element) -> tuple[str | None, str | None]:
-    """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
-
-    return (
-        (root.get("name") or "").strip() or None,
-        (root.get("icon") or "").strip() or None,
-    )
 
 
 def page_file_route(relative_path: str) -> str:

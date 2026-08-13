@@ -11,10 +11,10 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
+import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { platformApiPath } from '@/lib/platform-api';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const statusVariants = {
@@ -82,10 +82,10 @@ export default function AdminApplications() {
         },
     ];
     const {
-        items: applications,
+        data: applications = [],
         error,
         isLoading,
-    } = useCollectionQuery<ApplicationResponse>(platformApiPath('/applications'), {
+    } = useApiQuery<ApplicationResponse[]>(platformApiPath('/applications'), {
         refetchInterval: 5000,
         parse: (value) => zApplicationResponse.array().parse(value),
     });

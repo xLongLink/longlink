@@ -40,16 +40,14 @@ export function resolveUrl(baseUrl: string, path: string): string {
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
 export function isAppRelativeUrl(path: string): boolean {
-    // Empty paths are safe app-relative requests.
     const value = path.trim();
-    if (!value) return true;
 
     // Block Windows separators and explicit protocols.
     if (value.includes('\\') || hasProtocol(value)) return false;
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const base = new URL('http://longlink.local');
+        const base = new URL(RELATIVE_URL_ORIGIN);
         const url = new URL(value, base);
 
         return url.origin === base.origin;

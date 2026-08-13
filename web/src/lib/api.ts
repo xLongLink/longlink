@@ -118,12 +118,26 @@ async function requestApi(path: string, init?: RequestInit): Promise<Response> {
     return response;
 }
 
+/** Fetches unvalidated JSON. */
+export async function fetchApiJson(path: string, init?: RequestInit): Promise<unknown>;
+
+/** Fetches JSON and validates it before returning typed data. */
+export async function fetchApiJson<T>(
+    path: string,
+    init: RequestInit | undefined,
+    parse: (value: unknown) => T
+): Promise<T>;
+
 /** Fetches JSON and optionally validates it before returning typed data. */
-export async function fetchApiJson<T>(path: string, init?: RequestInit, parse?: (value: unknown) => T): Promise<T> {
+export async function fetchApiJson<T>(
+    path: string,
+    init?: RequestInit,
+    parse?: (value: unknown) => T
+): Promise<T | unknown> {
     const response = await requestApi(path, init);
     const value = (await response.json()) as unknown;
 
-    return parse ? parse(value) : (value as T);
+    return parse ? parse(value) : value;
 }
 
 /** Fetches text and throws a normalized error for non-OK responses. */

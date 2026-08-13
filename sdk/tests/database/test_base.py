@@ -1,5 +1,4 @@
 import pytest
-from types import SimpleNamespace
 from typing import ClassVar
 from sqlmodel import Field
 from longlink.database import base as database_base
@@ -96,7 +95,7 @@ def test_create_engine_selects_database_url_and_options(
 
         captured["database_url"] = database_url
         captured["kwargs"] = kwargs
-        return SimpleNamespace(url=database_url)
+        return object()
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
 

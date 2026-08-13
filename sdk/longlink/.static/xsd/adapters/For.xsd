@@ -3,7 +3,7 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="ForType">
     <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
     </xsd:sequence>
     <xsd:attribute name="each" type="xsd:string" use="required" />
     <xsd:attribute name="as" type="xsd:string" use="required" />

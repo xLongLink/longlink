@@ -1,21 +1,16 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
+import { ExternalLink } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
-import TopLayout from '@/layout/TopLayout';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { UserProfile } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { normalizePathname } from '@/platform/paths';
-
-type PlatformLayoutTab = {
-    href: string;
-    icon?: LucideIcon;
-};
+import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
 
 type PlatformLayoutProps = {
-    tabs?: Record<string, PlatformLayoutTab>;
+    tabs?: TopLayoutTab[];
     brandOnly?: boolean;
     brandHref?: string;
     fillViewport?: boolean;
@@ -24,7 +19,7 @@ type PlatformLayoutProps = {
 
 /** Renders the Platform shell with either breadcrumbs or brand-only header chrome. */
 export default function PlatformLayout({
-    tabs = {},
+    tabs = [],
     brandOnly = false,
     brandHref = '/organizations',
     fillViewport = false,
@@ -32,20 +27,13 @@ export default function PlatformLayout({
 }: PlatformLayoutProps) {
     const location = useLocation();
     const normalizedCurrentPathname = normalizePathname(location.pathname);
-    const tabEntries = Object.entries(tabs).map(([label, tab]) => {
-        return {
-            label,
-            icon: tab.icon,
-            href: tab.href,
-            value: normalizePathname(new URL(tab.href, window.location.origin).pathname),
-        };
-    });
-    const activeTabPathname = tabEntries.reduce<string | undefined>((best, tab) => {
-        if (tab.value !== normalizedCurrentPathname && !normalizedCurrentPathname.startsWith(`${tab.value}/`)) {
+    const activeTabPathname = tabs.reduce<string | undefined>((best, tab) => {
+        const tabPathname = normalizePathname(tab.href);
+        if (tabPathname !== normalizedCurrentPathname && !normalizedCurrentPathname.startsWith(`${tabPathname}/`)) {
             return best;
         }
 
-        return best === undefined || tab.value.length > best.length ? tab.value : best;
+        return best === undefined || tabPathname.length > best.length ? tabPathname : best;
     }, undefined);
     const { user } = useUserProfile();
 
@@ -74,8 +62,7 @@ export default function PlatformLayout({
                 )
             }
             height={fillViewport ? 'fill' : 'auto'}
-            reserveTabSpace={user === null}
-            tabs={tabEntries}
+            tabs={tabs}
             topNavClassName="min-h-11 px-7"
         >
             {children}

@@ -10,13 +10,13 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -33,10 +33,10 @@ export default function AdminDatabase() {
         },
     });
     const {
-        items: databases,
+        data: databases = [],
         error,
         isLoading,
-    } = useCollectionQuery<DatabaseRegistryResponse>(platformApiPath('/databases'), {
+    } = useApiQuery<DatabaseRegistryResponse[]>(platformApiPath('/databases'), {
         parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = useAdminPagination(databases);

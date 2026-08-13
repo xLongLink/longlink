@@ -11,7 +11,9 @@
     <xsd:attribute name="step" type="PositiveDecimalType" />
     <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
     <xsd:attribute name="valueDisplay" type="SliderValueDisplayType" default="tooltip" />
+    <xsd:attribute name="minStepsBetweenThumbs" type="xsd:nonNegativeInteger" />
     <xsd:attribute name="width" type="xsd:string" />
+    <xsd:attribute name="labelTooltip" type="xsd:string" />
     <xsd:attribute name="disabledMessage" type="xsd:string" />
     <xsd:attribute name="status" type="InputStatusType" />
     <xsd:attribute name="statusMessage" type="xsd:string" />

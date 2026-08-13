@@ -7,7 +7,21 @@ import { ActionHandlerContext } from './Action';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 
-/** Renders an Astryx button with adapter-owned action behavior. */
+/**
+ * checked: false
+ * https://astryx.atmeta.com/components/Button?tab=properties
+ * - label: string
+ * - tooltip: string
+ * - type: str
+ * - size: str
+ * - variant: str
+ * - elevation: str
+ * - isLoading: bool
+ * - isDisabled: bool
+ * - isIconOnly: bool
+ * - isInterruptible: bool
+ * - children: ReactNode
+ */
 export function Button({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const type = resolveXml(props, 'type', ctx);
@@ -22,19 +36,19 @@ export function Button({ props, nodes }: Props) {
     const isInterruptible = resolveXml(props, 'isInterruptible', ctx);
     const actionHandler = useContext(ActionHandlerContext);
 
-    if (variant != null && !isXmlEnum(variant, BUTTON_VARIANTS)) {
+    if (!isXmlEnum(variant, [undefined, ...BUTTON_VARIANTS])) {
         throw new Error(`Unsupported Button variant '${String(variant)}'`);
     }
 
-    if (size != null && !isXmlEnum(size, SIZES)) {
+    if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported Button size '${String(size)}'`);
     }
 
-    if (type != null && !isXmlEnum(type, BUTTON_HTML_TYPES)) {
+    if (!isXmlEnum(type, [undefined, ...BUTTON_HTML_TYPES])) {
         throw new Error(`Unsupported Button type '${String(type)}'`);
     }
 
-    if (elevation != null && !isXmlEnum(elevation, ELEVATIONS)) {
+    if (!isXmlEnum(elevation, [undefined, ...ELEVATIONS])) {
         throw new Error(`Unsupported Button elevation '${String(elevation)}'`);
     }
 

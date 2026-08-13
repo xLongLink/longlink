@@ -13,11 +13,9 @@ type XmlLayoutTab = {
 
 /** Renders the XML build shell with SDK-specific header chrome. */
 export default function XmlLayout({ tabs, children }: { tabs: Record<string, XmlLayoutTab>; children: ReactNode }) {
-    let activeHref = '';
+    const activeHref = Object.values(tabs).find((tab) => tab.active)?.href ?? '';
     const resolvedTabs = Object.entries(tabs).map(([label, tab]) => {
-        const { href, active, icon } = tab;
-
-        if (!activeHref && active) activeHref = href;
+        const { href, icon } = tab;
 
         return {
             href,
