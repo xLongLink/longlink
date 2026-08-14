@@ -15,7 +15,7 @@ export function Icon({ props }: Props) {
     const icon = requireXmlString(props, 'icon', ctx, 'Icon');
     const label = resolveXml(props, 'label', ctx);
 
-    if (!isXmlEnum(icon, [undefined, ...ICON_NAMES])) {
+    if (!isXmlEnum(icon, ICON_NAMES)) {
         throw new Error(`Unsupported Icon icon '${icon}'`);
     }
 

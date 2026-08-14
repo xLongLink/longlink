@@ -82,7 +82,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
                     scope.bindings[id] = proxy(initialValue);
                 }
             };
-            await services.setups[id]();
+            services.setups[id]();
         }
 
         if (node.name === 'Query') {

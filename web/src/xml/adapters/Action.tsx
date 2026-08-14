@@ -9,7 +9,7 @@ import { useXmlRuntime } from '../core/context';
 import { resolveRequestUrl } from '../core/url';
 import { isXmlEnum, resolveXml, resolveXmlValue } from '../core/props';
 
-export const ActionHandlerContext = createContext<(() => Promise<void>) | null>(null);
+export const ActionHandlerContext = createContext<(() => void) | null>(null);
 
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
@@ -18,13 +18,10 @@ export function Action({ props, nodes }: Props) {
     const toast = useToast();
 
     /** Sends the configured request and shows a minimal toast result. */
-    async function handleAction() {
-        // Surface action failures through the UI.
-        try {
-            await executeAction(props, ctx, services, fetch, toast, closeDialog);
-        } catch (error: unknown) {
+    function handleAction(): void {
+        void executeAction(props, ctx, services, fetch, toast, closeDialog).catch((error: unknown) => {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
-        }
+        });
     }
 
     return <ActionHandlerContext.Provider value={handleAction}>{renderNode(nodes, ctx)}</ActionHandlerContext.Provider>;

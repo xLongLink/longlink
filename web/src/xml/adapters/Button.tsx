@@ -63,13 +63,7 @@ export function Button({ props, nodes }: Props) {
             elevation={elevation}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isIconOnly={typeof isIconOnly === 'boolean' ? isIconOnly : undefined}
-            clickAction={
-                actionHandler
-                    ? () => {
-                          void actionHandler();
-                      }
-                    : undefined
-            }
+            clickAction={actionHandler ?? undefined}
             isInterruptible={typeof isInterruptible === 'boolean' ? isInterruptible : undefined}
         >
             {renderNode(nodes, ctx)}

@@ -24,8 +24,6 @@ export function parseXML(xml: string): [ASTNode] {
 
 /** Renders one XML page. */
 export function RenderXML({ ast, ...props }: Parameters<typeof runtime.RenderXML>[0]) {
-    assertPageRoot(ast);
-
     return createElement(runtime.RenderXML, { ast, ...props });
 }
 

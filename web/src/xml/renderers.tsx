@@ -17,8 +17,7 @@ type RenderXMLProps = {
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
-    const runtimeCtx = ctx;
-    runtimeCtx.services.requestBaseUrl = baseUrl;
+    ctx.services.requestBaseUrl = baseUrl;
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {
@@ -56,7 +55,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             unsubscribeAll();
 
             // Subscribe to reactive state values in the context.
-            for (const value of Object.values(runtimeCtx.scope.bindings)) {
+            for (const value of Object.values(ctx.scope.bindings)) {
                 // Skip non-reactive context values.
                 if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
 
@@ -69,18 +68,18 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             }
         }
 
-        runtimeCtx.services.setups = {};
-        runtimeCtx.scope.bindings = { params: runtimeCtx.scope.bindings.params };
+        ctx.services.setups = {};
+        ctx.scope.bindings = { params: ctx.scope.bindings.params };
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        runtimeCtx.services.invalidate = async (ids) => {
+        ctx.services.invalidate = async (ids) => {
             // Refresh each requested setup value.
             for (const id of ids) {
                 // Skip unknown invalidation targets.
-                const setup = runtimeCtx.services.setups[id];
+                const setup = ctx.services.setups[id];
                 if (!setup) continue;
 
-                delete runtimeCtx.scope.bindings[id];
+                delete ctx.scope.bindings[id];
                 await setup();
             }
 
@@ -88,7 +87,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             setResetKey((current) => current + 1);
         };
 
-        void setupContext(setup.nodes, runtimeCtx, baseUrl)
+        void setupContext(setup.nodes, ctx, baseUrl)
             .then(() => {
                 subscribeToStateValues();
 
@@ -109,7 +108,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             // Remove state subscriptions on unmount.
             unsubscribeAll();
         };
-    }, [ast, runtimeCtx, baseUrl, setup]);
+    }, [ast, ctx, baseUrl, setup]);
 
     // Show setup failures before rendering XML nodes.
     if (setup.error || setupError) {
@@ -125,8 +124,8 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
 
     return (
         <XmlErrorBoundary resetKey={resetKey}>
-            <XmlContext.Provider value={runtimeCtx}>
-                <Stack gap={6}>{renderNode(ast[0].children, runtimeCtx.scope)}</Stack>
+            <XmlContext.Provider value={ctx}>
+                <Stack gap={6}>{renderNode(ast[0].children, ctx.scope)}</Stack>
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );
