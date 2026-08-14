@@ -240,11 +240,11 @@ async def test_organization_storage_endpoint_returns_bucket_usage(
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
-        async def usage(self, bucket_name: str) -> dict[str, int]:
+        async def usage(self, bucket_name: str) -> int:
             """Return fake usage counters for one Organization bucket."""
 
             assert bucket_name == organization.id.hex
-            return {"space_used": 4096}
+            return 4096
 
     monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
 
@@ -276,7 +276,7 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
     class FakeStorage:
         """Provide a failing storage adapter."""
 
-        async def usage(self, bucket_name: str) -> dict[str, int]:
+        async def usage(self, bucket_name: str) -> int:
             """Raise the backend error expected by the test."""
 
             raise RuntimeError("storage offline")

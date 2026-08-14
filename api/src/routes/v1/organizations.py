@@ -147,7 +147,7 @@ async def get_organization_storage_usage(
     if usage is None:
         return None
 
-    return {"bucket_name": bucket_name, **usage}
+    return {"bucket_name": bucket_name, "space_used": usage}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

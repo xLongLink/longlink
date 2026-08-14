@@ -127,11 +127,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
-    const {
-        data: registeredPages,
-        isLoading,
-        error,
-    } = useApiQuery<RuntimePage[]>(pages, {
+    const { data: registeredPages, error } = useApiQuery<RuntimePage[]>(pages, {
         enabled: applicationCanLoad,
         parse: (value) => z.array(pageSchema).parse(value),
     });
@@ -147,9 +143,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
     const activePageStateKey = activePage ? `${activePage.path}\u0000${routePath}\u0000${activePage.tab}` : '';
-    const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
+    const activePageState = pageStates[activePageStateKey];
     const activePageStateIsCurrent = activePageState?.cacheKey === pages;
-    const isNotFound = Boolean(registeredPages && routePath && !activeRouteMatch);
     const fallbackActionProps = {
         actionHref: organization ? `/orgs/${organization}` : '/organizations',
         actionLabel: organization ? 'Back to organization' : 'Back to organizations',
@@ -183,11 +178,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         for (const page of registeredPages ?? []) {
             const dynamic = pageRouteIsDynamic(page.route);
             const currentGroup = tabGroups.get(page.tab);
-
-            // Keep existing tab groups active when any of their routes is active.
-            if (currentGroup) {
-                currentGroup.active = currentGroup.active || page.tab === activePage?.tab;
-            }
 
             // Dynamic pages need concrete params, so they cannot be direct navigation targets.
             if (!page.route || dynamic || currentGroup) {
@@ -409,13 +399,13 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     }
 
     // Delegate unknown app routes to the shared 404 page.
-    if (isNotFound) {
+    if (registeredPages && routePath && !activeRouteMatch) {
         return <NotFound />;
     }
 
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (!pageState.ast.length || pageState.cacheKey !== pages || pageState.error) {
+        if (!pageState.ast.length || pageState.cacheKey !== pages) {
             return null;
         }
 
@@ -441,7 +431,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         activeFallback = (
             <ErrorState {...fallbackActionProps} message={activePageState.error} title="Unable to load this page" />
         );
-    } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
+    } else if (!activePageStateIsCurrent || activePageState.loading) {
         activeFallback = <Spinner label="Loading" />;
     } else if (!activePageState.ast.length) {
         activeFallback = (
