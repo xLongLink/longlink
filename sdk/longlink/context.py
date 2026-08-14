@@ -4,8 +4,9 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from collections.abc import Callable, Awaitable, AsyncIterator
-from longlink.database import Audit, session
+from longlink.database import session
 from starlette.responses import Response
+from longlink.shared.models import Audit
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 _current_identity: ContextVar[UUID | None] = ContextVar("current_identity", default=None)
