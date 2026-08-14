@@ -5,13 +5,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Wordmark } from '@/components/Wordmark';
+import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
-import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
-    const { user } = useUserProfile();
-    const { memberships } = useUserOrganizations();
+    const { user, memberships } = useUserProfile();
 
     return (
         <>

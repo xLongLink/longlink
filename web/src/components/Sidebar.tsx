@@ -3,7 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { SideNav as AstryxSideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/platform/catalog';
+import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/lib/articles';
 import { Wordmark } from '@/components/Wordmark';
 
 type SidebarProps = {

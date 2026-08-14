@@ -4,7 +4,6 @@ from datetime import datetime
 from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column
 from src.models.roles import PlatformRoles
-from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 from src.database.models.base import PlatformModel
@@ -36,9 +35,6 @@ class User(PlatformModel, table=True):
         default=PlatformRoles.user,
         sa_column=Column(Enum(PlatformRoles, name="platform_role_enum", native_enum=False), nullable=False),
     )
-    theme: Theme = Field(default=Theme.dark)
-    accent: Accent = Field(default=Accent.neutral, max_length=7)
-    radius: float = Field(default=1.0, nullable=False)
 
     # Relationships
     organization_memberships: list["UserOrganization"] = Relationship(

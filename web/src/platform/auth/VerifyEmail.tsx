@@ -19,7 +19,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { PasswordInput } from '@/components/PasswordInput';
 import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
-import { zEmailPayload, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useFragmentToken } from './use-fragment-token';
 
 type RegistrationCompleteValues = {
@@ -87,7 +87,7 @@ export default function VerifyEmail() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
                 },
-                (value) => zUserProfile.parse(value)
+                (value) => zUserSummary.parse(value)
             ),
     });
     /** Creates the account and publishes only the new authenticated query state. */

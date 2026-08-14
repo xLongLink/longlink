@@ -80,7 +80,7 @@ class Postgres:
         database: str,
         *,
         autocommit: bool = False,
-        search_path: str | None = None,
+        search_path: str | None = None
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 

@@ -5,13 +5,6 @@ export type ClientOptions = {
 };
 
 /**
- * Accent
- *
- * Supported randomized LongLink logo accent colors.
- */
-export type Accent = 'slate' | 'gray' | 'zinc' | 'neutral' | 'stone' | 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green' | 'emerald' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo' | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose';
-
-/**
  * ApplicationCreate
  *
  * Validate application creation payloads.
@@ -655,13 +648,6 @@ export type StorageRegistryResponse = {
 };
 
 /**
- * Theme
- *
- * Supported user theme preferences.
- */
-export type Theme = 'system' | 'light' | 'dark';
-
-/**
  * TokenPayload
  *
  * Validate one unchanged authentication token.
@@ -732,37 +718,6 @@ export type UserOrganizationSummary = {
 };
 
 /**
- * UserProfile
- *
- * Represent the authenticated user payload returned by the API.
- */
-export type UserProfile = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Avatar
-     */
-    avatar: string;
-    role: PlatformRoles;
-    theme: Theme;
-    accent: Accent;
-    /**
-     * Radius
-     */
-    radius: number;
-};
-
-/**
  * UserSummary
  *
  * Represent a compact user object in nested responses.
@@ -801,12 +756,6 @@ export type UserUpdate = {
      * Avatar
      */
     avatar?: string | null;
-    theme?: Theme | null;
-    accent?: Accent | null;
-    /**
-     * Radius
-     */
-    radius?: number | null;
 };
 
 /**
@@ -1053,7 +1002,7 @@ export type CompleteRegistrationApiV1AuthRegisterCompletePostResponses = {
     /**
      * Successful Response
      */
-    201: UserProfile;
+    201: UserSummary;
 };
 
 export type CompleteRegistrationApiV1AuthRegisterCompletePostResponse = CompleteRegistrationApiV1AuthRegisterCompletePostResponses[keyof CompleteRegistrationApiV1AuthRegisterCompletePostResponses];
@@ -1989,7 +1938,7 @@ export type GetMeApiV1MeGetResponses = {
     /**
      * Successful Response
      */
-    200: UserProfile;
+    200: UserSummary;
 };
 
 export type GetMeApiV1MeGetResponse = GetMeApiV1MeGetResponses[keyof GetMeApiV1MeGetResponses];
@@ -2014,7 +1963,7 @@ export type PatchMeApiV1MePatchResponses = {
     /**
      * Successful Response
      */
-    200: UserProfile;
+    200: UserSummary;
 };
 
 export type PatchMeApiV1MePatchResponse = PatchMeApiV1MePatchResponses[keyof PatchMeApiV1MePatchResponses];

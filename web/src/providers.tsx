@@ -3,7 +3,7 @@ import { Theme } from '@astryxdesign/core/theme';
 import { Link as RouterLink } from 'react-router';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { DEFAULT_RADIUS, getAstryxTheme, type Accent, type Theme as ThemeMode } from '@/lib/theme';
+import { stoneTheme } from '@/theme';
 
 type AstryxRouterLinkProps = Omit<ComponentPropsWithoutRef<'a'>, 'href'> & { href: string };
 
@@ -13,19 +13,9 @@ function AstryxRouterLink({ href, ...props }: AstryxRouterLinkProps) {
 }
 
 /** Provides the shared Astryx theme, routing, and overlay infrastructure. */
-export function AstryxProvider({
-    accent = 'neutral',
-    children,
-    mode,
-    radius = DEFAULT_RADIUS,
-}: {
-    accent?: Accent;
-    children: ReactNode;
-    mode: ThemeMode;
-    radius?: number;
-}) {
+export function AstryxProvider({ children }: { children: ReactNode }) {
     return (
-        <Theme theme={getAstryxTheme(accent, radius)} mode={mode}>
+        <Theme theme={stoneTheme} mode="dark">
             <LinkProvider component={AstryxRouterLink}>
                 <LayerProvider toast={{ position: 'bottomEnd' }}>{children}</LayerProvider>
             </LinkProvider>

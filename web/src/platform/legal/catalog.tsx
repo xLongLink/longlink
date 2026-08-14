@@ -1,5 +1,5 @@
 import { FileText, Landmark, ShieldCheck } from 'lucide-react';
-import type { ArticlePage } from '@/platform/catalog';
+import type { ArticlePage } from '@/lib/articles';
 import { homePage, legalPages } from '@/platform/public';
 import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
 import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';

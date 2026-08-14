@@ -385,7 +385,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -2173,7 +2173,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -2228,7 +2228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -2351,35 +2351,6 @@
   },
   "components": {
     "schemas": {
-      "Accent": {
-        "type": "string",
-        "enum": [
-          "slate",
-          "gray",
-          "zinc",
-          "neutral",
-          "stone",
-          "red",
-          "orange",
-          "amber",
-          "yellow",
-          "lime",
-          "green",
-          "emerald",
-          "teal",
-          "cyan",
-          "sky",
-          "blue",
-          "indigo",
-          "violet",
-          "purple",
-          "fuchsia",
-          "pink",
-          "rose"
-        ],
-        "title": "Accent",
-        "description": "Supported randomized LongLink logo accent colors."
-      },
       "ApplicationCreate": {
         "properties": {
           "name": {
@@ -3417,16 +3388,6 @@
         "title": "StorageRegistryResponse",
         "description": "Describe one Exoscale SOS backend without exposing Platform credentials."
       },
-      "Theme": {
-        "type": "string",
-        "enum": [
-          "system",
-          "light",
-          "dark"
-        ],
-        "title": "Theme",
-        "description": "Supported user theme preferences."
-      },
       "TokenPayload": {
         "properties": {
           "token": {
@@ -3521,54 +3482,6 @@
         "title": "UserOrganizationSummary",
         "description": "Represent a compact Organization in current-user membership responses."
       },
-      "UserProfile": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          },
-          "role": {
-            "$ref": "#/components/schemas/PlatformRoles"
-          },
-          "theme": {
-            "$ref": "#/components/schemas/Theme"
-          },
-          "accent": {
-            "$ref": "#/components/schemas/Accent"
-          },
-          "radius": {
-            "type": "number",
-            "title": "Radius"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "email",
-          "avatar",
-          "role",
-          "theme",
-          "accent",
-          "radius"
-        ],
-        "title": "UserProfile",
-        "description": "Represent the authenticated user payload returned by the API."
-      },
       "UserSummary": {
         "properties": {
           "id": {
@@ -3630,39 +3543,6 @@
               }
             ],
             "title": "Avatar"
-          },
-          "theme": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Theme"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "accent": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Accent"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "radius": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.5,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Radius"
           }
         },
         "type": "object",

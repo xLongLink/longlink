@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { ExternalLink } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
+import { normalizePathname } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import { UserProfile } from '@/components/Profile';
+import { ProfileMenu } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { normalizePathname } from '@/platform/paths';
 import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
 
 type PlatformLayoutProps = {
@@ -42,7 +42,7 @@ export default function PlatformLayout({
             activeTab={activeTabPathname}
             endContent={
                 user ? (
-                    <UserProfile />
+                    <ProfileMenu />
                 ) : (
                     <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
                         <span className="inline-flex items-center gap-1 whitespace-nowrap">

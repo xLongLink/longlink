@@ -1,20 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Role } from '@/lib/roles';
 import type {
     ApplicationCreate,
-    OrganizationApplicationSummary,
     OrganizationCreate,
     OrganizationDetails,
     OrganizationInvitationCreate,
-    OrganizationInvitationResponse,
-    OrganizationMemberAccessResponse,
     OrganizationMemberUpdate,
-    OrganizationSummary,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
+import { useUserProfile } from '@/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
-import { useUserOrganizations } from '@/hooks/use-user';
 import { ApiError, apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import {
@@ -23,19 +18,9 @@ import {
     zOrganizationSummary,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
-type UseOrganizationResult = {
-    organization: OrganizationSummary | undefined;
-    members: OrganizationMemberAccessResponse[];
-    invitations: OrganizationInvitationResponse[];
-    applications: OrganizationApplicationSummary[];
-    role: Role | null;
-    isLoading: boolean;
-    error: (Error & { status?: number }) | null;
-};
-
 /** Fetches organization details and related collections for the current workspace. */
-export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { memberships, isLoading: isUserLoading } = useUserOrganizations();
+export function useOrganization(organizationSlug: string) {
+    const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -49,7 +34,8 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
         }
     );
 
-    const error = organizationQuery.error ?? (missingOrganization ? new ApiError('Organization not found', 404) : null);
+    const error: (Error & { status?: number }) | null =
+        organizationQuery.error ?? (missingOrganization ? new ApiError('Organization not found', 404) : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {

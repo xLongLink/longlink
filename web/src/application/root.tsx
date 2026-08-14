@@ -19,7 +19,7 @@ export default function ApplicationRoot() {
 
     return (
         <QueryClientProvider client={client}>
-            <AstryxProvider mode="dark">
+            <AstryxProvider>
                 <Outlet />
             </AstryxProvider>
         </QueryClientProvider>

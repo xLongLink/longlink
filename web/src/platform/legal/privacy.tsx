@@ -91,8 +91,7 @@ export const content = (
                     label={
                         <Text>
                             Account and identity data: internal account ID, name, email address, optional avatar URL,
-                            platform role, selected theme, accent, radius, account creation, update, deletion, and
-                            sign-in session information.
+                            platform role, account creation, update, deletion, and sign-in session information.
                         </Text>
                     }
                 />

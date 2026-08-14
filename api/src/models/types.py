@@ -21,41 +21,6 @@ class DatabaseSSLMode(StrEnum):
     verify_full = "verify-full"
 
 
-class Theme(StrEnum):
-    """Supported user theme preferences."""
-
-    system = "system"
-    light = "light"
-    dark = "dark"
-
-
-class Accent(StrEnum):
-    """Supported randomized LongLink logo accent colors."""
-
-    slate = "slate"
-    gray = "gray"
-    zinc = "zinc"
-    neutral = "neutral"
-    stone = "stone"
-    red = "red"
-    orange = "orange"
-    amber = "amber"
-    yellow = "yellow"
-    lime = "lime"
-    green = "green"
-    emerald = "emerald"
-    teal = "teal"
-    cyan = "cyan"
-    sky = "sky"
-    blue = "blue"
-    indigo = "indigo"
-    violet = "violet"
-    purple = "purple"
-    fuchsia = "fuchsia"
-    pink = "pink"
-    rose = "rose"
-
-
 class Image(str):
     """Represent one validated fully-qualified OCI image reference."""
 

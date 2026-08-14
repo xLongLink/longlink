@@ -14,7 +14,7 @@ import { useSignOut, useUserProfile } from '@/hooks/use-user';
 import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
-export function UserProfile() {
+export function ProfileMenu() {
     const { user } = useUserProfile();
     const signOut = useSignOut();
     const showToast = useToast();

@@ -3,36 +3,6 @@
 import * as z from 'zod';
 
 /**
- * Accent
- *
- * Supported randomized LongLink logo accent colors.
- */
-export const zAccent = z.enum([
-    'slate',
-    'gray',
-    'zinc',
-    'neutral',
-    'stone',
-    'red',
-    'orange',
-    'amber',
-    'yellow',
-    'lime',
-    'green',
-    'emerald',
-    'teal',
-    'cyan',
-    'sky',
-    'blue',
-    'indigo',
-    'violet',
-    'purple',
-    'fuchsia',
-    'pink',
-    'rose'
-]);
-
-/**
  * ApplicationOrganizationResponse
  *
  * Represent the compact Organization associated with an Application.
@@ -454,17 +424,6 @@ export const zStorageRegistryResponse = z.object({
 });
 
 /**
- * Theme
- *
- * Supported user theme preferences.
- */
-export const zTheme = z.enum([
-    'system',
-    'light',
-    'dark'
-]);
-
-/**
  * TokenPayload
  *
  * Validate one unchanged authentication token.
@@ -530,22 +489,6 @@ export const zUserOrganizationMembership = z.object({
 });
 
 /**
- * UserProfile
- *
- * Represent the authenticated user payload returned by the API.
- */
-export const zUserProfile = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    email: z.email(),
-    avatar: z.string(),
-    role: zPlatformRoles,
-    theme: zTheme,
-    accent: zAccent,
-    radius: z.number()
-});
-
-/**
  * UserSummary
  *
  * Represent a compact user object in nested responses.
@@ -565,10 +508,7 @@ export const zUserSummary = z.object({
  */
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
-    avatar: z.string().max(2048).nullish(),
-    theme: zTheme.nullish(),
-    accent: zAccent.nullish(),
-    radius: z.number().gte(0).lte(1.5).nullish()
+    avatar: z.string().max(2048).nullish()
 });
 
 /**
@@ -636,7 +576,7 @@ export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrat
 /**
  * Successful Response
  */
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserProfile;
+export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserSummary;
 
 /**
  * Response List Applications Api V1 Applications Get
@@ -922,14 +862,14 @@ export const zGetStorageRegistryApiV1StoragesRegistryIdGetResponse = zStorageReg
 /**
  * Successful Response
  */
-export const zGetMeApiV1MeGetResponse = zUserProfile;
+export const zGetMeApiV1MeGetResponse = zUserSummary;
 
 export const zPatchMeApiV1MePatchBody = zUserUpdate;
 
 /**
  * Successful Response
  */
-export const zPatchMeApiV1MePatchResponse = zUserProfile;
+export const zPatchMeApiV1MePatchResponse = zUserSummary;
 
 /**
  * Response Get My Organizations Api V1 Me Organizations Get

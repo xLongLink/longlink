@@ -8,10 +8,10 @@ import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import type { ArticlePage } from '@/platform/catalog';
+import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
+import { useUserProfile } from '@/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
-import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 /** Renders shared documentation and legal article content. */
 export function Article({
@@ -23,8 +23,7 @@ export function Article({
     previousPage?: ArticlePage;
     nextPage?: ArticlePage;
 }) {
-    const { user } = useUserProfile();
-    const { memberships } = useUserOrganizations();
+    const { user, memberships } = useUserProfile();
     const { content, metadata } = page;
 
     return (

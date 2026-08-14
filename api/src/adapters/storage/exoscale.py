@@ -56,7 +56,7 @@ class Exoscale:
             ),
         )
 
-    async def usage(self, bucket: str) -> dict[str, int] | None:
+    async def usage(self, bucket: str) -> int | None:
         """Return aggregate usage for one bucket, or none when the bucket is absent."""
 
         space_used = 0
@@ -75,7 +75,7 @@ class Exoscale:
                 return None
             raise
 
-        return {"space_used": space_used}
+        return space_used
 
     async def create(self, bucket: str) -> None:
         """Create one S3-compatible bucket."""

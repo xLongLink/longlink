@@ -5,67 +5,57 @@ import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Slider } from '@astryxdesign/core/Slider';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Selector } from '@astryxdesign/core/Selector';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { Building2, Settings2, UserRound } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
+import { useUserProfile } from '@/hooks/use-user';
+import { platformApiPath } from '@/lib/platform-api';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
+import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import {
-    ACCENT_OPTIONS,
-    DEFAULT_RADIUS,
-    MAX_RADIUS,
-    MIN_RADIUS,
-    THEME_OPTIONS,
-    type Accent,
-    type Theme,
-} from '@/lib/theme';
-
-const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
-    value,
-    label: formatRadius(value),
-}));
-
-function formatRadius(value: number): string {
-    return value === 0 ? 'None' : `${value.toFixed(2)}x`;
-}
-
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
     const location = useLocation();
-    const { user, theme, accent, radius, isLoading: isProfileLoading } = useUserProfile();
-    const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
-    const { mutateAsync: updateUser, isPending } = useUpdateUser();
+    const { user, memberships, isLoading: isProfileLoading, isOrganizationsLoading } = useUserProfile();
+    const queryClient = useQueryClient();
+    const { mutateAsync: updateUser } = useMutation({
+        mutationFn: (payload: UserUpdate) =>
+            fetchApiJson(
+                platformApiPath('/me'),
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                },
+                (value) => zUserSummary.parse(value)
+            ),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(userProfileQueryKey, updatedUser);
+        },
+    });
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
-    const [editedRadius, setEditedRadius] = useState<number | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
     const hash = location.hash.replace(/^#/, '');
-    const section = hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
+    const section = hash === 'organizations' || hash === 'account' ? hash : 'account';
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
-    const isLoading = isProfileLoading || areOrganizationsLoading;
-
-    /** Displays a failed account preference update. */
-    function showAccountUpdateError(error: unknown) {
-        toast({
-            body: error instanceof Error ? error.message : 'Failed to update account',
-            type: 'error',
-        });
-    }
+    const isLoading = isProfileLoading || isOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
@@ -173,12 +163,6 @@ export default function Settings() {
                                 label="Account"
                             />
                             <SideNavItem
-                                href={`${location.pathname}${location.search}#appearance`}
-                                icon={<Paintbrush aria-hidden="true" size={16} />}
-                                isSelected={section === 'appearance'}
-                                label="Appearance"
-                            />
-                            <SideNavItem
                                 href={`${location.pathname}${location.search}#organizations`}
                                 icon={<Building2 aria-hidden="true" size={16} />}
                                 isSelected={section === 'organizations'}
@@ -218,77 +202,6 @@ export default function Settings() {
                                         value={user?.email ?? ''}
                                         width="100%"
                                         isDisabled
-                                    />
-                                </HStack>
-                            </VStack>
-                        ) : null}
-
-                        {section === 'appearance' ? (
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Appearance</Heading>
-                                    <Text type="supporting">
-                                        Customize the theme, accent color, and radius for the interface.
-                                    </Text>
-                                </VStack>
-                                <HStack gap={4} align="start" wrap="wrap">
-                                    <Selector
-                                        label="Theme"
-                                        options={THEME_OPTIONS}
-                                        value={theme}
-                                        width={320}
-                                        isDisabled={isPending}
-                                        placeholder="Choose a theme"
-                                        onChange={(value) => {
-                                            void updateUser({ theme: value as Theme }).catch(showAccountUpdateError);
-                                        }}
-                                    />
-                                    <Selector
-                                        label="Accent color"
-                                        options={ACCENT_OPTIONS.map((option) => ({
-                                            value: option.value,
-                                            label: option.label,
-                                            icon: (
-                                                <span
-                                                    aria-hidden="true"
-                                                    style={{
-                                                        display: 'inline-block',
-                                                        width: 10,
-                                                        height: 10,
-                                                        borderRadius: 9999,
-                                                        backgroundColor: option.swatch,
-                                                    }}
-                                                />
-                                            ),
-                                        }))}
-                                        value={accent}
-                                        width={320}
-                                        isDisabled={isPending}
-                                        placeholder="Choose a color"
-                                        onChange={(value) => {
-                                            void updateUser({ accent: value as Accent }).catch(showAccountUpdateError);
-                                        }}
-                                    />
-                                    <Slider
-                                        label="Radius"
-                                        value={editedRadius ?? radius}
-                                        width={320}
-                                        min={MIN_RADIUS}
-                                        max={MAX_RADIUS}
-                                        step={0.05}
-                                        marks={RADIUS_MARKS}
-                                        formatValue={formatRadius}
-                                        isDisabled={isPending}
-                                        onChange={(value: number) => {
-                                            setEditedRadius(value);
-                                        }}
-                                        onChangeEnd={(value: number) => {
-                                            void updateUser({ radius: value })
-                                                .catch(showAccountUpdateError)
-                                                .finally(() => {
-                                                    setEditedRadius(null);
-                                                });
-                                        }}
                                     />
                                 </HStack>
                             </VStack>
