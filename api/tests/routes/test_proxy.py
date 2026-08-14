@@ -1,6 +1,7 @@
 import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
+from pathlib import Path
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable
@@ -61,7 +62,15 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
 
-    tls = object()
+    class FakeTLS:
+        """Capture the Platform client identity loaded into the TLS context."""
+
+        def load_cert_chain(self, certfile: str) -> None:
+            """Capture the temporary PEM identity configured for Gateway mTLS."""
+
+            captured["client_identity"] = Path(certfile).read_text()
+
+    tls = FakeTLS()
 
     class FakeProxyResponse:
         """Stream one fake upstream application response."""
@@ -125,7 +134,6 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
             "content-type": "text/plain",
             "x-custom-feature": "user-controlled",
             "x-forwarded-for": "203.0.113.10",
-            "x-longlink-api-key": "spoofed",
             "x-user-id": "spoofed",
         },
     )
@@ -143,6 +151,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert captured["cadata"] == registry.gateway_certificate
     assert isinstance(captured["client_kwargs"], dict)
     assert captured["client_kwargs"]["follow_redirects"] is False
+    assert captured["client_identity"] == registry.gateway_client_identity
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
     assert forwarded["method"] == "POST"
@@ -150,7 +159,6 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
     assert isinstance(headers, dict)
-    assert headers["x-longlink-api-key"] == registry.gateway_api_key
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
@@ -184,7 +192,7 @@ async def test_application_proxy_rejects_oversized_request_body(
         await applications.mark_running(session, app.id)
         await session.commit()
 
-    tls = object()
+    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
     class OversizedProxyClient(FakeProxyClient):
         """Consume the request body through the proxy size guard."""
@@ -313,7 +321,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         await applications.mark_running(session, app.id)
         await session.commit()
 
-    tls = object()
+    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
     class FailingProxyClient(FakeProxyClient):
         """Fake upstream HTTP client that fails application proxy requests."""

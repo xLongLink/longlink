@@ -11,7 +11,7 @@ export type ArticleBreadcrumb = {
 export type ArticlePage = {
     title: string;
     path: string;
-    icon: ReactElement<LucideProps>;
+    icon?: ReactElement<LucideProps>;
     description: string;
     seoTitle?: string;
     breadcrumbs: ArticleBreadcrumb[];

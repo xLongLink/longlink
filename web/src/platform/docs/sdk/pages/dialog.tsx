@@ -3,28 +3,33 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Layout'}</Text>
-            <Heading id="introduction" level={1}>
-                {'Dialog'}
+export default function DialogDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Layout'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Dialog'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Renders a modal workflow from one flat owner element.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock
+                code={
+                    '<Dialog title="Edit order" isOpen="$dialog.open">\n  <FormLayout>\n    <TextInput label="Name" value="$form.name" />\n  </FormLayout>\n</Dialog>'
+                }
+                language="xml"
+            />
         </Stack>
-        <Text as="p">{'Renders a modal workflow from one flat owner element.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock
-            code={
-                '<Dialog title="Edit order" isOpen="$dialog.open">\n  <FormLayout>\n    <TextInput label="Name" value="$form.name" />\n  </FormLayout>\n</Dialog>'
-            }
-            language="xml"
-        />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/dialog',
+    title: 'Dialog',
+    description: 'Renders a modal workflow from one flat owner element.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

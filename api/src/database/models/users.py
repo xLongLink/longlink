@@ -1,13 +1,12 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
-from sqlmodel import Field, Relationship
+from sqlmodel import Field
 from sqlalchemy import Enum, Column
 from src.models.roles import PlatformRoles
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 from src.database.models.base import PlatformModel
-from src.database.models.association import UserOrganization
 
 
 class User(PlatformModel, table=True):
@@ -34,13 +33,4 @@ class User(PlatformModel, table=True):
     role: PlatformRoles = Field(
         default=PlatformRoles.user,
         sa_column=Column(Enum(PlatformRoles, name="platform_role_enum", native_enum=False), nullable=False),
-    )
-
-    # Relationships
-    organization_memberships: list["UserOrganization"] = Relationship(
-        back_populates="user",
-        sa_relationship_kwargs={
-            "primaryjoin": "and_(User.id == UserOrganization.user_id, UserOrganization.deleted_at.is_(None))",
-            "foreign_keys": "UserOrganization.user_id",
-        },
     )

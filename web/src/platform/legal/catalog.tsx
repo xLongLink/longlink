@@ -1,49 +1,20 @@
-import { FileText, Landmark, ShieldCheck } from 'lucide-react';
+import { createElement } from 'react';
 import type { ArticlePage } from '@/lib/articles';
-import { homePage, legalPages } from '@/platform/public';
-import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
-import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';
-import { content as impressumContent, metadata as impressumMetadata } from '@/platform/legal/impressum';
+import { legalPages } from '@/platform/pages';
 
-/** Builds a legal page with its standard Home breadcrumb. */
-function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
-    return {
-        ...page,
-        breadcrumbs: [
-            { title: 'Home', path: homePage.path },
-            { title: page.title, path: page.path },
-        ],
-    };
-}
-
-export const LEGAL_PAGES = [
-    legalPage({
-        ...legalPages.terms,
-        icon: <FileText aria-hidden="true" size={16} />,
-        content: termsContent,
-        metadata: termsMetadata,
-    }),
-    legalPage({
-        ...legalPages.impressum,
-        icon: <Landmark aria-hidden="true" size={16} />,
-        content: impressumContent,
-        metadata: impressumMetadata,
-    }),
-    legalPage({
-        ...legalPages.privacy,
-        icon: <ShieldCheck aria-hidden="true" size={16} />,
-        content: privacyContent,
-        metadata: privacyMetadata,
-    }),
-];
+export const LEGAL_PAGES: ArticlePage[] = legalPages.map(({ Component, metadata }) => ({
+    ...metadata,
+    breadcrumbs: [
+        { title: 'Home', path: '/' },
+        { title: metadata.title, path: metadata.path },
+    ],
+    content: createElement(Component),
+    metadata,
+}));
 
 export const LEGAL_GROUPS = [
     {
         title: 'Legal',
-        items: LEGAL_PAGES.map((page) => ({
-            title: page.title,
-            path: page.path,
-            icon: page.icon,
-        })),
+        items: LEGAL_PAGES.map(({ title, path }) => ({ title, path })),
     },
 ];

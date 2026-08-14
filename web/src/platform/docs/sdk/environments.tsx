@@ -5,6 +5,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
+    path: '/docs/sdk/environments',
+    title: 'Environments',
+    description: 'Configure LongLink applications for local development, testing, and production environments.',
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -13,31 +16,33 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/environments.tsx',
 };
 
-export const content = (
-    <Stack gap={5}>
-        <Heading id="environments" level={1}>
-            Environments
-        </Heading>
-        <Text as="p">
-            LongLink uses{' '}
-            <Link
-                href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
-                hasUnderline
-                isExternalLink
-                type="inherit"
-            >
-                Pydantic Settings
-            </Link>{' '}
-            to define and manage Application configuration.
-        </Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock
-            code={
-                'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'
-            }
-            language="python"
-        />
-    </Stack>
-);
+export default function EnvironmentsDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Heading id="environments" level={1}>
+                Environments
+            </Heading>
+            <Text as="p">
+                LongLink uses{' '}
+                <Link
+                    href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
+                    hasUnderline
+                    isExternalLink
+                    type="inherit"
+                >
+                    Pydantic Settings
+                </Link>{' '}
+                to define and manage Application configuration.
+            </Text>
+            <Heading id="usage" level={2}>
+                Usage
+            </Heading>
+            <CodeBlock
+                code={
+                    'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'
+                }
+                language="python"
+            />
+        </Stack>
+    );
+}

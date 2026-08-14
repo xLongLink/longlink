@@ -8,20 +8,11 @@ from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
 from src.models.roles import PlatformRoles
-from src.models.users import UserUpdate
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
-
-
-async def fetch(session: AsyncSession) -> Sequence[User]:
-    """Return all users in the database."""
-
-    # Read users through a managed database session.
-    result = await session.scalars(select(User))
-    return result.all()
 
 
 async def active(session: AsyncSession, user_id: UUID) -> User | None:
@@ -51,25 +42,6 @@ async def register(session: AsyncSession, name: str, email: str, password: str) 
     session.add(user)
     await session.flush()
     return user
-
-
-def replace_password(user: User, password: str) -> None:
-    """Replace one user's password with a fresh secure hash."""
-
-    user.password = PasswordHash.recommended().hash(password)
-
-
-def update_profile(user: User, payload: UserUpdate) -> bool:
-    """Apply changed profile fields and report whether the profile changed."""
-
-    # Apply only supplied profile values that differ from their persisted counterparts.
-    changed = False
-    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
-        if getattr(user, field) == value:
-            continue
-        setattr(user, field, value)
-        changed = True
-    return changed
 
 
 async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:

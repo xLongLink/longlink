@@ -6,7 +6,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
-from src.models.gateways import API_KEY_HEADER, APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment, new_class
 from src.kubernetes.utils import apply, deployment_is_ready
 
@@ -48,8 +47,6 @@ class Applications:
         deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
-            api_key_header=API_KEY_HEADER,
-            application_id_header=APPLICATION_ID_HEADER,
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
@@ -134,8 +131,11 @@ class Applications:
 
         # The globally unique Application ID identifies its Pod across Organization Namespaces.
         api = await self._client.api()
-        pods = [pod async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)}) if isinstance(pod, Pod)]
-        active = [pod for pod in pods if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}]
+        active = [
+            pod
+            async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+            if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
+        ]
         if not active:
             raise ValueError("No Application Pod found")
         pod = min(active, key=lambda item: item.name)

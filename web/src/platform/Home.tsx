@@ -10,10 +10,17 @@ import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
-import { homePage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
 
-export const meta: MetaFunction = () => publicSeoMeta(homePage);
+export const metadata = {
+    path: '/',
+    title: 'LongLink',
+    seoTitle: 'LongLink | Python Platform for Business Applications',
+    description:
+        'LongLink is an open-source platform for building and running custom business-process applications with Python.',
+};
+
+export const meta: MetaFunction = () => publicSeoMeta(metadata);
 
 const paths = [
     {

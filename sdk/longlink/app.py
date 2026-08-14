@@ -6,7 +6,6 @@ from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_route_key, page_file_route
-from longlink.utils import Envs
 from longlink.logger import ApiAccessFilter
 from longlink.routes import root, router
 from longlink.context import install_context_middleware
@@ -16,8 +15,7 @@ from longlink.constants import ROOT
 from longlink.utils.xml import Element
 from longlink.middleware import install_frontend_middleware
 from longlink.storage.base import create_fs
-
-Environment = Literal["development", "testing", "production"]
+from longlink.utils.settings import Envs
 
 
 def render_page(content: str) -> Response:
@@ -37,7 +35,7 @@ class RuntimeState:
 class LongLink:
     """Install LongLink runtime services into one Application-owned FastAPI app."""
 
-    def __init__(self, app: FastAPI, env: Environment | None = None) -> None:
+    def __init__(self, app: FastAPI, env: Literal["development", "testing", "production"] | None = None) -> None:
         """Install runtime services, routes, and the frontend fallback into an Application app."""
 
         # Preserve Application routes so page collisions are rejected during discovery.

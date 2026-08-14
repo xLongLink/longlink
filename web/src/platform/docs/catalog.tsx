@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import {
     AppWindow,
     BookOpen,
@@ -13,19 +14,7 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/lib/articles';
-import * as overview from '@/platform/docs/index';
-import * as pages from '@/platform/docs/sdk/pages';
-import * as routes from '@/platform/docs/sdk/routes';
-import * as storage from '@/platform/docs/sdk/storage';
-import * as testing from '@/platform/docs/sdk/testing';
-import * as apiOverview from '@/platform/docs/api/index';
-import * as building from '@/platform/docs/sdk/building';
-import * as database from '@/platform/docs/sdk/database';
-import { documentationPages } from '@/platform/docs/pages';
-import * as environments from '@/platform/docs/sdk/environments';
-import * as applicationsOverview from '@/platform/docs/sdk/index';
-import * as apiApplications from '@/platform/docs/api/applications';
-import * as apiOrganizations from '@/platform/docs/api/organizations';
+import { documentationPages } from '@/platform/pages';
 import { pageReferenceDocPages } from '@/platform/docs/sdk/pages/index';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
@@ -40,12 +29,24 @@ type DocPageOptions = Omit<ArticlePage, 'breadcrumbs'> & {
     hiddenPages?: Array<Omit<ArticlePage, 'breadcrumbs'>>;
 };
 
-const documentationBreadcrumb = {
-    title: 'Documentation',
-    path: documentationPages.introduction.path,
-};
-const platformBreadcrumb = { title: 'Platform', path: documentationPages.platform.path };
-const applicationsBreadcrumb = { title: 'Applications', path: documentationPages.sdk.path };
+const [
+    introductionDocumentation,
+    platformDocumentation,
+    organizationsDocumentation,
+    apiApplicationsDocumentation,
+    applicationsDocumentation,
+    environmentsDocumentation,
+    routesDocumentation,
+    storageDocumentation,
+    databaseDocumentation,
+    pagesDocumentation,
+    testingDocumentation,
+    buildingDocumentation,
+] = documentationPages;
+
+const documentationBreadcrumb = { title: 'Documentation', path: introductionDocumentation.metadata.path };
+const platformBreadcrumb = { title: 'Platform', path: platformDocumentation.metadata.path };
+const applicationsBreadcrumb = { title: 'Applications', path: applicationsDocumentation.metadata.path };
 const docBreadcrumbsByGroup: Record<DocGroupTitle, ArticleBreadcrumb[]> = {
     Overview: [documentationBreadcrumb],
     Platform: [documentationBreadcrumb, platformBreadcrumb],
@@ -76,10 +77,7 @@ function docPage(
 
 /** Builds one docs sidebar section from page definitions. */
 function docSection(title: DocGroupTitle, items: DocPageOptions[]) {
-    return {
-        title,
-        items: items.map((item) => docPage(title, item)),
-    };
+    return { title, items: items.map((item) => docPage(title, item)) };
 }
 
 /** Flattens sidebar pages into the route catalog. */
@@ -104,73 +102,35 @@ function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
     };
 }
 
+/** Converts a documentation registry entry into a renderable article page. */
+function documentationPage(
+    { Component, metadata }: (typeof documentationPages)[number],
+    icon: ArticlePage['icon']
+): DocPageOptions {
+    return { ...metadata, icon, content: createElement(Component), metadata };
+}
+
 const DOC_SECTIONS = [
     docSection('Overview', [
-        {
-            ...documentationPages.introduction,
-            icon: <BookOpen aria-hidden="true" size={16} />,
-            ...overview,
-        },
+        documentationPage(introductionDocumentation, createElement(BookOpen, { 'aria-hidden': true, size: 16 })),
     ]),
     docSection('Platform', [
-        {
-            ...documentationPages.platform,
-            icon: <ShieldCheck aria-hidden="true" size={16} />,
-            ...apiOverview,
-        },
-        {
-            ...documentationPages.organizations,
-            icon: <Building2 aria-hidden="true" size={16} />,
-            ...apiOrganizations,
-        },
-        {
-            ...documentationPages.applications,
-            icon: <AppWindow aria-hidden="true" size={16} />,
-            ...apiApplications,
-        },
+        documentationPage(platformDocumentation, createElement(ShieldCheck, { 'aria-hidden': true, size: 16 })),
+        documentationPage(organizationsDocumentation, createElement(Building2, { 'aria-hidden': true, size: 16 })),
+        documentationPage(apiApplicationsDocumentation, createElement(AppWindow, { 'aria-hidden': true, size: 16 })),
     ]),
     docSection('Applications', [
+        documentationPage(applicationsDocumentation, createElement(Package, { 'aria-hidden': true, size: 16 })),
+        documentationPage(environmentsDocumentation, createElement(Globe, { 'aria-hidden': true, size: 16 })),
+        documentationPage(routesDocumentation, createElement(Waypoints, { 'aria-hidden': true, size: 16 })),
+        documentationPage(storageDocumentation, createElement(HardDrive, { 'aria-hidden': true, size: 16 })),
+        documentationPage(databaseDocumentation, createElement(Database, { 'aria-hidden': true, size: 16 })),
         {
-            ...documentationPages.sdk,
-            icon: <Package aria-hidden="true" size={16} />,
-            ...applicationsOverview,
-        },
-        {
-            ...documentationPages.environments,
-            icon: <Globe aria-hidden="true" size={16} />,
-            ...environments,
-        },
-        {
-            ...documentationPages.routes,
-            icon: <Waypoints aria-hidden="true" size={16} />,
-            ...routes,
-        },
-        {
-            ...documentationPages.storage,
-            icon: <HardDrive aria-hidden="true" size={16} />,
-            ...storage,
-        },
-        {
-            ...documentationPages.database,
-            icon: <Database aria-hidden="true" size={16} />,
-            ...database,
-        },
-        {
-            ...documentationPages.pages,
-            icon: <FileCode2 aria-hidden="true" size={16} />,
-            ...pages,
+            ...documentationPage(pagesDocumentation, createElement(FileCode2, { 'aria-hidden': true, size: 16 })),
             hiddenPages: pageReferenceDocPages,
         },
-        {
-            ...documentationPages.testing,
-            icon: <FlaskConical aria-hidden="true" size={16} />,
-            ...testing,
-        },
-        {
-            ...documentationPages.building,
-            icon: <Rocket aria-hidden="true" size={16} />,
-            ...building,
-        },
+        documentationPage(testingDocumentation, createElement(FlaskConical, { 'aria-hidden': true, size: 16 })),
+        documentationPage(buildingDocumentation, createElement(Rocket, { 'aria-hidden': true, size: 16 })),
     ]),
 ];
 

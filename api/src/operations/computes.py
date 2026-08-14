@@ -1,4 +1,3 @@
-import secrets
 import ipaddress
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -31,28 +30,27 @@ async def create(claimed: Operation) -> str | None:
         return None
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Reapply static Gateway resources without rotating published client credentials.
+    # Reapply static Gateway resources without rotating published mTLS credentials.
     if (
         registry.status == Status.running
         and registry.gateway_url is not None
-        and registry.gateway_api_key is not None
         and registry.gateway_certificate is not None
+        and registry.gateway_client_identity is not None
     ):
         gateway_address = await cluster.gateway.apply()
         if registry.gateway_url != gateway_url(gateway_address):
             return "Gateway endpoint changed and requires explicit credential rotation"
         return None
 
-    # Generate Gateway credentials only while bootstrapping an unpublished Compute.
-    api_key = secrets.token_urlsafe(32)
-    _, server_certificate, server_private_key = generate_gateway_tls(registry.id, None)
+    # Generate mTLS credentials only while bootstrapping an unpublished Compute.
+    tls = generate_gateway_tls(registry.id, None)
 
     # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
-    gateway_address = await cluster.gateway.apply(server_certificate, server_private_key, api_key)
+    gateway_address = await cluster.gateway.apply(tls)
 
-    # Replace the bootstrap identity with a certificate bound to the published endpoint.
-    gateway_certificate, server_certificate, server_private_key = generate_gateway_tls(registry.id, gateway_address)
-    await cluster.gateway.replace_tls(server_certificate, server_private_key, gateway_certificate, gateway_address)
+    # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
+    tls = generate_gateway_tls(registry.id, gateway_address)
+    await cluster.gateway.replace_tls(tls, gateway_address)
 
     # Publish connection material only after the desired gateway Deployment is serving.
     async with session_scope() as session:
@@ -60,8 +58,8 @@ async def create(claimed: Operation) -> str | None:
             session,
             registry.id,
             gateway_url(gateway_address),
-            api_key,
-            gateway_certificate,
+            tls.ca_certificate,
+            f"{tls.client_certificate}\n{tls.client_private_key}",
             registry.status,
         )
         await session.commit()

@@ -76,13 +76,8 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
     return invitation
 
 
-async def accept(session: AsyncSession, user_id: UUID) -> set[UUID]:
+async def accept(session: AsyncSession, user: User) -> set[UUID]:
     """Accept active email grants and return the Organizations with changed memberships."""
-
-    # Resolve the recipient before changing invitation or membership state.
-    user = await session.get(User, user_id)
-    if user is None:
-        return set()
 
     normalized_email = user.email.strip().lower()
 
@@ -112,7 +107,6 @@ async def accept(session: AsyncSession, user_id: UUID) -> set[UUID]:
     memberships = result.all()
     memberships_by_organization_id = {membership.organization_id: membership for membership in memberships}
 
-    now = utcnow()
     changed_organization_ids: set[UUID] = set()
 
     # Create or restore access without changing active membership roles.
@@ -131,7 +125,7 @@ async def accept(session: AsyncSession, user_id: UUID) -> set[UUID]:
             changed_organization_ids.add(invitation.organization_id)
         elif membership.deleted_at is not None:
             membership.role = invitation.role
-            membership.updated_at = now
+            membership.updated_at = utcnow()
             membership.updated_id = user.id
             membership.deleted_at = None
             membership.deleted_id = None

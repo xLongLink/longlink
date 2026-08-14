@@ -1,16 +1,18 @@
 import ssl
 import asyncio
+import tempfile
 import ipaddress
 from uuid import UUID
 from typing import TYPE_CHECKING
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
+from dataclasses import dataclass
 from cryptography import x509
 from kr8s.asyncio import Api
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, Namespace, new_class
 from src.kubernetes.utils import apply
-from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
+from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -24,6 +26,17 @@ GatewayClassResource = new_class(
     namespaced=False,
     plural="gatewayclasses",
 )
+
+
+@dataclass(slots=True)
+class GatewayTLS:
+    """Keep the Gateway server and Platform client identities issued by one private CA."""
+
+    ca_certificate: str
+    server_certificate: str
+    server_private_key: str
+    client_certificate: str
+    client_private_key: str
 
 
 def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
@@ -43,13 +56,53 @@ def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     )
 
 
-def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, str, str]:
-    """Generate one private CA and its Gateway server certificate."""
+def leaf_certificate_builder(
+    ca_name: x509.Name,
+    ca_key: rsa.RSAPrivateKey,
+    key: rsa.RSAPrivateKey,
+    name: str,
+    usage: ObjectIdentifier,
+    now: datetime,
+) -> x509.CertificateBuilder:
+    """Build one private-CA-signed leaf certificate with its intended TLS usage."""
 
-    # Create a private CA and a server-only identity for this Compute Gateway.
+    # Both sides need the same validity, issuer, and non-CA key constraints.
+    return (
+        x509.CertificateBuilder()
+        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, name)]))
+        .issuer_name(ca_name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=3650))
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .add_extension(x509.ExtendedKeyUsage([usage]), critical=False)
+        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                key_encipherment=True,
+                key_cert_sign=False,
+                key_agreement=False,
+                content_commitment=False,
+                data_encipherment=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+    )
+
+
+def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
+    """Generate a private CA with Gateway server and Platform client identities."""
+
+    # Create a private CA and independent server and client identities for this Compute.
     now = datetime.now(UTC)
     ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    client_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
     ca_certificate = (
         x509.CertificateBuilder()
@@ -80,31 +133,13 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
     )
 
     # Bind the final certificate to the controller-published IP address or hostname.
-    builder = (
-        x509.CertificateBuilder()
-        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")]))
-        .issuer_name(ca_name)
-        .public_key(server_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(minutes=5))
-        .not_valid_after(now + timedelta(days=3650))
-        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
-        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
-        .add_extension(
-            x509.KeyUsage(
-                digital_signature=True,
-                key_encipherment=True,
-                key_cert_sign=False,
-                key_agreement=False,
-                content_commitment=False,
-                data_encipherment=False,
-                crl_sign=False,
-                encipher_only=False,
-                decipher_only=False,
-            ),
-            critical=True,
-        )
+    builder = leaf_certificate_builder(
+        ca_name,
+        ca_key,
+        server_key,
+        f"LongLink Gateway {compute_id}",
+        ExtendedKeyUsageOID.SERVER_AUTH,
+        now,
     )
     if address is not None:
         try:
@@ -114,10 +149,26 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> tuple[str, st
         builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
     server_certificate = builder.sign(ca_key, hashes.SHA256())
 
-    return (
-        ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_key.private_bytes(
+    # Bind the Platform client identity to this Compute CA without exposing the CA private key.
+    client_certificate = leaf_certificate_builder(
+        ca_name,
+        ca_key,
+        client_key,
+        f"LongLink Platform {compute_id}",
+        ExtendedKeyUsageOID.CLIENT_AUTH,
+        now,
+    ).sign(ca_key, hashes.SHA256())
+
+    return GatewayTLS(
+        ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_private_key=server_key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        ).decode("ascii"),
+        client_certificate=client_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        client_private_key=client_key.private_bytes(
             serialization.Encoding.PEM,
             serialization.PrivateFormat.PKCS8,
             serialization.NoEncryption(),
@@ -133,43 +184,39 @@ class Gateway:
 
         self._client = client
 
-    async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
+    async def apply(self, tls: GatewayTLS | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""
 
         # Render LongLink resources that target the required Envoy Gateway controller.
-        namespace, gateway_class, gateway, security_policy = templates.readyml_list(
+        namespace, gateway_class, gateway, client_traffic_policy = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
         api = await self._client.api()
-        resources = [
-            Namespace(namespace, api=api),
-            GatewayClassResource(gateway_class, api=api),
-            new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api),
-            new_class(
-                "SecurityPolicy",
-                "gateway.envoyproxy.io/v1alpha1",
-                asyncio=True,
-                plural="securitypolicies",
-            )(security_policy, api=api),
-        ]
-        if certificate is not None and private_key is not None and api_key is not None:
-            resources[2:2] = [
-                gateway_tls_secret(certificate, private_key, api),
+        gateway_resource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api)
+        policy_resource = new_class(
+            "ClientTrafficPolicy",
+            "gateway.envoyproxy.io/v1alpha1",
+            asyncio=True,
+            plural="clienttrafficpolicies",
+        )(client_traffic_policy, api=api)
+        await apply(Namespace(namespace, api=api))
+        await apply(GatewayClassResource(gateway_class, api=api))
+        if tls is not None:
+            await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
+            await apply(
                 Secret(
                     {
-                        "metadata": {"name": "longlink-gateway-api-key", "namespace": "longlink-system"},
-                        "stringData": {"platform": api_key},
+                        "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+                        "stringData": {"ca.crt": tls.ca_certificate},
                         "type": "Opaque",
                     },
                     api=api,
-                ),
-            ]
-        for resource in resources:
-            await apply(resource)
+                )
+            )
+        await apply(gateway_resource)
+        await apply(policy_resource)
 
         # Require the controller, Gateway, policy, and external address before publishing readiness.
-        gateway_resource = resources[-2]
-        policy_resource = resources[-1]
         while True:
             await gateway_resource.refresh()
             await policy_resource.refresh()
@@ -196,14 +243,29 @@ class Gateway:
                         return value
             await asyncio.sleep(5)
 
-    async def replace_tls(self, certificate: str, private_key: str, gateway_certificate: str, address: str) -> None:
-        """Replace the Gateway server certificate after endpoint allocation."""
+    async def replace_tls(self, tls: GatewayTLS, address: str) -> None:
+        """Replace Gateway TLS identities after endpoint allocation."""
 
-        # Envoy Gateway watches its listener Secret and reloads the final address-bound identity.
-        await apply(gateway_tls_secret(certificate, private_key, await self._client.api()))
+        # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.
+        api = await self._client.api()
+        await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
+        await apply(
+            Secret(
+                {
+                    "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+                    "stringData": {"ca.crt": tls.ca_certificate},
+                    "type": "Opaque",
+                },
+                api=api,
+            )
+        )
 
         # Do not publish the Compute until Envoy serves the final address-bound certificate.
-        context = ssl.create_default_context(cadata=gateway_certificate)
+        context = ssl.create_default_context(cadata=tls.ca_certificate)
+        with tempfile.NamedTemporaryFile(mode="w") as identity:
+            identity.write(f"{tls.client_certificate}\n{tls.client_private_key}")
+            identity.flush()
+            context.load_cert_chain(identity.name)
         while True:
             try:
                 _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)

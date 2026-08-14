@@ -33,20 +33,18 @@ spec:
                   from: All
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: SecurityPolicy
+kind: ClientTrafficPolicy
 metadata:
-    name: longlink-api-only
+    name: longlink-platform-only
     namespace: longlink-system
 spec:
     targetRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
           name: longlink
-    apiKeyAuth:
-        credentialRefs:
-            - group: ''
-              kind: Secret
-              name: longlink-gateway-api-key
-        extractFrom:
-            - headers:
-                  - x-longlink-api-key
+    tls:
+        clientValidation:
+            caCertificateRefs:
+                - group: ''
+                  kind: Secret
+                  name: longlink-gateway-client-ca

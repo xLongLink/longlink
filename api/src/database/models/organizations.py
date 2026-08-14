@@ -1,16 +1,12 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 from datetime import datetime
-from sqlmodel import Field, Relationship
+from sqlmodel import Field
 from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 from src.database.models.base import PlatformModel
-
-# Import relationship targets only during type checking.
-if TYPE_CHECKING:
-    from src.database.models.applications import Application
 
 
 class Organization(PlatformModel, table=True):
@@ -50,6 +46,3 @@ class Organization(PlatformModel, table=True):
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
-
-    # Relationships
-    applications: list["Application"] = Relationship(back_populates="organization")

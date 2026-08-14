@@ -63,4 +63,4 @@ class Application(PlatformModel, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Relationships
-    organization: "Organization" = Relationship(back_populates="applications")
+    organization: "Organization" = Relationship()

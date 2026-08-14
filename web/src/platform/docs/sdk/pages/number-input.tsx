@@ -3,26 +3,31 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>
-                {'NumberInput'}
+export default function NumberInputDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Form'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'NumberInput'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Collects numeric values.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock
+                code={'<NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" />'}
+                language="xml"
+            />
         </Stack>
-        <Text as="p">{'Collects numeric values.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock
-            code={'<NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" />'}
-            language="xml"
-        />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/number-input',
+    title: 'NumberInput',
+    description: 'Collects numeric values.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

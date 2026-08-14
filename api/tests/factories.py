@@ -94,8 +94,8 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             name=f"{name} compute {suffix}",
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
-            gateway_api_key="test-api-key",
             gateway_certificate="test-certificate",
+            gateway_client_identity="test-client-certificate\ntest-client-private-key",
             status=Status.running,
         )
         database = DatabaseRegistry(

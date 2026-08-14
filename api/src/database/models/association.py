@@ -39,7 +39,6 @@ class UserOrganization(PlatformModel, table=True):
 
     # Relationships
     user: "User" = Relationship(
-        back_populates="organization_memberships",
         sa_relationship_kwargs={"foreign_keys": "UserOrganization.user_id"},
     )
     organization: "Organization" = Relationship(sa_relationship_kwargs={"foreign_keys": "UserOrganization.organization_id"})

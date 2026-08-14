@@ -273,32 +273,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
     return common_root, workdir
 
 
-def render_dockerfile(workdir: str, labels: str, sdk_version: str) -> str:
-    """Render Dockerfile content for a specific in-container workdir."""
-
-    return DOCKERFILE_TEMPLATE.format(
-        workdir=workdir,
-        labels=labels,
-        sdk_version=json.dumps(sdk_version),
-    )
-
-
-def gitignore_path(root: Path) -> Path | None:
-    """Return the closest Git ignore file that applies to one Application root."""
-
-    # Applications can be nested in a shared repository, so inherit its root ignore policy.
-    return next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
-
-
-def write_dockerignore(build_context: Path, root: Path) -> None:
-    """Write Docker ignore rules from the Application's applicable Git ignore file."""
-
-    # Docker needs its own file, but its ignore syntax supports the project's existing Git ignore rules.
-    source = gitignore_path(root)
-    rules = source.read_text(encoding="utf-8") if source is not None else ""
-    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n", encoding="utf-8")
-
-
 def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
     """Create Docker build artifacts for the current app."""
 
@@ -352,12 +326,21 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         ignore=ignore_out_of_tree_symlinks,
     )
 
-    # Apply the repository's canonical ignore rules when Docker uploads the context.
-    write_dockerignore(build_context, root)
+    # Apply the closest repository ignore rules when Docker uploads the context.
+    source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
+    rules = source.read_text(encoding="utf-8") if source is not None else ""
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"
-    dockerfile_path.write_text(render_dockerfile(workdir, labels, sdk_version), encoding="utf-8")
+    dockerfile_path.write_text(
+        DOCKERFILE_TEMPLATE.format(
+            workdir=workdir,
+            labels=labels,
+            sdk_version=json.dumps(sdk_version),
+        ),
+        encoding="utf-8",
+    )
 
     return dockerfile_path, version, project_name
 

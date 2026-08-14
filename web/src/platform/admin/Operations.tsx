@@ -75,7 +75,7 @@ export default function AdminOperations() {
         refetchInterval: 5000,
         parse: (value) => zOperationResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(operations, 'default');
+    const { pageItems, pagination } = useAdminPagination(operations);
 
     return (
         <VStack gap={6} width="100%">
