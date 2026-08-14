@@ -3,84 +3,18 @@ import { useLocation } from 'react-router';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Wordmark } from '@/components/Wordmark';
 
-const hiddenSegments = new Set(['orgs', 'apps']);
-
-/** Decodes one URL path segment without failing breadcrumb rendering. */
-function decodeSegment(segment: string): string {
-    // Decode readable labels when possible.
-    try {
-        return decodeURIComponent(segment);
-    } catch {
-        return segment;
-    }
-}
-
-/** Builds breadcrumbs for organization and application routes. */
-function buildOrganizationCrumbs(segments: string[]) {
-    const organization = segments[1];
-    const application = segments[2] === 'apps' ? segments[3] : null;
-    const organizationCrumb = {
-        label: startCase(decodeSegment(organization)),
-        href: `/orgs/${organization}`,
-    };
-
-    // Keep organization routes to a single crumb.
-    if (!application) {
-        return [organizationCrumb];
-    }
-
-    return [
-        organizationCrumb,
-        {
-            label: startCase(decodeSegment(application)),
-            href: `/orgs/${organization}/apps/${application}`,
-        },
-    ];
-}
-
-/** Builds generic breadcrumbs by hiding routing-only path segments. */
-function buildDefaultCrumbs(segments: string[]) {
-    return segments.flatMap((segment, index) => {
-        // Drop routing-only segments from default trails.
-        if (hiddenSegments.has(segment)) {
-            return [];
-        }
-
-        return [
-            {
-                label: startCase(decodeSegment(segment)),
-                href: `/${segments.slice(0, index + 1).join('/')}`,
-            },
-        ];
-    });
-}
-
-/** Renders the top navigation breadcrumb for organization, app, and profile routes. */
+/** Renders the top navigation breadcrumb for organization and admin routes. */
 export function Breadcrumb() {
     const { pathname } = useLocation();
-    const segments = pathname.split('/').filter(Boolean);
-    const isAdminSection = segments[0] === 'admin';
-    const isOrganizationSection = segments[0] === 'orgs' && segments.length >= 2;
-    const crumbs = isAdminSection
-        ? [{ href: '/admin/users', label: 'Admin' }]
-        : isOrganizationSection
-          ? buildOrganizationCrumbs(segments)
-          : buildDefaultCrumbs(segments);
+    const organization = pathname.split('/')[2];
+    const label = pathname.startsWith('/admin/') ? 'Admin' : startCase(decodeURIComponent(organization));
 
     return (
         <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/organizations">
                 <Wordmark />
             </BreadcrumbItem>
-            {crumbs.map((crumb, index) => {
-                const isCurrent = index === crumbs.length - 1;
-
-                return (
-                    <BreadcrumbItem key={crumb.href} href={isCurrent ? undefined : crumb.href} isCurrent={isCurrent}>
-                        {crumb.label}
-                    </BreadcrumbItem>
-                );
-            })}
+            <BreadcrumbItem isCurrent>{label}</BreadcrumbItem>
         </Breadcrumbs>
     );
 }

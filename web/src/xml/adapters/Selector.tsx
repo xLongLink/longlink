@@ -88,17 +88,14 @@ export function Selector({ props, nodes }: Props) {
     if (!isXmlEnum(variant, [undefined, ...SELECTOR_VARIANTS])) {
         throw new Error(`Unsupported Selector variant '${String(variant)}'`);
     }
-    const selectorSize = isXmlEnum(size, SIZES) ? size : undefined;
-    const selectorStatusVariant = isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined;
-    const selectorVariant = isXmlEnum(variant, SELECTOR_VARIANTS) ? variant : undefined;
     const common = {
-        size: selectorSize,
+        size,
         label: requireXmlString(props, 'label', ctx, 'Selector'),
         value: binding.value,
         width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
         status: resolveInputStatus(props, ctx),
         options,
-        variant: selectorVariant,
+        variant,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
         isLoading: typeof isLoading === 'boolean' ? isLoading : undefined,
@@ -108,10 +105,10 @@ export function Selector({ props, nodes }: Props) {
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-        placement: isXmlEnum(placement, LAYER_PLACEMENTS) ? placement : undefined,
+        placement,
         isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
         isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
-        statusVariant: selectorStatusVariant,
+        statusVariant,
         disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
         searchPlaceholder: typeof searchPlaceholder === 'string' ? searchPlaceholder : undefined,
     };

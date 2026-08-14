@@ -84,7 +84,7 @@ export function FileInput({ props }: Props) {
             onChange={binding.setValue}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
-            statusVariant={isXmlEnum(statusVariant, FIELD_STATUS_VARIANTS) ? statusVariant : undefined}
+            statusVariant={statusVariant}
             value={binding.value}
             width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
         />
