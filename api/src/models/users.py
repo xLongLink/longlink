@@ -1,6 +1,7 @@
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.resources import OrganizationIdentity
 from longlink.shared.models import Email
 
 
@@ -26,27 +27,13 @@ class UserIdentity(BaseModel):
     avatar: str
 
 
-class UserOrganizationSummary(BaseModel):
-    """Represent a compact Organization in current-user membership responses."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    avatar: str
-
-
 class UserOrganizationMembership(BaseModel):
     """Represent one current-user Organization membership."""
 
     model_config = ConfigDict(from_attributes=True)
 
     # Relationships
-    organization: UserOrganizationSummary
+    organization: OrganizationIdentity
 
     # Access
     role: OrganizationRoles

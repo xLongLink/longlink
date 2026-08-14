@@ -1,13 +1,10 @@
 import { hasProtocol } from 'ufo';
 
 type ApiErrorPayload = {
-    detail?:
-        | string
-        | {
-              code?: string;
-              reason?: string;
-          };
+    detail?: string;
 } | null;
+
+const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
@@ -29,8 +26,6 @@ export function apiQueryKey(path: string): [string, string] {
 
 /** Resolves an API path against the configured API origin. */
 function apiUrl(path: string): string {
-    const baseUrl = import.meta.env.VITE_API_URL || '';
-
     // Reject path separators that could bypass URL checks.
     if (path.includes('\\')) {
         throw new Error('API path must not contain backslashes');
@@ -54,11 +49,11 @@ function apiUrl(path: string): string {
     }
 
     // Keep relative paths unchanged when no API origin is configured.
-    if (!baseUrl) {
+    if (!apiBaseUrl) {
         return path;
     }
 
-    return new URL(path, baseUrl).toString();
+    return new URL(path, apiBaseUrl).toString();
 }
 
 /** Reads the API error detail from a failed response. */
@@ -71,25 +66,11 @@ async function readApiError(response: Response) {
         return { code: payload.detail, message: payload.detail };
     }
 
-    // Prefer a validation reason while retaining its stable API error code.
-    if (payload?.detail && typeof payload.detail === 'object') {
-        const { code, reason } = payload.detail;
-
-        return {
-            code: typeof code === 'string' ? code : undefined,
-            message: typeof reason === 'string' ? reason : typeof code === 'string' ? code : fallback,
-        };
-    }
-
     return { message: fallback };
 }
 
-/** Sends one API request with shared URL, credential, and header handling. */
-export async function fetchApiResponse(
-    path: string,
-    init?: RequestInit,
-    fetchImpl: typeof fetch = fetch
-): Promise<Response> {
+/** Sends one API request and normalizes non-OK errors. */
+export async function requestApi(path: string, init?: RequestInit, fetchImpl: typeof fetch = fetch): Promise<Response> {
     const headers = new Headers(init?.headers);
 
     // Request JSON by default unless callers override Accept.
@@ -97,16 +78,11 @@ export async function fetchApiResponse(
         headers.set('Accept', 'application/json');
     }
 
-    return fetchImpl(apiUrl(path), {
+    const response = await fetchImpl(apiUrl(path), {
         ...init,
         credentials: 'include',
         headers,
     });
-}
-
-/** Sends one API request and normalizes non-OK errors. */
-async function requestApi(path: string, init?: RequestInit): Promise<Response> {
-    const response = await fetchApiResponse(path, init);
 
     // Convert failed responses into typed API errors.
     if (!response.ok) {
@@ -119,35 +95,8 @@ async function requestApi(path: string, init?: RequestInit): Promise<Response> {
 }
 
 /** Fetches unvalidated JSON. */
-export async function fetchApiJson(path: string, init?: RequestInit): Promise<unknown>;
-
-/** Fetches JSON and validates it before returning typed data. */
-export async function fetchApiJson<T>(
-    path: string,
-    init: RequestInit | undefined,
-    parse: (value: unknown) => T
-): Promise<T>;
-
-/** Fetches JSON and optionally validates it before returning typed data. */
-export async function fetchApiJson<T>(
-    path: string,
-    init?: RequestInit,
-    parse?: (value: unknown) => T
-): Promise<T | unknown> {
-    const response = await requestApi(path, init);
-    const value = (await response.json()) as unknown;
-
-    return parse ? parse(value) : value;
-}
-
-/** Fetches text and throws a normalized error for non-OK responses. */
-export async function fetchApiText(path: string, init?: RequestInit): Promise<string> {
+export async function fetchApiJson(path: string, init?: RequestInit): Promise<unknown> {
     const response = await requestApi(path, init);
 
-    return response.text();
-}
-
-/** Fetches an API endpoint and ignores the body on success. */
-export async function fetchApiVoid(path: string, init?: RequestInit): Promise<void> {
-    await requestApi(path, init);
+    return response.json() as Promise<unknown>;
 }

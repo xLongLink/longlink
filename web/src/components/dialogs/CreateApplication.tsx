@@ -94,9 +94,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = await fetchApiJson(platformApiPath(`/image?${query.toString()}`), undefined, (value) =>
-                zLongLinkMetadata.parse(value)
-            );
+            const metadata = zLongLinkMetadata.parse(await fetchApiJson(platformApiPath(`/image?${query.toString()}`)));
 
             setDeclaredEnvironments(metadata.environments ?? []);
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });

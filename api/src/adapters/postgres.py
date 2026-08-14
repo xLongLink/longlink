@@ -80,7 +80,7 @@ class Postgres:
         database: str,
         *,
         autocommit: bool = False,
-        search_path: str | None = None
+        search_path: str | None = None,
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
@@ -279,11 +279,9 @@ class Postgres:
         # Read the exact Organization database size and normalize connection failures to no usage.
         try:
             async with self._connection(database_name) as conn:
-                space_used = await conn.scalar(text("SELECT pg_database_size(current_database())"))
+                return int(await conn.scalar(text("SELECT pg_database_size(current_database())")))
         except OperationalError:
             return None
-
-        return int(space_used)
 
     async def usage(self) -> int:
         """Return the total non-system database size in bytes."""

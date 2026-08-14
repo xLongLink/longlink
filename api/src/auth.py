@@ -3,17 +3,14 @@ import hmac
 from uuid import UUID
 from fastapi import Cookie, Depends, HTTPException
 from src.utils import token
-from dataclasses import dataclass
 from src.database import session as database
 from collections.abc import AsyncIterator
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import PlatformRoles
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
-from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
@@ -47,7 +44,7 @@ async def current_optional_user(
     return user
 
 
-async def authuser(user: User | None = Depends(current_optional_user)) -> User:
+def authuser(user: User | None = Depends(current_optional_user)) -> User:
     """Return the authenticated user with current LongLink resource access."""
 
     # Convert missing, expired, and invalidated sessions into one stable authentication error.
@@ -56,22 +53,13 @@ async def authuser(user: User | None = Depends(current_optional_user)) -> User:
     return user
 
 
-async def authadmin(user: User = Depends(authuser)) -> User:
+def authadmin(user: User = Depends(authuser)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
     if user.role != PlatformRoles.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user
-
-
-@dataclass(frozen=True, slots=True)
-class ApplicationAccess:
-    """Hold one authorized Application, Organization, and Organization role."""
-
-    application: Application
-    organization: Organization
-    role: OrganizationRoles
 
 
 async def organization_access(
@@ -86,18 +74,3 @@ async def organization_access(
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
     return membership
-
-
-async def application_access(
-    application_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationAccess:
-    """Return required active Application access for one authenticated user."""
-
-    # Convert absent membership and deleted Application state into the existing access response.
-    access = await organization_service.application_access(session, user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
-    return ApplicationAccess(application=application, organization=organization, role=role)

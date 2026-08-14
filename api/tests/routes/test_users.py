@@ -13,10 +13,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    organization = await create_organization(
-        user,
-        avatar="https://example.com/organizations/acme.png",
-    )
+    organization = await create_organization(user)
     client = clients[0]
 
     # Act
@@ -34,7 +31,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
                 "id": str(organization.id),
                 "name": "acme",
                 "slug": "acme",
-                "avatar": "https://example.com/organizations/acme.png",
+                "avatar": "",
             },
             "role": "owner",
         }

@@ -317,7 +317,6 @@ async def create(
     name: str,
     slug: str,
     user: User,
-    avatar: str | None = None,
     *,
     compute_id: UUID,
     storage_id: UUID,
@@ -326,12 +325,10 @@ async def create(
     """Create an Organization with the specified infrastructure."""
 
     # Lock the requested running compute registry.
-    compute_statement = select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update()
-    result = await session.scalars(compute_statement)
-    compute = result.one_or_none()
-    if compute is None:
+    compute_status = await session.scalar(select(ComputeRegistry.status).where(ComputeRegistry.id == compute_id).with_for_update())
+    if compute_status is None:
         raise UnavailableError("No compute registry available")
-    if compute.status != Status.running:
+    if compute_status != Status.running:
         raise UnavailableError("No ready compute registry available")
 
     # Lock the requested database registry.
@@ -348,7 +345,6 @@ async def create(
     organization = Organization(
         name=name,
         slug=slug,
-        avatar=avatar or "",
         compute_id=compute_id,
         database_id=database_id,
         storage_id=storage_id,

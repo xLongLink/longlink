@@ -30,7 +30,6 @@ class ColorFormatter(logging.Formatter):
 class ApiAccessFilter(logging.Filter):
     """Allow access logs for application requests while hiding frontend noise."""
 
-    _allowed_prefixes = ("/api/",)
     _allowed_methods = ("POST", "PUT", "PATCH", "DELETE")
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -45,7 +44,7 @@ class ApiAccessFilter(logging.Filter):
         path = str(record.args[2]).split("?", 1)[0]
 
         # Always show mutating and API requests while hiding frontend and asset requests.
-        return method in self._allowed_methods or path.startswith(self._allowed_prefixes)
+        return method in self._allowed_methods or path.startswith("/api/")
 
 
 def configure_logger(name: str) -> logging.Logger:

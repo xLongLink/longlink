@@ -4,19 +4,19 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { Wordmark } from '@/components/Wordmark';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { PasswordInput } from '@/components/PasswordInput';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 
 type LoginValues = {
     email: string;
@@ -39,12 +39,13 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
-        mutationFn: (payload: LoginValues) =>
-            fetchApiVoid(platformApiPath('/auth/password/login'), {
+        mutationFn: async (payload: LoginValues) => {
+            await requestApi(platformApiPath('/auth/password/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            }),
+            });
+        },
     });
 
     /** Signs in with an email and password, then refreshes the current profile. */
@@ -65,7 +66,12 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         <Stack gap={4} maxWidth={384} width="100%">
             <Stack gap={1} hAlign="center">
                 <Heading level={1} justify="center">
-                    <AuthWelcomeTitle />
+                    <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
+                        <Text color="inherit" type="inherit">
+                            Welcome to
+                        </Text>
+                        <Wordmark size="heading" />
+                    </HStack>
                 </Heading>
                 <Divider label="Sign in with your email and password." />
             </Stack>
@@ -137,7 +143,17 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 }
             />
 
-            <AuthLegalAgreement />
+            <Text as="p" color="secondary" justify="center" type="supporting">
+                By continuing, you agree to our <br />
+                <Link href="/terms" hasUnderline type="inherit">
+                    Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" hasUnderline type="inherit">
+                    Privacy Policy
+                </Link>
+                .
+            </Text>
         </Stack>
     );
 }

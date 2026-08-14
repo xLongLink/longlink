@@ -1870,16 +1870,6 @@
         "operationId": "update_organization_member_api_v1_organizations__organization_id__members__member_id__patch",
         "parameters": [
           {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
             "name": "member_id",
             "in": "path",
             "required": true,
@@ -1887,6 +1877,16 @@
               "type": "string",
               "format": "uuid",
               "title": "Member Id"
+            }
+          },
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
             }
           },
           {
@@ -2401,36 +2401,6 @@
         "title": "ApplicationCreate",
         "description": "Validate application creation payloads."
       },
-      "ApplicationOrganizationResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "avatar"
-        ],
-        "title": "ApplicationOrganizationResponse",
-        "description": "Represent the compact Organization associated with an Application."
-      },
       "ApplicationRelease": {
         "properties": {
           "image": {
@@ -2465,7 +2435,7 @@
             "title": "Id"
           },
           "organization": {
-            "$ref": "#/components/schemas/ApplicationOrganizationResponse"
+            "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "name": {
             "type": "string",
@@ -3016,6 +2986,36 @@
         "title": "OrganizationDetails",
         "description": "Represent an Organization with its members and Application access."
       },
+      "OrganizationIdentity": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "avatar": {
+            "type": "string",
+            "title": "Avatar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "avatar"
+        ],
+        "title": "OrganizationIdentity",
+        "description": "Represent a compact Organization in nested API responses."
+      },
       "OrganizationInvitationCreate": {
         "properties": {
           "email": {
@@ -3145,46 +3145,6 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
-          },
-          "compute_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Compute Id"
-          },
-          "storage_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Storage Id"
-          },
-          "database_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Database Id"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "deleted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deleted At"
           }
         },
         "type": "object",
@@ -3192,14 +3152,7 @@
           "id",
           "name",
           "slug",
-          "avatar",
-          "compute_id",
-          "storage_id",
-          "database_id",
-          "status",
-          "created_at",
-          "updated_at",
-          "deleted_at"
+          "avatar"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."
@@ -3438,7 +3391,7 @@
       "UserOrganizationMembership": {
         "properties": {
           "organization": {
-            "$ref": "#/components/schemas/UserOrganizationSummary"
+            "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "role": {
             "$ref": "#/components/schemas/OrganizationRoles"
@@ -3451,36 +3404,6 @@
         ],
         "title": "UserOrganizationMembership",
         "description": "Represent one current-user Organization membership."
-      },
-      "UserOrganizationSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "avatar"
-        ],
-        "title": "UserOrganizationSummary",
-        "description": "Represent a compact Organization in current-user membership responses."
       },
       "UserSummary": {
         "properties": {

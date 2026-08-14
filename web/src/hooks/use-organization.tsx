@@ -10,13 +10,9 @@ import type {
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
-import { ApiError, apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
+import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
-import {
-    zApplicationResponse,
-    zOrganizationDetails,
-    zOrganizationSummary,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
@@ -61,7 +57,7 @@ export function useInviteOrganizationMember(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/invitations`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}/invitations`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role }),
@@ -91,15 +87,11 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson(
-                platformApiPath(`/organizations/${organizationId}/applications`),
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, image, description, icon, envs }),
-                },
-                (value) => zApplicationResponse.parse(value)
-            );
+            await requestApi(platformApiPath(`/organizations/${organizationId}/applications`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, image, description, icon, envs }),
+            });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
@@ -120,7 +112,7 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role }),
@@ -145,16 +137,15 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiJson(
-                platformApiPath(`/applications/${applicationId}`),
-                {
-                    method: 'DELETE',
-                },
-                (value) => zApplicationResponse.parse(value)
-            );
+            await requestApi(platformApiPath(`/applications/${applicationId}`), { method: 'DELETE' });
+        },
+        onSuccess: () => {
+            if (organizationPath === null) {
+                return;
+            }
 
-            await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
-            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
+            queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
         },
     });
 }
@@ -164,15 +155,13 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ name }: OrganizationCreate) =>
-            fetchApiJson(
-                platformApiPath('/organizations'),
-                {
+        mutationFn: async ({ name }: OrganizationCreate) =>
+            zOrganizationSummary.parse(
+                await fetchApiJson(platformApiPath('/organizations'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name }),
-                },
-                (value) => zOrganizationSummary.parse(value)
+                })
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
@@ -192,14 +181,12 @@ export function useUpdateOrganization(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson(
-                organizationPath,
-                {
+            return zOrganizationSummary.parse(
+                await fetchApiJson(organizationPath, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar }),
-                },
-                (value) => zOrganizationSummary.parse(value)
+                })
             );
         },
         onSuccess: async () => {
@@ -225,7 +212,7 @@ export function useDeleteOrganization() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}`), {
                 method: 'DELETE',
             });
         },

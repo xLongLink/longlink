@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
@@ -7,7 +8,6 @@ import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/lib/articl
 import { Wordmark } from '@/components/Wordmark';
 
 type SidebarProps = {
-    currentPath: string;
     groups: ArticleNavigationGroup[];
 };
 
@@ -46,7 +46,9 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
 }
 
 /** Renders the left navigation for article pages. */
-export function Sidebar({ currentPath, groups }: SidebarProps) {
+export function Sidebar({ groups }: SidebarProps) {
+    const { pathname } = useLocation();
+
     return (
         <AstryxSideNav
             header={
@@ -65,7 +67,7 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
             <Stack paddingInline={2}>
                 {groups.map((group) => (
                     <SideNavSection key={group.title} title={group.title}>
-                        {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}
+                        {group.items.map((item) => renderArticleNavigationItem(item, pathname))}
                     </SideNavSection>
                 ))}
             </Stack>

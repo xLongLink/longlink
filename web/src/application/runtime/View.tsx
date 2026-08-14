@@ -6,17 +6,23 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { TopLayoutTab } from '@/layout/TopLayout';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiText } from '@/lib/api';
-import { RenderXML } from '@/xml/runtime';
+import XmlLayout from '@/xml/layout';
+import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import XmlLayout from '@/xml/runtime/layout';
 import { useApiQuery } from '@/hooks/use-api';
 import { getIconComponent } from '@/lib/icons';
-import { createContext as createXmlContext, parseXML, resolveRequestUrl, type ASTNode, type XmlRuntime } from '@/xml';
+import {
+    createContext as createXmlContext,
+    parseXML,
+    RenderXML,
+    resolveRequestUrl,
+    type ASTNode,
+    type XmlRuntime,
+} from '@/xml';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -41,11 +47,12 @@ type ErrorStateProps = {
 };
 
 type PageState = {
-    ast: ASTNode[];
+    ast: [ASTNode] | null;
     error: string | null;
-    loading: boolean;
     runtimeContext: XmlRuntime;
 };
+
+type ActivePageState = PageState & { key: string };
 
 const emptyRouteParams: Record<string, string> = {};
 
@@ -96,9 +103,7 @@ function resolveApplicationHref(route: string, organization?: string, applicatio
 export default function View({ applicationStatus, isApplicationLoading, pages }: ViewProps) {
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
-    const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
-    const pageStatesRef = useRef<Record<string, PageState>>({});
-    const inFlightPageKeysRef = useRef<Set<string>>(new Set());
+    const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
@@ -120,8 +125,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     const activePageStateKey = activePage
         ? `${pages}\u0000${activePage.path}\u0000${routePath}\u0000${activePage.tab}`
         : '';
-    const activePageState = pageStates[activePageStateKey];
-    const activePageTab = activePage?.tab;
+    const visiblePageState = activePageState?.key === activePageStateKey ? activePageState : null;
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -161,26 +165,14 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             });
         }
 
-        return { activeTab: activePageTab ? tabGroups.get(activePageTab)?.href : '', tabs: [...tabGroups.values()] };
-    }, [activePageTab, application, organization, registeredPages]);
+        return { activeTab: activePage?.tab ? tabGroups.get(activePage.tab)?.href : '', tabs: [...tabGroups.values()] };
+    }, [activePage?.tab, application, organization, registeredPages]);
 
-    /* Load each page once for the active route instance. */
+    /* Load the active page and discard inactive page state. */
     useEffect(() => {
         // Skip page loading until an active page can render.
         if (!applicationCanLoad || !activePage) {
-            return;
-        }
-
-        const existingPageState = pageStatesRef.current[activePageStateKey];
-        const inFlightPageKeys = inFlightPageKeysRef.current;
-
-        // Reuse completed page state for matching route instances.
-        if (existingPageState && !existingPageState.loading) {
-            return;
-        }
-
-        // Avoid duplicate requests for the same page state.
-        if (inFlightPageKeys.has(activePageStateKey)) {
+            setActivePageState(null);
             return;
         }
 
@@ -189,65 +181,40 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         runtimeContext.services.navigationBaseUrl = resolveApplicationHref('', organization, application);
         runtimeContext.scope.bindings.params = activeRouteParams;
 
-        const loadingPageState: PageState = { ast: [], error: null, loading: true, runtimeContext };
+        const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
         try {
             pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
         } catch (urlError: unknown) {
-            setPageStates((current) => {
-                const next = {
-                    ...current,
-                    [activePageStateKey]: {
-                        ...loadingPageState,
-                        error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
-                        loading: false,
-                    },
-                };
-
-                pageStatesRef.current = next;
-
-                return next;
+            setActivePageState({
+                ...loadingPageState,
+                error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
+                key: activePageStateKey,
             });
-
             return;
         }
 
         const controller = new AbortController();
 
-        inFlightPageKeys.add(activePageStateKey);
-        setPageStates((current) => {
-            const next = { ...current, [activePageStateKey]: loadingPageState };
+        setActivePageState({ ...loadingPageState, key: activePageStateKey });
 
-            pageStatesRef.current = next;
-
-            return next;
-        });
-
-        void fetchApiText(pageUrl, {
+        void requestApi(pageUrl, {
             headers: { Accept: 'application/xml' },
             signal: controller.signal,
         })
+            .then((response) => response.text())
             .then((content) => {
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
                     const ast = parseXML(content);
 
-                    setPageStates((current) => {
-                        const next = {
-                            ...current,
-                            [activePageStateKey]: {
-                                ...current[activePageStateKey],
-                                ast,
-                                error: null,
-                                loading: false,
-                            },
-                        };
-
-                        pageStatesRef.current = next;
-
-                        return next;
+                    setActivePageState({
+                        ...loadingPageState,
+                        ast,
+                        error: null,
+                        key: activePageStateKey,
                     });
                 }
             })
@@ -257,28 +224,15 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     return;
                 }
 
-                setPageStates((current) => {
-                    const next = {
-                        ...current,
-                        [activePageStateKey]: {
-                            ...current[activePageStateKey],
-                            error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
-                            loading: false,
-                        },
-                    };
-
-                    pageStatesRef.current = next;
-
-                    return next;
+                setActivePageState({
+                    ...loadingPageState,
+                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                    key: activePageStateKey,
                 });
-            })
-            .finally(() => {
-                inFlightPageKeys.delete(activePageStateKey);
             });
 
         return () => {
             controller.abort();
-            inFlightPageKeys.delete(activePageStateKey);
         };
     }, [
         activePage,
@@ -287,7 +241,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationCanLoad,
         application,
         organization,
-        pages,
         resolvedPagesBaseUrl,
     ]);
 
@@ -346,19 +299,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         return <NotFound />;
     }
 
-    const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
-        // Render only valid page panels from the current cache.
-        if (!pageState.ast.length || !pageStateKey.startsWith(`${pages}\u0000`)) {
-            return null;
-        }
-
-        return (
-            <Stack key={pageStateKey} as="section" gap={6} hidden={pageStateKey !== activePageStateKey}>
-                <RenderXML ast={pageState.ast} baseUrl={resolvedPagesBaseUrl} ctx={pageState.runtimeContext} />
-            </Stack>
-        );
-    });
-
     let activeFallback: ReactNode = null;
 
     // Choose the visible fallback for the active page.
@@ -369,15 +309,23 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                 title="Unexpected application response"
             />
         );
-    } else if (activePageState?.error) {
-        activeFallback = <ErrorState message={activePageState.error} title="Unable to load this page" />;
-    } else if (!activePageState || activePageState.loading) {
+    } else if (visiblePageState?.error) {
+        activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
+    } else if (!visiblePageState?.ast) {
         activeFallback = <Spinner label="Loading" />;
     }
 
     return (
         <XmlLayout activeTab={activeTab} tabs={tabs}>
-            {renderedPagePanels}
+            {visiblePageState?.ast ? (
+                <Stack as="section" gap={6}>
+                    <RenderXML
+                        ast={visiblePageState.ast}
+                        baseUrl={resolvedPagesBaseUrl}
+                        ctx={visiblePageState.runtimeContext}
+                    />
+                </Stack>
+            ) : null}
             {activeFallback && (
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     {activeFallback}

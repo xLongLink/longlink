@@ -56,7 +56,6 @@ async def reset_db(
 
     if request.node.get_closest_marker("no_db"):
         yield
-        session.Session = None
         return
 
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"

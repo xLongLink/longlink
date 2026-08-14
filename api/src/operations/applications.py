@@ -1,5 +1,4 @@
 import secrets
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
@@ -25,7 +24,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
-    if application.status != Status.running and not any(name.startswith("LONGLINK_") for name in application.secrets):
+    if not any(name.startswith("LONGLINK_") for name in application.secrets):
         # Resolve the Application's immutable provider assignments.
         db = Postgres(
             infrastructure.database.host,

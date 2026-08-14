@@ -40,9 +40,8 @@ def create_fs() -> AbstractFileSystem:
             "endpoint_url": env.STORAGE_ENDPOINT_URL,
             "key": env.STORAGE_USERNAME,
             "secret": env.STORAGE_PASSWORD,
+            "client_kwargs": {"region_name": env.STORAGE_REGION},
         }
-        if env.STORAGE_REGION is not None:
-            options["client_kwargs"] = {"region_name": env.STORAGE_REGION}
         filesystem = fsspec.filesystem(
             "s3",
             **options,

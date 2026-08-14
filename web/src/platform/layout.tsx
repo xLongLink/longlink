@@ -10,7 +10,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
 
 type PlatformLayoutProps = {
-    tabs?: TopLayoutTab[];
+    tabs?: readonly TopLayoutTab[];
     brandOnly?: boolean;
     brandHref?: string;
     fillViewport?: boolean;

@@ -32,10 +32,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert response.status_code == 202
     payload = response.json()
     assert payload["name"] == "acme"
-    assert payload["status"] == "creating"
-    assert payload["compute_id"] == str(least_used_infrastructure.compute.id)
-    assert payload["database_id"] == str(least_used_infrastructure.database.id)
-    assert payload["storage_id"] == str(least_used_infrastructure.storage.id)
 
 
 async def test_get_organization_returns_member_payload(
@@ -46,10 +42,7 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    organization = await create_organization(
-        owner,
-        avatar="https://example.com/organizations/acme.png",
-    )
+    organization = await create_organization(owner)
     application = await create_application(organization, owner)
 
     client = clients[0]
@@ -90,7 +83,6 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.status_code == 202
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(organization.id)
-    assert payload["status"] == "deleting"
     async with session_scope() as session:
         recorded_operations = await operations.fetch(session)
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)

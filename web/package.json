@@ -17,7 +17,7 @@
         "export:platform-api": "DEVELOPMENT=true uv --directory ../api run python -m scripts.openapi",
         "format": "vp fmt --write && vp lint --fix-suggestions",
         "generate:platform-api": "vp run export:platform-api && openapi-ts --file openapi-ts.config.ts",
-        "check:platform-api": "vp run generate:platform-api && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
+        "check:platform-api": "vp run generate:platform-api && vp run format && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
         "dev": "react-router dev --mode api",
         "dev:sdk": "react-router dev --mode sdk",
         "routes": "react-router routes",

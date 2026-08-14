@@ -16,6 +16,7 @@ Return a numeric list of cleanup options:
 ## Targets
 
 Chose a file, a module or a feature and focus the cleanup effort on it. Avoid spreading the cleanup across multiple unrelated areas.
+Indicate that feature or module was chosen in the cleanup report.
 
 ### 0. Project conventions
 
@@ -119,4 +120,3 @@ Apply these pragmatically:
 - **High cohesion / Low coupling** — keep related behavior together and minimize unnecessary dependencies.
 - **Locality of behavior** — keep logic close to the data and concepts it operates on.
 - **Information hiding** — avoid exposing implementation details unnecessarily.
-

@@ -10,8 +10,8 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ADMIN_NAVIGATION } from '@/platform/navigation';
 import { useSignOut, useUserProfile } from '@/hooks/use-user';
-import { ADMIN_NAVIGATION } from '@/platform/admin/navigation';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu() {

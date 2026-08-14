@@ -10,7 +10,6 @@ from src.database.models import users, computes, storages, databases, operations
 from src.database.models.base import PlatformModel
 
 pytestmark = pytest.mark.no_db
-POSTGRES_PORT = 5432
 
 
 def test_alembic_migrations_have_single_linear_head() -> None:
@@ -32,21 +31,19 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
     # Start the supported database backend with a password that requires URL escaping.
     password = "sec@ret"
     encoded_password = "sec%40ret"
-    container = start_postgres("longlink", password, "longlink", POSTGRES_PORT)
+    container = start_postgres("longlink", password, "longlink", 5432)
 
     engine = None
     try:
         # Run the real Alembic environment to verify ConfigParser and SQLAlchemy preserve the encoded password.
-        database_url = (
-            f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
-        )
+        database_url = f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(5432)}/longlink?ssl=disable"
         monkeypatch.setattr(env, "DATABASE_URL", database_url)
         config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
         command.upgrade(config, "head")
 
         # Compare every migrated platform table and column with the current model metadata.
         inspection_url = (
-            f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+            f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(5432)}/longlink?sslmode=disable"
         )
         engine = create_engine(inspection_url)
         model_columns = {table.name: {column.name for column in table.columns} for table in PlatformModel.metadata.sorted_tables}

@@ -12,10 +12,10 @@ from src.database.services import users, invitations, organizations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 
-router = APIRouter()
+router = APIRouter(tags=["auth"])
 
 
-@router.post("/auth/password/login", status_code=204, tags=["auth"])
+@router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
 
@@ -71,7 +71,7 @@ async def logout(
     )
 
 
-@router.post("/auth/forgot-password", status_code=202, tags=["auth"])
+@router.post("/auth/forgot-password", status_code=202)
 async def request_password_reset(
     email: Annotated[Email, Body(embed=True)],
     background_tasks: BackgroundTasks,
@@ -93,7 +93,7 @@ async def request_password_reset(
     )
 
 
-@router.post("/auth/reset-password/verify", status_code=204, tags=["auth"])
+@router.post("/auth/reset-password/verify", status_code=204)
 async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_session)):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
@@ -114,7 +114,7 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
     )
 
 
-@router.get("/auth/reset-password/setup", status_code=204, tags=["auth"])
+@router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
     response: Response,
     password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
@@ -130,7 +130,7 @@ async def get_password_reset_setup(
     response.headers["Cache-Control"] = "no-store"
 
 
-@router.post("/auth/reset-password", status_code=204, tags=["auth"])
+@router.post("/auth/reset-password", status_code=204)
 async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
@@ -160,7 +160,7 @@ async def reset_password(
     )
 
 
-@router.post("/auth/register", status_code=202, tags=["auth"])
+@router.post("/auth/register", status_code=202)
 async def request_registration(
     email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)
 ):
@@ -175,7 +175,7 @@ async def request_registration(
     background_tasks.add_task(mail.send_signup_verification_email, email, credential)
 
 
-@router.post("/auth/verify", response_model=EmailPayload, tags=["auth"])
+@router.post("/auth/verify", response_model=EmailPayload)
 async def verify_registration_token(payload: TokenPayload, response: Response):
     """Validate an emailed registration token without creating an account."""
 
@@ -197,7 +197,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     return {"email": email}
 
 
-@router.get("/auth/register/setup", response_model=EmailPayload, tags=["auth"])
+@router.get("/auth/register/setup", response_model=EmailPayload)
 async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
     """Restore verified registration state from its browser-only cookie."""
 
@@ -210,7 +210,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
     return {"email": email}
 
 
-@router.post("/auth/register/complete", response_model=UserSummary, status_code=201, tags=["auth"])
+@router.post("/auth/register/complete", response_model=UserSummary, status_code=201)
 async def complete_registration(
     payload: RegistrationComplete,
     response: Response,

@@ -5,10 +5,3 @@ export type PageMetadata = {
     description: string;
     seoTitle?: string;
 };
-
-/** Metadata rendered with documentation and legal articles. */
-export type ArticleMetadata = PageMetadata & {
-    toc?: Array<{ id: string; label: string; level: number }>;
-    lastUpdated: string;
-    editUrl?: string;
-};

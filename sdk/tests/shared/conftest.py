@@ -37,13 +37,12 @@ async def run_command(command: list[str], timeout: float, *, check: bool = True)
         raise
 
     # Return the standard subprocess result shape and optionally enforce success.
-    if process.returncode is None:
-        raise RuntimeError(f"Command did not report an exit code: {command}")
+    assert process.returncode is not None
     result = subprocess.CompletedProcess(
         command,
         process.returncode,
-        stdout_bytes.decode() if stdout_bytes is not None else "",
-        stderr_bytes.decode() if stderr_bytes is not None else "",
+        stdout_bytes.decode(),
+        stderr_bytes.decode(),
     )
     if check:
         result.check_returncode()
