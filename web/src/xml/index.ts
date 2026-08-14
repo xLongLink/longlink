@@ -4,7 +4,7 @@ import * as runtime from './renderers';
 import { parseXML as parseAst } from './core/parser';
 
 /** Verifies that an XML document contains one unversioned LongLink root. */
-function assertPageRoot(ast: ASTNode[]): void {
+function assertPageRoot(ast: ASTNode[]): asserts ast is [ASTNode] {
     const [root] = ast;
 
     if (ast.length !== 1 || root?.name !== 'longlink') {
@@ -15,7 +15,7 @@ function assertPageRoot(ast: ASTNode[]): void {
 }
 
 /** Parses one XML document. */
-export function parseXML(xml: string): ASTNode[] {
+export function parseXML(xml: string): [ASTNode] {
     const ast = parseAst(xml);
 
     assertPageRoot(ast);

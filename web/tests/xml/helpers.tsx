@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
-import { RenderXML } from '@/xml/renderers';
+import { RenderXML } from '@/xml';
 import { createContext } from '@/xml/core/context';
 import { compileAttribute } from '@/xml/expressions';
 
@@ -13,5 +13,7 @@ export function compileProps(props: Record<string, string>): ASTProps {
 
 /** Renders XML AST to static markup. */
 export function renderXmlToMarkup(ast: ASTNode[], ctx: XmlRuntime = createContext(), baseUrl = ''): string {
-    return renderToStaticMarkup(<RenderXML ast={ast} baseUrl={baseUrl} ctx={ctx} />);
+    return renderToStaticMarkup(
+        <RenderXML ast={[{ name: 'longlink', params: {}, children: ast }]} baseUrl={baseUrl} ctx={ctx} />
+    );
 }

@@ -5,9 +5,6 @@ const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
 /** Resolves an app-relative URL against a base URL string. */
 function resolveUrl(baseUrl: string, path: string): string {
-    // Preserve the base URL for empty paths.
-    if (!path) return baseUrl;
-
     const base = parseURL(baseUrl);
     const parsedPath = parsePath(path);
     const baseOrigin = base.protocol && base.host ? `${base.protocol}//${base.host}` : '';

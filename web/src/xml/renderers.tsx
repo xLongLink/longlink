@@ -5,10 +5,10 @@ import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
-import { createContext, setupContext, validateSetupNodes, XmlContext } from './core/context';
+import { createContext, getSetupNodes, setupContext, XmlContext } from './core/context';
 
 type RenderXMLProps = {
-    ast: ASTNode[];
+    ast: [ASTNode];
     ctx?: XmlRuntime;
     baseUrl?: string;
 };
@@ -19,23 +19,25 @@ type RenderXMLProps = {
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
     runtimeCtx.services.requestBaseUrl = baseUrl;
-    const requiresSetup = getRequirements(ast);
-    const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
+    const setup = useMemo(() => {
+        // Validate setup nodes before effects run.
+        try {
+            return { error: null, nodes: getSetupNodes(ast) };
+        } catch (error: unknown) {
+            return { error: error instanceof Error ? error : new Error('XML setup validation failed'), nodes: [] };
+        }
+    }, [ast]);
+    const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (setup.nodes.length ? null : ast));
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode[]; baseUrl: string; error: unknown } | null>(null);
     const [resetKey, setResetKey] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
-    const setupValidationError = useMemo(() => {
-        // Validate setup nodes before effects run.
-        try {
-            validateSetupNodes(ast);
-            return null;
-        } catch (error: unknown) {
-            return error instanceof Error ? error : new Error('XML setup validation failed');
-        }
-    }, [ast]);
-
     useEffect(() => {
+        // Do not initialize an invalid document.
+        if (setup.error) {
+            return;
+        }
+
         let mounted = true;
         let unsubscribers: Array<() => void> = [];
 
@@ -86,7 +88,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             setResetKey((current) => current + 1);
         };
 
-        void setupContext(ast, runtimeCtx, baseUrl)
+        void setupContext(setup.nodes, runtimeCtx, baseUrl)
             .then(() => {
                 subscribeToStateValues();
 
@@ -107,11 +109,11 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             // Remove state subscriptions on unmount.
             unsubscribeAll();
         };
-    }, [ast, runtimeCtx, baseUrl]);
+    }, [ast, runtimeCtx, baseUrl, setup]);
 
     // Show setup failures before rendering XML nodes.
-    if (setupValidationError || setupError) {
-        const visibleError = setupValidationError ?? setupError;
+    if (setup.error || setupError) {
+        const visibleError = setup.error ?? setupError;
 
         return (
             <Banner status="error" title={visibleError instanceof Error ? visibleError.message : 'XML setup failed'} />
@@ -119,7 +121,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     }
 
     // Wait for setup before rendering dependent nodes.
-    if (requiresSetup && initializedAst !== ast) return null;
+    if (setup.nodes.length && initializedAst !== ast) return null;
 
     return (
         <XmlErrorBoundary resetKey={resetKey}>
@@ -128,22 +130,12 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     );
 }
 
-function XmlContent({ ast, ctx }: { ast: ASTNode[]; ctx: XmlRuntime }) {
+function XmlContent({ ast, ctx }: { ast: [ASTNode]; ctx: XmlRuntime }) {
     const [root] = ast;
 
     return (
         <XmlContext.Provider value={ctx}>
-            {ast.length === 1 && root?.name === 'longlink' ? (
-                <Stack gap={6}>{renderNode(root.children, ctx.scope)}</Stack>
-            ) : (
-                renderNode(ast, ctx.scope)
-            )}
+            <Stack gap={6}>{renderNode(root.children, ctx.scope)}</Stack>
         </XmlContext.Provider>
     );
-}
-
-/** Returns whether setup nodes occur in an AST traversal. */
-function getRequirements(nodes: ASTNode[]): boolean {
-    // Walk the tree until a setup node is found.
-    return nodes.some((node) => node.name === 'State' || node.name === 'Query' || getRequirements(node.children));
 }

@@ -31,83 +31,79 @@ export function useXmlRuntime(): XmlRuntime {
     return runtime;
 }
 
-/** Resolves top-level State and Query nodes before rendering the page tree. */
-export async function setupContext(ast: ASTNode[], runtime: XmlRuntime, baseUrl: string): Promise<void> {
-    const { scope, services } = runtime;
+/** Finds and validates State and Query declarations in document order. */
+export function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
+    const setupNodes: ASTNode[] = [];
 
-    async function walk(nodes: ASTNode[]): Promise<void> {
-        // Visit setup declarations in document order.
-        for (const node of nodes) {
-            // If we reach a "For" component, we stop the walk since the content of "For" has a different context.
-            if (node.name === 'For') continue;
+    function walk(currentNodes: ASTNode[]): void {
+        // Validate each declaration before checking descendants.
+        for (const node of currentNodes) {
+            validateSetupNode(node);
 
-            // Seed state and queries before rendering the component tree.
-            if (node.name === 'State') {
-                const params = node.params;
-                const id = params.id.kind === 'text' ? params.id.value.trim() : '';
-                const entries = Object.entries(params).filter(([key]) => key !== 'id');
-
-                // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
-                services.setups[id] = () => {
-                    // Only seed state that is not already present.
-                    if (!(id in scope.bindings)) {
-                        // Seed a proxied object from all attributes except `id`.
-                        const initialValue: Record<string, unknown> = {};
-
-                        // Copy declared attributes into the initial state object.
-                        for (const [key, attribute] of entries) {
-                            initialValue[key] = evaluate(attribute, scope);
-                        }
-
-                        // Keep state values reactive for bound XML controls.
-                        if (!isSafePropertyName(id)) {
-                            throw new Error('State id must be a safe property name');
-                        }
-
-                        scope.bindings[id] = proxy(initialValue);
-                    }
-                };
-                await services.setups[id]();
+            // Collect setup declarations outside loop-local scope.
+            if (node.name === 'State' || node.name === 'Query') {
+                setupNodes.push(node);
             }
 
-            // Seed query data before rendering the component tree.
-            if (node.name === 'Query') {
-                const params = node.params;
-                const id = params.id.kind === 'text' ? params.id.value.trim() : '';
-                const pathAttribute = params.path;
-
-                // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
-                services.setups[id] = async () => {
-                    const path = evaluate(pathAttribute, scope);
-
-                    // Query paths may interpolate route params, but must still resolve to a URL string.
-                    if (path == null || typeof path === 'object' || typeof path === 'function') {
-                        throw new Error('Query path must resolve to a string');
-                    }
-
-                    const url = resolveRequestUrl(baseUrl, String(path));
-
-                    scope.bindings[id] = await fetchApiJson(url);
-                };
-                await services.setups[id]();
+            // Skip nested loop content because it has its own scope.
+            if (node.name !== 'For') {
+                walk(node.children);
             }
-
-            await walk(node.children);
         }
     }
 
-    await walk(ast);
+    walk(nodes);
+    return setupNodes;
 }
 
-/** Validates setup-only runtime declarations before they are initialized. */
-export function validateSetupNodes(nodes: ASTNode[]): void {
-    // Validate each declaration before checking descendants.
-    for (const node of nodes) {
-        validateSetupNode(node);
+/** Resolves validated State and Query nodes before rendering the page tree. */
+export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUrl: string): Promise<void> {
+    const { scope, services } = runtime;
 
-        // Skip nested loop content because it has its own scope.
-        if (node.name !== 'For') {
-            validateSetupNodes(node.children);
+    // Seed setup declarations before rendering the component tree.
+    for (const node of nodes) {
+        if (node.name === 'State') {
+            const params = node.params;
+            const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
+            const entries = Object.entries(params).filter(([key]) => key !== 'id');
+
+            // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
+            services.setups[id] = () => {
+                // Only seed state that is not already present.
+                if (!(id in scope.bindings)) {
+                    // Seed a proxied object from all attributes except `id`.
+                    const initialValue: Record<string, unknown> = {};
+
+                    // Copy declared attributes into the initial state object.
+                    for (const [key, attribute] of entries) {
+                        initialValue[key] = evaluate(attribute, scope);
+                    }
+
+                    scope.bindings[id] = proxy(initialValue);
+                }
+            };
+            await services.setups[id]();
+        }
+
+        if (node.name === 'Query') {
+            const params = node.params;
+            const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
+            const pathAttribute = params.path;
+
+            // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
+            services.setups[id] = async () => {
+                const path = evaluate(pathAttribute, scope);
+
+                // Query paths may interpolate route params, but must still resolve to a URL string.
+                if (path == null || typeof path === 'object' || typeof path === 'function') {
+                    throw new Error('Query path must resolve to a string');
+                }
+
+                const url = resolveRequestUrl(baseUrl, String(path));
+
+                scope.bindings[id] = await fetchApiJson(url);
+            };
+            await services.setups[id]();
         }
     }
 }
