@@ -1,10 +1,10 @@
 import type { LucideIcon } from 'lucide-react';
+import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useEffect, useState, type ReactNode } from 'react';
-import { ContentFrame } from '@/layout/ContentFrame';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 export type TopLayoutTab = {
@@ -97,9 +97,25 @@ function TopLayout({
             }
             variant="wash"
         >
-            <ContentFrame
-                className={`end-0 bottom-0 start-0 ${isTabFrameExpanded && hasTabs ? 'top-0' : 'top-[var(--appshell-header-height,0px)]'}`}
-                isConnectedToHeader={!isTabFrameExpanded || !hasTabs}
+            <Card
+                aria-hidden="true"
+                className={`pointer-events-none fixed z-0 end-0 bottom-0 start-0 overflow-clip ${isTabFrameExpanded && hasTabs ? 'top-0' : 'top-[var(--appshell-header-height,0px)] border-t-0'}`}
+                padding={0}
+                variant="transparent"
+            >
+                <Stack
+                    className={isTabFrameExpanded && hasTabs ? undefined : 'px-2 pb-2'}
+                    height="100%"
+                    padding={isTabFrameExpanded && hasTabs ? 2 : 0}
+                >
+                    <Card className="border-0 overflow-clip" height="100%" width="100%" />
+                </Stack>
+            </Card>
+            <Card
+                aria-hidden="true"
+                className={`pointer-events-none fixed z-30 end-0 bottom-0 start-0 bg-transparent ${isTabFrameExpanded && hasTabs ? 'top-0 border-8' : 'top-[var(--appshell-header-height,0px)] border-x-8 border-b-8 border-t-0'} border-body`}
+                padding={0}
+                variant="transparent"
             />
             <Stack
                 className="relative z-10"
