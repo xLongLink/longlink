@@ -1,11 +1,9 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import (
-    ApplicationAccess,
     authuser,
     authadmin,
     get_session,
-    application_access,
     organization_access,
 )
 from src.utils import names, roles, images
@@ -120,14 +118,17 @@ async def release_application(
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
 async def get_application_logs(
-    access: ApplicationAccess = Depends(application_access),
+    application_id: UUID,
+    user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
 ):
     """Return recent pod logs for one managed application."""
 
-    application = access.application
-    organization = access.organization
-    role = access.role
+    # Resolve active Application access before inspecting its runtime logs.
+    access = await organizations.application_access(session, user.id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role = access
 
     # Application logs require Organization maintenance authority.
     if not roles.atleast(role, OrganizationRoles.maintain):

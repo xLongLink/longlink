@@ -1,13 +1,14 @@
 import httpx2
+from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from src.auth import ApplicationAccess, authuser, get_session, application_access
+from src.auth import authuser, get_session
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient
-from src.database.services import compute
+from src.database.services import compute, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -20,9 +21,9 @@ PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 @router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
 async def proxy_application_request(
     request: Request,
+    application_id: UUID,
     path: str = "",
     user: User = Depends(authuser),
-    access: ApplicationAccess = Depends(application_access),
     session: AsyncSession = Depends(get_session),
 ) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
@@ -30,9 +31,11 @@ async def proxy_application_request(
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    application = access.application
-    organization = access.organization
-    role = access.role
+    # Resolve active Application access before proxying traffic to its runtime.
+    access = await organizations.application_access(session, user.id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role = access
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
