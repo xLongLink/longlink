@@ -195,7 +195,7 @@ class Exoscale:
                     editable=False,
                     policy=self._bucket_policy(bucket, write_prefix, organization_id),
                 )
-                role_id = await self._wait_operation(api, operation, require_reference=True)
+                role_id = await self._wait_operation(api, operation)
 
                 # Validate both generated values before returning runtime credentials.
                 key = await api.create_api_key(name=credential_name, role_id=role_id)
@@ -245,7 +245,7 @@ class Exoscale:
                         if exc.response is None or exc.response.status_code != 404:
                             raise
                     else:
-                        await self._wait_operation(api, operation, require_reference=False)
+                        await api.wait(self._string(operation, "id"), max_wait_time=10)
 
     async def credentials_exist(self, name: str) -> bool:
         """Return whether scoped Exoscale credentials remain for one Application."""
@@ -266,8 +266,8 @@ class Exoscale:
                     return True
         return False
 
-    async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
-        """Wait for an Exoscale operation and return its reference id when required."""
+    async def _wait_operation(self, api: AsyncClient, operation: Operation) -> str:
+        """Wait for an Exoscale operation and return its reference id."""
 
         # Delegate operation polling and error handling to the async client.
         operation_id = self._string(operation, "id")
@@ -278,8 +278,7 @@ class Exoscale:
             if isinstance(reference_id, str) and reference_id:
                 return reference_id
 
-        if require_reference:
-            raise RuntimeError("Exoscale operation completed without a resource reference")
+        raise RuntimeError("Exoscale operation completed without a resource reference")
 
     def _bucket_policy(self, bucket: str, write_prefix: str, organization_id: UUID) -> IamPolicy:
         """Build one IAM policy for shared reads and private Application writes."""

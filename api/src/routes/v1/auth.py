@@ -30,7 +30,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    changed_organization_ids = await invitations.accept(session, user.id)
+    changed_organization_ids = await invitations.accept(session, user)
     await session.commit()
 
     for organization_id in changed_organization_ids:
@@ -146,7 +146,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
-    users.replace_password(user, payload.password)
+    user.password = PasswordHash.recommended().hash(payload.password)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.
@@ -241,7 +241,7 @@ async def complete_registration(
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
 
-    changed_organization_ids = await invitations.accept(session, user.id)
+    changed_organization_ids = await invitations.accept(session, user)
     await session.commit()
 
     for organization_id in changed_organization_ids:

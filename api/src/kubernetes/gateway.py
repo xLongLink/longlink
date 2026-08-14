@@ -192,20 +192,18 @@ class Gateway:
             files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
         api = await self._client.api()
-        resources = [
-            Namespace(namespace, api=api),
-            GatewayClassResource(gateway_class, api=api),
-            new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api),
-            new_class(
-                "ClientTrafficPolicy",
-                "gateway.envoyproxy.io/v1alpha1",
-                asyncio=True,
-                plural="clienttrafficpolicies",
-            )(client_traffic_policy, api=api),
-        ]
+        gateway_resource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api)
+        policy_resource = new_class(
+            "ClientTrafficPolicy",
+            "gateway.envoyproxy.io/v1alpha1",
+            asyncio=True,
+            plural="clienttrafficpolicies",
+        )(client_traffic_policy, api=api)
+        await apply(Namespace(namespace, api=api))
+        await apply(GatewayClassResource(gateway_class, api=api))
         if tls is not None:
-            resources[2:2] = [
-                gateway_tls_secret(tls.server_certificate, tls.server_private_key, api),
+            await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
+            await apply(
                 Secret(
                     {
                         "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
@@ -213,14 +211,12 @@ class Gateway:
                         "type": "Opaque",
                     },
                     api=api,
-                ),
-            ]
-        for resource in resources:
-            await apply(resource)
+                )
+            )
+        await apply(gateway_resource)
+        await apply(policy_resource)
 
         # Require the controller, Gateway, policy, and external address before publishing readiness.
-        gateway_resource = resources[-2]
-        policy_resource = resources[-1]
         while True:
             await gateway_resource.refresh()
             await policy_resource.refresh()

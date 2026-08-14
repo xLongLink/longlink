@@ -1,5 +1,6 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_session
+from sqlalchemy import select
 from src.models.users import UserUpdate, UserSummary, UserOrganizationMembership
 from src.database.services import users, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +28,8 @@ async def get_my_organizations(user: User = Depends(authuser), session: AsyncSes
 async def list_users(_: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
     """Return all user summaries for administrator views."""
 
-    return await users.fetch(session)
+    result = await session.scalars(select(User))
+    return result.all()
 
 
 @router.patch("/me", response_model=UserSummary)
@@ -35,7 +37,13 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Apply only supplied values that change the persisted profile.
-    if not users.update_profile(user, payload):
+    changed = False
+    for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
+        if getattr(user, field) == value:
+            continue
+        setattr(user, field, value)
+        changed = True
+    if not changed:
         return user
     await session.commit()
 

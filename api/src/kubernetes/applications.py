@@ -131,8 +131,11 @@ class Applications:
 
         # The globally unique Application ID identifies its Pod across Organization Namespaces.
         api = await self._client.api()
-        pods = [pod async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)}) if isinstance(pod, Pod)]
-        active = [pod for pod in pods if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}]
+        active = [
+            pod
+            async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+            if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
+        ]
         if not active:
             raise ValueError("No Application Pod found")
         pod = min(active, key=lambda item: item.name)
