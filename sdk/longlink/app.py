@@ -8,15 +8,14 @@ from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_route_key, page_file_route
 from longlink.utils import Envs
 from longlink.logger import ApiAccessFilter
+from longlink.routes import root, router
 from longlink.context import install_context_middleware
-from fastapi.responses import Response, RedirectResponse
+from fastapi.responses import Response
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import Element
 from longlink.middleware import install_frontend_middleware
-from longlink.routes.pages import router as pages_router
 from longlink.storage.base import create_fs
-from longlink.routes.health import router as health_router
 
 Environment = Literal["development", "testing", "production"]
 
@@ -62,8 +61,7 @@ class LongLink:
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        app.include_router(health_router)
-        app.include_router(pages_router)
+        app.include_router(router)
 
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app)
@@ -75,27 +73,11 @@ class LongLink:
         self._register_page_directory(pages_directory)
 
         # Start applications on their first static page instead of an unselected shell.
-        self.install_root_redirect()
+        root.install_redirect(app)
 
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
-
-    def install_root_redirect(self) -> None:
-        """Redirect the application root to its first static page."""
-
-        # Dynamic pages need parameters and cannot be startup destinations.
-        first_page = next((page for page in self.app.state.longlink.pages if page.route and ":" not in page.route), None)
-
-        # Let the frontend render applications without a static startup page.
-        if first_page is None:
-            return
-
-        @self.app.get("/", include_in_schema=False)
-        def redirect_to_first_page() -> RedirectResponse:
-            """Send root requests to the first registered static page."""
-
-            return RedirectResponse(url=f"/{first_page.route}", status_code=307)
 
     def _register_page_directory(self, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
