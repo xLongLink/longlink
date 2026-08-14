@@ -9,9 +9,12 @@ import { Building2, UserRound, UsersRound } from 'lucide-react';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { publicSeoMeta } from '@/lib/seo';
 import { PublicPage } from '@/layout/PublicPage';
-import { metadata } from './Pricing.metadata';
 
-export { metadata } from './Pricing.metadata';
+export const metadata = {
+    path: '/pricing',
+    title: 'Pricing',
+    description: 'Simple LongLink pricing for building and running business-process applications.',
+};
 
 export const meta: MetaFunction = () => publicSeoMeta(metadata);
 

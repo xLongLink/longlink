@@ -12,7 +12,7 @@ from kr8s.asyncio import Api
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, Namespace, new_class
 from src.kubernetes.utils import apply
-from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
+from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -56,17 +56,42 @@ def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     )
 
 
-def gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
-    """Build the Kubernetes Secret containing the trusted Platform client CA."""
+def leaf_certificate_builder(
+    ca_name: x509.Name,
+    ca_key: rsa.RSAPrivateKey,
+    key: rsa.RSAPrivateKey,
+    name: str,
+    usage: ObjectIdentifier,
+    now: datetime,
+) -> x509.CertificateBuilder:
+    """Build one private-CA-signed leaf certificate with its intended TLS usage."""
 
-    # Envoy uses this trust anchor to authenticate the Platform during TLS negotiation.
-    return Secret(
-        {
-            "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
-            "stringData": {"ca.crt": certificate},
-            "type": "Opaque",
-        },
-        api=api,
+    # Both sides need the same validity, issuer, and non-CA key constraints.
+    return (
+        x509.CertificateBuilder()
+        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, name)]))
+        .issuer_name(ca_name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=3650))
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .add_extension(x509.ExtendedKeyUsage([usage]), critical=False)
+        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                key_encipherment=True,
+                key_cert_sign=False,
+                key_agreement=False,
+                content_commitment=False,
+                data_encipherment=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
     )
 
 
@@ -108,31 +133,13 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
     )
 
     # Bind the final certificate to the controller-published IP address or hostname.
-    builder = (
-        x509.CertificateBuilder()
-        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")]))
-        .issuer_name(ca_name)
-        .public_key(server_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(minutes=5))
-        .not_valid_after(now + timedelta(days=3650))
-        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
-        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
-        .add_extension(
-            x509.KeyUsage(
-                digital_signature=True,
-                key_encipherment=True,
-                key_cert_sign=False,
-                key_agreement=False,
-                content_commitment=False,
-                data_encipherment=False,
-                crl_sign=False,
-                encipher_only=False,
-                decipher_only=False,
-            ),
-            critical=True,
-        )
+    builder = leaf_certificate_builder(
+        ca_name,
+        ca_key,
+        server_key,
+        f"LongLink Gateway {compute_id}",
+        ExtendedKeyUsageOID.SERVER_AUTH,
+        now,
     )
     if address is not None:
         try:
@@ -143,33 +150,14 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
     server_certificate = builder.sign(ca_key, hashes.SHA256())
 
     # Bind the Platform client identity to this Compute CA without exposing the CA private key.
-    client_certificate = (
-        x509.CertificateBuilder()
-        .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Platform {compute_id}")]))
-        .issuer_name(ca_name)
-        .public_key(client_key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(minutes=5))
-        .not_valid_after(now + timedelta(days=3650))
-        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
-        .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.CLIENT_AUTH]), critical=False)
-        .add_extension(x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_key.public_key()), critical=False)
-        .add_extension(
-            x509.KeyUsage(
-                digital_signature=True,
-                key_encipherment=True,
-                key_cert_sign=False,
-                key_agreement=False,
-                content_commitment=False,
-                data_encipherment=False,
-                crl_sign=False,
-                encipher_only=False,
-                decipher_only=False,
-            ),
-            critical=True,
-        )
-        .sign(ca_key, hashes.SHA256())
-    )
+    client_certificate = leaf_certificate_builder(
+        ca_name,
+        ca_key,
+        client_key,
+        f"LongLink Platform {compute_id}",
+        ExtendedKeyUsageOID.CLIENT_AUTH,
+        now,
+    ).sign(ca_key, hashes.SHA256())
 
     return GatewayTLS(
         ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
@@ -218,7 +206,14 @@ class Gateway:
         if tls is not None:
             resources[2:2] = [
                 gateway_tls_secret(tls.server_certificate, tls.server_private_key, api),
-                gateway_client_ca_secret(tls.ca_certificate, api),
+                Secret(
+                    {
+                        "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+                        "stringData": {"ca.crt": tls.ca_certificate},
+                        "type": "Opaque",
+                    },
+                    api=api,
+                ),
             ]
         for resource in resources:
             await apply(resource)
@@ -258,7 +253,16 @@ class Gateway:
         # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.
         api = await self._client.api()
         await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-        await apply(gateway_client_ca_secret(tls.ca_certificate, api))
+        await apply(
+            Secret(
+                {
+                    "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+                    "stringData": {"ca.crt": tls.ca_certificate},
+                    "type": "Opaque",
+                },
+                api=api,
+            )
+        )
 
         # Do not publish the Compute until Envoy serves the final address-bound certificate.
         context = ssl.create_default_context(cadata=tls.ca_certificate)

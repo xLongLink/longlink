@@ -51,11 +51,7 @@ async def proxy_application_request(
     registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
-    gateway_url = registry.gateway_url
-    certificate = registry.gateway_certificate
-    client_certificate = registry.gateway_client_certificate
-    client_private_key = registry.gateway_client_private_key
-    if gateway_url is None or certificate is None or client_certificate is None or client_private_key is None:
+    if registry.gateway_url is None or registry.gateway_certificate is None or registry.gateway_client_identity is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
@@ -71,7 +67,11 @@ async def proxy_application_request(
 
     # Proxy only authenticated API requests through the mTLS compute gateway boundary.
     try:
-        gateway_response = await GatewayClient(gateway_url, certificate, client_certificate, client_private_key).request(
+        gateway_response = await GatewayClient(
+            registry.gateway_url,
+            registry.gateway_certificate,
+            registry.gateway_client_identity,
+        ).request(
             application_id=application.id,
             user_id=user.id,
             method=request.method,

@@ -81,8 +81,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert refreshed.status == Status.running
     assert refreshed.gateway_url == "https://192.0.2.1"
     assert refreshed.gateway_certificate == "ca-2"
-    assert refreshed.gateway_client_certificate == "client-certificate-2"
-    assert refreshed.gateway_client_private_key == "client-private-key-2"
+    assert refreshed.gateway_client_identity == "client-certificate-2\nclient-private-key-2"
 
 
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:

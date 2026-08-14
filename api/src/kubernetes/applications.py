@@ -6,7 +6,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
-from src.models.gateways import APPLICATION_ID_HEADER
 from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment, new_class
 from src.kubernetes.utils import apply, deployment_is_ready
 
@@ -48,7 +47,6 @@ class Applications:
         deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
-            application_id_header=APPLICATION_ID_HEADER,
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,

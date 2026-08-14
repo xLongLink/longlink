@@ -35,8 +35,7 @@ async def create(claimed: Operation) -> str | None:
         registry.status == Status.running
         and registry.gateway_url is not None
         and registry.gateway_certificate is not None
-        and registry.gateway_client_certificate is not None
-        and registry.gateway_client_private_key is not None
+        and registry.gateway_client_identity is not None
     ):
         gateway_address = await cluster.gateway.apply()
         if registry.gateway_url != gateway_url(gateway_address):
@@ -60,8 +59,7 @@ async def create(claimed: Operation) -> str | None:
             registry.id,
             gateway_url(gateway_address),
             tls.ca_certificate,
-            tls.client_certificate,
-            tls.client_private_key,
+            f"{tls.client_certificate}\n{tls.client_private_key}",
             registry.status,
         )
         await session.commit()

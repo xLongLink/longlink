@@ -83,13 +83,13 @@ spec:
     rules:
         - matches:
               - headers:
-                    - name: $application_id_header
+                    - name: x-longlink-application-id
                       value: $application_id
           filters:
               - type: RequestHeaderModifier
                 requestHeaderModifier:
                     remove:
-                        - $application_id_header
+                        - x-longlink-application-id
           backendRefs:
               - group: ''
                 kind: Service

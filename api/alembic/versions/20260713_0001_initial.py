@@ -58,8 +58,7 @@ def upgrade() -> None:
         ),
         sa.Column("gateway_url", sa.String(length=512), nullable=True),
         sa.Column("gateway_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_client_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_client_private_key", EncryptedType(env.ENCRYPTION_KEY), nullable=True),
+        sa.Column("gateway_client_identity", EncryptedType(env.ENCRYPTION_KEY), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )

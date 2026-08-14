@@ -95,8 +95,7 @@ async def record_success(
     compute_id: UUID,
     gateway_url: str,
     gateway_certificate: str,
-    gateway_client_certificate: str,
-    gateway_client_private_key: str,
+    gateway_client_identity: str,
     expected_status: Status,
 ) -> bool:
     """Publish successful Compute and Gateway state when its lifecycle state is current."""
@@ -108,7 +107,6 @@ async def record_success(
 
     registry.gateway_url = gateway_url
     registry.gateway_certificate = gateway_certificate
-    registry.gateway_client_certificate = gateway_client_certificate
-    registry.gateway_client_private_key = gateway_client_private_key
+    registry.gateway_client_identity = gateway_client_identity
     registry.status = Status.running
     return True

@@ -151,7 +151,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert captured["cadata"] == registry.gateway_certificate
     assert isinstance(captured["client_kwargs"], dict)
     assert captured["client_kwargs"]["follow_redirects"] is False
-    assert captured["client_identity"] == f"{registry.gateway_client_certificate}\n{registry.gateway_client_private_key}"
+    assert captured["client_identity"] == registry.gateway_client_identity
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
     assert forwarded["method"] == "POST"

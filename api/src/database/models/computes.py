@@ -34,5 +34,4 @@ class ComputeRegistry(PlatformModel, table=True):
     # Gateway
     gateway_url: str | None = Field(default=None, max_length=512)
     gateway_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_client_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_client_private_key: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
+    gateway_client_identity: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
