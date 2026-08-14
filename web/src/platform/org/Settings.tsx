@@ -1,7 +1,7 @@
 import { z } from 'zod';
+import { useState } from 'react';
 import { useLocation } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
-import { useState, type ReactNode } from 'react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -38,57 +38,6 @@ const organizationAvatarSchema = z.union([
     z.literal(''),
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
-
-/** Renders the organization storage usage table. */
-function StorageSettings({
-    columns,
-    description,
-    emptyState,
-    idKey,
-    isOrganizationLoading,
-    organizationError,
-    organizationId,
-    title,
-}: {
-    columns: TableColumn<OrganizationStorageUsageResponse>[];
-    description: string;
-    emptyState: ReactNode;
-    idKey: keyof OrganizationStorageUsageResponse & string;
-    isOrganizationLoading: boolean;
-    organizationError: Error | null;
-    organizationId: string;
-    title: string;
-}) {
-    const { data, error, isLoading } = useApiQuery<OrganizationStorageUsageResponse | null>(
-        organizationId ? platformApiPath(`/organizations/${organizationId}/storage`) : null,
-        {
-            parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
-            retry: false,
-        }
-    );
-    return (
-        <VStack gap={4}>
-            <VStack gap={1}>
-                <Heading level={2}>{title}</Heading>
-                <Text type="supporting">{description}</Text>
-            </VStack>
-            {isOrganizationLoading || isLoading ? null : organizationError ? (
-                <Banner status="error" title={organizationError.message} />
-            ) : error ? (
-                <Banner status="error" title={error.message} />
-            ) : (
-                <Table
-                    columns={columns}
-                    data={data ? [data] : []}
-                    density="compact"
-                    emptyState={emptyState}
-                    hasHover
-                    idKey={idKey}
-                />
-            )}
-        </VStack>
-    );
-}
 
 /** Renders the organization settings page body. */
 export default function Settings({
@@ -137,14 +86,16 @@ export default function Settings({
         }
     );
     const databaseResourceError = error ?? databaseError;
-    const ownerCell = (
-        <HStack gap={3} align="center">
-            <Avatar src={organizationAvatar} name={organizationName} size="md" />
-            <VStack gap={1}>
-                <Text weight="semibold">{organizationName}</Text>
-                <Text type="supporting">Organization</Text>
-            </VStack>
-        </HStack>
+    const {
+        data: storageUsage,
+        error: storageError,
+        isLoading: isStorageLoading,
+    } = useApiQuery<OrganizationStorageUsageResponse | null>(
+        section === 'storage' && organizationId ? platformApiPath(`/organizations/${organizationId}/storage`) : null,
+        {
+            parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
+            retry: false,
+        }
     );
     const storageColumns: TableColumn<OrganizationStorageUsageResponse>[] = [
         {
@@ -165,7 +116,15 @@ export default function Settings({
             key: 'owner',
             header: 'Owner',
             width: proportional(1),
-            renderCell: () => ownerCell,
+            renderCell: () => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
+                    <VStack gap={1}>
+                        <Text weight="semibold">{organizationName}</Text>
+                        <Text type="supporting">Organization</Text>
+                    </VStack>
+                </HStack>
+            ),
         },
     ];
 
@@ -328,16 +287,26 @@ export default function Settings({
                 ) : null}
 
                 {section === 'storage' ? (
-                    <StorageSettings
-                        columns={storageColumns}
-                        description="Review storage usage for this organization."
-                        emptyState={<EmptyState title="No storage resources found." isCompact />}
-                        idKey="bucket_name"
-                        isOrganizationLoading={isLoading}
-                        organizationError={error}
-                        organizationId={organizationId}
-                        title="Storage"
-                    />
+                    <VStack gap={4}>
+                        <VStack gap={1}>
+                            <Heading level={2}>Storage</Heading>
+                            <Text type="supporting">Review storage usage for this organization.</Text>
+                        </VStack>
+                        {isLoading || isStorageLoading ? null : error ? (
+                            <Banner status="error" title={error.message} />
+                        ) : storageError ? (
+                            <Banner status="error" title={storageError.message} />
+                        ) : (
+                            <Table
+                                columns={storageColumns}
+                                data={storageUsage ? [storageUsage] : []}
+                                density="compact"
+                                emptyState={<EmptyState title="No storage resources found." isCompact />}
+                                hasHover
+                                idKey="bucket_name"
+                            />
+                        )}
+                    </VStack>
                 ) : null}
             </div>
         </div>
