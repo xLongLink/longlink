@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ArticlePage } from '@/lib/articles';
-import { DOC_GROUPS, DOC_PAGE_PATHS } from '@/platform/docs/navigation';
+import { DOC_GROUPS, DOC_PAGE_PATHS } from '@/platform/navigation';
 import { ArticlePageRenderer, createArticleMeta } from '@/platform/routes/Articles';
 
 type DocMetadata = Omit<ArticlePage, 'breadcrumbs' | 'content' | 'icon' | 'metadata'> & ArticlePage['metadata'];

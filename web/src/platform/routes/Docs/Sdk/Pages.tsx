@@ -25,7 +25,7 @@ import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
-import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/docs/navigation';
+import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/navigation';
 
 type ComponentSummary = {
     name: string;

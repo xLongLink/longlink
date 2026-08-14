@@ -2,7 +2,7 @@ import type { Config } from '@react-router/dev/config';
 import path from 'node:path';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { publicRoutePath, SITE_URL } from './src/lib/urls';
-import { pageReferenceDocs } from './src/platform/docs/navigation';
+import { pageReferenceDocs } from './src/platform/navigation';
 
 const requestedMode = import.meta.env.MODE;
 

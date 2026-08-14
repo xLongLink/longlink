@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
-import { LEGAL_GROUPS } from '@/platform/legal/navigation';
+import { LEGAL_GROUPS } from '@/platform/navigation';
 import { ArticlePageRenderer, createArticleMeta } from '@/platform/routes/Articles';
 
 export const metadata = {

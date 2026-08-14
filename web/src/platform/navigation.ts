@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import {
     AppWindow,
+    ArrowUpDown,
     BookOpen,
     Building2,
     Database,
@@ -11,7 +12,9 @@ import {
     Package,
     Rocket,
     ShieldCheck,
+    Users,
     Waypoints,
+    Wrench,
 } from 'lucide-react';
 import type { ArticleNavigationGroup } from '@/lib/articles';
 
@@ -53,14 +56,6 @@ const pageReferencePages = [
     ['Layout', 'Table'],
 ] as const;
 
-export const pageReferenceDocs: DocPage[] = pageReferencePages.map(([category, title]) => ({
-    category,
-    path: `/docs/sdk/pages/${title === 'if' ? title : title.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`).slice(1)}`,
-    title,
-}));
-
-export const pageReferenceHrefByName = Object.fromEntries(pageReferenceDocs.map(({ path, title }) => [title, path]));
-
 const DOC_SECTIONS = [
     { title: 'Overview', items: [{ title: 'Introduction', path: '/docs', icon: BookOpen }] },
     {
@@ -86,6 +81,24 @@ const DOC_SECTIONS = [
     },
 ] as const;
 
+export const ADMIN_NAVIGATION = [
+    { href: '/admin/users', icon: Users, label: 'Users' },
+    { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
+    { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
+    { href: '/admin/database', icon: Database, label: 'Database' },
+    { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
+    { href: '/admin/compute', icon: Wrench, label: 'Compute' },
+    { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
+] as const;
+
+export const pageReferenceDocs: DocPage[] = pageReferencePages.map(([category, title]) => ({
+    category,
+    path: `/docs/sdk/pages/${title === 'if' ? title : title.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`).slice(1)}`,
+    title,
+}));
+
+export const pageReferenceHrefByName = Object.fromEntries(pageReferenceDocs.map(({ path, title }) => [title, path]));
+
 export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map(({ items, title }) => ({
     title,
     items: items.map(({ icon: Icon, ...item }) => ({
@@ -97,3 +110,14 @@ export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map(({ items, t
 export const DOC_PAGE_PATHS = [...DOC_GROUPS.flatMap(({ items }) => items), ...pageReferenceDocs].map(
     ({ path, title }) => ({ path, title })
 );
+
+export const LEGAL_GROUPS = [
+    {
+        title: 'Legal',
+        items: [
+            { title: 'Terms', path: '/terms' },
+            { title: 'Impressum', path: '/impressum' },
+            { title: 'Privacy', path: '/privacy' },
+        ],
+    },
+] satisfies ArticleNavigationGroup[];
