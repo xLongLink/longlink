@@ -47,7 +47,7 @@ async def current_optional_user(
     return user
 
 
-async def authuser(user: User | None = Depends(current_optional_user)) -> User:
+def authuser(user: User | None = Depends(current_optional_user)) -> User:
     """Return the authenticated user with current LongLink resource access."""
 
     # Convert missing, expired, and invalidated sessions into one stable authentication error.
@@ -56,7 +56,7 @@ async def authuser(user: User | None = Depends(current_optional_user)) -> User:
     return user
 
 
-async def authadmin(user: User = Depends(authuser)) -> User:
+def authadmin(user: User = Depends(authuser)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.

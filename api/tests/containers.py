@@ -31,17 +31,13 @@ class DockerRuntimeContainer:
         self,
         image: str,
         *,
-        command: str | Sequence[str] | None = None,
         ports: Sequence[int] = (),
-        volumes: Sequence[tuple[str, str, str]] = (),
         environment: dict[str, str],
     ) -> None:
         """Store container configuration without contacting Docker."""
 
         self._image = image
         self._ports = ports
-        self._command = command
-        self._volumes = volumes
         self._environment = environment
         self._client: DockerClient | None = None
         self._container: Container | None = None
@@ -51,18 +47,15 @@ class DockerRuntimeContainer:
 
         self._client = docker.from_env()
         port_bindings = {f"{port}/tcp": ("127.0.0.1", None) for port in self._ports}
-        volume_bindings = {source: {"bind": target, "mode": mode} for source, target, mode in self._volumes}
 
         # Close the Docker client after any failed pull or start while preserving the original error.
         try:
             self._container = self._client.containers.run(
                 self._image,
-                command=self._command,
                 detach=True,
                 environment=self._environment,
                 ports=port_bindings or None,
                 remove=False,
-                volumes=volume_bindings or None,
             )
         finally:
             if self._container is None:

@@ -59,7 +59,6 @@ async def get_organization(
 
 @router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)
 async def update_organization(
-    organization_id: UUID,
     payload: OrganizationUpdate,
     user: User = Depends(authuser),
     membership: UserOrganization = Depends(organization_access),
@@ -72,7 +71,7 @@ async def update_organization(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Persist mutable metadata only while the Organization remains active.
-    organization = await organizations.update(session, organization_id, str(payload.avatar), user)
+    organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     await session.commit()
@@ -163,7 +162,7 @@ async def create_organization_invitation(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Prevent inviting roles above the caller's role.
-    if roles.rank(payload.role) > roles.rank(membership.role):
+    if roles.ROLE_RANKS[payload.role] > roles.ROLE_RANKS[membership.role]:
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
     invitation = await invitations.create(session, membership.organization_id, payload.email, payload.role)
@@ -173,7 +172,6 @@ async def create_organization_invitation(
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
-    organization_id: UUID,
     member_id: UUID,
     payload: OrganizationMemberUpdate,
     user: User = Depends(authuser),
@@ -189,7 +187,7 @@ async def update_organization_member(
     # Persist the requested role only for an active Organization member.
     updated = await organizations.update_member_role(
         session,
-        organization_id,
+        membership.organization_id,
         member_id,
         payload.role,
         user,

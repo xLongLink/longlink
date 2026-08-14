@@ -3145,46 +3145,6 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
-          },
-          "compute_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Compute Id"
-          },
-          "storage_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Storage Id"
-          },
-          "database_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Database Id"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "deleted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deleted At"
           }
         },
         "type": "object",
@@ -3192,14 +3152,7 @@
           "id",
           "name",
           "slug",
-          "avatar",
-          "compute_id",
-          "storage_id",
-          "database_id",
-          "status",
-          "created_at",
-          "updated_at",
-          "deleted_at"
+          "avatar"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."

@@ -1,8 +1,50 @@
-import { DOC_GROUPS, DOC_PAGES } from '@/platform/docs/catalog';
-import { ArticleRoute, createArticleMeta } from '@/platform/routes/Articles';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
 
-export const meta = createArticleMeta(DOC_PAGES);
+function Content() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Action'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Button'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Renders a labeled command, submit trigger, or action trigger.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
+            </Heading>
+            <CodeBlock
+                code={
+                    '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
+                }
+                language="xml"
+            />
+        </Stack>
+    );
+}
 
-export default function DocsSdkPagesButtonArticle() {
-    return <ArticleRoute groups={DOC_GROUPS} hasPageNavigation pages={DOC_PAGES} />;
+export const metadata = {
+    path: '/docs/sdk/pages/button',
+    title: 'Button',
+    description: 'Renders a labeled command, submit trigger, or action trigger.',
+    toc: [
+        { id: 'introduction', label: 'Introduction', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+    ],
+    lastUpdated: '2026-07-21',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/Docs/Sdk/Pages/Button.tsx',
+};
+
+export const meta = createDocsMeta(metadata);
+
+export default function DocsArticleRoute() {
+    return (
+        <DocsArticle metadata={metadata}>
+            <Content />
+        </DocsArticle>
+    );
 }

@@ -16,6 +16,27 @@ export function createArticleMeta(pages: ArticlePage[]): MetaFunction {
     };
 }
 
+/** Renders a resolved article with its sidebar navigation. */
+export function ArticlePageRenderer({
+    groups,
+    page,
+    previousPage,
+    nextPage,
+}: {
+    groups: ArticleNavigationGroup[];
+    page: ArticlePage;
+    previousPage?: Pick<ArticlePage, 'path' | 'title'>;
+    nextPage?: Pick<ArticlePage, 'path' | 'title'>;
+}) {
+    const location = useLocation();
+
+    return (
+        <SideLayout sideNav={<Sidebar currentPath={location.pathname} groups={groups} />}>
+            <Article page={page} previousPage={previousPage} nextPage={nextPage} />
+        </SideLayout>
+    );
+}
+
 /** Resolves and renders one article from its catalog and navigation groups. */
 export function ArticleRoute({
     groups,
@@ -31,13 +52,12 @@ export function ArticleRoute({
     const page = pages[pageIndex];
 
     return page ? (
-        <SideLayout sideNav={<Sidebar currentPath={location.pathname} groups={groups} />}>
-            <Article
-                page={page}
-                previousPage={hasPageNavigation ? pages[pageIndex - 1] : undefined}
-                nextPage={hasPageNavigation ? pages[pageIndex + 1] : undefined}
-            />
-        </SideLayout>
+        <ArticlePageRenderer
+            groups={groups}
+            nextPage={hasPageNavigation ? pages[pageIndex + 1] : undefined}
+            page={page}
+            previousPage={hasPageNavigation ? pages[pageIndex - 1] : undefined}
+        />
     ) : (
         <NotFound />
     );

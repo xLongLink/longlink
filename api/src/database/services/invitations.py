@@ -17,13 +17,12 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
     normalized_email = email.strip().lower()
 
     # Require an active target organization.
-    result = await session.scalars(
+    if await session.scalar(
         select(Organization.id).where(
             Organization.id == organization_id,
             Organization.deleted_at.is_(None),
         )
-    )
-    if result.one_or_none() is None:
+    ) is None:
         raise NotFoundError("Organization not found")
 
     # Reject emails that already belong to the organization.

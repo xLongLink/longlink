@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -5,6 +6,7 @@ from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
+from src.database.models.applications import Application
 
 
 async def reconcile(claimed: Operation) -> str | None:
@@ -80,16 +82,17 @@ async def delete(claimed: Operation) -> str | None:
 
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
     async with session_scope() as session:
-        application_rows = await organizations.applications(session, organization.id, include_deleted=True)
+        application_ids_result = await session.scalars(select(Application.id).where(Application.organization_id == organization.id))
+        application_ids = application_ids_result.all()
     await cluster.organizations.delete(organization.id.hex)
-    for application in application_rows:
-        await db.delete_schema(organization.id, application.id)
-        await object_storage.revoke(application.id.hex)
+    for application_id in application_ids:
+        await db.delete_schema(organization.id, application_id)
+        await object_storage.revoke(application_id.hex)
 
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     async with session_scope() as session:
-        for application in application_rows:
-            await applications.purge(session, application.id)
+        for application_id in application_ids:
+            await applications.purge(session, application_id)
         await organizations.purge(session, organization.id)
         await session.commit()

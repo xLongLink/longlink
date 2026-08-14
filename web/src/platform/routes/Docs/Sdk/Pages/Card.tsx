@@ -1,8 +1,50 @@
-import { DOC_GROUPS, DOC_PAGES } from '@/platform/docs/catalog';
-import { ArticleRoute, createArticleMeta } from '@/platform/routes/Articles';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
 
-export const meta = createArticleMeta(DOC_PAGES);
+function Content() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Layout'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Card'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Groups one discrete item on an Astryx surface.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
+            </Heading>
+            <CodeBlock
+                code={
+                    '<Card variant="muted">\n  <Stack gap="2">\n    <Heading level="3">Order</Heading>\n    <Text value="$order.number" />\n  </Stack>\n</Card>'
+                }
+                language="xml"
+            />
+        </Stack>
+    );
+}
 
-export default function DocsSdkPagesCardArticle() {
-    return <ArticleRoute groups={DOC_GROUPS} hasPageNavigation pages={DOC_PAGES} />;
+export const metadata = {
+    path: '/docs/sdk/pages/card',
+    title: 'Card',
+    description: 'Groups one discrete item on an Astryx surface.',
+    toc: [
+        { id: 'introduction', label: 'Introduction', level: 1 },
+        { id: 'usage', label: 'Usage', level: 2 },
+    ],
+    lastUpdated: '2026-07-21',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/Docs/Sdk/Pages/Card.tsx',
+};
+
+export const meta = createDocsMeta(metadata);
+
+export default function DocsArticleRoute() {
+    return (
+        <DocsArticle metadata={metadata}>
+            <Content />
+        </DocsArticle>
+    );
 }

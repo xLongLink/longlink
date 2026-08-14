@@ -20,8 +20,8 @@ export function Article({
     nextPage,
 }: {
     page: ArticlePage;
-    previousPage?: ArticlePage;
-    nextPage?: ArticlePage;
+    previousPage?: Pick<ArticlePage, 'path' | 'title'>;
+    nextPage?: Pick<ArticlePage, 'path' | 'title'>;
 }) {
     const { user, memberships } = useUserProfile();
     const { content, metadata } = page;
