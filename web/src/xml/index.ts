@@ -1,6 +1,7 @@
 import { createElement } from 'react';
-import type { ASTNode } from './runtime/types';
-import * as runtime from './runtime';
+import type { ASTNode } from './types';
+import * as runtime from './renderers';
+import { parseXML as parseAst } from './core/parser';
 
 /** Verifies that an XML document contains one unversioned LongLink root. */
 function assertPageRoot(ast: ASTNode[]): void {
@@ -15,7 +16,7 @@ function assertPageRoot(ast: ASTNode[]): void {
 
 /** Parses one XML document. */
 export function parseXML(xml: string): ASTNode[] {
-    const ast = runtime.parseXML(xml);
+    const ast = parseAst(xml);
 
     assertPageRoot(ast);
     return ast;
@@ -28,5 +29,6 @@ export function RenderXML({ ast, ...props }: Parameters<typeof runtime.RenderXML
     return createElement(runtime.RenderXML, { ast, ...props });
 }
 
-export { createContext, resolveRequestUrl } from './runtime';
-export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './runtime';
+export { createContext } from './core/context';
+export { resolveRequestUrl } from './core/url';
+export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './types';

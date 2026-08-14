@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseXML } from '@/xml/runtime/core/parser';
-import { createContext } from '@/xml/runtime/core/context';
+import { parseXML } from '@/xml/core/parser';
+import { createContext } from '@/xml/core/context';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Link', () => {

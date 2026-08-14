@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createContext, setupContext } from '@/xml/runtime/core/context';
+import { createContext, setupContext } from '@/xml/core/context';
 import { compileProps } from '../helpers';
 
 describe('State', () => {

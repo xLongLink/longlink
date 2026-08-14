@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Scope } from '@/xml/runtime/types';
-import { compileAttribute, evaluate } from '@/xml/runtime/expressions';
+import type { Scope } from '@/xml/types';
+import { compileAttribute, evaluate } from '@/xml/expressions';
 
 describe('evaluate', () => {
     /* Evaluation should resolve expressions against the flat runtime context. */

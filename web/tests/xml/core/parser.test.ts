@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseXML } from '@/xml/runtime/core/parser';
+import { parseXML } from '@/xml/core/parser';
 
 describe('parseXML', () => {
     /* XML attributes are compiled without resolving runtime values. */

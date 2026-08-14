@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Scope } from '@/xml/runtime/types';
-import { resolvePath, resolveValue } from '@/xml/runtime/expressions';
+import type { Scope } from '@/xml/types';
+import { resolvePath, resolveValue } from '@/xml/expressions';
 
 describe('resolve', () => {
     it('resolves values through scope chains', () => {

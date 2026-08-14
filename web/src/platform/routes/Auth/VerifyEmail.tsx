@@ -2,9 +2,12 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -12,14 +15,13 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
+import { Wordmark } from '@/components/Wordmark';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
-import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
-import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type RegistrationCompleteValues = {
@@ -188,7 +190,17 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage title={<AuthWelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
+        <AuthPage
+            title={
+                <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
+                    <Text color="inherit" type="inherit">
+                        Welcome to
+                    </Text>
+                    <Wordmark size="heading" />
+                </HStack>
+            }
+            description={<Divider label="Email verified. Complete your profile." />}
+        >
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
@@ -266,7 +278,17 @@ export default function VerifyEmail() {
                     />
                 </Stack>
                 <Divider />
-                <AuthLegalAgreement />
+                <Text as="p" color="secondary" justify="center" type="supporting">
+                    By continuing, you agree to our <br />
+                    <Link href="/terms" hasUnderline type="inherit">
+                        Terms of Service
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" hasUnderline type="inherit">
+                        Privacy Policy
+                    </Link>
+                    .
+                </Text>
             </Stack>
         </AuthPage>
     );

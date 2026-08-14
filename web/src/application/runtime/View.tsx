@@ -11,9 +11,9 @@ import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } f
 import type { TopLayoutTab } from '@/layout/TopLayout';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { requestApi } from '@/lib/api';
-import { RenderXML } from '@/xml/runtime';
+import { RenderXML } from '@/xml';
 import NotFound from '@/platform/NotFound';
-import XmlLayout from '@/xml/runtime/layout';
+import XmlLayout from '@/xml/layout';
 import { useApiQuery } from '@/hooks/use-api';
 import { getIconComponent } from '@/lib/icons';
 import { createContext as createXmlContext, parseXML, resolveRequestUrl, type ASTNode, type XmlRuntime } from '@/xml';
