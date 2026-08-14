@@ -385,7 +385,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -2173,7 +2173,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -2228,7 +2228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfile"
+                  "$ref": "#/components/schemas/UserSummary"
                 }
               }
             }
@@ -3481,41 +3481,6 @@
         ],
         "title": "UserOrganizationSummary",
         "description": "Represent a compact Organization in current-user membership responses."
-      },
-      "UserProfile": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          },
-          "role": {
-            "$ref": "#/components/schemas/PlatformRoles"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "email",
-          "avatar",
-          "role"
-        ],
-        "title": "UserProfile",
-        "description": "Represent the authenticated user payload returned by the API."
       },
       "UserSummary": {
         "properties": {

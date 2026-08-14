@@ -18,15 +18,14 @@ import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
+import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
     const location = useLocation();
-    const { user, isLoading: isProfileLoading } = useUserProfile();
-    const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
+    const { user, memberships, isLoading: isProfileLoading, isOrganizationsLoading } = useUserProfile();
     const { mutateAsync: updateUser } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -35,7 +34,7 @@ export default function Settings() {
     const section = hash === 'organizations' || hash === 'account' ? hash : 'account';
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
-    const isLoading = isProfileLoading || areOrganizationsLoading;
+    const isLoading = isProfileLoading || isOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {

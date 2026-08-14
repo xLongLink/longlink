@@ -13,8 +13,8 @@ import type {
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
+import { useUserProfile } from '@/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
-import { useUserOrganizations } from '@/hooks/use-user';
 import { ApiError, apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import {
@@ -35,7 +35,7 @@ type UseOrganizationResult = {
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { memberships, isLoading: isUserLoading } = useUserOrganizations();
+    const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;

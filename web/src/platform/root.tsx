@@ -15,15 +15,6 @@ export function Layout({ children }: { children: ReactNode }) {
     return <Document>{children}</Document>;
 }
 
-/** Applies the platform's generated default theme. */
-function PlatformShell() {
-    return (
-        <AstryxProvider>
-            <Outlet />
-        </AstryxProvider>
-    );
-}
-
 /** Provides isolated Platform runtime state around the active framework route. */
 export default function PlatformRoot() {
     const [client] = useState(createQueryClient);
@@ -31,7 +22,9 @@ export default function PlatformRoot() {
     return (
         <QueryClientProvider client={client}>
             <UserProvider>
-                <PlatformShell />
+                <AstryxProvider>
+                    <Outlet />
+                </AstryxProvider>
             </UserProvider>
         </QueryClientProvider>
     );

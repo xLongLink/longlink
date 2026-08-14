@@ -57,7 +57,3 @@ class UserSummary(UserIdentity):
 
     # State
     role: PlatformRoles
-
-
-class UserProfile(UserSummary):
-    """Represent the authenticated user payload returned by the API."""

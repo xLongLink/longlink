@@ -11,15 +11,21 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
+import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { PageContainer } from '@/components/PageContainer';
-import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
-    const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
-    const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
+    const {
+        user,
+        memberships,
+        isLoading: isProfileLoading,
+        isOrganizationsLoading,
+        error: profileError,
+        organizationsError,
+    } = useUserProfile();
     const location = useLocation();
 
     // Show sign-in prompt for anonymous visitors.
@@ -69,7 +75,7 @@ export default function Organizations() {
                     </VStack>
                     <CreateOrganization />
                 </HStack>
-                {(isProfileLoading || areOrganizationsLoading) && memberships.length === 0 ? null : (profileError ??
+                {(isProfileLoading || isOrganizationsLoading) && memberships.length === 0 ? null : (profileError ??
                       organizationsError) &&
                   memberships.length === 0 ? (
                     <Banner status="error" title="Failed to load organizations." />

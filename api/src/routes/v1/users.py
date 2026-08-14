@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_session
-from src.models.users import UserUpdate, UserProfile, UserSummary, UserOrganizationMembership
+from src.models.users import UserUpdate, UserSummary, UserOrganizationMembership
 from src.database.services import users, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -8,7 +8,7 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserProfile)
+@router.get("/me", response_model=UserSummary)
 async def get_me(user: User = Depends(authuser)):
     """Return the authenticated user's details."""
 
@@ -30,7 +30,7 @@ async def list_users(_: User = Depends(authadmin), session: AsyncSession = Depen
     return await users.fetch(session)
 
 
-@router.patch("/me", response_model=UserProfile)
+@router.patch("/me", response_model=UserSummary)
 async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
     """Update the authenticated user's details."""
 

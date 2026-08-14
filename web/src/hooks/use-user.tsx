@@ -1,19 +1,19 @@
 import { createContext, useContext } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { UserOrganizationMembership, UserProfile, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import type { UserOrganizationMembership, UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
-const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
+const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useApiQuery<UserProfile>(platformApiPath('/me'), {
+    const user = useApiQuery<UserSummary>(platformApiPath('/me'), {
         // Auth state must refresh immediately after login/logout redirects.
-        parse: (value) => zUserProfile.parse(value),
+        parse: (value) => zUserSummary.parse(value),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -22,7 +22,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
 
-/** Reads the current user profile without loading memberships or saved accounts. */
+/** Reads the current user profile and organization memberships. */
 export function useUserProfile() {
     // Fail fast when the provider is missing.
     const context = useContext(UserContext);
@@ -31,29 +31,21 @@ export function useUserProfile() {
     }
 
     const { data: user, error, isLoading, refetch } = context;
-
-    return {
-        user: user ?? null,
-        isLoading,
-        error: error ?? null,
-        refetch,
-    };
-}
-
-/** Reads organization memberships only when a user is authenticated. */
-export function useUserOrganizations() {
-    const profile = useUserProfile();
-    const query = useApiQuery<UserOrganizationMembership[]>(
-        profile.user ? platformApiPath('/me/organizations') : null,
+    const organizations = useApiQuery<UserOrganizationMembership[]>(
+        user ? platformApiPath('/me/organizations') : null,
         {
             parse: (value) => zUserOrganizationMembership.array().parse(value),
         }
     );
 
     return {
-        memberships: query.data ?? [],
-        isLoading: profile.isLoading || query.isLoading,
-        error: profile.error ?? query.error ?? null,
+        user: user ?? null,
+        memberships: organizations.data ?? [],
+        isLoading,
+        isOrganizationsLoading: organizations.isLoading,
+        error: error ?? null,
+        organizationsError: organizations.error ?? null,
+        refetch,
     };
 }
 
@@ -81,7 +73,7 @@ export function useUpdateUser() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 },
-                (value) => zUserProfile.parse(value)
+                (value) => zUserSummary.parse(value)
             ),
         onSuccess: (user) => {
             queryClient.setQueryData(userProfileQueryKey, user);

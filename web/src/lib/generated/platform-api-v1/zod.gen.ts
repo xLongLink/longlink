@@ -489,19 +489,6 @@ export const zUserOrganizationMembership = z.object({
 });
 
 /**
- * UserProfile
- *
- * Represent the authenticated user payload returned by the API.
- */
-export const zUserProfile = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    email: z.email(),
-    avatar: z.string(),
-    role: zPlatformRoles
-});
-
-/**
  * UserSummary
  *
  * Represent a compact user object in nested responses.
@@ -589,7 +576,7 @@ export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrat
 /**
  * Successful Response
  */
-export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserProfile;
+export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserSummary;
 
 /**
  * Response List Applications Api V1 Applications Get
@@ -875,14 +862,14 @@ export const zGetStorageRegistryApiV1StoragesRegistryIdGetResponse = zStorageReg
 /**
  * Successful Response
  */
-export const zGetMeApiV1MeGetResponse = zUserProfile;
+export const zGetMeApiV1MeGetResponse = zUserSummary;
 
 export const zPatchMeApiV1MePatchBody = zUserUpdate;
 
 /**
  * Successful Response
  */
-export const zPatchMeApiV1MePatchResponse = zUserProfile;
+export const zPatchMeApiV1MePatchResponse = zUserSummary;
 
 /**
  * Response Get My Organizations Api V1 Me Organizations Get

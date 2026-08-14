@@ -7,7 +7,7 @@ from src.utils import mail, token
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
-from src.models.users import UserProfile
+from src.models.users import UserSummary
 from src.database.services import users, invitations, organizations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -210,7 +210,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
     return {"email": email}
 
 
-@router.post("/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
+@router.post("/auth/register/complete", response_model=UserSummary, status_code=201, tags=["auth"])
 async def complete_registration(
     payload: RegistrationComplete,
     response: Response,
