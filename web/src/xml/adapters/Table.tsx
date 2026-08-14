@@ -53,16 +53,6 @@ export function Table({ props, nodes }: Props) {
     );
 }
 
-/**
- * - key: string
- * - field: string
- * - header: string
- * - children: ReactNode
- */
-export function TableColumn(): never {
-    throw new Error('TableColumn must be used inside Table');
-}
-
 /** Converts one XML column into an Astryx column with an optional renderCell callback. */
 function buildColumn(
     node: ASTNode,

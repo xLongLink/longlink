@@ -24,7 +24,6 @@ export function Link({ props, nodes }: Props) {
     const to = resolveXml(props, 'to', ctx);
     const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
     const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
-    const content = renderNode(nodes, ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
 
     return (
@@ -32,7 +31,7 @@ export function Link({ props, nodes }: Props) {
             href={resolvedTo || resolvedHref || undefined}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
         >
-            {content}
+            {renderNode(nodes, ctx)}
         </AstryxLink>
     );
 }

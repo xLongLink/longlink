@@ -50,15 +50,3 @@ export function TabList({ props, nodes }: Props) {
         </Stack>
     );
 }
-
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Tab?tab=properties
- * - label: string
- * - value: string
- * - to: string
- * - children: ReactNode
- */
-export function Tab(): never {
-    throw new Error('Tab must be used inside TabList');
-}

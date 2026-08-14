@@ -42,8 +42,6 @@ export function Slider({ props }: Props) {
     });
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
-    const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'horizontal';
-    const valueDisplay = isXmlEnum(valueDisplayValue, SLIDER_VALUE_DISPLAYS) ? valueDisplayValue : 'tooltip';
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const minStepsBetweenThumbs = resolveXml(props, 'minStepsBetweenThumbs', ctx);
 
@@ -76,10 +74,10 @@ export function Slider({ props }: Props) {
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
         max: resolveNumberProp(props, 'max', ctx, 100),
         min: resolveNumberProp(props, 'min', ctx, 0),
-        orientation,
+        orientation: orientationValue ?? 'horizontal',
         status: resolveInputStatus(props, ctx),
         step: resolveNumberProp(props, 'step', ctx, 1),
-        valueDisplay,
+        valueDisplay: valueDisplayValue ?? 'tooltip',
         width: resolveSizeProp(props, 'width', ctx),
     };
 

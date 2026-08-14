@@ -54,14 +54,3 @@ export function SideNav({ props, nodes }: Props) {
         </div>
     );
 }
-
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/SideNavItem?tab=properties
- * - label: string
- * - value: string
- * - children: ReactNode
- */
-export function SideNavItem(): never {
-    throw new Error('SideNavItem must be used inside SideNav');
-}

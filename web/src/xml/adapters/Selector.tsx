@@ -127,14 +127,3 @@ export function Selector({ props, nodes }: Props) {
 
     return <AstryxSelector {...common} onChange={binding.setValue} value={binding.value} />;
 }
-
-/**
- * checked: false
- * https://astryx.atmeta.com/components/SelectorOption?tab=properties
- * - value: string
- * - label: string
- * - isDisabled: bool
- */
-export function SelectorOption(): never {
-    throw new Error('SelectorOption must be used inside Selector');
-}

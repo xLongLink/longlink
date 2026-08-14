@@ -5,11 +5,11 @@ import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
-import { createContext, getSetupNodes, setupContext, XmlContext } from './core/context';
+import { getSetupNodes, setupContext, XmlContext } from './core/context';
 
 type RenderXMLProps = {
     ast: [ASTNode];
-    ctx?: XmlRuntime;
+    ctx: XmlRuntime;
     baseUrl?: string;
 };
 
@@ -17,7 +17,7 @@ type RenderXMLProps = {
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
-    const [runtimeCtx] = useState<XmlRuntime>(() => ctx ?? createContext());
+    const runtimeCtx = ctx;
     runtimeCtx.services.requestBaseUrl = baseUrl;
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
@@ -125,17 +125,9 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
 
     return (
         <XmlErrorBoundary resetKey={resetKey}>
-            <XmlContent ast={ast} ctx={runtimeCtx} />
+            <XmlContext.Provider value={runtimeCtx}>
+                <Stack gap={6}>{renderNode(ast[0].children, runtimeCtx.scope)}</Stack>
+            </XmlContext.Provider>
         </XmlErrorBoundary>
-    );
-}
-
-function XmlContent({ ast, ctx }: { ast: [ASTNode]; ctx: XmlRuntime }) {
-    const [root] = ast;
-
-    return (
-        <XmlContext.Provider value={ctx}>
-            <Stack gap={6}>{renderNode(root.children, ctx.scope)}</Stack>
-        </XmlContext.Provider>
     );
 }

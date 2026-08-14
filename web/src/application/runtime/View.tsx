@@ -49,7 +49,6 @@ type ErrorStateProps = {
 type PageState = {
     ast: [ASTNode] | null;
     error: string | null;
-    loading: boolean;
     runtimeContext: XmlRuntime;
 };
 
@@ -127,7 +126,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         ? `${pages}\u0000${activePage.path}\u0000${routePath}\u0000${activePage.tab}`
         : '';
     const visiblePageState = activePageState?.key === activePageStateKey ? activePageState : null;
-    const activePageTab = activePage?.tab;
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -167,8 +165,8 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             });
         }
 
-        return { activeTab: activePageTab ? tabGroups.get(activePageTab)?.href : '', tabs: [...tabGroups.values()] };
-    }, [activePageTab, application, organization, registeredPages]);
+        return { activeTab: activePage?.tab ? tabGroups.get(activePage.tab)?.href : '', tabs: [...tabGroups.values()] };
+    }, [activePage?.tab, application, organization, registeredPages]);
 
     /* Load the active page and discard inactive page state. */
     useEffect(() => {
@@ -183,7 +181,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         runtimeContext.services.navigationBaseUrl = resolveApplicationHref('', organization, application);
         runtimeContext.scope.bindings.params = activeRouteParams;
 
-        const loadingPageState: PageState = { ast: null, error: null, loading: true, runtimeContext };
+        const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -194,7 +192,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                 ...loadingPageState,
                 error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
                 key: activePageStateKey,
-                loading: false,
             });
             return;
         }
@@ -218,7 +215,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                         ast,
                         error: null,
                         key: activePageStateKey,
-                        loading: false,
                     });
                 }
             })
@@ -232,7 +228,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     ...loadingPageState,
                     error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
                     key: activePageStateKey,
-                    loading: false,
                 });
             });
 
@@ -246,7 +241,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationCanLoad,
         application,
         organization,
-        pages,
         resolvedPagesBaseUrl,
     ]);
 
@@ -317,7 +311,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         );
     } else if (visiblePageState?.error) {
         activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
-    } else if (!visiblePageState || visiblePageState.loading) {
+    } else if (!visiblePageState?.ast) {
         activeFallback = <Spinner label="Loading" />;
     }
 

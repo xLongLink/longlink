@@ -54,7 +54,7 @@ export function CheckboxInput({ props }: Props) {
             width={typeof width === 'string' || typeof width === 'number' ? width : undefined}
             status={resolveInputStatus(props, ctx)}
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
-            onChange={(value) => binding.setValue(value)}
+            onChange={binding.setValue}
             isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
