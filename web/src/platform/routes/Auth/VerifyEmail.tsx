@@ -51,21 +51,17 @@ export default function VerifyEmail() {
         resolver: zodResolver(schema),
     });
     const verification = useMutation({
-        mutationFn: (registrationToken: string) => {
+        mutationFn: async (registrationToken: string) => {
             if (!registrationToken) {
-                return fetchApiJson(platformApiPath('/auth/register/setup'), undefined, (value) =>
-                    zEmailPayload.parse(value)
-                );
+                return zEmailPayload.parse(await fetchApiJson(platformApiPath('/auth/register/setup')));
             }
 
-            return fetchApiJson(
-                platformApiPath('/auth/verify'),
-                {
+            return zEmailPayload.parse(
+                await fetchApiJson(platformApiPath('/auth/verify'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: registrationToken }),
-                },
-                (value) => zEmailPayload.parse(value)
+                })
             );
         },
         onSuccess: (setup) => {
@@ -79,15 +75,13 @@ export default function VerifyEmail() {
         },
     });
     const completion = useMutation({
-        mutationFn: (payload: RegistrationCompleteValues) =>
-            fetchApiJson(
-                platformApiPath('/auth/register/complete'),
-                {
+        mutationFn: async (payload: RegistrationCompleteValues) =>
+            zUserSummary.parse(
+                await fetchApiJson(platformApiPath('/auth/register/complete'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...payload, email: verification.data?.email }),
-                },
-                (value) => zUserSummary.parse(value)
+                })
             ),
     });
     /** Creates the account and publishes only the new authenticated query state. */

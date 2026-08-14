@@ -1,13 +1,10 @@
 import { hasProtocol } from 'ufo';
 
 type ApiErrorPayload = {
-    detail?:
-        | string
-        | {
-              code?: string;
-              reason?: string;
-          };
+    detail?: string;
 } | null;
+
+const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
@@ -29,8 +26,6 @@ export function apiQueryKey(path: string): [string, string] {
 
 /** Resolves an API path against the configured API origin. */
 function apiUrl(path: string): string {
-    const baseUrl = import.meta.env.VITE_API_URL || '';
-
     // Reject path separators that could bypass URL checks.
     if (path.includes('\\')) {
         throw new Error('API path must not contain backslashes');
@@ -54,11 +49,11 @@ function apiUrl(path: string): string {
     }
 
     // Keep relative paths unchanged when no API origin is configured.
-    if (!baseUrl) {
+    if (!apiBaseUrl) {
         return path;
     }
 
-    return new URL(path, baseUrl).toString();
+    return new URL(path, apiBaseUrl).toString();
 }
 
 /** Reads the API error detail from a failed response. */
@@ -69,16 +64,6 @@ async function readApiError(response: Response) {
     // Preserve simple API error codes as both the message and machine-readable code.
     if (typeof payload?.detail === 'string') {
         return { code: payload.detail, message: payload.detail };
-    }
-
-    // Prefer a validation reason while retaining its stable API error code.
-    if (payload?.detail && typeof payload.detail === 'object') {
-        const { code, reason } = payload.detail;
-
-        return {
-            code: typeof code === 'string' ? code : undefined,
-            message: typeof reason === 'string' ? reason : typeof code === 'string' ? code : fallback,
-        };
     }
 
     return { message: fallback };
@@ -110,30 +95,8 @@ export async function requestApi(path: string, init?: RequestInit, fetchImpl: ty
 }
 
 /** Fetches unvalidated JSON. */
-export async function fetchApiJson(path: string, init?: RequestInit): Promise<unknown>;
-
-/** Fetches JSON and validates it before returning typed data. */
-export async function fetchApiJson<T>(
-    path: string,
-    init: RequestInit | undefined,
-    parse: (value: unknown) => T
-): Promise<T>;
-
-/** Fetches JSON and optionally validates it before returning typed data. */
-export async function fetchApiJson<T>(
-    path: string,
-    init?: RequestInit,
-    parse?: (value: unknown) => T
-): Promise<T | unknown> {
-    const response = await requestApi(path, init);
-    const value = (await response.json()) as unknown;
-
-    return parse ? parse(value) : value;
-}
-
-/** Fetches text and throws a normalized error for non-OK responses. */
-export async function fetchApiText(path: string, init?: RequestInit): Promise<string> {
+export async function fetchApiJson(path: string, init?: RequestInit): Promise<unknown> {
     const response = await requestApi(path, init);
 
-    return response.text();
+    return response.json() as Promise<unknown>;
 }

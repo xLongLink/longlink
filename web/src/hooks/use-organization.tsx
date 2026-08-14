@@ -91,14 +91,12 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson(
-                platformApiPath(`/organizations/${organizationId}/applications`),
-                {
+            return zApplicationResponse.parse(
+                await fetchApiJson(platformApiPath(`/organizations/${organizationId}/applications`), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
-                },
-                (value) => zApplicationResponse.parse(value)
+                })
             );
         },
         onSuccess: async () => {
@@ -145,12 +143,10 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiJson(
-                platformApiPath(`/applications/${applicationId}`),
-                {
+            zApplicationResponse.parse(
+                await fetchApiJson(platformApiPath(`/applications/${applicationId}`), {
                     method: 'DELETE',
-                },
-                (value) => zApplicationResponse.parse(value)
+                })
             );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
@@ -164,15 +160,13 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ name }: OrganizationCreate) =>
-            fetchApiJson(
-                platformApiPath('/organizations'),
-                {
+        mutationFn: async ({ name }: OrganizationCreate) =>
+            zOrganizationSummary.parse(
+                await fetchApiJson(platformApiPath('/organizations'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name }),
-                },
-                (value) => zOrganizationSummary.parse(value)
+                })
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
@@ -192,14 +186,12 @@ export function useUpdateOrganization(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson(
-                organizationPath,
-                {
+            return zOrganizationSummary.parse(
+                await fetchApiJson(organizationPath, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar }),
-                },
-                (value) => zOrganizationSummary.parse(value)
+                })
             );
         },
         onSuccess: async () => {

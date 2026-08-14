@@ -47,7 +47,7 @@ export default [
     route('docs/sdk/pages/text', './routes/Docs/Sdk/Pages/Text.tsx'),
     route('docs/sdk/pages/text-area', './routes/Docs/Sdk/Pages/TextArea.tsx'),
     route('docs/sdk/pages/text-input', './routes/Docs/Sdk/Pages/TextInput.tsx'),
-    route('docs/*', './routes/Docs/NotFound.tsx'),
+    route('docs/*', './routes/NotFound.tsx', { id: 'docs-not-found' }),
     route('terms', './routes/Legal/Terms.tsx'),
     route('privacy', './routes/Legal/Privacy.tsx'),
     route('impressum', './routes/Legal/Impressum.tsx'),

@@ -35,15 +35,13 @@ export default function CreateCompute() {
         resolver: zodResolver(schema),
     });
     const mutation = useMutation({
-        mutationFn: (payload: Values) =>
-            fetchApiJson(
-                platformApiPath('/computes'),
-                {
+        mutationFn: async (payload: Values) =>
+            zComputeRegistryResponse.parse(
+                await fetchApiJson(platformApiPath('/computes'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
-                },
-                (value) => zComputeRegistryResponse.parse(value)
+                })
             ),
         onSuccess: () => {
             setOpen(false);

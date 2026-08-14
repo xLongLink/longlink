@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { TopLayoutTab } from '@/layout/TopLayout';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiText } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { RenderXML } from '@/xml/runtime';
 import NotFound from '@/platform/NotFound';
 import XmlLayout from '@/xml/runtime/layout';
@@ -225,10 +225,11 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             return next;
         });
 
-        void fetchApiText(pageUrl, {
+        void requestApi(pageUrl, {
             headers: { Accept: 'application/xml' },
             signal: controller.signal,
         })
+            .then((response) => response.text())
             .then((content) => {
                 // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {

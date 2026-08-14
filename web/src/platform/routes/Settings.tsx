@@ -35,15 +35,13 @@ export default function Settings() {
     const { user, memberships, isLoading: isProfileLoading, isOrganizationsLoading } = useUserProfile();
     const queryClient = useQueryClient();
     const { mutateAsync: updateUser } = useMutation({
-        mutationFn: (payload: UserUpdate) =>
-            fetchApiJson(
-                platformApiPath('/me'),
-                {
+        mutationFn: async (payload: UserUpdate) =>
+            zUserSummary.parse(
+                await fetchApiJson(platformApiPath('/me'), {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
-                },
-                (value) => zUserSummary.parse(value)
+                })
             ),
         onSuccess: (updatedUser) => {
             queryClient.setQueryData(userProfileQueryKey, updatedUser);

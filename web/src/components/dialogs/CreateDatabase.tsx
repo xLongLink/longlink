@@ -44,15 +44,13 @@ export default function CreateDatabase() {
         resolver: zodResolver(schema),
     });
     const mutation = useMutation({
-        mutationFn: (payload: Values) =>
-            fetchApiJson(
-                platformApiPath('/databases'),
-                {
+        mutationFn: async (payload: Values) =>
+            zDatabaseRegistryResponse.parse(
+                await fetchApiJson(platformApiPath('/databases'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
-                },
-                (value) => zDatabaseRegistryResponse.parse(value)
+                })
             ),
         onSuccess: () => {
             setOpen(false);
