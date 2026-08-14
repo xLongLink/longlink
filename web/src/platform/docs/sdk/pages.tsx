@@ -75,14 +75,7 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
 
 const noop = () => undefined;
 
-export const metadata = {
-    toc: [
-        { id: 'pages', label: 'Pages', level: 1 },
-        ...componentCategories.map((category) => ({ id: category.id, label: category.title, level: 2 })),
-    ],
-    lastUpdated: '2026-07-21',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/pages.tsx',
-};
+export { metadata } from './pages.metadata';
 
 /** Renders one categorized group of XML page components. */
 function ComponentCategorySection({ category }: { category: ComponentCategory }) {
@@ -301,22 +294,24 @@ function renderComponentPreview(name: string) {
     }
 }
 
-export const content = (
-    <Stack gap={5}>
-        <Heading id="pages" level={1}>
-            Pages
-        </Heading>
-        <Text as="p">
-            Pages define the XML UI returned by SDK page handlers and are based on{' '}
-            <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
-                Astryx
-            </Link>
-            . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
-            compose the screen with supported XML components.
-        </Text>
-        <CodeBlock code={'<longlink>\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
-        {componentCategories.map((category) => (
-            <ComponentCategorySection key={category.id} category={category} />
-        ))}
-    </Stack>
-);
+export default function PagesDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Heading id="pages" level={1}>
+                Pages
+            </Heading>
+            <Text as="p">
+                Pages define the XML UI returned by SDK page handlers and are based on{' '}
+                <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
+                    Astryx
+                </Link>
+                . Use this page as the component map for LongLink Applications: start with LongLink state elements, then
+                compose the screen with supported XML components.
+            </Text>
+            <CodeBlock code={'<longlink>\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
+            {componentCategories.map((category) => (
+                <ComponentCategorySection key={category.id} category={category} />
+            ))}
+        </Stack>
+    );
+}

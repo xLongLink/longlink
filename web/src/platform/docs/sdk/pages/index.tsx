@@ -1,318 +1,227 @@
 import { FileCode2 } from 'lucide-react';
-import { content as ifContent, metadata as ifMetadata } from './if';
-import { content as forContent, metadata as forMetadata } from './for';
-import { content as tabContent, metadata as tabMetadata } from './tab';
-import { content as cardContent, metadata as cardMetadata } from './card';
-import { content as gridContent, metadata as gridMetadata } from './grid';
-import { content as iconContent, metadata as iconMetadata } from './icon';
-import { content as linkContent, metadata as linkMetadata } from './link';
-import { content as textContent, metadata as textMetadata } from './text';
-import { content as badgeContent, metadata as badgeMetadata } from './badge';
-import { content as queryContent, metadata as queryMetadata } from './query';
-import { content as stackContent, metadata as stackMetadata } from './stack';
-import { content as stateContent, metadata as stateMetadata } from './state';
-import { content as tableContent, metadata as tableMetadata } from './table';
-import { content as actionContent, metadata as actionMetadata } from './action';
-import { content as avatarContent, metadata as avatarMetadata } from './avatar';
-import { content as buttonContent, metadata as buttonMetadata } from './button';
-import { content as dialogContent, metadata as dialogMetadata } from './dialog';
-import { content as sliderContent, metadata as sliderMetadata } from './slider';
-import { content as switchContent, metadata as switchMetadata } from './switch';
-import { content as dividerContent, metadata as dividerMetadata } from './divider';
-import { content as headingContent, metadata as headingMetadata } from './heading';
-import { content as sideNavContent, metadata as sideNavMetadata } from './side-nav';
-import { content as bindingsContent, metadata as bindingsMetadata } from './bindings';
-import { content as selectorContent, metadata as selectorMetadata } from './selector';
-import { content as textAreaContent, metadata as textAreaMetadata } from './text-area';
-import { content as fileInputContent, metadata as fileInputMetadata } from './file-input';
-import { content as radioListContent, metadata as radioListMetadata } from './radio-list';
-import { content as textInputContent, metadata as textInputMetadata } from './text-input';
-import { content as expressionsContent, metadata as expressionsMetadata } from './expressions';
-import { content as numberInputContent, metadata as numberInputMetadata } from './number-input';
-import { content as checkboxInputContent, metadata as checkboxInputMetadata } from './checkbox-input';
-import { content as radioListItemContent, metadata as radioListItemMetadata } from './radio-list-item';
-import { content as selectorOptionContent, metadata as selectorOptionMetadata } from './selector-option';
+import { createElement, type ComponentType } from 'react';
+import type { ArticleMetadata } from '@/lib/pages';
+import IfDocumentation, { metadata as ifMetadata } from './if';
+import ForDocumentation, { metadata as forMetadata } from './for';
+import TabDocumentation, { metadata as tabMetadata } from './tab';
+import CardDocumentation, { metadata as cardMetadata } from './card';
+import GridDocumentation, { metadata as gridMetadata } from './grid';
+import IconDocumentation, { metadata as iconMetadata } from './icon';
+import LinkDocumentation, { metadata as linkMetadata } from './link';
+import TextDocumentation, { metadata as textMetadata } from './text';
+import BadgeDocumentation, { metadata as badgeMetadata } from './badge';
+import QueryDocumentation, { metadata as queryMetadata } from './query';
+import StackDocumentation, { metadata as stackMetadata } from './stack';
+import StateDocumentation, { metadata as stateMetadata } from './state';
+import TableDocumentation, { metadata as tableMetadata } from './table';
+import ActionDocumentation, { metadata as actionMetadata } from './action';
+import AvatarDocumentation, { metadata as avatarMetadata } from './avatar';
+import ButtonDocumentation, { metadata as buttonMetadata } from './button';
+import DialogDocumentation, { metadata as dialogMetadata } from './dialog';
+import SliderDocumentation, { metadata as sliderMetadata } from './slider';
+import SwitchDocumentation, { metadata as switchMetadata } from './switch';
+import DividerDocumentation, { metadata as dividerMetadata } from './divider';
+import HeadingDocumentation, { metadata as headingMetadata } from './heading';
+import SideNavDocumentation, { metadata as sideNavMetadata } from './side-nav';
+import BindingsDocumentation, { metadata as bindingsMetadata } from './bindings';
+import SelectorDocumentation, { metadata as selectorMetadata } from './selector';
+import TextAreaDocumentation, { metadata as textAreaMetadata } from './text-area';
+import FileInputDocumentation, { metadata as fileInputMetadata } from './file-input';
+import RadioListDocumentation, { metadata as radioListMetadata } from './radio-list';
+import TextInputDocumentation, { metadata as textInputMetadata } from './text-input';
+import ExpressionsDocumentation, { metadata as expressionsMetadata } from './expressions';
+import NumberInputDocumentation, { metadata as numberInputMetadata } from './number-input';
+import CheckboxInputDocumentation, { metadata as checkboxInputMetadata } from './checkbox-input';
+import RadioListItemDocumentation, { metadata as radioListItemMetadata } from './radio-list-item';
+import SelectorOptionDocumentation, { metadata as selectorOptionMetadata } from './selector-option';
 
-const pageReferences = [
+type PageReference = {
+    Component: ComponentType;
+    category: string;
+    metadata: ArticleMetadata;
+};
+
+export const pageReferencePages = [
     {
-        name: 'if',
-        slug: 'if',
         category: 'Runtime',
-        summary: 'Conditionally renders an XML node when its expression evaluates to a truthy value.',
-        content: ifContent,
+        Component: IfDocumentation,
         metadata: ifMetadata,
     },
     {
-        name: 'Expressions',
-        slug: 'expressions',
         category: 'Runtime',
-        summary: 'Evaluates a safe JavaScript expression subset against the XML runtime scope.',
-        content: expressionsContent,
+        Component: ExpressionsDocumentation,
         metadata: expressionsMetadata,
     },
     {
-        name: 'Bindings',
-        slug: 'bindings',
         category: 'Runtime',
-        summary: 'Connects writable control values to State objects declared in the XML runtime.',
-        content: bindingsContent,
+        Component: BindingsDocumentation,
         metadata: bindingsMetadata,
     },
     {
-        name: 'State',
-        slug: 'state',
         category: 'State',
-        summary: 'Declares local reactive page state before the page renders.',
-        content: stateContent,
+        Component: StateDocumentation,
         metadata: stateMetadata,
     },
     {
-        name: 'Query',
-        slug: 'query',
         category: 'State',
-        summary: 'Fetches JSON data before rendering and stores it in the XML runtime scope.',
-        content: queryContent,
+        Component: QueryDocumentation,
         metadata: queryMetadata,
     },
     {
-        name: 'Action',
-        slug: 'action',
         category: 'State',
-        summary: 'Provides request behavior to child triggers and refreshes selected runtime values.',
-        content: actionContent,
+        Component: ActionDocumentation,
         metadata: actionMetadata,
     },
     {
-        name: 'For',
-        slug: 'for',
         category: 'State',
-        summary: 'Repeats child XML for every item in an array.',
-        content: forContent,
+        Component: ForDocumentation,
         metadata: forMetadata,
     },
     {
-        name: 'Button',
-        slug: 'button',
         category: 'Action',
-        summary: 'Renders a labeled command, submit trigger, or action trigger.',
-        content: buttonContent,
+        Component: ButtonDocumentation,
         metadata: buttonMetadata,
     },
     {
-        name: 'Link',
-        slug: 'link',
         category: 'Action',
-        summary: 'Navigates inside a LongLink Application or opens an external URL.',
-        content: linkContent,
+        Component: LinkDocumentation,
         metadata: linkMetadata,
     },
     {
-        name: 'Card',
-        slug: 'card',
         category: 'Layout',
-        summary: 'Groups one discrete item on an Astryx surface.',
-        content: cardContent,
+        Component: CardDocumentation,
         metadata: cardMetadata,
     },
     {
-        name: 'Avatar',
-        slug: 'avatar',
         category: 'Content',
-        summary: 'Shows a user or team identity from an image or name.',
-        content: avatarContent,
+        Component: AvatarDocumentation,
         metadata: avatarMetadata,
     },
     {
-        name: 'Heading',
-        slug: 'heading',
         category: 'Content',
-        summary: 'Creates semantic section headings.',
-        content: headingContent,
+        Component: HeadingDocumentation,
         metadata: headingMetadata,
     },
     {
-        name: 'Icon',
-        slug: 'icon',
         category: 'Content',
-        summary: 'Displays a Lucide icon.',
-        content: iconContent,
+        Component: IconDocumentation,
         metadata: iconMetadata,
     },
     {
-        name: 'Text',
-        slug: 'text',
         category: 'Content',
-        summary: 'Renders paragraph, label, span, and supporting text content.',
-        content: textContent,
+        Component: TextDocumentation,
         metadata: textMetadata,
     },
     {
-        name: 'CheckboxInput',
-        slug: 'checkbox-input',
         category: 'Form',
-        summary: 'Captures one boolean value.',
-        content: checkboxInputContent,
+        Component: CheckboxInputDocumentation,
         metadata: checkboxInputMetadata,
     },
     {
-        name: 'FileInput',
-        slug: 'file-input',
         category: 'Form',
-        summary: 'Collects browser File values for form actions.',
-        content: fileInputContent,
+        Component: FileInputDocumentation,
         metadata: fileInputMetadata,
     },
     {
-        name: 'NumberInput',
-        slug: 'number-input',
         category: 'Form',
-        summary: 'Collects numeric values.',
-        content: numberInputContent,
+        Component: NumberInputDocumentation,
         metadata: numberInputMetadata,
     },
     {
-        name: 'RadioList',
-        slug: 'radio-list',
         category: 'Form',
-        summary: 'Presents one visible single-choice option group.',
-        content: radioListContent,
+        Component: RadioListDocumentation,
         metadata: radioListMetadata,
     },
     {
-        name: 'RadioListItem',
-        slug: 'radio-list-item',
         category: 'Form',
-        summary: 'Defines one option inside a RadioList.',
-        content: radioListItemContent,
+        Component: RadioListItemDocumentation,
         metadata: radioListItemMetadata,
     },
     {
-        name: 'Selector',
-        slug: 'selector',
         category: 'Form',
-        summary: 'Presents a dropdown selection control.',
-        content: selectorContent,
+        Component: SelectorDocumentation,
         metadata: selectorMetadata,
     },
     {
-        name: 'SelectorOption',
-        slug: 'selector-option',
         category: 'Form',
-        summary: 'Defines one option inside a Selector.',
-        content: selectorOptionContent,
+        Component: SelectorOptionDocumentation,
         metadata: selectorOptionMetadata,
     },
     {
-        name: 'Slider',
-        slug: 'slider',
         category: 'Form',
-        summary: 'Captures bounded numeric values through a range control.',
-        content: sliderContent,
+        Component: SliderDocumentation,
         metadata: sliderMetadata,
     },
     {
-        name: 'Switch',
-        slug: 'switch',
         category: 'Form',
-        summary: 'Captures an immediate on/off setting.',
-        content: switchContent,
+        Component: SwitchDocumentation,
         metadata: switchMetadata,
     },
     {
-        name: 'TextArea',
-        slug: 'text-area',
         category: 'Form',
-        summary: 'Collects longer text values.',
-        content: textAreaContent,
+        Component: TextAreaDocumentation,
         metadata: textAreaMetadata,
     },
     {
-        name: 'TextInput',
-        slug: 'text-input',
         category: 'Form',
-        summary: 'Collects short text values.',
-        content: textInputContent,
+        Component: TextInputDocumentation,
         metadata: textInputMetadata,
     },
     {
-        name: 'Badge',
-        slug: 'badge',
         category: 'Content',
-        summary: 'Displays a compact status or enumerated label.',
-        content: badgeContent,
+        Component: BadgeDocumentation,
         metadata: badgeMetadata,
     },
     {
-        name: 'Divider',
-        slug: 'divider',
         category: 'Layout',
-        summary: 'Separates related regions with a rule.',
-        content: dividerContent,
+        Component: DividerDocumentation,
         metadata: dividerMetadata,
     },
     {
-        name: 'Grid',
-        slug: 'grid',
         category: 'Layout',
-        summary: 'Creates fixed or responsive multi-column layouts.',
-        content: gridContent,
+        Component: GridDocumentation,
         metadata: gridMetadata,
     },
     {
-        name: 'Stack',
-        slug: 'stack',
         category: 'Layout',
-        summary: 'Arranges children vertically or horizontally.',
-        content: stackContent,
+        Component: StackDocumentation,
         metadata: stackMetadata,
     },
     {
-        name: 'SideNav',
-        slug: 'side-nav',
         category: 'Layout',
-        summary: 'Renders application navigation in a sidebar container.',
-        content: sideNavContent,
+        Component: SideNavDocumentation,
         metadata: sideNavMetadata,
     },
     {
-        name: 'Tab',
-        slug: 'tab',
         category: 'Layout',
-        summary: 'Defines one tab destination inside a TabList.',
-        content: tabContent,
+        Component: TabDocumentation,
         metadata: tabMetadata,
     },
     {
-        name: 'Dialog',
-        slug: 'dialog',
         category: 'Layout',
-        summary: 'Renders a modal workflow from one flat owner element.',
-        content: dialogContent,
+        Component: DialogDocumentation,
         metadata: dialogMetadata,
     },
     {
-        name: 'Table',
-        slug: 'table',
         category: 'Layout',
-        summary: 'Displays tabular data from an array.',
-        content: tableContent,
+        Component: TableDocumentation,
         metadata: tableMetadata,
     },
-];
+] as const satisfies readonly PageReference[];
 
-export const pageReferenceDocs = pageReferences.map(
-    ({ content: _content, metadata: _metadata, ...reference }) => reference
-);
+export const pageReferenceDocs = pageReferencePages.map(({ category, metadata }) => ({
+    name: metadata.title,
+    slug: metadata.path.slice('/docs/sdk/pages/'.length),
+    path: metadata.path,
+    category,
+    summary: metadata.description,
+}));
 
-export const pageReferenceDocPages = pageReferences.map(({ name, slug, summary, content, metadata }) => ({
-    path: `/docs/sdk/pages/${slug}`,
-    title: name,
-    description: summary,
-    icon: <FileCode2 aria-hidden="true" size={16} />,
-    content,
+export const pageReferenceDocPages = pageReferencePages.map(({ Component, metadata }) => ({
+    ...metadata,
+    icon: createElement(FileCode2, { 'aria-hidden': true, size: 16 }),
+    content: createElement(Component),
     metadata,
 }));
 
-export const pageReferenceHrefByName = Object.fromEntries(
-    pageReferenceDocPages.map(({ title, path }) => [title, path])
-);
+export const pageReferenceHrefByName = Object.fromEntries(pageReferenceDocs.map(({ name, path }) => [name, path]));

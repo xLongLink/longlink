@@ -1,5 +1,6 @@
 import type { MetaDescriptor } from 'react-router';
-import { publicRoutePath, SITE_URL, type PublicPage } from '@/platform/public';
+import type { PageMetadata } from '@/lib/pages';
+import { publicRoutePath, SITE_URL } from '@/lib/urls';
 
 /** Builds metadata for routes that search engines must not index. */
 export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
@@ -7,7 +8,7 @@ export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
 }
 
 /** Builds React Router metadata for one prerendered public page. */
-export function publicSeoMeta(page: PublicPage): MetaDescriptor[] {
+export function publicSeoMeta(page: PageMetadata): MetaDescriptor[] {
     const canonicalUrl = `${SITE_URL}${publicRoutePath(page.path)}`;
     const isDocumentation = page.path.startsWith('/docs');
     const title = page.seoTitle ?? (isDocumentation ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`);

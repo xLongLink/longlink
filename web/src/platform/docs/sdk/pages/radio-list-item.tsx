@@ -3,23 +3,31 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>
-                {'RadioListItem'}
+export default function RadioListItemDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Form'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'RadioListItem'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Defines one option inside a RadioList.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock
+                code={'<RadioListItem value="team" label="Team" description="Shared workspace" />'}
+                language="xml"
+            />
         </Stack>
-        <Text as="p">{'Defines one option inside a RadioList.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock code={'<RadioListItem value="team" label="Team" description="Shared workspace" />'} language="xml" />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/radio-list-item',
+    title: 'RadioListItem',
+    description: 'Defines one option inside a RadioList.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

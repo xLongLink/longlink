@@ -3,23 +3,28 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>
-                {'Switch'}
+export default function SwitchDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Form'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Switch'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Captures an immediate on/off setting.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock code={'<Switch label="Notifications" value="$settings.notifications" />'} language="xml" />
         </Stack>
-        <Text as="p">{'Captures an immediate on/off setting.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock code={'<Switch label="Notifications" value="$settings.notifications" />'} language="xml" />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/switch',
+    title: 'Switch',
+    description: 'Captures an immediate on/off setting.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

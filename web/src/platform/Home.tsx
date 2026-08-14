@@ -10,10 +10,12 @@ import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
-import { homePage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
+import { metadata } from './Home.metadata';
 
-export const meta: MetaFunction = () => publicSeoMeta(homePage);
+export { metadata } from './Home.metadata';
+
+export const meta: MetaFunction = () => publicSeoMeta(metadata);
 
 const paths = [
     {

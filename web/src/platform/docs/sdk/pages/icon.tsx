@@ -3,23 +3,28 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Content'}</Text>
-            <Heading id="introduction" level={1}>
-                {'Icon'}
+export default function IconDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Content'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Icon'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Displays a Lucide icon.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock code={'<Icon icon="info" size="sm" />'} language="xml" />
         </Stack>
-        <Text as="p">{'Displays a Lucide icon.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock code={'<Icon icon="info" size="sm" />'} language="xml" />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/icon',
+    title: 'Icon',
+    description: 'Displays a Lucide icon.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

@@ -37,38 +37,37 @@ const environments: EnvironmentRow[] = [
     },
 ];
 
-export const metadata = {
-    toc: [
-        { id: 'storage', label: 'Storage', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
-        { id: 'assets', label: 'Assets', level: 2 },
-    ],
-    lastUpdated: '2026-07-20',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/sdk/storage.tsx',
-};
+export { metadata } from './storage.metadata';
 
-export const content = (
-    <Stack gap={5}>
-        <Heading id="storage" level={1}>
-            Storage
-        </Heading>
-        <Text as="p">
-            The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
-            <Link href="https://filesystem-spec.readthedocs.io/en/latest/" hasUnderline isExternalLink type="inherit">
-                fsspec
-            </Link>
-            . Application code uses the same filesystem interface in local development, tests, and production.
-        </Text>
-        <EnvironmentTable environments={environments} />
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock
-            code={`from longlink import storage
+export default function StorageDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Heading id="storage" level={1}>
+                Storage
+            </Heading>
+            <Text as="p">
+                The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
+                <Link
+                    href="https://filesystem-spec.readthedocs.io/en/latest/"
+                    hasUnderline
+                    isExternalLink
+                    type="inherit"
+                >
+                    fsspec
+                </Link>
+                . Application code uses the same filesystem interface in local development, tests, and production.
+            </Text>
+            <EnvironmentTable environments={environments} />
+            <Heading id="usage" level={2}>
+                Usage
+            </Heading>
+            <CodeBlock
+                code={`from longlink import storage
 
 with storage.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}
-            language="python"
-        />
-    </Stack>
-);
+                language="python"
+            />
+        </Stack>
+    );
+}

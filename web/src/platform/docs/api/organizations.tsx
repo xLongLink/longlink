@@ -28,60 +28,55 @@ const organizationRoles = [
     },
 ];
 
-export const metadata = {
-    toc: [
-        { id: 'organizations', label: 'Organizations', level: 1 },
-        { id: 'users', label: 'Users', level: 2 },
-    ],
-    lastUpdated: '2026-07-25',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/organizations.tsx',
-};
+export { metadata } from './organizations.metadata';
 
-export const content = (
-    <Stack gap={5}>
-        <Heading id="organizations" level={1}>
-            Organizations
-        </Heading>
-        <Text as="p">
-            Organizations are the workspace boundary in LongLink. They bring together the people, applications, and
-            shared resources needed to run an organization’s work, while membership determines who can access the
-            workspace, manage users, deploy applications, and use the applications within it.
-        </Text>
-        <Text as="p">
-            Each organization receives its own dedicated database, storage, and compute space. This keeps its
-            applications and operational data separate, giving teams a clear and reliable environment in which to
-            deploy, run, and evolve their applications.
-        </Text>
-        <Heading id="users" level={2}>
-            Users
-        </Heading>
-        <Text as="p">
-            LongLink manages users and their access across the organization. Applications can access the users
-            authorized to use them.
-        </Text>
-        <Table density="compact">
-            <TableHeader>
-                <TableRow>
-                    <TableHeaderCell>Roles</TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {organizationRoles.map(({ access, icon: RoleIcon, name }) => (
-                    <TableRow key={name}>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <RoleIcon aria-hidden="true" className="text-accent" size={16} />
-                                    <Text type="body" weight="semibold">
-                                        {name}
-                                    </Text>
-                                </Stack>
-                                <Text type="supporting">{access}</Text>
-                            </Stack>
-                        </TableCell>
+export default function OrganizationsDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Heading id="organizations" level={1}>
+                Organizations
+            </Heading>
+            <Text as="p">
+                Organizations are the workspace boundary in LongLink. They bring together the people, applications, and
+                shared resources needed to run an organization’s work, while membership determines who can access the
+                workspace, manage users, deploy applications, and use the applications within it.
+            </Text>
+            <Text as="p">
+                Each organization receives its own dedicated database, storage, and compute space. This keeps its
+                applications and operational data separate, giving teams a clear and reliable environment in which to
+                deploy, run, and evolve their applications.
+            </Text>
+            <Heading id="users" level={2}>
+                Users
+            </Heading>
+            <Text as="p">
+                LongLink manages users and their access across the organization. Applications can access the users
+                authorized to use them.
+            </Text>
+            <Table density="compact">
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>Roles</TableHeaderCell>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    </Stack>
-);
+                </TableHeader>
+                <TableBody>
+                    {organizationRoles.map(({ access, icon: RoleIcon, name }) => (
+                        <TableRow key={name}>
+                            <TableCell>
+                                <Stack gap={1}>
+                                    <Stack direction="horizontal" gap={2} align="center">
+                                        <RoleIcon aria-hidden="true" className="text-accent" size={16} />
+                                        <Text type="body" weight="semibold">
+                                            {name}
+                                        </Text>
+                                    </Stack>
+                                    <Text type="supporting">{access}</Text>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </Stack>
+    );
+}

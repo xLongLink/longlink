@@ -7,6 +7,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute
 from src.models.operations import OperationStatus
+from src.kubernetes.gateway import GatewayTLS
 
 
 async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -15,29 +16,30 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     # Arrange
     compute_registry = await create_compute()
     generation = 0
-    keys = iter(["api-key-1"])
 
-    def generate_tls(compute_id: UUID, address: str | None) -> tuple[str, str, str]:
+    def generate_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
         """Return distinct generated TLS material."""
 
         nonlocal generation
         assert compute_id == compute_registry.id
         generation += 1
-        return (
-            f"ca-{generation}",
-            f"server-certificate-{generation}",
-            f"server-private-key-{generation}",
+        return GatewayTLS(
+            ca_certificate=f"ca-{generation}",
+            server_certificate=f"server-certificate-{generation}",
+            server_private_key=f"server-private-key-{generation}",
+            client_certificate=f"client-certificate-{generation}",
+            client_private_key=f"client-private-key-{generation}",
         )
 
     class FakeGateway:
         """Capture gateway resource operations."""
 
-        async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
+        async def apply(self, tls: GatewayTLS | None = None) -> str:
             """Return the shared Gateway endpoint."""
 
             return "192.0.2.1"
 
-        async def replace_tls(self, certificate: str, private_key: str, gateway_certificate: str, address: str) -> None:
+        async def replace_tls(self, tls: GatewayTLS, address: str) -> None:
             """Accept the final endpoint-bound server identity."""
 
     class FakeKubernetes:
@@ -51,7 +53,6 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    monkeypatch.setattr(compute_operations.secrets, "token_urlsafe", lambda _length: next(keys))
     await queue_operation(
         compute_registry.id,
         target_id=compute_registry.id,
@@ -79,8 +80,9 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert refreshed is not None
     assert refreshed.status == Status.running
     assert refreshed.gateway_url == "https://192.0.2.1"
-    assert refreshed.gateway_api_key == "api-key-1"
     assert refreshed.gateway_certificate == "ca-2"
+    assert refreshed.gateway_client_certificate == "client-certificate-2"
+    assert refreshed.gateway_client_private_key == "client-private-key-2"
 
 
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -92,7 +94,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     class FailingGateway:
         """Raise a transient endpoint provider error."""
 
-        async def apply(self, certificate: str | None = None, private_key: str | None = None, api_key: str | None = None) -> str:
+        async def apply(self, tls: GatewayTLS | None = None) -> str:
             """Fail shared Gateway creation after entering Kubernetes."""
 
             raise RuntimeError("gateway unavailable")

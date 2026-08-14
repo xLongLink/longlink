@@ -8,10 +8,12 @@ import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { publicSeoMeta } from '@/lib/seo';
-import { pricingPage } from '@/platform/public';
 import { PublicPage } from '@/layout/PublicPage';
+import { metadata } from './Pricing.metadata';
 
-export const meta: MetaFunction = () => publicSeoMeta(pricingPage);
+export { metadata } from './Pricing.metadata';
+
+export const meta: MetaFunction = () => publicSeoMeta(metadata);
 
 /** Renders the public pricing page. */
 export default function Pricing() {

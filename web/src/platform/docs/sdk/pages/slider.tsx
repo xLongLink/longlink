@@ -3,26 +3,31 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-export const content = (
-    <Stack gap={5}>
-        <Stack gap={2}>
-            <Text type="supporting">{'Form'}</Text>
-            <Heading id="introduction" level={1}>
-                {'Slider'}
+export default function SliderDocumentation() {
+    return (
+        <Stack gap={5}>
+            <Stack gap={2}>
+                <Text type="supporting">{'Form'}</Text>
+                <Heading id="introduction" level={1}>
+                    {'Slider'}
+                </Heading>
+            </Stack>
+            <Text as="p">{'Captures bounded numeric values through a range control.'}</Text>
+            <Heading id="usage" level={2}>
+                Usage
             </Heading>
+            <CodeBlock
+                code={'<Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" />'}
+                language="xml"
+            />
         </Stack>
-        <Text as="p">{'Captures bounded numeric values through a range control.'}</Text>
-        <Heading id="usage" level={2}>
-            Usage
-        </Heading>
-        <CodeBlock
-            code={'<Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" />'}
-            language="xml"
-        />
-    </Stack>
-);
+    );
+}
 
 export const metadata = {
+    path: '/docs/sdk/pages/slider',
+    title: 'Slider',
+    description: 'Captures bounded numeric values through a range control.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

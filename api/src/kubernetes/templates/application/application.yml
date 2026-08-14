@@ -90,7 +90,6 @@ spec:
                 requestHeaderModifier:
                     remove:
                         - $application_id_header
-                        - $api_key_header
           backendRefs:
               - group: ''
                 kind: Service
