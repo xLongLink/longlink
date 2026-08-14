@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -11,25 +11,24 @@ import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiVoid } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { PasswordInput } from '@/components/PasswordInput';
-import { useFragmentToken } from '../../auth/use-fragment-token';
+import { useFragmentToken } from '@/hooks/use-fragment-token';
 
 type ResetPasswordValues = {
     password: string;
 };
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
+const passwordSchema = z.object({
+    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+});
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const showToast = useToast();
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
-    const verificationStarted = useRef(false);
-    const schema = z.object({
-        password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
-    });
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
-        resolver: zodResolver(schema),
+        resolver: zodResolver(passwordSchema),
     });
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
@@ -83,12 +82,6 @@ export default function ResetPassword() {
     }
 
     useEffect(() => {
-        // Strict Mode may rerun effects, but credential exchange needs only one initial request.
-        if (verificationStarted.current) {
-            return;
-        }
-
-        verificationStarted.current = true;
         verification.mutate(token);
 
         // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.

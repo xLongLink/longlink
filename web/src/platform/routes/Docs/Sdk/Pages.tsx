@@ -71,7 +71,7 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
     ...category,
     components: pageReferenceDocs
         .filter((component) => component.category === category.title)
-        .map(({ name }) => ({ name })),
+        .map(({ title: name }) => ({ name })),
 }));
 
 const noop = () => undefined;

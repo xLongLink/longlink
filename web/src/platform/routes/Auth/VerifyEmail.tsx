@@ -17,10 +17,10 @@ import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { PasswordInput } from '@/components/PasswordInput';
+import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useFragmentToken } from '../../auth/use-fragment-token';
 
 type RegistrationCompleteValues = {
     name: string;
@@ -123,7 +123,6 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        // Repeat the idempotent exchange when Strict Mode remounts the mutation observer.
         verification.mutate(token);
 
         // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.

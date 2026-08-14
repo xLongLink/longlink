@@ -4,40 +4,10 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { CodeTabs } from '@/components/CodeTabs';
 import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
-import { EnvironmentTable, type EnvironmentRow } from '@/platform/docs/sdk/EnvironmentTable';
-
-const environments: EnvironmentRow[] = [
-    {
-        name: 'Testing',
-        icon: CheckCheck,
-        backend: (
-            <>
-                <Code>memory</Code> SQLite database for isolated test runs.
-            </>
-        ),
-    },
-    {
-        name: 'Development',
-        icon: Wrench,
-        backend: (
-            <>
-                <Code>dev.db</Code> SQLite database for local development.
-            </>
-        ),
-    },
-    {
-        name: 'Production',
-        icon: CheckCircle,
-        backend: (
-            <>
-                <Code>PostgreSQL</Code> database scoped to the application schema.
-            </>
-        ),
-    },
-];
 
 export const metadata = {
     path: '/docs/sdk/database',
@@ -74,7 +44,54 @@ function Content() {
                 </Link>
                 .
             </Text>
-            <EnvironmentTable environments={environments} />
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHeaderCell>Environment</TableHeaderCell>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                        <TableCell>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <CheckCheck aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">Testing</Text>
+                                </Stack>
+                                <Text type="supporting">
+                                    <Code>memory</Code> SQLite database for isolated test runs.
+                                </Text>
+                            </Stack>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Wrench aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">Development</Text>
+                                </Stack>
+                                <Text type="supporting">
+                                    <Code>dev.db</Code> SQLite database for local development.
+                                </Text>
+                            </Stack>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <CheckCircle aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">Production</Text>
+                                </Stack>
+                                <Text type="supporting">
+                                    <Code>PostgreSQL</Code> database scoped to the application schema.
+                                </Text>
+                            </Stack>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
             <Heading id="basic-usage" level={2}>
                 Basic usage
             </Heading>

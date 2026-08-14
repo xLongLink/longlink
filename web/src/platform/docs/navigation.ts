@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { ArticleNavigationGroup } from '@/lib/articles';
 
-type DocPage = { category?: string; name: string; path: string; title: string };
+type DocPage = { category?: string; path: string; title: string };
 
 const pageReferencePages = [
     ['Runtime', 'if'],
@@ -55,15 +55,11 @@ const pageReferencePages = [
 
 export const pageReferenceDocs: DocPage[] = pageReferencePages.map(([category, title]) => ({
     category,
-    name: title,
     path: `/docs/sdk/pages/${title === 'if' ? title : title.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`).slice(1)}`,
     title,
 }));
 
 export const pageReferenceHrefByName = Object.fromEntries(pageReferenceDocs.map(({ path, title }) => [title, path]));
-
-// Component references are routable but intentionally omitted from the sidebar.
-export const DOC_HIDDEN_PAGES = pageReferenceDocs;
 
 const DOC_SECTIONS = [
     { title: 'Overview', items: [{ title: 'Introduction', path: '/docs', icon: BookOpen }] },
@@ -98,14 +94,6 @@ export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map(({ items, t
     })),
 }));
 
-export const DOC_PATHS = [
-    ...DOC_SECTIONS.flatMap(({ items }) => items.map(({ path }) => path)),
-    ...pageReferenceDocs.map(({ path }) => path),
-];
-
-export const DOC_PAGE_PATHS = DOC_PATHS.map((path) => ({
-    path,
-    title:
-        [...DOC_GROUPS.flatMap(({ items }) => items), ...pageReferenceDocs].find((page) => page.path === path)?.title ??
-        '',
-}));
+export const DOC_PAGE_PATHS = [...DOC_GROUPS.flatMap(({ items }) => items), ...pageReferenceDocs].map(
+    ({ path, title }) => ({ path, title })
+);
