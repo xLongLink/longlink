@@ -3,7 +3,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { publicSeoMeta } from '@/lib/seo';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 export const metadata = {
     path: '/docs/sdk/environments',
@@ -48,7 +49,7 @@ function Content() {
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

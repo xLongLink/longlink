@@ -23,8 +23,9 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { publicSeoMeta } from '@/lib/seo';
 import { pageReferenceDocs } from '@/platform/navigation';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 type ComponentSummary = {
     name: string;
@@ -319,7 +320,7 @@ function Content() {
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

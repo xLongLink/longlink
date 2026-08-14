@@ -4,7 +4,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { publicSeoMeta } from '@/lib/seo';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 const applicationPaths = ['Use', 'Adapt', 'Create'];
 
@@ -72,7 +73,7 @@ function Content() {
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

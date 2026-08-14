@@ -84,12 +84,8 @@ async function readApiError(response: Response) {
     return { message: fallback };
 }
 
-/** Sends one API request with shared URL, credential, and header handling. */
-export async function fetchApiResponse(
-    path: string,
-    init?: RequestInit,
-    fetchImpl: typeof fetch = fetch
-): Promise<Response> {
+/** Sends one API request and normalizes non-OK errors. */
+export async function requestApi(path: string, init?: RequestInit, fetchImpl: typeof fetch = fetch): Promise<Response> {
     const headers = new Headers(init?.headers);
 
     // Request JSON by default unless callers override Accept.
@@ -97,16 +93,11 @@ export async function fetchApiResponse(
         headers.set('Accept', 'application/json');
     }
 
-    return fetchImpl(apiUrl(path), {
+    const response = await fetchImpl(apiUrl(path), {
         ...init,
         credentials: 'include',
         headers,
     });
-}
-
-/** Sends one API request and normalizes non-OK errors. */
-export async function requestApi(path: string, init?: RequestInit): Promise<Response> {
-    const response = await fetchApiResponse(path, init);
 
     // Convert failed responses into typed API errors.
     if (!response.ok) {

@@ -3,7 +3,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { ArrowUp, CheckCheck, CheckCircle, EyeOff, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { publicSeoMeta } from '@/lib/seo';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 const organizationRoles = [
     { name: 'read', access: 'View organization data and access assigned resources.', icon: EyeOff },
@@ -92,7 +93,7 @@ function Content() {
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

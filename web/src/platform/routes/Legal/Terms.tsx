@@ -5,8 +5,9 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { ArticlePage } from '@/lib/articles';
+import { publicSeoMeta } from '@/lib/seo';
 import { LEGAL_GROUPS } from '@/platform/navigation';
-import { ArticlePageRenderer, createArticleMeta } from '@/platform/routes/Articles';
+import { ArticlePageRenderer } from '@/platform/routes/Articles';
 
 export const metadata = {
     path: '/terms',
@@ -104,7 +105,7 @@ const page: ArticlePage = {
 };
 
 /** Returns SEO metadata for the terms article. */
-export const meta = createArticleMeta([page]);
+export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the terms of service. */
 export default function Terms() {

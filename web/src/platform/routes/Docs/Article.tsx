@@ -1,14 +1,9 @@
 import type { ReactNode } from 'react';
 import type { ArticlePage } from '@/lib/articles';
+import { ArticlePageRenderer } from '@/platform/routes/Articles';
 import { DOC_GROUPS, DOC_PAGE_PATHS } from '@/platform/navigation';
-import { ArticlePageRenderer, createArticleMeta } from '@/platform/routes/Articles';
 
 type DocMetadata = Omit<ArticlePage, 'breadcrumbs' | 'content' | 'icon' | 'metadata'> & ArticlePage['metadata'];
-
-/** Creates SEO metadata for one route-local documentation article. */
-export function createDocsMeta(metadata: DocMetadata) {
-    return createArticleMeta([{ ...metadata, breadcrumbs: [], content: null, metadata }]);
-}
 
 /** Renders route-local documentation content inside the shared article layout. */
 export function DocsArticle({ children, metadata }: { children: ReactNode; metadata: DocMetadata }) {

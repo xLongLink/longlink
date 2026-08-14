@@ -6,8 +6,9 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 export const metadata = {
     path: '/docs/sdk/database',
@@ -166,7 +167,7 @@ print(approval.status)  # pending
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

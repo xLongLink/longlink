@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { fetchApiResponse } from '@/lib/api';
+import { ApiError, requestApi } from '@/lib/api';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
@@ -119,15 +119,17 @@ export async function executeAction(
 
     // Send the action request through the API client.
     try {
-        response = await fetchApiResponse(requestUrl, init, fetchImpl);
+        response = await requestApi(requestUrl, init, fetchImpl);
     } catch (error: unknown) {
-        toast({ body: error instanceof Error ? error.message : 'Request failed', type: 'error' });
-        return;
-    }
-
-    // Treat non-2xx responses as action failures.
-    if (!response.ok) {
-        toast({ body: `Request failed with status ${response.status}`, type: 'error' });
+        toast({
+            body:
+                error instanceof ApiError
+                    ? `Request failed with status ${error.status}`
+                    : error instanceof Error
+                      ? error.message
+                      : 'Request failed',
+            type: 'error',
+        });
         return;
     }
 

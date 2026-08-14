@@ -4,8 +4,9 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
+import { publicSeoMeta } from '@/lib/seo';
 import { LEGAL_GROUPS } from '@/platform/navigation';
-import { ArticlePageRenderer, createArticleMeta } from '@/platform/routes/Articles';
+import { ArticlePageRenderer } from '@/platform/routes/Articles';
 
 export const metadata = {
     path: '/impressum',
@@ -31,7 +32,7 @@ const page: ArticlePage = {
 };
 
 /** Returns SEO metadata for the impressum article. */
-export const meta = createArticleMeta([page]);
+export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the legal notice and company information. */
 export default function Impressum() {

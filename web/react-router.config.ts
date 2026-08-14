@@ -2,7 +2,7 @@ import type { Config } from '@react-router/dev/config';
 import path from 'node:path';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { publicRoutePath, SITE_URL } from './src/lib/urls';
-import { pageReferenceDocs } from './src/platform/navigation';
+import { DOC_PAGE_PATHS, LEGAL_GROUPS } from './src/platform/navigation';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -15,22 +15,8 @@ const isApplication = process.env.LONGLINK_WEB_TARGET === 'sdk';
 const publicPagePaths = [
     '/',
     '/pricing',
-    '/docs',
-    '/docs/api',
-    '/docs/api/organizations',
-    '/docs/api/applications',
-    '/docs/sdk',
-    '/docs/sdk/environments',
-    '/docs/sdk/routes',
-    '/docs/sdk/storage',
-    '/docs/sdk/database',
-    '/docs/sdk/pages',
-    '/docs/sdk/testing',
-    '/docs/sdk/building',
-    ...pageReferenceDocs.map(({ path }) => path),
-    '/terms',
-    '/impressum',
-    '/privacy',
+    ...DOC_PAGE_PATHS.map(({ path }) => path),
+    ...LEGAL_GROUPS.flatMap(({ items }) => items.map(({ path }) => path)),
 ];
 const outputDirectory = path.resolve(
     import.meta.dirname,

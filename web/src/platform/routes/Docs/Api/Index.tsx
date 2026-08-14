@@ -21,8 +21,9 @@ import {
     ShieldCheck,
     UserRound,
 } from 'lucide-react';
+import { publicSeoMeta } from '@/lib/seo';
 import { Wordmark } from '@/components/Wordmark';
-import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
+import { DocsArticle } from '@/platform/routes/Docs/Article';
 
 const capabilities = {
     authentication: {
@@ -186,7 +187,7 @@ function Content() {
     );
 }
 
-export const meta = createDocsMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
