@@ -8,7 +8,7 @@ import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import type { ArticlePage } from '@/platform/catalog';
+import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';

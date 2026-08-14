@@ -12,7 +12,7 @@ import {
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
-import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/platform/catalog';
+import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/lib/articles';
 import * as overview from '@/platform/docs/index';
 import * as pages from '@/platform/docs/sdk/pages';
 import * as routes from '@/platform/docs/sdk/routes';
