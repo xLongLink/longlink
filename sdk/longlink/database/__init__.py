@@ -1,3 +1,3 @@
 from . import audit
-from .base import AuditTable, session
+from .base import session
 from longlink.shared.models import Audit
