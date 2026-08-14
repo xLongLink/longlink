@@ -1,9 +1,6 @@
 import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
-import type { Accent, Theme } from '@/lib/generated/platform-api-v1/types.gen';
+import type { Accent } from '@/lib/generated/platform-api-v1/types.gen';
 import { stoneTheme } from '@/theme';
-
-/** Theme mode values supported by the API and UI. */
-export const THEME_VALUES = ['light', 'dark', 'system'] as const satisfies readonly Theme[];
 
 /** Accent values supported by the API and UI. */
 export const ACCENT_VALUES = [
@@ -37,13 +34,7 @@ export const MAX_RADIUS = 1.5;
 export const DEFAULT_RADIUS = 1;
 export const THEME_PREFERENCES_KEY = 'longlink-theme';
 
-export type { Accent, Theme };
-
-const THEME_LABELS: Record<Theme, string> = {
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
-};
+export type { Accent };
 
 type AccentToken = {
     label: string;
@@ -86,9 +77,6 @@ export const ACCENT_BOOTSTRAP_VALUES = Object.fromEntries(
 ) as Record<Accent, [string, string]>;
 
 const themes = new Map<string, DefinedTheme>();
-
-/** Theme mode options available in the UI. */
-export const THEME_OPTIONS = THEME_VALUES.map((value) => ({ value, label: THEME_LABELS[value] }));
 
 /** Accent options available in the UI. */
 export const ACCENT_OPTIONS = ACCENT_VALUES.map((value) => ({

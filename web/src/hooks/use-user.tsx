@@ -10,9 +10,9 @@ import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platf
 
 const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
 
-/** Caches non-sensitive theme preferences for the next page's first paint. */
-function storeThemePreferences({ theme, accent, radius }: Pick<UserProfile, 'theme' | 'accent' | 'radius'>): void {
-    localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ theme, accent, radius }));
+/** Caches non-sensitive appearance preferences for the next page's first paint. */
+function storeThemePreferences({ accent, radius }: Pick<UserProfile, 'accent' | 'radius'>): void {
+    localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ accent, radius }));
 }
 
 /** Provides the authenticated user query to the app tree. */
@@ -47,7 +47,6 @@ export function useUserProfile() {
 
     return {
         user: user ?? null,
-        theme: user?.theme ?? 'dark',
         accent: user?.accent ?? 'neutral',
         radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,

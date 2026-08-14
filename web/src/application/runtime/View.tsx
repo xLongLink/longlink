@@ -41,8 +41,8 @@ type ViewProps = {
 };
 
 type ErrorStateProps = {
-    actionHref?: string;
-    actionLabel?: string;
+    actionHref: string;
+    actionLabel: string;
     isAlert?: boolean;
     message: string;
     title: string;
@@ -196,8 +196,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
-            const label = page.name || startCase(page.tab);
-            const icon = page.icon ? getIconComponent(page.icon) : undefined;
             const routePattern = normalizePath(page.route);
             const dynamic = pageRouteIsDynamic(page);
             const currentGroup = tabGroups.get(page.tab);
@@ -212,6 +210,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 continue;
             }
 
+            const label = page.name || startCase(page.tab);
+            const icon = page.icon ? getIconComponent(page.icon) : undefined;
             const href = resolveApplicationHref(routePattern, organization, application);
 
             // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
@@ -372,51 +372,43 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         resolvedPagesBaseUrl,
     ]);
 
+    let applicationState: ReactNode = null;
+
     // Show deployment loading only while status or access is still resolving.
     if (isApplicationLoading || applicationStatus === 'creating') {
-        return (
-            <XmlLayout tabs={tabs}>
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <LoadingState status={isApplicationLoading ? 'loading' : 'creating'} />
-                </Center>
-            </XmlLayout>
+        applicationState = <LoadingState status={isApplicationLoading ? 'loading' : 'creating'} />;
+    } else if (applicationStatus === 'failed' || applicationStatus === 'deleting') {
+        // Keep failed and deleting applications out of the runtime while surfacing their lifecycle state.
+        applicationState = (
+            <ErrorState
+                {...fallbackActionProps}
+                isAlert={applicationStatus === 'failed'}
+                message={
+                    applicationStatus === 'failed'
+                        ? 'LongLink could not deploy this application. Contact an administrator before trying again.'
+                        : 'This application is unavailable while LongLink removes it.'
+                }
+                title={
+                    applicationStatus === 'failed' ? 'Application deployment failed' : 'Application is being deleted'
+                }
+            />
+        );
+    } else if (error) {
+        // Surface page manifest loading failures in the shell.
+        applicationState = (
+            <ErrorState
+                {...fallbackActionProps}
+                message={error.message || 'The application definition could not be loaded.'}
+                title="Unable to load this application"
+            />
         );
     }
 
-    // Keep failed and deleting applications out of the runtime while surfacing their lifecycle state.
-    if (applicationStatus === 'failed' || applicationStatus === 'deleting') {
+    if (applicationState) {
         return (
             <XmlLayout tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <ErrorState
-                        {...fallbackActionProps}
-                        isAlert={applicationStatus === 'failed'}
-                        message={
-                            applicationStatus === 'failed'
-                                ? 'LongLink could not deploy this application. Contact an administrator before trying again.'
-                                : 'This application is unavailable while LongLink removes it.'
-                        }
-                        title={
-                            applicationStatus === 'failed'
-                                ? 'Application deployment failed'
-                                : 'Application is being deleted'
-                        }
-                    />
-                </Center>
-            </XmlLayout>
-        );
-    }
-
-    // Surface page manifest loading failures in the shell.
-    if (error) {
-        return (
-            <XmlLayout tabs={tabs}>
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <ErrorState
-                        {...fallbackActionProps}
-                        message={error.message || 'The application definition could not be loaded.'}
-                        title="Unable to load this application"
-                    />
+                    {applicationState}
                 </Center>
             </XmlLayout>
         );
@@ -433,10 +425,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return null;
         }
 
-        const pageIsActive = pageStateKey === activePageStateKey;
-
         return (
-            <Stack key={pageStateKey} as="section" gap={6} hidden={!pageIsActive}>
+            <Stack key={pageStateKey} as="section" gap={6} hidden={pageStateKey !== activePageStateKey}>
                 <RenderXML ast={pageState.ast} baseUrl={resolvedPagesBaseUrl} ctx={pageState.runtimeContext} />
             </Stack>
         );
@@ -502,11 +492,7 @@ function ErrorState({ actionHref, actionLabel, isAlert = true, message, title }:
     return (
         <Card maxWidth={576} padding={6} width="100%">
             <EmptyState
-                actions={
-                    actionHref && actionLabel ? (
-                        <Button href={actionHref} label={actionLabel} variant="primary" />
-                    ) : undefined
-                }
+                actions={<Button href={actionHref} label={actionLabel} variant="primary" />}
                 description={message}
                 headingLevel={1}
                 role={isAlert ? 'alert' : undefined}

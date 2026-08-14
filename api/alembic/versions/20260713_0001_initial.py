@@ -32,7 +32,6 @@ def upgrade() -> None:
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("role", sa.Enum("user", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
-        sa.Column("theme", sa.Enum("system", "light", "dark", name="theme"), nullable=False),
         sa.Column(
             "accent",
             sa.Enum(
@@ -347,4 +346,3 @@ def downgrade() -> None:
         "rose",
         name="accent",
     ).drop(bind, checkfirst=True)
-    sa.Enum("system", "light", "dark", name="theme").drop(bind, checkfirst=True)

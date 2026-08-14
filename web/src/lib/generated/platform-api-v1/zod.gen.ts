@@ -454,17 +454,6 @@ export const zStorageRegistryResponse = z.object({
 });
 
 /**
- * Theme
- *
- * Supported user theme preferences.
- */
-export const zTheme = z.enum([
-    'system',
-    'light',
-    'dark'
-]);
-
-/**
  * TokenPayload
  *
  * Validate one unchanged authentication token.
@@ -540,7 +529,6 @@ export const zUserProfile = z.object({
     email: z.email(),
     avatar: z.string(),
     role: zPlatformRoles,
-    theme: zTheme,
     accent: zAccent,
     radius: z.number()
 });
@@ -566,7 +554,6 @@ export const zUserSummary = z.object({
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
     avatar: z.string().max(2048).nullish(),
-    theme: zTheme.nullish(),
     accent: zAccent.nullish(),
     radius: z.number().gte(0).lte(1.5).nullish()
 });

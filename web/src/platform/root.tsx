@@ -16,9 +16,9 @@ export function Layout({ children }: { children: ReactNode }) {
     return <Document headContent={<ThemeBootstrap />}>{children}</Document>;
 }
 
-/** Applies the authenticated user's theme to Platform routes. */
+/** Applies the platform's default theme and authenticated appearance preferences. */
 function PlatformShell() {
-    const { theme, accent, radius, isLoading } = useUserProfile();
+    const { accent, radius, isLoading } = useUserProfile();
 
     // Keep cached first-paint overrides until the server-backed theme is ready.
     useLayoutEffect(() => {
@@ -30,7 +30,7 @@ function PlatformShell() {
     }, [isLoading]);
 
     return (
-        <AstryxProvider accent={accent} mode={theme} radius={radius}>
+        <AstryxProvider accent={accent} radius={radius}>
             <Outlet />
         </AstryxProvider>
     );

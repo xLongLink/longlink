@@ -21,14 +21,6 @@ class DatabaseSSLMode(StrEnum):
     verify_full = "verify-full"
 
 
-class Theme(StrEnum):
-    """Supported user theme preferences."""
-
-    system = "system"
-    light = "light"
-    dark = "dark"
-
-
 class Accent(StrEnum):
     """Supported randomized LongLink logo accent colors."""
 

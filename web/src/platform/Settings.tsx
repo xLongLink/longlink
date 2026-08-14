@@ -23,15 +23,7 @@ import { useDeleteOrganization } from '@/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import {
-    ACCENT_OPTIONS,
-    DEFAULT_RADIUS,
-    MAX_RADIUS,
-    MIN_RADIUS,
-    THEME_OPTIONS,
-    type Accent,
-    type Theme,
-} from '@/lib/theme';
+import { ACCENT_OPTIONS, DEFAULT_RADIUS, MAX_RADIUS, MIN_RADIUS, type Accent } from '@/lib/theme';
 
 const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
     value,
@@ -46,7 +38,7 @@ function formatRadius(value: number): string {
 export default function Settings() {
     const toast = useToast();
     const location = useLocation();
-    const { user, theme, accent, radius, isLoading: isProfileLoading } = useUserProfile();
+    const { user, accent, radius, isLoading: isProfileLoading } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
@@ -228,21 +220,10 @@ export default function Settings() {
                                 <VStack gap={1}>
                                     <Heading level={2}>Appearance</Heading>
                                     <Text type="supporting">
-                                        Customize the theme, accent color, and radius for the interface.
+                                        Customize the accent color and radius for the interface.
                                     </Text>
                                 </VStack>
                                 <HStack gap={4} align="start" wrap="wrap">
-                                    <Selector
-                                        label="Theme"
-                                        options={THEME_OPTIONS}
-                                        value={theme}
-                                        width={320}
-                                        isDisabled={isPending}
-                                        placeholder="Choose a theme"
-                                        onChange={(value) => {
-                                            void updateUser({ theme: value as Theme }).catch(showAccountUpdateError);
-                                        }}
-                                    />
                                     <Selector
                                         label="Accent color"
                                         options={ACCENT_OPTIONS.map((option) => ({

@@ -655,13 +655,6 @@ export type StorageRegistryResponse = {
 };
 
 /**
- * Theme
- *
- * Supported user theme preferences.
- */
-export type Theme = 'system' | 'light' | 'dark';
-
-/**
  * TokenPayload
  *
  * Validate one unchanged authentication token.
@@ -754,7 +747,6 @@ export type UserProfile = {
      */
     avatar: string;
     role: PlatformRoles;
-    theme: Theme;
     accent: Accent;
     /**
      * Radius
@@ -801,7 +793,6 @@ export type UserUpdate = {
      * Avatar
      */
     avatar?: string | null;
-    theme?: Theme | null;
     accent?: Accent | null;
     /**
      * Radius

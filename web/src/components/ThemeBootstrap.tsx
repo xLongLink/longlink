@@ -1,4 +1,4 @@
-import { ACCENT_BOOTSTRAP_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_PREFERENCES_KEY, THEME_VALUES } from '@/lib/theme';
+import { ACCENT_BOOTSTRAP_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_PREFERENCES_KEY } from '@/lib/theme';
 
 export const THEME_BOOTSTRAP_ID = 'longlink-theme-bootstrap';
 
@@ -10,21 +10,14 @@ const themeBootstrap = `
         const preferences = JSON.parse(localStorage.getItem('${THEME_PREFERENCES_KEY}'));
         const accent = Object.hasOwn(accents, preferences?.accent) ? accents[preferences.accent] : null;
         const radius = preferences?.radius;
-        const mode = preferences?.theme;
-        if (!accent || !${JSON.stringify(THEME_VALUES)}.includes(mode) || !Number.isFinite(radius) || radius < ${MIN_RADIUS} || radius > ${MAX_RADIUS}) {
+        if (!accent || !Number.isFinite(radius) || radius < ${MIN_RADIUS} || radius > ${MAX_RADIUS}) {
             return;
-        }
-
-        if (mode === 'system') {
-            document.documentElement.removeAttribute('data-theme');
-        } else {
-            document.documentElement.dataset.theme = mode;
         }
 
         const style = document.createElement('style');
         style.id = '${THEME_BOOTSTRAP_ID}';
         style.textContent = \`:root, :root [data-astryx-theme] {
-            color-scheme: \${mode === 'system' ? 'light dark' : mode} !important;
+            color-scheme: dark !important;
             --color-accent: \${accent[0]} !important;
             --color-accent-muted: light-dark(color-mix(in srgb, var(--color-accent) 20%, transparent), color-mix(in srgb, var(--color-accent) 25%, transparent)) !important;
             --color-text-accent: var(--color-accent) !important;

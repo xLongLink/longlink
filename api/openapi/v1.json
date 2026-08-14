@@ -3417,16 +3417,6 @@
         "title": "StorageRegistryResponse",
         "description": "Describe one Exoscale SOS backend without exposing Platform credentials."
       },
-      "Theme": {
-        "type": "string",
-        "enum": [
-          "system",
-          "light",
-          "dark"
-        ],
-        "title": "Theme",
-        "description": "Supported user theme preferences."
-      },
       "TokenPayload": {
         "properties": {
           "token": {
@@ -3544,9 +3534,6 @@
           "role": {
             "$ref": "#/components/schemas/PlatformRoles"
           },
-          "theme": {
-            "$ref": "#/components/schemas/Theme"
-          },
           "accent": {
             "$ref": "#/components/schemas/Accent"
           },
@@ -3562,7 +3549,6 @@
           "email",
           "avatar",
           "role",
-          "theme",
           "accent",
           "radius"
         ],
@@ -3630,16 +3616,6 @@
               }
             ],
             "title": "Avatar"
-          },
-          "theme": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Theme"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "accent": {
             "anyOf": [

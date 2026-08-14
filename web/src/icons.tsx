@@ -1,5 +1,4 @@
 import type { IconRegistry } from '@astryxdesign/core/Icon';
-import React from 'react';
 import {
     X,
     ChevronDown,
