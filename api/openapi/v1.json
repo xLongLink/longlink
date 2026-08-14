@@ -2401,36 +2401,6 @@
         "title": "ApplicationCreate",
         "description": "Validate application creation payloads."
       },
-      "ApplicationOrganizationResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "avatar"
-        ],
-        "title": "ApplicationOrganizationResponse",
-        "description": "Represent the compact Organization associated with an Application."
-      },
       "ApplicationRelease": {
         "properties": {
           "image": {
@@ -2465,7 +2435,7 @@
             "title": "Id"
           },
           "organization": {
-            "$ref": "#/components/schemas/ApplicationOrganizationResponse"
+            "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "name": {
             "type": "string",
@@ -3016,6 +2986,36 @@
         "title": "OrganizationDetails",
         "description": "Represent an Organization with its members and Application access."
       },
+      "OrganizationIdentity": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "avatar": {
+            "type": "string",
+            "title": "Avatar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "avatar"
+        ],
+        "title": "OrganizationIdentity",
+        "description": "Represent a compact Organization in nested API responses."
+      },
       "OrganizationInvitationCreate": {
         "properties": {
           "email": {
@@ -3438,7 +3438,7 @@
       "UserOrganizationMembership": {
         "properties": {
           "organization": {
-            "$ref": "#/components/schemas/UserOrganizationSummary"
+            "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "role": {
             "$ref": "#/components/schemas/OrganizationRoles"
@@ -3451,36 +3451,6 @@
         ],
         "title": "UserOrganizationMembership",
         "description": "Represent one current-user Organization membership."
-      },
-      "UserOrganizationSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "avatar"
-        ],
-        "title": "UserOrganizationSummary",
-        "description": "Represent a compact Organization in current-user membership responses."
       },
       "UserSummary": {
         "properties": {

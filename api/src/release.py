@@ -4,9 +4,7 @@ import asyncio
 async def schedule_reconciliation() -> None:
     """Schedule deployment reconciliation for every current resource desired state."""
 
-    # Load every relationship target before the standalone process configures SQLModel mappers.
     from src.errors import NotFoundError
-    from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
     from src.database.session import session_scope
     from src.database.services import operations as operation_service
 

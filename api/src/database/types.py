@@ -1,6 +1,6 @@
 from sqlalchemy import Text
 from sqlalchemy_utils import JSONType
-from sqlalchemy_utils.types.encrypted.encrypted_type import AesEngine, StringEncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import StringEncryptedType
 
 
 class EncryptedType(StringEncryptedType):
@@ -10,6 +10,6 @@ class EncryptedType(StringEncryptedType):
     cache_ok = True
 
     def __init__(self, key: str) -> None:
-        """Configure AES encryption with the supplied Platform key."""
+        """Configure credential encryption with the supplied Platform key."""
 
-        super().__init__(JSONType, key, AesEngine)
+        super().__init__(JSONType, key)

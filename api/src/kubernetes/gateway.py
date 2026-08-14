@@ -56,6 +56,19 @@ def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     )
 
 
+def gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
+    """Build the Kubernetes Secret containing the Gateway client certificate authority."""
+
+    return Secret(
+        {
+            "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+            "stringData": {"ca.crt": certificate},
+            "type": "Opaque",
+        },
+        api=api,
+    )
+
+
 def leaf_certificate_builder(
     ca_name: x509.Name,
     ca_key: rsa.RSAPrivateKey,
@@ -203,16 +216,7 @@ class Gateway:
         await apply(GatewayClassResource(gateway_class, api=api))
         if tls is not None:
             await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-            await apply(
-                Secret(
-                    {
-                        "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
-                        "stringData": {"ca.crt": tls.ca_certificate},
-                        "type": "Opaque",
-                    },
-                    api=api,
-                )
-            )
+            await apply(gateway_client_ca_secret(tls.ca_certificate, api))
         await apply(gateway_resource)
         await apply(policy_resource)
 
@@ -249,16 +253,7 @@ class Gateway:
         # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.
         api = await self._client.api()
         await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-        await apply(
-            Secret(
-                {
-                    "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
-                    "stringData": {"ca.crt": tls.ca_certificate},
-                    "type": "Opaque",
-                },
-                api=api,
-            )
-        )
+        await apply(gateway_client_ca_secret(tls.ca_certificate, api))
 
         # Do not publish the Compute until Envoy serves the final address-bound certificate.
         context = ssl.create_default_context(cadata=tls.ca_certificate)

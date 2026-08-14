@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Image
 from src.models.statuses import Status
+from src.models.resources import OrganizationIdentity
 from longlink.models.icons import Icon
 
 
@@ -62,20 +63,6 @@ class ApplicationRelease(BaseModel):
     description: str | None = Field(default=None, max_length=255)
 
 
-class ApplicationOrganizationResponse(BaseModel):
-    """Represent the compact Organization associated with an Application."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    avatar: str
-
-
 class ApplicationResponse(BaseModel):
     """Represent one application in API responses."""
 
@@ -85,7 +72,7 @@ class ApplicationResponse(BaseModel):
     id: UUID
 
     # Relationships
-    organization: ApplicationOrganizationResponse
+    organization: OrganizationIdentity
 
     # Metadata
     name: str

@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { Auth } from '@/components/Auth';
 import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
@@ -140,101 +141,103 @@ export default function Settings() {
     ];
 
     return (
-        <PlatformLayout
-            brandOnly
-            tabs={[
-                { href: '/organizations', icon: Building2, label: 'Organizations' },
-                { href: '/settings', icon: Settings2, label: 'Settings' },
-            ]}
-        >
-            <PageContainer gap={8}>
-                <VStack gap={1}>
-                    <Heading level={1}>Settings</Heading>
-                    <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
-                </VStack>
+        <Auth>
+            <PlatformLayout
+                brandOnly
+                tabs={[
+                    { href: '/organizations', icon: Building2, label: 'Organizations' },
+                    { href: '/settings', icon: Settings2, label: 'Settings' },
+                ]}
+            >
+                <PageContainer gap={8}>
+                    <VStack gap={1}>
+                        <Heading level={1}>Settings</Heading>
+                        <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
+                    </VStack>
 
-                <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-                    <SideNav className="h-auto w-full">
-                        <SideNavSection title="Settings" isHeaderHidden>
-                            <SideNavItem
-                                href={`${location.pathname}${location.search}#account`}
-                                icon={<UserRound aria-hidden="true" size={16} />}
-                                isSelected={section === 'account'}
-                                label="Account"
-                            />
-                            <SideNavItem
-                                href={`${location.pathname}${location.search}#organizations`}
-                                icon={<Building2 aria-hidden="true" size={16} />}
-                                isSelected={section === 'organizations'}
-                                label="Organizations"
-                            />
-                        </SideNavSection>
-                    </SideNav>
+                    <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
+                        <SideNav className="h-auto w-full">
+                            <SideNavSection title="Settings" isHeaderHidden>
+                                <SideNavItem
+                                    href={`${location.pathname}${location.search}#account`}
+                                    icon={<UserRound aria-hidden="true" size={16} />}
+                                    isSelected={section === 'account'}
+                                    label="Account"
+                                />
+                                <SideNavItem
+                                    href={`${location.pathname}${location.search}#organizations`}
+                                    icon={<Building2 aria-hidden="true" size={16} />}
+                                    isSelected={section === 'organizations'}
+                                    label="Organizations"
+                                />
+                            </SideNavSection>
+                        </SideNav>
 
-                    <div className="min-w-0">
-                        {section === 'account' ? (
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Account</Heading>
-                                    <Text type="supporting">
-                                        Update your username. Your account email is read-only here.
-                                    </Text>
-                                </VStack>
-                                <HStack gap={4} align="start" wrap="wrap">
-                                    <TextInput
-                                        label="Username"
-                                        value={name}
-                                        width="100%"
-                                        isRequired
-                                        isDisabled={isLoading || !user}
-                                        status={accountError ? { type: 'error', message: accountError } : undefined}
-                                        onChange={(value) => {
-                                            setEditedName(value);
-                                            setAccountError(null);
-                                        }}
-                                        onBlur={() => {
-                                            void saveAccountName();
-                                        }}
-                                    />
-                                    <TextInput
-                                        label="Email"
-                                        type="email"
-                                        value={user?.email ?? ''}
-                                        width="100%"
-                                        isDisabled
-                                    />
-                                </HStack>
-                            </VStack>
-                        ) : null}
-
-                        {section === 'organizations' ? (
-                            <VStack gap={4}>
-                                <HStack gap={4} justify="between" align="end" wrap="wrap">
+                        <div className="min-w-0">
+                            {section === 'account' ? (
+                                <VStack gap={4}>
                                     <VStack gap={1}>
-                                        <Heading level={2}>Organizations</Heading>
+                                        <Heading level={2}>Account</Heading>
                                         <Text type="supporting">
-                                            Review the organizations connected to your personal account.
+                                            Update your username. Your account email is read-only here.
                                         </Text>
                                     </VStack>
-                                    <CreateOrganization />
-                                </HStack>
-                                {isLoading && memberships.length === 0 ? null : (
-                                    <Table
-                                        columns={organizationColumns}
-                                        data={memberships}
-                                        density="compact"
-                                        emptyState={<EmptyState title="No results." isCompact />}
-                                        hasHover
-                                        idKey={(membership) => membership.organization.id}
-                                    />
-                                )}
-                            </VStack>
-                        ) : null}
-                    </div>
-                </div>
+                                    <HStack gap={4} align="start" wrap="wrap">
+                                        <TextInput
+                                            label="Username"
+                                            value={name}
+                                            width="100%"
+                                            isRequired
+                                            isDisabled={isLoading || !user}
+                                            status={accountError ? { type: 'error', message: accountError } : undefined}
+                                            onChange={(value) => {
+                                                setEditedName(value);
+                                                setAccountError(null);
+                                            }}
+                                            onBlur={() => {
+                                                void saveAccountName();
+                                            }}
+                                        />
+                                        <TextInput
+                                            label="Email"
+                                            type="email"
+                                            value={user?.email ?? ''}
+                                            width="100%"
+                                            isDisabled
+                                        />
+                                    </HStack>
+                                </VStack>
+                            ) : null}
 
-                <DeleteConfirmation {...deleteDialog.dialogProps} />
-            </PageContainer>
-        </PlatformLayout>
+                            {section === 'organizations' ? (
+                                <VStack gap={4}>
+                                    <HStack gap={4} justify="between" align="end" wrap="wrap">
+                                        <VStack gap={1}>
+                                            <Heading level={2}>Organizations</Heading>
+                                            <Text type="supporting">
+                                                Review the organizations connected to your personal account.
+                                            </Text>
+                                        </VStack>
+                                        <CreateOrganization />
+                                    </HStack>
+                                    {isLoading && memberships.length === 0 ? null : (
+                                        <Table
+                                            columns={organizationColumns}
+                                            data={memberships}
+                                            density="compact"
+                                            emptyState={<EmptyState title="No results." isCompact />}
+                                            hasHover
+                                            idKey={(membership) => membership.organization.id}
+                                        />
+                                    )}
+                                </VStack>
+                            ) : null}
+                        </div>
+                    </div>
+
+                    <DeleteConfirmation {...deleteDialog.dialogProps} />
+                </PageContainer>
+            </PlatformLayout>
+        </Auth>
     );
 }

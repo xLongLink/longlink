@@ -119,4 +119,3 @@ Apply these pragmatically:
 - **High cohesion / Low coupling** — keep related behavior together and minimize unnecessary dependencies.
 - **Locality of behavior** — keep logic close to the data and concepts it operates on.
 - **Information hiding** — avoid exposing implementation details unnecessarily.
-

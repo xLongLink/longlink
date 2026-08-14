@@ -11,7 +11,7 @@ import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiVoid } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { PasswordInput } from '@/components/PasswordInput';
-import { useFragmentToken } from './use-fragment-token';
+import { useFragmentToken } from '../../auth/use-fragment-token';
 
 type ResetPasswordValues = {
     password: string;

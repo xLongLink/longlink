@@ -7,7 +7,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PublicPage } from '@/layout/PublicPage';
 
 /** Renders the marketplace placeholder. */
-export default function Marketplace() {
+export default function MarketplaceRoute() {
     return (
         <PublicPage>
             <StackItem as="main" size="fill">

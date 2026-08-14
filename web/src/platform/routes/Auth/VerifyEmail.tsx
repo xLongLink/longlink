@@ -20,7 +20,7 @@ import { PasswordInput } from '@/components/PasswordInput';
 import { AuthWelcomeTitle } from '@/components/AuthWelcomeTitle';
 import { AuthLegalAgreement } from '@/components/AuthLegalAgreement';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useFragmentToken } from './use-fragment-token';
+import { useFragmentToken } from '../../auth/use-fragment-token';
 
 type RegistrationCompleteValues = {
     name: string;
