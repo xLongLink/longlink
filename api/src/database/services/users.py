@@ -95,12 +95,12 @@ async def ensure_administrator(session: AsyncSession) -> None:
 
     # Reconcile the persisted administrator before considering an initial account creation.
     statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
-    user = (await session.execute(select(User).where(col(User.role) == PlatformRoles.administrator))).scalar_one_or_none()
+    user = await session.scalar(select(User).where(col(User.role) == PlatformRoles.administrator))
     password_hash = PasswordHash.recommended()
 
     # Match the configured identity only when no administrator has been created yet.
     if user is None:
-        user = (await session.execute(statement)).scalar_one_or_none()
+        user = await session.scalar(statement)
     if user is None:
         user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=password_hash.hash(env.ADMIN_PASSWORD))
 
@@ -110,7 +110,7 @@ async def ensure_administrator(session: AsyncSession) -> None:
                 session.add(user)
                 await session.flush()
         except IntegrityError:
-            user = (await session.execute(statement)).scalar_one_or_none()
+            user = await session.scalar(statement)
             if user is None:
                 raise
 

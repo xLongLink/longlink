@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, setupContext } from '@/xml/runtimes/0.3/core/context';
+import { createContext, setupContext } from '@/xml/runtime/core/context';
 import { compileProps } from '../helpers';
 
 describe('core/context', () => {

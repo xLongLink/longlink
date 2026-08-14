@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { ASTProps, Scope } from '@/xml/runtimes/0.3/types';
-import { createContext } from '@/xml/runtimes/0.3/core/context';
-import { executeAction } from '@/xml/runtimes/0.3/adapters/Action';
+import type { ASTProps, Scope } from '@/xml/runtime/types';
+import { createContext } from '@/xml/runtime/core/context';
+import { executeAction } from '@/xml/runtime/adapters/Action';
 import { compileProps } from '../helpers';
 
 describe('Action', () => {

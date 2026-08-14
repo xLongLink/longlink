@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from longlink import context as runtime_context
 from sqlmodel import Field
 from longlink.database import base as database_base
-from longlink.database import audit as database_audit
+from longlink.database import audit
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -38,7 +38,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         return next(audit_times)
 
     # Bind this test's clock, users, and isolated engine.
-    monkeypatch.setattr(database_audit, "utcnow", next_audit_time)
+    monkeypatch.setattr(audit, "utcnow", next_audit_time)
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     deleter_id = UUID("00000000-0000-0000-0000-000000000004")

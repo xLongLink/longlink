@@ -27,7 +27,7 @@ import { SideNav, SideNavItem } from '../adapters/SideNav';
 import { Selector, SelectorOption } from '../adapters/Selector';
 import { RadioList, RadioListItem } from '../adapters/RadioList';
 
-/** Explicit Astryx 0.3 XML tag-to-adapter registry. */
+/** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Action,
     Avatar,

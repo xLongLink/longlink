@@ -117,9 +117,7 @@ function validateSetupNode(node: ASTNode): void {
     // LongLink roots accept optional metadata-only attributes.
     if (node.name === 'longlink') {
         const params = node.params;
-        const unsupported = Object.keys(params).filter(
-            (name) => name !== 'name' && name !== 'icon' && name !== 'version'
-        );
+        const unsupported = Object.keys(params).filter((name) => name !== 'name' && name !== 'icon');
 
         // Reject unknown root metadata.
         if (unsupported.length) {

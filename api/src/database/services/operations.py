@@ -25,9 +25,13 @@ async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID,
     """Discover release reconciliation targets in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.scalars(select(ComputeRegistry).order_by(col(ComputeRegistry.id)))
-    compute_rows = result.all()
-    result = await session.scalars(select(Organization).order_by(col(Organization.compute_id), col(Organization.id)))
+    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
+    compute_ids = result.scalars().all()
+    result = await session.execute(
+        select(col(Organization.id), col(Organization.deleted_at), col(Organization.compute_id)).order_by(
+            col(Organization.compute_id), col(Organization.id)
+        )
+    )
     organization_rows = result.all()
     result = await session.execute(
         select(col(Application.id), col(Application.deleted_at), col(Organization.compute_id))
@@ -37,14 +41,14 @@ async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID,
     )
     application_rows = result.all()
 
-    targets = [(OperationKind.compute_create, compute.id, compute.id) for compute in compute_rows]
+    targets = [(OperationKind.compute_create, compute_id, compute_id) for compute_id in compute_ids]
     targets.extend(
         (
-            OperationKind.organization_delete if organization.deleted_at is not None else OperationKind.organization_create,
-            organization.id,
-            organization.compute_id,
+            OperationKind.organization_delete if deleted_at is not None else OperationKind.organization_create,
+            organization_id,
+            compute_id,
         )
-        for organization in organization_rows
+        for organization_id, deleted_at, compute_id in organization_rows
     )
     targets.extend(
         (OperationKind.application_delete if deleted_at is not None else OperationKind.application_create, application_id, compute_id)

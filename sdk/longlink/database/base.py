@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
 from longlink.database import urls
 from sqlalchemy.engine import URL
-from longlink.utils.time import utcnow
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
@@ -22,8 +21,8 @@ class AuditTable(Base):
     __allow_unmapped__ = True
 
     # Audit timestamps
-    created_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
-    updated_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
+    created_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    updated_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Audit user identifiers

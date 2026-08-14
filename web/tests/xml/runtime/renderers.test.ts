@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ASTNode } from '@/xml/runtimes/0.3/types';
-import { createContext } from '@/xml/runtimes/0.3/core/context';
+import type { ASTNode } from '@/xml/runtime/types';
+import { createContext } from '@/xml/runtime/core/context';
 import { compileProps, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {

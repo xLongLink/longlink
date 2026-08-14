@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseXML } from '@/xml/runtimes/0.3/core/parser';
+import { parseXML } from '@/xml/runtime/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('setup adapters', () => {

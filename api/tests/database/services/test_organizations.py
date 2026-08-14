@@ -1,5 +1,5 @@
 import pytest
-from uuid import UUID, uuid4
+from uuid import uuid4
 from sqlmodel import col
 from factories import create_organization, create_ready_infrastructure
 from sqlalchemy import update

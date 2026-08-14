@@ -131,8 +131,7 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
         return
     if organization.deleted_at is None:
         raise RuntimeError("Active organizations cannot be purged")
-    application_id = await session.scalar(select(Application.id).where(Application.organization_id == organization_id).limit(1))
-    if application_id is not None:
+    if await session.scalar(select(Application.id).where(Application.organization_id == organization_id).limit(1)) is not None:
         raise RuntimeError("Organization applications must be purged first")
     await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
     await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
