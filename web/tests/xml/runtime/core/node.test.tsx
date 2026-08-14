@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderNode } from '@/xml/runtimes/0.3/core/node';
+import { renderNode } from '@/xml/runtime/core/node';
 import { compileProps } from '../helpers';
 
 describe('renderNode', () => {

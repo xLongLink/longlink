@@ -1,39 +1,32 @@
 import { createElement } from 'react';
-import type { ASTNode } from './runtimes/0.3/types';
-import * as v0_3 from './runtimes/0.3';
+import type { ASTNode } from './runtime/types';
+import * as runtime from './runtime';
 
-/** Returns the declared XML runtime version from a complete document AST. */
-export function getXmlRuntimeVersion(ast: ASTNode[]): string {
+/** Verifies that an XML document contains one unversioned LongLink root. */
+function assertPageRoot(ast: ASTNode[]): void {
     const [root] = ast;
-    const version = root?.params.version;
 
-    if (ast.length !== 1 || root?.name !== 'longlink' || version?.kind !== 'text') {
-        throw new Error('XML pages must contain exactly one versioned longlink root');
+    if (ast.length !== 1 || root?.name !== 'longlink') {
+        throw new Error('XML pages must contain exactly one longlink root');
     }
 
-    return version.value;
+    if (root.params.version) throw new Error('XML page version attributes are not supported');
 }
 
-/** Verifies that a document uses the installed XML runtime version. */
-function assertSupportedRuntime(ast: ASTNode[]): void {
-    const version = getXmlRuntimeVersion(ast);
-    if (version !== '0.3') throw new Error(`Unsupported LongLink XML runtime version: ${version}`);
-}
-
-/** Parses one XML document and verifies its declared runtime syntax. */
+/** Parses one XML document. */
 export function parseXML(xml: string): ASTNode[] {
-    const ast = v0_3.parseXML(xml);
+    const ast = runtime.parseXML(xml);
 
-    assertSupportedRuntime(ast);
+    assertPageRoot(ast);
     return ast;
 }
 
-/** Renders a document through the adapter set selected by its declared runtime version. */
-export function RenderXML({ ast, ...props }: Parameters<typeof v0_3.RenderXML>[0]) {
-    assertSupportedRuntime(ast);
+/** Renders one XML page. */
+export function RenderXML({ ast, ...props }: Parameters<typeof runtime.RenderXML>[0]) {
+    assertPageRoot(ast);
 
-    return createElement(v0_3.RenderXML, { ast, ...props });
+    return createElement(runtime.RenderXML, { ast, ...props });
 }
 
-export { createContext, resolveRequestUrl } from './runtimes/0.3';
-export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './runtimes/0.3';
+export { createContext, resolveRequestUrl } from './runtime';
+export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './runtime';

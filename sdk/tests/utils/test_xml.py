@@ -37,7 +37,7 @@ VALID_FRAGMENTS = [
     ),
     ("icon", '<Icon icon="info" size="sm" if="show" />'),
     ("link", '<Link to="/issues/123"><Text value="Open issue" /></Link>'),
-    ("longlink", '<longlink version="0.3" name="dashboard" icon="layout-dashboard" />'),
+    ("longlink", '<longlink name="dashboard" icon="layout-dashboard" />'),
     ("number-input", '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />'),
     ("query", '<Query id="projects" path="/projects" />'),
     (
@@ -76,10 +76,10 @@ INVALID_FRAGMENTS = [
     ("badge-duplicate-icon", '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
     ("missing-button-label", "<Button />"),
     ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style-through-root", '<longlink version="0.3"><Button label="Save" style="color: red" /></longlink>'),
+    ("forbidden-style-through-root", '<longlink><Button label="Save" style="color: red" /></longlink>'),
     (
         "invalid-child-through-root",
-        '<longlink version="0.3"><Action tone="accent"><Button label="Save" /></Action></longlink>',
+        '<longlink><Action tone="accent"><Button label="Save" /></Action></longlink>',
     ),
     (
         "missing-selector-option-value",
@@ -89,12 +89,12 @@ INVALID_FRAGMENTS = [
     ("missing-state-id", '<State value="[]" />'),
     ("missing-table-column-key", '<Table data="$items"><TableColumn field="sku" /></Table>'),
     ("missing-tab-value", '<TabList><Tab label="Overview"><Text value="Overview" /></Tab></TabList>'),
-    ("malformed-longlink", '<longlink version="0.3"><Text value="Dashboard"></longlink>'),
+    ("malformed-longlink", '<longlink><Text value="Dashboard"></longlink>'),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", '<!DOCTYPE longlink><longlink version="0.3" />'),
-    ("cdata", '<longlink version="0.3"><![CDATA[hidden]]></longlink>'),
+    ("doctype", '<!DOCTYPE longlink><longlink />'),
+    ("cdata", '<longlink><![CDATA[hidden]]></longlink>'),
 ]
 
 
@@ -118,7 +118,7 @@ def test_root_schema_accepts_valid_fragments(_name: str, content: str, tmp_path:
 
     # Build and validate the fragment through the application page schema.
     path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f'<longlink version="0.3">{content}</longlink>', encoding="utf-8")
+    path.write_text(content if content.startswith("<longlink") else f'<longlink>{content}</longlink>', encoding="utf-8")
     element = Element(path)
     element.validate()
 
@@ -129,7 +129,7 @@ def test_root_schema_rejects_invalid_fragments(_name: str, content: str, tmp_pat
 
     # Build the invalid fragment through the application page schema.
     path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f'<longlink version="0.3">{content}</longlink>', encoding="utf-8")
+    path.write_text(content if content.startswith("<longlink") else f'<longlink>{content}</longlink>', encoding="utf-8")
     element = Element(path)
 
     # Require schema validation to reject the fragment.

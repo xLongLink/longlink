@@ -22,7 +22,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     const requiresSetup = getRequirements(ast);
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode[]; baseUrl: string; error: unknown } | null>(null);
-    const [version, setVersion] = useState(0);
+    const [resetKey, setResetKey] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
     const setupValidationError = useMemo(() => {
@@ -61,7 +61,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
                 unsubscribers.push(
                     subscribe(value, () => {
                         // Refresh only while this renderer is mounted.
-                        if (mounted) setVersion((current) => current + 1);
+                        if (mounted) setResetKey((current) => current + 1);
                     })
                 );
             }
@@ -83,7 +83,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             }
 
             subscribeToStateValues();
-            setVersion((current) => current + 1);
+            setResetKey((current) => current + 1);
         };
 
         void setupContext(ast, runtimeCtx, baseUrl)
@@ -93,7 +93,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
                 // Publish initialized AST only while mounted.
                 if (mounted) {
                     setInitializedAst(ast);
-                    setVersion((current) => current + 1);
+                    setResetKey((current) => current + 1);
                 }
             })
             .catch((error) => {
@@ -122,7 +122,7 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
     if (requiresSetup && initializedAst !== ast) return null;
 
     return (
-        <XmlErrorBoundary resetKey={version}>
+        <XmlErrorBoundary resetKey={resetKey}>
             <XmlContent ast={ast} ctx={runtimeCtx} />
         </XmlErrorBoundary>
     );

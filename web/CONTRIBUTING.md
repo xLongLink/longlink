@@ -55,9 +55,9 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 
 ## XML
 
-- XML pages are parsed by `src/xml/runtimes/0.3/core/parser.ts` into an AST.
-- The renderer in `src/xml/runtimes/0.3/renderers.tsx` seeds runtime state and renders the AST through `src/xml/runtimes/0.3/core/node.tsx`.
-- Component names must exist in `src/xml/runtimes/0.3/core/registry.tsx`; unknown tags fail at render time.
+- XML pages are parsed by `src/xml/runtime/core/parser.ts` into an AST.
+- The renderer in `src/xml/runtime/renderers.tsx` seeds runtime state and renders the AST through `src/xml/runtime/core/node.tsx`.
+- Component names must exist in `src/xml/runtime/core/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
 - Text-bearing components use Astryx `label`, `title`, or `value` attributes. Use expressions in `value` for dynamic copy.
 - XML rejects `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
@@ -66,17 +66,17 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 
 - Keep platform concerns in the API mode path.
 - Use direct Astryx imports for reusable UI.
-- Keep XML runtime and compiler changes inside `src/xml/runtimes/0.3/`.
+- Keep XML runtime and compiler changes inside `src/xml/runtime/`.
 - Prefer `src/lib/api.ts` helpers over raw `fetch`.
 - Remove obsolete flows when replacing them end to end.
 - Favor the current MVP model over backward compatibility.
 
 ## Adding or Changing a Component
 
-1. Add or edit the adapter in `src/xml/runtimes/0.3/adapters/`.
+1. Add or edit the adapter in `src/xml/runtime/adapters/`.
 2. Keep the adapter entry point small and documented.
 3. Use `useXmlRuntime` for runtime scope and `renderNode` for child rendering.
-4. Register the tag in `src/xml/runtimes/0.3/core/registry.tsx`.
+4. Register the tag in `src/xml/runtime/core/registry.tsx`.
 5. Update parser, context, or helper code only when the component needs new runtime behavior.
 6. Add focused tests under `web/tests/xml/`.
 7. Update docs/examples so the new XML shape is discoverable.

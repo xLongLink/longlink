@@ -158,7 +158,6 @@ class LongLink:
                     PageDefinition(
                         path=registered_path,
                         route=page_route,
-                        runtime_version=page_root.get("version", ""),
                         tab=tab,
                         name=page_name,
                         icon=page_icon,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/runtimes/0.3/core/url';
+import { resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/runtime/core/url';
 
 describe('resolveUrl', () => {
     it('joins base and relative paths', () => {
