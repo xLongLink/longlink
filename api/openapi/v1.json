@@ -2351,35 +2351,6 @@
   },
   "components": {
     "schemas": {
-      "Accent": {
-        "type": "string",
-        "enum": [
-          "slate",
-          "gray",
-          "zinc",
-          "neutral",
-          "stone",
-          "red",
-          "orange",
-          "amber",
-          "yellow",
-          "lime",
-          "green",
-          "emerald",
-          "teal",
-          "cyan",
-          "sky",
-          "blue",
-          "indigo",
-          "violet",
-          "purple",
-          "fuchsia",
-          "pink",
-          "rose"
-        ],
-        "title": "Accent",
-        "description": "Supported randomized LongLink logo accent colors."
-      },
       "ApplicationCreate": {
         "properties": {
           "name": {
@@ -3533,13 +3504,6 @@
           },
           "role": {
             "$ref": "#/components/schemas/PlatformRoles"
-          },
-          "accent": {
-            "$ref": "#/components/schemas/Accent"
-          },
-          "radius": {
-            "type": "number",
-            "title": "Radius"
           }
         },
         "type": "object",
@@ -3548,9 +3512,7 @@
           "name",
           "email",
           "avatar",
-          "role",
-          "accent",
-          "radius"
+          "role"
         ],
         "title": "UserProfile",
         "description": "Represent the authenticated user payload returned by the API."
@@ -3616,29 +3578,6 @@
               }
             ],
             "title": "Avatar"
-          },
-          "accent": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Accent"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "radius": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.5,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Radius"
           }
         },
         "type": "object",

@@ -5,13 +5,6 @@ export type ClientOptions = {
 };
 
 /**
- * Accent
- *
- * Supported randomized LongLink logo accent colors.
- */
-export type Accent = 'slate' | 'gray' | 'zinc' | 'neutral' | 'stone' | 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green' | 'emerald' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo' | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose';
-
-/**
  * ApplicationCreate
  *
  * Validate application creation payloads.
@@ -747,11 +740,6 @@ export type UserProfile = {
      */
     avatar: string;
     role: PlatformRoles;
-    accent: Accent;
-    /**
-     * Radius
-     */
-    radius: number;
 };
 
 /**
@@ -793,11 +781,6 @@ export type UserUpdate = {
      * Avatar
      */
     avatar?: string | null;
-    accent?: Accent | null;
-    /**
-     * Radius
-     */
-    radius?: number | null;
 };
 
 /**

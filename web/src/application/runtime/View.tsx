@@ -376,7 +376,17 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     // Show deployment loading only while status or access is still resolving.
     if (isApplicationLoading || applicationStatus === 'creating') {
-        applicationState = <LoadingState status={isApplicationLoading ? 'loading' : 'creating'} />;
+        applicationState = isApplicationLoading ? (
+            <Spinner label="Loading" />
+        ) : (
+            <Card maxWidth={576} padding={6} width="100%">
+                <EmptyState
+                    description="Please try again in a moment."
+                    headingLevel={1}
+                    title="Application is being deployed"
+                />
+            </Card>
+        );
     } else if (applicationStatus === 'failed' || applicationStatus === 'deleting') {
         // Keep failed and deleting applications out of the runtime while surfacing their lifecycle state.
         applicationState = (
@@ -448,7 +458,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             <ErrorState {...fallbackActionProps} message={activePageState.error} title="Unable to load this page" />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
-        activeFallback = <LoadingState status="loading" />;
+        activeFallback = <Spinner label="Loading" />;
     } else if (!activePageState.ast.length) {
         activeFallback = (
             <ErrorState
@@ -468,22 +478,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 </Center>
             ) : null}
         </XmlLayout>
-    );
-}
-
-/** Renders the in-shell loading page while an application is being created. */
-function LoadingState({ status }: { status: 'creating' | 'loading' }) {
-    // Keep the shell visible while the page manifest or active page is loading.
-    if (status === 'loading') return <Spinner label="Loading" />;
-
-    return (
-        <Card maxWidth={576} padding={6} width="100%">
-            <EmptyState
-                description="Please try again in a moment."
-                headingLevel={1}
-                title="Application is being deployed"
-            />
-        </Card>
     );
 }
 

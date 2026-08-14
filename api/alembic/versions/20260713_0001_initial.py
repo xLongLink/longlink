@@ -32,36 +32,6 @@ def upgrade() -> None:
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("role", sa.Enum("user", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
-        sa.Column(
-            "accent",
-            sa.Enum(
-                "slate",
-                "gray",
-                "zinc",
-                "neutral",
-                "stone",
-                "red",
-                "orange",
-                "amber",
-                "yellow",
-                "lime",
-                "green",
-                "emerald",
-                "teal",
-                "cyan",
-                "sky",
-                "blue",
-                "indigo",
-                "violet",
-                "purple",
-                "fuchsia",
-                "pink",
-                "rose",
-                name="accent",
-            ),
-            nullable=False,
-        ),
-        sa.Column("radius", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
@@ -318,31 +288,3 @@ def downgrade() -> None:
     op.drop_table("database_registries")
     op.drop_table("compute_registries")
     op.drop_table("users")
-
-    # Remove the native preference enum type so a fresh upgrade can recreate it.
-    bind = op.get_bind()
-    sa.Enum(
-        "slate",
-        "gray",
-        "zinc",
-        "neutral",
-        "stone",
-        "red",
-        "orange",
-        "amber",
-        "yellow",
-        "lime",
-        "green",
-        "emerald",
-        "teal",
-        "cyan",
-        "sky",
-        "blue",
-        "indigo",
-        "violet",
-        "purple",
-        "fuchsia",
-        "pink",
-        "rose",
-        name="accent",
-    ).drop(bind, checkfirst=True)

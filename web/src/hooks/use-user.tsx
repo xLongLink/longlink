@@ -1,19 +1,13 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserOrganizationMembership, UserProfile, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY } from '@/lib/theme';
 import { zUserOrganizationMembership, zUserProfile } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserProfile, Error> | undefined>(undefined);
-
-/** Caches non-sensitive appearance preferences for the next page's first paint. */
-function storeThemePreferences({ accent, radius }: Pick<UserProfile, 'accent' | 'radius'>): void {
-    localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ accent, radius }));
-}
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -24,13 +18,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         refetchOnWindowFocus: true,
         retry: false,
     });
-
-    // Synchronize the browser cache with the server-backed active session.
-    useEffect(() => {
-        if (user.data) {
-            storeThemePreferences(user.data);
-        }
-    }, [user.data]);
 
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
@@ -47,8 +34,6 @@ export function useUserProfile() {
 
     return {
         user: user ?? null,
-        accent: user?.accent ?? 'neutral',
-        radius: user?.radius ?? DEFAULT_RADIUS,
         isLoading,
         error: error ?? null,
         refetch,
@@ -79,7 +64,6 @@ export function useSignOut() {
     return async () => {
         await fetchApiVoid(platformApiPath('/auth/logout'), { method: 'POST' });
         queryClient.clear();
-        localStorage.removeItem(THEME_PREFERENCES_KEY);
         window.location.assign('/organizations');
     };
 }

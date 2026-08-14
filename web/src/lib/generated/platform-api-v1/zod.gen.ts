@@ -3,36 +3,6 @@
 import * as z from 'zod';
 
 /**
- * Accent
- *
- * Supported randomized LongLink logo accent colors.
- */
-export const zAccent = z.enum([
-    'slate',
-    'gray',
-    'zinc',
-    'neutral',
-    'stone',
-    'red',
-    'orange',
-    'amber',
-    'yellow',
-    'lime',
-    'green',
-    'emerald',
-    'teal',
-    'cyan',
-    'sky',
-    'blue',
-    'indigo',
-    'violet',
-    'purple',
-    'fuchsia',
-    'pink',
-    'rose'
-]);
-
-/**
  * ApplicationOrganizationResponse
  *
  * Represent the compact Organization associated with an Application.
@@ -528,9 +498,7 @@ export const zUserProfile = z.object({
     name: z.string(),
     email: z.email(),
     avatar: z.string(),
-    role: zPlatformRoles,
-    accent: zAccent,
-    radius: z.number()
+    role: zPlatformRoles
 });
 
 /**
@@ -553,9 +521,7 @@ export const zUserSummary = z.object({
  */
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
-    avatar: z.string().max(2048).nullish(),
-    accent: zAccent.nullish(),
-    radius: z.number().gte(0).lte(1.5).nullish()
+    avatar: z.string().max(2048).nullish()
 });
 
 /**
