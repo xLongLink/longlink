@@ -9,7 +9,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
@@ -25,8 +25,9 @@ export default function AdminCompute() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
-        mutationFn: (computeId: string) =>
-            fetchApiVoid(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' }),
+        mutationFn: async (computeId: string) => {
+            await requestApi(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey });
             toast({ body: 'Compute deleted' });

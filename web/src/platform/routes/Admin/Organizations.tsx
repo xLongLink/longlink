@@ -11,7 +11,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
@@ -26,8 +26,9 @@ export default function AdminOrganizations() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
-        mutationFn: (organizationId: string) =>
-            fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
+        mutationFn: async (organizationId: string) => {
+            await requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
             toast({ body: 'Organization deleted' });

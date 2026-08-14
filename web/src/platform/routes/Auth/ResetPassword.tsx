@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { ApiError, fetchApiVoid } from '@/lib/api';
+import { ApiError, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
@@ -31,12 +31,14 @@ export default function ResetPassword() {
         resolver: zodResolver(passwordSchema),
     });
     const verification = useMutation({
-        mutationFn: (resetToken: string) => {
+        mutationFn: async (resetToken: string) => {
             if (!resetToken) {
-                return fetchApiVoid(platformApiPath('/auth/reset-password/setup'));
+                await requestApi(platformApiPath('/auth/reset-password/setup'));
+
+                return;
             }
 
-            return fetchApiVoid(platformApiPath('/auth/reset-password/verify'), {
+            await requestApi(platformApiPath('/auth/reset-password/verify'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: resetToken }),
@@ -53,12 +55,13 @@ export default function ResetPassword() {
         },
     });
     const resetPassword = useMutation({
-        mutationFn: (payload: ResetPasswordValues) =>
-            fetchApiVoid(platformApiPath('/auth/reset-password'), {
+        mutationFn: async (payload: ResetPasswordValues) => {
+            await requestApi(platformApiPath('/auth/reset-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            }),
+            });
+        },
     });
     const hasTokenError =
         (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||

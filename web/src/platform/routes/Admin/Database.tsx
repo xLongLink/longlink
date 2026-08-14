@@ -8,7 +8,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
@@ -25,8 +25,9 @@ export default function AdminDatabase() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
-        mutationFn: (databaseId: string) =>
-            fetchApiVoid(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' }),
+        mutationFn: async (databaseId: string) => {
+            await requestApi(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
             toast({ body: 'Database deleted' });

@@ -10,7 +10,7 @@ import type {
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
-import { ApiError, apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import {
     zApplicationResponse,
@@ -61,7 +61,7 @@ export function useInviteOrganizationMember(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/invitations`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}/invitations`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role }),
@@ -120,7 +120,7 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return fetchApiVoid(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role }),
@@ -225,7 +225,7 @@ export function useDeleteOrganization() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(platformApiPath(`/organizations/${organizationId}`), {
+            await requestApi(platformApiPath(`/organizations/${organizationId}`), {
                 method: 'DELETE',
             });
         },

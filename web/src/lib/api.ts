@@ -105,7 +105,7 @@ export async function fetchApiResponse(
 }
 
 /** Sends one API request and normalizes non-OK errors. */
-async function requestApi(path: string, init?: RequestInit): Promise<Response> {
+export async function requestApi(path: string, init?: RequestInit): Promise<Response> {
     const response = await fetchApiResponse(path, init);
 
     // Convert failed responses into typed API errors.
@@ -145,9 +145,4 @@ export async function fetchApiText(path: string, init?: RequestInit): Promise<st
     const response = await requestApi(path, init);
 
     return response.text();
-}
-
-/** Fetches an API endpoint and ignores the body on success. */
-export async function fetchApiVoid(path: string, init?: RequestInit): Promise<void> {
-    await requestApi(path, init);
 }

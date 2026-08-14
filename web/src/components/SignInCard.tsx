@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
@@ -39,12 +39,13 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
-        mutationFn: (payload: LoginValues) =>
-            fetchApiVoid(platformApiPath('/auth/password/login'), {
+        mutationFn: async (payload: LoginValues) => {
+            await requestApi(platformApiPath('/auth/password/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            }),
+            });
+        },
     });
 
     /** Signs in with an email and password, then refreshes the current profile. */

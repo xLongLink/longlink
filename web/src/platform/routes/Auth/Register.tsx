@@ -8,7 +8,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
@@ -32,12 +32,13 @@ export default function Register() {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
-        mutationFn: (payload: RegisterValues) =>
-            fetchApiVoid(platformApiPath('/auth/register'), {
+        mutationFn: async (payload: RegisterValues) => {
+            await requestApi(platformApiPath('/auth/register'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            }),
+            });
+        },
         onSuccess: () => {
             showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },

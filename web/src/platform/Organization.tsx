@@ -1,14 +1,20 @@
 import { useParams } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { AppWindow, Settings2 } from 'lucide-react';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { AppWindow, Settings2, Wrench } from 'lucide-react';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
-import NotFound from './NotFound';
-import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from '@/components/settings/Settings';
+import NotFound from './NotFound';
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {
@@ -23,6 +29,24 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
         error,
     } = useOrganization(organization);
     const isSettings = settingsSection !== undefined;
+    const columns: TableColumn<OrganizationApplicationSummary>[] = [
+        {
+            key: 'name',
+            header: 'Application',
+            width: proportional(1),
+            renderCell: (application) => (
+                <HStack gap={3} align="center">
+                    <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
+                            {application.name}
+                        </Link>
+                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
+                    </VStack>
+                </HStack>
+            ),
+        },
+    ];
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -58,12 +82,16 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
                         isLoading={isLoading}
                         error={error}
                     />
+                ) : isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                    <Banner status="error" title="Failed to load applications." />
                 ) : (
-                    <Applications
-                        organization={organization}
-                        applications={applications}
-                        isLoading={isLoading}
-                        error={error}
+                    <Table
+                        columns={columns}
+                        data={applications}
+                        density="compact"
+                        emptyState={<EmptyState title="No results." isCompact />}
+                        hasHover
+                        idKey="id"
                     />
                 )}
             </PageContainer>

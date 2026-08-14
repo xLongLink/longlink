@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserOrganizationMembership, UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -53,7 +53,7 @@ export function useSignOut() {
     const queryClient = useQueryClient();
 
     return async () => {
-        await fetchApiVoid(platformApiPath('/auth/logout'), { method: 'POST' });
+        await requestApi(platformApiPath('/auth/logout'), { method: 'POST' });
         queryClient.clear();
         window.location.assign('/organizations');
     };

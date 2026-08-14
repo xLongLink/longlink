@@ -9,7 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
-import { fetchApiVoid } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
@@ -25,8 +25,9 @@ export default function AdminStorage() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
-        mutationFn: (storageId: string) =>
-            fetchApiVoid(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' }),
+        mutationFn: async (storageId: string) => {
+            await requestApi(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
             toast({ body: 'Storage deleted' });
