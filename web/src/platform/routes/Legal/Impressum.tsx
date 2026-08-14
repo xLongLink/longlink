@@ -4,9 +4,9 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
+import { Legal } from '@/layout/Legal';
 import { publicSeoMeta } from '@/lib/seo';
-import { LEGAL_GROUPS } from '@/platform/navigation';
-import { ArticlePageRenderer } from '@/platform/routes/Articles';
+import { Article } from '@/layout/Article';
 
 export const metadata = {
     path: '/impressum',
@@ -36,7 +36,11 @@ export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the legal notice and company information. */
 export default function Impressum() {
-    return <ArticlePageRenderer groups={LEGAL_GROUPS} page={page} />;
+    return (
+        <Legal>
+            <Article page={page} />
+        </Legal>
+    );
 }
 
 /** Renders the legal notice and company information. */

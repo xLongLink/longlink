@@ -5,7 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 /** Renders public page chrome around page-specific content. */
-export function PublicPage({ children }: { children: ReactNode }) {
+export function Page({ children }: { children: ReactNode }) {
     return (
         <Stack minHeight="100vh" gap={0}>
             <DevelopmentNotice />

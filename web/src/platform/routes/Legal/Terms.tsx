@@ -5,9 +5,9 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { ArticlePage } from '@/lib/articles';
+import { Legal } from '@/layout/Legal';
 import { publicSeoMeta } from '@/lib/seo';
-import { LEGAL_GROUPS } from '@/platform/navigation';
-import { ArticlePageRenderer } from '@/platform/routes/Articles';
+import { Article } from '@/layout/Article';
 
 export const metadata = {
     path: '/terms',
@@ -109,7 +109,11 @@ export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the terms of service. */
 export default function Terms() {
-    return <ArticlePageRenderer groups={LEGAL_GROUPS} page={page} />;
+    return (
+        <Legal>
+            <Article page={page} />
+        </Legal>
+    );
 }
 
 /** Renders the terms of service content. */

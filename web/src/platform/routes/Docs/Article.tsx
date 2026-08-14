@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 import type { ArticlePage } from '@/lib/articles';
-import { ArticlePageRenderer } from '@/platform/routes/Articles';
-import { DOC_GROUPS, DOC_PAGE_PATHS } from '@/platform/navigation';
+import { Article } from '@/layout/Article';
+import { Documentation, DOCUMENTATION_PAGES } from '@/layout/Documentation';
 
 type DocMetadata = Omit<ArticlePage, 'breadcrumbs' | 'content' | 'icon' | 'metadata'> & ArticlePage['metadata'];
 
 /** Renders route-local documentation content inside the shared article layout. */
 export function DocsArticle({ children, metadata }: { children: ReactNode; metadata: DocMetadata }) {
-    const pageIndex = DOC_PAGE_PATHS.findIndex((page) => page.path === metadata.path);
+    const pageIndex = DOCUMENTATION_PAGES.findIndex((page) => page.path === metadata.path);
     const breadcrumbs =
         metadata.path === '/docs'
             ? [{ title: 'Documentation', path: '/docs' }]
@@ -27,11 +27,12 @@ export function DocsArticle({ children, metadata }: { children: ReactNode; metad
                 ];
 
     return (
-        <ArticlePageRenderer
-            groups={DOC_GROUPS}
-            nextPage={DOC_PAGE_PATHS[pageIndex + 1]}
-            page={{ ...metadata, breadcrumbs, content: children, metadata }}
-            previousPage={DOC_PAGE_PATHS[pageIndex - 1]}
-        />
+        <Documentation>
+            <Article
+                nextPage={DOCUMENTATION_PAGES[pageIndex + 1]}
+                page={{ ...metadata, breadcrumbs, content: children, metadata }}
+                previousPage={DOCUMENTATION_PAGES[pageIndex - 1]}
+            />
+        </Documentation>
     );
 }

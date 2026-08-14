@@ -24,8 +24,8 @@ import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { publicSeoMeta } from '@/lib/seo';
-import { pageReferenceDocs } from '@/platform/navigation';
 import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { DOCUMENTATION_REFERENCE_PAGES } from '@/layout/Documentation';
 
 type ComponentSummary = {
     name: string;
@@ -70,9 +70,9 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
 
 const componentCategories: ComponentCategory[] = componentCategoryConfigurations.map((category) => ({
     ...category,
-    components: pageReferenceDocs
-        .filter((component) => component.category === category.title)
-        .map(({ path, title: name }) => ({ name, path })),
+    components: DOCUMENTATION_REFERENCE_PAGES.filter((component) => component.category === category.title).map(
+        ({ path, title: name }) => ({ name, path })
+    ),
 }));
 
 const noop = () => undefined;

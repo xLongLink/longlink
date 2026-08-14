@@ -7,9 +7,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { Page } from '@/layout/Page';
 import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
-import { PublicPage } from '@/layout/PublicPage';
 
 export const metadata = {
     path: '/',
@@ -181,7 +181,7 @@ export default function Home() {
     }, []);
 
     return (
-        <PublicPage>
+        <Page>
             <main className="relative -mt-21 flex min-h-screen w-full overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <Globe />
@@ -431,6 +431,6 @@ export default function Home() {
                     </Grid>
                 </Stack>
             </Section>
-        </PublicPage>
+        </Page>
     );
 }
