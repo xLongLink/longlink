@@ -203,16 +203,22 @@ async def members(session: AsyncSession, organization_id: UUID, include_deleted:
 async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres | None = None) -> None:
     """Project Platform-owned users and memberships into one Organization database."""
 
-    # Load only the Organization and database assignment needed for user projection.
-    result = await session.execute(
-        select(Organization, DatabaseRegistry)
-        .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-        .where(col(Organization.id) == organization_id)
-    )
-    assigned = result.tuples().one_or_none()
-    if assigned is None:
-        return
-    organization, database = assigned
+    # Load the database assignment only when constructing a new client.
+    if db is None:
+        result = await session.execute(
+            select(Organization, DatabaseRegistry)
+            .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
+            .where(col(Organization.id) == organization_id)
+        )
+        assigned = result.tuples().one_or_none()
+        if assigned is None:
+            return
+        organization, database = assigned
+    else:
+        result = await session.scalars(select(Organization).where(Organization.id == organization_id))
+        organization = result.one_or_none()
+        if organization is None:
+            return
     if organization.deleted_at is not None:
         return
     if organization.status != Status.running and db is None:

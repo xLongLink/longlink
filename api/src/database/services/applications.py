@@ -80,12 +80,12 @@ async def create(
     compute_id = await session.scalar(select(col(Organization.compute_id)).where(col(Organization.id) == organization_id))
     if compute_id is None:
         raise NotFoundError("Organization not found")
-    compute = await session.get(ComputeRegistry, compute_id, with_for_update=True)
+    compute_status = await session.scalar(select(ComputeRegistry.status).where(ComputeRegistry.id == compute_id).with_for_update())
     organization_result = await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
     organization = organization_result.one_or_none()
-    if compute is None or organization is None:
+    if compute_status is None or organization is None:
         raise NotFoundError("Organization not found")
-    if compute.status != Status.running:
+    if compute_status != Status.running:
         raise ConflictError("Compute registry is not ready")
     if organization.deleted_at is not None or organization.status != Status.running:
         raise ConflictError("Organization is not ready")

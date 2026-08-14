@@ -14,7 +14,7 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/lib/articles';
-import { documentationPages } from '@/platform/docs/pages';
+import { documentationPages } from '@/platform/pages';
 import { pageReferenceDocPages } from '@/platform/docs/sdk/pages/index';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
