@@ -13,8 +13,8 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
+import { usePaginate } from '@/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const statusVariants = {
@@ -89,7 +89,7 @@ export default function AdminApplications() {
         refetchInterval: 5000,
         parse: (value) => zApplicationResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(applications);
+    const { pageItems, pagination } = usePaginate(applications);
 
     return (
         <VStack gap={6} width="100%">

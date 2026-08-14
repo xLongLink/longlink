@@ -7,8 +7,8 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
+import { usePaginate } from '@/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin operations page. */
@@ -75,7 +75,7 @@ export default function AdminOperations() {
         refetchInterval: 5000,
         parse: (value) => zOperationResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(operations);
+    const { pageItems, pagination } = usePaginate(operations);
 
     return (
         <VStack gap={6} width="100%">

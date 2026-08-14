@@ -14,9 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
 import { storagesQueryKey } from '@/lib/query-keys';
+import { usePaginate } from '@/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateStorage from '@/components/dialogs/CreateStorage';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -39,7 +39,7 @@ export default function AdminStorage() {
     } = useApiQuery<StorageRegistryResponse[]>(platformApiPath('/storages'), {
         parse: (value) => zStorageRegistryResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(storages);
+    const { pageItems, pagination } = usePaginate(storages);
     const deleteDialog = useDeleteDialog({
         title: 'Delete storage',
         mutation: deleteStorage,

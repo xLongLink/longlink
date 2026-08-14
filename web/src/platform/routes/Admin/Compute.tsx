@@ -13,10 +13,10 @@ import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
+import { usePaginate } from '@/hooks/pagination';
 import { computesQueryKey } from '@/lib/query-keys';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -40,7 +40,7 @@ export default function AdminCompute() {
         refetchInterval: 5000,
         parse: (value) => zComputeRegistryResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(computes);
+    const { pageItems, pagination } = usePaginate(computes);
     const deleteDialog = useDeleteDialog({
         title: 'Delete compute',
         mutation: deleteCompute,

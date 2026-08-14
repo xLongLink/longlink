@@ -3,8 +3,8 @@ import { paginateData, useTablePagination } from '@astryxdesign/core/Table';
 
 const PAGE_SIZE = 25;
 
-/** Provides consistent client-side pagination for Platform admin tables. */
-export function useAdminPagination<T extends Record<string, unknown>>(items: T[]) {
+/** Provides client-side pagination for tables. */
+export function usePaginate<T extends Record<string, unknown>>(items: T[]) {
     const [page, setPage] = useState(1);
     const currentPage = Math.min(page, Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
 

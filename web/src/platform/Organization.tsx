@@ -8,7 +8,7 @@ import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
-import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
+import OrganizationSettings, { type SettingsRouteSection } from '@/components/settings/Settings';
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {

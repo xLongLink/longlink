@@ -28,8 +28,8 @@ import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
 import { useUpdateOrganization } from '@/hooks/use-organization';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import People from './People';
-import ApplicationSettings from './ApplicationSettings';
+import People from '@/components/settings/People';
+import ApplicationSettings from '@/components/settings/ApplicationSettings';
 
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';

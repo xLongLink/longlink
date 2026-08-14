@@ -12,11 +12,11 @@ import { fetchApiVoid } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { useDeleteDialog } from '@/lib/utils';
+import { usePaginate } from '@/hooks/pagination';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -39,7 +39,7 @@ export default function AdminDatabase() {
     } = useApiQuery<DatabaseRegistryResponse[]>(platformApiPath('/databases'), {
         parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(databases);
+    const { pageItems, pagination } = usePaginate(databases);
     const deleteDialog = useDeleteDialog({
         title: 'Delete database',
         mutation: deleteDatabase,

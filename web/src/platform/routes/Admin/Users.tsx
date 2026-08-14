@@ -11,8 +11,8 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
+import { usePaginate } from '@/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin users page. */
@@ -25,7 +25,7 @@ export default function AdminUsers() {
     } = useApiQuery<UserSummary[]>(platformApiPath('/users'), {
         parse: (value) => zUserSummary.array().parse(value),
     });
-    const { pageItems, pagination } = useAdminPagination(users);
+    const { pageItems, pagination } = usePaginate(users);
     const columns: TableColumn<UserSummary>[] = [
         {
             key: 'user',

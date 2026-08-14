@@ -4,8 +4,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CodeTabs } from '@/components/CodeTabs';
 import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
 

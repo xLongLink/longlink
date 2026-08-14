@@ -4,8 +4,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
 
 export const metadata = {
@@ -80,7 +80,8 @@ function Content() {
                                     <Text weight="semibold">Production</Text>
                                 </Stack>
                                 <Text type="supporting">
-                                    <Code>s3</Code> backend using application and shared prefixes in one Organization bucket.
+                                    <Code>s3</Code> backend using application and shared prefixes in one Organization
+                                    bucket.
                                 </Text>
                             </Stack>
                         </TableCell>
