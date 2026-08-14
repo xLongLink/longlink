@@ -1,11 +1,6 @@
-import { Auth } from '@/components/Auth';
 import Organization from '@/platform/Organization';
 
-/** Protects and renders organization settings. */
+/** Renders organization settings. */
 export default function OrganizationSettingsRoute() {
-    return (
-        <Auth>
-            <Organization settingsSection="organization" />
-        </Auth>
-    );
+    return <Organization settingsSection="organization" />;
 }

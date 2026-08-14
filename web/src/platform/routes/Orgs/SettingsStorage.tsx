@@ -1,11 +1,6 @@
-import { Auth } from '@/components/Auth';
 import Organization from '@/platform/Organization';
 
-/** Protects and renders organization storage settings. */
+/** Renders organization storage settings. */
 export default function OrganizationSettingsStorageRoute() {
-    return (
-        <Auth>
-            <Organization settingsSection="storage" />
-        </Auth>
-    );
+    return <Organization settingsSection="storage" />;
 }
