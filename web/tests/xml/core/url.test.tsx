@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/core/url';
+import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 
-describe('resolveUrl', () => {
+describe('resolveNavigationUrl', () => {
     it('joins base and relative paths', () => {
-        expect(resolveUrl('/api', '/items')).toBe('/api/items');
-        expect(resolveUrl('/api/', 'items')).toBe('/api/items');
-        expect(resolveUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
+        expect(resolveNavigationUrl('/api', '/items')).toBe('/api/items');
+        expect(resolveNavigationUrl('/api/', 'items')).toBe('/api/items');
+        expect(resolveNavigationUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
             'https://apps.example/api/applications/123/proxy/items'
         );
     });
 
     it('resolves dot segments', () => {
-        expect(resolveUrl('/api', '../items')).toBe('/api/items');
-        expect(resolveUrl('/api/applications/123/proxy/', '../../me')).toBe('/api/applications/123/proxy/me');
+        expect(resolveNavigationUrl('/api', '../items')).toBe('/api/items');
+        expect(resolveNavigationUrl('/api/applications/123/proxy/', '../../me')).toBe('/api/applications/123/proxy/me');
     });
 });
 

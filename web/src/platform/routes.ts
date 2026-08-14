@@ -79,7 +79,7 @@ export default [
         ]),
     ]),
     layout('./routes/Orgs/Layout.tsx', [
-        route('orgs/:organization', './routes/Orgs/Index.tsx'),
+        route('orgs/:organization', './routes/Orgs/Organization.tsx'),
         route('orgs/:organization/settings/:settingsSection?', './routes/Orgs/Settings.tsx'),
         route('orgs/:organization/apps/:application/*', './routes/Orgs/Application.tsx'),
     ]),

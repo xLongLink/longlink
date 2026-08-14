@@ -3,13 +3,10 @@ import { hasProtocol, parsePath, parseURL } from 'ufo';
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
-/** Resolves a request URL against a base URL string. */
-export function resolveUrl(baseUrl: string, path: string): string {
+/** Resolves an app-relative URL against a base URL string. */
+function resolveUrl(baseUrl: string, path: string): string {
     // Preserve the base URL for empty paths.
     if (!path) return baseUrl;
-
-    // Keep already absolute or protocol-relative paths unchanged.
-    if (hasProtocol(path) || path.startsWith('//')) return path;
 
     const base = parseURL(baseUrl);
     const parsedPath = parsePath(path);

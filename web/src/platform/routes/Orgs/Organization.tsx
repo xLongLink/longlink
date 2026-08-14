@@ -10,11 +10,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { AppWindow, Settings2, Wrench } from 'lucide-react';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import NotFound from '@/platform/NotFound';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 import OrganizationSettings, { type SettingsRouteSection } from '@/components/settings/Settings';
-import NotFound from './NotFound';
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {

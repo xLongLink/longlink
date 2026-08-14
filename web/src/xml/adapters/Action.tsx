@@ -143,11 +143,6 @@ export async function executeAction(
 
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
-    // Preserve prebuilt form data payloads.
-    if (typeof FormData !== 'undefined' && value instanceof FormData) {
-        return value;
-    }
-
     // Require object-shaped form expressions.
     if (!isRecord(value)) {
         throw new Error('form must evaluate to an object');

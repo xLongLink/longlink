@@ -100,35 +100,12 @@ export const DIVIDER_VARIANTS = ['subtle', 'strong'] as const;
 export const FILE_INPUT_MODES = ['dropzone', 'input'] as const;
 export const FORM_DIRECTIONS = ['vertical', 'horizontal', 'horizontal-labels'] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
-export const ALIGNS = ['start', 'center', 'end'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const HEADING_TYPES = ['display-1', 'display-2', 'display-3'] as const;
-export const TRUNCATE_TOOLTIPS = [true, false, 'above', 'below', 'start', 'end'] as const;
-export const WORD_BREAKS = ['break-word', 'break-all'] as const;
-export const TEXT_WRAPS = ['wrap', 'nowrap', 'balance', 'pretty'] as const;
-export const TEXT_COLORS = ['primary', 'secondary', 'disabled', 'placeholder', 'accent', 'inherit'] as const;
 export const SLIDER_VALUE_DISPLAYS = ['tooltip', 'text', 'none'] as const;
 export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'around', 'evenly'] as const;
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;
 export const SWITCH_LABEL_POSITIONS = ['start', 'end'] as const;
 export const SWITCH_LABEL_SPACINGS = ['hug', 'spread'] as const;
-export const TABLE_DENSITIES = ['compact', 'balanced', 'spacious'] as const;
-export const TABLE_DIVIDERS = ['rows', 'columns', 'grid', 'none'] as const;
-export const TABLE_VERTICAL_ALIGNS = ['middle', 'top', 'bottom'] as const;
-export const TABLE_TEXT_OVERFLOWS = ['wrap', 'truncate'] as const;
 export const TAB_LAYOUTS = ['hug', 'fill'] as const;
-export const TYPOGRAPHIES = [
-    'body',
-    'large',
-    'label',
-    'supporting',
-    'code',
-    'display-1',
-    'display-2',
-    'display-3',
-    'inherit',
-] as const;
-export const FONT_WEIGHTS = ['normal', 'medium', 'semibold', 'bold'] as const;
-export const TEXT_DISPLAYS = ['inline', 'block'] as const;
 export const TEXT_ELEMENTS = ['span', 'p', 'div', 'label', 'h1', 'h2', 'h3'] as const;
-export const TEXT_SIZES = ['4xs', '3xs', '2xs', 'xsm', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'] as const;

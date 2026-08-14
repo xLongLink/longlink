@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 import NotFound from '@/platform/NotFound';
-import Organization from '@/platform/Organization';
+import Organization from './Organization';
 
 /** Renders one validated organization settings section. */
 export default function OrganizationSettingsRoute() {

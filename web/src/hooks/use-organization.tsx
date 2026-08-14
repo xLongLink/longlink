@@ -11,12 +11,8 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
 import { ApiError, apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
+import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
-import {
-    zApplicationResponse,
-    zOrganizationDetails,
-    zOrganizationSummary,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
@@ -91,13 +87,11 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return zApplicationResponse.parse(
-                await fetchApiJson(platformApiPath(`/organizations/${organizationId}/applications`), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, image, description, icon, envs }),
-                })
-            );
+            await requestApi(platformApiPath(`/organizations/${organizationId}/applications`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, image, description, icon, envs }),
+            });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
@@ -143,14 +137,15 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            zApplicationResponse.parse(
-                await fetchApiJson(platformApiPath(`/applications/${applicationId}`), {
-                    method: 'DELETE',
-                })
-            );
+            await requestApi(platformApiPath(`/applications/${applicationId}`), { method: 'DELETE' });
+        },
+        onSuccess: () => {
+            if (organizationPath === null) {
+                return;
+            }
 
-            await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
-            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
+            queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
         },
     });
 }
