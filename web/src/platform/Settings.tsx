@@ -11,14 +11,20 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Settings2, UserRound } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
+import { useUserProfile } from '@/hooks/use-user';
+import { platformApiPath } from '@/lib/platform-api';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
+import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 /** Renders the authenticated settings page. */
@@ -26,7 +32,22 @@ export default function Settings() {
     const toast = useToast();
     const location = useLocation();
     const { user, memberships, isLoading: isProfileLoading, isOrganizationsLoading } = useUserProfile();
-    const { mutateAsync: updateUser } = useUpdateUser();
+    const queryClient = useQueryClient();
+    const { mutateAsync: updateUser } = useMutation({
+        mutationFn: (payload: UserUpdate) =>
+            fetchApiJson(
+                platformApiPath('/me'),
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                },
+                (value) => zUserSummary.parse(value)
+            ),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(userProfileQueryKey, updatedUser);
+        },
+    });
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);

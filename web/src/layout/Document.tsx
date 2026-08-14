@@ -5,7 +5,7 @@ import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.
 /** Renders the common LongLink HTML document shell. */
 export function Document({ children }: { children: ReactNode }) {
     return (
-        <html lang="en" data-astryx-theme="stone">
+        <html lang="en">
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />

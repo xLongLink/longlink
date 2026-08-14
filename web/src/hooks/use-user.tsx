@@ -1,10 +1,9 @@
 import { createContext, useContext } from 'react';
-import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { UserOrganizationMembership, UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import type { UserOrganizationMembership, UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiVoid } from '@/lib/api';
 import { useApiQuery } from '@/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
-import { userProfileQueryKey } from '@/lib/query-keys';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
@@ -58,25 +57,4 @@ export function useSignOut() {
         queryClient.clear();
         window.location.assign('/organizations');
     };
-}
-
-/** Updates the current user profile. */
-export function useUpdateUser() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (payload: UserUpdate) =>
-            fetchApiJson(
-                platformApiPath('/me'),
-                {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                },
-                (value) => zUserSummary.parse(value)
-            ),
-        onSuccess: (user) => {
-            queryClient.setQueryData(userProfileQueryKey, user);
-        },
-    });
 }
