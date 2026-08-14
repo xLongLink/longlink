@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import { z } from 'zod';
 import startCase from 'lodash/startCase';
 import { Card } from '@astryxdesign/core/Card';
@@ -9,20 +8,15 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
+import type { TopLayoutTab } from '@/layout/TopLayout';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import { fetchApiText } from '@/lib/api';
+import { RenderXML } from '@/xml/runtime';
 import NotFound from '@/platform/NotFound';
 import XmlLayout from '@/xml/runtime/layout';
 import { useApiQuery } from '@/hooks/use-api';
 import { getIconComponent } from '@/lib/icons';
-import {
-    createContext as createXmlContext,
-    parseXML,
-    RenderXML,
-    resolveRequestUrl,
-    type ASTNode,
-    type XmlRuntime,
-} from '@/xml';
+import { createContext as createXmlContext, parseXML, resolveRequestUrl, type ASTNode, type XmlRuntime } from '@/xml';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -41,15 +35,12 @@ type ViewProps = {
 };
 
 type ErrorStateProps = {
-    actionHref: string;
-    actionLabel: string;
     isAlert?: boolean;
     message: string;
     title: string;
 };
 
 type PageState = {
-    cacheKey: string;
     ast: ASTNode[];
     error: string | null;
     loading: boolean;
@@ -60,16 +51,16 @@ const emptyRouteParams: Record<string, string> = {};
 
 /** Returns true when a page route contains dynamic path segments. */
 function pageRouteIsDynamic(route: string): boolean {
-    return route.split('/').some((segment) => segment.startsWith(':'));
+    return /(?:^|\/):/.test(route);
 }
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
-    const routes: Array<RouteObject & { page: RuntimePage }> = (pages ?? []).map((page) => ({
-        path: page.route || '/',
-        page,
-    }));
-    const [match] = matchRoutes(routes, `/${path}`) ?? [];
+    const [match] =
+        matchRoutes(
+            (pages ?? []).map((page): RouteObject & { page: RuntimePage } => ({ path: page.route || '/', page })),
+            `/${path}`
+        ) ?? [];
 
     // Stop when no page route matches the path.
     if (!match) return null;
@@ -99,26 +90,10 @@ function resolveApplicationHref(route: string, organization?: string, applicatio
     return `${basePath}/${route}`;
 }
 
-/** Creates the cached state holder for one browser-rendered page. */
-function createPageState(key: string, params: Record<string, string>, navigationBaseUrl: string): PageState {
-    const runtimeContext = createXmlContext();
-
-    runtimeContext.services.navigationBaseUrl = navigationBaseUrl;
-    runtimeContext.scope.bindings.params = params;
-
-    return {
-        cacheKey: key,
-        ast: [],
-        error: null,
-        loading: true,
-        runtimeContext,
-    };
-}
-
 /**
  * Renders registered XML pages for Platform and Application routes.
  */
-export default function View({ applicationStatus, isApplicationLoading = false, pages }: ViewProps) {
+export default function View({ applicationStatus, isApplicationLoading, pages }: ViewProps) {
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
@@ -142,13 +117,11 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
-    const activePageStateKey = activePage ? `${activePage.path}\u0000${routePath}\u0000${activePage.tab}` : '';
+    const activePageStateKey = activePage
+        ? `${pages}\u0000${activePage.path}\u0000${routePath}\u0000${activePage.tab}`
+        : '';
     const activePageState = pageStates[activePageStateKey];
-    const activePageStateIsCurrent = activePageState?.cacheKey === pages;
-    const fallbackActionProps = {
-        actionHref: organization ? `/orgs/${organization}` : '/organizations',
-        actionLabel: organization ? 'Back to organization' : 'Back to organizations',
-    };
+    const activePageTab = activePage?.tab;
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -163,16 +136,8 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         }
     }, [application, firstTabPage, navigate, organization, routePath]);
 
-    const tabs = useMemo(() => {
-        const tabGroups = new Map<
-            string,
-            {
-                active: boolean;
-                href: string;
-                icon?: LucideIcon;
-                label: string;
-            }
-        >();
+    const { activeTab, tabs } = useMemo(() => {
+        const tabGroups = new Map<string, TopLayoutTab>();
 
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
@@ -190,20 +155,14 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
             // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
             tabGroups.set(page.tab, {
-                active: page.tab === activePage?.tab,
                 href,
                 icon,
                 label,
             });
         }
 
-        return Object.fromEntries(
-            Array.from(tabGroups.values()).map((tab) => [
-                tab.label,
-                { active: tab.active, href: tab.href, icon: tab.icon },
-            ])
-        );
-    }, [activePage?.tab, application, organization, registeredPages]);
+        return { activeTab: activePageTab ? tabGroups.get(activePageTab)?.href : '', tabs: [...tabGroups.values()] };
+    }, [activePageTab, application, organization, registeredPages]);
 
     /* Load each page once for the active route instance. */
     useEffect(() => {
@@ -212,25 +171,25 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
             return;
         }
 
-        const pageKey = `${pages}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
         const inFlightPageKeys = inFlightPageKeysRef.current;
 
         // Reuse completed page state for matching route instances.
-        if (existingPageState?.cacheKey === pages && !existingPageState.loading) {
+        if (existingPageState && !existingPageState.loading) {
             return;
         }
 
         // Avoid duplicate requests for the same page state.
-        if (existingPageState?.cacheKey === pages && inFlightPageKeys.has(pageKey)) {
+        if (inFlightPageKeys.has(activePageStateKey)) {
             return;
         }
 
-        const loadingPageState = createPageState(
-            pages,
-            activeRouteParams,
-            resolveApplicationHref('', organization, application)
-        );
+        const runtimeContext = createXmlContext();
+
+        runtimeContext.services.navigationBaseUrl = resolveApplicationHref('', organization, application);
+        runtimeContext.scope.bindings.params = activeRouteParams;
+
+        const loadingPageState: PageState = { ast: [], error: null, loading: true, runtimeContext };
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -257,7 +216,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
         const controller = new AbortController();
 
-        inFlightPageKeys.add(pageKey);
+        inFlightPageKeys.add(activePageStateKey);
         setPageStates((current) => {
             const next = { ...current, [activePageStateKey]: loadingPageState };
 
@@ -276,17 +235,10 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                     const ast = parseXML(content);
 
                     setPageStates((current) => {
-                        const currentPageState = current[activePageStateKey];
-
-                        // Keep stale responses from replacing newer page state.
-                        if (currentPageState?.cacheKey !== pages) {
-                            return current;
-                        }
-
                         const next = {
                             ...current,
                             [activePageStateKey]: {
-                                ...currentPageState,
+                                ...current[activePageStateKey],
                                 ast,
                                 error: null,
                                 loading: false,
@@ -306,17 +258,10 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 }
 
                 setPageStates((current) => {
-                    const currentPageState = current[activePageStateKey];
-
-                    // Keep stale failures from replacing newer page state.
-                    if (currentPageState?.cacheKey !== pages) {
-                        return current;
-                    }
-
                     const next = {
                         ...current,
                         [activePageStateKey]: {
-                            ...currentPageState,
+                            ...current[activePageStateKey],
                             error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
                             loading: false,
                         },
@@ -328,12 +273,12 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
                 });
             })
             .finally(() => {
-                inFlightPageKeys.delete(pageKey);
+                inFlightPageKeys.delete(activePageStateKey);
             });
 
         return () => {
             controller.abort();
-            inFlightPageKeys.delete(pageKey);
+            inFlightPageKeys.delete(activePageStateKey);
         };
     }, [
         activePage,
@@ -365,7 +310,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         // Keep failed and deleting applications out of the runtime while surfacing their lifecycle state.
         applicationState = (
             <ErrorState
-                {...fallbackActionProps}
                 isAlert={applicationStatus === 'failed'}
                 message={
                     applicationStatus === 'failed'
@@ -381,7 +325,6 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
         // Surface page manifest loading failures in the shell.
         applicationState = (
             <ErrorState
-                {...fallbackActionProps}
                 message={error.message || 'The application definition could not be loaded.'}
                 title="Unable to load this application"
             />
@@ -390,7 +333,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     if (applicationState) {
         return (
-            <XmlLayout tabs={tabs}>
+            <XmlLayout activeTab={activeTab} tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     {applicationState}
                 </Center>
@@ -405,7 +348,7 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
 
     const renderedPagePanels = Object.entries(pageStates).map(([pageStateKey, pageState]) => {
         // Render only valid page panels from the current cache.
-        if (!pageState.ast.length || pageState.cacheKey !== pages) {
+        if (!pageState.ast.length || !pageStateKey.startsWith(`${pages}\u0000`)) {
             return null;
         }
 
@@ -422,41 +365,34 @@ export default function View({ applicationStatus, isApplicationLoading = false, 
     if (!activePage) {
         activeFallback = (
             <ErrorState
-                {...fallbackActionProps}
                 message="The application did not expose any pages to render."
                 title="Unexpected application response"
             />
         );
-    } else if (activePageStateIsCurrent && activePageState?.error) {
-        activeFallback = (
-            <ErrorState {...fallbackActionProps} message={activePageState.error} title="Unable to load this page" />
-        );
-    } else if (!activePageStateIsCurrent || activePageState.loading) {
+    } else if (activePageState?.error) {
+        activeFallback = <ErrorState message={activePageState.error} title="Unable to load this page" />;
+    } else if (!activePageState || activePageState.loading) {
         activeFallback = <Spinner label="Loading" />;
-    } else if (!activePageState.ast.length) {
-        activeFallback = (
-            <ErrorState
-                {...fallbackActionProps}
-                message="The application returned an empty response."
-                title="Unexpected application response"
-            />
-        );
     }
 
     return (
-        <XmlLayout tabs={tabs}>
+        <XmlLayout activeTab={activeTab} tabs={tabs}>
             {renderedPagePanels}
-            {activeFallback ? (
+            {activeFallback && (
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     {activeFallback}
                 </Center>
-            ) : null}
+            )}
         </XmlLayout>
     );
 }
 
 /** Renders a centered in-shell application state message. */
-function ErrorState({ actionHref, actionLabel, isAlert = true, message, title }: ErrorStateProps) {
+function ErrorState({ isAlert = true, message, title }: ErrorStateProps) {
+    const { organization } = useParams();
+    const actionHref = organization ? `/orgs/${organization}` : '/organizations';
+    const actionLabel = organization ? 'Back to organization' : 'Back to organizations';
+
     return (
         <Card maxWidth={576} padding={6} width="100%">
             <EmptyState

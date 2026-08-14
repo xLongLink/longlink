@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { ExternalLink } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
+import { normalizePathname } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { ProfileMenu } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { normalizePathname } from '@/lib/paths';
 import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
 
 type PlatformLayoutProps = {
