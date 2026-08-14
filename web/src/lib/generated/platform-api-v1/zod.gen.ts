@@ -3,18 +3,6 @@
 import * as z from 'zod';
 
 /**
- * ApplicationOrganizationResponse
- *
- * Represent the compact Organization associated with an Application.
- */
-export const zApplicationOrganizationResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string()
-});
-
-/**
  * ApplicationRelease
  *
  * Validate a requested Application release.
@@ -222,6 +210,18 @@ export const zOrganizationCreate = z.object({
 });
 
 /**
+ * OrganizationIdentity
+ *
+ * Represent a compact Organization in nested API responses.
+ */
+export const zOrganizationIdentity = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    slug: z.string(),
+    avatar: z.string()
+});
+
+/**
  * OrganizationRoles
  *
  * Supported organization membership roles.
@@ -273,6 +273,18 @@ export const zOrganizationMemberUpdate = z.object({
 export const zOrganizationStorageUsageResponse = z.object({
     bucket_name: z.string(),
     space_used: z.int().gte(0)
+});
+
+/**
+ * OrganizationSummary
+ *
+ * Represent one organization in admin list responses.
+ */
+export const zOrganizationSummary = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    slug: z.string(),
+    avatar: z.string()
 });
 
 /**
@@ -344,7 +356,7 @@ export const zStatus = z.enum([
  */
 export const zApplicationResponse = z.object({
     id: z.uuid(),
-    organization: zApplicationOrganizationResponse,
+    organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
     icon: zIcon.nullable(),
@@ -379,25 +391,6 @@ export const zOrganizationApplicationSummary = z.object({
     icon: zIcon.nullish(),
     description: z.string().nullish(),
     status: zStatus
-});
-
-/**
- * OrganizationSummary
- *
- * Represent one organization in admin list responses.
- */
-export const zOrganizationSummary = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string(),
-    compute_id: z.uuid(),
-    storage_id: z.uuid(),
-    database_id: z.uuid(),
-    status: zStatus,
-    created_at: z.iso.datetime(),
-    updated_at: z.iso.datetime(),
-    deleted_at: z.iso.datetime().nullable()
 });
 
 /**
@@ -467,24 +460,12 @@ export const zOrganizationDetails = z.object({
 });
 
 /**
- * UserOrganizationSummary
- *
- * Represent a compact Organization in current-user membership responses.
- */
-export const zUserOrganizationSummary = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string()
-});
-
-/**
  * UserOrganizationMembership
  *
  * Represent one current-user Organization membership.
  */
 export const zUserOrganizationMembership = z.object({
-    organization: zUserOrganizationSummary,
+    organization: zOrganizationIdentity,
     role: zOrganizationRoles
 });
 
@@ -818,8 +799,8 @@ export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvita
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchBody = zOrganizationMemberUpdate;
 
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchPath = z.object({
-    organization_id: z.uuid(),
-    member_id: z.uuid()
+    member_id: z.uuid(),
+    organization_id: z.uuid()
 });
 
 /**

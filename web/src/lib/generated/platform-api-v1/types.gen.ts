@@ -32,30 +32,6 @@ export type ApplicationCreate = {
 };
 
 /**
- * ApplicationOrganizationResponse
- *
- * Represent the compact Organization associated with an Application.
- */
-export type ApplicationOrganizationResponse = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Slug
-     */
-    slug: string;
-    /**
-     * Avatar
-     */
-    avatar: string;
-};
-
-/**
  * ApplicationRelease
  *
  * Validate a requested Application release.
@@ -81,7 +57,7 @@ export type ApplicationResponse = {
      * Id
      */
     id: string;
-    organization: ApplicationOrganizationResponse;
+    organization: OrganizationIdentity;
     /**
      * Name
      */
@@ -401,6 +377,30 @@ export type OrganizationDetails = {
 };
 
 /**
+ * OrganizationIdentity
+ *
+ * Represent a compact Organization in nested API responses.
+ */
+export type OrganizationIdentity = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Avatar
+     */
+    avatar: string;
+};
+
+/**
  * OrganizationInvitationCreate
  *
  * Validate organization invitation payloads.
@@ -498,31 +498,6 @@ export type OrganizationSummary = {
      * Avatar
      */
     avatar: string;
-    /**
-     * Compute Id
-     */
-    compute_id: string;
-    /**
-     * Storage Id
-     */
-    storage_id: string;
-    /**
-     * Database Id
-     */
-    database_id: string;
-    status: Status;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Updated At
-     */
-    updated_at: string;
-    /**
-     * Deleted At
-     */
-    deleted_at: string | null;
 };
 
 /**
@@ -689,32 +664,8 @@ export type UserIdentity = {
  * Represent one current-user Organization membership.
  */
 export type UserOrganizationMembership = {
-    organization: UserOrganizationSummary;
+    organization: OrganizationIdentity;
     role: OrganizationRoles;
-};
-
-/**
- * UserOrganizationSummary
- *
- * Represent a compact Organization in current-user membership responses.
- */
-export type UserOrganizationSummary = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Slug
-     */
-    slug: string;
-    /**
-     * Avatar
-     */
-    avatar: string;
 };
 
 /**
@@ -1776,13 +1727,13 @@ export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMembe
     body: OrganizationMemberUpdate;
     path: {
         /**
-         * Organization Id
-         */
-        organization_id: string;
-        /**
          * Member Id
          */
         member_id: string;
+        /**
+         * Organization Id
+         */
+        organization_id: string;
     };
     query?: never;
     url: '/api/v1/organizations/{organization_id}/members/{member_id}';

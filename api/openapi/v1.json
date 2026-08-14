@@ -1870,16 +1870,6 @@
         "operationId": "update_organization_member_api_v1_organizations__organization_id__members__member_id__patch",
         "parameters": [
           {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
             "name": "member_id",
             "in": "path",
             "required": true,
@@ -1887,6 +1877,16 @@
               "type": "string",
               "format": "uuid",
               "title": "Member Id"
+            }
+          },
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
             }
           },
           {
