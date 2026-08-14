@@ -157,13 +157,13 @@ export default function Settings() {
                         <SideNav className="h-auto w-full">
                             <SideNavSection title="Settings" isHeaderHidden>
                                 <SideNavItem
-                                    href={`${location.pathname}${location.search}#account`}
+                                    href="#account"
                                     icon={<UserRound aria-hidden="true" size={16} />}
                                     isSelected={section === 'account'}
                                     label="Account"
                                 />
                                 <SideNavItem
-                                    href={`${location.pathname}${location.search}#organizations`}
+                                    href="#organizations"
                                     icon={<Building2 aria-hidden="true" size={16} />}
                                     isSelected={section === 'organizations'}
                                     label="Organizations"

@@ -92,10 +92,9 @@ async def get_organization_database_usage(
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # Resolve the Organization's immutable database assignment.
+    # Load the Organization's immutable database assignment.
     registry = await database.get(session, membership.organization.database_id)
-    if registry is None:
-        raise RuntimeError("Organization database registry is missing")
+    assert registry is not None
 
     # Inspect the exact Organization database and return its physical size when available.
     try:
@@ -122,10 +121,9 @@ async def get_organization_storage_usage(
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # Resolve the Organization's immutable storage assignment.
+    # Load the Organization's immutable storage assignment.
     registry = await storage.get(session, membership.organization.storage_id)
-    if registry is None:
-        raise RuntimeError("Organization storage registry is missing")
+    assert registry is not None
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
@@ -162,7 +160,7 @@ async def create_organization_invitation(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Prevent inviting roles above the caller's role.
-    if roles.ROLE_RANKS[payload.role] > roles.ROLE_RANKS[membership.role]:
+    if not roles.atleast(membership.role, payload.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
     invitation = await invitations.create(session, membership.organization_id, payload.email, payload.role)

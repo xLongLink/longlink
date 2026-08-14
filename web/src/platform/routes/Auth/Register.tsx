@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { useLocation } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -23,7 +23,8 @@ type RegisterValues = {
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
     const showToast = useToast();
-    const initialEmail = new URLSearchParams(useLocation().search).get('email') ?? '';
+    const [searchParams] = useSearchParams();
+    const initialEmail = searchParams.get('email') ?? '';
     const schema = z.object({
         email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
     });

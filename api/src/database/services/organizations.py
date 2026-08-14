@@ -317,7 +317,6 @@ async def create(
     name: str,
     slug: str,
     user: User,
-    avatar: str | None = None,
     *,
     compute_id: UUID,
     storage_id: UUID,
@@ -346,7 +345,6 @@ async def create(
     organization = Organization(
         name=name,
         slug=slug,
-        avatar=avatar or "",
         compute_id=compute_id,
         database_id=database_id,
         storage_id=storage_id,

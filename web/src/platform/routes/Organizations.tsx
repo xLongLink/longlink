@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -26,7 +26,7 @@ export default function Organizations() {
         error: profileError,
         organizationsError,
     } = useUserProfile();
-    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const organizationState =
         memberships.length === 0 && (isProfileLoading || isOrganizationsLoading)
             ? 'loading'
@@ -39,7 +39,7 @@ export default function Organizations() {
         return (
             <PlatformLayout brandOnly brandHref="/" fillViewport>
                 <VStack height="100%" justify="center" align="center" width="100%">
-                    <SignInCard initialEmail={new URLSearchParams(location.search).get('email') ?? ''} />
+                    <SignInCard initialEmail={searchParams.get('email') ?? ''} />
                 </VStack>
             </PlatformLayout>
         );

@@ -42,10 +42,7 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    organization = await create_organization(
-        owner,
-        avatar="https://example.com/organizations/acme.png",
-    )
+    organization = await create_organization(owner)
     application = await create_application(organization, owner)
 
     client = clients[0]

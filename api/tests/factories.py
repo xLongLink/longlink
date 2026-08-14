@@ -121,7 +121,6 @@ async def create_organization(
     owner: User,
     name: str = "acme",
     slug: str = "acme",
-    avatar: str | None = None,
     infrastructure: Infrastructure | None = None,
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
@@ -135,7 +134,6 @@ async def create_organization(
             name,
             slug,
             owner,
-            avatar=avatar,
             compute_id=infrastructure.compute.id,
             storage_id=infrastructure.storage.id,
             database_id=infrastructure.database.id,
