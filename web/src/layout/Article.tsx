@@ -10,7 +10,6 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
-import { useUserProfile } from '@/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 
 /** Renders shared documentation and legal article content. */
@@ -23,7 +22,6 @@ export function Article({
     previousPage?: Pick<ArticlePage, 'path' | 'title'>;
     nextPage?: Pick<ArticlePage, 'path' | 'title'>;
 }) {
-    const { user, memberships } = useUserProfile();
     const { content, metadata } = page;
 
     return (
@@ -50,16 +48,7 @@ export function Article({
                             </Breadcrumbs>
                         </PageContainer>
                         <Center className="absolute end-0 top-0 px-4" height={64}>
-                            <Button
-                                href={
-                                    user && memberships.length === 1
-                                        ? `/orgs/${memberships[0].organization.slug}`
-                                        : '/organizations'
-                                }
-                                label="Get Started"
-                                size="sm"
-                                variant="primary"
-                            />
+                            <Button href="/organizations" label="Get Started" size="sm" variant="primary" />
                         </Center>
                     </Stack>
                 </LayoutHeader>

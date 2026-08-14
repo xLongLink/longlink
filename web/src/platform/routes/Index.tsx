@@ -181,8 +181,8 @@ export default function Home() {
     }, []);
 
     return (
-        <PublicPage className="overflow-x-clip">
-            <main className="relative -mt-21 flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
+        <PublicPage>
+            <main className="relative -mt-21 flex min-h-screen w-full overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <Globe />
                 </div>

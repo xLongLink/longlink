@@ -24,12 +24,12 @@ import { formatBytes } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
+import People from '@/components/settings/People';
 import { platformApiPath } from '@/lib/platform-api';
 import { hasMinimumRole, type Role } from '@/lib/roles';
 import { useUpdateOrganization } from '@/hooks/use-organization';
-import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import People from '@/components/settings/People';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
+import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';

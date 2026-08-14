@@ -1,5 +1,5 @@
-import { Link } from '@astryxdesign/core/Link';
 import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';

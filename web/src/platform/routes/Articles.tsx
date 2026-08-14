@@ -1,6 +1,6 @@
 import type { ArticleNavigationGroup, ArticlePage } from '@/lib/articles';
-import SideLayout from '@/layout/SideLayout';
 import { Article } from '@/layout/Article';
+import SideLayout from '@/layout/SideLayout';
 import { Sidebar } from '@/components/Sidebar';
 
 /** Renders a resolved article with its sidebar navigation. */
