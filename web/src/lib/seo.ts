@@ -2,11 +2,6 @@ import type { MetaDescriptor } from 'react-router';
 import type { PageMetadata } from '@/lib/pages';
 import { publicRoutePath, SITE_URL } from '@/lib/urls';
 
-/** Builds metadata for routes that search engines must not index. */
-export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
-    return [{ title }, { name: 'robots', content: 'noindex, nofollow' }];
-}
-
 /** Builds React Router metadata for one prerendered public page. */
 export function publicSeoMeta(page: PageMetadata): MetaDescriptor[] {
     const canonicalUrl = `${SITE_URL}${publicRoutePath(page.path)}`;
@@ -45,7 +40,6 @@ export function publicSeoMeta(page: PageMetadata): MetaDescriptor[] {
     return [
         { title },
         { name: 'description', content: page.description },
-        { name: 'robots', content: 'index, follow' },
         { tagName: 'link', rel: 'canonical', href: canonicalUrl },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: canonicalUrl },

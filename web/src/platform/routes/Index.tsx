@@ -1,4 +1,3 @@
-import type { MetaFunction } from 'react-router';
 import { ArrowRight } from 'lucide-react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
@@ -20,7 +19,7 @@ export const metadata = {
         'LongLink is an open-source platform for building and running custom business-process applications with Python.',
 };
 
-export const meta: MetaFunction = () => publicSeoMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 const paths = [
     {

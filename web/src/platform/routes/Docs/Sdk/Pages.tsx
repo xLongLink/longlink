@@ -19,16 +19,16 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { pageReferenceDocs } from '@/platform/navigation';
 import { DocsArticle, createDocsMeta } from '@/platform/routes/Docs/Article';
-import { pageReferenceDocs, pageReferenceHrefByName } from '@/platform/navigation';
 
 type ComponentSummary = {
     name: string;
+    path: string;
 };
 
 type ComponentCategoryConfiguration = {
@@ -71,7 +71,7 @@ const componentCategories: ComponentCategory[] = componentCategoryConfigurations
     ...category,
     components: pageReferenceDocs
         .filter((component) => component.category === category.title)
-        .map(({ title: name }) => ({ name })),
+        .map(({ path, title: name }) => ({ name, path })),
 }));
 
 const noop = () => undefined;
@@ -114,7 +114,7 @@ function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
     return (
         <Stack className="relative" gap={2}>
             <Card aria-hidden="true" inert minHeight={190} variant="muted">
-                <Center minHeight={150}>{renderComponentPreview(component.name)}</Center>
+                <Center minHeight={150}>{renderComponentPreview(component)}</Center>
             </Card>
             <Text color="secondary" type="supporting">
                 {component.name}
@@ -122,14 +122,14 @@ function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
             <RouterLink
                 aria-label={`Open ${component.name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={pageReferenceHrefByName[component.name]}
+                to={component.path}
             />
         </Stack>
     );
 }
 
 /** Renders a compact live or symbolic preview for one XML page element. */
-function renderComponentPreview(name: string) {
+function renderComponentPreview({ name, path }: ComponentSummary) {
     switch (name) {
         case 'if':
             return <Code>{'if="${order.open}"'}</Code>;
@@ -137,8 +137,6 @@ function renderComponentPreview(name: string) {
             return <Code>{'${order.total > 0}'}</Code>;
         case 'Bindings':
             return <Code>{'value="$form.name"'}</Code>;
-        case 'longlink':
-            return <Code>{'<longlink />'}</Code>;
         case 'Button':
             return (
                 <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
@@ -149,7 +147,7 @@ function renderComponentPreview(name: string) {
             );
         case 'Link':
             return (
-                <Link href={pageReferenceHrefByName.Link} type="inherit" hasUnderline>
+                <Link href={path} type="inherit" hasUnderline>
                     Docs
                 </Link>
             );
@@ -277,19 +275,8 @@ function renderComponentPreview(name: string) {
             );
         case 'SideNav':
             return <Code>{'<SideNav />'}</Code>;
-        case 'SideNavItem':
-            return <Code>{'<SideNavItem />'}</Code>;
         case 'Tab':
             return <Code>{'<Tab />'}</Code>;
-        case 'TabList':
-            return (
-                <Stack width={170}>
-                    <TabList aria-label="Preview tabs" size="sm" value="overview" onChange={noop}>
-                        <Tab label="Overview" value="overview" />
-                        <Tab label="Activity" value="activity" />
-                    </TabList>
-                </Stack>
-            );
         case 'Dialog':
             return <Code>{'<Dialog />'}</Code>;
         case 'Table':

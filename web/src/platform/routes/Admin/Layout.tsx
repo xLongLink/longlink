@@ -8,7 +8,7 @@ import { PageContainer } from '@/components/PageContainer';
 export default function AdminLayoutRoute() {
     return (
         <Auth requiresAdministrator>
-            <PlatformLayout tabs={[...ADMIN_NAVIGATION]}>
+            <PlatformLayout tabs={ADMIN_NAVIGATION}>
                 <PageContainer gap={8}>
                     <Outlet />
                 </PageContainer>

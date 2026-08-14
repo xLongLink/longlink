@@ -19,7 +19,7 @@ type TopLayoutProps = {
     endContent: ReactNode;
     heading: ReactNode;
     height?: 'auto' | 'fill';
-    tabs?: TopLayoutTab[];
+    tabs?: readonly TopLayoutTab[];
     topNavClassName: string;
 };
 

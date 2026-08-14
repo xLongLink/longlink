@@ -1,18 +1,20 @@
 import { useLocation, type MetaFunction } from 'react-router';
 import type { ArticleNavigationGroup, ArticlePage } from '@/lib/articles';
+import { publicSeoMeta } from '@/lib/seo';
 import NotFound from '@/platform/NotFound';
 import SideLayout from '@/layout/SideLayout';
 import { Article } from '@/components/Article';
 import { Sidebar } from '@/components/Sidebar';
 import { normalizePathname } from '@/lib/paths';
-import { noIndexMeta, publicSeoMeta } from '@/lib/seo';
 
 /** Creates route metadata for one article catalog. */
 export function createArticleMeta(pages: ArticlePage[]): MetaFunction {
     return ({ location }) => {
         const page = pages.find((item) => item.path === normalizePathname(location.pathname));
 
-        return page ? publicSeoMeta(page) : noIndexMeta('Not Found | LongLink');
+        return page
+            ? publicSeoMeta(page)
+            : [{ title: 'Not Found | LongLink' }, { name: 'robots', content: 'noindex, nofollow' }];
     };
 }
 

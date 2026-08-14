@@ -1,4 +1,3 @@
-import type { MetaFunction } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
@@ -16,7 +15,7 @@ export const metadata = {
     description: 'Simple LongLink pricing for building and running business-process applications.',
 };
 
-export const meta: MetaFunction = () => publicSeoMeta(metadata);
+export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the public pricing page. */
 export default function Pricing() {

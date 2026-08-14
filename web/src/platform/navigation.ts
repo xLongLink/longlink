@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import type { ArticleNavigationGroup } from '@/lib/articles';
 
-type DocPage = { category?: string; path: string; title: string };
+type DocPage = { category: string; path: string; title: string };
 
 const pageReferencePages = [
     ['Runtime', 'if'],
@@ -97,8 +97,6 @@ export const pageReferenceDocs: DocPage[] = pageReferencePages.map(([category, t
     title,
 }));
 
-export const pageReferenceHrefByName = Object.fromEntries(pageReferenceDocs.map(({ path, title }) => [title, path]));
-
 export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map(({ items, title }) => ({
     title,
     items: items.map(({ icon: Icon, ...item }) => ({
@@ -107,9 +105,7 @@ export const DOC_GROUPS: ArticleNavigationGroup[] = DOC_SECTIONS.map(({ items, t
     })),
 }));
 
-export const DOC_PAGE_PATHS = [...DOC_GROUPS.flatMap(({ items }) => items), ...pageReferenceDocs].map(
-    ({ path, title }) => ({ path, title })
-);
+export const DOC_PAGE_PATHS = [...DOC_GROUPS.flatMap(({ items }) => items), ...pageReferenceDocs];
 
 export const LEGAL_GROUPS = [
     {
