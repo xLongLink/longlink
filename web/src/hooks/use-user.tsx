@@ -101,7 +101,6 @@ export function useUpdateUser() {
                 (value) => zUserProfile.parse(value)
             ),
         onSuccess: (user) => {
-            storeThemePreferences(user);
             queryClient.setQueryData(userProfileQueryKey, user);
         },
     });
