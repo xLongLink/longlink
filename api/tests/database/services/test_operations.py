@@ -74,7 +74,7 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
 
 
 async def test_release_schedules_all_active_application_creation_once() -> None:
-    """Queue one reconciliation Operation for every non-deleted Application."""
+    """Queue one reconciliation Operation for every Application lifecycle state."""
 
     # Arrange
     compute = await create_compute("local")
@@ -110,7 +110,6 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
             name="Dashboard",
             slug="dashboard",
             image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
-            image_deployed="ghcr.io/longlink/dashboard@sha256:resolved",
             secrets={},
             status=Status.running,
         )
@@ -119,7 +118,6 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
             name="Pending",
             slug="pending",
             image_desired="ghcr.io/longlink/pending@sha256:resolved",
-            image_deployed="ghcr.io/longlink/pending@sha256:resolved",
             secrets={},
             status=Status.creating,
         )
@@ -128,7 +126,6 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
             name="Deleted",
             slug="deleted",
             image_desired="ghcr.io/longlink/deleted@sha256:resolved",
-            image_deployed="ghcr.io/longlink/deleted@sha256:resolved",
             secrets={},
             status=Status.running,
             deleted_at=utcnow(),
@@ -171,7 +168,7 @@ async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatc
         *,
         kind: OperationKind,
         target_id: UUID,
-    ) -> Operation:
+    ) -> Operation | None:
         """Delete one discovered Compute before exercising the real enqueue lookup."""
 
         if compute_id == deleted.id:

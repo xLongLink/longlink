@@ -31,6 +31,7 @@ async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKi
     # Tests without a resource command transaction commit their queued work here.
     async with session_scope() as session:
         operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
+        assert operation is not None
         await session.commit()
         return operation
 

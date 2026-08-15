@@ -168,17 +168,13 @@ async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secre
     return application.secrets
 
 
-async def publish_deployment(session: AsyncSession, application_id: UUID, image: str) -> None:
+async def publish_deployment(session: AsyncSession, application_id: UUID) -> None:
     """Publish an applied release and Application readiness."""
 
     # Lock the Application before publishing the completed worker transition.
     application = await session.get(Application, application_id, with_for_update=True)
     if application is None or application.deleted_at is not None:
         return
-
-    # Promote only the exact desired release applied by the worker.
-    if application.image_desired == image:
-        application.image_deployed = image
 
     # Publish running after the Application workload is ready.
     if application.status == Status.creating:

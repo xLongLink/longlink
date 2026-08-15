@@ -77,7 +77,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
-        await applications.publish_deployment(session, application.id, image_desired)
+        await applications.publish_deployment(session, application.id)
         await session.commit()
 
 
