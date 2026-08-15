@@ -32,7 +32,7 @@ async def send_mail(recipient: str, subject: str, text: str, html: str) -> None:
 
     # Keep local development self-contained when no SMTP server is configured.
     if env.SMTP_HOST is None and env.DEVELOPMENT:
-        logger.warning("Development email to %s: %s\n%s", recipient, subject, text)
+        logger.warning("Development email to %s: %s", recipient, subject)
         return
 
     # Require delivery configuration outside the development logging path.

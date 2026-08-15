@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import tempfile
 import ipaddress
+from kr8s import ServerError
 from uuid import UUID
 from typing import TYPE_CHECKING
 from datetime import UTC, datetime, timedelta
@@ -201,6 +202,23 @@ class Gateway:
     async def install_controller(self) -> None:
         """Install the Envoy Gateway controller required by every Compute."""
 
+        # Reuse a controller that has already accepted LongLink's GatewayClass.
+        api = await self._client.api()
+        gateway_class = GatewayClassResource("longlink-envoy", api=api)
+        try:
+            if await gateway_class.exists():
+                await gateway_class.refresh()
+                status = gateway_class.raw.get("status")
+                conditions = status.get("conditions", []) if isinstance(status, dict) else []
+                if any(
+                    isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
+                    for condition in conditions
+                ):
+                    return
+        except ServerError as exc:
+            if exc.response is None or exc.response.status_code != 404:
+                raise
+
         # Verify the pinned upstream manifest before applying its CRDs and controller resources.
         async with httpx2.AsyncClient(follow_redirects=True, timeout=30.0) as client:
             response = await client.get("https://github.com/envoyproxy/gateway/releases/download/v1.8.3/install.yaml")
@@ -213,7 +231,7 @@ class Gateway:
         with tempfile.NamedTemporaryFile() as manifest_file:
             manifest_file.write(manifest)
             manifest_file.flush()
-            resources = await objects_from_files(manifest_file.name, api=await self._client.api())
+            resources = await objects_from_files(manifest_file.name, api=api)
             for resource in resources:
                 # LongLink-generated resources do not need Envoy's optional admission policies or webhooks.
                 if resource.raw.get("kind") in {
@@ -223,7 +241,13 @@ class Gateway:
                     "ValidatingWebhookConfiguration",
                 }:
                     continue
-                await apply(resource)
+                try:
+                    async with asyncio.timeout(30):
+                        await apply(resource)
+                except TimeoutError:
+                    metadata = resource.raw.get("metadata")
+                    name = metadata.get("name", "unknown") if isinstance(metadata, dict) else "unknown"
+                    raise RuntimeError(f"Timed out applying Envoy Gateway {resource.raw.get('kind', 'resource')}/{name}") from None
 
     async def apply(self, tls: GatewayTLS | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""
