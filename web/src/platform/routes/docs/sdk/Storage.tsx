@@ -26,7 +26,7 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={{ ...metadata, metadata }}>
+        <Article page={metadata}>
             <Stack gap={5}>
                 <Heading id="storage" level={1}>
                     Storage

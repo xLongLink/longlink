@@ -12,10 +12,10 @@ async def create(claimed: Operation) -> str | None:
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
-        application = await applications.get(session, claimed.target_id)
-        if application is None:
+        target = await organizations.application_infrastructure(session, claimed.target_id)
+        if target is None:
             return None
-        infrastructure = await organizations.infrastructure(session, application.organization_id)
+        application, infrastructure = target
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
@@ -84,12 +84,12 @@ async def delete(claimed: Operation) -> str | None:
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        application = await applications.get(session, claimed.target_id, include_deleted=True)
-        if application is None:
+        target = await organizations.application_infrastructure(session, claimed.target_id, include_deleted=True)
+        if target is None:
             return None
+        application, infrastructure = target
         if application.deleted_at is None:
             return "Active Applications cannot be deleted by lifecycle cleanup"
-        infrastructure = await organizations.infrastructure(session, application.organization_id)
     if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization

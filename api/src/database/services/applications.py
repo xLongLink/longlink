@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import select, update
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
@@ -167,14 +167,16 @@ async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secre
 async def publish_deployment(session: AsyncSession, application_id: UUID) -> None:
     """Publish an applied release and Application readiness."""
 
-    # Lock the Application before publishing the completed worker transition.
-    application = await session.get(Application, application_id, with_for_update=True)
-    if application is None or application.deleted_at is not None:
-        return
-
-    # Publish running after the Application workload is ready.
-    if application.status == Status.creating:
-        application.status = Status.running
+    # Publish only an active Application's initial deployment transition.
+    await session.execute(
+        update(Application)
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+            Application.status == Status.creating,
+        )
+        .values(status=Status.running)
+    )
 
 
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:

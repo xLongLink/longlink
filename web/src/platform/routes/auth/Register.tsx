@@ -14,21 +14,20 @@ import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
-type RegisterValues = {
-    email: string;
-};
+const registerSchema = z.object({
+    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+});
+
+type RegisterValues = z.infer<typeof registerSchema>;
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
     const initialEmail = searchParams.get('email') ?? '';
-    const schema = z.object({
-        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
-    });
     const form = useForm<RegisterValues>({
         defaultValues: { email: initialEmail },
-        resolver: zodResolver(schema),
+        resolver: zodResolver(registerSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';

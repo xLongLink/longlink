@@ -130,7 +130,7 @@ async def get_application_logs(
 
     # Map expected cluster log failures to a service-unavailable response.
     try:
-        return await Kubernetes(registry.kubeconfig).applications.logs(application.id)
+        return await Kubernetes(registry.kubeconfig).applications.logs(application.id, organization.id.hex)
     except RuntimeError as exc:
         logger.warning("Application logs unavailable for '%s': %s", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc

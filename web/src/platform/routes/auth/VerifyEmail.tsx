@@ -22,20 +22,15 @@ import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { ApiError, fetchApiJson, requestApiJson } from '@/lib/api';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
-type RegistrationCompleteValues = {
-    name: string;
-    surname: string;
-    password: string;
-};
-
-type RegistrationSetup = z.infer<typeof zEmailPayload>;
-
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({
     name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
     surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
     password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
 });
+
+type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
+type RegistrationSetup = z.infer<typeof zEmailPayload>;
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {

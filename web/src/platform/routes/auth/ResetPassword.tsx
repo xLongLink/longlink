@@ -13,14 +13,12 @@ import { platformApiPath } from '@/lib/platform-api';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 
-type ResetPasswordValues = {
-    password: string;
-};
-
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 const passwordSchema = z.object({
     password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
 });
+
+type ResetPasswordValues = z.infer<typeof passwordSchema>;
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {

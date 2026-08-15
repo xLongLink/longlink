@@ -18,18 +18,13 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Impressum.tsx',
 };
 
-const page = {
-    ...metadata,
-    metadata,
-};
-
 /** Returns SEO metadata for the impressum article. */
 export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (
-        <Article page={page}>
+        <Article page={metadata}>
             <ImpressumContent />
         </Article>
     );

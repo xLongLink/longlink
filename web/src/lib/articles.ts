@@ -8,11 +8,9 @@ export type ArticlePage = {
     icon?: ReactElement<LucideProps>;
     description: string;
     seoTitle?: string;
-    metadata: {
-        toc?: Array<{ id: string; label: string; level: number }>;
-        lastUpdated: string;
-        editUrl?: string;
-    };
+    toc?: Array<{ id: string; label: string; level: number }>;
+    lastUpdated: string;
+    editUrl?: string;
 };
 
 /** Sidebar navigation item for article-like pages. */

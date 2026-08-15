@@ -16,20 +16,18 @@ import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
-type LoginValues = {
-    email: string;
-    password: string;
-};
+const loginSchema = z.object({
+    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 /** Renders the shared LongLink sign-in form. */
 export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const showToast = useToast();
-    const loginSchema = z.object({
-        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
-        password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
-    });
     const form = useForm<LoginValues>({
         defaultValues: { email: initialEmail, password: '' },
         resolver: zodResolver(loginSchema),

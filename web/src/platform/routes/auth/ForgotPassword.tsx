@@ -13,19 +13,18 @@ import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
 
-type ForgotPasswordValues = {
-    email: string;
-};
+const forgotPasswordSchema = z.object({
+    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+});
+
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const showToast = useToast();
-    const schema = z.object({
-        email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
-    });
     const form = useForm<ForgotPasswordValues>({
         defaultValues: { email: '' },
-        resolver: zodResolver(schema),
+        resolver: zodResolver(forgotPasswordSchema),
     });
     const requestReset = useMutation({
         mutationFn: (payload: ForgotPasswordValues) =>

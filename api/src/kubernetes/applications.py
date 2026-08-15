@@ -56,11 +56,11 @@ class Applications:
         await apply(Service(service, api=api))
         route_resource = HTTPRouteResource(route, api=api)
         await apply(route_resource)
-        await apply(Deployment(deployment, api=api))
+        deployed = Deployment(deployment, api=api)
+        await apply(deployed)
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            deployed = Deployment(str(application_id), namespace=namespace, api=api)
             if not await deployed.exists():
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
             await deployed.refresh()
@@ -100,14 +100,16 @@ class Applications:
 
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
-        while await Namespace(namespace, api=api).exists():
+        namespace_resource = Namespace(namespace, api=api)
+        resources = (
+            Deployment(str(application_id), namespace=namespace, api=api),
+            Service(f"app-{application_id}", namespace=namespace, api=api),
+            Secret(str(application_id), namespace=namespace, api=api),
+            HTTPRouteResource(str(application_id), namespace=namespace, api=api),
+        )
+        while await namespace_resource.exists():
             remaining = False
-            for resource in (
-                Deployment(str(application_id), namespace=namespace, api=api),
-                Service(f"app-{application_id}", namespace=namespace, api=api),
-                Secret(str(application_id), namespace=namespace, api=api),
-                HTTPRouteResource(str(application_id), namespace=namespace, api=api),
-            ):
+            for resource in resources:
                 if await resource.exists():
                     await resource.refresh()
                     remaining = True
@@ -120,15 +122,15 @@ class Applications:
                 return
             await asyncio.sleep(5)
 
-    async def logs(self, application_id: UUID) -> list[str]:
+    async def logs(self, application_id: UUID, namespace: str) -> list[str]:
         """Return recent logs for one managed Application Pod."""
 
-        # The globally unique Application ID identifies its Pod across Organization Namespaces.
+        # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
             active = [
                 pod
-                async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
                 if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
             ]
             if not active:

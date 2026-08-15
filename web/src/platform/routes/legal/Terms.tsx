@@ -91,18 +91,13 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Terms.tsx',
 };
 
-const page = {
-    ...metadata,
-    metadata,
-};
-
 /** Returns SEO metadata for the terms article. */
 export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the terms of service. */
 export default function Terms() {
     return (
-        <Article page={page}>
+        <Article page={metadata}>
             <TermsContent />
         </Article>
     );

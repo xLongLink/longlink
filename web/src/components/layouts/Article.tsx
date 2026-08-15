@@ -14,7 +14,6 @@ import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
 
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
-    const { metadata } = page;
     const Breadcrumb = page.path.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
 
     return (
@@ -42,10 +41,10 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">
-                                            {`Last updated: ${dateFormatter.format(new Date(metadata.lastUpdated))}`}
+                                            {`Last updated: ${dateFormatter.format(new Date(page.lastUpdated))}`}
                                         </Text>
-                                        {metadata.editUrl ? (
-                                            <Link href={metadata.editUrl} hasUnderline isExternalLink type="supporting">
+                                        {page.editUrl ? (
+                                            <Link href={page.editUrl} hasUnderline isExternalLink type="supporting">
                                                 Edit this page in GitHub
                                             </Link>
                                         ) : null}
@@ -53,7 +52,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                 </Stack>
                             </article>
                         </PageContainer>
-                        {metadata.toc?.length ? (
+                        {page.toc?.length ? (
                             <Stack
                                 as="aside"
                                 aria-label="On this page"
@@ -65,7 +64,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                 <Text type="label" weight="semibold">
                                     On this page
                                 </Text>
-                                <Outline items={metadata.toc} density="compact" label="On this page" />
+                                <Outline items={page.toc} density="compact" label="On this page" />
                             </Stack>
                         ) : null}
                     </Stack>

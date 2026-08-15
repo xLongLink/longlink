@@ -64,18 +64,13 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Privacy.tsx',
 };
 
-const page = {
-    ...metadata,
-    metadata,
-};
-
 /** Returns SEO metadata for the privacy article. */
 export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the privacy policy. */
 export default function Privacy() {
     return (
-        <Article page={page}>
+        <Article page={metadata}>
             <PrivacyContent />
         </Article>
     );
