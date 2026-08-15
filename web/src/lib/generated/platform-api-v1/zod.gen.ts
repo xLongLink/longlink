@@ -345,7 +345,6 @@ export const zRegistrationComplete = z.object({
 export const zStatus = z.enum([
     'creating',
     'running',
-    'failed',
     'deleting'
 ]);
 

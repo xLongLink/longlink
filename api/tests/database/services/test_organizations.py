@@ -194,7 +194,7 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
     async with Session() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
-        registry.status = Status.failed
+        registry.status = Status.creating
         await session.commit()
 
     # Act
@@ -207,7 +207,7 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
         assert await organizations.fetch(session) == []
         reloaded_compute = await compute.get(session, infrastructure.compute.id)
         assert reloaded_compute is not None
-        assert reloaded_compute.status == Status.failed
+        assert reloaded_compute.status == Status.creating
         assert await operations.fetch(session) == []
 
 

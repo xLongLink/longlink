@@ -20,7 +20,6 @@ import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 const statusVariants = {
     creating: 'info',
     running: 'neutral',
-    failed: 'error',
     deleting: 'neutral',
 } satisfies Record<Status, ComponentProps<typeof Badge>['variant']>;
 
@@ -29,7 +28,6 @@ export default function AdminApplications() {
     const statusLabels: Record<Status, string> = {
         creating: 'Creating',
         running: 'Running',
-        failed: 'Failed',
         deleting: 'Deleting',
     };
     const columns: TableColumn<ApplicationResponse>[] = [
