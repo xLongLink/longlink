@@ -302,7 +302,7 @@ class Gateway:
                         return value
             await asyncio.sleep(5)
 
-    async def replace_tls(self, tls: GatewayTLS, address: str) -> None:
+    async def replace_tls(self, tls: GatewayTLS) -> None:
         """Replace Gateway TLS identities after endpoint allocation."""
 
         # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.

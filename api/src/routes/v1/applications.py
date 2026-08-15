@@ -1,11 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import (
-    authuser,
-    authadmin,
-    get_session,
-    organization_access,
-)
+from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles

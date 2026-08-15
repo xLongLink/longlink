@@ -43,6 +43,7 @@ longlink/
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
 - Store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
+- Use `collections.abc.Sequence` for read-only query result return types instead of `list`.
 
 ### FastAPI & Pydantic
 
