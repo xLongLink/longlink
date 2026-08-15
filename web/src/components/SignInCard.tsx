@@ -14,8 +14,8 @@ import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { PasswordInput } from '@/components/PasswordInput';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { PasswordInput } from '@/components/PasswordInput';
 
 type LoginValues = {
     email: string;

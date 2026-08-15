@@ -1,5 +1,5 @@
-import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders the shared LongLink welcome title used by authentication screens. */

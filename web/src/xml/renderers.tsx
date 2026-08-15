@@ -5,8 +5,8 @@ import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
-import { setupContext, XmlContext } from './core/context';
 import { isSafePropertyName } from './expressions';
+import { setupContext, XmlContext } from './core/context';
 
 type RenderXMLProps = {
     ast: [ASTNode];

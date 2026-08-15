@@ -2,8 +2,8 @@ import { proxy } from 'valtio';
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { fetchApiJson } from '@/lib/api';
 import type { ASTNode, XmlRuntime } from '../types';
-import { resolveRequestUrl } from './url';
 import { evaluate } from '../expressions';
+import { resolveRequestUrl } from './url';
 
 export const XmlContext = createReactContext<XmlRuntime | null>(null);
 

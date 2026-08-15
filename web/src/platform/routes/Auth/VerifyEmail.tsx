@@ -18,10 +18,10 @@ import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 type RegistrationCompleteValues = {
     name: string;
