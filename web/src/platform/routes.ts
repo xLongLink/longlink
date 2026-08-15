@@ -61,10 +61,12 @@ export default [
     route('impressum', './routes/Legal/Impressum.tsx'),
     route('pricing', './routes/Pricing.tsx'),
     route('marketplace', './routes/Marketplace.tsx'),
-    route('auth/register', './routes/Auth/Register.tsx'),
-    route('auth/verify-email', './routes/Auth/VerifyEmail.tsx'),
-    route('auth/forgot-password', './routes/Auth/ForgotPassword.tsx'),
-    route('auth/reset-password', './routes/Auth/ResetPassword.tsx'),
+    ...prefix('auth', [
+        route('register', './routes/Auth/Register.tsx'),
+        route('verify-email', './routes/Auth/VerifyEmail.tsx'),
+        route('forgot-password', './routes/Auth/ForgotPassword.tsx'),
+        route('reset-password', './routes/Auth/ResetPassword.tsx'),
+    ]),
     route('organizations', './routes/Organizations.tsx'),
     route('settings', './routes/Settings.tsx'),
     ...prefix('admin', [

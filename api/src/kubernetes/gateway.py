@@ -216,6 +216,9 @@ class Gateway:
             manifest_file.flush()
             resources = await objects_from_files(manifest_file.name, api=await self._client.api())
             for resource in resources:
+                # These optional admission policies are unavailable on Kubernetes versions before 1.30.
+                if resource.raw.get("kind") in {"ValidatingAdmissionPolicy", "ValidatingAdmissionPolicyBinding"}:
+                    continue
                 await apply(resource)
 
     async def apply(self, tls: GatewayTLS | None = None) -> str:

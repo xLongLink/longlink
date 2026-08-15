@@ -31,14 +31,12 @@ export default function ResetPassword() {
         resolver: zodResolver(passwordSchema),
     });
     const verification = useMutation({
-        mutationFn: async (resetToken: string) => {
+        mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                await requestApi(platformApiPath('/auth/reset-password/setup'));
-
-                return;
+                return requestApi(platformApiPath('/auth/reset-password/setup'));
             }
 
-            await requestApi(platformApiPath('/auth/reset-password/verify'), {
+            return requestApi(platformApiPath('/auth/reset-password/verify'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: resetToken }),
@@ -55,13 +53,12 @@ export default function ResetPassword() {
         },
     });
     const resetPassword = useMutation({
-        mutationFn: async (payload: ResetPasswordValues) => {
-            await requestApi(platformApiPath('/auth/reset-password'), {
+        mutationFn: (payload: ResetPasswordValues) =>
+            requestApi(platformApiPath('/auth/reset-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
     const hasTokenError =
         (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
@@ -73,7 +70,7 @@ export default function ResetPassword() {
             await resetPassword.mutateAsync(payload);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
-            if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
                 return;
             }
 
@@ -117,18 +114,11 @@ export default function ResetPassword() {
         );
     }
 
-    // Do not collect a password until the server has moved reset proof into its restricted cookie.
-    if (!verification.isSuccess) {
-        return (
-            <AuthPage title="Set a new password" description="Choose a new password for your LongLink account.">
-                <Button isLoading label="Reset password" variant="primary" />
-            </AuthPage>
-        );
-    }
-
     return (
         <AuthPage title="Set a new password" description="Choose a new password for your LongLink account.">
-            {resetPassword.isSuccess ? (
+            {!verification.isSuccess ? (
+                <Button isLoading label="Reset password" variant="primary" />
+            ) : resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title="Your password has been reset. You can now sign in." />
                     <Button href="/organizations" label="Back to sign in" variant="primary" />

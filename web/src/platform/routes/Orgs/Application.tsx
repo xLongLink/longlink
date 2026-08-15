@@ -11,7 +11,7 @@ export default function OrganizationApplication() {
     const applicationAccess = applications.find((item) => item.slug === application);
 
     if (isLoading) {
-        return <View isApplicationLoading pages="" />;
+        return <View isApplicationLoading pages={null} />;
     }
 
     if (error?.status === 404 || !organizationDetails || !applicationAccess) {

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import startCase from 'lodash/startCase';
 import { Card } from '@astryxdesign/core/Card';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
@@ -37,7 +36,7 @@ type RuntimePage = z.infer<typeof pageSchema>;
 type ViewProps = {
     applicationStatus?: Status;
     isApplicationLoading?: boolean;
-    pages: string;
+    pages: string | null;
 };
 
 type ErrorStateProps = {
@@ -104,7 +103,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
-    const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
+    const resolvedPagesBaseUrl = pages?.replace(/pages\.json(?:[?#].*)?$/i, '') ?? '';
     const applicationCanLoad =
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const { data: registeredPages, error } = useApiQuery<RuntimePage[]>(pages, {
@@ -146,10 +145,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
             const dynamic = pageRouteIsDynamic(page.route);
-            const currentGroup = tabGroups.get(page.tab);
 
             // Dynamic pages need concrete params, so they cannot be direct navigation targets.
-            if (!page.route || dynamic || currentGroup) {
+            if (!page.route || dynamic || tabGroups.has(page.tab)) {
                 continue;
             }
 
@@ -284,53 +282,57 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         );
     }
 
+    let content: ReactNode;
+
     if (applicationState) {
-        return (
-            <XmlLayout activeTab={activeTab} tabs={tabs}>
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    {applicationState}
-                </Center>
-            </XmlLayout>
+        content = (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                {applicationState}
+            </Center>
         );
-    }
+    } else {
+        // Delegate unknown app routes to the shared 404 page.
+        if (registeredPages && routePath && !activeRouteMatch) {
+            return <NotFound />;
+        }
 
-    // Delegate unknown app routes to the shared 404 page.
-    if (registeredPages && routePath && !activeRouteMatch) {
-        return <NotFound />;
-    }
+        let activeFallback: ReactNode = null;
 
-    let activeFallback: ReactNode = null;
+        // Choose the visible fallback for the active page.
+        if (!activePage) {
+            activeFallback = (
+                <ErrorState
+                    message="The application did not expose any pages to render."
+                    title="Unexpected application response"
+                />
+            );
+        } else if (visiblePageState?.error) {
+            activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
+        } else if (!visiblePageState?.ast) {
+            activeFallback = <Spinner label="Loading" />;
+        }
 
-    // Choose the visible fallback for the active page.
-    if (!activePage) {
-        activeFallback = (
-            <ErrorState
-                message="The application did not expose any pages to render."
-                title="Unexpected application response"
-            />
-        );
-    } else if (visiblePageState?.error) {
-        activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
-    } else if (!visiblePageState?.ast) {
-        activeFallback = <Spinner label="Loading" />;
-    }
-
-    return (
-        <XmlLayout activeTab={activeTab} tabs={tabs}>
-            {visiblePageState?.ast ? (
-                <Stack as="section" gap={6}>
+        content = (
+            <>
+                {visiblePageState?.ast ? (
                     <RenderXML
                         ast={visiblePageState.ast}
                         baseUrl={resolvedPagesBaseUrl}
                         ctx={visiblePageState.runtimeContext}
                     />
-                </Stack>
-            ) : null}
-            {activeFallback && (
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    {activeFallback}
-                </Center>
-            )}
+                ) : null}
+                {activeFallback && (
+                    <Center minHeight="calc(100vh - 14rem)" width="100%">
+                        {activeFallback}
+                    </Center>
+                )}
+            </>
+        );
+    }
+
+    return (
+        <XmlLayout activeTab={activeTab} tabs={tabs}>
+            {content}
         </XmlLayout>
     );
 }

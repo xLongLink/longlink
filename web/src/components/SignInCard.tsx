@@ -4,7 +4,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,9 +12,9 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Wordmark } from '@/components/Wordmark';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 
 type LoginValues = {
@@ -39,13 +38,12 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
-        mutationFn: async (payload: LoginValues) => {
-            await requestApi(platformApiPath('/auth/password/login'), {
+        mutationFn: (payload: LoginValues) =>
+            requestApi(platformApiPath('/auth/password/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Signs in with an email and password, then refreshes the current profile. */
@@ -66,12 +64,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
         <Stack gap={4} maxWidth={384} width="100%">
             <Stack gap={1} hAlign="center">
                 <Heading level={1} justify="center">
-                    <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-                        <Text color="inherit" type="inherit">
-                            Welcome to
-                        </Text>
-                        <Wordmark size="heading" />
-                    </HStack>
+                    <WelcomeTitle />
                 </Heading>
                 <Divider label="Sign in with your email and password." />
             </Stack>

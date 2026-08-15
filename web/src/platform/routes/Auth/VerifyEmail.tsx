@@ -7,7 +7,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -15,11 +14,11 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { Wordmark } from '@/components/Wordmark';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -40,8 +39,6 @@ export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
-    const [accountExists, setAccountExists] = useState(false);
-    const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const schema = z.object({
         name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
@@ -100,13 +97,12 @@ export default function VerifyEmail() {
             if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
                 verification.mutate('');
             }
-            if (error instanceof ApiError && error.code === 'REGISTER_SETUP_MISMATCH') {
-                setSetupMismatch(true);
+            if (
+                error instanceof ApiError &&
+                (error.code === 'REGISTER_SETUP_MISMATCH' || error.code === 'REGISTER_USER_ALREADY_EXISTS')
+            ) {
+                return;
             }
-            if (error instanceof ApiError && error.code === 'REGISTER_USER_ALREADY_EXISTS') {
-                setAccountExists(true);
-            }
-
             const message =
                 error instanceof ApiError && error.code === 'REGISTER_USER_ALREADY_EXISTS'
                     ? 'An account with this email already exists. Sign in or reset your password to continue.'
@@ -128,6 +124,9 @@ export default function VerifyEmail() {
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
     const recoveryRegisterHref = `/auth/register${recoverySearch}`;
     const recoverySignInHref = `/organizations${recoverySearch}`;
+    const accountExists =
+        completion.error instanceof ApiError && completion.error.code === 'REGISTER_USER_ALREADY_EXISTS';
+    const setupMismatch = completion.error instanceof ApiError && completion.error.code === 'REGISTER_SETUP_MISMATCH';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -146,12 +145,7 @@ export default function VerifyEmail() {
                 <Stack gap={3}>
                     <Banner status="error" title="LongLink could not verify this registration link." />
                     {invalidToken ? null : (
-                        <Button
-                            isLoading={verification.isPending}
-                            label="Retry"
-                            onClick={() => verification.mutate(token)}
-                            variant="primary"
-                        />
+                        <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
                     )}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
@@ -190,17 +184,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage
-            title={
-                <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-                    <Text color="inherit" type="inherit">
-                        Welcome to
-                    </Text>
-                    <Wordmark size="heading" />
-                </HStack>
-            }
-            description={<Divider label="Email verified. Complete your profile." />}
-        >
+        <AuthPage title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
