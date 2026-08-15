@@ -1,8 +1,8 @@
-import { Outlet, useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
+import { Outlet, useLocation } from 'react-router';
 import { Divider } from '@astryxdesign/core/Divider';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';

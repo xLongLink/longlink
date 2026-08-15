@@ -19,7 +19,12 @@ function OrganizationApplicationContent() {
         return <NotFound />;
     }
 
-    return <View applicationStatus={applicationAccess.status} pages={platformApiPath(`/applications/${applicationAccess.id}/proxy/pages.json`)} />;
+    return (
+        <View
+            applicationStatus={applicationAccess.status}
+            pages={platformApiPath(`/applications/${applicationAccess.id}/proxy/pages.json`)}
+        />
+    );
 }
 
 /** Protects one proxy-backed organization application. */

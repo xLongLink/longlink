@@ -68,5 +68,5 @@ export const stoneIconComponents = {
 } satisfies Record<string, LucideIcon>;
 
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon {...iconProps} />])
+    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon key={name} {...iconProps} />])
 ) as IconRegistry;

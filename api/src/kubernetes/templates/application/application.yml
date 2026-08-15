@@ -88,5 +88,5 @@ spec:
                     remove:
                         - x-longlink-application-id
           backendRefs:
-               - name: app-$application_id
-                 port: 8000
+              - name: app-$application_id
+                port: 8000

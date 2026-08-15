@@ -1,5 +1,5 @@
-import type { LucideProps } from 'lucide-react';
 import type { ReactElement } from 'react';
+import type { LucideProps } from 'lucide-react';
 
 /** A renderable article page. */
 export type ArticlePage = {
