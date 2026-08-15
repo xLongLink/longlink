@@ -10,7 +10,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { useLocation, useParams } from 'react-router';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { proportional } from '@astryxdesign/core/Table';
 import { AppWindow, Boxes, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
@@ -27,6 +27,7 @@ import { PageContainer } from '@/components/PageContainer';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { useOrganization, useUpdateOrganization } from '@/hooks/use-organization';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type DatabaseUsage = { id: string; usage: number };
@@ -35,6 +36,19 @@ const organizationAvatarSchema = z.union([
     z.literal(''),
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
+
+/** Renders the organization owning a database or storage resource. */
+function OrganizationOwner({ avatar, name }: { avatar: string; name: string }) {
+    return (
+        <HStack gap={3} align="center">
+            <Avatar src={avatar} name={name} size="md" />
+            <VStack gap={1}>
+                <Text weight="semibold">{name}</Text>
+                <Text type="supporting">Organization</Text>
+            </VStack>
+        </HStack>
+    );
+}
 
 /** Renders the organization settings page. */
 export default function OrganizationSettingsRoute() {
@@ -94,67 +108,6 @@ export default function OrganizationSettingsRoute() {
             retry: false,
         }
     );
-    const storageColumns: TableColumn<OrganizationStorageUsageResponse>[] = [
-        {
-            key: 'resource',
-            header: 'Resource',
-            width: proportional(1),
-            renderCell: (resource) => (
-                <HStack gap={3} align="center">
-                    <S3 aria-hidden="true" className="shrink-0" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{resource.bucket_name}</Text>
-                        <Text type="supporting">{formatBytes(resource.space_used)}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'owner',
-            header: 'Owner',
-            width: proportional(1),
-            renderCell: () => (
-                <HStack gap={3} align="center">
-                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{organizationName}</Text>
-                        <Text type="supporting">Organization</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-    ];
-    const databaseColumns: TableColumn<DatabaseUsage>[] = [
-        {
-            key: 'usage',
-            header: 'Resource',
-            width: proportional(1),
-            renderCell: (resource) => (
-                <HStack gap={3} align="center">
-                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">PostgreSQL</Text>
-                        <Text type="supporting">{formatBytes(resource.usage)}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'owner',
-            header: 'Owner',
-            width: proportional(1),
-            renderCell: () => (
-                <HStack gap={3} align="center">
-                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{organizationName}</Text>
-                        <Text type="supporting">Organization</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-    ];
-
     /** Saves the Organization avatar URL when focus leaves the setting. */
     async function saveAvatar() {
         setAvatarError(null);
@@ -283,13 +236,39 @@ export default function OrganizationSettingsRoute() {
                                         <EmptyState title="No results." isCompact />
                                     ) : (
                                         <Table
-                                            columns={databaseColumns}
                                             data={[{ id: 'database', usage: databaseUsage }]}
                                             density="compact"
-                                            emptyState={<EmptyState title="No results." isCompact />}
                                             hasHover
                                             idKey="id"
-                                        />
+                                        >
+                                            <TableColumn<DatabaseUsage>
+                                                field="usage"
+                                                header="Resource"
+                                                width={proportional(1)}
+                                            >
+                                                {(resource) => (
+                                                    <HStack gap={3} align="center">
+                                                        <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
+                                                        <VStack gap={1}>
+                                                            <Text weight="semibold">PostgreSQL</Text>
+                                                            <Text type="supporting">{formatBytes(resource.usage)}</Text>
+                                                        </VStack>
+                                                    </HStack>
+                                                )}
+                                            </TableColumn>
+                                            <TableColumn<DatabaseUsage>
+                                                field="owner"
+                                                header="Owner"
+                                                width={proportional(1)}
+                                            >
+                                                {() => (
+                                                    <OrganizationOwner
+                                                        avatar={organizationAvatar}
+                                                        name={organizationName}
+                                                    />
+                                                )}
+                                            </TableColumn>
+                                        </Table>
                                     )}
                                 </VStack>
                             </MenuItem>
@@ -307,13 +286,42 @@ export default function OrganizationSettingsRoute() {
                                         <Banner status="error" title={storageError.message} />
                                     ) : (
                                         <Table
-                                            columns={storageColumns}
                                             data={storageUsage ? [storageUsage] : []}
                                             density="compact"
                                             emptyState={<EmptyState title="No storage resources found." isCompact />}
                                             hasHover
                                             idKey="bucket_name"
-                                        />
+                                        >
+                                            <TableColumn<OrganizationStorageUsageResponse>
+                                                field="bucket_name"
+                                                header="Resource"
+                                                width={proportional(1)}
+                                            >
+                                                {(resource) => (
+                                                    <HStack gap={3} align="center">
+                                                        <S3 aria-hidden="true" className="shrink-0" />
+                                                        <VStack gap={1}>
+                                                            <Text weight="semibold">{resource.bucket_name}</Text>
+                                                            <Text type="supporting">
+                                                                {formatBytes(resource.space_used)}
+                                                            </Text>
+                                                        </VStack>
+                                                    </HStack>
+                                                )}
+                                            </TableColumn>
+                                            <TableColumn<OrganizationStorageUsageResponse>
+                                                field="owner"
+                                                header="Owner"
+                                                width={proportional(1)}
+                                            >
+                                                {() => (
+                                                    <OrganizationOwner
+                                                        avatar={organizationAvatar}
+                                                        name={organizationName}
+                                                    />
+                                                )}
+                                            </TableColumn>
+                                        </Table>
                                     )}
                                 </VStack>
                             </MenuItem>

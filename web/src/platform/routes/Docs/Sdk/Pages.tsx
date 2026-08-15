@@ -25,7 +25,7 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { publicSeoMeta } from '@/lib/seo';
 import { DocsArticle } from '@/platform/routes/Docs/Article';
-import { DOCUMENTATION_REFERENCE_PAGES } from '@/components/layouts/Documents';
+import { DOCUMENTATION_REFERENCE_PAGES } from '@/platform/routes/Docs/navigation';
 
 type ComponentSummary = {
     name: string;

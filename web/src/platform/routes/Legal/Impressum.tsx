@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
-import { Legal } from '@/layout/Legal';
+import { Legal } from '@/platform/layouts/Legal';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/layout/Article';
 

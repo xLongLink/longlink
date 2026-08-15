@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import type { ArticlePage } from '@/lib/articles';
 import { Article } from '@/layout/Article';
-import { Documents, DOCUMENTATION_PAGES } from '@/components/layouts/Documents';
+import { Documentation } from '@/platform/layouts/Documentation';
+import { DOCUMENTATION_PAGES } from '@/platform/routes/Docs/navigation';
 
 type DocMetadata = Omit<ArticlePage, 'breadcrumbs' | 'content' | 'icon' | 'metadata'> & ArticlePage['metadata'];
 
@@ -27,12 +28,12 @@ export function DocsArticle({ children, metadata }: { children: ReactNode; metad
                 ];
 
     return (
-        <Documents>
+        <Documentation>
             <Article
                 nextPage={DOCUMENTATION_PAGES[pageIndex + 1]}
                 page={{ ...metadata, breadcrumbs, content: children, metadata }}
                 previousPage={DOCUMENTATION_PAGES[pageIndex - 1]}
             />
-        </Documents>
+        </Documentation>
     );
 }

@@ -4,7 +4,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { Section } from '@astryxdesign/core/Section';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Page } from '@/layout/Page';
+import { Page } from '@/platform/layouts/Page';
 
 /** Renders the marketplace placeholder. */
 export default function MarketplaceRoute() {

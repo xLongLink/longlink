@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { Page } from '@/layout/Page';
+import { Page } from '@/platform/layouts/Page';
 import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
 
