@@ -4,7 +4,6 @@ from sqlmodel import col
 from sqlalchemy import case, select, update
 from src.errors import NotFoundError
 from src.logger import logger
-from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,14 +13,14 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[Operation]:
+async def fetch(session: AsyncSession) -> list[Operation]:
     """Return all operations ordered by newest first."""
 
     result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
     return result.all()
 
 
-async def discover(session: AsyncSession) -> Sequence[tuple[OperationKind, UUID, UUID]]:
+async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUID]]:
     """Discover release reconciliation targets in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
@@ -106,7 +105,7 @@ async def claim(session: AsyncSession) -> Operation | None:
         .where(Operation.finished_at.is_(None))
         .order_by(
             case(
-                (col(Operation.lease_expires_at).is_not(None) & (col(Operation.lease_expires_at) > now), 0),
+                (col(Operation.lease_expires_at) > now, 0),
                 (col(Operation.lease_expires_at).is_not(None), 1),
                 else_=2,
             ),
@@ -147,7 +146,6 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
         update(Operation)
         .where(
             Operation.id == operation_id,
-            Operation.lease_expires_at.is_not(None),
             col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )

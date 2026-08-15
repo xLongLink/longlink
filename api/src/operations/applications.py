@@ -43,7 +43,7 @@ async def create(claimed: Operation) -> str | None:
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
         database_password = secrets.token_urlsafe(24)
-        credentials = await object_storage.credentials(claimed.target_id.hex, bucket, prefix)
+        credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
         connection = await db.schema(organization.id, application.id, database_password)
 
@@ -77,8 +77,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
-        await applications.mark_deployed(session, application.id, image_desired)
-        await applications.mark_running(session, application.id)
+        await applications.publish_deployment(session, application.id, image_desired)
         await session.commit()
 
 
