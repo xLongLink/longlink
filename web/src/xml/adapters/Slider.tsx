@@ -8,29 +8,6 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 type SliderValue = number | [number, number];
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Slider?tab=properties
- * - label: string
- * - description: string
- * - disabledMessage: string
- * - htmlName: string
- * - value: int | float | [int | float, int | float]
- * - min: int | float
- * - max: int | float
- * - step: int | float
- * - orientation: str
- * - valueDisplay: str
- * - isDisabled: bool
- * - isLabelHidden: bool
- * - isOptional: bool
- * - isRequired: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - labelTooltip: string
- * - minStepsBetweenThumbs: int
- */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue<SliderValue>(props, 'value', ctx, (value) => {

@@ -7,26 +7,6 @@ import { useBindableValue } from '../core/binding';
 import { COMPACT_SIZES, ORIENTATIONS } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/RadioList?tab=properties
- * - label: string
- * - description: string
- * - disabledMessage: string
- * - htmlName: string
- * - value: string
- * - orientation: str
- * - size: str
- * - isDisabled: bool
- * - isLabelHidden: bool
- * - isOptional: bool
- * - isRequired: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - labelTooltip: string
- * - children: RadioListItem
- */
 export function RadioList({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
@@ -67,14 +47,6 @@ export function RadioList({ props, nodes }: Props) {
     );
 }
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/RadioListItem?tab=properties
- * - label: string
- * - value: string
- * - description: string
- * - isDisabled: bool
- */
 export function RadioListItem({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const description = resolveXml(props, 'description', ctx);

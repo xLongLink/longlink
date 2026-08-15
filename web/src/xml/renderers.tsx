@@ -159,17 +159,6 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {
-    // LongLink roots accept optional metadata-only attributes.
-    if (node.name === 'longlink') {
-        const params = node.params;
-        const unsupported = Object.keys(params).filter((name) => name !== 'name' && name !== 'icon');
-
-        // Reject unknown root metadata.
-        if (unsupported.length) {
-            throw new Error(`Unsupported longlink attributes: ${unsupported.join(', ')}`);
-        }
-    }
-
     // Validate state declarations.
     if (node.name === 'State') {
         // Require a declared state key.

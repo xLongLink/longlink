@@ -2,7 +2,7 @@ from uuid import UUID
 from sqlalchemy import select, update
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import defer, contains_eager
 from collections.abc import Sequence
 from src.models.types import Image
 from longlink.utils.time import utcnow
@@ -23,7 +23,7 @@ async def fetch(session: AsyncSession) -> Sequence[Application]:
     statement = (
         select(Application)
         .join(Application.organization)
-        .options(contains_eager(Application.organization))
+        .options(contains_eager(Application.organization), defer(Application.secrets))
         .where(Application.deleted_at.is_(None))
         .order_by(Organization.name, Application.name)
     )
@@ -95,11 +95,12 @@ async def create(
     application.created_id = user.id
     application.updated_id = user.id
     application.organization = organization
-    session.add(application)
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
-        await session.flush()
+        async with session.begin_nested():
+            session.add(application)
+            await session.flush()
     except IntegrityError as exc:
         raise ConflictError("Application slug already exists") from exc
 
@@ -126,7 +127,7 @@ async def release(
     result = await session.execute(
         select(Application, Organization.compute_id)
         .join(Application.organization)
-        .where(Application.id == application_id)
+        .where(Application.id == application_id, Organization.deleted_at.is_(None))
         .with_for_update()
     )
     row = result.one_or_none()

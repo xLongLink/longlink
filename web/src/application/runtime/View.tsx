@@ -39,11 +39,7 @@ type ViewProps = {
     pages: string | null;
 };
 
-type ErrorStateProps = {
-    isAlert?: boolean;
-    message: string;
-    title: string;
-};
+type ErrorStateProps = { message: string; title: string };
 
 type PageState = {
     ast: [ASTNode] | null;
@@ -331,7 +327,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 }
 
 /** Renders a centered in-shell application state message. */
-function ErrorState({ isAlert = true, message, title }: ErrorStateProps) {
+function ErrorState({ message, title }: ErrorStateProps) {
     const { organization } = useParams();
     const actionHref = organization ? `/orgs/${organization}` : '/organizations';
     const actionLabel = organization ? 'Back to organization' : 'Back to organizations';
@@ -342,7 +338,7 @@ function ErrorState({ isAlert = true, message, title }: ErrorStateProps) {
                 actions={<Button href={actionHref} label={actionLabel} variant="primary" />}
                 description={message}
                 headingLevel={1}
-                role={isAlert ? 'alert' : undefined}
+                role="alert"
                 title={title}
             />
         </Card>

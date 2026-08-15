@@ -6,30 +6,6 @@ import { useBindableValue } from '../core/binding';
 import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/FileInput?tab=properties
- * - label: string
- * - accept: string
- * - description: string
- * - disabledMessage: string
- * - placeholder: string
- * - value: File | File[] | null
- * - maxFiles: int
- * - maxSize: int | float
- * - mode: str
- * - isDisabled: bool
- * - isLabelHidden: bool
- * - isLoading: bool
- * - isMultiple: bool
- * - isOptional: bool
- * - isRequired: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - statusVariant: str
- * - labelTooltip: string
- */
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(

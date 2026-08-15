@@ -6,27 +6,6 @@ import { toXmlBoolean, useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Switch?tab=properties
- * - label: string
- * - description: string
- * - disabledMessage: string
- * - htmlName: string
- * - labelTooltip: string
- * - value: bool
- * - isLoading: bool
- * - isDisabled: bool
- * - isOptional: bool
- * - isRequired: bool
- * - isLabelHidden: bool
- * - size: str
- * - labelSpacing: int | float
- * - labelPosition: str
- * - width: str | int
- * - status: str
- * - statusMessage: string
- */
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
