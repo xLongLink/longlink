@@ -1,5 +1,5 @@
-import type { IconRegistry } from '@astryxdesign/core/Icon';
 import type { LucideIcon } from 'lucide-react';
+import type { IconRegistry } from '@astryxdesign/core/Icon';
 import {
     X,
     ChevronDown,

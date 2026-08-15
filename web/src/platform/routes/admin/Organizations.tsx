@@ -8,8 +8,8 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -18,8 +18,8 @@ import { useDeleteDialog } from '@/lib/utils';
 import { usePaginate } from '@/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey } from '@/lib/query-keys';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin organizations page. */

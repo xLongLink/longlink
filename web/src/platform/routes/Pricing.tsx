@@ -6,8 +6,8 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { Page } from '@/platform/layouts/Page';
 import { publicSeoMeta } from '@/lib/seo';
+import { Page } from '@/platform/layouts/Page';
 
 export const metadata = {
     path: '/pricing',

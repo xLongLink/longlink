@@ -14,8 +14,8 @@ import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v
 import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { usePaginate } from '@/hooks/pagination';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { platformApiPath } from '@/lib/platform-api';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const statusVariants = {

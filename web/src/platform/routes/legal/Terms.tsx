@@ -5,8 +5,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { ArticlePage } from '@/lib/articles';
-import { Legal } from '@/platform/layouts/Legal';
 import { publicSeoMeta } from '@/lib/seo';
+import { Legal } from '@/platform/layouts/Legal';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {

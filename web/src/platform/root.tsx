@@ -2,10 +2,10 @@ import { Outlet } from 'react-router';
 import { useState, type ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import '@/index.css';
-import { Document } from '@/components/layouts/Document';
 import { AstryxProvider } from '@/providers';
 import { UserProvider } from '@/hooks/use-user';
 import { createQueryClient } from '@/lib/react-query';
+import { Document } from '@/components/layouts/Document';
 
 /** Renders the complete Platform HTML document for prerendering and hydration. */
 export function Layout({ children }: { children: ReactNode }) {

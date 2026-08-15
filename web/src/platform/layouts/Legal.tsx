@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Link } from '@astryxdesign/core/Link';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders legal content with the fixed legal navigation. */

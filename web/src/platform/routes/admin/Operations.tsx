@@ -8,8 +8,8 @@ import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.ge
 import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { usePaginate } from '@/hooks/pagination';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { platformApiPath } from '@/lib/platform-api';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the admin operations page. */
