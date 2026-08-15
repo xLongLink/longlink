@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
 import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,8 +11,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { Wordmark } from '@/components/Wordmark';
 import { platformApiPath } from '@/lib/platform-api';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 type RegisterValues = {
     email: string;
@@ -50,17 +48,7 @@ export default function Register() {
     });
 
     return (
-        <AuthPage
-            title={
-                <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-                    <Text color="inherit" type="inherit">
-                        Welcome to
-                    </Text>
-                    <Wordmark size="heading" />
-                </HStack>
-            }
-            description={<Divider label="Please enter your email" />}
-        >
+        <AuthPage title={<WelcomeTitle />} description={<Divider label="Please enter your email" />}>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller

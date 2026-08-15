@@ -12,43 +12,6 @@ permissions:
     contents: read
 
 jobs:
-    format:
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Setup Python environment
-              uses: ./.github/actions/setup-python
-
-            - name: Setup web environment
-              uses: ./.github/actions/setup-vite
-
-            - name: Install API dependencies
-              working-directory: api
-              run: uv sync --locked --extra dev
-
-            - name: Check API formatting
-              working-directory: api
-              run: uv run --locked ruff check .
-
-            - name: Check Platform API client generation
-              working-directory: web
-              run: vp run check:platform-api
-
-            - name: Install SDK dependencies
-              working-directory: sdk
-              run: uv sync --locked --group dev
-
-            - name: Check SDK formatting
-              working-directory: sdk
-              run: uv run --locked ruff check .
-
-            - name: Check web formatting
-              working-directory: web
-              run: vp run check
-
     # The API is packaged into a container, so test it on the supported Python runtime.
     api-tests:
         runs-on: ubuntu-latest
@@ -66,6 +29,14 @@ jobs:
             - name: Install dependencies
               working-directory: api
               run: uv sync --locked --extra dev
+
+            - name: Check API formatting
+              working-directory: api
+              run: uv run --locked ruff check .
+
+            - name: Check Platform API client generation
+              working-directory: web
+              run: vp run check:platform-api
 
             - name: Build API web bundle
               working-directory: web
@@ -97,6 +68,10 @@ jobs:
               working-directory: sdk
               run: uv sync --locked --group dev
 
+            - name: Check SDK formatting
+              working-directory: sdk
+              run: uv run --locked ruff check .
+
             - name: Build SDK web bundle
               working-directory: web
               run: vp run build:sdk:bundle --logLevel warn
@@ -123,6 +98,10 @@ jobs:
 
             - name: Setup web environment
               uses: ./.github/actions/setup-vite
+
+            - name: Check web formatting
+              working-directory: web
+              run: vp run check
 
             - name: Run tests
               working-directory: web

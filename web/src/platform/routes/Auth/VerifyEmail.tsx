@@ -7,7 +7,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -15,7 +14,6 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { Wordmark } from '@/components/Wordmark';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
@@ -23,6 +21,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 type RegistrationCompleteValues = {
     name: string;
@@ -97,6 +96,12 @@ export default function VerifyEmail() {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
                 verification.mutate('');
+            }
+            if (
+                error instanceof ApiError &&
+                (error.code === 'REGISTER_SETUP_MISMATCH' || error.code === 'REGISTER_USER_ALREADY_EXISTS')
+            ) {
+                return;
             }
             const message =
                 error instanceof ApiError && error.code === 'REGISTER_USER_ALREADY_EXISTS'
@@ -179,17 +184,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage
-            title={
-                <HStack as="span" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-                    <Text color="inherit" type="inherit">
-                        Welcome to
-                    </Text>
-                    <Wordmark size="heading" />
-                </HStack>
-            }
-            description={<Divider label="Email verified. Complete your profile." />}
-        >
+        <AuthPage title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
