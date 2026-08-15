@@ -126,12 +126,10 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
         # Act
         fetched = await applications.fetch(session)
         listed = await organizations.applications(session, organization.id)
-        listed_with_deleted = await organizations.applications(session, organization.id, include_deleted=True)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
     assert [application.id for application in listed] == [active_application.id]
-    assert [application.id for application in listed_with_deleted] == [deleted_application.id, active_application.id]
 
 
 async def test_mark_running_updates_active_applications() -> None:

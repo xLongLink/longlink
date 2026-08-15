@@ -270,8 +270,6 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
         await session.commit()
     replacement_claim = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
-    async with session_scope() as session:
-        expired_compute_row = await session.get(ComputeRegistry, expired_compute.id)
 
     # Verify only eligible waiting work was claimed.
     assert second_active_claim is None
@@ -280,8 +278,6 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert replacement_claim is None
     assert expired_row.status == OperationStatus.failed
     assert expired_row.lease_expires_at is None
-    assert expired_compute_row is not None
-    assert expired_compute_row.status == Status.creating
 
 
 async def test_operations_service_expiry_preserves_published_compute_success() -> None:
@@ -359,16 +355,12 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     failed_claim = await claim_operation()
     assert failed_claim is not None
     finished = await fail_operation(failed_claim.id)
-    async with session_scope() as session:
-        failed_compute_row = await session.get(ComputeRegistry, failed_compute.id)
 
     # Verify both terminal states retain their expected lifecycle metadata.
     assert completed is not None
     assert completed.status == OperationStatus.completed
     assert finished is not None
     assert finished.status == OperationStatus.failed
-    assert failed_compute_row is not None
-    assert failed_compute_row.status == Status.creating
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:

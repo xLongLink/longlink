@@ -1,5 +1,5 @@
 from httpx2 import AsyncClient
-from factories import queue_operation, create_ready_infrastructure
+from factories import create_compute, queue_operation
 
 
 async def test_operations_endpoint_returns_targeted_operations(
@@ -9,10 +9,10 @@ async def test_operations_endpoint_returns_targeted_operations(
 
     # Arrange
     client = clients[0]
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_compute()
     operation = await queue_operation(
-        infrastructure.compute.id,
-        target_id=infrastructure.compute.id,
+        compute.id,
+        target_id=compute.id,
     )
 
     # Act

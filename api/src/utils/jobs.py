@@ -1,6 +1,5 @@
 import asyncio
 from uuid import UUID
-from fastapi import HTTPException
 from src.logger import logger
 from src.operations import OperationHandler, handlers
 from collections.abc import Callable, Awaitable
@@ -69,8 +68,6 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
         raise
     except TimeoutError:
         reason = "Operation timed out"
-    except HTTPException as exc:
-        reason = str(exc.detail)
     except Exception as exc:
         logger.exception("Operation %s failed: %r", operation.id, exc)
         reason = str(exc) or type(exc).__name__
@@ -97,14 +94,13 @@ async def run_operation_scheduler() -> None:
 
     # Keep polling after transient database failures so the worker remains available.
     while True:
+        operation: Operation | None = None
         try:
             async with session_scope() as session:
                 operation = await operations.claim(session)
                 await session.commit()
         except Exception as exc:
             logger.exception("Operation scheduler polling failed: %r", exc)
-            await asyncio.sleep(1)
-            continue
 
         # Sleep briefly when the queue has no claimable work.
         if operation is None:

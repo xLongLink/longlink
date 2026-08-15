@@ -9,8 +9,8 @@ from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from kr8s.asyncio import Api
-from importlib.resources import files
-from kr8s.asyncio.objects import Secret, Namespace, new_class
+from importlib.resources import files, as_file
+from kr8s.asyncio.objects import Secret, Namespace, new_class, objects_from_files
 from src.kubernetes.utils import apply
 from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
@@ -197,8 +197,21 @@ class Gateway:
 
         self._client = client
 
+    async def install_controller(self) -> None:
+        """Install the Envoy Gateway controller required by every Compute."""
+
+        # Apply the version-pinned Envoy manifest bundled with LongLink before using its APIs.
+        manifest = files("src.kubernetes.templates").joinpath("platform", "envoy-gateway-v1.8.3.yml")
+        with as_file(manifest) as manifest_path:
+            resources = await objects_from_files(manifest_path, api=await self._client.api())
+            for resource in resources:
+                await apply(resource)
+
     async def apply(self, tls: GatewayTLS | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""
+
+        # Every registered kubeconfig gets the controller before LongLink creates Gateway API resources.
+        await self.install_controller()
 
         # Render LongLink resources that target the required Envoy Gateway controller.
         namespace, gateway_class, gateway, client_traffic_policy = templates.readyml_list(

@@ -204,21 +204,21 @@ async def delete_organization(
 ):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
-    # The initiating owner or a Platform administrator may retry cleanup after memberships are removed.
-    tombstone = await organizations.get(session, organization_id, include_deleted=True)
-    if tombstone is not None and tombstone.deleted_at is not None:
-        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+    # The initiating owner may retry cleanup after memberships are removed.
+    if user.role != PlatformRoles.administrator:
+        tombstone = await organizations.get(session, organization_id, include_deleted=True)
+        if tombstone is not None and tombstone.deleted_at is not None and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
-    # Require active Organization ownership for the first deletion request.
-    elif user.role != PlatformRoles.administrator:
-        membership = await organizations.membership(session, user.id, organization_id)
-        if membership is None:
-            raise HTTPException(status_code=403, detail="Access required")
+        # Require active Organization ownership for the first deletion request.
+        if tombstone is None or tombstone.deleted_at is None:
+            membership = await organizations.membership(session, user.id, organization_id)
+            if membership is None:
+                raise HTTPException(status_code=403, detail="Access required")
 
-        # Require organization owners to delete organizations.
-        if not roles.atleast(membership.role, OrganizationRoles.owner):
-            raise HTTPException(status_code=403, detail="Permission required")
+            # Require organization owners to delete organizations.
+            if not roles.atleast(membership.role, OrganizationRoles.owner):
+                raise HTTPException(status_code=403, detail="Permission required")
 
     # Tombstone the Organization and its lifecycle cleanup atomically.
     result = await organizations.soft_delete(session, organization_id, user)

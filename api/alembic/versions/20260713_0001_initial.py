@@ -271,7 +271,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_operations_queue",
         "operations",
-        ["kind", "target_id", "finished_at", "lease_expires_at", "created_at", "id"],
+        ["kind", "target_id", "finished_at", "lease_expires_at"],
     )
 
 

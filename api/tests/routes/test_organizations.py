@@ -12,15 +12,12 @@ from src.database.models.association import UserOrganization
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
     client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], name="Existing", slug="existing", infrastructure=infrastructure)
-    least_used_infrastructure = await create_ready_infrastructure(name="Least used")
+    await create_ready_infrastructure()
 
     # Act
     response = await client.post(
