@@ -1,4 +1,3 @@
-import ssl
 import httpx2
 import asyncio
 import hashlib
@@ -286,23 +285,6 @@ class Gateway:
         api = await self._client.api()
         await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
         await apply(gateway_client_ca_secret(tls.ca_certificate, api))
-
-        # Do not publish the Compute until Envoy serves the final address-bound certificate.
-        context = ssl.create_default_context(cadata=tls.ca_certificate)
-        with tempfile.NamedTemporaryFile(mode="w") as identity:
-            identity.write(f"{tls.client_certificate}\n{tls.client_private_key}")
-            identity.flush()
-            context.load_cert_chain(identity.name)
-        while True:
-            try:
-                async with asyncio.timeout(10):
-                    _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
-            except (TimeoutError, OSError, ssl.SSLError):
-                await asyncio.sleep(5)
-                continue
-            writer.close()
-            await writer.wait_closed()
-            return
 
     async def delete(self) -> None:
         """Delete the cluster-scoped LongLink GatewayClass and wait for completion."""
