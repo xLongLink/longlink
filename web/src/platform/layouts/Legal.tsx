@@ -7,19 +7,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
-import type { ArticleNavigationGroup } from '@/lib/articles';
 import { Wordmark } from '@/components/Wordmark';
-
-const LEGAL_GROUPS: ArticleNavigationGroup[] = [
-    {
-        title: 'Legal',
-        items: [
-            { title: 'Terms', path: '/terms' },
-            { title: 'Impressum', path: '/impressum' },
-            { title: 'Privacy', path: '/privacy' },
-        ],
-    },
-];
 
 /** Renders legal content with the fixed legal navigation. */
 export function Legal({ children }: { children: ReactNode }) {
@@ -46,19 +34,11 @@ export function Legal({ children }: { children: ReactNode }) {
                     }
                 >
                     <Stack paddingInline={2}>
-                        {LEGAL_GROUPS.map((group) => (
-                            <SideNavSection key={group.title} title={group.title}>
-                                {group.items.map((item) => (
-                                    <SideNavItem
-                                        key={item.path}
-                                        href={item.path}
-                                        icon={item.icon}
-                                        isSelected={pathname === item.path}
-                                        label={item.title}
-                                    />
-                                ))}
-                            </SideNavSection>
-                        ))}
+                        <SideNavSection title="Legal">
+                            <SideNavItem href="/terms" isSelected={pathname === '/terms'} label="Terms" />
+                            <SideNavItem href="/impressum" isSelected={pathname === '/impressum'} label="Impressum" />
+                            <SideNavItem href="/privacy" isSelected={pathname === '/privacy'} label="Privacy" />
+                        </SideNavSection>
                     </Stack>
                 </SideNav>
             }

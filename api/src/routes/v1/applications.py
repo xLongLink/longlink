@@ -36,8 +36,6 @@ async def create_application(
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    application_slug = names.slugify(payload.name)
-
     # Resolve immutable image metadata before creating durable Application state.
     metadata = await images.metadata(payload.image)
     if metadata is None:
@@ -55,7 +53,7 @@ async def create_application(
         session,
         organization_id,
         payload.name,
-        application_slug,
+        names.slugify(payload.name),
         image=metadata.image,
         description=payload.description,
         icon=payload.icon,

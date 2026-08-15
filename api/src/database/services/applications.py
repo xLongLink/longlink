@@ -156,11 +156,9 @@ async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secre
         return None
 
     # Reuse durable runtime values after an interrupted creation attempt.
-    if any(name.startswith("LONGLINK_") for name in application.secrets):
-        return application.secrets
-
-    # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-    application.secrets = {**application.secrets, **secrets}
+    if not any(name.startswith("LONGLINK_") for name in application.secrets):
+        # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
+        application.secrets = {**application.secrets, **secrets}
     return application.secrets
 
 

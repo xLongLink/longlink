@@ -103,14 +103,13 @@ class Applications:
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
         while await Namespace(namespace, api=api).exists():
-            resources = (
+            remaining = False
+            for resource in (
                 Deployment(str(application_id), namespace=namespace, api=api),
                 Service(f"app-{application_id}", namespace=namespace, api=api),
                 Secret(str(application_id), namespace=namespace, api=api),
                 HTTPRouteResource(str(application_id), namespace=namespace, api=api),
-            )
-            remaining = False
-            for resource in resources:
+            ):
                 if await resource.exists():
                     await resource.refresh()
                     remaining = True
@@ -118,11 +117,7 @@ class Applications:
                         await resource.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            pods = [
-                pod
-                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-                if isinstance(pod, Pod)
-            ]
+            pods = [pod async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})]
             if not remaining and not any(pod.raw["status"].get("phase") not in {"Succeeded", "Failed"} for pod in pods):
                 return
             await asyncio.sleep(5)
@@ -136,7 +131,7 @@ class Applications:
             active = [
                 pod
                 async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-                if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
+                if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
             ]
             if not active:
                 raise RuntimeError("Application logs unavailable")

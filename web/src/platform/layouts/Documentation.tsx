@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { createElement } from 'react';
 import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
@@ -22,78 +21,7 @@ import {
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
-import type { ArticleNavigationGroup } from '@/lib/articles';
 import { Wordmark } from '@/components/Wordmark';
-
-const documentationGroups: ArticleNavigationGroup[] = [
-    {
-        title: 'Overview',
-        items: [
-            { title: 'Introduction', path: '/docs', icon: createElement(BookOpen, { 'aria-hidden': true, size: 16 }) },
-        ],
-    },
-    {
-        title: 'Platform',
-        items: [
-            {
-                title: 'Overview',
-                path: '/docs/api',
-                icon: createElement(ShieldCheck, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Organizations',
-                path: '/docs/api/organizations',
-                icon: createElement(Building2, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Applications',
-                path: '/docs/api/applications',
-                icon: createElement(AppWindow, { 'aria-hidden': true, size: 16 }),
-            },
-        ],
-    },
-    {
-        title: 'Applications',
-        items: [
-            { title: 'Overview', path: '/docs/sdk', icon: createElement(Package, { 'aria-hidden': true, size: 16 }) },
-            {
-                title: 'Environments',
-                path: '/docs/sdk/environments',
-                icon: createElement(Globe, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Routes',
-                path: '/docs/sdk/routes',
-                icon: createElement(Waypoints, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Storage',
-                path: '/docs/sdk/storage',
-                icon: createElement(HardDrive, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Database',
-                path: '/docs/sdk/database',
-                icon: createElement(Database, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Pages',
-                path: '/docs/sdk/pages',
-                icon: createElement(FileCode2, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Testing',
-                path: '/docs/sdk/testing',
-                icon: createElement(FlaskConical, { 'aria-hidden': true, size: 16 }),
-            },
-            {
-                title: 'Building',
-                path: '/docs/sdk/building',
-                icon: createElement(Rocket, { 'aria-hidden': true, size: 16 }),
-            },
-        ],
-    },
-];
 
 /** Renders documentation content with the fixed documentation navigation. */
 export function Documentation({ children }: { children: ReactNode }) {
@@ -120,19 +48,84 @@ export function Documentation({ children }: { children: ReactNode }) {
                     }
                 >
                     <Stack paddingInline={2}>
-                        {documentationGroups.map((group) => (
-                            <SideNavSection key={group.title} title={group.title}>
-                                {group.items.map((item) => (
-                                    <SideNavItem
-                                        key={item.path}
-                                        href={item.path}
-                                        icon={item.icon}
-                                        isSelected={pathname === item.path}
-                                        label={item.title}
-                                    />
-                                ))}
-                            </SideNavSection>
-                        ))}
+                        <SideNavSection title="Overview">
+                            <SideNavItem
+                                href="/docs"
+                                icon={<BookOpen aria-hidden size={16} />}
+                                isSelected={pathname === '/docs'}
+                                label="Introduction"
+                            />
+                        </SideNavSection>
+                        <SideNavSection title="Platform">
+                            <SideNavItem
+                                href="/docs/api"
+                                icon={<ShieldCheck aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/api'}
+                                label="Overview"
+                            />
+                            <SideNavItem
+                                href="/docs/api/organizations"
+                                icon={<Building2 aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/api/organizations'}
+                                label="Organizations"
+                            />
+                            <SideNavItem
+                                href="/docs/api/applications"
+                                icon={<AppWindow aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/api/applications'}
+                                label="Applications"
+                            />
+                        </SideNavSection>
+                        <SideNavSection title="Applications">
+                            <SideNavItem
+                                href="/docs/sdk"
+                                icon={<Package aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk'}
+                                label="Overview"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/environments"
+                                icon={<Globe aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/environments'}
+                                label="Environments"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/routes"
+                                icon={<Waypoints aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/routes'}
+                                label="Routes"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/storage"
+                                icon={<HardDrive aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/storage'}
+                                label="Storage"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/database"
+                                icon={<Database aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/database'}
+                                label="Database"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/pages"
+                                icon={<FileCode2 aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/pages'}
+                                label="Pages"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/testing"
+                                icon={<FlaskConical aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/testing'}
+                                label="Testing"
+                            />
+                            <SideNavItem
+                                href="/docs/sdk/building"
+                                icon={<Rocket aria-hidden size={16} />}
+                                isSelected={pathname === '/docs/sdk/building'}
+                                label="Building"
+                            />
+                        </SideNavSection>
                     </Stack>
                 </SideNav>
             }

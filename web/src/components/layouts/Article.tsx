@@ -9,11 +9,13 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
+import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
 
 /** Renders shared documentation and legal article content. */
 export function Article({ page }: { page: ArticlePage }) {
     const { content, metadata } = page;
+    const Breadcrumb = page.path.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
 
     return (
         <Layout
@@ -22,7 +24,7 @@ export function Article({ page }: { page: ArticlePage }) {
                 <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" hasDivider padding={0}>
                     <Stack className="relative" height={64} width="100%">
                         <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                            <Breadcrumb article className="min-w-0 overflow-hidden" />
+                            <Breadcrumb className="min-w-0 overflow-hidden" />
                         </PageContainer>
                         <Center className="absolute end-0 top-0 px-4" height={64}>
                             <Button href="/organizations" label="Get Started" size="sm" variant="primary" />

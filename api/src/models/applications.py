@@ -36,7 +36,7 @@ class ApplicationCreate(BaseModel):
                 raise ValueError(f"Environment variable '{name}' is too long")
 
             # Environment names must be shell-compatible identifiers.
-            if not re.fullmatch(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
                 raise ValueError(f"Environment variable '{name}' is invalid")
 
             # Reserve Platform-managed runtime variables for reconciliation.
