@@ -295,8 +295,9 @@ class Gateway:
             context.load_cert_chain(identity.name)
         while True:
             try:
-                _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
-            except (OSError, ssl.SSLError):
+                async with asyncio.timeout(10):
+                    _, writer = await asyncio.open_connection(address, 443, ssl=context, server_hostname=address)
+            except (TimeoutError, OSError, ssl.SSLError):
                 await asyncio.sleep(5)
                 continue
             writer.close()
