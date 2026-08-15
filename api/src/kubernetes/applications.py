@@ -2,6 +2,7 @@ import json
 import base64
 import asyncio
 import hashlib
+from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
@@ -130,13 +131,19 @@ class Applications:
         """Return recent logs for one managed Application Pod."""
 
         # The globally unique Application ID identifies its Pod across Organization Namespaces.
-        api = await self._client.api()
-        active = [
-            pod
-            async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-            if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
-        ]
+        try:
+            api = await self._client.api()
+            active = [
+                pod
+                async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+                if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
+            ]
+        except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
+            raise RuntimeError("Application logs unavailable") from exc
         if not active:
-            raise ValueError("No Application Pod found")
+            raise RuntimeError("Application logs unavailable")
         pod = min(active, key=lambda item: item.name)
-        return [line async for line in pod.logs(tail_lines=200)]
+        try:
+            return [line async for line in pod.logs(tail_lines=200)]
+        except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
+            raise RuntimeError("Application logs unavailable") from exc

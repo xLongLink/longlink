@@ -92,7 +92,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
     assert payload["image_desired"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert payload["image_deployed"] is None
     assert "envs" not in payload
     assert "secret-value" not in response.text
 

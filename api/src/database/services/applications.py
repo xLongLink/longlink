@@ -67,10 +67,6 @@ async def create(
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
-    # Validate direct service callers while preserving already-validated API values.
-    if "@" not in image:
-        raise ValueError("Application image must be pinned to its resolved digest")
-
     # Lock the Organization and its assigned Compute registry before validating their lifecycle state.
     result = await session.execute(
         select(Organization, ComputeRegistry.status)
@@ -93,7 +89,7 @@ async def create(
         name=name,
         slug=slug,
         description=description,
-        image_desired=str(image),
+        image_desired=image,
         icon=icon,
         secrets=secrets,
     )
@@ -105,14 +101,15 @@ async def create(
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
         await session.flush()
-        await operations.enqueue(
-            session,
-            organization.compute_id,
-            kind=OperationKind.application_create,
-            target_id=application.id,
-        )
     except IntegrityError as exc:
         raise ConflictError("Application slug already exists") from exc
+
+    await operations.enqueue(
+        session,
+        organization.compute_id,
+        kind=OperationKind.application_create,
+        target_id=application.id,
+    )
 
     return application
 
@@ -141,7 +138,7 @@ async def release(
         return None
 
     # Persist the image-derived desired release before scheduling its convergence.
-    application.image_desired = str(image)
+    application.image_desired = image
     application.description = description
     application.updated_id = user.id
     application.organization = organization

@@ -2470,17 +2470,6 @@
             "type": "string",
             "title": "Image Desired"
           },
-          "image_deployed": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Image Deployed"
-          },
           "status": {
             "$ref": "#/components/schemas/Status"
           },
@@ -2499,7 +2488,6 @@
           "icon",
           "description",
           "image_desired",
-          "image_deployed",
           "status",
           "created_at"
         ],

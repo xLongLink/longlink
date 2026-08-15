@@ -75,10 +75,6 @@ export type ApplicationResponse = {
      * Image Desired
      */
     image_desired: string;
-    /**
-     * Image Deployed
-     */
-    image_deployed: string | null;
     status: Status;
     /**
      * Created At
