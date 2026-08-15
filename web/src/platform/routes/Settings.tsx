@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -12,26 +11,24 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Settings2, UserRound } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
-import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
 import { useUserProfile } from '@/hooks/use-user';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
-import { userProfileQueryKey } from '@/lib/query-keys';
 import { PageContainer } from '@/components/PageContainer';
-import { useDeleteOrganization } from '@/hooks/use-organization';
+import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
-    const location = useLocation();
     const { user, memberships, isLoading: isProfileLoading, isOrganizationsLoading } = useUserProfile();
     const queryClient = useQueryClient();
     const { mutateAsync: updateUser } = useMutation({
@@ -47,11 +44,13 @@ export default function Settings() {
             queryClient.setQueryData(userProfileQueryKey, updatedUser);
         },
     });
-    const deleteOrganization = useDeleteOrganization();
+    const deleteOrganization = useMutation({
+        mutationFn: (organizationId: string) =>
+            requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+    });
     const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
-    const hash = location.hash.replace(/^#/, '');
-    const section = hash === 'organizations' || hash === 'account' ? hash : 'account';
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
     const isLoading = isProfileLoading || isOrganizationsLoading;
@@ -153,26 +152,9 @@ export default function Settings() {
                         <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
                     </VStack>
 
-                    <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-                        <SideNav className="h-auto w-full">
-                            <SideNavSection title="Settings" isHeaderHidden>
-                                <SideNavItem
-                                    href="#account"
-                                    icon={<UserRound aria-hidden="true" size={16} />}
-                                    isSelected={section === 'account'}
-                                    label="Account"
-                                />
-                                <SideNavItem
-                                    href="#organizations"
-                                    icon={<Building2 aria-hidden="true" size={16} />}
-                                    isSelected={section === 'organizations'}
-                                    label="Organizations"
-                                />
-                            </SideNavSection>
-                        </SideNav>
-
-                        <div className="min-w-0">
-                            {section === 'account' ? (
+                    <Menu className="h-auto w-full">
+                        <MenuSection title="Settings" isHeaderHidden>
+                            <MenuItem icon={<UserRound aria-hidden="true" size={16} />} label="Account">
                                 <VStack gap={4}>
                                     <Heading level={2}>Account</Heading>
                                     <HStack gap={4} align="start" wrap="wrap">
@@ -200,9 +182,8 @@ export default function Settings() {
                                         />
                                     </HStack>
                                 </VStack>
-                            ) : null}
-
-                            {section === 'organizations' ? (
+                            </MenuItem>
+                            <MenuItem icon={<Building2 aria-hidden="true" size={16} />} label="Organizations">
                                 <VStack gap={4}>
                                     <HStack gap={4} justify="between" align="end" wrap="wrap">
                                         <Heading level={2}>Organizations</Heading>
@@ -219,9 +200,9 @@ export default function Settings() {
                                         />
                                     )}
                                 </VStack>
-                            ) : null}
-                        </div>
-                    </div>
+                            </MenuItem>
+                        </MenuSection>
+                    </Menu>
 
                     <DeleteConfirmation {...deleteDialog.dialogProps} />
                 </PageContainer>

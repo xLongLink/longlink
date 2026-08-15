@@ -25,7 +25,7 @@ import type {
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
+import { useOrganizationMembers } from '@/hooks/use-organization';
 
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     read: 'read',
@@ -63,8 +63,7 @@ export default function People({
         member: OrganizationMemberAccessResponse;
         role: Role;
     } | null>(null);
-    const inviteMember = useInviteOrganizationMember(organizationId);
-    const changeMemberRole = useChangeOrganizationMemberRole(organizationId);
+    const { inviteMember, changeMemberRole } = useOrganizationMembers(organizationId);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [
