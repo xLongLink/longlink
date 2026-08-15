@@ -257,19 +257,12 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                 />
             </Card>
         );
-    } else if (applicationStatus === 'failed' || applicationStatus === 'deleting') {
-        // Keep failed and deleting applications out of the runtime while surfacing their lifecycle state.
+    } else if (applicationStatus === 'deleting') {
+        // Keep deleting applications out of the runtime while surfacing their lifecycle state.
         applicationState = (
             <ErrorState
-                isAlert={applicationStatus === 'failed'}
-                message={
-                    applicationStatus === 'failed'
-                        ? 'LongLink could not deploy this application. Contact an administrator before trying again.'
-                        : 'This application is unavailable while LongLink removes it.'
-                }
-                title={
-                    applicationStatus === 'failed' ? 'Application deployment failed' : 'Application is being deleted'
-                }
+                message="This application is unavailable while LongLink removes it."
+                title="Application is being deleted"
             />
         );
     } else if (error) {

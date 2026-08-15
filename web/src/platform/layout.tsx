@@ -6,7 +6,7 @@ import { normalizePathname } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { ProfileMenu } from '@/components/Profile';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
 
 type PlatformLayoutProps = {
@@ -58,7 +58,7 @@ export default function PlatformLayout({
                         <Wordmark />
                     </Link>
                 ) : (
-                    <Breadcrumb />
+                    <PageBreadcrumb />
                 )
             }
             height={fillViewport ? 'fill' : 'auto'}

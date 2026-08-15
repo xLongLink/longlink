@@ -38,21 +38,18 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     assert claimed.kind == OperationKind.application_delete
     assert claimed.target_id == application.id
 
-    class FailingApplications:
-        """Fail workload removal before the provider cleanup boundary."""
-
-        async def delete(self, *_args: object) -> None:
-            """Raise the Kubernetes deletion failure under test."""
-
-            raise RuntimeError("Kubernetes workload deletion failed")
-
     class FailingKubernetes:
         """Expose the failing Application workload client."""
 
         def __init__(self, _kubeconfig: str) -> None:
             """Initialize the fake Kubernetes client."""
 
-            self.applications = FailingApplications()
+            self.applications = self
+
+        async def delete(self, *_args: object) -> None:
+            """Raise the Kubernetes deletion failure under test."""
+
+            raise RuntimeError("Kubernetes workload deletion failed")
 
     def unexpected_provider(*_args: object) -> object:
         """Fail if provider cleanup runs before Kubernetes deletion completes."""

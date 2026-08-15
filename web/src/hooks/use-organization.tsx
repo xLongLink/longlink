@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
-    OrganizationCreate,
     OrganizationDetails,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
@@ -19,7 +18,6 @@ export function useOrganization(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
-    const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
     const organizationQuery = useApiQuery<OrganizationDetails>(
         organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null,
@@ -31,7 +29,10 @@ export function useOrganization(organizationSlug: string) {
     );
 
     const error: (Error & { status?: number }) | null =
-        organizationQuery.error ?? (missingOrganization ? new ApiError('Organization not found', 404) : null);
+        organizationQuery.error ??
+        (!isUserLoading && organizationSlug.length > 0 && organizationId.length === 0
+            ? new ApiError('Organization not found', 404)
+            : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {
@@ -45,13 +46,13 @@ export function useOrganization(organizationSlug: string) {
     };
 }
 
-/** Invites one organization member and refreshes organization data. */
-export function useInviteOrganizationMember(organizationId: string) {
+/** Provides mutations for organization members and invitations. */
+export function useOrganizationMembers(organizationId: string) {
     const queryClient = useQueryClient();
     const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
-    return useMutation({
-        mutationFn: async ({ email, role }: OrganizationInvitationCreate) => {
+    const inviteMember = useMutation({
+        mutationFn: async (payload: OrganizationInvitationCreate) => {
             // Require a resolved organization before mutating.
             if (!organizationId) {
                 throw new Error('Organization not found');
@@ -60,52 +61,13 @@ export function useInviteOrganizationMember(organizationId: string) {
             await requestApi(platformApiPath(`/organizations/${organizationId}/invitations`), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, role }),
+                body: JSON.stringify(payload),
             });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
     });
-}
 
-/** Creates one application and refreshes organization application data. */
-export function useCreateOrganizationApplication(organizationId: string) {
-    const queryClient = useQueryClient();
-    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
-
-    return useMutation({
-        mutationFn: async ({
-            name,
-            image,
-            description,
-            icon,
-            envs,
-        }: ApplicationCreate & { envs: Record<string, string> }) => {
-            // Require a resolved organization before creating apps.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
-
-            await requestApi(platformApiPath(`/organizations/${organizationId}/applications`), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, image, description, icon, envs }),
-            });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-            await queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
-        },
-    });
-}
-
-/** Changes one organization member role and refreshes membership data. */
-export function useChangeOrganizationMemberRole(organizationId: string) {
-    const queryClient = useQueryClient();
-    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
-
-    return useMutation({
+    const changeMemberRole = useMutation({
         mutationFn: async ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) => {
             // Require a resolved organization before mutating.
             if (!organizationId) {
@@ -118,54 +80,61 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
                 body: JSON.stringify({ role }),
             });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+            ]),
+    });
+
+    return { inviteMember, changeMemberRole };
+}
+
+/** Creates one application and refreshes organization application data. */
+export function useCreateOrganizationApplication(organizationId: string) {
+    const queryClient = useQueryClient();
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
+
+    return useMutation({
+        mutationFn: async (payload: ApplicationCreate) => {
+            // Require a resolved organization before creating apps.
+            if (!organizationId) {
+                throw new Error('Organization not found');
+            }
+
+            await requestApi(platformApiPath(`/organizations/${organizationId}/applications`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
         },
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+            ]),
     });
 }
 
 /** Deletes one application and refreshes organization application data. */
 export function useDeleteOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async (applicationId: string) => {
             // Require a resolved organization before deleting apps.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
             await requestApi(platformApiPath(`/applications/${applicationId}`), { method: 'DELETE' });
         },
-        onSuccess: () => {
-            if (organizationPath === null) {
-                return;
-            }
-
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-            queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
-        },
-    });
-}
-
-/** Creates a new organization and refreshes the authenticated user cache. */
-export function useCreateOrganization() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ name }: OrganizationCreate) =>
-            zOrganizationSummary.parse(
-                await fetchApiJson(platformApiPath('/organizations'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name }),
-                })
-            ),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
-        },
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+            ]),
     });
 }
 
@@ -189,35 +158,13 @@ export function useUpdateOrganization(organizationId: string) {
                 })
             );
         },
-        onSuccess: async () => {
-            // Refresh every response that embeds Organization metadata.
-            await Promise.all([
+        // Refresh every response that embeds Organization metadata.
+        onSuccess: () =>
+            Promise.all([
                 queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
                 queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
                 queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
                 queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
-            ]);
-        },
-    });
-}
-
-/** Deletes one organization and refreshes the authenticated user cache. */
-export function useDeleteOrganization() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async (organizationId: string) => {
-            // Require an organization identifier before deleting.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
-
-            await requestApi(platformApiPath(`/organizations/${organizationId}`), {
-                method: 'DELETE',
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey });
-        },
+            ]),
     });
 }

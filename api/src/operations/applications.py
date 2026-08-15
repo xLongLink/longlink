@@ -12,17 +12,17 @@ async def create(claimed: Operation) -> str | None:
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
-        application = await applications.get(session, claimed.target_id)
-        if application is None:
+        target = await organizations.application_infrastructure(session, claimed.target_id)
+        if target is None:
             return None
-        infrastructure = await organizations.infrastructure(session, application.organization_id)
+        application, infrastructure = target
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
-    if not any(name.startswith("LONGLINK_") for name in application.secrets):
+    if "LONGLINK_ENV" not in application.secrets:
         # Resolve the Application's immutable provider assignments.
         db = Postgres(
             infrastructure.database.host,
@@ -40,10 +40,9 @@ async def create(claimed: Operation) -> str | None:
         # Generate fresh credentials for the initial creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
-        database_password = secrets.token_urlsafe(24)
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
-        connection = await db.schema(organization.id, application.id, database_password)
+        connection = await db.schema(organization.id, application.id, secrets.token_urlsafe(24))
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {
@@ -70,14 +69,13 @@ async def create(claimed: Operation) -> str | None:
         application.secrets = persisted_secrets
 
     # Apply the captured desired release so reconciliation repairs workload drift.
-    image_desired = application.image_desired
     await Kubernetes(infrastructure.compute.kubeconfig).applications.apply(
-        application.id, organization.id.hex, image_desired, application.secrets
+        application.id, organization.id.hex, application.image_desired, application.secrets
     )
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
-        await applications.publish_deployment(session, application.id, image_desired)
+        await applications.publish_deployment(session, application.id)
         await session.commit()
 
 
@@ -86,12 +84,12 @@ async def delete(claimed: Operation) -> str | None:
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        application = await applications.get(session, claimed.target_id, include_deleted=True)
-        if application is None:
+        target = await organizations.application_infrastructure(session, claimed.target_id, include_deleted=True)
+        if target is None:
             return None
+        application, infrastructure = target
         if application.deleted_at is None:
             return "Active Applications cannot be deleted by lifecycle cleanup"
-        infrastructure = await organizations.infrastructure(session, application.organization_id)
     if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization

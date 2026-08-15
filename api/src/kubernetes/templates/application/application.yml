@@ -62,7 +62,6 @@ metadata:
     name: app-$application_id
     namespace: '$namespace'
 spec:
-    type: ClusterIP
     selector:
         $application_id_label: $application_id
     ports:
@@ -75,9 +74,7 @@ metadata:
     namespace: '$namespace'
 spec:
     parentRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: longlink
+        - name: longlink
           namespace: longlink-system
           sectionName: https
     rules:
@@ -91,7 +88,5 @@ spec:
                     remove:
                         - x-longlink-application-id
           backendRefs:
-              - group: ''
-                kind: Service
-                name: app-$application_id
+              - name: app-$application_id
                 port: 8000

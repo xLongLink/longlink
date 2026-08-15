@@ -18,9 +18,7 @@ function isBindableValue(value: unknown): value is Record<string, unknown> {
 
 /** Coerces an evaluated XML control value without treating the string "false" as true. */
 export function toXmlBoolean(value: unknown): boolean {
-    if (value === false || value === 'false' || value == null || value === '') return false;
-
-    return Boolean(value);
+    return value !== 'false' && Boolean(value);
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
@@ -31,9 +29,8 @@ export function useBindableValue<T>(
     coerce: (value: unknown) => T,
     type?: 'file'
 ) {
-    const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
-    const target = resolveBindableTarget(rawValue, value, ctx);
+    const target = resolveBindableTarget(props[name], value, ctx);
     const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
     const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
     const [localValue, setLocalValue] = useState(() => coerce(value));

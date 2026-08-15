@@ -8,9 +8,20 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
+import {
+    AppWindow,
+    ArrowUpDown,
+    BookOpen,
+    Building2,
+    ChevronRight,
+    Database,
+    ExternalLink,
+    HardDrive,
+    Settings2,
+    Users,
+    Wrench,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ADMIN_NAVIGATION } from '@/platform/navigation';
 import { useSignOut, useUserProfile } from '@/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
@@ -19,6 +30,15 @@ export function ProfileMenu() {
     const signOut = useSignOut();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
+    const administrationItems = [
+        { href: '/admin/users', icon: Users, label: 'Users' },
+        { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
+        { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
+        { href: '/admin/database', icon: Database, label: 'Database' },
+        { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
+        { href: '/admin/compute', icon: Wrench, label: 'Compute' },
+        { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
+    ] as const;
 
     // Hide the profile menu until a user is loaded.
     if (!user) {
@@ -84,7 +104,7 @@ export function ProfileMenu() {
                                     </Text>
                                 }
                             >
-                                {ADMIN_NAVIGATION.map(({ href, icon: Icon, label }) => (
+                                {administrationItems.map(({ href, icon: Icon, label }) => (
                                     <ListItem
                                         key={href}
                                         endContent={

@@ -6,5 +6,4 @@ class Status(StrEnum):
 
     creating = "creating"
     running = "running"
-    failed = "failed"
     deleting = "deleting"

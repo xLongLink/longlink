@@ -98,6 +98,32 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
+async def application_infrastructure(
+    session: AsyncSession, application_id: UUID, include_deleted: bool = False
+) -> tuple[Application, Infrastructure | None] | None:
+    """Return one Application and its assigned infrastructure when all assignments exist."""
+
+    # Load the Application and its infrastructure in one lifecycle query.
+    statement = (
+        select(Application, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        .outerjoin(Organization, Organization.id == Application.organization_id)
+        .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+        .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+        .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
+        .where(Application.id == application_id)
+    )
+    result = await session.execute(statement)
+    row = result.tuples().one_or_none()
+    if row is None:
+        return None
+    application, organization, compute, database, storage = row
+    if application.deleted_at is not None and not include_deleted:
+        return None
+    if organization is None or compute is None or database is None or storage is None:
+        return application, None
+    return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
+
+
 async def fetch(session: AsyncSession) -> Sequence[Organization]:
     """Return all organizations in the database."""
 

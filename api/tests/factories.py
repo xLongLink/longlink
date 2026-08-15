@@ -31,6 +31,7 @@ async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKi
     # Tests without a resource command transaction commit their queued work here.
     async with session_scope() as session:
         operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
+        assert operation is not None
         await session.commit()
         return operation
 
@@ -151,12 +152,10 @@ async def create_application(
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
     parsed_image = Image(image)
     resolved_image = Image(image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
     async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         application = await applications.create(
             session,
             organization.id,

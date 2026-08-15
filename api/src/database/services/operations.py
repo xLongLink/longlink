@@ -2,7 +2,6 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import case, select, update
-from src.errors import NotFoundError
 from src.logger import logger
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
@@ -28,13 +27,13 @@ async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUI
     result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
     compute_ids = result.scalars().all()
     result = await session.execute(
-        select(col(Organization.id), col(Organization.deleted_at), col(Organization.compute_id)).order_by(
+        select(col(Organization.id), col(Organization.deleted_at).is_not(None), col(Organization.compute_id)).order_by(
             col(Organization.compute_id), col(Organization.id)
         )
     )
     organization_rows = result.all()
     result = await session.execute(
-        select(col(Application.id), col(Application.deleted_at), col(Organization.compute_id))
+        select(col(Application.id), col(Application.deleted_at).is_not(None), col(Organization.compute_id))
         .join(Organization, col(Organization.id) == col(Application.organization_id))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.compute_id), col(Application.id))
@@ -44,15 +43,15 @@ async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUI
     targets = [(OperationKind.compute_create, compute_id, compute_id) for compute_id in compute_ids]
     targets.extend(
         (
-            OperationKind.organization_delete if deleted_at is not None else OperationKind.organization_create,
+            OperationKind.organization_delete if deleted else OperationKind.organization_create,
             organization_id,
             compute_id,
         )
-        for organization_id, deleted_at, compute_id in organization_rows
+        for organization_id, deleted, compute_id in organization_rows
     )
     targets.extend(
-        (OperationKind.application_delete if deleted_at is not None else OperationKind.application_create, application_id, compute_id)
-        for application_id, deleted_at, compute_id in application_rows
+        (OperationKind.application_delete if deleted else OperationKind.application_create, application_id, compute_id)
+        for application_id, deleted, compute_id in application_rows
     )
     return targets
 
@@ -63,7 +62,7 @@ async def enqueue(
     *,
     kind: OperationKind,
     target_id: UUID,
-) -> Operation:
+) -> Operation | None:
     """Add one Platform operation to an existing command transaction."""
 
     if kind == OperationKind.compute_create and target_id != compute_id:
@@ -72,7 +71,7 @@ async def enqueue(
     # Require the assigned compute before scheduling its resource work.
     compute_result = await session.scalar(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
     if compute_result is None:
-        raise NotFoundError("Operation compute registry not found")
+        return None
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(
@@ -100,7 +99,7 @@ async def claim(session: AsyncSession) -> Operation | None:
     # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
     now = utcnow()
 
-    # Classify the active lease, expired lease, or next Operation in one locked query.
+    # Classify the active lease, expired lease, or next Operation.
     operation = await session.scalar(
         select(Operation)
         .where(Operation.finished_at.is_(None))
@@ -114,7 +113,6 @@ async def claim(session: AsyncSession) -> Operation | None:
             Operation.id.asc(),
         )
         .limit(1)
-        .with_for_update()
     )
     if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
         return None

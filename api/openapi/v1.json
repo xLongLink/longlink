@@ -3261,7 +3261,6 @@
         "enum": [
           "creating",
           "running",
-          "failed",
           "deleting"
         ],
         "title": "Status",

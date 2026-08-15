@@ -47,7 +47,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "failed",
                 "deleting",
                 name="compute_status_enum",
                 native_enum=False,
@@ -108,7 +107,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "failed",
                 "deleting",
                 name="organization_status_enum",
                 native_enum=False,
@@ -146,7 +144,6 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=100), nullable=False),
         sa.Column("icon", sa.String(length=50), nullable=True),
         sa.Column("image_desired", sa.String(length=512), nullable=False),
-        sa.Column("image_deployed", sa.String(length=512), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column("secrets", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
@@ -154,7 +151,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "failed",
                 "deleting",
                 name="application_status_enum",
                 native_enum=False,

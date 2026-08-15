@@ -215,10 +215,11 @@ async def test_get_app_logs_returns_pod_logs(
 
             self.applications = self
 
-        async def logs(self, application_id: UUID) -> list[str]:
+        async def logs(self, application_id: UUID, namespace: str) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = application_id
+            captured["namespace"] = namespace
             return ["line 1", "line 2"]
 
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FakeCompute)
@@ -231,6 +232,7 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.status_code == 200
     assert response.json() == ["line 1", "line 2"]
     assert captured["logs"] == app.id
+    assert captured["namespace"] == organization.id.hex
 
 
 async def test_app_logs_require_maintainer_access(
@@ -277,7 +279,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
 
             self.applications = self
 
-        async def logs(self, application_id: UUID) -> list[str]:
+        async def logs(self, application_id: UUID, namespace: str) -> list[str]:
             """Raise the backend error expected by the test."""
 
             raise RuntimeError("logs unavailable")

@@ -1,5 +1,4 @@
 import json
-import base64
 import asyncio
 import hashlib
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
@@ -36,9 +35,8 @@ class Applications:
                     "metadata": {
                         "name": str(application_id),
                         "namespace": namespace,
-                        "labels": {APPLICATION_ID_LABEL: str(application_id)},
                     },
-                    "data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in secrets.items()},
+                    "stringData": secrets,
                 },
                 api=api,
             )
@@ -58,11 +56,11 @@ class Applications:
         await apply(Service(service, api=api))
         route_resource = HTTPRouteResource(route, api=api)
         await apply(route_resource)
-        await apply(Deployment(deployment, api=api))
+        deployed = Deployment(deployment, api=api)
+        await apply(deployed)
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            deployed = Deployment(str(application_id), namespace=namespace, api=api)
             if not await deployed.exists():
                 raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
             await deployed.refresh()
@@ -102,13 +100,14 @@ class Applications:
 
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
-        while await Namespace(namespace, api=api).exists():
-            resources = (
-                Deployment(str(application_id), namespace=namespace, api=api),
-                Service(f"app-{application_id}", namespace=namespace, api=api),
-                Secret(str(application_id), namespace=namespace, api=api),
-                HTTPRouteResource(str(application_id), namespace=namespace, api=api),
-            )
+        namespace_resource = Namespace(namespace, api=api)
+        resources = (
+            Deployment(str(application_id), namespace=namespace, api=api),
+            Service(f"app-{application_id}", namespace=namespace, api=api),
+            Secret(str(application_id), namespace=namespace, api=api),
+            HTTPRouteResource(str(application_id), namespace=namespace, api=api),
+        )
+        while await namespace_resource.exists():
             remaining = False
             for resource in resources:
                 if await resource.exists():
@@ -118,32 +117,25 @@ class Applications:
                         await resource.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            pods = [
-                pod
-                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-                if isinstance(pod, Pod)
-            ]
+            pods = [pod async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})]
             if not remaining and not any(pod.raw["status"].get("phase") not in {"Succeeded", "Failed"} for pod in pods):
                 return
             await asyncio.sleep(5)
 
-    async def logs(self, application_id: UUID) -> list[str]:
+    async def logs(self, application_id: UUID, namespace: str) -> list[str]:
         """Return recent logs for one managed Application Pod."""
 
-        # The globally unique Application ID identifies its Pod across Organization Namespaces.
+        # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
             active = [
                 pod
-                async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-                if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
+                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
+                if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
             ]
-        except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
-            raise RuntimeError("Application logs unavailable") from exc
-        if not active:
-            raise RuntimeError("Application logs unavailable")
-        pod = min(active, key=lambda item: item.name)
-        try:
+            if not active:
+                raise RuntimeError("Application logs unavailable")
+            pod = min(active, key=lambda item: item.name)
             return [line async for line in pod.logs(tail_lines=200)]
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
             raise RuntimeError("Application logs unavailable") from exc

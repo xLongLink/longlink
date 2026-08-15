@@ -1,11 +1,5 @@
+import type { ReactElement } from 'react';
 import type { LucideProps } from 'lucide-react';
-import type { ReactElement, ReactNode } from 'react';
-
-/** One breadcrumb link rendered above an article page. */
-export type ArticleBreadcrumb = {
-    title: string;
-    path: string;
-};
 
 /** A renderable article page. */
 export type ArticlePage = {
@@ -14,13 +8,9 @@ export type ArticlePage = {
     icon?: ReactElement<LucideProps>;
     description: string;
     seoTitle?: string;
-    breadcrumbs: ArticleBreadcrumb[];
-    content: ReactNode;
-    metadata: {
-        toc?: Array<{ id: string; label: string; level: number }>;
-        lastUpdated: string;
-        editUrl?: string;
-    };
+    toc?: Array<{ id: string; label: string; level: number }>;
+    lastUpdated: string;
+    editUrl?: string;
 };
 
 /** Sidebar navigation item for article-like pages. */

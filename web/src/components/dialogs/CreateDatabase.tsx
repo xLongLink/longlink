@@ -16,7 +16,6 @@ import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
-import { PasswordInput } from '@/components/PasswordInput';
 import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const schema = z.object({
@@ -194,8 +193,7 @@ export default function CreateDatabase() {
                                         control={form.control}
                                         name="password"
                                         render={({ field }) => (
-                                            <PasswordInput
-                                                key={open ? 'open' : 'closed'}
+                                            <TextInput
                                                 ref={field.ref}
                                                 label="Password"
                                                 value={field.value}
@@ -203,6 +201,7 @@ export default function CreateDatabase() {
                                                 isRequired
                                                 onBlur={field.onBlur}
                                                 onChange={field.onChange}
+                                                type="password"
                                             />
                                         )}
                                     />
