@@ -1,5 +1,7 @@
 import ssl
+import httpx2
 import asyncio
+import hashlib
 import tempfile
 import ipaddress
 from uuid import UUID
@@ -9,7 +11,7 @@ from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from kr8s.asyncio import Api
-from importlib.resources import files, as_file
+from importlib.resources import files
 from kr8s.asyncio.objects import Secret, Namespace, new_class, objects_from_files
 from src.kubernetes.utils import apply
 from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
@@ -200,10 +202,19 @@ class Gateway:
     async def install_controller(self) -> None:
         """Install the Envoy Gateway controller required by every Compute."""
 
-        # Apply the version-pinned Envoy manifest bundled with LongLink before using its APIs.
-        manifest = files("src.kubernetes.templates").joinpath("platform", "envoy-gateway-v1.8.3.yml")
-        with as_file(manifest) as manifest_path:
-            resources = await objects_from_files(manifest_path, api=await self._client.api())
+        # Verify the pinned upstream manifest before applying its CRDs and controller resources.
+        async with httpx2.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+            response = await client.get("https://github.com/envoyproxy/gateway/releases/download/v1.8.3/install.yaml")
+            response.raise_for_status()
+        manifest = response.content
+        if hashlib.sha256(manifest).hexdigest() != "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781":
+            raise ValueError("Envoy Gateway v1.8.3 manifest checksum does not match")
+
+        # kr8s loads multi-document manifests from a file while retaining the Compute API connection.
+        with tempfile.NamedTemporaryFile() as manifest_file:
+            manifest_file.write(manifest)
+            manifest_file.flush()
+            resources = await objects_from_files(manifest_file.name, api=await self._client.api())
             for resource in resources:
                 await apply(resource)
 
