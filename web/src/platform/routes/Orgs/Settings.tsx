@@ -1,20 +1,58 @@
 import { useParams } from 'react-router';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { AppWindow, Settings2 } from 'lucide-react';
+import { Heading } from '@astryxdesign/core/Heading';
 import NotFound from '@/platform/NotFound';
-import Organization from './Organization';
+import PlatformLayout from '@/platform/layout';
+import { PageContainer } from '@/components/PageContainer';
+import { useOrganization } from '@/hooks/use-organization';
+import OrganizationSettings from '@/components/settings/Settings';
 
-/** Renders one validated organization settings section. */
+/** Renders the organization settings page. */
 export default function OrganizationSettingsRoute() {
-    const { settingsSection = 'organization' } = useParams();
+    const { organization = '' } = useParams();
+    const {
+        organization: organizationDetails,
+        members,
+        invitations,
+        applications,
+        role: organizationRole,
+        isLoading,
+        error,
+    } = useOrganization(organization);
 
-    if (
-        settingsSection !== 'organization' &&
-        settingsSection !== 'applications' &&
-        settingsSection !== 'people' &&
-        settingsSection !== 'database' &&
-        settingsSection !== 'storage'
-    ) {
+    // Hide missing or inaccessible orgs behind the shared 404 page.
+    if (error?.status === 404) {
         return <NotFound />;
     }
 
-    return <Organization settingsSection={settingsSection} />;
+    return (
+        <PlatformLayout
+            tabs={[
+                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
+                { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
+            ]}
+        >
+            <PageContainer gap={8}>
+                <Stack gap={1} width="100%">
+                    <Heading level={1}>Settings</Heading>
+                    <Text as="p" color="secondary">
+                        Configure the organization and its runtime defaults.
+                    </Text>
+                </Stack>
+                <OrganizationSettings
+                    organization={organization}
+                    organizationDetails={organizationDetails}
+                    applications={applications}
+                    members={members}
+                    invitations={invitations}
+                    organizationRole={organizationRole}
+                    routeSection="organization"
+                    isLoading={isLoading}
+                    error={error}
+                />
+            </PageContainer>
+        </PlatformLayout>
+    );
 }

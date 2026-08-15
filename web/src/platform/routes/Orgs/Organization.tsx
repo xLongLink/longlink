@@ -14,21 +14,11 @@ import NotFound from '@/platform/NotFound';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
-import OrganizationSettings, { type SettingsRouteSection } from '@/components/settings/Settings';
 
-/** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ settingsSection }: { settingsSection?: SettingsRouteSection }) {
+/** Renders the organization applications page. */
+export default function Organization() {
     const { organization = '' } = useParams();
-    const {
-        organization: organizationDetails,
-        members,
-        invitations,
-        applications,
-        role: organizationRole,
-        isLoading,
-        error,
-    } = useOrganization(organization);
-    const isSettings = settingsSection !== undefined;
+    const { applications, isLoading, error } = useOrganization(organization);
     const columns: TableColumn<OrganizationApplicationSummary>[] = [
         {
             key: 'name',
@@ -63,26 +53,12 @@ export default function Organization({ settingsSection }: { settingsSection?: Se
         >
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
-                    <Heading level={1}>{isSettings ? 'Settings' : 'Applications'}</Heading>
+                    <Heading level={1}>Applications</Heading>
                     <Text as="p" color="secondary">
-                        {isSettings
-                            ? 'Configure the organization and its runtime defaults.'
-                            : 'Manage the applications attached to this organization.'}
+                        Manage the applications attached to this organization.
                     </Text>
                 </Stack>
-                {isSettings ? (
-                    <OrganizationSettings
-                        organization={organization}
-                        organizationDetails={organizationDetails}
-                        applications={applications}
-                        members={members}
-                        invitations={invitations}
-                        organizationRole={organizationRole}
-                        routeSection={settingsSection}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
                     <Banner status="error" title="Failed to load applications." />
                 ) : (
                     <Table

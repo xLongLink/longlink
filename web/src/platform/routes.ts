@@ -80,10 +80,10 @@ export default [
             route('operations', './routes/Admin/Operations.tsx'),
         ]),
     ]),
-    layout('./routes/Orgs/Layout.tsx', [
-        route('orgs/:organization', './routes/Orgs/Organization.tsx'),
-        route('orgs/:organization/settings/:settingsSection?', './routes/Orgs/Settings.tsx'),
-        route('orgs/:organization/apps/:application/*', './routes/Orgs/Application.tsx'),
+    route('orgs/:organization', './routes/Orgs/Layout.tsx', [
+        index('./routes/Orgs/Organization.tsx'),
+        route('settings', './routes/Orgs/Settings.tsx'),
+        route('apps/:application/*', './routes/Orgs/Application.tsx'),
     ]),
     route('*', './NotFound.tsx'),
 ] satisfies RouteConfig;

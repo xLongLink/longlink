@@ -32,6 +32,7 @@ import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type PeopleSection = 'members' | 'invitations';
+type DatabaseUsage = { id: string; usage: number };
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
 
 const organizationAvatarSchema = z.union([
@@ -73,7 +74,20 @@ export default function Settings({
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const peopleSection: PeopleSection = location.hash.replace(/^#/, '') === 'invitations' ? 'invitations' : 'members';
-    const section = routeSection === 'people' ? peopleSection : routeSection;
+    const section =
+        location.hash === '#applications'
+            ? 'applications'
+            : location.hash === '#database'
+              ? 'database'
+              : location.hash === '#storage'
+                ? 'storage'
+                : location.hash === '#invitations'
+                  ? 'invitations'
+                  : location.hash === '#members'
+                    ? 'members'
+                    : routeSection === 'people'
+                      ? peopleSection
+                      : routeSection;
     const {
         data: databaseUsage,
         error: databaseError,
@@ -108,6 +122,36 @@ export default function Settings({
                     <VStack gap={1}>
                         <Text weight="semibold">{resource.bucket_name}</Text>
                         <Text type="supporting">{formatBytes(resource.space_used)}</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
+        {
+            key: 'owner',
+            header: 'Owner',
+            width: proportional(1),
+            renderCell: () => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organizationAvatar} name={organizationName} size="md" />
+                    <VStack gap={1}>
+                        <Text weight="semibold">{organizationName}</Text>
+                        <Text type="supporting">Organization</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
+    ];
+    const databaseColumns: TableColumn<DatabaseUsage>[] = [
+        {
+            key: 'usage',
+            header: 'Resource',
+            width: proportional(1),
+            renderCell: (resource) => (
+                <HStack gap={3} align="center">
+                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
+                    <VStack gap={1}>
+                        <Text weight="semibold">PostgreSQL</Text>
+                        <Text type="supporting">{formatBytes(resource.usage)}</Text>
                     </VStack>
                 </HStack>
             ),
@@ -177,18 +221,18 @@ export default function Settings({
                         label="People"
                     >
                         <SideNavItem
-                            href={`/orgs/${organization}/settings/people#members`}
+                            href={`/orgs/${organization}/settings#members`}
                             isSelected={section === 'members'}
                             label="Members"
                         />
                         <SideNavItem
-                            href={`/orgs/${organization}/settings/people#invitations`}
+                            href={`/orgs/${organization}/settings#invitations`}
                             isSelected={section === 'invitations'}
                             label="Invitations"
                         />
                     </SideNavItem>
                     <SideNavItem
-                        href={`/orgs/${organization}/settings/applications`}
+                        href={`/orgs/${organization}/settings#applications`}
                         icon={<Boxes aria-hidden="true" size={16} />}
                         isSelected={section === 'applications'}
                         label="Applications"
@@ -196,13 +240,13 @@ export default function Settings({
                     {hasOrganizationApplicationAccess ? (
                         <>
                             <SideNavItem
-                                href={`/orgs/${organization}/settings/database`}
+                                href={`/orgs/${organization}/settings#database`}
                                 icon={<Database aria-hidden="true" size={16} />}
                                 isSelected={section === 'database'}
                                 label="Database"
                             />
                             <SideNavItem
-                                href={`/orgs/${organization}/settings/storage`}
+                                href={`/orgs/${organization}/settings#storage`}
                                 icon={<HardDrive aria-hidden="true" size={16} />}
                                 isSelected={section === 'storage'}
                                 label="Storage"
@@ -275,13 +319,14 @@ export default function Settings({
                         ) : databaseUsage === null || databaseUsage === undefined ? (
                             <EmptyState title="No results." isCompact />
                         ) : (
-                            <HStack gap={3} align="center">
-                                <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
-                                <VStack gap={1}>
-                                    <Text weight="semibold">PostgreSQL</Text>
-                                    <Text type="supporting">{formatBytes(databaseUsage)}</Text>
-                                </VStack>
-                            </HStack>
+                            <Table
+                                columns={databaseColumns}
+                                data={[{ id: 'database', usage: databaseUsage }]}
+                                density="compact"
+                                emptyState={<EmptyState title="No results." isCompact />}
+                                hasHover
+                                idKey="id"
+                            />
                         )}
                     </VStack>
                 ) : null}
