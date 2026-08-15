@@ -72,12 +72,12 @@ export function Slider({ props }: Props) {
         isRequired: resolveBooleanProp(props, 'isRequired', ctx),
         label: requireXmlString(props, 'label', ctx, 'Slider'),
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-        max: resolveNumberProp(props, 'max', ctx, 100),
-        min: resolveNumberProp(props, 'min', ctx, 0),
-        orientation: orientationValue ?? 'horizontal',
+        max: resolveNumberProp(props, 'max', ctx),
+        min: resolveNumberProp(props, 'min', ctx),
+        orientation: orientationValue,
         status: resolveInputStatus(props, ctx),
-        step: resolveNumberProp(props, 'step', ctx, 1),
-        valueDisplay: valueDisplayValue ?? 'tooltip',
+        step: resolveNumberProp(props, 'step', ctx),
+        valueDisplay: valueDisplayValue,
         width: resolveSizeProp(props, 'width', ctx),
     };
 
@@ -101,15 +101,10 @@ function resolveBooleanProp(props: Props['props'], name: string, ctx: ReturnType
     return typeof value === 'boolean' ? value : undefined;
 }
 
-/** Resolves an optional XML number prop with a component default. */
-function resolveNumberProp(
-    props: Props['props'],
-    name: string,
-    ctx: ReturnType<typeof useXmlRuntime>['scope'],
-    fallback: number
-) {
+/** Resolves an optional XML number prop. */
+function resolveNumberProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
     const value = resolveXml(props, name, ctx);
-    return typeof value === 'number' ? value : fallback;
+    return typeof value === 'number' ? value : undefined;
 }
 
 /** Resolves an optional XML size prop. */

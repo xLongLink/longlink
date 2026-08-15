@@ -8,7 +8,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { requestApi } from '@/lib/api';
+import { requestApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
@@ -34,11 +34,7 @@ export default function Register() {
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
         mutationFn: (payload: RegisterValues) =>
-            requestApi(platformApiPath('/auth/register'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            }),
+            requestApiJson(platformApiPath('/auth/register'), payload, { method: 'POST' }),
         onSuccess: () => {
             showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },

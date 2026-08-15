@@ -14,7 +14,7 @@ export function Badge({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const label = requireXmlString(props, 'label', ctx, 'Badge');
 
-    const iconNodes = nodes.map((node) => {
+    for (const node of nodes) {
         const slot = resolveXml(node.params, 'slot', ctx);
         if (slot != null && slot !== 'icon') {
             throw new Error(`Badge does not support the ${String(slot)} slot`);
@@ -23,14 +23,11 @@ export function Badge({ props, nodes }: Props) {
         if (node.name !== 'Icon') {
             throw new Error('Badge icon slot only supports Icon');
         }
+    }
 
-        const { slot: _slot, ...iconProps } = node.params;
-        return { ...node, params: iconProps };
-    });
-
-    if (iconNodes.length > 1) {
+    if (nodes.length > 1) {
         throw new Error('Badge icon slot accepts one child');
     }
 
-    return <AstryxBadge icon={renderNode(iconNodes, ctx)} label={label} />;
+    return <AstryxBadge icon={renderNode(nodes, ctx)} label={label} />;
 }

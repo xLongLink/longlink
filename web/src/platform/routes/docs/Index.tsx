@@ -3,7 +3,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
-import { Documentation } from '@/platform/layouts/Documentation';
 
 export const metadata = {
     path: '/docs',
@@ -59,7 +58,6 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Documentation>
             <Article
                 page={{
                     ...metadata,
@@ -67,6 +65,5 @@ export default function DocsArticleRoute() {
                     metadata,
                 }}
             />
-        </Documentation>
     );
 }

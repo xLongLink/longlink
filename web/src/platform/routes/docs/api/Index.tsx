@@ -24,7 +24,6 @@ import {
 import { publicSeoMeta } from '@/lib/seo';
 import { Wordmark } from '@/components/Wordmark';
 import { Article } from '@/components/layouts/Article';
-import { Documentation } from '@/platform/layouts/Documentation';
 
 const capabilities = {
     authentication: {
@@ -192,7 +191,6 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Documentation>
             <Article
                 page={{
                     ...metadata,
@@ -200,6 +198,5 @@ export default function DocsArticleRoute() {
                     metadata,
                 }}
             />
-        </Documentation>
     );
 }

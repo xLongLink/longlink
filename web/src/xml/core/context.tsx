@@ -40,7 +40,6 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
         if (node.name === 'State') {
             const params = node.params;
             const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
-            const entries = Object.entries(params).filter(([key]) => key !== 'id');
 
             // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
             services.setups[id] = () => {
@@ -50,7 +49,9 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
                     const initialValue: Record<string, unknown> = {};
 
                     // Copy declared attributes into the initial state object.
-                    for (const [key, attribute] of entries) {
+                    for (const [key, attribute] of Object.entries(params)) {
+                        if (key === 'id') continue;
+
                         initialValue[key] = evaluate(attribute, scope);
                     }
 

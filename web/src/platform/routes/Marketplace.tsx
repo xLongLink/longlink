@@ -4,12 +4,10 @@ import { Center } from '@astryxdesign/core/Center';
 import { Section } from '@astryxdesign/core/Section';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Page } from '@/platform/layouts/Page';
 
 /** Renders the marketplace placeholder. */
 export default function MarketplaceRoute() {
     return (
-        <Page>
             <StackItem as="main" size="fill">
                 <Section variant="transparent" height="100%" padding={6}>
                     <Center height="100%" width="100%">
@@ -23,6 +21,5 @@ export default function MarketplaceRoute() {
                     </Center>
                 </Section>
             </StackItem>
-        </Page>
     );
 }

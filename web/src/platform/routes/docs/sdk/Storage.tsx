@@ -8,7 +8,6 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
-import { Documentation } from '@/platform/layouts/Documentation';
 
 export const metadata = {
     path: '/docs/sdk/storage',
@@ -108,7 +107,6 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Documentation>
             <Article
                 page={{
                     ...metadata,
@@ -116,6 +114,5 @@ export default function DocsArticleRoute() {
                     metadata,
                 }}
             />
-        </Documentation>
     );
 }

@@ -6,7 +6,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { ArticlePage } from '@/lib/articles';
 import { publicSeoMeta } from '@/lib/seo';
-import { Legal } from '@/platform/layouts/Legal';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -106,9 +105,7 @@ export const meta = () => publicSeoMeta(metadata);
 /** Renders the terms of service. */
 export default function Terms() {
     return (
-        <Legal>
             <Article page={page} />
-        </Legal>
     );
 }
 

@@ -8,7 +8,6 @@ import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTo
 import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
-import { Documentation } from '@/platform/layouts/Documentation';
 
 /** Renders the local SDK runtime request flow diagram. */
 function LocalRuntimeDiagram() {
@@ -132,7 +131,6 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Documentation>
             <Article
                 page={{
                     ...metadata,
@@ -140,6 +138,5 @@ export default function DocsArticleRoute() {
                     metadata,
                 }}
             />
-        </Documentation>
     );
 }

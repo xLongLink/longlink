@@ -7,7 +7,6 @@ import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { publicSeoMeta } from '@/lib/seo';
-import { Page } from '@/platform/layouts/Page';
 
 export const metadata = {
     path: '/pricing',
@@ -20,7 +19,6 @@ export const meta = () => publicSeoMeta(metadata);
 /** Renders the public pricing page. */
 export default function Pricing() {
     return (
-        <Page>
             <main>
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
@@ -150,6 +148,5 @@ export default function Pricing() {
                     </Stack>
                 </Section>
             </main>
-        </Page>
     );
 }

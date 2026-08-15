@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useEffect, useEffectEvent } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
@@ -9,9 +9,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { ApiError, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
+import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 
 type ResetPasswordValues = {
     password: string;
@@ -36,33 +36,30 @@ export default function ResetPassword() {
                 return requestApi(platformApiPath('/auth/reset-password/setup'));
             }
 
-            return requestApi(platformApiPath('/auth/reset-password/verify'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: resetToken }),
-            });
+            return requestApiJson(
+                platformApiPath('/auth/reset-password/verify'),
+                { token: resetToken },
+                { method: 'POST' }
+            );
         },
         onSuccess: () => {
             sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
             }
         },
     });
     const resetPassword = useMutation({
         mutationFn: (payload: ResetPasswordValues) =>
-            requestApi(platformApiPath('/auth/reset-password'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            }),
+            requestApiJson(platformApiPath('/auth/reset-password'), payload, { method: 'POST' }),
     });
+    const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
     const hasTokenError =
-        (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
-        (resetPassword.error instanceof ApiError && resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN');
+        (verification.error instanceof ApiError && verification.error.message === 'RESET_PASSWORD_BAD_TOKEN') ||
+        (resetPassword.error instanceof ApiError && resetPassword.error.message === 'RESET_PASSWORD_BAD_TOKEN');
 
     /** Saves the new password while keeping invalid-token failures inline. */
     async function handleResetPassword(payload: ResetPasswordValues) {
@@ -70,7 +67,7 @@ export default function ResetPassword() {
             await resetPassword.mutateAsync(payload);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
-            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
                 return;
             }
 
@@ -82,10 +79,8 @@ export default function ResetPassword() {
     }
 
     useEffect(() => {
-        verification.mutate(token);
-
-        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
-    }, [token, verification.mutate]);
+        verifyToken(token);
+    }, [token]);
 
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {

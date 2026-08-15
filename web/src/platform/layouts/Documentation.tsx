@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -24,7 +23,7 @@ import {
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders documentation content with the fixed documentation navigation. */
-export function Documentation({ children }: { children: ReactNode }) {
+export default function Documentation() {
     const { pathname } = useLocation();
 
     return (
@@ -148,7 +147,7 @@ export function Documentation({ children }: { children: ReactNode }) {
                 variant="transparent"
             />
             <Stack className="relative z-10" padding={2}>
-                {children}
+                <Outlet />
             </Stack>
         </AppShell>
     );

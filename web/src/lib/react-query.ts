@@ -1,4 +1,4 @@
-import { hashKey, QueryClient, type QueryKey } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 
 /** Creates an isolated query cache for one browser or prerendered document. */
 export function createQueryClient(): QueryClient {
@@ -13,12 +13,11 @@ export function createQueryClient(): QueryClient {
     });
 }
 
-/** Cancels and removes cached API data except for observers that callers will reseed. */
-export async function clearSessionQueries(client: QueryClient, preserve: QueryKey[]): Promise<void> {
-    const preservedHashes = new Set(preserve.map((key) => hashKey(key)));
+/** Cancels and removes cached API data from the previous identity. */
+export async function clearSessionQueries(client: QueryClient): Promise<void> {
     const isSessionQuery = (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === 'api';
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });
-    client.removeQueries({ predicate: (query) => isSessionQuery(query) && !preservedHashes.has(query.queryHash) });
+    client.removeQueries({ predicate: isSessionQuery });
 }

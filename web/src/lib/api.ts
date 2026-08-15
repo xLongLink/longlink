@@ -1,20 +1,14 @@
 import { hasProtocol } from 'ufo';
 
-type ApiErrorPayload = {
-    detail?: string;
-} | null;
-
 const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
-    code?: string;
     status: number;
 
-    constructor(message: string, status: number, code?: string) {
+    constructor(message: string, status: number) {
         super(message);
         this.name = 'ApiError';
-        this.code = code;
         this.status = status;
     }
 }
@@ -56,19 +50,6 @@ function apiUrl(path: string): string {
     return new URL(path, apiBaseUrl).toString();
 }
 
-/** Reads the API error detail from a failed response. */
-async function readApiError(response: Response) {
-    const payload = (await response.json().catch(() => null)) as ApiErrorPayload;
-    const fallback = `API request failed (${response.status})`;
-
-    // Preserve simple API error codes as both the message and machine-readable code.
-    if (typeof payload?.detail === 'string') {
-        return { code: payload.detail, message: payload.detail };
-    }
-
-    return { message: fallback };
-}
-
 /** Sends one API request and normalizes non-OK errors. */
 export async function requestApi(path: string, init?: RequestInit, fetchImpl: typeof fetch = fetch): Promise<Response> {
     const headers = new Headers(init?.headers);
@@ -86,12 +67,22 @@ export async function requestApi(path: string, init?: RequestInit, fetchImpl: ty
 
     // Convert failed responses into typed API errors.
     if (!response.ok) {
-        const error = await readApiError(response);
+        const payload = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+        const message =
+            typeof payload?.detail === 'string' ? payload.detail : `API request failed (${response.status})`;
 
-        throw new ApiError(error.message, response.status, error.code);
+        throw new ApiError(message, response.status);
     }
 
     return response;
+}
+
+/** Sends one JSON API request. */
+export function requestApiJson(path: string, body: unknown, init?: RequestInit): Promise<Response> {
+    const headers = new Headers(init?.headers);
+    headers.set('Content-Type', 'application/json');
+
+    return requestApi(path, { ...init, body: JSON.stringify(body), headers });
 }
 
 /** Fetches unvalidated JSON. */

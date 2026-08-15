@@ -8,7 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { requestApi } from '@/lib/api';
+import { requestApiJson } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
@@ -29,11 +29,7 @@ export default function ForgotPassword() {
     });
     const requestReset = useMutation({
         mutationFn: (payload: ForgotPasswordValues) =>
-            requestApi(platformApiPath('/auth/forgot-password'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            }),
+            requestApiJson(platformApiPath('/auth/forgot-password'), payload, { method: 'POST' }),
         onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : 'Please try again in a moment.',

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
-import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -11,15 +10,16 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
-import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
+import { ApiError, fetchApiJson, requestApiJson } from '@/lib/api';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type RegistrationCompleteValues = {
@@ -54,58 +54,60 @@ export default function VerifyEmail() {
                 return zEmailPayload.parse(await fetchApiJson(platformApiPath('/auth/register/setup')));
             }
 
-            return zEmailPayload.parse(
-                await fetchApiJson(platformApiPath('/auth/verify'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: registrationToken }),
-                })
+            const response = await requestApiJson(
+                platformApiPath('/auth/verify'),
+                { token: registrationToken },
+                { method: 'POST' }
             );
+
+            return zEmailPayload.parse(await response.json());
         },
         onSuccess: (setup) => {
             setLastVerifiedSetup(setup);
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
+            if (error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN') {
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             }
         },
     });
     const completion = useMutation({
-        mutationFn: async (payload: RegistrationCompleteValues) =>
-            zUserSummary.parse(
-                await fetchApiJson(platformApiPath('/auth/register/complete'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...payload, email: verification.data?.email }),
-                })
-            ),
+        mutationFn: async (payload: RegistrationCompleteValues) => {
+            const response = await requestApiJson(
+                platformApiPath('/auth/register/complete'),
+                { ...payload, email: verification.data?.email },
+                { method: 'POST' }
+            );
+
+            return zUserSummary.parse(await response.json());
+        },
     });
+    const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
             const user = await completion.mutateAsync(payload);
 
-            await clearSessionQueries(queryClient, [userProfileQueryKey]);
+            await clearSessionQueries(queryClient);
             queryClient.setQueryData(userProfileQueryKey, user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             navigate('/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
-            if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
+            if (error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN') {
                 verification.mutate('');
             }
             if (
                 error instanceof ApiError &&
-                (error.code === 'REGISTER_SETUP_MISMATCH' || error.code === 'REGISTER_USER_ALREADY_EXISTS')
+                (error.message === 'REGISTER_SETUP_MISMATCH' || error.message === 'REGISTER_USER_ALREADY_EXISTS')
             ) {
                 return;
             }
             const message =
-                error instanceof ApiError && error.code === 'REGISTER_USER_ALREADY_EXISTS'
+                error instanceof ApiError && error.message === 'REGISTER_USER_ALREADY_EXISTS'
                     ? 'An account with this email already exists. Sign in or reset your password to continue.'
-                    : error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN'
+                    : error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN'
                       ? 'This registration link is invalid or expired. Request a new link to continue.'
                       : 'Could not create the account. Check your details and try again.';
 
@@ -114,23 +116,22 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        verification.mutate(token);
-
-        // oxlint-disable-next-line react-hooks/exhaustive-deps -- React Query keeps the mutate callback stable.
-    }, [token, verification.mutate]);
+        verifyToken(token);
+    }, [token]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
     const recoveryRegisterHref = `/auth/register${recoverySearch}`;
     const recoverySignInHref = `/organizations${recoverySearch}`;
     const accountExists =
-        completion.error instanceof ApiError && completion.error.code === 'REGISTER_USER_ALREADY_EXISTS';
-    const setupMismatch = completion.error instanceof ApiError && completion.error.code === 'REGISTER_SETUP_MISMATCH';
+        completion.error instanceof ApiError && completion.error.message === 'REGISTER_USER_ALREADY_EXISTS';
+    const setupMismatch =
+        completion.error instanceof ApiError && completion.error.message === 'REGISTER_SETUP_MISMATCH';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
         const invalidToken =
-            verification.error instanceof ApiError && verification.error.code === 'VERIFY_USER_BAD_TOKEN';
+            verification.error instanceof ApiError && verification.error.message === 'VERIFY_USER_BAD_TOKEN';
 
         return (
             <AuthPage

@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
-import { Documentation } from '@/platform/layouts/Documentation';
 
 export const metadata = {
     path: '/docs/sdk/database',
@@ -172,7 +171,6 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <Documentation>
             <Article
                 page={{
                     ...metadata,
@@ -180,6 +178,5 @@ export default function DocsArticleRoute() {
                     metadata,
                 }}
             />
-        </Documentation>
     );
 }

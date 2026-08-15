@@ -5,7 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
 import { publicSeoMeta } from '@/lib/seo';
-import { Legal } from '@/platform/layouts/Legal';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -33,9 +32,7 @@ export const meta = () => publicSeoMeta(metadata);
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (
-        <Legal>
             <Article page={page} />
-        </Legal>
     );
 }
 

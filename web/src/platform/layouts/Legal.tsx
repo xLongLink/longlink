@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -10,7 +9,7 @@ import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders legal content with the fixed legal navigation. */
-export function Legal({ children }: { children: ReactNode }) {
+export default function Legal() {
     const { pathname } = useLocation();
 
     return (
@@ -61,7 +60,7 @@ export function Legal({ children }: { children: ReactNode }) {
                 variant="transparent"
             />
             <Stack className="relative z-10" padding={2}>
-                {children}
+                <Outlet />
             </Stack>
         </AppShell>
     );

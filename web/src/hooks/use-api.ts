@@ -29,7 +29,7 @@ export function useApiQuery<TQueryFnData>(
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
-                    await clearSessionQueries(queryClient, [userProfileQueryKey]);
+                    await clearSessionQueries(queryClient);
                     queryClient.setQueryData(userProfileQueryKey, null);
                 }
 
