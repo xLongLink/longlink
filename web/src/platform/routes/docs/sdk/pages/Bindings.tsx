@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Runtime'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Bindings'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Connects writable control values to State objects declared in the XML runtime.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<State id="form" name="" active="true" />\n\n<TextInput label="Name" value="$form.name" />\n<Switch label="Active" value="$form.active" />'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/bindings',
     title: 'Bindings',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Runtime'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Bindings'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Connects writable control values to State objects declared in the XML runtime.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<State id="form" name="" active="true" />\n\n<TextInput label="Name" value="$form.name" />\n<Switch label="Active" value="$form.active" />'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

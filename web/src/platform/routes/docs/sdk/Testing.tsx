@@ -18,38 +18,41 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Testing.tsx',
 };
 
-function Content() {
+export const meta = () => publicSeoMeta(metadata);
+
+export default function DocsArticleRoute() {
     return (
-        <Stack gap={5}>
-            <Heading id="testing" level={1}>
-                Testing
-            </Heading>
-            <Text as="p">
-                Test LongLink applications with standard{' '}
-                <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
-                    pytest
-                </Link>{' '}
-                and{' '}
-                <Link
-                    href="https://pytest-asyncio.readthedocs.io/en/stable/"
-                    hasUnderline
-                    isExternalLink
-                    type="inherit"
-                >
-                    pytest-asyncio
-                </Link>{' '}
-                workflows.
-            </Text>
-            <CodeBlock
-                code={`uv run pytest
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Heading id="testing" level={1}>
+                    Testing
+                </Heading>
+                <Text as="p">
+                    Test LongLink applications with standard{' '}
+                    <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
+                        pytest
+                    </Link>{' '}
+                    and{' '}
+                    <Link
+                        href="https://pytest-asyncio.readthedocs.io/en/stable/"
+                        hasUnderline
+                        isExternalLink
+                        type="inherit"
+                    >
+                        pytest-asyncio
+                    </Link>{' '}
+                    workflows.
+                </Text>
+                <CodeBlock
+                    code={`uv run pytest
 uv run pytest tests/test_app.py -q`}
-                language="bash"
-            />
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={`from main import app
+                    language="bash"
+                />
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={`from main import app
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -59,22 +62,9 @@ def test_healthcheck() -> None:
     response = client.get("/health")
 
     assert response.status_code == 200`}
-                language="python"
-            />
-        </Stack>
-    );
-}
-
-export const meta = () => publicSeoMeta(metadata);
-
-export default function DocsArticleRoute() {
-    return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+                    language="python"
+                />
+            </Stack>
+        </Article>
     );
 }

@@ -5,27 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Form'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Slider'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Captures bounded numeric values through a range control.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={'<Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" />'}
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/slider',
     title: 'Slider',
@@ -42,12 +21,23 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Form'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Slider'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Captures bounded numeric values through a range control.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={'<Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" />'}
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

@@ -5,24 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Content'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Heading'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Creates semantic section headings.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock code={'<Heading level="1">Orders</Heading>'} language="xml" />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/heading',
     title: 'Heading',
@@ -39,12 +21,20 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Content'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Heading'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Creates semantic section headings.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock code={'<Heading level="1">Orders</Heading>'} language="xml" />
+            </Stack>
+        </Article>
     );
 }

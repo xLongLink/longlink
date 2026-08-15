@@ -40,10 +40,9 @@ async def create(claimed: Operation) -> str | None:
         # Generate fresh credentials for the initial creation attempt.
         bucket = organization.id.hex
         prefix = f"applications/{application.id.hex}/"
-        database_password = secrets.token_urlsafe(24)
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
-        connection = await db.schema(organization.id, application.id, database_password)
+        connection = await db.schema(organization.id, application.id, secrets.token_urlsafe(24))
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {

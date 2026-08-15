@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Layout'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'SideNav'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Renders application navigation in a sidebar container.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<SideNav label="Application navigation">\n  <SideNavItem value="/orders" label="Orders" />\n  <SideNavItem value="/customers" label="Customers" />\n</SideNav>'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/side-nav',
     title: 'SideNav',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Layout'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'SideNav'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Renders application navigation in a sidebar container.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<SideNav label="Application navigation">\n  <SideNavItem value="/orders" label="Orders" />\n  <SideNavItem value="/customers" label="Customers" />\n</SideNav>'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

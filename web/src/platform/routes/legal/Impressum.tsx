@@ -1,9 +1,7 @@
-import { createElement } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import type { ArticlePage } from '@/lib/articles';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
@@ -20,9 +18,8 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Impressum.tsx',
 };
 
-const page: ArticlePage = {
+const page = {
     ...metadata,
-    content: createElement(ImpressumContent),
     metadata,
 };
 
@@ -32,7 +29,9 @@ export const meta = () => publicSeoMeta(metadata);
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (
-            <Article page={page} />
+        <Article page={page}>
+            <ImpressumContent />
+        </Article>
     );
 }
 

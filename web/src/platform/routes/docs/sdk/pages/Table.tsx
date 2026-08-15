@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Layout'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Table'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Displays tabular data from an array.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<Table data="$orders.items">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/table',
     title: 'Table',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Layout'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Table'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Displays tabular data from an array.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<Table data="$orders.items">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

@@ -5,27 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'State'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'State'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Declares local reactive page state before the page renders.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={'<State id="form" name="" active="true" />\n\n<TextInput label="Name" value="$form.name" />'}
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/state',
     title: 'State',
@@ -42,12 +21,23 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'State'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'State'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Declares local reactive page state before the page renders.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={'<State id="form" name="" active="true" />\n\n<TextInput label="Name" value="$form.name" />'}
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

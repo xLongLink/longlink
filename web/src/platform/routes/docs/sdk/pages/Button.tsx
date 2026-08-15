@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Action'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Button'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Renders a labeled command, submit trigger, or action trigger.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/button',
     title: 'Button',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Action'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Button'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Renders a labeled command, submit trigger, or action trigger.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

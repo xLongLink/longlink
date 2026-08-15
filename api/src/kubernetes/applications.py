@@ -35,7 +35,6 @@ class Applications:
                     "metadata": {
                         "name": str(application_id),
                         "namespace": namespace,
-                        "labels": {APPLICATION_ID_LABEL: str(application_id)},
                     },
                     "stringData": secrets,
                 },

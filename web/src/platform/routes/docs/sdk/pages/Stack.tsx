@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Layout'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Stack'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Arranges children vertically or horizontally.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<Stack direction="horizontal" justify="between" align="center" gap="3">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/stack',
     title: 'Stack',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Layout'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Stack'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Arranges children vertically or horizontally.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<Stack direction="horizontal" justify="between" align="center" gap="3">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

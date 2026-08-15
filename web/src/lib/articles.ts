@@ -1,5 +1,5 @@
 import type { LucideProps } from 'lucide-react';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 
 /** A renderable article page. */
 export type ArticlePage = {
@@ -8,7 +8,6 @@ export type ArticlePage = {
     icon?: ReactElement<LucideProps>;
     description: string;
     seoTitle?: string;
-    content: ReactNode;
     metadata: {
         toc?: Array<{ id: string; label: string; level: number }>;
         lastUpdated: string;

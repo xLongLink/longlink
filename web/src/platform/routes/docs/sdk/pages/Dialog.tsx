@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Layout'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Dialog'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Renders a modal workflow from one flat owner element.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<Dialog title="Edit order" isOpen="$dialog.open">\n  <FormLayout>\n    <TextInput label="Name" value="$form.name" />\n  </FormLayout>\n</Dialog>'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/dialog',
     title: 'Dialog',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Layout'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Dialog'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Renders a modal workflow from one flat owner element.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<Dialog title="Edit order" isOpen="$dialog.open">\n  <FormLayout>\n    <TextInput label="Name" value="$form.name" />\n  </FormLayout>\n</Dialog>'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

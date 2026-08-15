@@ -30,6 +30,8 @@ export default function ResetPassword() {
         defaultValues: { password: '' },
         resolver: zodResolver(passwordSchema),
     });
+    const isBadTokenError = (error: unknown) =>
+        error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN';
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
@@ -47,7 +49,7 @@ export default function ResetPassword() {
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (isBadTokenError(error)) {
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
             }
         },
@@ -57,9 +59,7 @@ export default function ResetPassword() {
             requestApiJson(platformApiPath('/auth/reset-password'), payload, { method: 'POST' }),
     });
     const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
-    const hasTokenError =
-        (verification.error instanceof ApiError && verification.error.message === 'RESET_PASSWORD_BAD_TOKEN') ||
-        (resetPassword.error instanceof ApiError && resetPassword.error.message === 'RESET_PASSWORD_BAD_TOKEN');
+    const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
 
     /** Saves the new password while keeping invalid-token failures inline. */
     async function handleResetPassword(payload: ResetPasswordValues) {
@@ -67,7 +67,7 @@ export default function ResetPassword() {
             await resetPassword.mutateAsync(payload);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
-            if (error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (isBadTokenError(error)) {
                 return;
             }
 

@@ -5,24 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Content'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Text'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Renders paragraph, label, span, and supporting text content.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock code={'<Text as="p" value="${`Order #${order.number}`}" />'} language="xml" />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/text',
     title: 'Text',
@@ -39,12 +21,20 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Content'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Text'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Renders paragraph, label, span, and supporting text content.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock code={'<Text as="p" value="${`Order #${order.number}`}" />'} language="xml" />
+            </Stack>
+        </Article>
     );
 }

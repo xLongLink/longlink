@@ -5,29 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Runtime'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Expressions'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Evaluates a safe JavaScript expression subset against the XML runtime scope.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={
-                    '<TextInput label="Name" value="$form.name" />\n<Button isDisabled="${!form.name || form.saving}" label="Save" />\n<Link to="/orders/${params.order}" label="Open order" />'
-                }
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/expressions',
     title: 'Expressions',
@@ -44,12 +21,25 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Runtime'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Expressions'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Evaluates a safe JavaScript expression subset against the XML runtime scope.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={
+                        '<TextInput label="Name" value="$form.name" />\n<Button isDisabled="${!form.name || form.saving}" label="Save" />\n<Link to="/orders/${params.order}" label="Open order" />'
+                    }
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

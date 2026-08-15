@@ -13,8 +13,8 @@ import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
 import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
 
 /** Renders shared documentation and legal article content. */
-export function Article({ page }: { page: ArticlePage }) {
-    const { content, metadata } = page;
+export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
+    const { metadata } = page;
     const Breadcrumb = page.path.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
 
     return (
@@ -37,7 +37,7 @@ export function Article({ page }: { page: ArticlePage }) {
                     <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
                         <PageContainer className="min-w-0" maxWidth={768}>
                             <article className="article-content space-y-7 text-justify">
-                                {content}
+                                {children}
                                 <Stack as="footer" gap={3}>
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
@@ -74,3 +74,4 @@ export function Article({ page }: { page: ArticlePage }) {
         />
     );
 }
+import type { ReactNode } from 'react';

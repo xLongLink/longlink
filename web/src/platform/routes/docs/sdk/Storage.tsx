@@ -22,97 +22,87 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
 };
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Heading id="storage" level={1}>
-                Storage
-            </Heading>
-            <Text as="p">
-                The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
-                <Link
-                    href="https://filesystem-spec.readthedocs.io/en/latest/"
-                    hasUnderline
-                    isExternalLink
-                    type="inherit"
-                >
-                    fsspec
-                </Link>
-                . Application code uses the same filesystem interface in local development, tests, and production.
-            </Text>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHeaderCell>Environment</TableHeaderCell>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <CheckCheck aria-hidden="true" className="text-accent" size={16} />
-                                    <Text weight="semibold">Testing</Text>
-                                </Stack>
-                                <Text type="supporting">
-                                    <Code>memory</Code> backend for isolated in-memory test files.
-                                </Text>
-                            </Stack>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <Wrench aria-hidden="true" className="text-accent" size={16} />
-                                    <Text weight="semibold">Development</Text>
-                                </Stack>
-                                <Text type="supporting">
-                                    <Code>file</Code> backend for inspectable local files.
-                                </Text>
-                            </Stack>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>
-                            <Stack gap={1}>
-                                <Stack direction="horizontal" gap={2} align="center">
-                                    <CheckCircle aria-hidden="true" className="text-accent" size={16} />
-                                    <Text weight="semibold">Production</Text>
-                                </Stack>
-                                <Text type="supporting">
-                                    <Code>s3</Code> backend using application and shared prefixes in one Organization
-                                    bucket.
-                                </Text>
-                            </Stack>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={`from longlink import storage
-
-with storage.open("reports/example.txt", "wb") as f:
-    f.write(b"hello")`}
-                language="python"
-            />
-        </Stack>
-    );
-}
-
 export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Heading id="storage" level={1}>
+                    Storage
+                </Heading>
+                <Text as="p">
+                    The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
+                    <Link
+                        href="https://filesystem-spec.readthedocs.io/en/latest/"
+                        hasUnderline
+                        isExternalLink
+                        type="inherit"
+                    >
+                        fsspec
+                    </Link>
+                    . Application code uses the same filesystem interface in local development, tests, and production.
+                </Text>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Environment</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>
+                                <Stack gap={1}>
+                                    <Stack direction="horizontal" gap={2} align="center">
+                                        <CheckCheck aria-hidden="true" className="text-accent" size={16} />
+                                        <Text weight="semibold">Testing</Text>
+                                    </Stack>
+                                    <Text type="supporting">
+                                        <Code>memory</Code> backend for isolated in-memory test files.
+                                    </Text>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                <Stack gap={1}>
+                                    <Stack direction="horizontal" gap={2} align="center">
+                                        <Wrench aria-hidden="true" className="text-accent" size={16} />
+                                        <Text weight="semibold">Development</Text>
+                                    </Stack>
+                                    <Text type="supporting">
+                                        <Code>file</Code> backend for inspectable local files.
+                                    </Text>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                <Stack gap={1}>
+                                    <Stack direction="horizontal" gap={2} align="center">
+                                        <CheckCircle aria-hidden="true" className="text-accent" size={16} />
+                                        <Text weight="semibold">Production</Text>
+                                    </Stack>
+                                    <Text type="supporting">
+                                        <Code>s3</Code> backend using application and shared prefixes in one
+                                        Organization bucket.
+                                    </Text>
+                                </Stack>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={`from longlink import storage
+
+with storage.open("reports/example.txt", "wb") as f:
+    f.write(b"hello")`}
+                    language="python"
+                />
+            </Stack>
+        </Article>
     );
 }

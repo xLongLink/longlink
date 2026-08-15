@@ -5,24 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Form'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'TextArea'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Collects longer text values.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock code={'<TextArea label="Notes" value="$form.notes" rows="4" />'} language="xml" />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/text-area',
     title: 'TextArea',
@@ -39,12 +21,20 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Form'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'TextArea'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Collects longer text values.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock code={'<TextArea label="Notes" value="$form.notes" rows="4" />'} language="xml" />
+            </Stack>
+        </Article>
     );
 }

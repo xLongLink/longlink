@@ -5,24 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Content'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Badge'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Displays a compact status or enumerated label.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock code={'<Badge label="$order.status" variant="info" />'} language="xml" />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/badge',
     title: 'Badge',
@@ -39,12 +21,20 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Content'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Badge'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Displays a compact status or enumerated label.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock code={'<Badge label="$order.status" variant="info" />'} language="xml" />
+            </Stack>
+        </Article>
     );
 }

@@ -5,27 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
-function Content() {
-    return (
-        <Stack gap={5}>
-            <Stack gap={2}>
-                <Text type="supporting">{'Action'}</Text>
-                <Heading id="introduction" level={1}>
-                    {'Link'}
-                </Heading>
-            </Stack>
-            <Text as="p">{'Navigates inside a LongLink Application or opens an external URL.'}</Text>
-            <Heading id="usage" level={2}>
-                Usage
-            </Heading>
-            <CodeBlock
-                code={'<Link to="/orders/${order.id}" label="Open order" hasUnderline="true" />'}
-                language="xml"
-            />
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk/pages/link',
     title: 'Link',
@@ -42,12 +21,23 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-            <Article
-                page={{
-                    ...metadata,
-                    content: <Content />,
-                    metadata,
-                }}
-            />
+        <Article page={{ ...metadata, metadata }}>
+            <Stack gap={5}>
+                <Stack gap={2}>
+                    <Text type="supporting">{'Action'}</Text>
+                    <Heading id="introduction" level={1}>
+                        {'Link'}
+                    </Heading>
+                </Stack>
+                <Text as="p">{'Navigates inside a LongLink Application or opens an external URL.'}</Text>
+                <Heading id="usage" level={2}>
+                    Usage
+                </Heading>
+                <CodeBlock
+                    code={'<Link to="/orders/${order.id}" label="Open order" hasUnderline="true" />'}
+                    language="xml"
+                />
+            </Stack>
+        </Article>
     );
 }

@@ -31,6 +31,11 @@ type RegistrationCompleteValues = {
 type RegistrationSetup = z.infer<typeof zEmailPayload>;
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
+const registrationCompleteSchema = z.object({
+    name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
+    surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
+    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+});
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -39,14 +44,9 @@ export default function VerifyEmail() {
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const schema = z.object({
-        name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
-        surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
-        password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
-    });
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', surname: '', password: '' },
-        resolver: zodResolver(schema),
+        resolver: zodResolver(registrationCompleteSchema),
     });
     const verification = useMutation({
         mutationFn: async (registrationToken: string) => {
