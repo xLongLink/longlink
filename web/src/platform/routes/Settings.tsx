@@ -174,12 +174,7 @@ export default function Settings() {
                         <div className="min-w-0">
                             {section === 'account' ? (
                                 <VStack gap={4}>
-                                    <VStack gap={1}>
-                                        <Heading level={2}>Account</Heading>
-                                        <Text type="supporting">
-                                            Update your username. Your account email is read-only here.
-                                        </Text>
-                                    </VStack>
+                                    <Heading level={2}>Account</Heading>
                                     <HStack gap={4} align="start" wrap="wrap">
                                         <TextInput
                                             label="Username"
@@ -210,12 +205,7 @@ export default function Settings() {
                             {section === 'organizations' ? (
                                 <VStack gap={4}>
                                     <HStack gap={4} justify="between" align="end" wrap="wrap">
-                                        <VStack gap={1}>
-                                            <Heading level={2}>Organizations</Heading>
-                                            <Text type="supporting">
-                                                Review the organizations connected to your personal account.
-                                            </Text>
-                                        </VStack>
+                                        <Heading level={2}>Organizations</Heading>
                                         <CreateOrganization />
                                     </HStack>
                                     {isLoading && memberships.length === 0 ? null : (

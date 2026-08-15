@@ -7,14 +7,14 @@ import { useOrganization } from '@/hooks/use-organization';
 /** Renders one proxy-backed organization application. */
 export default function OrganizationApplication() {
     const { organization = '', application = '' } = useParams();
-    const { organization: organizationDetails, applications, isLoading, error } = useOrganization(organization);
+    const { applications, isLoading, error } = useOrganization(organization);
     const applicationAccess = applications.find((item) => item.slug === application);
 
     if (isLoading) {
         return <View isApplicationLoading pages={null} />;
     }
 
-    if (error?.status === 404 || !organizationDetails || !applicationAccess) {
+    if (error?.status === 404 || !applicationAccess) {
         return <NotFound />;
     }
 

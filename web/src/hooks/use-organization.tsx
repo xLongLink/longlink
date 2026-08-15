@@ -19,7 +19,6 @@ export function useOrganization(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id ?? '';
-    const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
     const organizationQuery = useApiQuery<OrganizationDetails>(
         organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null,
@@ -31,7 +30,10 @@ export function useOrganization(organizationSlug: string) {
     );
 
     const error: (Error & { status?: number }) | null =
-        organizationQuery.error ?? (missingOrganization ? new ApiError('Organization not found', 404) : null);
+        organizationQuery.error ??
+        (!isUserLoading && organizationSlug.length > 0 && organizationId.length === 0
+            ? new ApiError('Organization not found', 404)
+            : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {
@@ -63,9 +65,7 @@ export function useInviteOrganizationMember(organizationId: string) {
                 body: JSON.stringify({ email, role }),
             });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
     });
 }
 
@@ -128,25 +128,22 @@ export function useChangeOrganizationMemberRole(organizationId: string) {
 /** Deletes one application and refreshes organization application data. */
 export function useDeleteOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null;
+    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
 
     return useMutation({
         mutationFn: async (applicationId: string) => {
             // Require a resolved organization before deleting apps.
-            if (organizationPath === null) {
+            if (!organizationId) {
                 throw new Error('Organization not found');
             }
 
             await requestApi(platformApiPath(`/applications/${applicationId}`), { method: 'DELETE' });
         },
-        onSuccess: () => {
-            if (organizationPath === null) {
-                return;
-            }
-
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
-            queryClient.invalidateQueries({ queryKey: applicationsQueryKey });
-        },
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+            ]),
     });
 }
 
@@ -189,15 +186,14 @@ export function useUpdateOrganization(organizationId: string) {
                 })
             );
         },
-        onSuccess: async () => {
-            // Refresh every response that embeds Organization metadata.
-            await Promise.all([
+        // Refresh every response that embeds Organization metadata.
+        onSuccess: () =>
+            Promise.all([
                 queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
                 queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
                 queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
                 queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
-            ]);
-        },
+            ]),
     });
 }
 
