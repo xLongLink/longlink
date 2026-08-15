@@ -1,9 +1,14 @@
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
+import { Center } from '@astryxdesign/core/Center';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Link } from '@astryxdesign/core/Link';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import type { ArticleNavigationGroup } from '@/lib/articles';
-import { Sidebar } from '@/components/Sidebar';
+import { Wordmark } from '@/components/Wordmark';
 
 const LEGAL_GROUPS: ArticleNavigationGroup[] = [
     {
@@ -18,12 +23,45 @@ const LEGAL_GROUPS: ArticleNavigationGroup[] = [
 
 /** Renders legal content with the fixed legal navigation. */
 export function Legal({ children }: { children: ReactNode }) {
+    const { pathname } = useLocation();
+
     return (
         <AppShell
             contentPadding={0}
             height="auto"
             mobileNav={{ breakpoint: 'lg' }}
-            sideNav={<Sidebar groups={LEGAL_GROUPS} />}
+            sideNav={
+                <SideNav
+                    header={
+                        <Stack className="-my-2">
+                            <Center className="lg:mt-2" height={64} width="100%">
+                                <Link href="/" label="LongLink home" color="inherit">
+                                    <Wordmark size="heading" />
+                                </Link>
+                            </Center>
+                            <Stack paddingInline={2}>
+                                <Divider />
+                            </Stack>
+                        </Stack>
+                    }
+                >
+                    <Stack paddingInline={2}>
+                        {LEGAL_GROUPS.map((group) => (
+                            <SideNavSection key={group.title} title={group.title}>
+                                {group.items.map((item) => (
+                                    <SideNavItem
+                                        key={item.path}
+                                        href={item.path}
+                                        icon={item.icon}
+                                        isSelected={pathname === item.path}
+                                        label={item.title}
+                                    />
+                                ))}
+                            </SideNavSection>
+                        ))}
+                    </Stack>
+                </SideNav>
+            }
             variant="wash"
         >
             <Card

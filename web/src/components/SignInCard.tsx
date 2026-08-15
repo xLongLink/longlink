@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { PasswordInput } from '@/components/PasswordInput';
 
 type LoginValues = {
     email: string;
@@ -98,9 +97,8 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                         control={form.control}
                         name="password"
                         render={({ field, fieldState }) => (
-                            <PasswordInput
+                            <TextInput
                                 ref={field.ref}
-                                autoComplete="current-password"
                                 htmlName={field.name}
                                 isLabelHidden
                                 isRequired
@@ -112,6 +110,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                                 }
                                 value={field.value}
                                 width="100%"
+                                type="password"
                             />
                         )}
                     />

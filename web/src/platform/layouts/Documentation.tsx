@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
 import { createElement } from 'react';
+import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
+import { Center } from '@astryxdesign/core/Center';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Link } from '@astryxdesign/core/Link';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import {
@@ -17,8 +22,8 @@ import {
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
-import { Sidebar } from '@/components/Sidebar';
 import type { ArticleNavigationGroup } from '@/lib/articles';
+import { Wordmark } from '@/components/Wordmark';
 
 const documentationGroups: ArticleNavigationGroup[] = [
     {
@@ -92,12 +97,45 @@ const documentationGroups: ArticleNavigationGroup[] = [
 
 /** Renders documentation content with the fixed documentation navigation. */
 export function Documentation({ children }: { children: ReactNode }) {
+    const { pathname } = useLocation();
+
     return (
         <AppShell
             contentPadding={0}
             height="auto"
             mobileNav={{ breakpoint: 'lg' }}
-            sideNav={<Sidebar groups={documentationGroups} />}
+            sideNav={
+                <SideNav
+                    header={
+                        <Stack className="-my-2">
+                            <Center className="lg:mt-2" height={64} width="100%">
+                                <Link href="/" label="LongLink home" color="inherit">
+                                    <Wordmark size="heading" />
+                                </Link>
+                            </Center>
+                            <Stack paddingInline={2}>
+                                <Divider />
+                            </Stack>
+                        </Stack>
+                    }
+                >
+                    <Stack paddingInline={2}>
+                        {documentationGroups.map((group) => (
+                            <SideNavSection key={group.title} title={group.title}>
+                                {group.items.map((item) => (
+                                    <SideNavItem
+                                        key={item.path}
+                                        href={item.path}
+                                        icon={item.icon}
+                                        isSelected={pathname === item.path}
+                                        label={item.title}
+                                    />
+                                ))}
+                            </SideNavSection>
+                        ))}
+                    </Stack>
+                </SideNav>
+            }
             variant="wash"
         >
             <Card

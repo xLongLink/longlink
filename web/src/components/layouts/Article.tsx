@@ -5,11 +5,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 /** Renders shared documentation and legal article content. */
 export function Article({ page }: { page: ArticlePage }) {
@@ -22,21 +22,7 @@ export function Article({ page }: { page: ArticlePage }) {
                 <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" hasDivider padding={0}>
                     <Stack className="relative" height={64} width="100%">
                         <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                            <Breadcrumbs className="min-w-0 overflow-hidden" separator=">" variant="supporting">
-                                {page.breadcrumbs.map((item, index) => {
-                                    const isLast = index === page.breadcrumbs.length - 1;
-
-                                    return (
-                                        <BreadcrumbItem
-                                            key={item.path}
-                                            href={isLast ? undefined : item.path}
-                                            isCurrent={isLast}
-                                        >
-                                            {item.title}
-                                        </BreadcrumbItem>
-                                    );
-                                })}
-                            </Breadcrumbs>
+                            <Breadcrumb article className="min-w-0 overflow-hidden" />
                         </PageContainer>
                         <Center className="absolute end-0 top-0 px-4" height={64}>
                             <Button href="/organizations" label="Get Started" size="sm" variant="primary" />

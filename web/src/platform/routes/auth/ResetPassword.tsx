@@ -6,11 +6,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { ApiError, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
-import { PasswordInput } from '@/components/PasswordInput';
 import { useFragmentToken } from '@/hooks/use-fragment-token';
 
 type ResetPasswordValues = {
@@ -129,9 +129,8 @@ export default function ResetPassword() {
                         control={form.control}
                         name="password"
                         render={({ field, fieldState }) => (
-                            <PasswordInput
+                            <TextInput
                                 ref={field.ref}
-                                autoComplete="new-password"
                                 htmlName={field.name}
                                 isRequired
                                 label="New password"
@@ -142,6 +141,7 @@ export default function ResetPassword() {
                                 }
                                 value={field.value}
                                 width="100%"
+                                type="password"
                             />
                         )}
                     />

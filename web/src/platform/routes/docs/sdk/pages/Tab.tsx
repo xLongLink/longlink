@@ -44,12 +44,6 @@ export default function DocsArticleRoute() {
             <Article
                 page={{
                     ...metadata,
-                    breadcrumbs: [
-                        { title: 'Documentation', path: '/docs' },
-                        { title: 'Applications', path: '/docs/sdk' },
-                        { title: 'Pages', path: '/docs/sdk/pages' },
-                        { title: metadata.title, path: metadata.path },
-                    ],
                     content: <Content />,
                     metadata,
                 }}

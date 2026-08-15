@@ -96,10 +96,6 @@ export const metadata = {
 
 const page: ArticlePage = {
     ...metadata,
-    breadcrumbs: [
-        { title: 'Home', path: '/' },
-        { title: metadata.title, path: metadata.path },
-    ],
     content: createElement(TermsContent),
     metadata,
 };
