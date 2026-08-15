@@ -22,7 +22,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
-    if not any(name.startswith("LONGLINK_") for name in application.secrets):
+    if "LONGLINK_ENV" not in application.secrets:
         # Resolve the Application's immutable provider assignments.
         db = Postgres(
             infrastructure.database.host,

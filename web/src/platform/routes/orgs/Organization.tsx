@@ -10,13 +10,14 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { AppWindow, Settings2, Wrench } from 'lucide-react';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 
 /** Renders the organization applications page. */
-export default function Organization() {
+function OrganizationContent() {
     const { organization = '' } = useParams();
     const { applications, isLoading, error } = useOrganization(organization);
     const columns: TableColumn<OrganizationApplicationSummary>[] = [
@@ -72,5 +73,14 @@ export default function Organization() {
                 )}
             </PageContainer>
         </PlatformLayout>
+    );
+}
+
+/** Protects the organization applications page. */
+export default function Organization() {
+    return (
+        <Auth>
+            <OrganizationContent />
+        </Auth>
     );
 }

@@ -5,7 +5,7 @@ import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 
 /** Renders the authorized admin shell with tabbed navigation. */
-export default function AdminLayoutRoute() {
+export default function Admin() {
     const tabs = [
         { href: '/admin/users', icon: Users, label: 'Users' },
         { href: '/admin/applications', icon: AppWindow, label: 'Applications' },

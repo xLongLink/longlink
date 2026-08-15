@@ -70,7 +70,7 @@ export default [
     route('organizations', './routes/Organizations.tsx'),
     route('settings', './routes/Settings.tsx'),
     ...prefix('admin', [
-        layout('./routes/admin/Layout.tsx', [
+        layout('./layouts/Admin.tsx', [
             route('users', './routes/admin/Users.tsx'),
             route('applications', './routes/admin/Applications.tsx'),
             route('organizations', './routes/admin/Organizations.tsx'),
@@ -80,10 +80,8 @@ export default [
             route('operations', './routes/admin/Operations.tsx'),
         ]),
     ]),
-    route('orgs/:organization', './routes/orgs/Layout.tsx', [
-        index('./routes/orgs/Organization.tsx'),
-        route('settings', './routes/orgs/Settings.tsx'),
-        route('apps/:application/*', './routes/orgs/Application.tsx'),
-    ]),
+    route('orgs/:organization', './routes/orgs/Organization.tsx'),
+    route('orgs/:organization/settings', './routes/orgs/Settings.tsx'),
+    route('orgs/:organization/apps/:application/*', './routes/orgs/Application.tsx'),
     route('*', './NotFound.tsx'),
 ] satisfies RouteConfig;

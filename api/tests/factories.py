@@ -152,12 +152,10 @@ async def create_application(
 ) -> Application:
     """Create one Application after making its Organization ready."""
 
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
     parsed_image = Image(image)
     resolved_image = Image(image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
     async with session_scope() as session:
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         application = await applications.create(
             session,
             organization.id,

@@ -122,14 +122,17 @@ async def release(
 ) -> Application | None:
     """Record one desired Application release and queue its deployment."""
 
-    # Lock the Organization and Application before changing its desired release.
+    # Lock the Application and its Organization assignment before changing its desired release.
     result = await session.execute(
-        select(Organization, Application).join(Application.organization).where(Application.id == application_id).with_for_update()
+        select(Application, Organization.compute_id)
+        .join(Application.organization)
+        .where(Application.id == application_id)
+        .with_for_update()
     )
     row = result.one_or_none()
     if row is None:
         return None
-    organization, application = row
+    application, compute_id = row
     if application.deleted_at is not None:
         return None
 
@@ -137,10 +140,9 @@ async def release(
     application.image_desired = image
     application.description = description
     application.updated_id = user.id
-    application.organization = organization
     await operations.enqueue(
         session,
-        organization.compute_id,
+        compute_id,
         kind=OperationKind.application_create,
         target_id=application.id,
     )
@@ -156,7 +158,7 @@ async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secre
         return None
 
     # Reuse durable runtime values after an interrupted creation attempt.
-    if not any(name.startswith("LONGLINK_") for name in application.secrets):
+    if "LONGLINK_ENV" not in application.secrets:
         # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
         application.secrets = {**application.secrets, **secrets}
     return application.secrets

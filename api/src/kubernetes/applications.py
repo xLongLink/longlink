@@ -1,5 +1,4 @@
 import json
-import base64
 import asyncio
 import hashlib
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
@@ -38,7 +37,7 @@ class Applications:
                         "namespace": namespace,
                         "labels": {APPLICATION_ID_LABEL: str(application_id)},
                     },
-                    "data": {name: base64.b64encode(value.encode()).decode("ascii") for name, value in secrets.items()},
+                    "stringData": secrets,
                 },
                 api=api,
             )

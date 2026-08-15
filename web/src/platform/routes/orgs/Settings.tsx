@@ -13,6 +13,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { AppWindow, Boxes, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { Auth } from '@/components/Auth';
 import { S3 } from '@/svg/S3';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
@@ -51,7 +52,7 @@ function OrganizationOwner({ avatar, name }: { avatar: string; name: string }) {
 }
 
 /** Renders the organization settings page. */
-export default function OrganizationSettingsRoute() {
+function OrganizationSettings() {
     const { organization = '' } = useParams();
     const toast = useToast();
     const location = useLocation();
@@ -330,5 +331,14 @@ export default function OrganizationSettingsRoute() {
                 </Menu>
             </PageContainer>
         </PlatformLayout>
+    );
+}
+
+/** Protects the organization settings page. */
+export default function OrganizationSettingsRoute() {
+    return (
+        <Auth>
+            <OrganizationSettings />
+        </Auth>
     );
 }
