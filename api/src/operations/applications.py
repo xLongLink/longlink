@@ -70,9 +70,8 @@ async def create(claimed: Operation) -> str | None:
         application.secrets = persisted_secrets
 
     # Apply the captured desired release so reconciliation repairs workload drift.
-    image_desired = application.image_desired
     await Kubernetes(infrastructure.compute.kubeconfig).applications.apply(
-        application.id, organization.id.hex, image_desired, application.secrets
+        application.id, organization.id.hex, application.image_desired, application.secrets
     )
 
     # Publish the applied release only after workload readiness.

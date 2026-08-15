@@ -138,12 +138,9 @@ class Applications:
                 async for pod in Pod.list(api=api, label_selector={APPLICATION_ID_LABEL: str(application_id)})
                 if isinstance(pod, Pod) and pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
             ]
-        except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
-            raise RuntimeError("Application logs unavailable") from exc
-        if not active:
-            raise RuntimeError("Application logs unavailable")
-        pod = min(active, key=lambda item: item.name)
-        try:
+            if not active:
+                raise RuntimeError("Application logs unavailable")
+            pod = min(active, key=lambda item: item.name)
             return [line async for line in pod.logs(tail_lines=200)]
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
             raise RuntimeError("Application logs unavailable") from exc

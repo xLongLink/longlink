@@ -36,10 +36,7 @@ async def create_application(
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    organization = membership.organization
     application_slug = names.slugify(payload.name)
-
-    logger.info("Creating application desired state %s/%s", organization.slug, application_slug)
 
     # Resolve immutable image metadata before creating durable Application state.
     metadata = await images.metadata(payload.image)
@@ -56,7 +53,7 @@ async def create_application(
 
     application = await applications.create(
         session,
-        organization.id,
+        organization_id,
         payload.name,
         application_slug,
         image=metadata.image,
@@ -82,7 +79,7 @@ async def release_application(
     access = await organizations.application_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application, _, role = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
@@ -97,7 +94,6 @@ async def release_application(
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    logger.info("Creating application release %s/%s", organization.slug, application.slug)
     result = await applications.release(
         session,
         application_id,

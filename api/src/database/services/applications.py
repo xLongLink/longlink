@@ -1,5 +1,4 @@
 from uuid import UUID
-from sqlmodel import col
 from sqlalchemy import select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -85,7 +84,7 @@ async def create(
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
-        organization_id=organization_id,
+        organization_id=organization.id,
         name=name,
         slug=slug,
         description=description,
@@ -125,10 +124,7 @@ async def release(
 
     # Lock the Organization and Application before changing its desired release.
     result = await session.execute(
-        select(Organization, Application)
-        .join(Application, col(Application.organization_id) == col(Organization.id))
-        .where(col(Application.id) == application_id)
-        .with_for_update()
+        select(Organization, Application).join(Application.organization).where(Application.id == application_id).with_for_update()
     )
     row = result.one_or_none()
     if row is None:
@@ -186,10 +182,7 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
 
     # Lock the Organization and Application state before tombstoning.
     result = await session.execute(
-        select(Organization, Application)
-        .join(Application, col(Application.organization_id) == col(Organization.id))
-        .where(col(Application.id) == application_id)
-        .with_for_update()
+        select(Organization, Application).join(Application.organization).where(Application.id == application_id).with_for_update()
     )
     row = result.one_or_none()
     if row is None:
