@@ -155,20 +155,19 @@ async def delete_application(
 ):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
-    # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
-    tombstone = await applications.get(session, application_id, include_deleted=True)
-    if tombstone is not None and tombstone.deleted_at is not None:
-        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
-            raise HTTPException(status_code=403, detail="Access required")
-    else:
-        access = await organizations.application_access(session, user.id, application_id)
-        if access is None:
-            raise HTTPException(status_code=403, detail="Access required")
+    # Active Applications require Organization maintenance authority.
+    access = await organizations.application_access(session, user.id, application_id)
+    if access is not None:
         _, _, role = access
-
-        # Active Applications require Organization maintenance authority.
         if not roles.atleast(role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
+    else:
+        # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
+        tombstone = await applications.get(session, application_id, include_deleted=True)
+        if tombstone is None or tombstone.deleted_at is None:
+            raise HTTPException(status_code=403, detail="Access required")
+        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+            raise HTTPException(status_code=403, detail="Access required")
 
     result = await applications.soft_delete(session, application_id, user)
     if result is None:

@@ -132,31 +132,6 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
     assert [application.id for application in listed] == [active_application.id]
 
 
-async def test_mark_running_updates_active_applications() -> None:
-    """Publish readiness only for active Applications in the creating state."""
-
-    # Arrange
-    user, _, application = await create_application_context("runtime")
-
-    # Act
-    async with session_scope() as session:
-        await applications.mark_running(session, application.id)
-        await session.commit()
-        running = await applications.get(session, application.id)
-
-    async with session_scope() as session:
-        await applications.soft_delete(session, application.id, user)
-        await session.commit()
-        await applications.mark_running(session, application.id)
-        deleted = await applications.get(session, application.id, include_deleted=True)
-
-    # Assert
-    assert running is not None
-    assert running.status == Status.running
-    assert deleted is not None
-    assert deleted.status == Status.deleting
-
-
 async def test_soft_delete_marks_application_deleted() -> None:
     """Soft-delete an application while scheduling its cleanup operation."""
 

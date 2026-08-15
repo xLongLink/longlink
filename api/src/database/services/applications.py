@@ -47,15 +47,11 @@ async def purge(session: AsyncSession, application_id: UUID) -> None:
 async def get(session: AsyncSession, application_id: UUID, include_deleted: bool = False) -> Application | None:
     """Return a registered application by id."""
 
-    # Load one application by id.
-    statement = select(Application).where(Application.id == application_id)
-
-    # Exclude deleted applications unless requested.
-    if not include_deleted:
-        statement = statement.where(Application.deleted_at.is_(None))
-
-    result = await session.scalars(statement)
-    return result.one_or_none()
+    # Load the requested application by primary key.
+    application = await session.get(Application, application_id)
+    if application is None or (not include_deleted and application.deleted_at is not None):
+        return None
+    return application
 
 
 async def create(
@@ -75,16 +71,17 @@ async def create(
     if "@" not in image:
         raise ValueError("Application image must be pinned to its resolved digest")
 
-    # Create the Application after validating its Organization lifecycle state.
-    # Resolve the parent before taking locks in aggregate order.
-    compute_id = await session.scalar(select(col(Organization.compute_id)).where(col(Organization.id) == organization_id))
-    if compute_id is None:
+    # Lock the Organization and its assigned Compute registry before validating their lifecycle state.
+    result = await session.execute(
+        select(Organization, ComputeRegistry.status)
+        .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+        .where(Organization.id == organization_id)
+        .with_for_update()
+    )
+    row = result.one_or_none()
+    if row is None:
         raise NotFoundError("Organization not found")
-    compute_status = await session.scalar(select(ComputeRegistry.status).where(ComputeRegistry.id == compute_id).with_for_update())
-    organization_result = await session.scalars(select(Organization).where(Organization.id == organization_id).with_for_update())
-    organization = organization_result.one_or_none()
-    if compute_status is None or organization is None:
-        raise NotFoundError("Organization not found")
+    organization, compute_status = row
     if compute_status != Status.running:
         raise ConflictError("Compute registry is not ready")
     if organization.deleted_at is not None or organization.status != Status.running:
@@ -174,28 +171,21 @@ async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secre
     return application.secrets
 
 
-async def mark_running(session: AsyncSession, application_id: UUID) -> None:
-    """Publish Application readiness."""
+async def publish_deployment(session: AsyncSession, application_id: UUID, image: str) -> None:
+    """Publish an applied release and Application readiness."""
 
-    # Lock the Application before publishing readiness.
+    # Lock the Application before publishing the completed worker transition.
     application = await session.get(Application, application_id, with_for_update=True)
     if application is None or application.deleted_at is not None:
         return
 
-    # Publish running after the Application workload is ready.
-    if application.status != Status.creating:
-        return
-    application.status = Status.running
-
-
-async def mark_deployed(session: AsyncSession, application_id: UUID, image: str) -> None:
-    """Publish a successfully applied desired release as deployed."""
-
     # Promote only the exact desired release applied by the worker.
-    application = await session.get(Application, application_id, with_for_update=True)
-    if application is None or application.deleted_at is not None or application.image_desired != image:
-        return
-    application.image_deployed = application.image_desired
+    if application.image_desired == image:
+        application.image_deployed = image
+
+    # Publish running after the Application workload is ready.
+    if application.status == Status.creating:
+        application.status = Status.running
 
 
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
