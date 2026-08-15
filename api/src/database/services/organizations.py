@@ -107,8 +107,8 @@ async def fetch(session: AsyncSession) -> Sequence[Organization]:
     return result.all()
 
 
-async def set_runtime(session: AsyncSession, organization_id: UUID, expected_status: Status, status: Status) -> None:
-    """Transition one active Organization from the expected lifecycle state."""
+async def mark_running(session: AsyncSession, organization_id: UUID) -> None:
+    """Publish one active Organization after its creation lifecycle completes."""
 
     # Guard lifecycle writes from stale attempts after deletion or another transition.
     await session.execute(
@@ -116,9 +116,9 @@ async def set_runtime(session: AsyncSession, organization_id: UUID, expected_sta
         .where(
             Organization.id == organization_id,
             Organization.deleted_at.is_(None),
-            Organization.status == expected_status,
+            Organization.status == Status.creating,
         )
-        .values(status=status)
+        .values(status=Status.running)
     )
 
 
@@ -138,17 +138,18 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
     await session.execute(delete(Organization).where(Organization.id == organization_id))
 
 
-async def applications(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[Application]:
+async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:
     """Return applications for one organization."""
 
-    # Query organization applications in one session.
-    statement = select(Application).where(Application.organization_id == organization_id)
-
-    # Include deleted rows only when requested.
-    if not include_deleted:
-        statement = statement.where(Application.deleted_at.is_(None))
-
-    statement = statement.order_by(Application.created_at.asc())
+    # Query active organization applications in one session.
+    statement = (
+        select(Application)
+        .where(
+            Application.organization_id == organization_id,
+            Application.deleted_at.is_(None),
+        )
+        .order_by(Application.created_at.asc())
+    )
     result = await session.scalars(statement)
     return result.all()
 
@@ -171,17 +172,13 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
 
 
 async def get(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Organization | None:
-    """Return one organization by id with related rows loaded."""
+    """Return one organization by id."""
 
-    # Load organization details through one managed session.
-    statement = select(Organization).where(Organization.id == organization_id)
-
-    # Exclude deleted organizations unless requested.
-    if not include_deleted:
-        statement = statement.where(Organization.deleted_at.is_(None))
-
-    result = await session.scalars(statement)
-    return result.one_or_none()
+    # Load the requested organization by its primary key.
+    organization = await session.get(Organization, organization_id)
+    if organization is None or (not include_deleted and organization.deleted_at is not None):
+        return None
+    return organization
 
 
 async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:

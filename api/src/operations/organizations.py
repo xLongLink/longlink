@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
@@ -19,18 +18,13 @@ async def reconcile(claimed: Operation) -> str | None:
         return None
     organization = infrastructure.organization
 
-    # Resolve the Organization's immutable provider and compute assignments.
-    database_registry = infrastructure.database
-    storage_registry = infrastructure.storage
-    compute_registry = infrastructure.compute
-
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     db = Postgres(
-        database_registry.host,
-        database_registry.port,
-        database_registry.username,
-        database_registry.password,
-        database_registry.sslmode,
+        infrastructure.database.host,
+        infrastructure.database.port,
+        infrastructure.database.username,
+        infrastructure.database.password,
+        infrastructure.database.sslmode,
     )
     await db.prepare_organization_database(organization.id)
     async with session_scope() as session:
@@ -38,19 +32,19 @@ async def reconcile(claimed: Operation) -> str | None:
 
     # Converge the Organization bucket before Applications receive scoped credentials.
     object_storage = Exoscale(
-        storage_registry.endpoint_url,
-        storage_registry.access_key_id,
-        storage_registry.secret_access_key,
+        infrastructure.storage.endpoint_url,
+        infrastructure.storage.access_key_id,
+        infrastructure.storage.secret_access_key,
     )
     await object_storage.create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and ingress policy.
-    cluster = Kubernetes(compute_registry.kubeconfig)
+    cluster = Kubernetes(infrastructure.compute.kubeconfig)
     await cluster.organizations.apply(organization.id.hex)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     async with session_scope() as session:
-        await organizations.set_runtime(session, organization.id, Status.creating, Status.running)
+        await organizations.mark_running(session, organization.id)
         await session.commit()
 
 

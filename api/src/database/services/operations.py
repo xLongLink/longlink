@@ -83,8 +83,6 @@ async def enqueue(
             Operation.finished_at.is_(None),
             Operation.lease_expires_at.is_(None),
         )
-        .order_by(Operation.created_at, Operation.id)
-        .limit(1)
         .with_for_update()
     )
     if operation is None:
@@ -149,7 +147,7 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
         update(Operation)
         .where(
             Operation.id == operation_id,
-            col(Operation.lease_expires_at).is_not(None),
+            Operation.lease_expires_at.is_not(None),
             col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )

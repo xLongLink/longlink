@@ -1,12 +1,11 @@
 import asyncio
+from src.errors import NotFoundError
+from src.database.session import session_scope
+from src.database.services import operations as operation_service
 
 
 async def schedule_reconciliation() -> None:
     """Schedule deployment reconciliation for every current resource desired state."""
-
-    from src.errors import NotFoundError
-    from src.database.session import session_scope
-    from src.database.services import operations as operation_service
 
     # Discover deployment reconciliation targets in dependency order.
     async with session_scope() as session:

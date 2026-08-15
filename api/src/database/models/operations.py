@@ -20,8 +20,6 @@ class Operation(PlatformModel, table=True):
             "target_id",
             "finished_at",
             "lease_expires_at",
-            "created_at",
-            "id",
         ),
     )
 
