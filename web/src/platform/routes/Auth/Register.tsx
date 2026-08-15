@@ -35,13 +35,12 @@ export default function Register() {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
-        mutationFn: async (payload: RegisterValues) => {
-            await requestApi(platformApiPath('/auth/register'), {
+        mutationFn: (payload: RegisterValues) =>
+            requestApi(platformApiPath('/auth/register'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
         onSuccess: () => {
             showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },

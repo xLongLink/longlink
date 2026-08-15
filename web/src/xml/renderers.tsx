@@ -5,7 +5,8 @@ import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
-import { getSetupNodes, setupContext, XmlContext } from './core/context';
+import { setupContext, XmlContext } from './core/context';
+import { isSafePropertyName } from './expressions';
 
 type RenderXMLProps = {
     ast: [ASTNode];
@@ -129,4 +130,87 @@ export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );
+}
+
+/** Finds and validates State and Query declarations in document order. */
+function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
+    const setupNodes: ASTNode[] = [];
+
+    function walk(currentNodes: ASTNode[]): void {
+        // Validate each declaration before checking descendants.
+        for (const node of currentNodes) {
+            validateSetupNode(node);
+
+            // Collect setup declarations outside loop-local scope.
+            if (node.name === 'State' || node.name === 'Query') {
+                setupNodes.push(node);
+            }
+
+            // Skip nested loop content because it has its own scope.
+            if (node.name !== 'For') {
+                walk(node.children);
+            }
+        }
+    }
+
+    walk(nodes);
+    return setupNodes;
+}
+
+/** Validates a single setup-only runtime declaration. */
+function validateSetupNode(node: ASTNode): void {
+    // LongLink roots accept optional metadata-only attributes.
+    if (node.name === 'longlink') {
+        const params = node.params;
+        const unsupported = Object.keys(params).filter((name) => name !== 'name' && name !== 'icon');
+
+        // Reject unknown root metadata.
+        if (unsupported.length) {
+            throw new Error(`Unsupported longlink attributes: ${unsupported.join(', ')}`);
+        }
+    }
+
+    // Validate state declarations.
+    if (node.name === 'State') {
+        // Require a declared state key.
+        if (!node.params.id) throw new Error('State requires a string id');
+
+        // Keep state keys static.
+        if (node.params.id.kind !== 'text') throw new Error('State id must be literal text');
+
+        // Prevent unsafe state property names.
+        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
+            throw new Error('State id must be a safe property name');
+        }
+
+        const unsafeAttributes = Object.keys(node.params).filter((name) => name !== 'id' && !isSafePropertyName(name));
+
+        // Reject unsafe state attribute names.
+        if (unsafeAttributes.length) {
+            throw new Error(`State attributes must be safe property names: ${unsafeAttributes.join(', ')}`);
+        }
+
+        // Keep State declarations leaf-only.
+        if (node.children.length > 0) throw new Error('State cannot have children');
+    }
+
+    // Validate query declarations.
+    if (node.name === 'Query') {
+        // Require a declared query key.
+        if (!node.params.id) throw new Error('Query requires a string id');
+
+        // Require a query source path.
+        if (!node.params.path) throw new Error('Query requires a string path');
+
+        // Keep Query declarations leaf-only.
+        if (node.children.length > 0) throw new Error('Query cannot have children');
+
+        // Keep query keys static.
+        if (node.params.id.kind !== 'text') throw new Error('Query id must be literal text');
+
+        // Prevent unsafe query property names.
+        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
+            throw new Error('Query id must be a safe property name');
+        }
+    }
 }

@@ -39,13 +39,12 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
-        mutationFn: async (payload: LoginValues) => {
-            await requestApi(platformApiPath('/auth/password/login'), {
+        mutationFn: (payload: LoginValues) =>
+            requestApi(platformApiPath('/auth/password/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
 
     /** Signs in with an email and password, then refreshes the current profile. */

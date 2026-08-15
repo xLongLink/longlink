@@ -55,13 +55,12 @@ export default function ResetPassword() {
         },
     });
     const resetPassword = useMutation({
-        mutationFn: async (payload: ResetPasswordValues) => {
-            await requestApi(platformApiPath('/auth/reset-password'), {
+        mutationFn: (payload: ResetPasswordValues) =>
+            requestApi(platformApiPath('/auth/reset-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
     });
     const hasTokenError =
         (verification.error instanceof ApiError && verification.error.code === 'RESET_PASSWORD_BAD_TOKEN') ||
@@ -73,7 +72,7 @@ export default function ResetPassword() {
             await resetPassword.mutateAsync(payload);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
-            if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
                 return;
             }
 

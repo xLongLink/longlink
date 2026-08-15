@@ -28,13 +28,12 @@ export default function ForgotPassword() {
         resolver: zodResolver(schema),
     });
     const requestReset = useMutation({
-        mutationFn: async (payload: ForgotPasswordValues) => {
-            await requestApi(platformApiPath('/auth/forgot-password'), {
+        mutationFn: (payload: ForgotPasswordValues) =>
+            requestApi(platformApiPath('/auth/forgot-password'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-            });
-        },
+            }),
         onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : 'Please try again in a moment.',

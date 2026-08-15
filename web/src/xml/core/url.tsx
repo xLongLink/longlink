@@ -33,7 +33,7 @@ function resolveUrl(baseUrl: string, path: string): string {
 }
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
-export function isAppRelativeUrl(path: string): boolean {
+function isAppRelativeUrl(path: string): boolean {
     const value = path.trim();
 
     // Block Windows separators and explicit protocols.
