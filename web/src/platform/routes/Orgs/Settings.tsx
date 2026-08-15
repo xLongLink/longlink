@@ -11,7 +11,6 @@ import { useLocation, useParams } from 'react-router';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { AppWindow, Boxes, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
@@ -27,6 +26,7 @@ import { platformApiPath } from '@/lib/platform-api';
 import { PageContainer } from '@/components/PageContainer';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { useOrganization, useUpdateOrganization } from '@/hooks/use-organization';
+import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type DatabaseUsage = { id: string; usage: number };
@@ -206,59 +206,9 @@ export default function OrganizationSettingsRoute() {
                         Configure the organization and its runtime defaults.
                     </Text>
                 </Stack>
-                <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-                    <SideNav className="h-auto w-full">
-                        <SideNavSection title="Settings" isHeaderHidden>
-                            <SideNavItem
-                                href={`/orgs/${organization}/settings`}
-                                icon={<Building2 aria-hidden="true" size={16} />}
-                                isSelected={section === 'organization'}
-                                label="Organization"
-                            />
-                            <SideNavItem
-                                collapsible
-                                icon={<Users aria-hidden="true" size={16} />}
-                                isSelected={section === 'members' || section === 'invitations'}
-                                label="People"
-                            >
-                                <SideNavItem
-                                    href={`/orgs/${organization}/settings#members`}
-                                    isSelected={section === 'members'}
-                                    label="Members"
-                                />
-                                <SideNavItem
-                                    href={`/orgs/${organization}/settings#invitations`}
-                                    isSelected={section === 'invitations'}
-                                    label="Invitations"
-                                />
-                            </SideNavItem>
-                            <SideNavItem
-                                href={`/orgs/${organization}/settings#applications`}
-                                icon={<Boxes aria-hidden="true" size={16} />}
-                                isSelected={section === 'applications'}
-                                label="Applications"
-                            />
-                            {hasOrganizationApplicationAccess ? (
-                                <>
-                                    <SideNavItem
-                                        href={`/orgs/${organization}/settings#database`}
-                                        icon={<Database aria-hidden="true" size={16} />}
-                                        isSelected={section === 'database'}
-                                        label="Database"
-                                    />
-                                    <SideNavItem
-                                        href={`/orgs/${organization}/settings#storage`}
-                                        icon={<HardDrive aria-hidden="true" size={16} />}
-                                        isSelected={section === 'storage'}
-                                        label="Storage"
-                                    />
-                                </>
-                            ) : null}
-                        </SideNavSection>
-                    </SideNav>
-
-                    <div className="min-w-0">
-                        {section === 'organization' ? (
+                <Menu className="h-auto w-full">
+                    <MenuSection title="Settings" isHeaderHidden>
+                        <MenuItem icon={<Building2 aria-hidden="true" size={16} />} label="Organization">
                             <VStack gap={4}>
                                 <VStack gap={1}>
                                     <Heading level={2}>Organization</Heading>
@@ -284,22 +234,34 @@ export default function OrganizationSettingsRoute() {
                                     />
                                 </HStack>
                             </VStack>
-                        ) : null}
-
-                        {section === 'members' || section === 'invitations' ? (
-                            <People
-                                organizationId={organizationId}
-                                members={members}
-                                invitations={invitations}
-                                activeSection={section}
-                                canInviteMembers={hasOrganizationApplicationAccess}
-                                canManageMembers={canManageOrganization}
-                                isLoading={isLoading}
-                                error={error}
-                            />
-                        ) : null}
-
-                        {section === 'applications' ? (
+                        </MenuItem>
+                        <MenuSubSection icon={<Users aria-hidden="true" size={16} />} label="People">
+                            <MenuItem label="Members">
+                                <People
+                                    organizationId={organizationId}
+                                    members={members}
+                                    invitations={invitations}
+                                    activeSection="members"
+                                    canInviteMembers={hasOrganizationApplicationAccess}
+                                    canManageMembers={canManageOrganization}
+                                    isLoading={isLoading}
+                                    error={error}
+                                />
+                            </MenuItem>
+                            <MenuItem label="Invitations">
+                                <People
+                                    organizationId={organizationId}
+                                    members={members}
+                                    invitations={invitations}
+                                    activeSection="invitations"
+                                    canInviteMembers={hasOrganizationApplicationAccess}
+                                    canManageMembers={canManageOrganization}
+                                    isLoading={isLoading}
+                                    error={error}
+                                />
+                            </MenuItem>
+                        </MenuSubSection>
+                        <MenuItem icon={<Boxes aria-hidden="true" size={16} />} label="Applications">
                             <ApplicationSettings
                                 organizationId={organizationId}
                                 applications={applications}
@@ -307,55 +269,57 @@ export default function OrganizationSettingsRoute() {
                                 isLoading={isLoading}
                                 error={error}
                             />
-                        ) : null}
-
-                        {section === 'database' ? (
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Database</Heading>
-                                    <Text type="supporting">Review database usage for this organization.</Text>
+                        </MenuItem>
+                        {hasOrganizationApplicationAccess ? (
+                            <MenuItem icon={<Database aria-hidden="true" size={16} />} label="Database">
+                                <VStack gap={4}>
+                                    <VStack gap={1}>
+                                        <Heading level={2}>Database</Heading>
+                                        <Text type="supporting">Review database usage for this organization.</Text>
+                                    </VStack>
+                                    {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
+                                        <Banner status="error" title={databaseResourceError.message} />
+                                    ) : databaseUsage === null || databaseUsage === undefined ? (
+                                        <EmptyState title="No results." isCompact />
+                                    ) : (
+                                        <Table
+                                            columns={databaseColumns}
+                                            data={[{ id: 'database', usage: databaseUsage }]}
+                                            density="compact"
+                                            emptyState={<EmptyState title="No results." isCompact />}
+                                            hasHover
+                                            idKey="id"
+                                        />
+                                    )}
                                 </VStack>
-                                {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
-                                    <Banner status="error" title={databaseResourceError.message} />
-                                ) : databaseUsage === null || databaseUsage === undefined ? (
-                                    <EmptyState title="No results." isCompact />
-                                ) : (
-                                    <Table
-                                        columns={databaseColumns}
-                                        data={[{ id: 'database', usage: databaseUsage }]}
-                                        density="compact"
-                                        emptyState={<EmptyState title="No results." isCompact />}
-                                        hasHover
-                                        idKey="id"
-                                    />
-                                )}
-                            </VStack>
+                            </MenuItem>
                         ) : null}
-
-                        {section === 'storage' ? (
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Storage</Heading>
-                                    <Text type="supporting">Review storage usage for this organization.</Text>
+                        {hasOrganizationApplicationAccess ? (
+                            <MenuItem icon={<HardDrive aria-hidden="true" size={16} />} label="Storage">
+                                <VStack gap={4}>
+                                    <VStack gap={1}>
+                                        <Heading level={2}>Storage</Heading>
+                                        <Text type="supporting">Review storage usage for this organization.</Text>
+                                    </VStack>
+                                    {isLoading || isStorageLoading ? null : error ? (
+                                        <Banner status="error" title={error.message} />
+                                    ) : storageError ? (
+                                        <Banner status="error" title={storageError.message} />
+                                    ) : (
+                                        <Table
+                                            columns={storageColumns}
+                                            data={storageUsage ? [storageUsage] : []}
+                                            density="compact"
+                                            emptyState={<EmptyState title="No storage resources found." isCompact />}
+                                            hasHover
+                                            idKey="bucket_name"
+                                        />
+                                    )}
                                 </VStack>
-                                {isLoading || isStorageLoading ? null : error ? (
-                                    <Banner status="error" title={error.message} />
-                                ) : storageError ? (
-                                    <Banner status="error" title={storageError.message} />
-                                ) : (
-                                    <Table
-                                        columns={storageColumns}
-                                        data={storageUsage ? [storageUsage] : []}
-                                        density="compact"
-                                        emptyState={<EmptyState title="No storage resources found." isCompact />}
-                                        hasHover
-                                        idKey="bucket_name"
-                                    />
-                                )}
-                            </VStack>
+                            </MenuItem>
                         ) : null}
-                    </div>
-                </div>
+                    </MenuSection>
+                </Menu>
             </PageContainer>
         </PlatformLayout>
     );

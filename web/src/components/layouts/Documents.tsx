@@ -133,7 +133,7 @@ export const DOCUMENTATION_PAGES = [
 ];
 
 /** Renders documentation content with the fixed documentation navigation. */
-export function Documentation({ children }: { children: ReactNode }) {
+export function Documents({ children }: { children: ReactNode }) {
     return (
         <AppShell
             contentPadding={0}

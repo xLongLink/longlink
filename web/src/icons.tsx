@@ -1,4 +1,5 @@
 import type { IconRegistry } from '@astryxdesign/core/Icon';
+import type { LucideIcon } from 'lucide-react';
 import {
     X,
     ChevronDown,
@@ -35,33 +36,37 @@ const iconProps = {
     'aria-hidden': true as const,
 };
 
-export const stoneIconRegistry: IconRegistry = {
-    close: <X {...iconProps} />,
-    chevronDown: <ChevronDown {...iconProps} />,
-    chevronLeft: <ChevronLeft {...iconProps} />,
-    chevronRight: <ChevronRight {...iconProps} />,
-    chevronsLeft: <ChevronsLeft {...iconProps} />,
-    chevronsRight: <ChevronsRight {...iconProps} />,
-    check: <Check {...iconProps} />,
-    success: <CheckCircle {...iconProps} />,
-    error: <XCircle {...iconProps} />,
-    warning: <AlertTriangle {...iconProps} />,
-    info: <Info {...iconProps} />,
-    calendar: <Calendar {...iconProps} />,
-    clock: <Clock {...iconProps} />,
-    externalLink: <ExternalLink {...iconProps} />,
-    menu: <Menu {...iconProps} />,
-    moreHorizontal: <MoreHorizontal {...iconProps} />,
-    search: <Search {...iconProps} />,
-    arrowUp: <ArrowUp {...iconProps} />,
-    arrowDown: <ArrowDown {...iconProps} />,
-    arrowsUpDown: <ArrowUpDown {...iconProps} />,
-    funnel: <Filter {...iconProps} />,
-    eyeSlash: <EyeOff {...iconProps} />,
-    viewColumns: <Columns {...iconProps} />,
-    copy: <Copy {...iconProps} />,
-    checkDouble: <CheckCheck {...iconProps} />,
-    wrench: <Wrench {...iconProps} />,
-    stop: <Square {...iconProps} />,
-    microphone: <Mic {...iconProps} />,
-};
+export const stoneIconComponents = {
+    close: X,
+    chevronDown: ChevronDown,
+    chevronLeft: ChevronLeft,
+    chevronRight: ChevronRight,
+    chevronsLeft: ChevronsLeft,
+    chevronsRight: ChevronsRight,
+    check: Check,
+    success: CheckCircle,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info,
+    calendar: Calendar,
+    clock: Clock,
+    externalLink: ExternalLink,
+    menu: Menu,
+    moreHorizontal: MoreHorizontal,
+    search: Search,
+    arrowUp: ArrowUp,
+    arrowDown: ArrowDown,
+    arrowsUpDown: ArrowUpDown,
+    funnel: Filter,
+    eyeSlash: EyeOff,
+    viewColumns: Columns,
+    copy: Copy,
+    checkDouble: CheckCheck,
+    wrench: Wrench,
+    stop: Square,
+    microphone: Mic,
+} satisfies Record<string, LucideIcon>;
+
+export const stoneIconRegistry: IconRegistry = Object.fromEntries(
+    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon {...iconProps} />])
+) as IconRegistry;
