@@ -39,7 +39,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
             return "192.0.2.1"
 
-        async def replace_tls(self, tls: GatewayTLS, address: str) -> None:
+        async def replace_tls(self, tls: GatewayTLS) -> None:
             """Accept the final endpoint-bound server identity."""
 
     class FakeKubernetes:

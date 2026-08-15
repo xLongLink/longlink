@@ -50,7 +50,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
     tls = generate_gateway_tls(registry.id, gateway_address)
-    await cluster.gateway.replace_tls(tls, gateway_address)
+    await cluster.gateway.replace_tls(tls)
 
     # Publish connection material only after the desired gateway Deployment is serving.
     async with session_scope() as session:

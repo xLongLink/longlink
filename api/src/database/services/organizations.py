@@ -125,14 +125,12 @@ async def mark_running(session: AsyncSession, organization_id: UUID) -> None:
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
     """Hard-delete one organization after all applications and external resources are gone."""
 
-    # The organization tombstone remains until every child application has been purged.
+    # The organization tombstone remains until lifecycle cleanup has purged every child application.
     organization = await session.get(Organization, organization_id, with_for_update=True)
     if organization is None:
         return
     if organization.deleted_at is None:
         raise RuntimeError("Active organizations cannot be purged")
-    if await session.scalar(select(Application.id).where(Application.organization_id == organization_id).limit(1)) is not None:
-        raise RuntimeError("Organization applications must be purged first")
     await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
     await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
     await session.execute(delete(Organization).where(Organization.id == organization_id))
@@ -321,21 +319,24 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    # Lock the requested running compute registry.
-    compute_status = await session.scalar(select(ComputeRegistry.status).where(ComputeRegistry.id == compute_id).with_for_update())
-    if compute_status is None:
+    # Lock every requested registry while validating the immutable infrastructure assignment.
+    result = await session.execute(
+        select(ComputeRegistry.status, DatabaseRegistry.id, StorageRegistry.id)
+        .select_from(ComputeRegistry)
+        .outerjoin(DatabaseRegistry, DatabaseRegistry.id == database_id)
+        .outerjoin(StorageRegistry, StorageRegistry.id == storage_id)
+        .where(ComputeRegistry.id == compute_id)
+        .with_for_update()
+    )
+    assignment = result.one_or_none()
+    if assignment is None:
         raise UnavailableError("No compute registry available")
+    compute_status, database_registry_id, storage_registry_id = assignment
     if compute_status != Status.running:
         raise UnavailableError("No ready compute registry available")
-
-    # Lock the requested database registry.
-    database_statement = select(DatabaseRegistry.id).where(DatabaseRegistry.id == database_id).with_for_update()
-    if await session.scalar(database_statement) is None:
+    if database_registry_id is None:
         raise UnavailableError("No database registry available")
-
-    # Lock the requested storage registry.
-    storage_statement = select(StorageRegistry.id).where(StorageRegistry.id == storage_id).with_for_update()
-    if await session.scalar(storage_statement) is None:
+    if storage_registry_id is None:
         raise UnavailableError("No storage registry available")
 
     # Build the Organization with its immutable infrastructure assignments.

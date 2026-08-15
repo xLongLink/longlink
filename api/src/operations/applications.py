@@ -12,15 +12,13 @@ async def create(claimed: Operation) -> str | None:
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
-        application = await applications.get(session, claimed.target_id, include_deleted=True)
-        if application is None or application.deleted_at is not None:
+        application = await applications.get(session, claimed.target_id)
+        if application is None:
             return None
         infrastructure = await organizations.infrastructure(session, application.organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
-
-    cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
@@ -73,7 +71,9 @@ async def create(claimed: Operation) -> str | None:
 
     # Apply the captured desired release so reconciliation repairs workload drift.
     image_desired = application.image_desired
-    await cluster.applications.apply(application.id, organization.id.hex, image_desired, application.secrets)
+    await Kubernetes(infrastructure.compute.kubeconfig).applications.apply(
+        application.id, organization.id.hex, image_desired, application.secrets
+    )
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
@@ -95,10 +95,8 @@ async def delete(claimed: Operation) -> str | None:
     if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization
-    cluster = Kubernetes(infrastructure.compute.kubeconfig)
-
     # Remove Application Kubernetes resources before revoking provider credentials.
-    await cluster.applications.delete(application.id, organization.id.hex)
+    await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(

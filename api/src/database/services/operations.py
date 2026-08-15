@@ -4,6 +4,7 @@ from sqlmodel import col
 from sqlalchemy import case, select, update
 from src.errors import NotFoundError
 from src.logger import logger
+from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,11 +14,11 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> list[Operation]:
+async def fetch(session: AsyncSession) -> Sequence[Operation]:
     """Return all operations ordered by newest first."""
 
     result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
-    return list(result.all())
+    return result.all()
 
 
 async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUID]]:

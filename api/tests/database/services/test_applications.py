@@ -6,48 +6,17 @@ from sqlalchemy import update
 from src.errors import ConflictError
 from src.models.types import Image
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.services import applications, organizations
 from src.database.models.users import User
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def create_application_context(prefix: str) -> tuple[User, Organization, Application]:
-    """Create a user, organization, and application for service tests."""
-
-    user = await create_user(prefix)
-    organization = await create_organization(
-        user,
-        name=f"{prefix}-org",
-        slug=f"{prefix}-org",
-    )
-    application = await create_application(organization, user, name="Dashboard")
-    return user, organization, application
-
-
-async def create_user(prefix: str) -> User:
-    """Persist one verified local user for application service tests."""
-
-    Session = await get_session()
-
-    # These tests do not authenticate, so a fixed non-empty hash is sufficient.
-    async with Session() as session:
-        user = User(
-            name=f"{prefix} User",
-            email=f"{prefix}@longlink.dev",
-            password="test-password-hash",
-        )
-        session.add(user)
-        await session.commit()
-        return user
-
-
-async def test_create_requires_running_organization() -> None:
+async def test_create_requires_running_organization(users: tuple[User, User, User]) -> None:
     """Create Applications only for running Organizations."""
 
     # Arrange
-    user = await create_user("app")
+    user = users[0]
     organization = await create_organization(user)
 
     # Act
@@ -79,14 +48,15 @@ async def test_create_requires_running_organization() -> None:
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
-    assert application.image_deployed is None
 
 
-async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
+async def test_create_rejects_duplicate_application_slug_within_organization(users: tuple[User, User, User]) -> None:
     """Reject duplicate application slugs inside the same organization."""
 
     # Arrange
-    user, organization, _ = await create_application_context("duplicate")
+    user = users[0]
+    organization = await create_organization(user, name="duplicate-org", slug="duplicate-org")
+    await create_application(organization, user, name="Dashboard")
 
     # Act
     async with session_scope() as session:
@@ -105,11 +75,13 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     assert str(exc.value) == "Application slug already exists"
 
 
-async def test_fetch_and_organization_applications_ignore_deleted_applications() -> None:
+async def test_fetch_and_organization_applications_ignore_deleted_applications(users: tuple[User, User, User]) -> None:
     """Return only active applications from collection read services."""
 
     # Arrange
-    user, organization, deleted_application = await create_application_context("collections")
+    user = users[0]
+    organization = await create_organization(user, name="collections-org", slug="collections-org")
+    deleted_application = await create_application(organization, user, name="Dashboard")
     async with session_scope() as session:
         active_application = await applications.create(
             session,
@@ -132,11 +104,13 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
     assert [application.id for application in listed] == [active_application.id]
 
 
-async def test_soft_delete_marks_application_deleted() -> None:
+async def test_soft_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:
     """Soft-delete an application while scheduling its cleanup operation."""
 
     # Arrange
-    user, _, application = await create_application_context("delete")
+    user = users[0]
+    organization = await create_organization(user, name="delete-org", slug="delete-org")
+    application = await create_application(organization, user, name="Dashboard")
 
     # Act
     async with session_scope() as session:

@@ -1,11 +1,6 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import (
-    authuser,
-    authadmin,
-    get_session,
-    organization_access,
-)
+from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import names, roles, images
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
@@ -139,11 +134,11 @@ async def get_application_logs(
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
-    # Map adapter errors to a service-unavailable response for the API client.
+    # Map expected cluster log failures to a service-unavailable response.
     try:
         return await Kubernetes(registry.kubeconfig).applications.logs(application.id)
-    except Exception as exc:
-        logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
+    except RuntimeError as exc:
+        logger.warning("Application logs unavailable for '%s': %s", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
 
