@@ -17,7 +17,7 @@ async def fetch(session: AsyncSession) -> list[Operation]:
     """Return all operations ordered by newest first."""
 
     result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
-    return result.all()
+    return list(result.all())
 
 
 async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUID]]:
