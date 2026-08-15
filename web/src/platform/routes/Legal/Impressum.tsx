@@ -6,7 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import type { ArticlePage } from '@/lib/articles';
 import { Legal } from '@/platform/layouts/Legal';
 import { publicSeoMeta } from '@/lib/seo';
-import { Article } from '@/layout/Article';
+import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
     path: '/impressum',

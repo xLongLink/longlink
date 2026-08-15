@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 /** Renders the local SDK runtime request flow diagram. */
 function LocalRuntimeDiagram() {
@@ -131,8 +132,18 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Applications', path: '/docs/sdk' },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }

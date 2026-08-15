@@ -5,7 +5,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
 import { publicSeoMeta } from '@/lib/seo';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 const applicationPaths = ['Use', 'Adapt', 'Create'];
 
@@ -77,8 +78,19 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Platform', path: '/docs/api' },
+                        { title: metadata.title, path: metadata.path },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }

@@ -7,11 +7,12 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/hooks/use-toast';
 import { useApiQuery } from '@/hooks/use-api';
 import { usePaginate } from '@/hooks/pagination';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { platformApiPath } from '@/lib/platform-api';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -26,60 +27,6 @@ export default function AdminUsers() {
         parse: (value) => zUserSummary.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(users);
-    const columns: TableColumn<UserSummary>[] = [
-        {
-            key: 'user',
-            header: 'User',
-            width: proportional(1),
-            renderCell: (user) => (
-                <HStack gap={3} align="center">
-                    <Avatar src={user.avatar} name={user.name} size="md" />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{user.name}</Text>
-                        <Text type="supporting">{user.email}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'id',
-            header: 'ID',
-            width: pixel(288),
-            renderCell: (user) => <Text type="code">{user.id}</Text>,
-        },
-        {
-            key: 'role',
-            header: 'Role',
-            width: pixel(128),
-            renderCell: (user) => <Badge label={user.role} />,
-        },
-        {
-            key: 'actions',
-            header: 'Action',
-            width: pixel(96),
-            align: 'end',
-            renderCell: (user) => (
-                <MoreMenu
-                    label={`Open actions for ${user.name}`}
-                    size="sm"
-                    items={[
-                        {
-                            label: 'Copy email',
-                            onClick: async () => {
-                                try {
-                                    await navigator.clipboard.writeText(user.email);
-                                    toast({ body: 'Email copied' });
-                                } catch {
-                                    toast({ body: 'Failed to copy to clipboard', type: 'error' });
-                                }
-                            },
-                        },
-                    ]}
-                />
-            ),
-        },
-    ];
-
     return (
         <VStack gap={6} width="100%">
             <VStack gap={1}>
@@ -90,14 +37,52 @@ export default function AdminUsers() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}
-                />
+                >
+                    <TableColumn<UserSummary> field="user" header="User" width={proportional(1)}>
+                        {(user) => (
+                            <HStack gap={3} align="center">
+                                <Avatar src={user.avatar} name={user.name} size="md" />
+                                <VStack gap={1}>
+                                    <Text weight="semibold">{user.name}</Text>
+                                    <Text type="supporting">{user.email}</Text>
+                                </VStack>
+                            </HStack>
+                        )}
+                    </TableColumn>
+                    <TableColumn<UserSummary> field="id" header="ID" width={pixel(288)}>
+                        {(user) => <Text type="code">{user.id}</Text>}
+                    </TableColumn>
+                    <TableColumn<UserSummary> field="role" header="Role" width={pixel(128)}>
+                        {(user) => <Badge label={user.role} />}
+                    </TableColumn>
+                    <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
+                        {(user) => (
+                            <MoreMenu
+                                label={`Open actions for ${user.name}`}
+                                size="sm"
+                                items={[
+                                    {
+                                        label: 'Copy email',
+                                        onClick: async () => {
+                                            try {
+                                                await navigator.clipboard.writeText(user.email);
+                                                toast({ body: 'Email copied' });
+                                            } catch {
+                                                toast({ body: 'Failed to copy to clipboard', type: 'error' });
+                                            }
+                                        },
+                                    },
+                                ]}
+                            />
+                        )}
+                    </TableColumn>
+                </Table>
             )}
         </VStack>
     );

@@ -1,9 +1,94 @@
 import type { ReactNode } from 'react';
+import { createElement } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
+import {
+    AppWindow,
+    BookOpen,
+    Building2,
+    Database,
+    FileCode2,
+    FlaskConical,
+    Globe,
+    HardDrive,
+    Package,
+    Rocket,
+    ShieldCheck,
+    Waypoints,
+} from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
-import { DOCUMENTATION_GROUPS } from '@/platform/routes/Docs/navigation';
+import type { ArticleNavigationGroup } from '@/lib/articles';
+
+const documentationGroups: ArticleNavigationGroup[] = [
+    {
+        title: 'Overview',
+        items: [
+            { title: 'Introduction', path: '/docs', icon: createElement(BookOpen, { 'aria-hidden': true, size: 16 }) },
+        ],
+    },
+    {
+        title: 'Platform',
+        items: [
+            {
+                title: 'Overview',
+                path: '/docs/api',
+                icon: createElement(ShieldCheck, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Organizations',
+                path: '/docs/api/organizations',
+                icon: createElement(Building2, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Applications',
+                path: '/docs/api/applications',
+                icon: createElement(AppWindow, { 'aria-hidden': true, size: 16 }),
+            },
+        ],
+    },
+    {
+        title: 'Applications',
+        items: [
+            { title: 'Overview', path: '/docs/sdk', icon: createElement(Package, { 'aria-hidden': true, size: 16 }) },
+            {
+                title: 'Environments',
+                path: '/docs/sdk/environments',
+                icon: createElement(Globe, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Routes',
+                path: '/docs/sdk/routes',
+                icon: createElement(Waypoints, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Storage',
+                path: '/docs/sdk/storage',
+                icon: createElement(HardDrive, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Database',
+                path: '/docs/sdk/database',
+                icon: createElement(Database, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Pages',
+                path: '/docs/sdk/pages',
+                icon: createElement(FileCode2, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Testing',
+                path: '/docs/sdk/testing',
+                icon: createElement(FlaskConical, { 'aria-hidden': true, size: 16 }),
+            },
+            {
+                title: 'Building',
+                path: '/docs/sdk/building',
+                icon: createElement(Rocket, { 'aria-hidden': true, size: 16 }),
+            },
+        ],
+    },
+];
 
 /** Renders documentation content with the fixed documentation navigation. */
 export function Documentation({ children }: { children: ReactNode }) {
@@ -12,7 +97,7 @@ export function Documentation({ children }: { children: ReactNode }) {
             contentPadding={0}
             height="auto"
             mobileNav={{ breakpoint: 'lg' }}
-            sideNav={<Sidebar groups={DOCUMENTATION_GROUPS} />}
+            sideNav={<Sidebar groups={documentationGroups} />}
             variant="wash"
         >
             <Card

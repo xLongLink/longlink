@@ -6,7 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
 import { requestApi } from '@/lib/api';
@@ -17,6 +17,7 @@ import { usePaginate } from '@/hooks/pagination';
 import { storagesQueryKey } from '@/lib/query-keys';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateStorage from '@/components/dialogs/CreateStorage';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -51,36 +52,6 @@ export default function AdminStorage() {
         fallbackDescription: 'Delete this storage registry?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<StorageRegistryResponse>[] = [
-        {
-            key: 'storage',
-            header: 'Storage',
-            width: proportional(2),
-            renderCell: (storage) => (
-                <HStack gap={3} align="center">
-                    <S3 />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{storage.name}</Text>
-                        <Text type="supporting">{storage.endpoint_url}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'actions',
-            header: 'Action',
-            width: pixel(96),
-            align: 'end',
-            renderCell: (storage) => (
-                <MoreMenu
-                    label={`Open actions for ${storage.name}`}
-                    size="sm"
-                    items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(storage) }]}
-                />
-            ),
-        },
-    ];
-
     return (
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
@@ -94,14 +65,34 @@ export default function AdminStorage() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}
-                />
+                >
+                    <TableColumn<StorageRegistryResponse> field="storage" header="Storage" width={proportional(2)}>
+                        {(storage) => (
+                            <HStack gap={3} align="center">
+                                <S3 />
+                                <VStack gap={1}>
+                                    <Text weight="semibold">{storage.name}</Text>
+                                    <Text type="supporting">{storage.endpoint_url}</Text>
+                                </VStack>
+                            </HStack>
+                        )}
+                    </TableColumn>
+                    <TableColumn<StorageRegistryResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                        {(storage) => (
+                            <MoreMenu
+                                label={`Open actions for ${storage.name}`}
+                                size="sm"
+                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(storage) }]}
+                            />
+                        )}
+                    </TableColumn>
+                </Table>
             )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>

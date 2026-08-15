@@ -4,7 +4,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { publicSeoMeta } from '@/lib/seo';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 export const metadata = {
     path: '/docs/sdk/testing',
@@ -69,8 +70,19 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Applications', path: '/docs/sdk' },
+                        { title: metadata.title, path: metadata.path },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }

@@ -7,7 +7,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import { usePaginate } from '@/hooks/pagination';
 import { computesQueryKey } from '@/lib/query-keys';
 import { platformApiPath } from '@/lib/platform-api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -54,36 +55,6 @@ export default function AdminCompute() {
             'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const columns: TableColumn<ComputeRegistryResponse>[] = [
-        {
-            key: 'compute',
-            header: 'Compute',
-            width: proportional(2),
-            renderCell: (compute) => (
-                <HStack gap={3} align="center">
-                    <Wrench className="text-accent" size={20} />
-                    <VStack gap={1}>
-                        <Text weight="semibold">{compute.name}</Text>
-                        <Text type="supporting">{compute.gateway_url}</Text>
-                    </VStack>
-                </HStack>
-            ),
-        },
-        {
-            key: 'actions',
-            header: 'Action',
-            width: pixel(96),
-            align: 'end',
-            renderCell: (compute) => (
-                <MoreMenu
-                    label={`Open actions for ${compute.name}`}
-                    size="sm"
-                    items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(compute) }]}
-                />
-            ),
-        },
-    ];
-
     return (
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
@@ -97,14 +68,34 @@ export default function AdminCompute() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}
-                />
+                >
+                    <TableColumn<ComputeRegistryResponse> field="compute" header="Compute" width={proportional(2)}>
+                        {(compute) => (
+                            <HStack gap={3} align="center">
+                                <Wrench className="text-accent" size={20} />
+                                <VStack gap={1}>
+                                    <Text weight="semibold">{compute.name}</Text>
+                                    <Text type="supporting">{compute.gateway_url}</Text>
+                                </VStack>
+                            </HStack>
+                        )}
+                    </TableColumn>
+                    <TableColumn<ComputeRegistryResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                        {(compute) => (
+                            <MoreMenu
+                                label={`Open actions for ${compute.name}`}
+                                size="sm"
+                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(compute) }]}
+                            />
+                        )}
+                    </TableColumn>
+                </Table>
             )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>

@@ -8,7 +8,8 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 export const metadata = {
     path: '/docs/sdk/database',
@@ -171,8 +172,19 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Applications', path: '/docs/sdk' },
+                        { title: metadata.title, path: metadata.path },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }

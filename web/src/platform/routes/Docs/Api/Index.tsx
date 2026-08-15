@@ -23,7 +23,8 @@ import {
 } from 'lucide-react';
 import { publicSeoMeta } from '@/lib/seo';
 import { Wordmark } from '@/components/Wordmark';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 const capabilities = {
     authentication: {
@@ -191,8 +192,18 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Platform', path: '/docs/api' },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }

@@ -5,7 +5,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticlePage } from '@/lib/articles';
@@ -13,15 +12,7 @@ import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 
 /** Renders shared documentation and legal article content. */
-export function Article({
-    page,
-    previousPage,
-    nextPage,
-}: {
-    page: ArticlePage;
-    previousPage?: Pick<ArticlePage, 'path' | 'title'>;
-    nextPage?: Pick<ArticlePage, 'path' | 'title'>;
-}) {
+export function Article({ page }: { page: ArticlePage }) {
     const { content, metadata } = page;
 
     return (
@@ -60,36 +51,6 @@ export function Article({
                             <article className="article-content space-y-7 text-justify">
                                 {content}
                                 <Stack as="footer" gap={3}>
-                                    {previousPage || nextPage ? (
-                                        <Stack
-                                            as="nav"
-                                            direction="horizontal"
-                                            gap={3}
-                                            hAlign="between"
-                                            aria-label="Documentation navigation"
-                                        >
-                                            {previousPage ? (
-                                                <Button
-                                                    className="bg-muted"
-                                                    href={previousPage.path}
-                                                    icon={<ArrowLeft aria-hidden="true" size={16} />}
-                                                    label={previousPage.title}
-                                                    size="sm"
-                                                    variant="secondary"
-                                                />
-                                            ) : null}
-                                            {nextPage ? (
-                                                <Button
-                                                    className="ms-auto bg-muted"
-                                                    endContent={<ArrowRight aria-hidden="true" size={16} />}
-                                                    href={nextPage.path}
-                                                    label={nextPage.title}
-                                                    size="sm"
-                                                    variant="secondary"
-                                                />
-                                            ) : null}
-                                        </Stack>
-                                    ) : null}
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">

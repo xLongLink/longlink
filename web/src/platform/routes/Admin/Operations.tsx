@@ -3,11 +3,12 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/hooks/use-api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { usePaginate } from '@/hooks/pagination';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { platformApiPath } from '@/lib/platform-api';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -26,47 +27,6 @@ export default function AdminOperations() {
         'organization.create': 'Organization creation',
         'organization.delete': 'Organization deletion',
     };
-    const columns: TableColumn<OperationResponse>[] = [
-        {
-            key: 'operation',
-            header: 'Operation',
-            width: proportional(1),
-            renderCell: (operation) => (
-                <VStack gap={1}>
-                    <Text weight="semibold">{kindLabels[operation.kind]}</Text>
-                    <Text type="supporting">{statusLabels[operation.status]}</Text>
-                </VStack>
-            ),
-        },
-        {
-            key: 'timestamp',
-            header: 'Timestamp',
-            width: pixel(208),
-            renderCell: (operation) => dateTimeFormatter.format(new Date(operation.created_at)),
-        },
-        {
-            key: 'finished_at',
-            header: 'Finished',
-            width: pixel(208),
-            renderCell: (operation) =>
-                operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-',
-        },
-        {
-            key: 'metadata',
-            header: 'Metadata',
-            width: proportional(2),
-            renderCell: (operation) => (
-                <VStack gap={1}>
-                    <Text>
-                        <Text type="supporting">ID</Text> <Text type="code">{operation.id}</Text>
-                    </Text>
-                    <Text>
-                        <Text type="supporting">Target</Text> <Text type="code">{operation.target_id}</Text>
-                    </Text>
-                </VStack>
-            ),
-        },
-    ];
     const {
         data: operations = [],
         error,
@@ -89,14 +49,42 @@ export default function AdminOperations() {
                 <Banner status="error" title={error.message} />
             ) : (
                 <Table
-                    columns={columns}
                     data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title="No results." isCompact />}
                     hasHover
                     idKey="id"
                     plugins={{ pagination }}
-                />
+                >
+                    <TableColumn<OperationResponse> field="operation" header="Operation" width={proportional(1)}>
+                        {(operation) => (
+                            <VStack gap={1}>
+                                <Text weight="semibold">{kindLabels[operation.kind]}</Text>
+                                <Text type="supporting">{statusLabels[operation.status]}</Text>
+                            </VStack>
+                        )}
+                    </TableColumn>
+                    <TableColumn<OperationResponse> field="timestamp" header="Timestamp" width={pixel(208)}>
+                        {(operation) => dateTimeFormatter.format(new Date(operation.created_at))}
+                    </TableColumn>
+                    <TableColumn<OperationResponse> field="finished_at" header="Finished" width={pixel(208)}>
+                        {(operation) =>
+                            operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-'
+                        }
+                    </TableColumn>
+                    <TableColumn<OperationResponse> field="metadata" header="Metadata" width={proportional(2)}>
+                        {(operation) => (
+                            <VStack gap={1}>
+                                <Text>
+                                    <Text type="supporting">ID</Text> <Text type="code">{operation.id}</Text>
+                                </Text>
+                                <Text>
+                                    <Text type="supporting">Target</Text> <Text type="code">{operation.target_id}</Text>
+                                </Text>
+                            </VStack>
+                        )}
+                    </TableColumn>
+                </Table>
             )}
         </VStack>
     );

@@ -24,8 +24,8 @@ import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { publicSeoMeta } from '@/lib/seo';
-import { DocsArticle } from '@/platform/routes/Docs/Article';
-import { DOCUMENTATION_REFERENCE_PAGES } from '@/platform/routes/Docs/navigation';
+import { Article } from '@/components/layouts/Article';
+import { Documentation } from '@/platform/layouts/Documentation';
 
 type ComponentSummary = {
     name: string;
@@ -40,6 +40,42 @@ type ComponentCategoryConfiguration = {
 type ComponentCategory = ComponentCategoryConfiguration & {
     components: ComponentSummary[];
 };
+
+const componentSummaries: (ComponentSummary & { category: string })[] = [
+    { category: 'Runtime', path: '/docs/sdk/pages/if', name: 'if' },
+    { category: 'Runtime', path: '/docs/sdk/pages/expressions', name: 'Expressions' },
+    { category: 'Runtime', path: '/docs/sdk/pages/bindings', name: 'Bindings' },
+    { category: 'State', path: '/docs/sdk/pages/state', name: 'State' },
+    { category: 'State', path: '/docs/sdk/pages/query', name: 'Query' },
+    { category: 'State', path: '/docs/sdk/pages/action', name: 'Action' },
+    { category: 'State', path: '/docs/sdk/pages/for', name: 'For' },
+    { category: 'Action', path: '/docs/sdk/pages/button', name: 'Button' },
+    { category: 'Action', path: '/docs/sdk/pages/link', name: 'Link' },
+    { category: 'Layout', path: '/docs/sdk/pages/card', name: 'Card' },
+    { category: 'Content', path: '/docs/sdk/pages/avatar', name: 'Avatar' },
+    { category: 'Content', path: '/docs/sdk/pages/heading', name: 'Heading' },
+    { category: 'Content', path: '/docs/sdk/pages/icon', name: 'Icon' },
+    { category: 'Content', path: '/docs/sdk/pages/text', name: 'Text' },
+    { category: 'Form', path: '/docs/sdk/pages/checkbox-input', name: 'CheckboxInput' },
+    { category: 'Form', path: '/docs/sdk/pages/file-input', name: 'FileInput' },
+    { category: 'Form', path: '/docs/sdk/pages/number-input', name: 'NumberInput' },
+    { category: 'Form', path: '/docs/sdk/pages/radio-list', name: 'RadioList' },
+    { category: 'Form', path: '/docs/sdk/pages/radio-list-item', name: 'RadioListItem' },
+    { category: 'Form', path: '/docs/sdk/pages/selector', name: 'Selector' },
+    { category: 'Form', path: '/docs/sdk/pages/selector-option', name: 'SelectorOption' },
+    { category: 'Form', path: '/docs/sdk/pages/slider', name: 'Slider' },
+    { category: 'Form', path: '/docs/sdk/pages/switch', name: 'Switch' },
+    { category: 'Form', path: '/docs/sdk/pages/text-area', name: 'TextArea' },
+    { category: 'Form', path: '/docs/sdk/pages/text-input', name: 'TextInput' },
+    { category: 'Content', path: '/docs/sdk/pages/badge', name: 'Badge' },
+    { category: 'Layout', path: '/docs/sdk/pages/divider', name: 'Divider' },
+    { category: 'Layout', path: '/docs/sdk/pages/grid', name: 'Grid' },
+    { category: 'Layout', path: '/docs/sdk/pages/stack', name: 'Stack' },
+    { category: 'Layout', path: '/docs/sdk/pages/side-nav', name: 'SideNav' },
+    { category: 'Layout', path: '/docs/sdk/pages/tab', name: 'Tab' },
+    { category: 'Layout', path: '/docs/sdk/pages/dialog', name: 'Dialog' },
+    { category: 'Layout', path: '/docs/sdk/pages/table', name: 'Table' },
+];
 
 const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
     {
@@ -70,9 +106,7 @@ const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
 
 const componentCategories: ComponentCategory[] = componentCategoryConfigurations.map((category) => ({
     ...category,
-    components: DOCUMENTATION_REFERENCE_PAGES.filter((component) => component.category === category.title).map(
-        ({ path, title: name }) => ({ name, path })
-    ),
+    components: componentSummaries.filter((component) => component.category === category.title),
 }));
 
 const noop = () => undefined;
@@ -324,8 +358,19 @@ export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
-        <DocsArticle metadata={metadata}>
-            <Content />
-        </DocsArticle>
+        <Documentation>
+            <Article
+                page={{
+                    ...metadata,
+                    breadcrumbs: [
+                        { title: 'Documentation', path: '/docs' },
+                        { title: 'Applications', path: '/docs/sdk' },
+                        { title: 'Pages', path: '/docs/sdk/pages' },
+                    ],
+                    content: <Content />,
+                    metadata,
+                }}
+            />
+        </Documentation>
     );
 }
