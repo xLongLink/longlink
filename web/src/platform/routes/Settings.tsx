@@ -23,7 +23,7 @@ import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
+import { organizationsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
@@ -45,7 +45,11 @@ export default function Settings() {
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) =>
             requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+            ]),
     });
     const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);

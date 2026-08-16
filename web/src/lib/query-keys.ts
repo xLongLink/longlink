@@ -10,6 +10,11 @@ export const userOrganizationsQueryKey = apiQueryKey(platformApiPath('/me/organi
 /** Organizations list query key. */
 export const organizationsQueryKey = apiQueryKey(platformApiPath('/organizations'));
 
+/** One organization details query key. */
+export function organizationQueryKey(organizationId: string) {
+    return apiQueryKey(platformApiPath(`/organizations/${organizationId}`));
+}
+
 /** Applications list query key. */
 export const applicationsQueryKey = apiQueryKey(platformApiPath('/applications'));
 

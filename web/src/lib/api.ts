@@ -2,6 +2,8 @@ import { hasProtocol } from 'ufo';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
+export type ApiQueryKey = readonly ['api', string];
+
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
     status: number;
@@ -14,7 +16,7 @@ export class ApiError extends Error {
 }
 
 /** Builds the canonical React Query key for one API resource. */
-export function apiQueryKey(path: string): [string, string] {
+export function apiQueryKey(path: string): ApiQueryKey {
     return ['api', apiUrl(path)];
 }
 

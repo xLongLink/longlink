@@ -12,7 +12,7 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
-import { userOrganizationsQueryKey } from '@/lib/query-keys';
+import { organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
@@ -35,7 +35,11 @@ export default function CreateOrganization() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),
             }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+            ]),
     });
     const formId = useId();
     const [open, setOpen] = useState(false);

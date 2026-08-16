@@ -17,10 +17,10 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
-import { organizationsQueryKey } from '@/lib/query-keys';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -31,7 +31,10 @@ export default function AdminOrganizations() {
             await requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+            ]);
             toast({ body: 'Organization deleted' });
         },
     });

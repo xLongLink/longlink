@@ -1,14 +1,16 @@
 import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
-import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, type ApiQueryKey } from '@/lib/api';
 
 type UseApiQueryOptions<TQueryFnData> = Omit<
-    UseQueryOptions<TQueryFnData, Error, TQueryFnData, string[]>,
+    UseQueryOptions<TQueryFnData, Error, TQueryFnData, ApiQueryKey>,
     'queryKey' | 'queryFn'
 > & {
     parse: (value: unknown) => TQueryFnData;
 };
+
+const disabledApiQueryKey = ['api', 'disabled'] as const satisfies ApiQueryKey;
 
 /** Fetches one API resource through the shared transport and React Query cache. */
 export function useApiQuery<TQueryFnData>(
@@ -18,10 +20,10 @@ export function useApiQuery<TQueryFnData>(
     const { parse, ...queryOptions } = options;
     const queryClient = useQueryClient();
 
-    return useQuery<TQueryFnData, Error, TQueryFnData, string[]>({
+    return useQuery<TQueryFnData, Error, TQueryFnData, ApiQueryKey>({
         ...queryOptions,
         enabled: path !== null && (queryOptions.enabled ?? true),
-        queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
+        queryKey: path !== null ? apiQueryKey(path) : disabledApiQueryKey,
         queryFn: async ({ signal }) => {
             // Normalize known API errors before React Query stores them.
             try {
