@@ -8,12 +8,13 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Building2, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
 import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { PageContainer } from '@/components/PageContainer';
+import { Table, TableColumn } from '@/components/ui/Table';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
@@ -45,25 +46,6 @@ export default function Organizations() {
         );
     }
 
-    const columns: TableColumn<UserOrganizationMembership>[] = [
-        {
-            key: 'name',
-            header: 'Name',
-            width: proportional(1),
-            renderCell: (membership) => (
-                <HStack gap={3} align="center">
-                    <Avatar
-                        src={membership.organization.avatar || undefined}
-                        name={membership.organization.name}
-                        size="md"
-                    />
-                    <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                        {membership.organization.name}
-                    </Link>
-                </HStack>
-            ),
-        },
-    ];
     return (
         <PlatformLayout
             brandOnly
@@ -85,13 +67,31 @@ export default function Organizations() {
                     <Banner status="error" title="Failed to load organizations." />
                 ) : (
                     <Table
-                        columns={columns}
                         data={memberships}
                         density="compact"
                         emptyState={<EmptyState title="No results." isCompact />}
                         hasHover
                         idKey={(membership) => membership.organization.id}
-                    />
+                    >
+                        <TableColumn<UserOrganizationMembership>
+                            field="name"
+                            header="Name"
+                            width={proportional(1)}
+                        >
+                            {(membership) => (
+                                <HStack gap={3} align="center">
+                                    <Avatar
+                                        src={membership.organization.avatar || undefined}
+                                        name={membership.organization.name}
+                                        size="md"
+                                    />
+                                    <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                                        {membership.organization.name}
+                                    </Link>
+                                </HStack>
+                            )}
+                        </TableColumn>
+                    </Table>
                 )}
             </PageContainer>
         </PlatformLayout>

@@ -11,7 +11,7 @@ import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { AppWindow, Boxes, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
+import { AppWindow, Settings2, Users } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
 import { Auth } from '@/components/Auth';
@@ -162,7 +162,7 @@ function OrganizationSettings() {
                 </Stack>
                 <Menu className="h-auto w-full">
                     <MenuSection title="Settings" isHeaderHidden>
-                        <MenuItem icon={<Building2 aria-hidden="true" size={16} />} label="Organization">
+                        <MenuItem icon="building2" label="Organization">
                             <VStack gap={4}>
                                 <VStack gap={1}>
                                     <Heading level={2}>Organization</Heading>
@@ -215,7 +215,7 @@ function OrganizationSettings() {
                                 />
                             </MenuItem>
                         </MenuSubSection>
-                        <MenuItem icon={<Boxes aria-hidden="true" size={16} />} label="Applications">
+                        <MenuItem icon="boxes" label="Applications">
                             <ApplicationSettings
                                 organizationId={organizationId}
                                 applications={applications}
@@ -225,7 +225,7 @@ function OrganizationSettings() {
                             />
                         </MenuItem>
                         {hasOrganizationApplicationAccess ? (
-                            <MenuItem icon={<Database aria-hidden="true" size={16} />} label="Database">
+                            <MenuItem icon="database" label="Database">
                                 <VStack gap={4}>
                                     <VStack gap={1}>
                                         <Heading level={2}>Database</Heading>
@@ -275,7 +275,7 @@ function OrganizationSettings() {
                             </MenuItem>
                         ) : null}
                         {hasOrganizationApplicationAccess ? (
-                            <MenuItem icon={<HardDrive aria-hidden="true" size={16} />} label="Storage">
+                            <MenuItem icon="hardDrive" label="Storage">
                                 <VStack gap={4}>
                                     <VStack gap={1}>
                                         <Heading level={2}>Storage</Heading>

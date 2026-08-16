@@ -7,7 +7,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import type { TopLayoutTab } from '@/layout/TopLayout';
+import type { PlatformTab } from '@/components/layouts/Platform';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import XmlLayout from '@/xml/layout';
 import { requestApi } from '@/lib/api';
@@ -136,7 +136,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     }, [application, firstTabPage, navigate, organization, routePath]);
 
     const { activeTab, tabs } = useMemo(() => {
-        const tabGroups = new Map<string, TopLayoutTab>();
+        const tabGroups = new Map<string, PlatformTab>();
 
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {

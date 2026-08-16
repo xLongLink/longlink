@@ -20,11 +20,11 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { Table as AstryxTable } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
+import { Table, TableColumn } from '@/components/ui/Table';
 
 type ComponentSummary = {
     name: string;
@@ -316,14 +316,10 @@ function renderComponentPreview({ name, path }: ComponentSummary) {
         case 'Table':
             return (
                 <Stack width={170}>
-                    <AstryxTable
-                        columns={[
-                            { key: 'item', header: 'Item' },
-                            { key: 'status', header: 'Status' },
-                        ]}
-                        data={[{ item: 'Order', status: 'Open' }]}
-                        density="compact"
-                    />
+                    <Table data={[{ item: 'Order', status: 'Open' }]} density="compact">
+                        <TableColumn field="item" header="Item" />
+                        <TableColumn field="status" header="Status" />
+                    </Table>
                 </Stack>
             );
         default:

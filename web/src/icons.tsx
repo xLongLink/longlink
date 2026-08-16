@@ -21,13 +21,18 @@ import {
     ArrowUp,
     ArrowDown,
     ArrowUpDown,
+    Boxes,
+    Building2,
+    Database,
     Filter,
+    HardDrive,
     EyeOff,
     Columns,
     Copy,
     CheckCheck,
     Wrench,
     Square,
+    UserRound,
     Mic,
 } from 'lucide-react';
 
@@ -57,6 +62,9 @@ export const stoneIconComponents = {
     arrowUp: ArrowUp,
     arrowDown: ArrowDown,
     arrowsUpDown: ArrowUpDown,
+    boxes: Boxes,
+    building2: Building2,
+    database: Database,
     funnel: Filter,
     eyeSlash: EyeOff,
     viewColumns: Columns,
@@ -65,6 +73,8 @@ export const stoneIconComponents = {
     wrench: Wrench,
     stop: Square,
     microphone: Mic,
+    hardDrive: HardDrive,
+    userRound: UserRound,
 } satisfies Record<string, LucideIcon>;
 
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(

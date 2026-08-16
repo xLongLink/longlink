@@ -7,10 +7,10 @@ import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { ProfileMenu } from '@/components/Profile';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
+import Platform, { type PlatformTab } from '@/components/layouts/Platform';
 
 type PlatformLayoutProps = {
-    tabs?: readonly TopLayoutTab[];
+    tabs?: readonly PlatformTab[];
     brandOnly?: boolean;
     brandHref?: string;
     fillViewport?: boolean;
@@ -38,7 +38,7 @@ export default function PlatformLayout({
     const { user } = useUserProfile();
 
     return (
-        <TopLayout
+        <Platform
             activeTab={activeTabPathname}
             endContent={
                 user ? (
@@ -66,6 +66,6 @@ export default function PlatformLayout({
             topNavClassName="min-h-11 px-7"
         >
             {children}
-        </TopLayout>
+        </Platform>
     );
 }

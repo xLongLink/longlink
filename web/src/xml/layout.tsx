@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Wordmark } from '@/components/Wordmark';
 import { PageContainer } from '@/components/PageContainer';
-import TopLayout, { type TopLayoutTab } from '@/layout/TopLayout';
+import Platform, { type PlatformTab } from '@/components/layouts/Platform';
 
 /** Renders the XML build shell with SDK-specific header chrome. */
 export default function XmlLayout({
@@ -11,12 +11,12 @@ export default function XmlLayout({
     children,
 }: {
     activeTab?: string;
-    tabs: TopLayoutTab[];
+    tabs: PlatformTab[];
     children: ReactNode;
 }) {
     // Keep XML page content aligned within the centered application container.
     return (
-        <TopLayout
+        <Platform
             activeTab={activeTab}
             endContent={
                 <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
@@ -39,6 +39,6 @@ export default function XmlLayout({
             topNavClassName="px-7"
         >
             <PageContainer minHeight="100%">{children}</PageContainer>
-        </TopLayout>
+        </Platform>
     );
 }

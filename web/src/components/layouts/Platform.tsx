@@ -7,24 +7,24 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { useEffect, useState, type ReactNode } from 'react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
-export type TopLayoutTab = {
+export type PlatformTab = {
     href: string;
     icon?: LucideIcon;
     label: string;
 };
 
-type TopLayoutProps = {
+type PlatformProps = {
     activeTab?: string;
     children: ReactNode;
     endContent: ReactNode;
     heading: ReactNode;
     height?: 'auto' | 'fill';
-    tabs?: readonly TopLayoutTab[];
+    tabs?: readonly PlatformTab[];
     topNavClassName: string;
 };
 
-/** Renders the shared application shell with top navigation. */
-function TopLayout({
+/** Renders the shared platform shell with top navigation. */
+function Platform({
     activeTab = '',
     children,
     endContent,
@@ -32,7 +32,7 @@ function TopLayout({
     height = 'auto',
     tabs = [],
     topNavClassName,
-}: TopLayoutProps) {
+}: PlatformProps) {
     // Preserve the existing top navigation and optional tab-strip structure.
     const hasTabs = tabs.length > 0;
     const [isTabFrameExpanded, setIsTabFrameExpanded] = useState(false);
@@ -134,4 +134,4 @@ function TopLayout({
     );
 }
 
-export default TopLayout;
+export default Platform;

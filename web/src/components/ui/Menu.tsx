@@ -5,10 +5,14 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
+import { Icon } from '@/components/ui/Icon';
 
 type MenuProps = ComponentProps<typeof AstryxSideNav>;
 type MenuSectionProps = ComponentProps<typeof AstryxSideNavSection>;
-type MenuItemProps = Omit<ComponentProps<typeof AstryxSideNavItem>, 'href' | 'isSelected'> & { children?: ReactNode };
+type MenuItemProps = Omit<ComponentProps<typeof AstryxSideNavItem>, 'href' | 'icon' | 'isSelected'> & {
+    children?: ReactNode;
+    icon?: string;
+};
 type MenuSubSectionProps = Omit<ComponentProps<typeof AstryxSideNavItem>, 'children' | 'href' | 'isSelected'> & {
     children?: ReactNode;
 };
@@ -76,11 +80,12 @@ export function Menu({ children, ...props }: MenuProps) {
                                 return (
                                     <AstryxSideNavItem {...subSectionProps} collapsible key={subSectionProps.label}>
                                         {items.map((item) => {
-                                            const { children: _children, ...itemProps } = item.props;
+                                            const { children: _children, icon, ...itemProps } = item.props;
 
                                             return (
                                                 <AstryxSideNavItem
                                                     {...itemProps}
+                                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                                                     href={menuItemHref(itemProps.label)}
                                                     isSelected={item === activeItem}
                                                     key={itemProps.label}
@@ -91,11 +96,12 @@ export function Menu({ children, ...props }: MenuProps) {
                                 );
                             }
 
-                            const { children: _children, ...itemProps } = entry.item.props;
+                            const { children: _children, icon, ...itemProps } = entry.item.props;
 
                             return (
                                 <AstryxSideNavItem
                                     {...itemProps}
+                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                                     href={menuItemHref(itemProps.label)}
                                     isSelected={entry.item === activeItem}
                                     key={itemProps.label}
