@@ -537,13 +537,6 @@ export type PasswordResetComplete = {
 };
 
 /**
- * PlatformRoles
- *
- * Supported platform access roles.
- */
-export type PlatformRoles = 'user' | 'administrator';
-
-/**
  * RegistrationComplete
  *
  * Validate profile and password setup after email authentication.
@@ -686,7 +679,10 @@ export type UserSummary = {
      * Avatar
      */
     avatar: string;
-    role: PlatformRoles;
+    /**
+     * Administrator
+     */
+    administrator: boolean;
 };
 
 /**

@@ -8,43 +8,17 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import {
-    AppWindow,
-    ArrowUpDown,
-    BookOpen,
-    Building2,
-    ChevronRight,
-    Database,
-    ExternalLink,
-    HardDrive,
-    Settings2,
-    Users,
-    Wrench,
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useSignOut, useUserProfile } from '@/hooks/use-user';
+import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
+import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useToast } from '@/lib/hooks/use-toast';
+import { useSignOut } from '@/lib/hooks/use-user';
+import { administratorTabs } from '@/platform/tabs';
 
 /** Renders a user profile popover with authentication and navigation actions. */
-export function ProfileMenu() {
-    const { user } = useUserProfile();
+export function ProfileMenu({ user }: { user: UserSummary }) {
     const signOut = useSignOut();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
-    const administrationItems = [
-        { href: '/admin/users', icon: Users, label: 'Users' },
-        { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
-        { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-        { href: '/admin/database', icon: Database, label: 'Database' },
-        { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
-        { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-        { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-    ] as const;
-
-    // Hide the profile menu until a user is loaded.
-    if (!user) {
-        return null;
-    }
-
     return (
         <Popover
             alignment="end"
@@ -93,7 +67,7 @@ export function ProfileMenu() {
                             target="_blank"
                         />
                     </List>
-                    {user.role === 'administrator' ? (
+                    {user.administrator ? (
                         <>
                             <Divider />
                             <List
@@ -104,7 +78,7 @@ export function ProfileMenu() {
                                     </Text>
                                 }
                             >
-                                {administrationItems.map(({ href, icon: Icon, label }) => (
+                                {administratorTabs.map(({ href, icon: Icon, label }) => (
                                     <ListItem
                                         key={href}
                                         endContent={

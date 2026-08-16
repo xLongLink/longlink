@@ -5,9 +5,8 @@ import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import PlatformLayout from '@/platform/layout';
-import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
 export function Auth({
@@ -17,7 +16,7 @@ export function Auth({
     children: ReactElement;
     requiresAdministrator?: boolean;
 }) {
-    const { user, isLoading, error, refetch } = useUserProfile();
+    const { user, isLoading, error, refetch } = useCurrentUser();
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
@@ -27,30 +26,26 @@ export function Auth({
     // Keep authenticated users from seeing a sign-in prompt during profile API failures.
     if (error && (!(error instanceof ApiError) || error.status !== 401)) {
         return (
-            <PlatformLayout brandOnly brandHref="/" fillViewport>
-                <Center height="100%" width="100%">
-                    <VStack gap={4} align="center">
-                        <Banner status="error" title={error.message} />
-                        <Button label="Retry" onClick={() => void refetch()} variant="primary" />
-                    </VStack>
-                </Center>
-            </PlatformLayout>
+            <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+                <VStack gap={4} align="center">
+                    <Banner status="error" title={error.message} />
+                    <Button label="Retry" onClick={() => void refetch()} variant="primary" />
+                </VStack>
+            </Center>
         );
     }
 
     // Show sign-in UI for unauthenticated users.
     if (!user) {
         return (
-            <PlatformLayout brandOnly brandHref="/" fillViewport>
-                <Center height="100%" width="100%">
-                    <SignInCard />
-                </Center>
-            </PlatformLayout>
+            <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+                <SignInCard />
+            </Center>
         );
     }
 
     // Hide administrator routes from regular Platform users.
-    if (requiresAdministrator && user.role !== 'administrator') {
+    if (requiresAdministrator && !user.administrator) {
         return <NotFound />;
     }
 

@@ -5,7 +5,6 @@ from fastapi import Cookie, Depends, HTTPException
 from src.utils import token
 from src.database import session as database
 from collections.abc import AsyncIterator
-from src.models.roles import PlatformRoles
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,7 +56,7 @@ def authadmin(user: User = Depends(authuser)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
-    if user.role != PlatformRoles.administrator:
+    if not user.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user
 

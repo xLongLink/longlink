@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("role", sa.Enum("user", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
+        sa.Column("administrator", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)

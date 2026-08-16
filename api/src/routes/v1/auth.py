@@ -58,7 +58,12 @@ async def logout(
     """Remove the active browser credential."""
 
     # Block cross-origin requests from clearing an authenticated browser session.
-    if origin is not None and origin != env.PUBLIC_URL.rstrip("/"):
+    public_origin = env.PUBLIC_URL.rstrip("/")
+    trusted_origins = {public_origin}
+    if env.DEVELOPMENT:
+        trusted_origins.add(public_origin.replace("://localhost", "://127.0.0.1"))
+        trusted_origins.add(public_origin.replace("://127.0.0.1", "://localhost"))
+    if origin is not None and origin not in trusted_origins:
         raise HTTPException(status_code=403, detail="Origin required")
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.

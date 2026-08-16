@@ -319,13 +319,6 @@ export const zPasswordResetComplete = z.object({
 });
 
 /**
- * PlatformRoles
- *
- * Supported platform access roles.
- */
-export const zPlatformRoles = z.enum(['user', 'administrator']);
-
-/**
  * RegistrationComplete
  *
  * Validate profile and password setup after email authentication.
@@ -477,7 +470,7 @@ export const zUserSummary = z.object({
     name: z.string(),
     email: z.email(),
     avatar: z.string(),
-    role: zPlatformRoles
+    administrator: z.boolean()
 });
 
 /**

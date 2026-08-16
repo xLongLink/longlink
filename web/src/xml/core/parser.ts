@@ -46,9 +46,6 @@ function toNodes(input: unknown): ASTNode[] {
         return input.flatMap((item) => toNodes(item));
     }
 
-    // Treat empty parser output as no nodes.
-    if (!input) return [];
-
     // Compile visible text into the existing Text adapter so XML elements can use natural text children.
     if (typeof input === 'string') {
         const value = input.trim();
@@ -56,8 +53,8 @@ function toNodes(input: unknown): ASTNode[] {
         return value ? [{ name: 'Text', params: { value: compileAttribute(value) }, children: [] }] : [];
     }
 
-    // Ignore unsupported primitive parser values.
-    if (typeof input !== 'object') return [];
+    // Treat empty or unsupported parser output as no nodes.
+    if (!input || typeof input !== 'object') return [];
 
     const record = input as Record<string, unknown>;
     const attributes = collectParams(record[':@']);

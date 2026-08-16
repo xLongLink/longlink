@@ -3,7 +3,7 @@ import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
 import View from '@/application/runtime/View';
 import { platformApiPath } from '@/lib/platform-api';
-import { useOrganization } from '@/hooks/use-organization';
+import { useOrganization } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application. */
 function OrganizationApplicationContent() {

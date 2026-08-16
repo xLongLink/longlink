@@ -1,28 +1,65 @@
-import { Outlet } from 'react-router';
-import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import { Outlet, useLocation } from 'react-router';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Auth } from '@/components/Auth';
-import PlatformLayout from '@/platform/layout';
+import { findActiveTab } from '@/lib/paths';
+import { administratorTabs } from '@/platform/tabs';
+import Platform from '@/components/layouts/Platform';
+import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AccountAction } from '@/components/AccountAction';
 import { PageContainer } from '@/components/PageContainer';
+import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
-    const tabs = [
-        { href: '/admin/users', icon: Users, label: 'Users' },
-        { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
-        { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-        { href: '/admin/database', icon: Database, label: 'Database' },
-        { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
-        { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-        { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-    ] as const;
+    const { pathname } = useLocation();
+    const { user } = useCurrentUser();
+    const activeTab = findActiveTab(administratorTabs, pathname);
 
     return (
         <Auth requiresAdministrator>
-            <PlatformLayout tabs={tabs}>
+            <Platform
+                topNav={
+                    <Stack gap={0}>
+                        <TopNav
+                            className="min-h-11 px-7"
+                            endContent={<AccountAction user={user ?? null} />}
+                            heading={<PageBreadcrumb />}
+                            label="Main navigation"
+                        />
+                        {user ? (
+                            <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                                <TabList
+                                    aria-label="Section navigation"
+                                    hasDivider
+                                    onChange={() => undefined}
+                                    size="sm"
+                                    value={activeTab ?? ''}
+                                >
+                                    {administratorTabs.map((tab) => {
+                                        const TabIcon = tab.icon;
+
+                                        return (
+                                            <Tab
+                                                key={tab.label}
+                                                href={tab.href}
+                                                icon={<TabIcon aria-hidden="true" size={16} />}
+                                                label={tab.label}
+                                                value={tab.href}
+                                            />
+                                        );
+                                    })}
+                                </TabList>
+                            </Stack>
+                        ) : null}
+                    </Stack>
+                }
+            >
                 <PageContainer gap={8}>
                     <Outlet />
                 </PageContainer>
-            </PlatformLayout>
+            </Platform>
         </Auth>
     );
 }

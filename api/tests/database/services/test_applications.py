@@ -70,9 +70,20 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 user=user,
                 secrets={},
             )
+        created = await applications.create(
+            session,
+            organization.id,
+            "Reports",
+            slug="reports",
+            image=Image("ghcr.io/longlink/reports@sha256:test"),
+            user=user,
+            secrets={},
+        )
+        await session.commit()
 
     # Assert
     assert str(exc.value) == "Application slug already exists"
+    assert created.slug == "reports"
 
 
 async def test_fetch_and_organization_applications_ignore_deleted_applications(users: tuple[User, User, User]) -> None:
@@ -131,3 +142,27 @@ async def test_soft_delete_marks_application_deleted(users: tuple[User, User, Us
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
+
+
+async def test_release_requires_an_active_organization(users: tuple[User, User, User]) -> None:
+    """Reject releases after the owning Organization is tombstoned."""
+
+    # Arrange
+    user = users[0]
+    organization = await create_organization(user, name="release-org", slug="release-org")
+    application = await create_application(organization, user, name="Dashboard")
+
+    # Act
+    async with session_scope() as session:
+        await organizations.soft_delete(session, organization.id, user)
+        result = await applications.release(
+            session,
+            application.id,
+            Image("ghcr.io/longlink/dashboard@sha256:release"),
+            "Updated dashboard",
+            user,
+        )
+        await session.commit()
+
+    # Assert
+    assert result is None

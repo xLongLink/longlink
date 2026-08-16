@@ -9,13 +9,6 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/SideNav?tab=properties
- * - label: string
- * - value: string
- * - children: SideNavItem
- */
 export function SideNav({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const items = nodes

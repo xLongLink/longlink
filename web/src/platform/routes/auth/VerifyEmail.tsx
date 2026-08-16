@@ -12,13 +12,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
+import { useToast } from '@/lib/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { useFragmentToken } from '@/hooks/use-fragment-token';
+import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { ApiError, fetchApiJson, requestApiJson } from '@/lib/api';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 

@@ -9,9 +9,9 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { useToast } from '@/hooks/use-toast';
-import { useApiQuery } from '@/hooks/use-api';
-import { usePaginate } from '@/hooks/pagination';
+import { useToast } from '@/lib/hooks/use-toast';
+import { useApiQuery } from '@/lib/hooks/use-api';
+import { usePaginate } from '@/lib/hooks/pagination';
 import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -58,8 +58,8 @@ export default function AdminUsers() {
                     <TableColumn<UserSummary> field="id" header="ID" width={pixel(288)}>
                         {(user) => <Text type="code">{user.id}</Text>}
                     </TableColumn>
-                    <TableColumn<UserSummary> field="role" header="Role" width={pixel(128)}>
-                        {(user) => <Badge label={user.role} />}
+                    <TableColumn<UserSummary> field="administrator" header="Access" width={pixel(128)}>
+                        {(user) => <Badge label={user.administrator ? 'Administrator' : 'User'} />}
                     </TableColumn>
                     <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
                         {(user) => (

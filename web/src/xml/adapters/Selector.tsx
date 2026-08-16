@@ -6,34 +6,6 @@ import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Selector?tab=properties
- * - label: string
- * - htmlName: string
- * - description: string
- * - placeholder: string
- * - labelTooltip: string
- * - disabledMessage: string
- * - searchPlaceholder: string
- * - value: str | undefined
- * - options: SelectorOption[]
- * - size: str
- * - variant: str
- * - placement: str
- * - hasClear: bool
- * - hasSearch: bool
- * - isLoading: bool
- * - isDisabled: bool
- * - isOptional: bool
- * - isRequired: bool
- * - isLabelHidden: bool
- * - isDefaultOpen: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - statusVariant: str
- */
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : String(value)));

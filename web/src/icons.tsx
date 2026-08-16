@@ -21,20 +21,21 @@ import {
     ArrowUp,
     ArrowDown,
     ArrowUpDown,
+    Boxes,
+    Building2,
+    Database,
     Filter,
+    HardDrive,
     EyeOff,
     Columns,
     Copy,
     CheckCheck,
     Wrench,
     Square,
+    UserRound,
+    Users,
     Mic,
 } from 'lucide-react';
-
-const iconProps = {
-    size: '1em',
-    'aria-hidden': true as const,
-};
 
 export const stoneIconComponents = {
     close: X,
@@ -57,6 +58,9 @@ export const stoneIconComponents = {
     arrowUp: ArrowUp,
     arrowDown: ArrowDown,
     arrowsUpDown: ArrowUpDown,
+    boxes: Boxes,
+    building2: Building2,
+    database: Database,
     funnel: Filter,
     eyeSlash: EyeOff,
     viewColumns: Columns,
@@ -65,8 +69,13 @@ export const stoneIconComponents = {
     wrench: Wrench,
     stop: Square,
     microphone: Mic,
+    hardDrive: HardDrive,
+    userRound: UserRound,
+    users: Users,
 } satisfies Record<string, LucideIcon>;
 
+export type StoneIconName = keyof typeof stoneIconComponents;
+
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon key={name} {...iconProps} />])
+    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon aria-hidden={true} key={name} size="1em" />])
 ) as IconRegistry;

@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import names, roles, images
 from src.logger import logger
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.database.services import compute, applications, organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -155,7 +155,7 @@ async def delete_application(
         tombstone = await applications.get(session, application_id, include_deleted=True)
         if tombstone is None or tombstone.deleted_at is None:
             raise HTTPException(status_code=403, detail="Access required")
-        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+        if not user.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
     result = await applications.soft_delete(session, application_id, user)

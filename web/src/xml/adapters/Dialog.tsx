@@ -11,16 +11,6 @@ import { toXmlBoolean, useBindableValue } from '../core/binding';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Dialog?tab=properties
- * - title: string
- * - subtitle: string
- * - triggerLabel: string
- * - isOpen: bool
- * - purpose: str
- * - children: ReactNode
- */
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, toXmlBoolean);

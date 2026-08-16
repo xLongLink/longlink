@@ -1,37 +1,18 @@
-import { z } from 'zod';
-import startCase from 'lodash/startCase';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import type { TopLayoutTab } from '@/layout/TopLayout';
+import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import XmlLayout from '@/xml/layout';
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { useApiQuery } from '@/hooks/use-api';
-import { getIconComponent } from '@/lib/icons';
-import {
-    createContext as createXmlContext,
-    parseXML,
-    RenderXML,
-    resolveRequestUrl,
-    type ASTNode,
-    type XmlRuntime,
-} from '@/xml';
-
-const pageSchema = z.object({
-    tab: z.string().trim().min(1),
-    path: z.string().trim().min(1),
-    name: z.string().trim().min(1).optional(),
-    icon: z.string().trim().min(1).optional(),
-    route: z.string().trim(),
-});
-
-type RuntimePage = z.infer<typeof pageSchema>;
+import { useApiQuery } from '@/lib/hooks/use-api';
+import { resolveRequestUrl } from '@/xml/core/url';
+import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
+import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
+import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
 
 type ViewProps = {
     applicationStatus?: Status;
@@ -39,26 +20,13 @@ type ViewProps = {
     pages: string | null;
 };
 
-type ErrorStateProps = {
-    isAlert?: boolean;
-    message: string;
-    title: string;
-};
+type ErrorStateProps = { message: string; organization?: string; title: string };
 
-type PageState = {
-    ast: [ASTNode] | null;
-    error: string | null;
-    runtimeContext: XmlRuntime;
-};
+type PageState = { status: 'loading' } | { ast: [ASTNode]; status: 'ready' } | { message: string; status: 'error' };
 
-type ActivePageState = PageState & { key: string };
+type ActivePageState = PageState & { key: string; runtimeContext: XmlRuntime };
 
 const emptyRouteParams: Record<string, string> = {};
-
-/** Returns true when a page route contains dynamic path segments. */
-function pageRouteIsDynamic(route: string): boolean {
-    return /(?:^|\/):/.test(route);
-}
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
@@ -79,23 +47,6 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
     };
 }
 
-/** Builds an app-shell href for one page route path. */
-function resolveApplicationHref(route: string, organization?: string, application?: string): string {
-    const basePath =
-        application && organization
-            ? generatePath('/orgs/:organization/apps/:application', { organization, application })
-            : organization
-              ? generatePath('/orgs/:organization', { organization })
-              : '';
-
-    // Use the application root for empty routes.
-    if (!route) {
-        return basePath || '/';
-    }
-
-    return `${basePath}/${route}`;
-}
-
 /**
  * Renders registered XML pages for Platform and Application routes.
  */
@@ -108,7 +59,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const { data: registeredPages, error } = useApiQuery<RuntimePage[]>(pages, {
         enabled: applicationCanLoad,
-        parse: (value) => z.array(pageSchema).parse(value),
+        parse: (value) => pageSchema.array().parse(value),
     });
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(
@@ -121,9 +72,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
-    const activePageStateKey = activePage
-        ? `${pages}\u0000${activePage.path}\u0000${routePath}\u0000${activePage.tab}`
-        : '';
+    const activePageStateKey = activePage ? `${pages}\u0000${activePage.path}\u0000${routePath}` : '';
     const visiblePageState = activePageState?.key === activePageStateKey ? activePageState : null;
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
@@ -135,36 +84,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 
         // Keep root-routed tabs at the application root.
         if (firstTabPage.route) {
-            navigate(resolveApplicationHref(firstTabPage.route, organization, application), { replace: true });
+            navigate(applicationHref(firstTabPage.route, organization, application), { replace: true });
         }
     }, [application, firstTabPage, navigate, organization, routePath]);
-
-    const { activeTab, tabs } = useMemo(() => {
-        const tabGroups = new Map<string, TopLayoutTab>();
-
-        // Build one visible navigation target per tab.
-        for (const page of registeredPages ?? []) {
-            const dynamic = pageRouteIsDynamic(page.route);
-
-            // Dynamic pages need concrete params, so they cannot be direct navigation targets.
-            if (!page.route || dynamic || tabGroups.has(page.tab)) {
-                continue;
-            }
-
-            const label = page.name || startCase(page.tab);
-            const icon = page.icon ? getIconComponent(page.icon) : undefined;
-            const href = resolveApplicationHref(page.route, organization, application);
-
-            // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
-            tabGroups.set(page.tab, {
-                href,
-                icon,
-                label,
-            });
-        }
-
-        return { activeTab: activePage?.tab ? tabGroups.get(activePage.tab)?.href : '', tabs: [...tabGroups.values()] };
-    }, [activePage?.tab, application, organization, registeredPages]);
 
     /* Load the active page and discard inactive page state. */
     useEffect(() => {
@@ -174,12 +96,11 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             return;
         }
 
-        const runtimeContext = createXmlContext();
+        const runtimeContext = createXmlContext(activeRouteParams);
 
-        runtimeContext.services.navigationBaseUrl = resolveApplicationHref('', organization, application);
-        runtimeContext.scope.bindings.params = activeRouteParams;
+        runtimeContext.services.navigationBaseUrl = applicationHref('', organization, application);
 
-        const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
+        const pageState = { key: activePageStateKey, runtimeContext };
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -187,16 +108,16 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
         } catch (urlError: unknown) {
             setActivePageState({
-                ...loadingPageState,
-                error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
-                key: activePageStateKey,
+                ...pageState,
+                message: urlError instanceof Error ? urlError.message : 'Invalid page URL',
+                status: 'error',
             });
             return;
         }
 
         const controller = new AbortController();
 
-        setActivePageState({ ...loadingPageState, key: activePageStateKey });
+        setActivePageState({ ...pageState, status: 'loading' });
 
         void requestApi(pageUrl, {
             headers: { Accept: 'application/xml' },
@@ -209,10 +130,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     const ast = parseXML(content);
 
                     setActivePageState({
-                        ...loadingPageState,
+                        ...pageState,
                         ast,
-                        error: null,
-                        key: activePageStateKey,
+                        status: 'ready',
                     });
                 }
             })
@@ -223,9 +143,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                 }
 
                 setActivePageState({
-                    ...loadingPageState,
-                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
-                    key: activePageStateKey,
+                    ...pageState,
+                    message: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                    status: 'error',
                 });
             });
 
@@ -262,6 +182,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationState = (
             <ErrorState
                 message="This application is unavailable while LongLink removes it."
+                organization={organization}
                 title="Application is being deleted"
             />
         );
@@ -270,6 +191,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationState = (
             <ErrorState
                 message={error.message || 'The application definition could not be loaded.'}
+                organization={organization}
                 title="Unable to load this application"
             />
         );
@@ -296,18 +218,25 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             activeFallback = (
                 <ErrorState
                     message="The application did not expose any pages to render."
+                    organization={organization}
                     title="Unexpected application response"
                 />
             );
-        } else if (visiblePageState?.error) {
-            activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
-        } else if (!visiblePageState?.ast) {
+        } else if (visiblePageState?.status === 'error') {
+            activeFallback = (
+                <ErrorState
+                    message={visiblePageState.message}
+                    organization={organization}
+                    title="Unable to load this page"
+                />
+            );
+        } else if (visiblePageState?.status !== 'ready') {
             activeFallback = <Spinner label="Loading" />;
         }
 
         content = (
             <>
-                {visiblePageState?.ast ? (
+                {visiblePageState?.status === 'ready' ? (
                     <RenderXML
                         ast={visiblePageState.ast}
                         baseUrl={resolvedPagesBaseUrl}
@@ -323,17 +252,12 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         );
     }
 
-    return (
-        <XmlLayout activeTab={activeTab} tabs={tabs}>
-            {content}
-        </XmlLayout>
-    );
+    return <ApplicationLayout pages={registeredPages ?? []}>{content}</ApplicationLayout>;
 }
 
 /** Renders a centered in-shell application state message. */
-function ErrorState({ isAlert = true, message, title }: ErrorStateProps) {
-    const { organization } = useParams();
-    const actionHref = organization ? `/orgs/${organization}` : '/organizations';
+function ErrorState({ message, organization, title }: ErrorStateProps) {
+    const actionHref = applicationHref('', organization);
     const actionLabel = organization ? 'Back to organization' : 'Back to organizations';
 
     return (
@@ -342,7 +266,7 @@ function ErrorState({ isAlert = true, message, title }: ErrorStateProps) {
                 actions={<Button href={actionHref} label={actionLabel} variant="primary" />}
                 description={message}
                 headingLevel={1}
-                role={isAlert ? 'alert' : undefined}
+                role="alert"
                 title={title}
             />
         </Card>

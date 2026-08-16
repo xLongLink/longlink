@@ -1,13 +1,6 @@
 from enum import StrEnum
 
 
-class PlatformRoles(StrEnum):
-    """Supported platform access roles."""
-
-    user = "user"
-    administrator = "administrator"
-
-
 class OrganizationRoles(StrEnum):
     """Supported organization membership roles."""
 

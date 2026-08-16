@@ -7,21 +7,6 @@ import { ActionHandlerContext } from './Action';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Button?tab=properties
- * - label: string
- * - tooltip: string
- * - type: str
- * - size: str
- * - variant: str
- * - elevation: str
- * - isLoading: bool
- * - isDisabled: bool
- * - isIconOnly: bool
- * - isInterruptible: bool
- * - children: ReactNode
- */
 export function Button({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const type = resolveXml(props, 'type', ctx);

@@ -1,6 +1,6 @@
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.resources import OrganizationIdentity
 from longlink.shared.models import Email
 
@@ -43,4 +43,4 @@ class UserSummary(UserIdentity):
     """Represent a compact user object in nested responses."""
 
     # State
-    role: PlatformRoles
+    administrator: bool

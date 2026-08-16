@@ -8,29 +8,6 @@ import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 type SliderValue = number | [number, number];
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/Slider?tab=properties
- * - label: string
- * - description: string
- * - disabledMessage: string
- * - htmlName: string
- * - value: int | float | [int | float, int | float]
- * - min: int | float
- * - max: int | float
- * - step: int | float
- * - orientation: str
- * - valueDisplay: str
- * - isDisabled: bool
- * - isLabelHidden: bool
- * - isOptional: bool
- * - isRequired: bool
- * - width: str | int
- * - status: str
- * - statusMessage: string
- * - labelTooltip: string
- * - minStepsBetweenThumbs: int
- */
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue<SliderValue>(props, 'value', ctx, (value) => {
@@ -44,6 +21,7 @@ export function Slider({ props }: Props) {
     const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const minStepsBetweenThumbs = resolveXml(props, 'minStepsBetweenThumbs', ctx);
+    const width = resolveXml(props, 'width', ctx);
 
     if (!isXmlEnum(orientationValue, [undefined, ...ORIENTATIONS])) {
         throw new Error(`Unsupported Slider orientation '${String(orientationValue)}'`);
@@ -78,7 +56,7 @@ export function Slider({ props }: Props) {
         status: resolveInputStatus(props, ctx),
         step: resolveNumberProp(props, 'step', ctx),
         valueDisplay: valueDisplayValue,
-        width: resolveSizeProp(props, 'width', ctx),
+        width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
     };
 
     if (Array.isArray(binding.value)) {
@@ -105,12 +83,6 @@ function resolveBooleanProp(props: Props['props'], name: string, ctx: ReturnType
 function resolveNumberProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
     const value = resolveXml(props, name, ctx);
     return typeof value === 'number' ? value : undefined;
-}
-
-/** Resolves an optional XML size prop. */
-function resolveSizeProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
-    const value = resolveXml(props, name, ctx);
-    return typeof value === 'string' || typeof value === 'number' ? value : undefined;
 }
 
 /** Resolves an optional XML string prop. */

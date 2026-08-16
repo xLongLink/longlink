@@ -4,12 +4,6 @@ import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Badge?tab=properties
- * - label: string
- * - children: Icon
- */
 export function Badge({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const label = requireXmlString(props, 'label', ctx, 'Badge');

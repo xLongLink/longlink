@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { ApiError, requestApi } from '@/lib/api';
+import { useToast } from '@/lib/hooks/use-toast';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
@@ -32,7 +32,7 @@ export async function executeAction(
     props: Props['props'],
     ctx: Scope,
     services: RuntimeServices,
-    fetchImpl: typeof fetch = fetch,
+    fetchImpl: typeof fetch,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
 ): Promise<void> {
@@ -141,7 +141,7 @@ export async function executeAction(
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
     // Require object-shaped form expressions.
-    if (!isRecord(value)) {
+    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
         throw new Error('form must evaluate to an object');
     }
 
@@ -153,11 +153,6 @@ function createActionFormData(value: unknown): FormData {
     }
 
     return formData;
-}
-
-/** Returns whether a value is a non-array object with string keys. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /** Appends one XML action form value to a multipart payload. */

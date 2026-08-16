@@ -6,25 +6,6 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: false
- * https://astryx.atmeta.com/components/CheckboxInput?tab=properties
- * - label: string
- * - description: string
- * - disabledMessage: string
- * - htmlName: string
- * - value: bool | str
- * - isLoading: bool
- * - isDisabled: bool
- * - isOptional: bool
- * - isReadOnly: bool
- * - isRequired: bool
- * - isLabelHidden: bool
- * - size: str
- * - width: str | int
- * - status: str
- * - statusMessage: string
- */
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue<boolean | 'indeterminate'>(props, 'value', ctx, (value) =>

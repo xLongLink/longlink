@@ -11,24 +11,22 @@ import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { AppWindow, Boxes, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
 import { Auth } from '@/components/Auth';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
-import { useToast } from '@/hooks/use-toast';
 import { hasMinimumRole } from '@/lib/roles';
-import { useApiQuery } from '@/hooks/use-api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
-import PlatformLayout from '@/platform/layout';
+import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
-import { useOrganization, useUpdateOrganization } from '@/hooks/use-organization';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
+import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 type DatabaseUsage = { id: string; usage: number };
@@ -147,190 +145,183 @@ function OrganizationSettings() {
     }
 
     return (
-        <PlatformLayout
-            tabs={[
-                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
-                { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
-            ]}
-        >
-            <PageContainer gap={8}>
-                <Stack gap={1} width="100%">
-                    <Heading level={1}>Settings</Heading>
-                    <Text as="p" color="secondary">
-                        Configure the organization and its runtime defaults.
-                    </Text>
-                </Stack>
-                <Menu className="h-auto w-full">
-                    <MenuSection title="Settings" isHeaderHidden>
-                        <MenuItem icon={<Building2 aria-hidden="true" size={16} />} label="Organization">
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Organization</Heading>
-                                    <Text type="supporting">View and manage organization details.</Text>
-                                </VStack>
-                                <HStack gap={4} align="center" wrap="wrap">
-                                    <Avatar src={avatar || undefined} name={organizationName} size="lg" />
-                                    <TextInput
-                                        label="Avatar URL"
-                                        value={avatar}
-                                        width="100%"
-                                        isOptional
-                                        isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
-                                        placeholder="https://example.com/org.png"
-                                        status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                        onChange={(value) => {
-                                            setEditedAvatar(value);
-                                            setAvatarError(null);
-                                        }}
-                                        onBlur={() => {
-                                            void saveAvatar();
-                                        }}
-                                    />
-                                </HStack>
+        <PageContainer gap={8}>
+            <Stack gap={1} width="100%">
+                <Heading level={1}>Settings</Heading>
+                <Text as="p" color="secondary">
+                    Configure the organization and its runtime defaults.
+                </Text>
+            </Stack>
+            <Menu>
+                <MenuSection title="Settings" isHeaderHidden>
+                    <MenuItem icon="building2" label="Organization">
+                        <VStack gap={4}>
+                            <VStack gap={1}>
+                                <Heading level={2}>Organization</Heading>
+                                <Text type="supporting">View and manage organization details.</Text>
                             </VStack>
-                        </MenuItem>
-                        <MenuSubSection icon={<Users aria-hidden="true" size={16} />} label="People">
-                            <MenuItem label="Members">
-                                <People
-                                    organizationId={organizationId}
-                                    members={members}
-                                    invitations={invitations}
-                                    activeSection="members"
-                                    canInviteMembers={hasOrganizationApplicationAccess}
-                                    canManageMembers={canManageOrganization}
-                                    isLoading={isLoading}
-                                    error={error}
+                            <HStack gap={4} align="center" wrap="wrap">
+                                <Avatar src={avatar || undefined} name={organizationName} size="lg" />
+                                <TextInput
+                                    label="Avatar URL"
+                                    value={avatar}
+                                    width="100%"
+                                    isOptional
+                                    isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
+                                    placeholder="https://example.com/org.png"
+                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
+                                    onChange={(value) => {
+                                        setEditedAvatar(value);
+                                        setAvatarError(null);
+                                    }}
+                                    onBlur={() => {
+                                        void saveAvatar();
+                                    }}
                                 />
-                            </MenuItem>
-                            <MenuItem label="Invitations">
-                                <People
-                                    organizationId={organizationId}
-                                    members={members}
-                                    invitations={invitations}
-                                    activeSection="invitations"
-                                    canInviteMembers={hasOrganizationApplicationAccess}
-                                    canManageMembers={canManageOrganization}
-                                    isLoading={isLoading}
-                                    error={error}
-                                />
-                            </MenuItem>
-                        </MenuSubSection>
-                        <MenuItem icon={<Boxes aria-hidden="true" size={16} />} label="Applications">
-                            <ApplicationSettings
+                            </HStack>
+                        </VStack>
+                    </MenuItem>
+                    <MenuSubSection icon="users" label="People">
+                        <MenuItem label="Members">
+                            <People
                                 organizationId={organizationId}
-                                applications={applications}
-                                canManageApplications={hasOrganizationApplicationAccess}
+                                members={members}
+                                invitations={invitations}
+                                activeSection="members"
+                                canInviteMembers={hasOrganizationApplicationAccess}
+                                canManageMembers={canManageOrganization}
                                 isLoading={isLoading}
                                 error={error}
                             />
                         </MenuItem>
-                        {hasOrganizationApplicationAccess ? (
-                            <MenuItem icon={<Database aria-hidden="true" size={16} />} label="Database">
-                                <VStack gap={4}>
-                                    <VStack gap={1}>
-                                        <Heading level={2}>Database</Heading>
-                                        <Text type="supporting">Review database usage for this organization.</Text>
-                                    </VStack>
-                                    {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
-                                        <Banner status="error" title={databaseResourceError.message} />
-                                    ) : databaseUsage === null || databaseUsage === undefined ? (
-                                        <EmptyState title="No results." isCompact />
-                                    ) : (
-                                        <Table
-                                            data={[{ id: 'database', usage: databaseUsage }]}
-                                            density="compact"
-                                            hasHover
-                                            idKey="id"
-                                        >
-                                            <TableColumn<DatabaseUsage>
-                                                field="usage"
-                                                header="Resource"
-                                                width={proportional(1)}
-                                            >
-                                                {(resource) => (
-                                                    <HStack gap={3} align="center">
-                                                        <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
-                                                        <VStack gap={1}>
-                                                            <Text weight="semibold">PostgreSQL</Text>
-                                                            <Text type="supporting">{formatBytes(resource.usage)}</Text>
-                                                        </VStack>
-                                                    </HStack>
-                                                )}
-                                            </TableColumn>
-                                            <TableColumn<DatabaseUsage>
-                                                field="owner"
-                                                header="Owner"
-                                                width={proportional(1)}
-                                            >
-                                                {() => (
-                                                    <OrganizationOwner
-                                                        avatar={organizationAvatar}
-                                                        name={organizationName}
-                                                    />
-                                                )}
-                                            </TableColumn>
-                                        </Table>
-                                    )}
+                        <MenuItem label="Invitations">
+                            <People
+                                organizationId={organizationId}
+                                members={members}
+                                invitations={invitations}
+                                activeSection="invitations"
+                                canInviteMembers={hasOrganizationApplicationAccess}
+                                canManageMembers={canManageOrganization}
+                                isLoading={isLoading}
+                                error={error}
+                            />
+                        </MenuItem>
+                    </MenuSubSection>
+                    <MenuItem icon="boxes" label="Applications">
+                        <ApplicationSettings
+                            organizationId={organizationId}
+                            applications={applications}
+                            canManageApplications={hasOrganizationApplicationAccess}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    </MenuItem>
+                    {hasOrganizationApplicationAccess ? (
+                        <MenuItem icon="database" label="Database">
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>Database</Heading>
+                                    <Text type="supporting">Review database usage for this organization.</Text>
                                 </VStack>
-                            </MenuItem>
-                        ) : null}
-                        {hasOrganizationApplicationAccess ? (
-                            <MenuItem icon={<HardDrive aria-hidden="true" size={16} />} label="Storage">
-                                <VStack gap={4}>
-                                    <VStack gap={1}>
-                                        <Heading level={2}>Storage</Heading>
-                                        <Text type="supporting">Review storage usage for this organization.</Text>
-                                    </VStack>
-                                    {isLoading || isStorageLoading ? null : error ? (
-                                        <Banner status="error" title={error.message} />
-                                    ) : storageError ? (
-                                        <Banner status="error" title={storageError.message} />
-                                    ) : (
-                                        <Table
-                                            data={storageUsage ? [storageUsage] : []}
-                                            density="compact"
-                                            emptyState={<EmptyState title="No storage resources found." isCompact />}
-                                            hasHover
-                                            idKey="bucket_name"
+                                {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
+                                    <Banner status="error" title={databaseResourceError.message} />
+                                ) : databaseUsage === null || databaseUsage === undefined ? (
+                                    <EmptyState title="No results." isCompact />
+                                ) : (
+                                    <Table
+                                        data={[{ id: 'database', usage: databaseUsage }]}
+                                        density="compact"
+                                        hasHover
+                                        idKey="id"
+                                    >
+                                        <TableColumn<DatabaseUsage>
+                                            field="usage"
+                                            header="Resource"
+                                            width={proportional(1)}
                                         >
-                                            <TableColumn<OrganizationStorageUsageResponse>
-                                                field="bucket_name"
-                                                header="Resource"
-                                                width={proportional(1)}
-                                            >
-                                                {(resource) => (
-                                                    <HStack gap={3} align="center">
-                                                        <S3 aria-hidden="true" className="shrink-0" />
-                                                        <VStack gap={1}>
-                                                            <Text weight="semibold">{resource.bucket_name}</Text>
-                                                            <Text type="supporting">
-                                                                {formatBytes(resource.space_used)}
-                                                            </Text>
-                                                        </VStack>
-                                                    </HStack>
-                                                )}
-                                            </TableColumn>
-                                            <TableColumn<OrganizationStorageUsageResponse>
-                                                field="owner"
-                                                header="Owner"
-                                                width={proportional(1)}
-                                            >
-                                                {() => (
-                                                    <OrganizationOwner
-                                                        avatar={organizationAvatar}
-                                                        name={organizationName}
-                                                    />
-                                                )}
-                                            </TableColumn>
-                                        </Table>
-                                    )}
+                                            {(resource) => (
+                                                <HStack gap={3} align="center">
+                                                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
+                                                    <VStack gap={1}>
+                                                        <Text weight="semibold">PostgreSQL</Text>
+                                                        <Text type="supporting">{formatBytes(resource.usage)}</Text>
+                                                    </VStack>
+                                                </HStack>
+                                            )}
+                                        </TableColumn>
+                                        <TableColumn<DatabaseUsage>
+                                            field="owner"
+                                            header="Owner"
+                                            width={proportional(1)}
+                                        >
+                                            {() => (
+                                                <OrganizationOwner
+                                                    avatar={organizationAvatar}
+                                                    name={organizationName}
+                                                />
+                                            )}
+                                        </TableColumn>
+                                    </Table>
+                                )}
+                            </VStack>
+                        </MenuItem>
+                    ) : null}
+                    {hasOrganizationApplicationAccess ? (
+                        <MenuItem icon="hardDrive" label="Storage">
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>Storage</Heading>
+                                    <Text type="supporting">Review storage usage for this organization.</Text>
                                 </VStack>
-                            </MenuItem>
-                        ) : null}
-                    </MenuSection>
-                </Menu>
-            </PageContainer>
-        </PlatformLayout>
+                                {isLoading || isStorageLoading ? null : error ? (
+                                    <Banner status="error" title={error.message} />
+                                ) : storageError ? (
+                                    <Banner status="error" title={storageError.message} />
+                                ) : (
+                                    <Table
+                                        data={storageUsage ? [storageUsage] : []}
+                                        density="compact"
+                                        emptyState={<EmptyState title="No storage resources found." isCompact />}
+                                        hasHover
+                                        idKey="bucket_name"
+                                    >
+                                        <TableColumn<OrganizationStorageUsageResponse>
+                                            field="bucket_name"
+                                            header="Resource"
+                                            width={proportional(1)}
+                                        >
+                                            {(resource) => (
+                                                <HStack gap={3} align="center">
+                                                    <S3 aria-hidden="true" className="shrink-0" />
+                                                    <VStack gap={1}>
+                                                        <Text weight="semibold">{resource.bucket_name}</Text>
+                                                        <Text type="supporting">
+                                                            {formatBytes(resource.space_used)}
+                                                        </Text>
+                                                    </VStack>
+                                                </HStack>
+                                            )}
+                                        </TableColumn>
+                                        <TableColumn<OrganizationStorageUsageResponse>
+                                            field="owner"
+                                            header="Owner"
+                                            width={proportional(1)}
+                                        >
+                                            {() => (
+                                                <OrganizationOwner
+                                                    avatar={organizationAvatar}
+                                                    name={organizationName}
+                                                />
+                                            )}
+                                        </TableColumn>
+                                    </Table>
+                                )}
+                            </VStack>
+                        </MenuItem>
+                    ) : null}
+                </MenuSection>
+            </Menu>
+        </PageContainer>
     );
 }
 

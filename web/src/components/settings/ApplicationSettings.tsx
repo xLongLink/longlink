@@ -10,11 +10,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import Logs from '@/components/dialogs/Logs';
-import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
+import { useToast } from '@/lib/hooks/use-toast';
 import CreateApplication from '@/components/dialogs/CreateApplication';
-import { useDeleteOrganizationApplication } from '@/hooks/use-organization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useDeleteOrganizationApplication } from '@/lib/hooks/use-organization';
 
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({

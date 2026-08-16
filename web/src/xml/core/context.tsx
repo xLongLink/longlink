@@ -8,9 +8,9 @@ import { resolveRequestUrl } from './url';
 export const XmlContext = createReactContext<XmlRuntime | null>(null);
 
 /** Creates a blank XML runtime context. */
-export function createContext(): XmlRuntime {
+export function createContext(params: Record<string, string> = {}): XmlRuntime {
     return {
-        scope: { bindings: { params: {} } },
+        scope: { bindings: { params } },
         services: {
             invalidate: async () => {},
             navigationBaseUrl: '',
