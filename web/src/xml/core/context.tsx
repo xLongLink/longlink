@@ -1,6 +1,6 @@
 import { proxy } from 'valtio';
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
-import { api } from '@/lib/api';
+import { ApiError } from '@/lib/api';
 import type { ASTNode, XmlRuntime } from '../types';
 import { evaluate } from '../expressions';
 import { resolveRequestUrl } from './url';
@@ -77,7 +77,15 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
 
                 const url = resolveRequestUrl(baseUrl, String(path));
 
-                scope.bindings[id] = await api(url).json();
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers: { Accept: 'application/json' },
+                });
+                if (!response.ok) {
+                    throw new ApiError(`API request failed (${response.status})`, response.status);
+                }
+
+                scope.bindings[id] = await response.json();
             };
             await services.setups[id]();
         }

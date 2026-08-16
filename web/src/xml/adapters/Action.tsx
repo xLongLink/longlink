@@ -1,6 +1,5 @@
-import type { Options } from 'ky';
 import { createContext, useContext } from 'react';
-import { api, ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';
@@ -85,7 +84,7 @@ export async function executeAction(
         return;
     }
 
-    const init: Options = { method: normalizedMethod };
+    const init: RequestInit = { method: normalizedMethod };
 
     // Avoid ambiguous payload configuration.
     if (formValue !== undefined && jsonValue !== undefined) {
@@ -105,7 +104,8 @@ export async function executeAction(
         if (formValue !== undefined) {
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
-            init.json = jsonValue;
+            init.body = JSON.stringify(jsonValue);
+            init.headers = { 'Content-Type': 'application/json' };
         }
     } catch (error: unknown) {
         toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
@@ -116,8 +116,18 @@ export async function executeAction(
 
     // Send the action request through the API client.
     try {
-        const client = fetchImpl ? api.extend({ fetch: fetchImpl }) : api;
-        status = (await client(requestUrl, init)).status;
+        const headers = new Headers(init.headers);
+        headers.set('Accept', 'application/json');
+        const response = await (fetchImpl ?? fetch)(requestUrl, {
+            ...init,
+            credentials: 'include',
+            headers,
+        });
+        if (!response.ok) {
+            throw new ApiError(`API request failed (${response.status})`, response.status);
+        }
+
+        status = response.status;
     } catch (error: unknown) {
         toast({
             body:
