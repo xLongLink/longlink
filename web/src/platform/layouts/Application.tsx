@@ -4,13 +4,13 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import type { ReactNode } from 'react';
-import { generatePath, useLocation } from 'react-router';
+import { generatePath, useLocation, useParams } from 'react-router';
 import { Wordmark } from '@/components/Wordmark';
 import { PageContainer } from '@/components/PageContainer';
 import Platform from '@/components/layouts/Platform';
 import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
 import { getIconComponent } from '@/lib/icons';
-import { normalizePathname } from '@/lib/paths';
+import { findActiveTab } from '@/lib/paths';
 
 /** Builds an application-shell href for one runtime page route. */
 export function applicationHref(route: string, organization?: string, application?: string): string {
@@ -25,18 +25,9 @@ export function applicationHref(route: string, organization?: string, applicatio
 }
 
 /** Renders application content with navigation derived from the runtime page manifest. */
-export function ApplicationLayout({
-    application,
-    children,
-    organization,
-    pages,
-}: {
-    application?: string;
-    children: ReactNode;
-    organization?: string;
-    pages: readonly RuntimePage[];
-}) {
+export function ApplicationLayout({ children, pages }: { children: ReactNode; pages: readonly RuntimePage[] }) {
     const { pathname } = useLocation();
+    const { application, organization } = useParams();
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
@@ -53,15 +44,7 @@ export function ApplicationLayout({
     }
 
     const tabs = [...tabGroups.values()];
-    const normalizedPathname = normalizePathname(pathname);
-    const activeTab = tabs.reduce<string | undefined>((best, tab) => {
-        const tabPathname = normalizePathname(tab.href);
-        if (tabPathname !== normalizedPathname && !normalizedPathname.startsWith(`${tabPathname}/`)) {
-            return best;
-        }
-
-        return best === undefined || tabPathname.length > best.length ? tabPathname : best;
-    }, undefined);
+    const activeTab = findActiveTab(tabs, pathname);
 
     return (
         <Platform

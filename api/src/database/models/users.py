@@ -2,8 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Column
-from src.models.roles import PlatformRoles
+from sqlalchemy import Column, Boolean
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 from src.database.models.base import PlatformModel
@@ -30,7 +29,4 @@ class User(PlatformModel, table=True):
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # State
-    role: PlatformRoles = Field(
-        default=PlatformRoles.user,
-        sa_column=Column(Enum(PlatformRoles, name="platform_role_enum", native_enum=False), nullable=False),
-    )
+    administrator: bool = Field(default=False, sa_column=Column(Boolean, nullable=False))

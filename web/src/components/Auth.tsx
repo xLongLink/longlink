@@ -5,7 +5,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { useUserProfile } from '@/lib/hooks/use-user';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
@@ -16,7 +16,7 @@ export function Auth({
     children: ReactElement;
     requiresAdministrator?: boolean;
 }) {
-    const { user, isLoading, error, refetch } = useUserProfile();
+    const { user, isLoading, error, refetch } = useCurrentUser();
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
@@ -45,7 +45,7 @@ export function Auth({
     }
 
     // Hide administrator routes from regular Platform users.
-    if (requiresAdministrator && user.role !== 'administrator') {
+    if (requiresAdministrator && !user.administrator) {
         return <NotFound />;
     }
 

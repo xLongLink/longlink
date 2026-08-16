@@ -58,8 +58,8 @@ export default function AdminUsers() {
                     <TableColumn<UserSummary> field="id" header="ID" width={pixel(288)}>
                         {(user) => <Text type="code">{user.id}</Text>}
                     </TableColumn>
-                    <TableColumn<UserSummary> field="role" header="Role" width={pixel(128)}>
-                        {(user) => <Badge label={user.role} />}
+                    <TableColumn<UserSummary> field="administrator" header="Access" width={pixel(128)}>
+                        {(user) => <Badge label={user.administrator ? 'Administrator' : 'User'} />}
                     </TableColumn>
                     <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
                         {(user) => (

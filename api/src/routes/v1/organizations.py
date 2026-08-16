@@ -4,7 +4,7 @@ from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, names, roles
 from src.errors import UnavailableError
 from src.logger import logger
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
@@ -205,7 +205,7 @@ async def delete_organization(
     """Mark one Organization absent and queue lifecycle cleanup."""
 
     # The initiating owner may retry cleanup after memberships are removed.
-    if user.role != PlatformRoles.administrator:
+    if not user.administrator:
         tombstone = await organizations.get(session, organization_id, include_deleted=True)
         if tombstone is not None and tombstone.deleted_at is not None and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")

@@ -23,6 +23,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     # Assert
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == str(user.id)
+    assert profile_response.json()["administrator"] is True
 
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [

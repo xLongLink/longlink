@@ -1,34 +1,18 @@
-import { Building2, ExternalLink, Settings2 } from 'lucide-react';
+import { Building2, Settings2 } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Outlet, useLocation } from 'react-router';
-import { ProfileMenu } from '@/components/Profile';
+import { AccountAction } from '@/components/AccountAction';
 import { Wordmark } from '@/components/Wordmark';
 import Platform from '@/components/layouts/Platform';
-import { useUserProfile } from '@/lib/hooks/use-user';
-
-/** Renders the signed-in profile menu or documentation link in a top navigation. */
-function AccountAction({ isSignedIn }: { isSignedIn: boolean }) {
-    if (isSignedIn) {
-        return <ProfileMenu />;
-    }
-
-    return (
-        <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
-            <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                Documentation
-                <ExternalLink aria-hidden="true" className="size-3 shrink-0" />
-            </span>
-        </Link>
-    );
-}
+import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {
     const { pathname } = useLocation();
-    const { user } = useUserProfile();
+    const { user } = useCurrentUser();
 
     return (
         <Platform
@@ -36,7 +20,7 @@ export default function UserLayout() {
                 <Stack gap={0}>
                     <TopNav
                         className="min-h-11 px-7"
-                        endContent={<AccountAction isSignedIn={Boolean(user)} />}
+                        endContent={<AccountAction user={user ?? null} />}
                         heading={
                             <Link href="/" label="LongLink home" color="inherit">
                                 <Wordmark />

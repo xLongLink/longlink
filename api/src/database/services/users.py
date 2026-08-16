@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
-from src.models.roles import PlatformRoles
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -67,7 +66,7 @@ async def ensure_administrator(session: AsyncSession) -> None:
 
     # Reconcile the persisted administrator before considering an initial account creation.
     statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
-    user = await session.scalar(select(User).where(col(User.role) == PlatformRoles.administrator))
+    user = await session.scalar(select(User).where(col(User.administrator).is_(True)))
     password_hash = PasswordHash.recommended()
 
     # Match the configured identity only when no administrator has been created yet.
@@ -91,5 +90,5 @@ async def ensure_administrator(session: AsyncSession) -> None:
         user.password = password_hash.hash(env.ADMIN_PASSWORD)
     user.name = env.ADMIN_NAME
     user.email = env.ADMIN_EMAIL
-    user.role = PlatformRoles.administrator
+    user.administrator = True
     user.deleted_at = None

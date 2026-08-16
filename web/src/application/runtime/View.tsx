@@ -252,11 +252,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         );
     }
 
-    return (
-        <ApplicationLayout application={application} organization={organization} pages={registeredPages ?? []}>
-            {content}
-        </ApplicationLayout>
-    );
+    return <ApplicationLayout pages={registeredPages ?? []}>{content}</ApplicationLayout>;
 }
 
 /** Renders a centered in-shell application state message. */

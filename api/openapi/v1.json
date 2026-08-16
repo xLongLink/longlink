@@ -3210,15 +3210,6 @@
         "title": "PasswordResetComplete",
         "description": "Validate a new password supplied with browser-only reset proof."
       },
-      "PlatformRoles": {
-        "type": "string",
-        "enum": [
-          "user",
-          "administrator"
-        ],
-        "title": "PlatformRoles",
-        "description": "Supported platform access roles."
-      },
       "RegistrationComplete": {
         "properties": {
           "name": {
@@ -3412,8 +3403,9 @@
             "type": "string",
             "title": "Avatar"
           },
-          "role": {
-            "$ref": "#/components/schemas/PlatformRoles"
+          "administrator": {
+            "type": "boolean",
+            "title": "Administrator"
           }
         },
         "type": "object",
@@ -3422,7 +3414,7 @@
           "name",
           "email",
           "avatar",
-          "role"
+          "administrator"
         ],
         "title": "UserSummary",
         "description": "Represent a compact user object in nested responses."

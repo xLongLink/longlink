@@ -1,18 +1,17 @@
-import { AppWindow, ExternalLink, Settings2 } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
+import { AppWindow, Settings2 } from 'lucide-react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Outlet, useLocation, useParams } from 'react-router';
-import { ProfileMenu } from '@/components/Profile';
+import { AccountAction } from '@/components/AccountAction';
 import Platform from '@/components/layouts/Platform';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useUserProfile } from '@/lib/hooks/use-user';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {
     const { pathname } = useLocation();
-    const { user } = useUserProfile();
+    const { user } = useCurrentUser();
     const { organization = '' } = useParams();
     const applicationHref = `/orgs/${organization}`;
     const settingsHref = `${applicationHref}/settings`;
@@ -23,24 +22,7 @@ export default function OrganizationLayout() {
                 <Stack gap={0}>
                     <TopNav
                         className="min-h-11 px-7"
-                        endContent={
-                            user ? (
-                                <ProfileMenu />
-                            ) : (
-                                <Link
-                                    href="/docs"
-                                    color="secondary"
-                                    isStandalone
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                >
-                                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                                        Documentation
-                                        <ExternalLink aria-hidden="true" className="size-3 shrink-0" />
-                                    </span>
-                                </Link>
-                            )
-                        }
+                        endContent={<AccountAction user={user ?? null} />}
                         heading={<PageBreadcrumb />}
                         label="Main navigation"
                     />

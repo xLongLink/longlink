@@ -1,40 +1,21 @@
 import { Outlet, useLocation } from 'react-router';
-import { AppWindow, ArrowUpDown, Building2, Database, ExternalLink, HardDrive, Users, Wrench } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Auth } from '@/components/Auth';
-import { ProfileMenu } from '@/components/Profile';
+import { AccountAction } from '@/components/AccountAction';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { PageContainer } from '@/components/PageContainer';
 import Platform from '@/components/layouts/Platform';
-import { useUserProfile } from '@/lib/hooks/use-user';
-import { normalizePathname } from '@/lib/paths';
-
-const tabs = [
-    { href: '/admin/users', icon: Users, label: 'Users' },
-    { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
-    { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-    { href: '/admin/database', icon: Database, label: 'Database' },
-    { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
-    { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-    { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-] as const;
+import { useCurrentUser } from '@/lib/hooks/use-user';
+import { findActiveTab } from '@/lib/paths';
+import { administratorTabs } from '@/platform/tabs';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
     const { pathname } = useLocation();
-    const { user } = useUserProfile();
-    const normalizedPathname = normalizePathname(pathname);
-    const activeTab = tabs.reduce<string | undefined>((best, tab) => {
-        const tabPathname = normalizePathname(tab.href);
-        if (tabPathname !== normalizedPathname && !normalizedPathname.startsWith(`${tabPathname}/`)) {
-            return best;
-        }
-
-        return best === undefined || tabPathname.length > best.length ? tabPathname : best;
-    }, undefined);
+    const { user } = useCurrentUser();
+    const activeTab = findActiveTab(administratorTabs, pathname);
 
     return (
         <Auth requiresAdministrator>
@@ -43,24 +24,7 @@ export default function Admin() {
                     <Stack gap={0}>
                         <TopNav
                             className="min-h-11 px-7"
-                            endContent={
-                                user ? (
-                                    <ProfileMenu />
-                                ) : (
-                                    <Link
-                                        href="/docs"
-                                        color="secondary"
-                                        isStandalone
-                                        rel="noopener noreferrer"
-                                        target="_blank"
-                                    >
-                                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                                            Documentation
-                                            <ExternalLink aria-hidden="true" className="size-3 shrink-0" />
-                                        </span>
-                                    </Link>
-                                )
-                            }
+                            endContent={<AccountAction user={user ?? null} />}
                             heading={<PageBreadcrumb />}
                             label="Main navigation"
                         />
@@ -73,7 +37,7 @@ export default function Admin() {
                                     size="sm"
                                     value={activeTab ?? ''}
                                 >
-                                    {tabs.map((tab) => {
+                                    {administratorTabs.map((tab) => {
                                         const TabIcon = tab.icon;
 
                                         return (
