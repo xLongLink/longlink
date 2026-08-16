@@ -22,7 +22,6 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 import { Table, TableColumn } from '@/components/ui/Table';
 
@@ -326,8 +325,6 @@ function renderComponentPreview({ name, path }: ComponentSummary) {
             return <Code>{`<${name} />`}</Code>;
     }
 }
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

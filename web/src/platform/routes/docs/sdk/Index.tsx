@@ -5,7 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
-import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
 
@@ -52,7 +51,6 @@ function LocalRuntimeDiagram() {
 export const metadata = {
     path: '/docs/sdk',
     title: 'Overview',
-    seoTitle: 'Applications Documentation | LongLink',
     description:
         'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
     toc: [
@@ -63,8 +61,6 @@ export const metadata = {
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Index.tsx',
 };
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

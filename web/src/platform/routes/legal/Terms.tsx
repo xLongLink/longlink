@@ -3,7 +3,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -92,8 +91,6 @@ export const metadata = {
 };
 
 /** Returns SEO metadata for the terms article. */
-export const meta = () => publicSeoMeta(metadata);
-
 /** Renders the terms of service. */
 export default function Terms() {
     return (

@@ -6,7 +6,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
-import { publicSeoMeta } from '@/lib/seo';
 import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
 
@@ -23,8 +22,6 @@ export const metadata = {
     lastUpdated: '2026-08-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Database.tsx',
 };
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

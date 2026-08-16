@@ -11,7 +11,7 @@ import { findActiveTab } from '@/lib/paths';
 import { getIconComponent } from '@/lib/icons';
 import { Wordmark } from '@/components/Wordmark';
 import { PageContainer } from '@/components/PageContainer';
-import { pageRouteIsDynamic, type RuntimePage } from '@/platform/pages';
+import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
 
 type ApplicationLayoutProps = {
     banner?: ReactNode;

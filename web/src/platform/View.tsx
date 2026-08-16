@@ -5,11 +5,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { requestApi } from '@/lib/api';
+import NotFound from '@/platform/NotFound';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { resolveRequestUrl } from '@/xml/core/url';
-import ApplicationNotFound from '@/application/runtime/NotFound';
-import { ApplicationLayout, applicationHref } from '@/application/runtime/Layout';
-import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
+import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
+import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/platform/pages';
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
 
 type ViewProps = {
@@ -46,8 +46,8 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
     };
 }
 
-/** Renders XML pages registered by an application manifest. */
-export default function ApplicationView({ banner, basePath, errorAction, pages }: ViewProps) {
+/** Renders XML pages registered by a Platform application manifest. */
+export default function PlatformApplicationView({ banner, basePath, errorAction, pages }: ViewProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
@@ -164,7 +164,7 @@ export default function ApplicationView({ banner, basePath, errorAction, pages }
     } else {
         // Delegate unknown app routes to the runtime 404 state.
         if (registeredPages && routePath && !activeRouteMatch) {
-            return <ApplicationNotFound />;
+            return <NotFound />;
         }
 
         let activeFallback: ReactNode = null;

@@ -6,7 +6,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -21,8 +20,6 @@ export const metadata = {
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
 };
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

@@ -1,20 +1,16 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
     path: '/docs',
     title: 'Introduction',
-    seoTitle: 'Documentation | LongLink',
     description: 'Learn how LongLink helps teams build and run structured business applications.',
     toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',
 };
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (

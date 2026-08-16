@@ -7,18 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
-
-export const metadata = {
-    path: '/',
-    title: 'LongLink',
-    seoTitle: 'LongLink | Python Platform for Business Applications',
-    description:
-        'LongLink is an open-source platform for building and running custom business-process applications with Python.',
-};
-
-export const meta = () => publicSeoMeta(metadata);
+import humanRobotHands from '@/svg/HumanRobotHands.svg';
 
 const paths = [
     {
@@ -334,7 +324,7 @@ export default function Home() {
                                         className="block h-auto w-full object-contain"
                                         decoding="async"
                                         loading="lazy"
-                                        src="/human_robot_hands_vector.svg"
+                                        src={humanRobotHands}
                                     />
                                 </div>
                             </div>

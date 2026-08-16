@@ -1,6 +1,6 @@
-import View from '@/application/runtime/View';
+import RuntimeApplicationView from '@/application/runtime/View';
 
 /** Renders pages registered by the embedded LongLink Application. */
 export default function ApplicationView() {
-    return <View pages="/pages.json" />;
+    return <RuntimeApplicationView basePath="/" pages="/pages.json" />;
 }

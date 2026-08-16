@@ -7,7 +7,6 @@ export type ArticlePage = {
     path: string;
     icon?: ReactElement<LucideProps>;
     description: string;
-    seoTitle?: string;
     toc?: Array<{ id: string; label: string; level: number }>;
     lastUpdated: string;
     editUrl?: string;
