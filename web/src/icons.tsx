@@ -37,11 +37,6 @@ import {
     Mic,
 } from 'lucide-react';
 
-const iconProps = {
-    size: '1em',
-    'aria-hidden': true as const,
-};
-
 export const stoneIconComponents = {
     close: X,
     chevronDown: ChevronDown,
@@ -79,6 +74,11 @@ export const stoneIconComponents = {
     users: Users,
 } satisfies Record<string, LucideIcon>;
 
+export type StoneIconName = keyof typeof stoneIconComponents;
+
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, Icon]) => [name, <Icon key={name} {...iconProps} />])
+    Object.entries(stoneIconComponents).map(([name, Icon]) => [
+        name,
+        <Icon aria-hidden={true} key={name} size="1em" />,
+    ])
 ) as IconRegistry;

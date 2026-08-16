@@ -1,21 +1,13 @@
 import type { ComponentProps } from 'react';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
-import { stoneIconComponents } from '@/icons';
+import { stoneIconComponents, type StoneIconName } from '@/icons';
 
 type IconProps = {
-    icon: string;
+    icon: StoneIconName;
     size: ComponentProps<typeof AstryxIcon>['size'];
 };
 
 /** Renders a registered Lucide icon at the requested Astryx size. */
 export function Icon({ icon, size }: IconProps) {
-    const iconEntry = Object.entries(stoneIconComponents).find(([name]) => name === icon);
-
-    if (!iconEntry) {
-        return null;
-    }
-
-    const [, IconComponent] = iconEntry;
-
-    return <AstryxIcon icon={IconComponent} size={size} />;
+    return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
 }

@@ -6,7 +6,6 @@
 @import '@astryxdesign/core/astryx.css';
 @import './lib/generated/stone.css';
 @import '@astryxdesign/core/tailwind-theme.css';
-@import '@fontsource-variable/inter';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @layer base {

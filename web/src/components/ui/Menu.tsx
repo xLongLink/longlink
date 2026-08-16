@@ -6,6 +6,7 @@ import {
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 import { Icon } from '@/components/ui/Icon';
+import type { StoneIconName } from '@/icons';
 
 type MenuProps = { children?: ReactNode };
 type MenuSectionProps = {
@@ -15,17 +16,12 @@ type MenuSectionProps = {
 };
 type MenuItemProps = {
     children?: ReactNode;
-    icon?: string;
-    label: string;
-};
-type MenuSubSectionProps = {
-    children?: ReactNode;
-    icon?: string;
+    icon?: StoneIconName;
     label: string;
 };
 type MenuEntry =
     | { item: ReactElement<MenuItemProps>; kind: 'item' }
-    | { kind: 'subsection'; subSection: ReactElement<MenuSubSectionProps> };
+    | { kind: 'subsection'; subSection: ReactElement<MenuItemProps> };
 
 /** Converts a menu label into its hash navigation target. */
 function menuItemHref(label: string): string {
@@ -42,8 +38,23 @@ function isMenuItem(node: ReactNode): node is ReactElement<MenuItemProps> {
 }
 
 /** Returns whether a node groups nested menu items. */
-function isMenuSubSection(node: ReactNode): node is ReactElement<MenuSubSectionProps> {
+function isMenuSubSection(node: ReactNode): node is ReactElement<MenuItemProps> {
     return isValidElement(node) && node.type === MenuSubSection;
+}
+
+/** Renders a selectable SideNav item from its Menu marker. */
+function renderMenuItem(item: ReactElement<MenuItemProps>, activeItem: ReactElement<MenuItemProps> | undefined) {
+    const { children: _children, icon, ...itemProps } = item.props;
+
+    return (
+        <AstryxSideNavItem
+            {...itemProps}
+            icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
+            href={menuItemHref(itemProps.label)}
+            isSelected={item === activeItem}
+            key={itemProps.label}
+        />
+    );
 }
 
 /** Renders section navigation beside the selected item's content. */
@@ -86,34 +97,12 @@ export function Menu({ children }: MenuProps) {
 
                                 return (
                                     <AstryxSideNavItem {...subSectionProps} collapsible key={subSectionProps.label}>
-                                        {items.map((item) => {
-                                            const { children: _children, icon, ...itemProps } = item.props;
-
-                                            return (
-                                                <AstryxSideNavItem
-                                                    {...itemProps}
-                                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                                                    href={menuItemHref(itemProps.label)}
-                                                    isSelected={item === activeItem}
-                                                    key={itemProps.label}
-                                                />
-                                            );
-                                        })}
+                                        {items.map((item) => renderMenuItem(item, activeItem))}
                                     </AstryxSideNavItem>
                                 );
                             }
 
-                            const { children: _children, icon, ...itemProps } = entry.item.props;
-
-                            return (
-                                <AstryxSideNavItem
-                                    {...itemProps}
-                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                                    href={menuItemHref(itemProps.label)}
-                                    isSelected={entry.item === activeItem}
-                                    key={itemProps.label}
-                                />
-                            );
+                            return renderMenuItem(entry.item, activeItem);
                         })}
                     </AstryxSideNavSection>
                 ))}
@@ -134,6 +123,6 @@ export function MenuItem(_props: MenuItemProps) {
 }
 
 /** Defines a collapsible group of related MenuItems. */
-export function MenuSubSection(_props: MenuSubSectionProps) {
+export function MenuSubSection(_props: MenuItemProps) {
     return null;
 }

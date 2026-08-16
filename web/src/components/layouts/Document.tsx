@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Links, Meta, Scripts, ScrollRestoration } from 'react-router';
-import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 /** Renders the common LongLink HTML document shell. */
 export function Document({ children }: { children: ReactNode }) {
@@ -12,7 +11,6 @@ export function Document({ children }: { children: ReactNode }) {
                 <Meta />
                 <Links />
                 <link rel="icon" href="/favicon.ico" />
-                <link rel="preload" href={interFont} as="font" type="font/woff2" crossOrigin="anonymous" />
             </head>
             <body>
                 {children}

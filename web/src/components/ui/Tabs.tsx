@@ -2,13 +2,14 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState, Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import type { StoneIconName } from '@/icons';
 
 type TabsProps = Omit<ComponentProps<typeof AstryxTabList>, 'children' | 'onChange' | 'value'> & {
     children?: ReactNode;
 };
 type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon' | 'value'> & {
     children?: ReactNode;
-    icon?: string;
+    icon?: StoneIconName;
 };
 
 /** Renders tabs and the selected tab's content. */
