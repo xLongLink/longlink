@@ -74,9 +74,9 @@ export default [
             route('forgot-password', './routes/auth/ForgotPassword.tsx'),
             route('reset-password', './routes/auth/ResetPassword.tsx'),
         ]),
+        route('login', './routes/auth/Login.tsx'),
         route('*', '../components/layouts/NotFound.tsx'),
     ]),
-    route('login', './routes/Login.tsx'),
     layout('./layouts/Authenticated.tsx', [
         layout('./layouts/User.tsx', [
             route('organizations', './routes/Organizations.tsx'),

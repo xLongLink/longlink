@@ -51,7 +51,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Persist Application desired state and return its compute Operation."""
+    """Persist Application desired state and queue its compute Operation."""
 
     # Arrange
     user = users[0]
@@ -87,18 +87,17 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     )
 
     # Assert
-    assert response.status_code == 202
-    payload = response.json()
-    assert payload["status"] == "creating"
-    assert payload["description"] == "Dashboard app"
-    assert payload["image_desired"] == "ghcr.io/longlink/dashboard@sha256:test"
-    assert "envs" not in payload
+    assert response.status_code == 204
+    assert response.content == b""
     assert "secret-value" not in response.text
 
     async with session_scope() as session:
-        persisted = await applications.get(session, UUID(payload["id"]))
+        persisted = await applications.get(session, (await applications.fetch(session))[0].id)
         assert persisted is not None
         assert persisted.organization_id == organization.id
+        assert persisted.status == Status.creating
+        assert persisted.description == "Dashboard app"
+        assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
         assert any(
             item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch(session)
@@ -295,11 +294,11 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     assert response.json() == {"detail": "Application logs unavailable"}
 
 
-async def test_delete_application_soft_deletes_and_returns_transitional_resource(
+async def test_delete_application_soft_deletes_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an Application and return its transitional resource state."""
+    """Soft-delete an Application and queue its reconciliation operation."""
 
     # Arrange
     user = users[0]
@@ -312,12 +311,10 @@ async def test_delete_application_soft_deletes_and_returns_transitional_resource
     retry_response = await client.delete(f"/api/v1/applications/{app.id}")
 
     # Assert
-    assert response.status_code == 202
-    payload = response.json()
-    assert retry_response.status_code == 202
-    assert retry_response.json()["id"] == payload["id"]
-    assert payload["id"] == str(app.id)
-    assert payload["status"] == "deleting"
+    assert response.status_code == 204
+    assert response.content == b""
+    assert retry_response.status_code == 204
+    assert retry_response.content == b""
     async with session_scope() as session:
         recorded_operations = await operations.fetch(session)
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

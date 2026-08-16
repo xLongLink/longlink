@@ -7,7 +7,11 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { api, ApiError } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import {
+    zOrganizationApplicationSummary,
+    zOrganizationDetails,
+    zOrganizationSummary,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Returns a resolved organization identifier for mutation requests. */
 function requireOrganizationId(organizationId: string): string {
@@ -18,10 +22,17 @@ function requireOrganizationId(organizationId: string): string {
     return organizationId;
 }
 
-/** Fetches organization details and related collections for the current workspace. */
-export function useOrganization(organizationSlug: string) {
+/** Returns current-user membership data for one organization route slug. */
+function useOrganizationMembership(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
+
+    return { membership, isUserLoading };
+}
+
+/** Fetches organization details and related collections for the current workspace. */
+export function useOrganization(organizationSlug: string) {
+    const { membership, isUserLoading } = useOrganizationMembership(organizationSlug);
     const organizationId = membership?.organization.id;
 
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
@@ -37,9 +48,7 @@ export function useOrganization(organizationSlug: string) {
 
     const error: (Error & { status?: number }) | null =
         organizationQuery.error ??
-        (!isUserLoading && organizationSlug.length > 0 && !organizationId
-            ? new ApiError('Organization not found', 404)
-            : null);
+        (!isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {
@@ -49,6 +58,32 @@ export function useOrganization(organizationSlug: string) {
         applications,
         role: membership?.role ?? null,
         isLoading: isUserLoading || organizationQuery.isLoading,
+        error,
+    };
+}
+
+/** Fetches organization applications without loading people-management data. */
+export function useOrganizationApplications(organizationSlug: string) {
+    const { membership, isUserLoading } = useOrganizationMembership(organizationSlug);
+    const organizationId = membership?.organization.id;
+    const applicationsPath = organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
+    const applicationsQuery = useQuery({
+        queryKey: ['api', applicationsPath],
+        queryFn:
+            applicationsPath === null
+                ? skipToken
+                : async ({ signal }) =>
+                      zOrganizationApplicationSummary.array().parse(await api(applicationsPath, { signal }).json()),
+        refetchInterval: 5000,
+        retry: false,
+    });
+    const error: (Error & { status?: number }) | null =
+        applicationsQuery.error ??
+        (!isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null);
+
+    return {
+        applications: applicationsQuery.data ?? [],
+        isLoading: isUserLoading || applicationsQuery.isLoading,
         error,
     };
 }
@@ -108,6 +143,9 @@ export function useCreateOrganizationApplication(organizationId: string) {
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+                queryClient.invalidateQueries({
+                    queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
+                }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
             ]),
     });
@@ -119,14 +157,14 @@ export function useDeleteOrganizationApplication(organizationId: string) {
 
     return useMutation({
         mutationFn: async (applicationId: string) => {
-            // Require a resolved organization before deleting apps.
-            requireOrganizationId(organizationId);
-
             await api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
         },
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+                queryClient.invalidateQueries({
+                    queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
+                }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
             ]),
     });

@@ -1,14 +1,16 @@
+import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
 import { useMutation } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { api } from '@/lib/api';
-import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
@@ -18,6 +20,23 @@ const registerSchema = z.object({
 });
 
 type RegisterValues = z.infer<typeof registerSchema>;
+
+/** Renders registration content within the standalone account page. */
+function AuthLayout({ children }: { children: ReactNode }) {
+    return (
+        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+            <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
+                <Stack gap={1}>
+                    <Heading justify="center" level={1}>
+                        <WelcomeTitle />
+                    </Heading>
+                    <Divider>{'Please enter your email'}</Divider>
+                </Stack>
+                {children}
+            </Stack>
+        </Center>
+    );
+}
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -41,7 +60,7 @@ export default function Register() {
     });
 
     return (
-        <AuthPage title={<WelcomeTitle />} description={<Divider>{'Please enter your email'}</Divider>}>
+        <AuthLayout>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller
@@ -79,6 +98,6 @@ export default function Register() {
                     </Link>
                 </Divider>
             </Stack>
-        </AuthPage>
+        </AuthLayout>
     );
 }

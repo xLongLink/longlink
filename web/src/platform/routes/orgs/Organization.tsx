@@ -13,12 +13,12 @@ import type { OrganizationApplicationSummary } from '@/lib/generated/platform-ap
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { useOrganization } from '@/lib/hooks/use-organization';
+import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders the organization applications page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const { applications, isLoading, error } = useOrganization(organization);
+    const { applications, isLoading, error } = useOrganizationApplications(organization);
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
         return <NotFoundLayout />;

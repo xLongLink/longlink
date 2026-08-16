@@ -557,6 +557,17 @@ export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserS
  */
 export const zListApplicationsApiV1ApplicationsGetResponse = z.array(zApplicationResponse);
 
+export const zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get
+ *
+ * Successful Response
+ */
+export const zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse = z.array(zOrganizationApplicationSummary);
+
 export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostBody = zApplicationCreate;
 
 export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostPath = z.object({
@@ -566,7 +577,7 @@ export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostP
 /**
  * Successful Response
  */
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = zApplicationResponse;
+export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = z.void();
 
 export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostBody = zApplicationRelease;
 
@@ -597,7 +608,7 @@ export const zDeleteApplicationApiV1ApplicationsApplicationIdDeletePath = z.obje
 /**
  * Successful Response
  */
-export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = zApplicationResponse;
+export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = z.void();
 
 /**
  * Response List Compute Registries Api V1 Computes Get

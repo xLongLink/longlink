@@ -6,14 +6,14 @@ import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog'
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
+import { useBindableValue } from '../core/binding';
 import { requireXmlString, resolveXml } from '../core/props';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'isOpen', ctx, toXmlBoolean);
+    const binding = useBindableValue(props, 'isOpen', ctx, (value) => value !== 'false' && Boolean(value));
     const title = requireXmlString(props, 'title', ctx, 'Dialog');
     const triggerLabel =
         props.triggerLabel == null ? undefined : requireXmlString(props, 'triggerLabel', ctx, 'Dialog');

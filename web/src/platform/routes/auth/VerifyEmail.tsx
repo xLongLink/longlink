@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -6,13 +7,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
-import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Divider } from '@/components/ui/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
@@ -29,6 +31,37 @@ const registrationCompleteSchema = z.object({
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
 type RegistrationSetup = z.infer<typeof zEmailPayload>;
+
+/** Renders email verification content within the standalone account page. */
+function AuthLayout({
+    children,
+    description,
+    title,
+}: {
+    children: ReactNode;
+    description: ReactNode;
+    title: ReactNode;
+}) {
+    return (
+        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+            <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
+                <Stack gap={1}>
+                    <Heading justify="center" level={1}>
+                        {title}
+                    </Heading>
+                    {typeof description === 'string' ? (
+                        <Text as="p" color="secondary" justify="center" type="supporting">
+                            {description}
+                        </Text>
+                    ) : (
+                        description
+                    )}
+                </Stack>
+                {children}
+            </Stack>
+        </Center>
+    );
+}
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -122,7 +155,7 @@ export default function VerifyEmail() {
             verification.error instanceof ApiError && verification.error.message === 'VERIFY_USER_BAD_TOKEN';
 
         return (
-            <AuthPage
+            <AuthLayout
                 title="Verify your email"
                 description={
                     invalidToken
@@ -137,23 +170,23 @@ export default function VerifyEmail() {
                     )}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
-            </AuthPage>
+            </AuthLayout>
         );
     }
 
     // Wait for the server to authenticate the signed email claim.
     if (!verification.data) {
         return (
-            <AuthPage title="Verify your email" description="Verifying your email...">
+            <AuthLayout title="Verify your email" description="Verifying your email...">
                 <Button isLoading label="Verifying your email..." variant="primary" />
-            </AuthPage>
+            </AuthLayout>
         );
     }
 
     // Account races and cross-tab setup changes cannot succeed by resubmitting the same form.
     if (accountExists || setupMismatch) {
         return (
-            <AuthPage
+            <AuthLayout
                 title="Complete your account"
                 description={
                     setupMismatch
@@ -167,12 +200,15 @@ export default function VerifyEmail() {
                     ) : null}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
-            </AuthPage>
+            </AuthLayout>
         );
     }
 
     return (
-        <AuthPage title={<WelcomeTitle />} description={<Divider>{'Email verified. Complete your profile.'}</Divider>}>
+        <AuthLayout
+            title={<WelcomeTitle />}
+            description={<Divider>{'Email verified. Complete your profile.'}</Divider>}
+        >
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
@@ -262,6 +298,6 @@ export default function VerifyEmail() {
                     .
                 </Text>
             </Stack>
-        </AuthPage>
+        </AuthLayout>
     );
 }

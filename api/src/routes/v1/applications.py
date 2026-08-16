@@ -20,7 +20,7 @@ async def list_applications(_user: User = Depends(authadmin), session: AsyncSess
     return await applications.fetch(session)
 
 
-@router.post("/organizations/{organization_id}/applications", response_model=ApplicationResponse, status_code=202)
+@router.post("/organizations/{organization_id}/applications", status_code=204)
 async def create_application(
     organization_id: UUID,
     payload: ApplicationCreate,
@@ -49,7 +49,7 @@ async def create_application(
             detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    application = await applications.create(
+    await applications.create(
         session,
         organization_id,
         payload.name,
@@ -61,7 +61,6 @@ async def create_application(
         secrets=payload.envs,
     )
     await session.commit()
-    return application
 
 
 @router.post("/applications/{application_id}/releases", response_model=ApplicationResponse, status_code=202)
@@ -136,7 +135,7 @@ async def get_application_logs(
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
 
-@router.delete("/applications/{application_id}", status_code=202, response_model=ApplicationResponse)
+@router.delete("/applications/{application_id}", status_code=204)
 async def delete_application(
     application_id: UUID,
     user: User = Depends(authuser),
@@ -158,9 +157,7 @@ async def delete_application(
         if not user.administrator and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
-    result = await applications.soft_delete(session, application_id, user)
-    if result is None:
+    if await applications.soft_delete(session, application_id, user) is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
     await session.commit()
-    return result

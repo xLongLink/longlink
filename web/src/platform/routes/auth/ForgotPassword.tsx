@@ -1,15 +1,17 @@
+import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
 import { useMutation } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { api } from '@/lib/api';
-import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
 
 const forgotPasswordSchema = z.object({
@@ -17,6 +19,37 @@ const forgotPasswordSchema = z.object({
 });
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+
+/** Renders password reset content within the standalone account page. */
+function AuthLayout({
+    children,
+    description,
+    title,
+}: {
+    children: ReactNode;
+    description: ReactNode;
+    title: ReactNode;
+}) {
+    return (
+        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+            <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
+                <Stack gap={1}>
+                    <Heading justify="center" level={1}>
+                        {title}
+                    </Heading>
+                    {typeof description === 'string' ? (
+                        <Text as="p" color="secondary" justify="center" type="supporting">
+                            {description}
+                        </Text>
+                    ) : (
+                        description
+                    )}
+                </Stack>
+                {children}
+            </Stack>
+        </Center>
+    );
+}
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
@@ -37,7 +70,7 @@ export default function ForgotPassword() {
     });
 
     return (
-        <AuthPage
+        <AuthLayout
             title="Reset your password"
             description="Enter your account email and LongLink will send password reset instructions."
         >
@@ -87,6 +120,6 @@ export default function ForgotPassword() {
                     </Link>
                 </Text>
             ) : null}
-        </AuthPage>
+        </AuthLayout>
     );
 }

@@ -59,6 +59,34 @@ async def test_get_organization_returns_member_payload(
     assert payload["applications"][0]["id"] == str(application.id)
 
 
+async def test_get_organization_applications_omits_people_management_data(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return only applications for application-only organization views."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    application = await create_application(organization, owner)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/applications")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": str(application.id),
+            "name": application.name,
+            "slug": application.slug,
+            "description": application.description,
+            "icon": application.icon,
+            "status": application.status,
+        }
+    ]
+
+
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

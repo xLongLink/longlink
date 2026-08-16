@@ -16,11 +16,6 @@ function isBindableValue(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
-/** Coerces an evaluated XML control value without treating the string "false" as true. */
-export function toXmlBoolean(value: unknown): boolean {
-    return value !== 'false' && Boolean(value);
-}
-
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
 export function useBindableValue<T>(
     props: ASTProps,

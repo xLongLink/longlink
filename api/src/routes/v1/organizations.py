@@ -6,6 +6,7 @@ from src.errors import UnavailableError
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
+from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -55,6 +56,16 @@ async def get_organization(
         "invitations": active_invitations,
         "applications": active_applications,
     }
+
+
+@router.get("/organizations/{organization_id}/applications", response_model=list[OrganizationApplicationSummary])
+async def get_organization_applications(
+    membership: UserOrganization = Depends(organization_access),
+    session: AsyncSession = Depends(get_session),
+):
+    """Return applications visible to the current organization member."""
+
+    return await organizations.applications(session, membership.organization_id)
 
 
 @router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)

@@ -2,13 +2,13 @@ import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
-import { toXmlBoolean, useBindableValue } from '../core/binding';
+import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, toXmlBoolean);
+    const binding = useBindableValue(props, 'value', ctx, (value) => value !== 'false' && Boolean(value));
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);

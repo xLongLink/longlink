@@ -5,13 +5,13 @@ import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { useOrganization } from '@/lib/hooks/use-organization';
 import { RuntimeApplicationView } from '@/xml/ApplicationView';
+import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {
     const { organization = '', application = '' } = useParams();
-    const { applications, isLoading, error } = useOrganization(organization);
+    const { applications, isLoading, error } = useOrganizationApplications(organization);
     const applicationAccess = applications.find((item) => item.slug === application);
 
     if (isLoading) {
