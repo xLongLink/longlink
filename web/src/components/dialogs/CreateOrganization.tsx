@@ -9,9 +9,8 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { requestApi } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
+import { apiQueryKey, requestApi } from '@/lib/api';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
@@ -36,8 +35,8 @@ export default function CreateOrganization() {
             }),
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
-                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
             ]),
     });
     const formId = useId();

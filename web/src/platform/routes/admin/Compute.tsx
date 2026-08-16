@@ -9,11 +9,10 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { requestApi } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { computesQueryKey } from '@/lib/query-keys';
+import { apiQueryKey, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateCompute from '@/components/dialogs/CreateCompute';
@@ -29,7 +28,7 @@ export default function AdminCompute() {
             await requestApi(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: computesQueryKey });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/computes') });
             toast({ body: 'Compute deleted' });
         },
     });

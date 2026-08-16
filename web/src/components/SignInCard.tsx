@@ -10,9 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { requestApiJson } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { userProfileQueryKey } from '@/lib/query-keys';
+import { apiQueryKey, requestApiJson } from '@/lib/api';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 const loginSchema = z.object({
@@ -42,7 +41,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey });
+            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me') });
             navigate('/organizations', { replace: true });
         } catch (loginError) {
             showToast({

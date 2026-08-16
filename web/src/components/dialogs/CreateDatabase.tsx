@@ -12,9 +12,8 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { databasesQueryKey } from '@/lib/query-keys';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const schema = z.object({
@@ -53,7 +52,7 @@ export default function CreateDatabase() {
         onSuccess: () => {
             setOpen(false);
             form.reset();
-            return queryClient.invalidateQueries({ queryKey: databasesQueryKey });
+            return queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/databases') });
         },
     });
 

@@ -8,14 +8,8 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { ApiError, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import {
-    applicationsQueryKey,
-    organizationQueryKey,
-    organizationsQueryKey,
-    userOrganizationsQueryKey,
-} from '@/lib/query-keys';
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
@@ -65,7 +59,8 @@ export function useOrganizationMembers(organizationId: string) {
                 method: 'POST',
             });
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: organizationQueryKey(organizationId) }),
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
     });
 
     const changeMemberRole = useMutation({
@@ -85,8 +80,8 @@ export function useOrganizationMembers(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
-                queryClient.invalidateQueries({ queryKey: organizationQueryKey(organizationId) }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
             ]),
     });
 
@@ -110,8 +105,8 @@ export function useCreateOrganizationApplication(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: organizationQueryKey(organizationId) }),
-                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
             ]),
     });
 }
@@ -131,8 +126,8 @@ export function useDeleteOrganizationApplication(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: organizationQueryKey(organizationId) }),
-                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
             ]),
     });
 }
@@ -160,10 +155,10 @@ export function useUpdateOrganization(organizationId: string) {
         // Refresh every response that embeds Organization metadata.
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: organizationQueryKey(organizationId) }),
-                queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
-                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
-                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
             ]),
     });
 }

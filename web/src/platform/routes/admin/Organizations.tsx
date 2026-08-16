@@ -11,15 +11,14 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { requestApi } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
+import { apiQueryKey, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -31,8 +30,8 @@ export default function AdminOrganizations() {
         },
         onSuccess: async () => {
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),
-                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
             ]);
             toast({ body: 'Organization deleted' });
         },
