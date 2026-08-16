@@ -28,13 +28,12 @@ export function TabList({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const labelValue = resolveXml(props, 'label', ctx);
-    const label = typeof labelValue === 'string' ? labelValue : 'Tabs';
+    const label = resolveXml(props, 'label', ctx);
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
         <Stack gap={4}>
-            <AstryxTabList aria-label={label} onChange={binding.setValue} value={binding.value}>
+            <AstryxTabList aria-label={typeof label === 'string' ? label : 'Tabs'} onChange={binding.setValue} value={binding.value}>
                 {tabs.map((tab) => (
                     <AstryxTab href={tab.href} key={tab.value} label={tab.label} value={tab.value} />
                 ))}

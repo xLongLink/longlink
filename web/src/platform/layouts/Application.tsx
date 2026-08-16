@@ -8,6 +8,7 @@ import { generatePath, useLocation } from 'react-router';
 import { Wordmark } from '@/components/Wordmark';
 import { PageContainer } from '@/components/PageContainer';
 import Platform from '@/components/layouts/Platform';
+import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
 import { getIconComponent } from '@/lib/icons';
 import { normalizePathname } from '@/lib/paths';
 
@@ -33,14 +34,14 @@ export function ApplicationLayout({
     application?: string;
     children: ReactNode;
     organization?: string;
-    pages: readonly { icon?: string; name?: string; route: string; tab: string }[];
+    pages: readonly RuntimePage[];
 }) {
     const { pathname } = useLocation();
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
     for (const page of pages) {
-        if (!page.route || /(?:^|\/):/.test(page.route) || tabGroups.has(page.tab)) {
+        if (!page.route || pageRouteIsDynamic(page.route) || tabGroups.has(page.tab)) {
             continue;
         }
 

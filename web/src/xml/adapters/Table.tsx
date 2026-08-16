@@ -77,13 +77,7 @@ function buildColumn(
         header,
         key: key.value,
         renderCell: (row) => {
-            const value = fieldParts.reduce<unknown>((current, segment) => {
-                if (current == null || typeof current !== 'object') {
-                    return undefined;
-                }
-
-                return readSafeProperty(current, segment);
-            }, row);
+            const value = fieldParts.reduce<unknown>((current, segment) => readSafeProperty(current, segment), row);
 
             // Shorthand columns render the resolved field value directly.
             if (cellNodes.length === 0) {

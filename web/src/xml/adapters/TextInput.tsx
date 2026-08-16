@@ -19,7 +19,6 @@ export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const type = resolveXml(props, 'type', ctx);
-    const label = requireXmlString(props, 'label', ctx, 'TextInput');
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
@@ -31,7 +30,7 @@ export function TextInput({ props }: Props) {
     return (
         <AstryxTextInput
             type={type}
-            label={label}
+            label={requireXmlString(props, 'label', ctx, 'TextInput')}
             value={binding.value}
             onChange={binding.setValue}
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}

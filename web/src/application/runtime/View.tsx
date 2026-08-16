@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -11,18 +10,9 @@ import { ApplicationLayout, applicationHref } from '@/platform/layouts/Applicati
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { useApiQuery } from '@/lib/hooks/use-api';
+import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
 import { resolveRequestUrl } from '@/xml/core/url';
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
-
-const pageSchema = z.object({
-    tab: z.string().trim().min(1),
-    path: z.string().trim().min(1),
-    name: z.string().trim().min(1).optional(),
-    icon: z.string().trim().min(1).optional(),
-    route: z.string().trim(),
-});
-
-type RuntimePage = z.infer<typeof pageSchema>;
 
 type ViewProps = {
     applicationStatus?: Status;
@@ -32,20 +22,11 @@ type ViewProps = {
 
 type ErrorStateProps = { message: string; organization?: string; title: string };
 
-type PageState = {
-    ast: [ASTNode] | null;
-    error: string | null;
-    runtimeContext: XmlRuntime;
-};
+type PageState = { status: 'loading' } | { ast: [ASTNode]; status: 'ready' } | { message: string; status: 'error' };
 
-type ActivePageState = PageState & { key: string };
+type ActivePageState = PageState & { key: string; runtimeContext: XmlRuntime };
 
 const emptyRouteParams: Record<string, string> = {};
-
-/** Returns true when a page route contains dynamic path segments. */
-function pageRouteIsDynamic(route: string): boolean {
-    return /(?:^|\/):/.test(route);
-}
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
@@ -78,7 +59,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         !isApplicationLoading && (applicationStatus === undefined || applicationStatus === 'running');
     const { data: registeredPages, error } = useApiQuery<RuntimePage[]>(pages, {
         enabled: applicationCanLoad,
-        parse: (value) => z.array(pageSchema).parse(value),
+        parse: (value) => pageSchema.array().parse(value),
     });
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(
@@ -119,7 +100,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 
         runtimeContext.services.navigationBaseUrl = applicationHref('', organization, application);
 
-        const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
+        const pageState = { key: activePageStateKey, runtimeContext };
         let pageUrl: string;
 
         // Validate registered page paths before fetch so an app cannot request external URLs.
@@ -127,16 +108,16 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
         } catch (urlError: unknown) {
             setActivePageState({
-                ...loadingPageState,
-                error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
-                key: activePageStateKey,
+                ...pageState,
+                message: urlError instanceof Error ? urlError.message : 'Invalid page URL',
+                status: 'error',
             });
             return;
         }
 
         const controller = new AbortController();
 
-        setActivePageState({ ...loadingPageState, key: activePageStateKey });
+        setActivePageState({ ...pageState, status: 'loading' });
 
         void requestApi(pageUrl, {
             headers: { Accept: 'application/xml' },
@@ -149,9 +130,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     const ast = parseXML(content);
 
                     setActivePageState({
-                        ...loadingPageState,
+                        ...pageState,
                         ast,
-                        key: activePageStateKey,
+                        status: 'ready',
                     });
                 }
             })
@@ -162,9 +143,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                 }
 
                 setActivePageState({
-                    ...loadingPageState,
-                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
-                    key: activePageStateKey,
+                    ...pageState,
+                    message: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                    status: 'error',
                 });
             });
 
@@ -241,21 +222,21 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     title="Unexpected application response"
                 />
             );
-        } else if (visiblePageState?.error) {
+        } else if (visiblePageState?.status === 'error') {
             activeFallback = (
                 <ErrorState
-                    message={visiblePageState.error}
+                    message={visiblePageState.message}
                     organization={organization}
                     title="Unable to load this page"
                 />
             );
-        } else if (!visiblePageState?.ast) {
+        } else if (visiblePageState?.status !== 'ready') {
             activeFallback = <Spinner label="Loading" />;
         }
 
         content = (
             <>
-                {visiblePageState?.ast ? (
+                {visiblePageState?.status === 'ready' ? (
                     <RenderXML
                         ast={visiblePageState.ast}
                         baseUrl={resolvedPagesBaseUrl}
@@ -280,7 +261,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 
 /** Renders a centered in-shell application state message. */
 function ErrorState({ message, organization, title }: ErrorStateProps) {
-    const actionHref = organization ? `/orgs/${organization}` : '/organizations';
+    const actionHref = applicationHref('', organization);
     const actionLabel = organization ? 'Back to organization' : 'Back to organizations';
 
     return (
