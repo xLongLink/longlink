@@ -1,12 +1,13 @@
 import { Text } from '@astryxdesign/core/Text';
+import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson } from '@/lib/api';
 import { dateTimeFormatter } from '@/lib/utils';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -30,9 +31,11 @@ export default function AdminOperations() {
         data: operations = [],
         error,
         isLoading,
-    } = useApiQuery<OperationResponse[]>('/api/v1/operations', {
+    } = useQuery({
+        queryKey: ['api', '/api/v1/operations'],
+        queryFn: async ({ signal }) =>
+            zOperationResponse.array().parse(await fetchApiJson('/api/v1/operations', { signal })),
         refetchInterval: 5000,
-        parse: (value) => zOperationResponse.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(operations);
 

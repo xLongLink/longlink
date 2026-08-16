@@ -1,5 +1,3 @@
-export type ApiQueryKey = readonly ['api', string];
-
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
     status: number;

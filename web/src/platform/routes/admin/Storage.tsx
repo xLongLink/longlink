@@ -6,13 +6,12 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/components/svg/S3';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
-import { requestApi } from '@/lib/api';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateStorage from '@/components/dialogs/CreateStorage';
@@ -36,8 +35,10 @@ export default function AdminStorage() {
         data: storages = [],
         error,
         isLoading,
-    } = useApiQuery<StorageRegistryResponse[]>('/api/v1/storages', {
-        parse: (value) => zStorageRegistryResponse.array().parse(value),
+    } = useQuery({
+        queryKey: ['api', '/api/v1/storages'],
+        queryFn: async ({ signal }) =>
+            zStorageRegistryResponse.array().parse(await fetchApiJson('/api/v1/storages', { signal })),
     });
     const { pageItems, pagination } = usePaginate(storages);
     const deleteDialog = useDeleteDialog({

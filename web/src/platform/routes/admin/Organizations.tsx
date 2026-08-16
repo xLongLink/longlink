@@ -9,12 +9,11 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
-import { requestApi } from '@/lib/api';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
@@ -40,8 +39,10 @@ export default function AdminOrganizations() {
         data: organizations = [],
         error,
         isLoading,
-    } = useApiQuery<OrganizationSummary[]>('/api/v1/organizations', {
-        parse: (value) => zOrganizationSummary.array().parse(value),
+    } = useQuery({
+        queryKey: ['api', '/api/v1/organizations'],
+        queryFn: async ({ signal }) =>
+            zOrganizationSummary.array().parse(await fetchApiJson('/api/v1/organizations', { signal })),
     });
     const { pageItems, pagination } = usePaginate(organizations);
     const deleteDialog = useDeleteDialog({

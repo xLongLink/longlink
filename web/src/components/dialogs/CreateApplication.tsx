@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -12,9 +13,8 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { ICON_NAMES, isIconName, type IconName } from '@/components/ui/Icon';
+import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -51,6 +51,8 @@ const defaultCreateApplicationValues = {
     envs: {},
 } satisfies CreateApplicationInput;
 
+const disabledApiQueryKey = ['api', 'disabled'] as const;
+
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organizationId }: { organizationId: string }) {
     const toast = useToast();
@@ -72,8 +74,17 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasImage = image.trim().length > 0;
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/v1/icons' : null, {
-        parse: (value) => zIcon.array().parse(value),
+    const iconPath = open ? '/api/v1/icons' : null;
+    const { data: iconCatalog } = useQuery({
+        enabled: iconPath !== null,
+        queryKey: iconPath ? ['api', iconPath] : disabledApiQueryKey,
+        queryFn: async ({ signal }) => {
+            if (iconPath === null) {
+                throw new Error('Icon catalog path is unavailable');
+            }
+
+            return zIcon.array().parse(await fetchApiJson(iconPath, { signal }));
+        },
         staleTime: Infinity,
     });
 

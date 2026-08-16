@@ -3,6 +3,7 @@ import { Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -11,8 +12,8 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson } from '@/lib/api';
 import { dateTimeFormatter } from '@/lib/utils';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -34,9 +35,11 @@ export default function AdminApplications() {
         data: applications = [],
         error,
         isLoading,
-    } = useApiQuery<ApplicationResponse[]>('/api/v1/applications', {
+    } = useQuery({
+        queryKey: ['api', '/api/v1/applications'],
+        queryFn: async ({ signal }) =>
+            zApplicationResponse.array().parse(await fetchApiJson('/api/v1/applications', { signal })),
         refetchInterval: 5000,
-        parse: (value) => zApplicationResponse.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(applications);
 

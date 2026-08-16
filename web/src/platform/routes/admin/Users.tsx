@@ -1,5 +1,6 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -9,8 +10,8 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -22,8 +23,9 @@ export default function AdminUsers() {
         data: users = [],
         error,
         isLoading,
-    } = useApiQuery<UserSummary[]>('/api/v1/users', {
-        parse: (value) => zUserSummary.array().parse(value),
+    } = useQuery({
+        queryKey: ['api', '/api/v1/users'],
+        queryFn: async ({ signal }) => zUserSummary.array().parse(await fetchApiJson('/api/v1/users', { signal })),
     });
     const { pageItems, pagination } = usePaginate(users);
     return (

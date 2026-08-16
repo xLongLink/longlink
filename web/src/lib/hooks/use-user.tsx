@@ -1,8 +1,7 @@
 import { createContext, useContext } from 'react';
-import { useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { UserOrganizationMembership, UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { requestApi } from '@/lib/api';
-import { useApiQuery } from '@/lib/hooks/use-api';
+import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
@@ -10,9 +9,10 @@ const AuthenticatedUserContext = createContext<UserSummary | undefined>(undefine
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useApiQuery<UserSummary>('/api/v1/me', {
+    const user = useQuery({
         // Auth state must refresh immediately after login/logout redirects.
-        parse: (value) => zUserSummary.parse(value),
+        queryKey: ['api', '/api/v1/me'],
+        queryFn: async ({ signal }) => zUserSummary.parse(await fetchApiJson('/api/v1/me', { signal })),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -56,8 +56,10 @@ export function useAuthenticatedUser() {
 /** Reads the current user profile and organization memberships. */
 export function useUserProfile() {
     const user = useAuthenticatedUser();
-    const organizations = useApiQuery<UserOrganizationMembership[]>('/api/v1/me/organizations', {
-        parse: (value) => zUserOrganizationMembership.array().parse(value),
+    const organizations = useQuery({
+        queryKey: ['api', '/api/v1/me/organizations'],
+        queryFn: async ({ signal }) =>
+            zUserOrganizationMembership.array().parse(await fetchApiJson('/api/v1/me/organizations', { signal })),
     });
 
     return {

@@ -1,15 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
-    OrganizationDetails,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { ApiError, requestApi, requestApiJson } from '@/lib/api';
+import { ApiError, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+
+const disabledApiQueryKey = ['api', 'disabled'] as const;
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
@@ -17,14 +17,20 @@ export function useOrganization(organizationSlug: string) {
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id;
 
-    const organizationQuery = useApiQuery<OrganizationDetails>(
-        organizationId ? `/api/v1/organizations/${organizationId}` : null,
-        {
-            parse: (value) => zOrganizationDetails.parse(value),
-            refetchInterval: 5000,
-            retry: false,
-        }
-    );
+    const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
+    const organizationQuery = useQuery({
+        enabled: organizationPath !== null,
+        queryKey: organizationPath ? ['api', organizationPath] : disabledApiQueryKey,
+        queryFn: async ({ signal }) => {
+            if (organizationPath === null) {
+                throw new Error('Organization path is unavailable');
+            }
+
+            return zOrganizationDetails.parse(await fetchApiJson(organizationPath, { signal }));
+        },
+        refetchInterval: 5000,
+        retry: false,
+    });
 
     const error: (Error & { status?: number }) | null =
         organizationQuery.error ??

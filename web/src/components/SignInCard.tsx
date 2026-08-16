@@ -10,8 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/lib/hooks/use-toast';
 import { requestApiJson } from '@/lib/api';
+import { useToast } from '@/lib/hooks/use-toast';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 const loginSchema = z.object({

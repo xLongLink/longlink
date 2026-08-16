@@ -7,12 +7,11 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
-import { requestApi } from '@/lib/api';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateCompute from '@/components/dialogs/CreateCompute';
@@ -36,9 +35,11 @@ export default function AdminCompute() {
         data: computes = [],
         error,
         isLoading,
-    } = useApiQuery<ComputeRegistryResponse[]>('/api/v1/computes', {
+    } = useQuery({
+        queryKey: ['api', '/api/v1/computes'],
+        queryFn: async ({ signal }) =>
+            zComputeRegistryResponse.array().parse(await fetchApiJson('/api/v1/computes', { signal })),
         refetchInterval: 5000,
-        parse: (value) => zComputeRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(computes);
     const deleteDialog = useDeleteDialog({

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -13,12 +14,12 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/components/svg/S3';
+import { fetchApiJson } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
 import { hasMinimumRole } from '@/lib/roles';
 import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -34,6 +35,7 @@ const organizationAvatarSchema = z.union([
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
 const organizationSettingsSections = ['applications', 'database', 'storage', 'invitations', 'members'];
+const disabledApiQueryKey = ['api', 'disabled'] as const;
 
 /** Renders the organization owning a database or storage resource. */
 function OrganizationOwner({ avatar, name }: { avatar: string; name: string }) {
@@ -73,29 +75,47 @@ function OrganizationSettings() {
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const hashSection = location.hash.slice(1);
     const section = organizationSettingsSections.includes(hashSection) ? hashSection : 'organization';
+    const databasePath =
+        section === 'database' && organizationId ? `/api/v1/organizations/${organizationId}/database` : null;
     const {
         data: databaseUsage,
         error: databaseError,
         isLoading: isDatabaseLoading,
-    } = useApiQuery<number | null>(
-        section === 'database' && organizationId ? `/api/v1/organizations/${organizationId}/database` : null,
-        {
-            parse: (value) => z.int().gte(0).nullable().parse(value),
-            retry: false,
-        }
-    );
+    } = useQuery({
+        enabled: databasePath !== null,
+        queryKey: databasePath ? ['api', databasePath] : disabledApiQueryKey,
+        queryFn: async ({ signal }) => {
+            if (databasePath === null) {
+                throw new Error('Database path is unavailable');
+            }
+
+            return z
+                .int()
+                .gte(0)
+                .nullable()
+                .parse(await fetchApiJson(databasePath, { signal }));
+        },
+        retry: false,
+    });
     const databaseResourceError = error ?? databaseError;
+    const storagePath =
+        section === 'storage' && organizationId ? `/api/v1/organizations/${organizationId}/storage` : null;
     const {
         data: storageUsage,
         error: storageError,
         isLoading: isStorageLoading,
-    } = useApiQuery<OrganizationStorageUsageResponse | null>(
-        section === 'storage' && organizationId ? `/api/v1/organizations/${organizationId}/storage` : null,
-        {
-            parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
-            retry: false,
-        }
-    );
+    } = useQuery({
+        enabled: storagePath !== null,
+        queryKey: storagePath ? ['api', storagePath] : disabledApiQueryKey,
+        queryFn: async ({ signal }) => {
+            if (storagePath === null) {
+                throw new Error('Storage path is unavailable');
+            }
+
+            return zOrganizationStorageUsageResponse.nullable().parse(await fetchApiJson(storagePath, { signal }));
+        },
+        retry: false,
+    });
     /** Saves the Organization avatar URL when focus leaves the setting. */
     async function saveAvatar() {
         setAvatarError(null);

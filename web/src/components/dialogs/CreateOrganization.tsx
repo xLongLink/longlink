@@ -9,8 +9,8 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { useToast } from '@/lib/hooks/use-toast';
 import { requestApi } from '@/lib/api';
+import { useToast } from '@/lib/hooks/use-toast';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),

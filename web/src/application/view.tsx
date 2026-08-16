@@ -1,12 +1,12 @@
 import { Card } from '@astryxdesign/core/Card';
+import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import { requestApi } from '@/lib/api';
-import { useApiQuery } from '@/lib/hooks/use-api';
 import { resolveRequestUrl } from '@/xml/core/url';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import ApplicationNotFound from '@/application/runtime/NotFound';
 import { ApplicationLayout, applicationHref } from '@/application/runtime/Layout';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
@@ -44,8 +44,9 @@ export default function ApplicationView() {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
-    const { data: registeredPages, error } = useApiQuery<RuntimePage[]>('/pages.json', {
-        parse: (value) => pageSchema.array().parse(value),
+    const { data: registeredPages, error } = useQuery({
+        queryKey: ['api', '/pages.json'],
+        queryFn: async ({ signal }) => pageSchema.array().parse(await fetchApiJson('/pages.json', { signal })),
     });
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(
