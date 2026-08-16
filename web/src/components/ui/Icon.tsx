@@ -178,13 +178,8 @@ const iconComponents: Record<IconName, LucideIcon> = {
     x: X,
 };
 
-type IconProps = {
-    icon: StoneIconName;
-    size: ComponentProps<typeof AstryxIcon>['size'];
-};
-
 /** Renders a registered Lucide icon at the requested Astryx size. */
-export function Icon({ icon, size }: IconProps) {
+export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps<typeof AstryxIcon>['size'] }) {
     return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
 }
 
