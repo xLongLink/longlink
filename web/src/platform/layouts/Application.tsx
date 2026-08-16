@@ -11,19 +11,6 @@ import Platform from '@/components/layouts/Platform';
 import { getIconComponent } from '@/lib/icons';
 import { normalizePathname } from '@/lib/paths';
 
-export type ApplicationPage = {
-    icon?: string;
-    name?: string;
-    route: string;
-    tab: string;
-};
-
-type ApplicationTab = {
-    href: string;
-    icon?: ReturnType<typeof getIconComponent>;
-    label: string;
-};
-
 /** Builds an application-shell href for one runtime page route. */
 export function applicationHref(route: string, organization?: string, application?: string): string {
     const basePath =
@@ -46,10 +33,10 @@ export function ApplicationLayout({
     application?: string;
     children: ReactNode;
     organization?: string;
-    pages: readonly ApplicationPage[];
+    pages: readonly { icon?: string; name?: string; route: string; tab: string }[];
 }) {
     const { pathname } = useLocation();
-    const tabGroups = new Map<string, ApplicationTab>();
+    const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
     for (const page of pages) {

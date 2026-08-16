@@ -15,7 +15,6 @@ import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
-import { UserLayout } from '@/platform/layouts/User';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { fetchApiJson, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
@@ -99,117 +98,115 @@ export default function Settings() {
     });
     return (
         <Auth>
-            <UserLayout>
-                <PageContainer gap={8}>
-                    <VStack gap={1}>
-                        <Heading level={1}>Settings</Heading>
-                        <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
-                    </VStack>
+            <PageContainer gap={8}>
+                <VStack gap={1}>
+                    <Heading level={1}>Settings</Heading>
+                    <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
+                </VStack>
 
-                    <Menu>
-                        <MenuSection title="Settings" isHeaderHidden>
-                            <MenuItem icon="userRound" label="Account">
-                                <VStack gap={4}>
-                                    <Heading level={2}>Account</Heading>
-                                    <HStack gap={4} align="start" wrap="wrap">
-                                        <TextInput
-                                            label="Username"
-                                            value={name}
-                                            width="100%"
-                                            isRequired
-                                            isDisabled={isLoading || !user}
-                                            status={accountError ? { type: 'error', message: accountError } : undefined}
-                                            onChange={(value) => {
-                                                setEditedName(value);
-                                                setAccountError(null);
-                                            }}
-                                            onBlur={() => {
-                                                void saveAccountName();
-                                            }}
-                                        />
-                                        <TextInput
-                                            label="Email"
-                                            type="email"
-                                            value={user?.email ?? ''}
-                                            width="100%"
-                                            isDisabled
-                                        />
-                                    </HStack>
-                                </VStack>
-                            </MenuItem>
-                            <MenuItem icon="building2" label="Organizations">
-                                <VStack gap={4}>
-                                    <HStack gap={4} justify="between" align="end" wrap="wrap">
-                                        <Heading level={2}>Organizations</Heading>
-                                        <CreateOrganization />
-                                    </HStack>
-                                    {isLoading && memberships.length === 0 ? null : (
-                                        <Table
-                                            data={memberships}
-                                            density="compact"
-                                            emptyState={<EmptyState title="No results." isCompact />}
-                                            hasHover
-                                            idKey={(membership) => membership.organization.id}
+                <Menu>
+                    <MenuSection title="Settings" isHeaderHidden>
+                        <MenuItem icon="userRound" label="Account">
+                            <VStack gap={4}>
+                                <Heading level={2}>Account</Heading>
+                                <HStack gap={4} align="start" wrap="wrap">
+                                    <TextInput
+                                        label="Username"
+                                        value={name}
+                                        width="100%"
+                                        isRequired
+                                        isDisabled={isLoading || !user}
+                                        status={accountError ? { type: 'error', message: accountError } : undefined}
+                                        onChange={(value) => {
+                                            setEditedName(value);
+                                            setAccountError(null);
+                                        }}
+                                        onBlur={() => {
+                                            void saveAccountName();
+                                        }}
+                                    />
+                                    <TextInput
+                                        label="Email"
+                                        type="email"
+                                        value={user?.email ?? ''}
+                                        width="100%"
+                                        isDisabled
+                                    />
+                                </HStack>
+                            </VStack>
+                        </MenuItem>
+                        <MenuItem icon="building2" label="Organizations">
+                            <VStack gap={4}>
+                                <HStack gap={4} justify="between" align="end" wrap="wrap">
+                                    <Heading level={2}>Organizations</Heading>
+                                    <CreateOrganization />
+                                </HStack>
+                                {isLoading && memberships.length === 0 ? null : (
+                                    <Table
+                                        data={memberships}
+                                        density="compact"
+                                        emptyState={<EmptyState title="No results." isCompact />}
+                                        hasHover
+                                        idKey={(membership) => membership.organization.id}
+                                    >
+                                        <TableColumn<(typeof memberships)[number]>
+                                            field="name"
+                                            header="Name"
+                                            width={proportional(1)}
                                         >
-                                            <TableColumn<(typeof memberships)[number]>
-                                                field="name"
-                                                header="Name"
-                                                width={proportional(1)}
-                                            >
-                                                {(membership) => (
-                                                    <HStack gap={3} align="center">
-                                                        <Avatar
-                                                            src={membership.organization.avatar || undefined}
-                                                            name={membership.organization.name}
-                                                            size="md"
-                                                        />
-                                                        <Link
-                                                            href={`/orgs/${membership.organization.slug}`}
-                                                            weight="semibold"
-                                                        >
-                                                            {membership.organization.name}
-                                                        </Link>
-                                                    </HStack>
-                                                )}
-                                            </TableColumn>
-                                            <TableColumn<(typeof memberships)[number]>
-                                                field="role"
-                                                header="Role"
-                                                width={pixel(128)}
-                                            >
-                                                {(membership) => <Badge label={membership.role} />}
-                                            </TableColumn>
-                                            <TableColumn<(typeof memberships)[number]>
-                                                field="actions"
-                                                header="Actions"
-                                                width={pixel(96)}
-                                                align="end"
-                                            >
-                                                {(membership) =>
-                                                    membership.role === 'owner' ? (
-                                                        <MoreMenu
-                                                            label={`Open actions for ${membership.organization.name}`}
-                                                            size="sm"
-                                                            items={[
-                                                                {
-                                                                    label: 'Delete',
-                                                                    onClick: () => deleteDialog.openFor(membership),
-                                                                },
-                                                            ]}
-                                                        />
-                                                    ) : null
-                                                }
-                                            </TableColumn>
-                                        </Table>
-                                    )}
-                                </VStack>
-                            </MenuItem>
-                        </MenuSection>
-                    </Menu>
+                                            {(membership) => (
+                                                <HStack gap={3} align="center">
+                                                    <Avatar
+                                                        src={membership.organization.avatar || undefined}
+                                                        name={membership.organization.name}
+                                                        size="md"
+                                                    />
+                                                    <Link
+                                                        href={`/orgs/${membership.organization.slug}`}
+                                                        weight="semibold"
+                                                    >
+                                                        {membership.organization.name}
+                                                    </Link>
+                                                </HStack>
+                                            )}
+                                        </TableColumn>
+                                        <TableColumn<(typeof memberships)[number]>
+                                            field="role"
+                                            header="Role"
+                                            width={pixel(128)}
+                                        >
+                                            {(membership) => <Badge label={membership.role} />}
+                                        </TableColumn>
+                                        <TableColumn<(typeof memberships)[number]>
+                                            field="actions"
+                                            header="Actions"
+                                            width={pixel(96)}
+                                            align="end"
+                                        >
+                                            {(membership) =>
+                                                membership.role === 'owner' ? (
+                                                    <MoreMenu
+                                                        label={`Open actions for ${membership.organization.name}`}
+                                                        size="sm"
+                                                        items={[
+                                                            {
+                                                                label: 'Delete',
+                                                                onClick: () => deleteDialog.openFor(membership),
+                                                            },
+                                                        ]}
+                                                    />
+                                                ) : null
+                                            }
+                                        </TableColumn>
+                                    </Table>
+                                )}
+                            </VStack>
+                        </MenuItem>
+                    </MenuSection>
+                </Menu>
 
-                    <DeleteConfirmation {...deleteDialog.dialogProps} />
-                </PageContainer>
-            </UserLayout>
+                <DeleteConfirmation {...deleteDialog.dialogProps} />
+            </PageContainer>
         </Auth>
     );
 }

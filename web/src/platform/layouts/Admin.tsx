@@ -12,19 +12,20 @@ import Platform from '@/components/layouts/Platform';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { normalizePathname } from '@/lib/paths';
 
+const tabs = [
+    { href: '/admin/users', icon: Users, label: 'Users' },
+    { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
+    { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
+    { href: '/admin/database', icon: Database, label: 'Database' },
+    { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
+    { href: '/admin/compute', icon: Wrench, label: 'Compute' },
+    { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
+] as const;
+
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
     const { pathname } = useLocation();
     const { user } = useUserProfile();
-    const tabs = [
-        { href: '/admin/users', icon: Users, label: 'Users' },
-        { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
-        { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-        { href: '/admin/database', icon: Database, label: 'Database' },
-        { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
-        { href: '/admin/compute', icon: Wrench, label: 'Compute' },
-        { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-    ] as const;
     const normalizedPathname = normalizePathname(pathname);
     const activeTab = tabs.reduce<string | undefined>((best, tab) => {
         const tabPathname = normalizePathname(tab.href);
@@ -63,29 +64,31 @@ export default function Admin() {
                             heading={<PageBreadcrumb />}
                             label="Main navigation"
                         />
-                        <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                hasDivider
-                                onChange={() => undefined}
-                                size="sm"
-                                value={activeTab ?? ''}
-                            >
-                                {tabs.map((tab) => {
-                                    const TabIcon = tab.icon;
+                        {user ? (
+                            <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                                <TabList
+                                    aria-label="Section navigation"
+                                    hasDivider
+                                    onChange={() => undefined}
+                                    size="sm"
+                                    value={activeTab ?? ''}
+                                >
+                                    {tabs.map((tab) => {
+                                        const TabIcon = tab.icon;
 
-                                    return (
-                                        <Tab
-                                            key={tab.label}
-                                            href={tab.href}
-                                            icon={<TabIcon aria-hidden="true" size={16} />}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    );
-                                })}
-                            </TabList>
-                        </Stack>
+                                        return (
+                                            <Tab
+                                                key={tab.label}
+                                                href={tab.href}
+                                                icon={<TabIcon aria-hidden="true" size={16} />}
+                                                label={tab.label}
+                                                value={tab.href}
+                                            />
+                                        );
+                                    })}
+                                </TabList>
+                            </Stack>
+                        ) : null}
                     </Stack>
                 }
             >
