@@ -1,17 +1,15 @@
 import type { ReactNode } from 'react';
 import startCase from 'lodash/startCase';
 import { useLocation } from 'react-router';
-import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { AppShell } from '@astryxdesign/core/AppShell';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { findActiveTab } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
+import TopLayout from '@/components/layouts/TopLayout';
 import { getIconComponent } from '@/components/ui/Icon';
 import { PageContainer } from '@/components/PageContainer';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { pageRouteIsDynamic, type RuntimePage } from './pages';
 
 type ApplicationLayoutProps = {
@@ -49,13 +47,8 @@ export function ApplicationLayout({ basePath, children, pages }: ApplicationLayo
     const activeTab = findActiveTab(tabs, pathname);
 
     return (
-        <AppShell
-            banner={<DevelopmentNotice />}
-            className="platform-top-layout"
-            contentPadding={0}
-            height="auto"
-            mobileNav={false}
-            topNav={
+        <TopLayout
+            topMenu={
                 <Stack gap={0}>
                     <TopNav
                         className="px-7"
@@ -105,27 +98,8 @@ export function ApplicationLayout({ basePath, children, pages }: ApplicationLayo
                     ) : null}
                 </Stack>
             }
-            variant="wash"
         >
-            <Card
-                aria-hidden="true"
-                className="pointer-events-none fixed z-0 end-0 bottom-0 start-0 top-0 overflow-clip"
-                padding={0}
-                variant="transparent"
-            >
-                <Stack height="100%" padding={2}>
-                    <Card className="border-0 overflow-clip" height="100%" width="100%" />
-                </Stack>
-            </Card>
-            <Card
-                aria-hidden="true"
-                className="pointer-events-none fixed z-30 end-0 bottom-0 start-0 top-0 border-8 border-body bg-transparent"
-                padding={0}
-                variant="transparent"
-            />
-            <Stack className="relative z-10" minHeight="calc(100dvh - var(--appshell-header-height, 0px))" padding={2}>
-                <PageContainer minHeight="100%">{children}</PageContainer>
-            </Stack>
-        </AppShell>
+            <PageContainer minHeight="100%">{children}</PageContainer>
+        </TopLayout>
     );
 }

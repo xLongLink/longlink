@@ -76,6 +76,7 @@ export default [
         ]),
         route('*', './NotFound.tsx'),
     ]),
+    route('login', './routes/Login.tsx'),
     layout('./layouts/Authenticated.tsx', [
         layout('./layouts/User.tsx', [
             route('organizations', './routes/Organizations.tsx'),

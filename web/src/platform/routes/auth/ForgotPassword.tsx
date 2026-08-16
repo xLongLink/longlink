@@ -47,7 +47,7 @@ export default function ForgotPassword() {
                         status="success"
                         title="If an account exists for that email, password reset instructions are on the way."
                     />
-                    <Button href="/organizations" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit((values) => requestReset.mutate(values))}>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
             )}
             {!requestReset.isSuccess ? (
                 <Text as="p" color="secondary" justify="center" type="supporting">
-                    <Link href="/organizations" type="inherit" weight="medium">
+                    <Link href="/login" type="inherit" weight="medium">
                         Back to sign in
                     </Link>
                 </Text>

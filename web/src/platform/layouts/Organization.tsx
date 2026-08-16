@@ -4,7 +4,7 @@ import { AppWindow, Settings2 } from 'lucide-react';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Outlet, useLocation, useParams } from 'react-router';
 import { ProfileMenu } from '@/components/Profile';
-import Platform from '@/components/layouts/Platform';
+import TopLayout from '@/components/layouts/TopLayout';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
@@ -17,8 +17,8 @@ export default function OrganizationLayout() {
     const settingsHref = `${applicationHref}/settings`;
 
     return (
-        <Platform
-            topNav={
+        <TopLayout
+            topMenu={
                 <Stack gap={0}>
                     <TopNav
                         className="min-h-11 px-7"
@@ -52,6 +52,6 @@ export default function OrganizationLayout() {
             }
         >
             <Outlet />
-        </Platform>
+        </TopLayout>
     );
 }

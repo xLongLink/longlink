@@ -4,13 +4,13 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
-type PlatformProps = {
+type TopLayoutProps = {
     children: ReactNode;
-    topNav: ReactNode;
+    topMenu: ReactNode;
 };
 
-/** Renders the shared platform shell with top navigation. */
-function Platform({ children, topNav }: PlatformProps) {
+/** Renders the shared application frame with a top menu and content region. */
+export default function TopLayout({ children, topMenu }: TopLayoutProps) {
     return (
         <AppShell
             banner={import.meta.env.MODE === 'sdk' ? undefined : <DevelopmentNotice />}
@@ -18,7 +18,7 @@ function Platform({ children, topNav }: PlatformProps) {
             contentPadding={0}
             height="auto"
             mobileNav={false}
-            topNav={topNav}
+            topNav={topMenu}
             variant="wash"
         >
             <Card
@@ -43,5 +43,3 @@ function Platform({ children, topNav }: PlatformProps) {
         </AppShell>
     );
 }
-
-export default Platform;

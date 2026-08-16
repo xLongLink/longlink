@@ -6,7 +6,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -15,6 +14,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Divider } from '@/components/ui/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -110,7 +110,7 @@ export default function VerifyEmail() {
     const recoverySetup = verification.data ?? lastVerifiedSetup;
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
     const recoveryRegisterHref = `/auth/register${recoverySearch}`;
-    const recoverySignInHref = `/organizations${recoverySearch}`;
+    const recoverySignInHref = `/login${recoverySearch}`;
     const accountExists =
         completion.error instanceof ApiError && completion.error.message === 'REGISTER_USER_ALREADY_EXISTS';
     const setupMismatch =
@@ -172,7 +172,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
+        <AuthPage title={<WelcomeTitle />} description={<Divider>{'Email verified. Complete your profile.'}</Divider>}>
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">

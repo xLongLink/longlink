@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
+import { Navigate } from 'react-router';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { SignInCard } from '@/components/SignInCard';
 import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
@@ -35,13 +35,9 @@ export function Auth({
         );
     }
 
-    // Show sign-in UI for unauthenticated users.
+    // Keep protected routes focused on authenticated application content.
     if (!user) {
-        return (
-            <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-                <SignInCard />
-            </Center>
-        );
+        return <Navigate replace to="/login" />;
     }
 
     // Hide administrator routes from regular Platform users.

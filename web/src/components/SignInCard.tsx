@@ -4,7 +4,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -12,6 +11,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 const loginSchema = z.object({
@@ -56,7 +56,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 <Heading level={1} justify="center">
                     <WelcomeTitle />
                 </Heading>
-                <Divider label="Sign in with your email and password." />
+                <Divider>{'Sign in with your email and password.'}</Divider>
             </Stack>
 
             <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
@@ -115,16 +115,12 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
                 />
             </Stack>
 
-            <Divider
-                label={
-                    <>
-                        New to LongLink?{' '}
-                        <Link href={registerHref} type="inherit" weight="medium">
-                            Create account
-                        </Link>
-                    </>
-                }
-            />
+            <Divider>
+                New to LongLink?{' '}
+                <Link href={registerHref} type="inherit" weight="medium">
+                    Create account
+                </Link>
+            </Divider>
 
             <Text as="p" color="secondary" justify="center" type="supporting">
                 By continuing, you agree to our <br />

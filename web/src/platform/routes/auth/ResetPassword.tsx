@@ -109,7 +109,7 @@ export default function ResetPassword() {
             ) : resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title="Your password has been reset. You can now sign in." />
-                    <Button href="/organizations" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>

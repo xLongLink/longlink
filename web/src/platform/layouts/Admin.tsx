@@ -6,7 +6,7 @@ import { Auth } from '@/components/Auth';
 import { findActiveTab } from '@/lib/paths';
 import { ProfileMenu } from '@/components/Profile';
 import { administratorTabs } from '@/platform/tabs';
-import Platform from '@/components/layouts/Platform';
+import TopLayout from '@/components/layouts/TopLayout';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
@@ -27,8 +27,8 @@ function AdminContent() {
     const activeTab = findActiveTab(administratorTabs, pathname);
 
     return (
-        <Platform
-            topNav={
+        <TopLayout
+            topMenu={
                 <Stack gap={0}>
                     <TopNav
                         className="min-h-11 px-7"
@@ -65,6 +65,6 @@ function AdminContent() {
             <PageContainer gap={8}>
                 <Outlet />
             </PageContainer>
-        </Platform>
+        </TopLayout>
     );
 }
