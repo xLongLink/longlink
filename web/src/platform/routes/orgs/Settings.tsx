@@ -16,11 +16,11 @@ import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-
 import { api } from '@/lib/api';
 import { S3 } from '@/components/svg/S3';
 import { formatBytes } from '@/lib/utils';
-import NotFound from '@/platform/NotFound';
 import { hasMinimumRole } from '@/lib/roles';
 import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
@@ -141,7 +141,7 @@ function OrganizationSettings() {
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
-        return <NotFound />;
+        return <NotFoundLayout />;
     }
 
     return (

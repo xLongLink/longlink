@@ -10,9 +10,9 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { administratorTabs } from '@/lib/administrator';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useSignOut } from '@/lib/hooks/use-user';
-import { administratorTabs } from '@/platform/tabs';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: UserSummary }) {

@@ -5,9 +5,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import NotFound from '@/platform/NotFound';
-import PlatformApplicationView from '@/platform/View';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { useOrganization } from '@/lib/hooks/use-organization';
+import { RuntimeApplicationView } from '@/xml/ApplicationView';
 
 /** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {
@@ -21,7 +21,7 @@ export default function OrganizationApplication() {
     }
 
     if (error?.status === 404 || !applicationAccess) {
-        return <NotFound />;
+        return <NotFoundLayout />;
     }
 
     if (applicationAccess.status === 'creating') {
@@ -39,7 +39,7 @@ export default function OrganizationApplication() {
     }
 
     return (
-        <PlatformApplicationView
+        <RuntimeApplicationView
             basePath={`${organizationHref}/apps/${application}`}
             errorAction={<Button href={organizationHref} label="Back to organization" variant="primary" />}
             pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}

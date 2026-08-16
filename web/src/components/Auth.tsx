@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
-import NotFound from '@/platform/NotFound';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
@@ -42,7 +42,7 @@ export function Auth({
 
     // Hide administrator routes from regular Platform users.
     if (requiresAdministrator && !user.administrator) {
-        return <NotFound />;
+        return <NotFoundLayout />;
     }
 
     return <AuthenticatedUserProvider user={user}>{children}</AuthenticatedUserProvider>;

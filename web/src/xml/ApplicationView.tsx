@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { resolveRequestUrl } from './core/url';
 import { ApplicationLayout, applicationHref } from './ApplicationLayout';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from './pages';
@@ -15,7 +16,6 @@ import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, t
 type RuntimeApplicationViewProps = {
     basePath: string;
     errorAction?: ReactNode;
-    notFound: ComponentType;
     pages: string;
 };
 
@@ -47,12 +47,7 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
 }
 
 /** Renders XML pages registered by an application manifest. */
-export function RuntimeApplicationView({
-    basePath,
-    errorAction,
-    notFound: NotFound,
-    pages,
-}: RuntimeApplicationViewProps) {
+export function RuntimeApplicationView({ basePath, errorAction, pages }: RuntimeApplicationViewProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
@@ -167,9 +162,9 @@ export function RuntimeApplicationView({
             </Center>
         );
     } else {
-        // Delegate unknown app routes to the runtime 404 state.
+        // Show the shared 404 state for unknown application routes.
         if (registeredPages && routePath && !activeRouteMatch) {
-            return <NotFound />;
+            return <NotFoundLayout />;
         }
 
         let activeFallback: ReactNode = null;

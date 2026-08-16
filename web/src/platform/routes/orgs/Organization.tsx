@@ -10,7 +10,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { proportional } from '@astryxdesign/core/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import NotFound from '@/platform/NotFound';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { useOrganization } from '@/lib/hooks/use-organization';
@@ -21,7 +21,7 @@ export default function Organization() {
     const { applications, isLoading, error } = useOrganization(organization);
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
-        return <NotFound />;
+        return <NotFoundLayout />;
     }
 
     // Keep edge-aware content aligned within the centered page container.
