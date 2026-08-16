@@ -9,7 +9,7 @@ import type {
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { ApiError, apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
+import { ApiError, apiQueryKey, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 
@@ -58,10 +58,8 @@ export function useOrganizationMembers(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApi(platformApiPath(`/organizations/${organizationId}/invitations`), {
+            await requestApiJson(platformApiPath(`/organizations/${organizationId}/invitations`), payload, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
             });
         },
         onSuccess: () => queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
@@ -74,11 +72,13 @@ export function useOrganizationMembers(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApi(platformApiPath(`/organizations/${organizationId}/members/${memberId}`), {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role }),
-            });
+            await requestApiJson(
+                platformApiPath(`/organizations/${organizationId}/members/${memberId}`),
+                { role },
+                {
+                    method: 'PATCH',
+                }
+            );
         },
         onSuccess: () =>
             Promise.all([
@@ -102,10 +102,8 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApi(platformApiPath(`/organizations/${organizationId}/applications`), {
+            await requestApiJson(platformApiPath(`/organizations/${organizationId}/applications`), payload, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
             });
         },
         onSuccess: () =>

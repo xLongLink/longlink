@@ -112,11 +112,11 @@ export async function executeAction(
         return;
     }
 
-    let response: Response;
+    let status: number;
 
     // Send the action request through the API client.
     try {
-        response = await requestApi(requestUrl, init, fetchImpl);
+        status = (await requestApi(requestUrl, init, fetchImpl)).status;
     } catch (error: unknown) {
         toast({
             body:
@@ -135,7 +135,7 @@ export async function executeAction(
     // Close the containing dialog only after the request and invalidation succeed.
     if (resolveXml(props, 'closeDialog', ctx)) closeDialog?.();
 
-    toast({ body: `Request completed with status ${response.status}` });
+    toast({ body: `Request completed with status ${status}` });
 }
 
 /** Builds multipart form data from an XML action form expression. */

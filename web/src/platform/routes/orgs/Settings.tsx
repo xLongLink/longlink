@@ -35,6 +35,7 @@ const organizationAvatarSchema = z.union([
     z.literal(''),
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
+const organizationSettingsSections = ['applications', 'database', 'storage', 'invitations', 'members'];
 
 /** Renders the organization owning a database or storage resource. */
 function OrganizationOwner({ avatar, name }: { avatar: string; name: string }) {
@@ -72,18 +73,8 @@ function OrganizationSettings() {
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
-    const section =
-        location.hash === '#applications'
-            ? 'applications'
-            : location.hash === '#database'
-              ? 'database'
-              : location.hash === '#storage'
-                ? 'storage'
-                : location.hash === '#invitations'
-                  ? 'invitations'
-                  : location.hash === '#members'
-                    ? 'members'
-                    : 'organization';
+    const hashSection = location.hash.slice(1);
+    const section = organizationSettingsSections.includes(hashSection) ? hashSection : 'organization';
     const {
         data: databaseUsage,
         error: databaseError,

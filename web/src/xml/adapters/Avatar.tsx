@@ -4,14 +4,6 @@ import { resolveXml } from '../core/props';
 import { resolveAnchorUrl } from '../core/url';
 import { useXmlRuntime } from '../core/context';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Avatar?tab=properties
- * - src: string
- * - fallbackSrc: string
- * - name: string
- * - alt: string
- */
 export function Avatar({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const source = resolveXml(props, 'src', ctx);
