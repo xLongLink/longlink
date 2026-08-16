@@ -1,4 +1,4 @@
-import { Link as AstryxLink } from '@astryxdesign/core-0-3/Link';
+import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { resolveXml } from '../core/props';

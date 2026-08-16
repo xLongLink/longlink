@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
     OrganizationInvitationCreate,
@@ -9,8 +9,6 @@ import { api, ApiError } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
-const disabledApiQueryKey = ['api', 'disabled'] as const;
-
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
@@ -19,15 +17,11 @@ export function useOrganization(organizationSlug: string) {
 
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
     const organizationQuery = useQuery({
-        enabled: organizationPath !== null,
-        queryKey: organizationPath ? ['api', organizationPath] : disabledApiQueryKey,
-        queryFn: async ({ signal }) => {
-            if (organizationPath === null) {
-                throw new Error('Organization path is unavailable');
-            }
-
-            return zOrganizationDetails.parse(await api(organizationPath, { signal }).json());
-        },
+        queryKey: ['api', organizationPath],
+        queryFn:
+            organizationPath === null
+                ? skipToken
+                : async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json()),
         refetchInterval: 5000,
         retry: false,
     });

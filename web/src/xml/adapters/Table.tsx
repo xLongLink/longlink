@@ -1,5 +1,5 @@
-import { Text } from '@astryxdesign/core-0-3/Text';
-import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core-0-3/Table';
+import { Text } from '@astryxdesign/core/Text';
+import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import type { ASTNode, Props, Scope } from '../types';
 import { renderNode } from '../core/node';
 import { readSafeProperty } from '../expressions';

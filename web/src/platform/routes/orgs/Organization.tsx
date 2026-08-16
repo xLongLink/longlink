@@ -16,7 +16,7 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { useOrganization } from '@/lib/hooks/use-organization';
 
 /** Renders the organization applications page. */
-function OrganizationContent() {
+export default function Organization() {
     const { organization = '' } = useParams();
     const { applications, isLoading, error } = useOrganization(organization);
     // Hide missing or inaccessible orgs behind the shared 404 page.
@@ -66,9 +66,4 @@ function OrganizationContent() {
             )}
         </PageContainer>
     );
-}
-
-/** Renders the organization applications page after route authentication. */
-export default function Organization() {
-    return <OrganizationContent />;
 }

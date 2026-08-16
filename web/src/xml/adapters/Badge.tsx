@@ -1,4 +1,4 @@
-import { Badge as AstryxBadge } from '@astryxdesign/core-0-3/Badge';
+import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

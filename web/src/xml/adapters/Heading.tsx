@@ -1,4 +1,4 @@
-import { Heading as AstryxHeading } from '@astryxdesign/core-0-3/Heading';
+import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

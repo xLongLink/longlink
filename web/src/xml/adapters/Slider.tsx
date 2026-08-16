@@ -1,4 +1,4 @@
-import { Slider as AstryxSlider } from '@astryxdesign/core-0-3/Slider';
+import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';

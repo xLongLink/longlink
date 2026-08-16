@@ -1,4 +1,4 @@
-import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core-0-3/RadioList';
+import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { resolveInputStatus } from '../input';

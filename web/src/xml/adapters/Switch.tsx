@@ -1,4 +1,4 @@
-import { Switch as AstryxSwitch } from '@astryxdesign/core-0-3/Switch';
+import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';

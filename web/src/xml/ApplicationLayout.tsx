@@ -12,7 +12,7 @@ import { Wordmark } from '@/components/Wordmark';
 import { getIconComponent } from '@/components/ui/Icon';
 import { PageContainer } from '@/components/PageContainer';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
-import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
+import { pageRouteIsDynamic, type RuntimePage } from './pages';
 
 type ApplicationLayoutProps = {
     basePath: string;

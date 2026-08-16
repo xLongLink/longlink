@@ -1,4 +1,4 @@
-import { TextInput as AstryxTextInput } from '@astryxdesign/core-0-3/TextInput';
+import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 import type { Props } from '../types';
 import { TEXT_INPUT_TYPES } from '../constants';
 import { useXmlRuntime } from '../core/context';

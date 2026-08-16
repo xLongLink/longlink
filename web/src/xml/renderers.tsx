@@ -1,7 +1,7 @@
 import { getVersion, subscribe } from 'valtio';
-import { Stack } from '@astryxdesign/core-0-3/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
 import { useEffect, useMemo, useState } from 'react';
-import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';

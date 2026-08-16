@@ -1,4 +1,4 @@
-import { Avatar as AstryxAvatar } from '@astryxdesign/core-0-3/Avatar';
+import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
 import type { Props } from '../types';
 import { resolveXml } from '../core/props';
 import { resolveAnchorUrl } from '../core/url';

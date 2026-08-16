@@ -1,4 +1,4 @@
-import { FileInput as AstryxFileInput } from '@astryxdesign/core-0-3/FileInput';
+import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';

@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { Banner } from '@astryxdesign/core-0-3/Banner';
+import { Banner } from '@astryxdesign/core/Banner';
 
 /** Keeps XML rendering failures scoped to the XML surface. */
 export class XmlErrorBoundary extends Component<{ children: ReactNode; resetKey: number }, { error: Error | null }> {

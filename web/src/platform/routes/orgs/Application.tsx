@@ -9,8 +9,8 @@ import NotFound from '@/platform/NotFound';
 import PlatformApplicationView from '@/platform/View';
 import { useOrganization } from '@/lib/hooks/use-organization';
 
-/** Renders one proxy-backed organization application. */
-function OrganizationApplicationContent() {
+/** Renders one proxy-backed organization application after route authentication. */
+export default function OrganizationApplication() {
     const { organization = '', application = '' } = useParams();
     const { applications, isLoading, error } = useOrganization(organization);
     const applicationAccess = applications.find((item) => item.slug === application);
@@ -45,11 +45,6 @@ function OrganizationApplicationContent() {
             pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
         />
     );
-}
-
-/** Renders one proxy-backed organization application after route authentication. */
-export default function OrganizationApplication() {
-    return <OrganizationApplicationContent />;
 }
 
 /** Renders a Platform-owned application lifecycle state. */

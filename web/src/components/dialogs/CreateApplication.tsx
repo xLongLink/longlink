@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -51,8 +51,6 @@ const defaultCreateApplicationValues = {
     envs: {},
 } satisfies CreateApplicationInput;
 
-const disabledApiQueryKey = ['api', 'disabled'] as const;
-
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organizationId }: { organizationId: string }) {
     const toast = useToast();
@@ -74,17 +72,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasImage = image.trim().length > 0;
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const iconPath = open ? '/api/v1/icons' : null;
     const { data: iconCatalog } = useQuery({
-        enabled: iconPath !== null,
-        queryKey: iconPath ? ['api', iconPath] : disabledApiQueryKey,
-        queryFn: async ({ signal }) => {
-            if (iconPath === null) {
-                throw new Error('Icon catalog path is unavailable');
-            }
-
-            return zIcon.array().parse(await api(iconPath, { signal }).json());
-        },
+        queryKey: ['api', '/api/v1/icons'],
+        queryFn: open
+            ? async ({ signal }) => zIcon.array().parse(await api('/api/v1/icons', { signal }).json())
+            : skipToken,
         staleTime: Infinity,
     });
 
