@@ -1,19 +1,16 @@
 import { z } from 'zod';
-import startCase from 'lodash/startCase';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import type { PlatformTab } from '@/components/layouts/Platform';
+import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import XmlLayout from '@/xml/layout';
+import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { getIconComponent } from '@/lib/icons';
 import {
     createContext as createXmlContext,
     parseXML,
@@ -75,23 +72,6 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
     };
 }
 
-/** Builds an app-shell href for one page route path. */
-function resolveApplicationHref(route: string, organization?: string, application?: string): string {
-    const basePath =
-        application && organization
-            ? generatePath('/orgs/:organization/apps/:application', { organization, application })
-            : organization
-              ? generatePath('/orgs/:organization', { organization })
-              : '';
-
-    // Use the application root for empty routes.
-    if (!route) {
-        return basePath || '/';
-    }
-
-    return `${basePath}/${route}`;
-}
-
 /**
  * Renders registered XML pages for Platform and Application routes.
  */
@@ -131,36 +111,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 
         // Keep root-routed tabs at the application root.
         if (firstTabPage.route) {
-            navigate(resolveApplicationHref(firstTabPage.route, organization, application), { replace: true });
+            navigate(applicationHref(firstTabPage.route, organization, application), { replace: true });
         }
     }, [application, firstTabPage, navigate, organization, routePath]);
-
-    const { activeTab, tabs } = useMemo(() => {
-        const tabGroups = new Map<string, PlatformTab>();
-
-        // Build one visible navigation target per tab.
-        for (const page of registeredPages ?? []) {
-            const dynamic = pageRouteIsDynamic(page.route);
-
-            // Dynamic pages need concrete params, so they cannot be direct navigation targets.
-            if (!page.route || dynamic || tabGroups.has(page.tab)) {
-                continue;
-            }
-
-            const label = page.name || startCase(page.tab);
-            const icon = page.icon ? getIconComponent(page.icon) : undefined;
-            const href = resolveApplicationHref(page.route, organization, application);
-
-            // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
-            tabGroups.set(page.tab, {
-                href,
-                icon,
-                label,
-            });
-        }
-
-        return { activeTab: activePage?.tab ? tabGroups.get(activePage.tab)?.href : '', tabs: [...tabGroups.values()] };
-    }, [activePage?.tab, application, organization, registeredPages]);
 
     /* Load the active page and discard inactive page state. */
     useEffect(() => {
@@ -172,7 +125,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 
         const runtimeContext = createXmlContext();
 
-        runtimeContext.services.navigationBaseUrl = resolveApplicationHref('', organization, application);
+        runtimeContext.services.navigationBaseUrl = applicationHref('', organization, application);
         runtimeContext.scope.bindings.params = activeRouteParams;
 
         const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
@@ -320,9 +273,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     }
 
     return (
-        <XmlLayout activeTab={activeTab} tabs={tabs}>
+        <ApplicationLayout application={application} organization={organization} pages={registeredPages ?? []}>
             {content}
-        </XmlLayout>
+        </ApplicationLayout>
     );
 }
 

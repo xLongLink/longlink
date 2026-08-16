@@ -9,14 +9,13 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Building2, Settings2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
-import PlatformLayout from '@/platform/layout';
+import { UserLayout } from '@/platform/layouts/User';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { fetchApiJson, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
@@ -100,13 +99,7 @@ export default function Settings() {
     });
     return (
         <Auth>
-            <PlatformLayout
-                brandOnly
-                tabs={[
-                    { href: '/organizations', icon: Building2, label: 'Organizations' },
-                    { href: '/settings', icon: Settings2, label: 'Settings' },
-                ]}
-            >
+            <UserLayout>
                 <PageContainer gap={8}>
                     <VStack gap={1}>
                         <Heading level={1}>Settings</Heading>
@@ -216,7 +209,7 @@ export default function Settings() {
 
                     <DeleteConfirmation {...deleteDialog.dialogProps} />
                 </PageContainer>
-            </PlatformLayout>
+            </UserLayout>
         </Auth>
     );
 }

@@ -4,12 +4,12 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import PlatformLayout from '@/platform/layout';
+import { BrandLayout } from '@/platform/layouts/User';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {
     return (
-        <PlatformLayout brandOnly>
+        <BrandLayout>
             <Center minHeight="70dvh" width="100%">
                 <EmptyState
                     actions={
@@ -24,6 +24,6 @@ export default function NotFound() {
                     title="We can't find that page"
                 />
             </Center>
-        </PlatformLayout>
+        </BrandLayout>
     );
 }

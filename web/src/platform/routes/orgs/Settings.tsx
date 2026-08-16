@@ -11,7 +11,6 @@ import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { AppWindow, Settings2 } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
 import { Auth } from '@/components/Auth';
@@ -21,7 +20,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { hasMinimumRole } from '@/lib/roles';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
-import PlatformLayout from '@/platform/layout';
+import { OrganizationLayout } from '@/platform/layouts/Organization';
 import People from '@/components/settings/People';
 import { platformApiPath } from '@/lib/platform-api';
 import { PageContainer } from '@/components/PageContainer';
@@ -147,12 +146,7 @@ function OrganizationSettings() {
     }
 
     return (
-        <PlatformLayout
-            tabs={[
-                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
-                { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
-            ]}
-        >
+        <OrganizationLayout organization={organization}>
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
                     <Heading level={1}>Settings</Heading>
@@ -330,7 +324,7 @@ function OrganizationSettings() {
                     </MenuSection>
                 </Menu>
             </PageContainer>
-        </PlatformLayout>
+        </OrganizationLayout>
     );
 }
 

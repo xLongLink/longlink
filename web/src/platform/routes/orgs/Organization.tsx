@@ -7,12 +7,12 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { AppWindow, Settings2, Wrench } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 import { proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
-import PlatformLayout from '@/platform/layout';
+import { OrganizationLayout } from '@/platform/layouts/Organization';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { useOrganization } from '@/lib/hooks/use-organization';
@@ -28,12 +28,7 @@ function OrganizationContent() {
 
     // Keep edge-aware content aligned within the centered page container.
     return (
-        <PlatformLayout
-            tabs={[
-                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
-                { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
-            ]}
-        >
+        <OrganizationLayout organization={organization}>
             <PageContainer gap={8}>
                 <Stack gap={1} width="100%">
                     <Heading level={1}>Applications</Heading>
@@ -73,7 +68,7 @@ function OrganizationContent() {
                     </Table>
                 )}
             </PageContainer>
-        </PlatformLayout>
+        </OrganizationLayout>
     );
 }
 

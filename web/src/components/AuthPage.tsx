@@ -3,7 +3,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
-import PlatformLayout from '@/platform/layout';
+import { BrandLayout } from '@/platform/layouts/User';
 
 /** Renders the shared shell for standalone account authentication pages. */
 export function AuthPage({
@@ -16,7 +16,7 @@ export function AuthPage({
     title: ReactNode;
 }) {
     return (
-        <PlatformLayout brandOnly brandHref="/" fillViewport>
+        <BrandLayout brandHref="/" fillViewport>
             <Center height="100%" width="100%">
                 <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
                     <Stack gap={1}>
@@ -34,6 +34,6 @@ export function AuthPage({
                     {children}
                 </Stack>
             </Center>
-        </PlatformLayout>
+        </BrandLayout>
     );
 }

@@ -5,12 +5,11 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Building2, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
-import PlatformLayout from '@/platform/layout';
+import { BrandLayout, UserLayout } from '@/platform/layouts/User';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { PageContainer } from '@/components/PageContainer';
@@ -38,23 +37,16 @@ export default function Organizations() {
     // Show sign-in prompt for anonymous visitors.
     if (!user) {
         return (
-            <PlatformLayout brandOnly brandHref="/" fillViewport>
+            <BrandLayout brandHref="/" fillViewport>
                 <VStack height="100%" justify="center" align="center" width="100%">
                     <SignInCard initialEmail={searchParams.get('email') ?? ''} />
                 </VStack>
-            </PlatformLayout>
+            </BrandLayout>
         );
     }
 
     return (
-        <PlatformLayout
-            brandOnly
-            brandHref="/"
-            tabs={[
-                { href: '/organizations', icon: Building2, label: 'Organizations' },
-                { href: '/settings', icon: Settings2, label: 'Settings' },
-            ]}
-        >
+        <UserLayout>
             <PageContainer gap={8}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
@@ -73,11 +65,7 @@ export default function Organizations() {
                         hasHover
                         idKey={(membership) => membership.organization.id}
                     >
-                        <TableColumn<UserOrganizationMembership>
-                            field="name"
-                            header="Name"
-                            width={proportional(1)}
-                        >
+                        <TableColumn<UserOrganizationMembership> field="name" header="Name" width={proportional(1)}>
                             {(membership) => (
                                 <HStack gap={3} align="center">
                                     <Avatar
@@ -94,6 +82,6 @@ export default function Organizations() {
                     </Table>
                 )}
             </PageContainer>
-        </PlatformLayout>
+        </UserLayout>
     );
 }
