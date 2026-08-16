@@ -3,7 +3,6 @@ import { useParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -13,6 +12,7 @@ import type { OrganizationApplicationSummary } from '@/lib/generated/platform-ap
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { PageError, PageLoading } from '@/components/layouts/State';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders the organization applications page. */
@@ -24,6 +24,19 @@ export default function Organization() {
         return <NotFoundLayout />;
     }
 
+    if (isLoading && applications.length === 0) {
+        return <PageLoading label="Loading applications" />;
+    }
+
+    if (error && applications.length === 0) {
+        return (
+            <PageError
+                description="We couldn't load the applications for this organization."
+                title="Unable to load applications"
+            />
+        );
+    }
+
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8}>
@@ -33,37 +46,29 @@ export default function Organization() {
                     Manage the applications attached to this organization.
                 </Text>
             </Stack>
-            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
-                <Banner status="error" title="Failed to load applications." />
-            ) : (
-                <Table
-                    data={applications}
-                    density="compact"
-                    emptyState={<EmptyState title="No results." isCompact />}
-                    hasHover
-                    idKey="id"
-                >
-                    <TableColumn<OrganizationApplicationSummary>
-                        field="name"
-                        header="Application"
-                        width={proportional(1)}
-                    >
-                        {(application) => (
-                            <HStack gap={3} align="center">
-                                <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
-                                <VStack gap={1}>
-                                    <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
-                                        {application.name}
-                                    </Link>
-                                    {application.description ? (
-                                        <Text type="supporting">{application.description}</Text>
-                                    ) : null}
-                                </VStack>
-                            </HStack>
-                        )}
-                    </TableColumn>
-                </Table>
-            )}
+            <Table
+                data={applications}
+                density="compact"
+                emptyState={<EmptyState title="No results." isCompact />}
+                hasHover
+                idKey="id"
+            >
+                <TableColumn<OrganizationApplicationSummary> field="name" header="Application" width={proportional(1)}>
+                    {(application) => (
+                        <HStack gap={3} align="center">
+                            <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
+                            <VStack gap={1}>
+                                <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
+                                    {application.name}
+                                </Link>
+                                {application.description ? (
+                                    <Text type="supporting">{application.description}</Text>
+                                ) : null}
+                            </VStack>
+                        </HStack>
+                    )}
+                </TableColumn>
+            </Table>
         </PageContainer>
     );
 }

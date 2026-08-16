@@ -31,7 +31,7 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
 
     # Assert
     assert response.status_code == 400
-    assert response.json() == {"detail": "VERIFY_USER_BAD_TOKEN"}
+    assert response.json() == {"detail": "This registration link is invalid or expired. Request a new link to continue."}
     assert client.cookies.get("longlink_auth") is None
 
 
@@ -96,8 +96,10 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert restored_setup.status_code == 200
     assert restored_setup.json() == {"email": email}
-    assert mismatched_setup.status_code == 400
-    assert mismatched_setup.json() == {"detail": "REGISTER_SETUP_MISMATCH"}
+    assert mismatched_setup.status_code == 409
+    assert mismatched_setup.json() == {
+        "detail": "Another registration was verified in this browser. Reopen the link for this email to continue safely."
+    }
     assert complete_response.status_code == 201
     registered_user = complete_response.json()
     assert registered_user["name"] == "Registered User"
@@ -116,8 +118,10 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
         )
 
     assert repeat_verify_response.status_code == 200
-    assert repeat_response.status_code == 400
-    assert repeat_response.json() == {"detail": "REGISTER_USER_ALREADY_EXISTS"}
+    assert repeat_response.status_code == 409
+    assert repeat_response.json() == {
+        "detail": "An account with this email already exists. Sign in or reset your password to continue."
+    }
     assert repeat_client.cookies.get("longlink_auth") is None
 
     # Password login still works after the verification-link login path.

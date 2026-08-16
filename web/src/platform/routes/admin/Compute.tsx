@@ -1,6 +1,5 @@
 import { Wrench } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
-import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -15,6 +14,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateCompute from '@/components/dialogs/CreateCompute';
+import { PageError, PageLoading } from '@/components/layouts/State';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -54,6 +54,15 @@ export default function AdminCompute() {
             'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+
+    if (isLoading && computes.length === 0) {
+        return <PageLoading label="Loading compute registries" />;
+    }
+
+    if (error && computes.length === 0) {
+        return <PageError description="We couldn't load the compute registries." title="Unable to load compute" />;
+    }
+
     return (
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
@@ -63,39 +72,35 @@ export default function AdminCompute() {
                 </VStack>
                 <CreateCompute />
             </HStack>
-            {isLoading && computes.length === 0 ? null : error && computes.length === 0 ? (
-                <Banner status="error" title={error.message} />
-            ) : (
-                <Table
-                    data={pageItems}
-                    density="compact"
-                    emptyState={<EmptyState title="No results." isCompact />}
-                    hasHover
-                    idKey="id"
-                    plugins={{ pagination }}
-                >
-                    <TableColumn<ComputeRegistryResponse> field="compute" header="Compute" width={proportional(2)}>
-                        {(compute) => (
-                            <HStack gap={3} align="center">
-                                <Wrench className="text-accent" size={20} />
-                                <VStack gap={1}>
-                                    <Text weight="semibold">{compute.name}</Text>
-                                    <Text type="supporting">{compute.gateway_url}</Text>
-                                </VStack>
-                            </HStack>
-                        )}
-                    </TableColumn>
-                    <TableColumn<ComputeRegistryResponse> align="end" field="actions" header="Action" width={pixel(96)}>
-                        {(compute) => (
-                            <MoreMenu
-                                label={`Open actions for ${compute.name}`}
-                                size="sm"
-                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(compute) }]}
-                            />
-                        )}
-                    </TableColumn>
-                </Table>
-            )}
+            <Table
+                data={pageItems}
+                density="compact"
+                emptyState={<EmptyState title="No results." isCompact />}
+                hasHover
+                idKey="id"
+                plugins={{ pagination }}
+            >
+                <TableColumn<ComputeRegistryResponse> field="compute" header="Compute" width={proportional(2)}>
+                    {(compute) => (
+                        <HStack gap={3} align="center">
+                            <Wrench className="text-accent" size={20} />
+                            <VStack gap={1}>
+                                <Text weight="semibold">{compute.name}</Text>
+                                <Text type="supporting">{compute.gateway_url}</Text>
+                            </VStack>
+                        </HStack>
+                    )}
+                </TableColumn>
+                <TableColumn<ComputeRegistryResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                    {(compute) => (
+                        <MoreMenu
+                            label={`Open actions for ${compute.name}`}
+                            size="sm"
+                            items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(compute) }]}
+                        />
+                    )}
+                </TableColumn>
+            </Table>
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

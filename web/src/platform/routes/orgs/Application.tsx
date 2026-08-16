@@ -2,10 +2,10 @@ import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { RuntimeApplicationView } from '@/xml/ApplicationView';
+import { PageError, PageLoading } from '@/components/layouts/State';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */
@@ -15,10 +15,18 @@ export default function OrganizationApplication() {
     const applicationAccess = applications.find((item) => item.slug === application);
 
     if (isLoading) {
-        return <Spinner label="Loading" />;
+        return <PageLoading label="Loading application" />;
     }
 
-    if (error?.status === 404 || !applicationAccess) {
+    if (error?.status === 404) {
+        return <NotFoundLayout />;
+    }
+
+    if (error && !applicationAccess) {
+        return <PageError description="We couldn't load this application." title="Unable to load application" />;
+    }
+
+    if (!applicationAccess) {
         return <NotFoundLayout />;
     }
 

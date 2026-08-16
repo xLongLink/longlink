@@ -1,5 +1,4 @@
 import { Text } from '@astryxdesign/core/Text';
-import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -15,6 +14,7 @@ import { usePaginate } from '@/lib/hooks/pagination';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
+import { PageError, PageLoading } from '@/components/layouts/State';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -51,6 +51,15 @@ export default function AdminDatabase() {
         fallbackDescription: 'Delete this database?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+
+    if (isLoading && databases.length === 0) {
+        return <PageLoading label="Loading databases" />;
+    }
+
+    if (error && databases.length === 0) {
+        return <PageError description="We couldn't load the database registries." title="Unable to load databases" />;
+    }
+
     return (
         <VStack gap={6} width="100%">
             <HStack gap={4} justify="between" align="end" wrap="wrap">
@@ -60,44 +69,35 @@ export default function AdminDatabase() {
                 </VStack>
                 <CreateDatabase />
             </HStack>
-            {isLoading && databases.length === 0 ? null : error && databases.length === 0 ? (
-                <Banner status="error" title={error.message} />
-            ) : (
-                <Table
-                    data={pageItems}
-                    density="compact"
-                    emptyState={<EmptyState title="No results." isCompact />}
-                    hasHover
-                    idKey="id"
-                    plugins={{ pagination }}
-                >
-                    <TableColumn<DatabaseRegistryResponse> field="database" header="Database" width={proportional(2)}>
-                        {(database) => (
-                            <HStack gap={3} align="center">
-                                <PostgreSQL height={24} width={24} />
-                                <VStack gap={1}>
-                                    <Text weight="semibold">{database.name}</Text>
-                                    <Text type="supporting">{`${database.host}:${database.port}`}</Text>
-                                </VStack>
-                            </HStack>
-                        )}
-                    </TableColumn>
-                    <TableColumn<DatabaseRegistryResponse>
-                        align="end"
-                        field="actions"
-                        header="Action"
-                        width={pixel(96)}
-                    >
-                        {(database) => (
-                            <MoreMenu
-                                label={`Open actions for ${database.name}`}
-                                size="sm"
-                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(database) }]}
-                            />
-                        )}
-                    </TableColumn>
-                </Table>
-            )}
+            <Table
+                data={pageItems}
+                density="compact"
+                emptyState={<EmptyState title="No results." isCompact />}
+                hasHover
+                idKey="id"
+                plugins={{ pagination }}
+            >
+                <TableColumn<DatabaseRegistryResponse> field="database" header="Database" width={proportional(2)}>
+                    {(database) => (
+                        <HStack gap={3} align="center">
+                            <PostgreSQL height={24} width={24} />
+                            <VStack gap={1}>
+                                <Text weight="semibold">{database.name}</Text>
+                                <Text type="supporting">{`${database.host}:${database.port}`}</Text>
+                            </VStack>
+                        </HStack>
+                    )}
+                </TableColumn>
+                <TableColumn<DatabaseRegistryResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                    {(database) => (
+                        <MoreMenu
+                            label={`Open actions for ${database.name}`}
+                            size="sm"
+                            items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(database) }]}
+                        />
+                    )}
+                </TableColumn>
+            </Table>
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

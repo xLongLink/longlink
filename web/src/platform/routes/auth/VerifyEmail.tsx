@@ -89,7 +89,7 @@ export default function VerifyEmail() {
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN') {
+            if (error instanceof ApiError && error.status === 400) {
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             }
         },
@@ -116,23 +116,17 @@ export default function VerifyEmail() {
             navigate('/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
-            if (error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN') {
+            if (error instanceof ApiError && error.status === 400) {
                 verification.mutate('');
             }
-            if (
-                error instanceof ApiError &&
-                (error.message === 'REGISTER_SETUP_MISMATCH' || error.message === 'REGISTER_USER_ALREADY_EXISTS')
-            ) {
+            if (error instanceof ApiError && error.status === 409) {
                 return;
             }
-            const message =
-                error instanceof ApiError && error.message === 'REGISTER_USER_ALREADY_EXISTS'
-                    ? 'An account with this email already exists. Sign in or reset your password to continue.'
-                    : error instanceof ApiError && error.message === 'VERIFY_USER_BAD_TOKEN'
-                      ? 'This registration link is invalid or expired. Request a new link to continue.'
-                      : 'Could not create the account. Check your details and try again.';
 
-            showToast({ body: message, type: 'error' });
+            showToast({
+                body: error instanceof ApiError ? error.message : 'error',
+                type: 'error',
+            });
         }
     }
 
@@ -143,28 +137,17 @@ export default function VerifyEmail() {
     const recoverySetup = verification.data ?? lastVerifiedSetup;
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
     const recoveryRegisterHref = `/auth/register${recoverySearch}`;
-    const recoverySignInHref = `/login${recoverySearch}`;
-    const accountExists =
-        completion.error instanceof ApiError && completion.error.message === 'REGISTER_USER_ALREADY_EXISTS';
-    const setupMismatch =
-        completion.error instanceof ApiError && completion.error.message === 'REGISTER_SETUP_MISMATCH';
+    const completionError = completion.error instanceof ApiError ? completion.error : null;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
-        const invalidToken =
-            verification.error instanceof ApiError && verification.error.message === 'VERIFY_USER_BAD_TOKEN';
+        const verificationError = verification.error instanceof ApiError ? verification.error : null;
+        const invalidToken = verificationError?.status === 400;
 
         return (
-            <AuthLayout
-                title="Verify your email"
-                description={
-                    invalidToken
-                        ? 'This registration link is invalid or expired. Request a new link to continue.'
-                        : 'LongLink could not verify this registration link.'
-                }
-            >
+            <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
                 <Stack gap={3}>
-                    <Banner status="error" title="LongLink could not verify this registration link." />
+                    <Banner status="error" title={verificationError?.message ?? 'error'} />
                     {invalidToken ? null : (
                         <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
                     )}
@@ -184,20 +167,10 @@ export default function VerifyEmail() {
     }
 
     // Account races and cross-tab setup changes cannot succeed by resubmitting the same form.
-    if (accountExists || setupMismatch) {
+    if (completionError?.status === 409) {
         return (
-            <AuthLayout
-                title="Complete your account"
-                description={
-                    setupMismatch
-                        ? 'Another registration was verified in this browser. Reopen the link for this email to continue safely.'
-                        : 'An account with this email already exists. Sign in or reset your password to continue.'
-                }
-            >
+            <AuthLayout title="Complete your account" description={completionError?.message ?? 'error'}>
                 <Stack gap={3}>
-                    {accountExists ? (
-                        <Button href={recoverySignInHref} label="Back to sign in" variant="primary" />
-                    ) : null}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>
             </AuthLayout>

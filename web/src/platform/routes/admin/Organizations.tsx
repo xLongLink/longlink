@@ -1,7 +1,6 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
-import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -15,6 +14,7 @@ import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { PageError, PageLoading } from '@/components/layouts/State';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -52,44 +52,54 @@ export default function AdminOrganizations() {
         fallbackDescription: 'Delete this organization?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+
+    if (isLoading && organizations.length === 0) {
+        return <PageLoading label="Loading organizations" />;
+    }
+
+    if (error && organizations.length === 0) {
+        return (
+            <PageError
+                description="We couldn't load the platform organizations."
+                title="Unable to load organizations"
+            />
+        );
+    }
+
     return (
         <VStack gap={6} width="100%">
             <VStack gap={1}>
                 <Heading level={1}>Organizations</Heading>
                 <Text type="supporting">Review organization lifecycle, ownership, and access boundaries.</Text>
             </VStack>
-            {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
-                <Banner status="error" title={error.message} />
-            ) : (
-                <Table
-                    data={pageItems}
-                    density="compact"
-                    emptyState={<EmptyState title="No results." isCompact />}
-                    hasHover
-                    idKey="id"
-                    plugins={{ pagination }}
-                >
-                    <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
-                        {(organization) => (
-                            <HStack gap={3} align="center">
-                                <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
-                                <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                                    {organization.name}
-                                </Link>
-                            </HStack>
-                        )}
-                    </TableColumn>
-                    <TableColumn<OrganizationSummary> align="end" field="actions" header="Action" width={pixel(96)}>
-                        {(organization) => (
-                            <MoreMenu
-                                label={`Open actions for ${organization.name}`}
-                                size="sm"
-                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(organization) }]}
-                            />
-                        )}
-                    </TableColumn>
-                </Table>
-            )}
+            <Table
+                data={pageItems}
+                density="compact"
+                emptyState={<EmptyState title="No results." isCompact />}
+                hasHover
+                idKey="id"
+                plugins={{ pagination }}
+            >
+                <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
+                    {(organization) => (
+                        <HStack gap={3} align="center">
+                            <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
+                            <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                                {organization.name}
+                            </Link>
+                        </HStack>
+                    )}
+                </TableColumn>
+                <TableColumn<OrganizationSummary> align="end" field="actions" header="Action" width={pixel(96)}>
+                    {(organization) => (
+                        <MoreMenu
+                            label={`Open actions for ${organization.name}`}
+                            size="sm"
+                            items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(organization) }]}
+                        />
+                    )}
+                </TableColumn>
+            </Table>
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

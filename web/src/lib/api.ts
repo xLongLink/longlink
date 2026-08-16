@@ -21,14 +21,12 @@ export const api = ky.create({
             async ({ response }) => {
                 // Normalize failed responses without consuming the response body.
                 if (!response.ok) {
-                    const payload = (await response
+                    const payload: { detail?: unknown } | null = await response
                         .clone()
                         .json()
-                        .catch(() => null)) as { detail?: unknown } | null;
-                    const message =
-                        typeof payload?.detail === 'string'
-                            ? payload.detail
-                            : `API request failed (${response.status})`;
+                        .catch(() => null);
+                    const detail = payload?.detail;
+                    const message = typeof detail === 'string' ? detail : `API request failed (${response.status})`;
 
                     throw new ApiError(message, response.status);
                 }
