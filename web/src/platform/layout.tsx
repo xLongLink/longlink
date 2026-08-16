@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { normalizePathname } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
-import { useUserProfile } from '@/hooks/use-user';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { ProfileMenu } from '@/components/Profile';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import Platform, { type PlatformTab } from '@/components/layouts/Platform';

@@ -15,7 +15,7 @@ import NotFound from '@/platform/NotFound';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { useOrganization } from '@/hooks/use-organization';
+import { useOrganization } from '@/lib/hooks/use-organization';
 
 /** Renders the organization applications page. */
 function OrganizationContent() {

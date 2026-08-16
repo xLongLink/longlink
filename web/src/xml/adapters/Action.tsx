@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 import { ApiError, requestApi } from '@/lib/api';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';

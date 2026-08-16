@@ -11,12 +11,12 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
-import { useToast } from '@/hooks/use-toast';
-import { useApiQuery } from '@/hooks/use-api';
+import { useToast } from '@/lib/hooks/use-toast';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
-import { useCreateOrganizationApplication } from '@/hooks/use-organization';
+import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const createApplicationFormSchema = z.object({

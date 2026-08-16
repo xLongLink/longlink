@@ -11,7 +11,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import PlatformLayout from '@/platform/layout';
-import { useUserProfile } from '@/hooks/use-user';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';

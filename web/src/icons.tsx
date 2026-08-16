@@ -33,6 +33,7 @@ import {
     Wrench,
     Square,
     UserRound,
+    Users,
     Mic,
 } from 'lucide-react';
 
@@ -75,6 +76,7 @@ export const stoneIconComponents = {
     microphone: Mic,
     hardDrive: HardDrive,
     userRound: UserRound,
+    users: Users,
 } satisfies Record<string, LucideIcon>;
 
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(

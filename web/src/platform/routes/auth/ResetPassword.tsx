@@ -7,10 +7,10 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { platformApiPath } from '@/lib/platform-api';
-import { useFragmentToken } from '@/hooks/use-fragment-token';
+import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';

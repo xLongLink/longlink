@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import { useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserOrganizationMembership, UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { requestApi } from '@/lib/api';
-import { useApiQuery } from '@/hooks/use-api';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 

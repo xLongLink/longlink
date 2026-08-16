@@ -12,7 +12,7 @@ import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
 import XmlLayout from '@/xml/layout';
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { useApiQuery } from '@/hooks/use-api';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { getIconComponent } from '@/lib/icons';
 import {
     createContext as createXmlContext,

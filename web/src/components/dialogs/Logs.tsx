@@ -4,7 +4,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { useApiQuery } from '@/hooks/use-api';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { platformApiPath } from '@/lib/platform-api';
 
 /** Parses the application log response. */

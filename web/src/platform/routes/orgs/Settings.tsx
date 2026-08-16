@@ -11,15 +11,15 @@ import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { AppWindow, Settings2, Users } from 'lucide-react';
+import { AppWindow, Settings2 } from 'lucide-react';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
 import { Auth } from '@/components/Auth';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 import { hasMinimumRole } from '@/lib/roles';
-import { useApiQuery } from '@/hooks/use-api';
+import { useApiQuery } from '@/lib/hooks/use-api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import PlatformLayout from '@/platform/layout';
 import People from '@/components/settings/People';
@@ -27,7 +27,7 @@ import { platformApiPath } from '@/lib/platform-api';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
-import { useOrganization, useUpdateOrganization } from '@/hooks/use-organization';
+import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -160,7 +160,7 @@ function OrganizationSettings() {
                         Configure the organization and its runtime defaults.
                     </Text>
                 </Stack>
-                <Menu className="h-auto w-full">
+                <Menu>
                     <MenuSection title="Settings" isHeaderHidden>
                         <MenuItem icon="building2" label="Organization">
                             <VStack gap={4}>
@@ -189,7 +189,7 @@ function OrganizationSettings() {
                                 </HStack>
                             </VStack>
                         </MenuItem>
-                        <MenuSubSection icon={<Users aria-hidden="true" size={16} />} label="People">
+                        <MenuSubSection icon="users" label="People">
                             <MenuItem label="Members">
                                 <People
                                     organizationId={organizationId}

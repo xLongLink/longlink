@@ -10,7 +10,7 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { requestApi } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 import { userOrganizationsQueryKey } from '@/lib/query-keys';
 

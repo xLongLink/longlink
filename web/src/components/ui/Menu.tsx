@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router';
-import { Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
+import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
@@ -7,14 +7,21 @@ import {
 } from '@astryxdesign/core/SideNav';
 import { Icon } from '@/components/ui/Icon';
 
-type MenuProps = ComponentProps<typeof AstryxSideNav>;
-type MenuSectionProps = ComponentProps<typeof AstryxSideNavSection>;
-type MenuItemProps = Omit<ComponentProps<typeof AstryxSideNavItem>, 'href' | 'icon' | 'isSelected'> & {
+type MenuProps = { children?: ReactNode };
+type MenuSectionProps = {
+    children?: ReactNode;
+    isHeaderHidden?: boolean;
+    title: string;
+};
+type MenuItemProps = {
     children?: ReactNode;
     icon?: string;
+    label: string;
 };
-type MenuSubSectionProps = Omit<ComponentProps<typeof AstryxSideNavItem>, 'children' | 'href' | 'isSelected'> & {
+type MenuSubSectionProps = {
     children?: ReactNode;
+    icon?: string;
+    label: string;
 };
 type MenuEntry =
     | { item: ReactElement<MenuItemProps>; kind: 'item' }
@@ -40,7 +47,7 @@ function isMenuSubSection(node: ReactNode): node is ReactElement<MenuSubSectionP
 }
 
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children, ...props }: MenuProps) {
+export function Menu({ children }: MenuProps) {
     const { hash } = useLocation();
     const sections = Children.toArray(children)
         .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)
@@ -69,7 +76,7 @@ export function Menu({ children, ...props }: MenuProps) {
 
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-            <AstryxSideNav {...props} className="h-auto w-full">
+            <AstryxSideNav className="h-auto w-full">
                 {sections.map(({ entries, section }) => (
                     <AstryxSideNavSection {...section.props} key={section.props.title}>
                         {entries.map((entry) => {

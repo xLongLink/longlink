@@ -21,8 +21,8 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useSignOut, useUserProfile } from '@/hooks/use-user';
+import { useToast } from '@/lib/hooks/use-toast';
+import { useSignOut, useUserProfile } from '@/lib/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu() {

@@ -14,10 +14,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
-import { useUserProfile } from '@/hooks/use-user';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { fetchApiJson, requestApi } from '@/lib/api';
 import { platformApiPath } from '@/lib/platform-api';
 import { PageContainer } from '@/components/PageContainer';
@@ -113,7 +113,7 @@ export default function Settings() {
                         <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
                     </VStack>
 
-                    <Menu className="h-auto w-full">
+                    <Menu>
                         <MenuSection title="Settings" isHeaderHidden>
                             <MenuItem icon="userRound" label="Account">
                                 <VStack gap={4}>

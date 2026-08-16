@@ -24,8 +24,8 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { useOrganizationMembers } from '@/hooks/use-organization';
+import { useToast } from '@/lib/hooks/use-toast';
+import { useOrganizationMembers } from '@/lib/hooks/use-organization';
 
 const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     read: 'read',
