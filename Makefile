@@ -45,7 +45,7 @@ sdk\:format: sdk\:install
 web\:format: web\:install
 	cd web && vp run format
 	cd web && vp fmt --write $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
-	cd web && vp check
+	cd web && vp check --fix
 
 
 # Run API and SDK ty checks.

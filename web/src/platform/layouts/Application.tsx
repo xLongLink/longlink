@@ -1,16 +1,16 @@
+import type { ReactNode } from 'react';
 import startCase from 'lodash/startCase';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import type { ReactNode } from 'react';
 import { generatePath, useLocation, useParams } from 'react-router';
-import { Wordmark } from '@/components/Wordmark';
-import { PageContainer } from '@/components/PageContainer';
-import Platform from '@/components/layouts/Platform';
-import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
-import { getIconComponent } from '@/lib/icons';
 import { findActiveTab } from '@/lib/paths';
+import { getIconComponent } from '@/lib/icons';
+import { Wordmark } from '@/components/Wordmark';
+import Platform from '@/components/layouts/Platform';
+import { PageContainer } from '@/components/PageContainer';
+import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
 
 /** Builds an application-shell href for one runtime page route. */
 export function applicationHref(route: string, organization?: string, application?: string): string {

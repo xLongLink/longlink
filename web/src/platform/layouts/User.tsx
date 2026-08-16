@@ -1,13 +1,13 @@
-import { Building2, Settings2 } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Outlet, useLocation } from 'react-router';
-import { AccountAction } from '@/components/AccountAction';
+import { Building2, Settings2 } from 'lucide-react';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Wordmark } from '@/components/Wordmark';
 import Platform from '@/components/layouts/Platform';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AccountAction } from '@/components/AccountAction';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {

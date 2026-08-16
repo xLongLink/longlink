@@ -9,8 +9,8 @@ import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
-import { useToast } from '@/lib/hooks/use-toast';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useToast } from '@/lib/hooks/use-toast';
 import { useSignOut } from '@/lib/hooks/use-user';
 import { administratorTabs } from '@/platform/tabs';
 

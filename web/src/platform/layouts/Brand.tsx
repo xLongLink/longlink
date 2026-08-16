@@ -1,6 +1,6 @@
+import { Outlet } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { Outlet } from 'react-router';
 import { Wordmark } from '@/components/Wordmark';
 import Platform from '@/components/layouts/Platform';
 

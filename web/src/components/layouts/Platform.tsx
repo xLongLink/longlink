@@ -1,7 +1,7 @@
+import type { ReactNode } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
-import type { ReactNode } from 'react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 type PlatformProps = {

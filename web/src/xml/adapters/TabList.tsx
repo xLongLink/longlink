@@ -33,7 +33,11 @@ export function TabList({ props, nodes }: Props) {
 
     return (
         <Stack gap={4}>
-            <AstryxTabList aria-label={typeof label === 'string' ? label : 'Tabs'} onChange={binding.setValue} value={binding.value}>
+            <AstryxTabList
+                aria-label={typeof label === 'string' ? label : 'Tabs'}
+                onChange={binding.setValue}
+                value={binding.value}
+            >
                 {tabs.map((tab) => (
                     <AstryxTab href={tab.href} key={tab.value} label={tab.label} value={tab.value} />
                 ))}

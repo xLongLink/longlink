@@ -6,12 +6,12 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
 import { resolveRequestUrl } from '@/xml/core/url';
+import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
+import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/runtime/pages';
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
 
 type ViewProps = {

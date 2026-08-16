@@ -5,8 +5,8 @@ import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
-import { useCurrentUser } from '@/lib/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
 export function Auth({

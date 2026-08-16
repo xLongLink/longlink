@@ -1,12 +1,12 @@
-import { AppWindow, Settings2 } from 'lucide-react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { AppWindow, Settings2 } from 'lucide-react';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Outlet, useLocation, useParams } from 'react-router';
-import { AccountAction } from '@/components/AccountAction';
 import Platform from '@/components/layouts/Platform';
-import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AccountAction } from '@/components/AccountAction';
+import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {

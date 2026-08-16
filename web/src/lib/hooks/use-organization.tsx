@@ -7,8 +7,8 @@ import type {
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { useUserProfile } from '@/lib/hooks/use-user';
 import { platformApiPath } from '@/lib/platform-api';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { ApiError, apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';

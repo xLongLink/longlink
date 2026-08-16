@@ -1,15 +1,15 @@
-import { Outlet, useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { Outlet, useLocation } from 'react-router';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Auth } from '@/components/Auth';
-import { AccountAction } from '@/components/AccountAction';
-import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { PageContainer } from '@/components/PageContainer';
-import Platform from '@/components/layouts/Platform';
-import { useCurrentUser } from '@/lib/hooks/use-user';
 import { findActiveTab } from '@/lib/paths';
 import { administratorTabs } from '@/platform/tabs';
+import Platform from '@/components/layouts/Platform';
+import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AccountAction } from '@/components/AccountAction';
+import { PageContainer } from '@/components/PageContainer';
+import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {

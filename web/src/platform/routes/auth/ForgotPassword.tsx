@@ -9,8 +9,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { requestApiJson } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
+import { useToast } from '@/lib/hooks/use-toast';
 import { platformApiPath } from '@/lib/platform-api';
 
 const forgotPasswordSchema = z.object({

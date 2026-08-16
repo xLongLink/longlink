@@ -1,3 +1,4 @@
+import { Wrench } from 'lucide-react';
 import { useParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -6,9 +7,8 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Wrench } from 'lucide-react';
 import { proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
