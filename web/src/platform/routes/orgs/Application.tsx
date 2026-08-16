@@ -9,7 +9,6 @@ import NotFound from '@/platform/NotFound';
 import { platformApiPath } from '@/lib/platform-api';
 import PlatformApplicationView from '@/platform/View';
 import { useOrganization } from '@/lib/hooks/use-organization';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 /** Renders one proxy-backed organization application. */
 function OrganizationApplicationContent() {
@@ -42,7 +41,6 @@ function OrganizationApplicationContent() {
 
     return (
         <PlatformApplicationView
-            banner={<DevelopmentNotice />}
             basePath={`${organizationHref}/apps/${application}`}
             errorAction={<Button href={organizationHref} label="Back to organization" variant="primary" />}
             pages={platformApiPath(`/applications/${applicationAccess.id}/proxy/pages.json`)}

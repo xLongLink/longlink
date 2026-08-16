@@ -8,7 +8,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { Globe } from '@/components/Globe';
-import humanRobotHands from '@/svg/HumanRobotHands.svg';
+import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
 
 const paths = [
     {

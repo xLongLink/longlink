@@ -5,9 +5,9 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { GitHub } from '@/svg/GitHub';
-import { LinkedIn } from '@/svg/LinkedIn';
+import { GitHub } from '@/components/svg/GitHub';
 import { Wordmark } from '@/components/Wordmark';
+import { LinkedIn } from '@/components/svg/LinkedIn';
 
 /** Renders the public landing page footer. */
 export function Footer() {

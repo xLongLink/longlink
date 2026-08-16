@@ -13,7 +13,6 @@ import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/application/
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
 
 type ViewProps = {
-    banner?: ReactNode;
     basePath: string;
     errorAction?: ReactNode;
     pages: string;
@@ -47,7 +46,7 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
 }
 
 /** Renders XML pages registered by an application manifest. */
-export default function ApplicationView({ banner, basePath, errorAction, pages }: ViewProps) {
+export default function ApplicationView({ basePath, errorAction, pages }: ViewProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
@@ -205,7 +204,7 @@ export default function ApplicationView({ banner, basePath, errorAction, pages }
     }
 
     return (
-        <ApplicationLayout banner={banner} basePath={basePath} pages={registeredPages ?? []}>
+        <ApplicationLayout basePath={basePath} pages={registeredPages ?? []}>
             {content}
         </ApplicationLayout>
     );

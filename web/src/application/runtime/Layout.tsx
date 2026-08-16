@@ -11,10 +11,10 @@ import { findActiveTab } from '@/lib/paths';
 import { getIconComponent } from '@/lib/icons';
 import { Wordmark } from '@/components/Wordmark';
 import { PageContainer } from '@/components/PageContainer';
+import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
 
 type ApplicationLayoutProps = {
-    banner?: ReactNode;
     basePath: string;
     children: ReactNode;
     pages: readonly RuntimePage[];
@@ -28,7 +28,7 @@ export function applicationHref(route: string, basePath: string): string {
 }
 
 /** Renders application content with navigation derived from the runtime page manifest. */
-export function ApplicationLayout({ banner, basePath, children, pages }: ApplicationLayoutProps) {
+export function ApplicationLayout({ basePath, children, pages }: ApplicationLayoutProps) {
     const { pathname } = useLocation();
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
@@ -50,7 +50,7 @@ export function ApplicationLayout({ banner, basePath, children, pages }: Applica
 
     return (
         <AppShell
-            banner={banner}
+            banner={<DevelopmentNotice />}
             className="platform-top-layout"
             contentPadding={0}
             height="auto"
