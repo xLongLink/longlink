@@ -7,7 +7,6 @@ import type {
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { platformApiPath } from '@/lib/platform-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { ApiError, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -25,7 +24,7 @@ export function useOrganization(organizationSlug: string) {
     const organizationId = membership?.organization.id ?? '';
 
     const organizationQuery = useApiQuery<OrganizationDetails>(
-        organizationId.length > 0 ? platformApiPath(`/organizations/${organizationId}`) : null,
+        organizationId.length > 0 ? `/api/v1/organizations/${organizationId}` : null,
         {
             parse: (value) => zOrganizationDetails.parse(value),
             refetchInterval: 5000,
@@ -62,7 +61,7 @@ export function useOrganizationMembers(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApiJson(platformApiPath(`/organizations/${organizationId}/invitations`), payload, {
+            await requestApiJson(`/api/v1/organizations/${organizationId}/invitations`, payload, {
                 method: 'POST',
             });
         },
@@ -77,7 +76,7 @@ export function useOrganizationMembers(organizationId: string) {
             }
 
             await requestApiJson(
-                platformApiPath(`/organizations/${organizationId}/members/${memberId}`),
+                `/api/v1/organizations/${organizationId}/members/${memberId}`,
                 { role },
                 {
                     method: 'PATCH',
@@ -105,7 +104,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApiJson(platformApiPath(`/organizations/${organizationId}/applications`), payload, {
+            await requestApiJson(`/api/v1/organizations/${organizationId}/applications`, payload, {
                 method: 'POST',
             });
         },
@@ -128,7 +127,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApi(platformApiPath(`/applications/${applicationId}`), { method: 'DELETE' });
+            await requestApi(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
         },
         onSuccess: () =>
             Promise.all([
@@ -141,7 +140,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
 /** Updates mutable organization settings and refreshes organization caches. */
 export function useUpdateOrganization(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = platformApiPath(`/organizations/${organizationId}`);
+    const organizationPath = `/api/v1/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ avatar }: OrganizationUpdate) => {

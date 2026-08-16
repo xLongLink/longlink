@@ -15,7 +15,6 @@ import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { fetchApiJson, requestApi } from '@/lib/api';
-import { platformApiPath } from '@/lib/platform-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -32,7 +31,7 @@ export default function Settings() {
     const { mutateAsync: updateUser } = useMutation({
         mutationFn: async (payload: UserUpdate) =>
             zUserSummary.parse(
-                await fetchApiJson(platformApiPath('/me'), {
+                await fetchApiJson('/api/v1/me', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
@@ -44,7 +43,7 @@ export default function Settings() {
     });
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) =>
-            requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' }),
+            requestApi(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: organizationsQueryKey }),

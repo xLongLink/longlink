@@ -19,7 +19,6 @@ import { hasMinimumRole } from '@/lib/roles';
 import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { platformApiPath } from '@/lib/platform-api';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -79,7 +78,7 @@ function OrganizationSettings() {
         error: databaseError,
         isLoading: isDatabaseLoading,
     } = useApiQuery<number | null>(
-        section === 'database' && organizationId ? platformApiPath(`/organizations/${organizationId}/database`) : null,
+        section === 'database' && organizationId ? `/api/v1/organizations/${organizationId}/database` : null,
         {
             parse: (value) => z.int().gte(0).nullable().parse(value),
             retry: false,
@@ -91,7 +90,7 @@ function OrganizationSettings() {
         error: storageError,
         isLoading: isStorageLoading,
     } = useApiQuery<OrganizationStorageUsageResponse | null>(
-        section === 'storage' && organizationId ? platformApiPath(`/organizations/${organizationId}/storage`) : null,
+        section === 'storage' && organizationId ? `/api/v1/organizations/${organizationId}/storage` : null,
         {
             parse: (value) => zOrganizationStorageUsageResponse.nullable().parse(value),
             retry: false,

@@ -9,7 +9,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 
@@ -33,14 +32,10 @@ export default function ResetPassword() {
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                return requestApi(platformApiPath('/auth/reset-password/setup'));
+                return requestApi('/api/v1/auth/reset-password/setup');
             }
 
-            return requestApiJson(
-                platformApiPath('/auth/reset-password/verify'),
-                { token: resetToken },
-                { method: 'POST' }
-            );
+            return requestApiJson('/api/v1/auth/reset-password/verify', { token: resetToken }, { method: 'POST' });
         },
         onSuccess: () => {
             sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
@@ -54,7 +49,7 @@ export default function ResetPassword() {
     });
     const resetPassword = useMutation({
         mutationFn: (payload: ResetPasswordValues) =>
-            requestApiJson(platformApiPath('/auth/reset-password'), payload, { method: 'POST' }),
+            requestApiJson('/api/v1/auth/reset-password', payload, { method: 'POST' }),
     });
     const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);

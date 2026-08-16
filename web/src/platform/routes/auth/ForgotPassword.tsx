@@ -11,7 +11,6 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { requestApiJson } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 
 const forgotPasswordSchema = z.object({
     email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
@@ -28,7 +27,7 @@ export default function ForgotPassword() {
     });
     const requestReset = useMutation({
         mutationFn: (payload: ForgotPasswordValues) =>
-            requestApiJson(platformApiPath('/auth/forgot-password'), payload, { method: 'POST' }),
+            requestApiJson('/api/v1/auth/forgot-password', payload, { method: 'POST' }),
         onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : 'Please try again in a moment.',

@@ -5,7 +5,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { platformApiPath } from '@/lib/platform-api';
 
 /** Parses the application log response. */
 function parseLogLines(value: unknown): string[] {
@@ -31,7 +30,7 @@ export default function Logs({
         data: logLines = [],
         error,
         isFetching,
-    } = useApiQuery<string[]>(platformApiPath(`/applications/${applicationId}/logs`), {
+    } = useApiQuery<string[]>(`/api/v1/applications/${applicationId}/logs`, {
         parse: parseLogLines,
     });
 

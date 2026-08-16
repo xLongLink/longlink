@@ -16,7 +16,6 @@ import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -28,7 +27,7 @@ export default function AdminOrganizations() {
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
         mutationFn: async (organizationId: string) => {
-            await requestApi(platformApiPath(`/organizations/${organizationId}`), { method: 'DELETE' });
+            await requestApi(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await Promise.all([
@@ -42,7 +41,7 @@ export default function AdminOrganizations() {
         data: organizations = [],
         error,
         isLoading,
-    } = useApiQuery<OrganizationSummary[]>(platformApiPath('/organizations'), {
+    } = useApiQuery<OrganizationSummary[]>('/api/v1/organizations', {
         parse: (value) => zOrganizationSummary.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(organizations);

@@ -11,7 +11,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { requestApi } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 import { organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 
 const createOrganizationSchema = z.object({
@@ -30,7 +29,7 @@ export default function CreateOrganization() {
     const queryClient = useQueryClient();
     const createOrganization = useMutation({
         mutationFn: ({ name }: CreateOrganizationValues) =>
-            requestApi(platformApiPath('/organizations'), {
+            requestApi('/api/v1/organizations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),

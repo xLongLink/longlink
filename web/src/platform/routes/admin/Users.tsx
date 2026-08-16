@@ -12,7 +12,6 @@ import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -23,7 +22,7 @@ export default function AdminUsers() {
         data: users = [],
         error,
         isLoading,
-    } = useApiQuery<UserSummary[]>(platformApiPath('/users'), {
+    } = useApiQuery<UserSummary[]>('/api/v1/users', {
         parse: (value) => zUserSummary.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(users);

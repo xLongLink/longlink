@@ -13,7 +13,6 @@ import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -27,7 +26,7 @@ export default function AdminDatabase() {
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
         mutationFn: async (databaseId: string) => {
-            await requestApi(platformApiPath(`/databases/${databaseId}`), { method: 'DELETE' });
+            await requestApi(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey });
@@ -38,7 +37,7 @@ export default function AdminDatabase() {
         data: databases = [],
         error,
         isLoading,
-    } = useApiQuery<DatabaseRegistryResponse[]>(platformApiPath('/databases'), {
+    } = useApiQuery<DatabaseRegistryResponse[]>('/api/v1/databases', {
         parse: (value) => zDatabaseRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(databases);

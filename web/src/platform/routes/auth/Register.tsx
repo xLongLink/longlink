@@ -11,7 +11,6 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { requestApiJson } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
 const registerSchema = z.object({
@@ -32,8 +31,7 @@ export default function Register() {
     const email = useWatch({ control: form.control, name: 'email' }).trim();
     const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
     const registration = useMutation({
-        mutationFn: (payload: RegisterValues) =>
-            requestApiJson(platformApiPath('/auth/register'), payload, { method: 'POST' }),
+        mutationFn: (payload: RegisterValues) => requestApiJson('/api/v1/auth/register', payload, { method: 'POST' }),
         onSuccess: () => {
             showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },

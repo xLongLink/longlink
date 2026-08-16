@@ -6,7 +6,6 @@ import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFound from '@/platform/NotFound';
-import { platformApiPath } from '@/lib/platform-api';
 import PlatformApplicationView from '@/platform/View';
 import { useOrganization } from '@/lib/hooks/use-organization';
 
@@ -43,7 +42,7 @@ function OrganizationApplicationContent() {
         <PlatformApplicationView
             basePath={`${organizationHref}/apps/${application}`}
             errorAction={<Button href={organizationHref} label="Back to organization" variant="primary" />}
-            pages={platformApiPath(`/applications/${applicationAccess.id}/proxy/pages.json`)}
+            pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
         />
     );
 }

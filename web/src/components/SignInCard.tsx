@@ -12,7 +12,6 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { requestApiJson } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 
@@ -36,7 +35,7 @@ export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const registerHref = email ? `/auth/register?${new URLSearchParams({ email })}` : '/auth/register';
     const login = useMutation({
         mutationFn: (payload: LoginValues) =>
-            requestApiJson(platformApiPath('/auth/password/login'), payload, { method: 'POST' }),
+            requestApiJson('/api/v1/auth/password/login', payload, { method: 'POST' }),
     });
 
     /** Signs in with an email and password, then refreshes the current profile. */

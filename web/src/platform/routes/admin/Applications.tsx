@@ -14,7 +14,6 @@ import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v
 import { dateTimeFormatter } from '@/lib/utils';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -35,7 +34,7 @@ export default function AdminApplications() {
         data: applications = [],
         error,
         isLoading,
-    } = useApiQuery<ApplicationResponse[]>(platformApiPath('/applications'), {
+    } = useApiQuery<ApplicationResponse[]>('/api/v1/applications', {
         refetchInterval: 5000,
         parse: (value) => zApplicationResponse.array().parse(value),
     });

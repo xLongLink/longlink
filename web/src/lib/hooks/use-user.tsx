@@ -3,7 +3,6 @@ import { useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserOrganizationMembership, UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { requestApi } from '@/lib/api';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { platformApiPath } from '@/lib/platform-api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
@@ -11,7 +10,7 @@ const AuthenticatedUserContext = createContext<UserSummary | undefined>(undefine
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useApiQuery<UserSummary>(platformApiPath('/me'), {
+    const user = useApiQuery<UserSummary>('/api/v1/me', {
         // Auth state must refresh immediately after login/logout redirects.
         parse: (value) => zUserSummary.parse(value),
         staleTime: 0,
@@ -57,7 +56,7 @@ export function useAuthenticatedUser() {
 /** Reads the current user profile and organization memberships. */
 export function useUserProfile() {
     const user = useAuthenticatedUser();
-    const organizations = useApiQuery<UserOrganizationMembership[]>(platformApiPath('/me/organizations'), {
+    const organizations = useApiQuery<UserOrganizationMembership[]>('/api/v1/me/organizations', {
         parse: (value) => zUserOrganizationMembership.array().parse(value),
     });
 
@@ -74,7 +73,7 @@ export function useSignOut() {
     const queryClient = useQueryClient();
 
     return async () => {
-        await requestApi(platformApiPath('/auth/logout'), { method: 'POST' });
+        await requestApi('/api/v1/auth/logout', { method: 'POST' });
         queryClient.clear();
         window.location.assign('/organizations');
     };

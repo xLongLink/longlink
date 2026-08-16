@@ -15,7 +15,6 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { storagesQueryKey } from '@/lib/query-keys';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
@@ -27,7 +26,7 @@ export default function AdminStorage() {
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
         mutationFn: async (storageId: string) => {
-            await requestApi(platformApiPath(`/storages/${storageId}`), { method: 'DELETE' });
+            await requestApi(`/api/v1/storages/${storageId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey });
@@ -38,7 +37,7 @@ export default function AdminStorage() {
         data: storages = [],
         error,
         isLoading,
-    } = useApiQuery<StorageRegistryResponse[]>(platformApiPath('/storages'), {
+    } = useApiQuery<StorageRegistryResponse[]>('/api/v1/storages', {
         parse: (value) => zStorageRegistryResponse.array().parse(value),
     });
     const { pageItems, pagination } = usePaginate(storages);

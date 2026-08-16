@@ -15,7 +15,6 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { computesQueryKey } from '@/lib/query-keys';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
@@ -27,7 +26,7 @@ export default function AdminCompute() {
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
         mutationFn: async (computeId: string) => {
-            await requestApi(platformApiPath(`/computes/${computeId}`), { method: 'DELETE' });
+            await requestApi(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey });
@@ -38,7 +37,7 @@ export default function AdminCompute() {
         data: computes = [],
         error,
         isLoading,
-    } = useApiQuery<ComputeRegistryResponse[]>(platformApiPath('/computes'), {
+    } = useApiQuery<ComputeRegistryResponse[]>('/api/v1/computes', {
         refetchInterval: 5000,
         parse: (value) => zComputeRegistryResponse.array().parse(value),
     });

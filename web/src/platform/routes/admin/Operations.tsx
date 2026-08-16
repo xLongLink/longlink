@@ -8,7 +8,6 @@ import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.ge
 import { dateTimeFormatter } from '@/lib/utils';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { usePaginate } from '@/lib/hooks/pagination';
-import { platformApiPath } from '@/lib/platform-api';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -31,7 +30,7 @@ export default function AdminOperations() {
         data: operations = [],
         error,
         isLoading,
-    } = useApiQuery<OperationResponse[]>(platformApiPath('/operations'), {
+    } = useApiQuery<OperationResponse[]>('/api/v1/operations', {
         refetchInterval: 5000,
         parse: (value) => zOperationResponse.array().parse(value),
     });

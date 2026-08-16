@@ -12,7 +12,6 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { storagesQueryKey } from '@/lib/query-keys';
-import { platformApiPath } from '@/lib/platform-api';
 import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const schema = z.object({
@@ -43,7 +42,7 @@ export default function CreateStorage() {
     const mutation = useMutation({
         mutationFn: async (payload: Values) =>
             zStorageRegistryResponse.parse(
-                await fetchApiJson(platformApiPath('/storages'), {
+                await fetchApiJson('/api/v1/storages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

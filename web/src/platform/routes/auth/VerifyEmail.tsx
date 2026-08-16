@@ -14,7 +14,6 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
@@ -46,11 +45,11 @@ export default function VerifyEmail() {
     const verification = useMutation({
         mutationFn: async (registrationToken: string) => {
             if (!registrationToken) {
-                return zEmailPayload.parse(await fetchApiJson(platformApiPath('/auth/register/setup')));
+                return zEmailPayload.parse(await fetchApiJson('/api/v1/auth/register/setup'));
             }
 
             const response = await requestApiJson(
-                platformApiPath('/auth/verify'),
+                '/api/v1/auth/verify',
                 { token: registrationToken },
                 { method: 'POST' }
             );
@@ -70,7 +69,7 @@ export default function VerifyEmail() {
     const completion = useMutation({
         mutationFn: async (payload: RegistrationCompleteValues) => {
             const response = await requestApiJson(
-                platformApiPath('/auth/register/complete'),
+                '/api/v1/auth/register/complete',
                 { ...payload, email: verification.data?.email },
                 { method: 'POST' }
             );
