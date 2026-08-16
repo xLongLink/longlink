@@ -5,7 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
-import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
 
 /** Renders the local SDK runtime request flow diagram. */
@@ -86,12 +85,7 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-project" level={2}>
                     Create a Project
                 </Heading>
-                <CodeTabs
-                    items={[
-                        { code: 'pip install longlink\nlonglink init', label: 'pip', value: 'pip' },
-                        { code: 'uv add longlink\nuv run longlink init', label: 'uv', value: 'uv' },
-                    ]}
-                />
+                <CodeBlock code={'uv add longlink\nuv run longlink init'} language="bash" />
                 <Text as="p">It creates an Application scaffold with everything you need to get started.</Text>
                 <CodeBlock
                     code={
@@ -109,12 +103,7 @@ export default function DocsArticleRoute() {
                 <Heading id="local-development" level={2}>
                     Local Development
                 </Heading>
-                <CodeTabs
-                    items={[
-                        { code: 'pip install .[dev]\nlonglink dev', label: 'pip', value: 'pip' },
-                        { code: 'uv sync --extra dev\nuv run longlink dev', label: 'uv', value: 'uv' },
-                    ]}
-                />
+                <CodeBlock code={'uv sync --extra dev\nuv run longlink dev'} language="bash" />
                 <Text as="p">
                     Navigate to{' '}
                     <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
