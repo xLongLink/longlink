@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
@@ -16,8 +17,6 @@ type RuntimeApplicationViewProps = {
     basePath?: string;
     pages?: string;
 };
-
-type ErrorStateProps = { message: string; title: string };
 
 type PageState = { status: 'loading' } | { ast: [ASTNode]; status: 'ready' } | { message: string; status: 'error' };
 
@@ -144,48 +143,64 @@ export function RuntimeApplicationView({ basePath = '/', pages = '/pages.json' }
         };
     }, [activePage, activePageStateKey, activeRouteParams, basePath, resolvedPagesBaseUrl]);
 
-    return (
-        <ApplicationLayout basePath={basePath} pages={registeredPages ?? []}>
-            {!error && registeredPages && routePath && !activeRouteMatch ? (
-                <NotFoundLayout />
-            ) : error ? (
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <ErrorState
-                        message={error.message || 'The application definition could not be loaded.'}
+    let content: ReactNode;
+
+    if (!error && registeredPages && routePath && !activeRouteMatch) {
+        content = <NotFoundLayout />;
+    } else if (error) {
+        content = (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                <Card maxWidth={576} padding={6} width="100%">
+                    <EmptyState
+                        description={error.message || 'The application definition could not be loaded.'}
+                        headingLevel={1}
+                        role="alert"
                         title="Unable to load this application"
                     />
-                </Center>
-            ) : visiblePageState?.status === 'ready' ? (
-                <RenderXML
-                    ast={visiblePageState.ast}
-                    baseUrl={resolvedPagesBaseUrl}
-                    ctx={visiblePageState.runtimeContext}
-                />
-            ) : (
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    {!activePage ? (
-                        <ErrorState
-                            message="The application did not expose any pages to render."
+                </Card>
+            </Center>
+        );
+    } else if (visiblePageState?.status === 'ready') {
+        content = (
+            <RenderXML
+                ast={visiblePageState.ast}
+                baseUrl={resolvedPagesBaseUrl}
+                ctx={visiblePageState.runtimeContext}
+            />
+        );
+    } else {
+        content = (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                {!activePage ? (
+                    <Card maxWidth={576} padding={6} width="100%">
+                        <EmptyState
+                            description="The application did not expose any pages to render."
+                            headingLevel={1}
+                            role="alert"
                             title="Unexpected application response"
                         />
-                    ) : visiblePageState?.status === 'error' ? (
-                        <ErrorState message={visiblePageState.message} title="Unable to load this page" />
-                    ) : (
-                        <Spinner label="Loading" />
-                    )}
-                </Center>
-            )}
+                    </Card>
+                ) : visiblePageState?.status === 'error' ? (
+                    <Card maxWidth={576} padding={6} width="100%">
+                        <EmptyState
+                            description={visiblePageState.message}
+                            headingLevel={1}
+                            role="alert"
+                            title="Unable to load this page"
+                        />
+                    </Card>
+                ) : (
+                    <Spinner label="Loading" />
+                )}
+            </Center>
+        );
+    }
+
+    return (
+        <ApplicationLayout basePath={basePath} pages={registeredPages ?? []}>
+            {content}
         </ApplicationLayout>
     );
 }
 
 export default RuntimeApplicationView;
-
-/** Renders a centered in-shell application state message. */
-function ErrorState({ message, title }: ErrorStateProps) {
-    return (
-        <Card maxWidth={576} padding={6} width="100%">
-            <EmptyState description={message} headingLevel={1} role="alert" title={title} />
-        </Card>
-    );
-}

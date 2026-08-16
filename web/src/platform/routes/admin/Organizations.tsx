@@ -1,4 +1,3 @@
-import { Copy } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -24,9 +23,7 @@ export default function AdminOrganizations() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteOrganization = useMutation({
-        mutationFn: async (organizationId: string) => {
-            await api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' });
-        },
+        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
@@ -87,21 +84,7 @@ export default function AdminOrganizations() {
                             <MoreMenu
                                 label={`Open actions for ${organization.name}`}
                                 size="sm"
-                                items={[
-                                    {
-                                        label: 'Copy organization name',
-                                        icon: <Copy size={16} />,
-                                        onClick: async () => {
-                                            try {
-                                                await navigator.clipboard.writeText(organization.name);
-                                                toast({ body: 'Organization name: Copied' });
-                                            } catch {
-                                                toast({ body: 'Failed to copy to clipboard', type: 'error' });
-                                            }
-                                        },
-                                    },
-                                    { label: 'Delete', onClick: () => deleteDialog.openFor(organization) },
-                                ]}
+                                items={[{ label: 'Delete', onClick: () => deleteDialog.openFor(organization) }]}
                             />
                         )}
                     </TableColumn>

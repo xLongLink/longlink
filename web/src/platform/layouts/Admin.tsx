@@ -14,7 +14,7 @@ import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
     return (
-        <Auth requiresAdministrator>
+        <Auth administrator>
             <AdminContent />
         </Auth>
     );

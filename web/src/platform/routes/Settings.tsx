@@ -51,7 +51,6 @@ export default function Settings() {
     const [accountError, setAccountError] = useState<string | null>(null);
     const name = editedName ?? user.name;
     const accountName = name.trim();
-    const isLoading = isOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
@@ -108,7 +107,7 @@ export default function Settings() {
                                     value={name}
                                     width="100%"
                                     isRequired
-                                    isDisabled={isLoading}
+                                    isDisabled={isOrganizationsLoading}
                                     status={accountError ? { type: 'error', message: accountError } : undefined}
                                     onChange={(value) => {
                                         setEditedName(value);
@@ -128,7 +127,7 @@ export default function Settings() {
                                 <Heading level={2}>Organizations</Heading>
                                 <CreateOrganization />
                             </HStack>
-                            {isLoading && memberships.length === 0 ? null : (
+                            {isOrganizationsLoading && memberships.length === 0 ? null : (
                                 <Table
                                     data={memberships}
                                     density="compact"

@@ -13,7 +13,6 @@ export default function OrganizationApplication() {
     const { organization = '', application = '' } = useParams();
     const { applications, isLoading, error } = useOrganization(organization);
     const applicationAccess = applications.find((item) => item.slug === application);
-    const organizationHref = `/orgs/${organization}`;
 
     if (isLoading) {
         return <Spinner label="Loading" />;
@@ -30,7 +29,7 @@ export default function OrganizationApplication() {
                     <EmptyState
                         actions={
                             applicationAccess.status === 'deleting' ? (
-                                <Button href={organizationHref} label="Back to organization" variant="primary" />
+                                <Button href={`/orgs/${organization}`} label="Back to organization" variant="primary" />
                             ) : undefined
                         }
                         description={
@@ -53,7 +52,7 @@ export default function OrganizationApplication() {
 
     return (
         <RuntimeApplicationView
-            basePath={`${organizationHref}/apps/${application}`}
+            basePath={`/orgs/${organization}/apps/${application}`}
             pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
         />
     );

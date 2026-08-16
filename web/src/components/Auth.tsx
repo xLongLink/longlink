@@ -9,13 +9,7 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
-export function Auth({
-    children,
-    requiresAdministrator = false,
-}: {
-    children: ReactElement;
-    requiresAdministrator?: boolean;
-}) {
+export function Auth({ children, administrator = false }: { children: ReactElement; administrator?: boolean }) {
     const { user, isLoading, error, refetch } = useCurrentUser();
 
     // Wait for profile loading before deciding access.
@@ -41,7 +35,7 @@ export function Auth({
     }
 
     // Hide administrator routes from regular Platform users.
-    if (requiresAdministrator && !user.administrator) {
+    if (administrator && !user.administrator) {
         return <NotFoundLayout />;
     }
 
