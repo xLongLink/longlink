@@ -12,7 +12,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiJson } from '@/lib/api';
+import { api } from '@/lib/api';
 import { dateTimeFormatter } from '@/lib/utils';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -38,7 +38,7 @@ export default function AdminApplications() {
     } = useQuery({
         queryKey: ['api', '/api/v1/applications'],
         queryFn: async ({ signal }) =>
-            zApplicationResponse.array().parse(await fetchApiJson('/api/v1/applications', { signal })),
+            zApplicationResponse.array().parse(await api('/api/v1/applications', { signal }).json()),
         refetchInterval: 5000,
     });
     const { pageItems, pagination } = usePaginate(applications);

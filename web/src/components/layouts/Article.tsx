@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -6,11 +7,17 @@ import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import type { ArticlePage } from '@/lib/articles';
 import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
 import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
+
+type ArticlePage = {
+    path: string;
+    lastUpdated: string;
+    toc?: Array<{ id: string; label: string; level: number }>;
+    editUrl?: string;
+};
 
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
@@ -73,4 +80,3 @@ export function Article({ children, page }: { children: ReactNode; page: Article
         />
     );
 }
-import type { ReactNode } from 'react';

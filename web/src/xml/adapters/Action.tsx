@@ -1,5 +1,6 @@
+import type { Options } from 'ky';
 import { createContext, useContext } from 'react';
-import { ApiError, requestApi } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';
@@ -84,7 +85,7 @@ export async function executeAction(
         return;
     }
 
-    const init: RequestInit = { method: normalizedMethod };
+    const init: Options = { method: normalizedMethod };
 
     // Avoid ambiguous payload configuration.
     if (formValue !== undefined && jsonValue !== undefined) {
@@ -104,8 +105,7 @@ export async function executeAction(
         if (formValue !== undefined) {
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
-            init.body = JSON.stringify(jsonValue);
-            init.headers = { 'content-type': 'application/json' };
+            init.json = jsonValue;
         }
     } catch (error: unknown) {
         toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
@@ -116,7 +116,7 @@ export async function executeAction(
 
     // Send the action request through the API client.
     try {
-        status = (await requestApi(requestUrl, init, fetchImpl)).status;
+        status = (await api.extend({ fetch: fetchImpl })(requestUrl, init)).status;
     } catch (error: unknown) {
         toast({
             body:

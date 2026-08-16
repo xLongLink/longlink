@@ -9,9 +9,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { api } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { fetchApiJson, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateCompute from '@/components/dialogs/CreateCompute';
@@ -24,7 +24,7 @@ export default function AdminCompute() {
     const queryClient = useQueryClient();
     const deleteCompute = useMutation({
         mutationFn: async (computeId: string) => {
-            await requestApi(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
+            await api(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
@@ -38,7 +38,7 @@ export default function AdminCompute() {
     } = useQuery({
         queryKey: ['api', '/api/v1/computes'],
         queryFn: async ({ signal }) =>
-            zComputeRegistryResponse.array().parse(await fetchApiJson('/api/v1/computes', { signal })),
+            zComputeRegistryResponse.array().parse(await api('/api/v1/computes', { signal }).json()),
         refetchInterval: 5000,
     });
     const { pageItems, pagination } = usePaginate(computes);

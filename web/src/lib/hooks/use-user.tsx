@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiJson, requestApi } from '@/lib/api';
+import { api } from '@/lib/api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
@@ -12,7 +12,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
-        queryFn: async ({ signal }) => zUserSummary.parse(await fetchApiJson('/api/v1/me', { signal })),
+        queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -59,7 +59,7 @@ export function useUserProfile() {
     const organizations = useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: async ({ signal }) =>
-            zUserOrganizationMembership.array().parse(await fetchApiJson('/api/v1/me/organizations', { signal })),
+            zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
     });
 
     return {
@@ -75,7 +75,7 @@ export function useSignOut() {
     const queryClient = useQueryClient();
 
     return async () => {
-        await requestApi('/api/v1/auth/logout', { method: 'POST' });
+        await api('/api/v1/auth/logout', { method: 'POST' });
         queryClient.clear();
         window.location.assign('/organizations');
     };

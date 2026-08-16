@@ -12,12 +12,12 @@ import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api, ApiError } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { ApiError, fetchApiJson, requestApiJson } from '@/lib/api';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -44,14 +44,10 @@ export default function VerifyEmail() {
     const verification = useMutation({
         mutationFn: async (registrationToken: string) => {
             if (!registrationToken) {
-                return zEmailPayload.parse(await fetchApiJson('/api/v1/auth/register/setup'));
+                return zEmailPayload.parse(await api('/api/v1/auth/register/setup').json());
             }
 
-            const response = await requestApiJson(
-                '/api/v1/auth/verify',
-                { token: registrationToken },
-                { method: 'POST' }
-            );
+            const response = await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST' });
 
             return zEmailPayload.parse(await response.json());
         },
@@ -67,11 +63,10 @@ export default function VerifyEmail() {
     });
     const completion = useMutation({
         mutationFn: async (payload: RegistrationCompleteValues) => {
-            const response = await requestApiJson(
-                '/api/v1/auth/register/complete',
-                { ...payload, email: verification.data?.email },
-                { method: 'POST' }
-            );
+            const response = await api('/api/v1/auth/register/complete', {
+                json: { ...payload, email: verification.data?.email },
+                method: 'POST',
+            });
 
             return zUserSummary.parse(await response.json());
         },

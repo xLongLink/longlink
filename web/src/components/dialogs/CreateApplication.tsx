@@ -12,8 +12,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
+import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { ApiError, fetchApiJson } from '@/lib/api';
 import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -83,7 +83,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 throw new Error('Icon catalog path is unavailable');
             }
 
-            return zIcon.array().parse(await fetchApiJson(iconPath, { signal }));
+            return zIcon.array().parse(await api(iconPath, { signal }).json());
         },
         staleTime: Infinity,
     });
@@ -104,7 +104,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = zLongLinkMetadata.parse(await fetchApiJson(`/api/v1/image?${query.toString()}`));
+            const metadata = zLongLinkMetadata.parse(await api(`/api/v1/image?${query.toString()}`).json());
 
             setDeclaredEnvironments(metadata.environments ?? []);
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });

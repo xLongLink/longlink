@@ -5,9 +5,9 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
+import { api } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { resolveRequestUrl } from '@/xml/core/url';
-import { fetchApiJson, requestApi } from '@/lib/api';
 import { ApplicationLayout, applicationHref } from '@/platform/layouts/Application';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/platform/pages';
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
@@ -53,7 +53,7 @@ export default function PlatformApplicationView({ basePath, errorAction, pages }
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pages],
-        queryFn: async ({ signal }) => pageSchema.array().parse(await fetchApiJson(pages, { signal })),
+        queryFn: async ({ signal }) => pageSchema.array().parse(await api(pages, { signal }).json()),
     });
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(
@@ -113,7 +113,7 @@ export default function PlatformApplicationView({ basePath, errorAction, pages }
 
         setActivePageState({ ...pageState, status: 'loading' });
 
-        void requestApi(pageUrl, {
+        void api(pageUrl, {
             headers: { Accept: 'application/xml' },
             signal: controller.signal,
         })

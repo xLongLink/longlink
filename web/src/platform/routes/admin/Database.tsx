@@ -8,9 +8,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { api } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { fetchApiJson, requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -24,7 +24,7 @@ export default function AdminDatabase() {
     const queryClient = useQueryClient();
     const deleteDatabase = useMutation({
         mutationFn: async (databaseId: string) => {
-            await requestApi(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
+            await api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
@@ -38,7 +38,7 @@ export default function AdminDatabase() {
     } = useQuery({
         queryKey: ['api', '/api/v1/databases'],
         queryFn: async ({ signal }) =>
-            zDatabaseRegistryResponse.array().parse(await fetchApiJson('/api/v1/databases', { signal })),
+            zDatabaseRegistryResponse.array().parse(await api('/api/v1/databases', { signal }).json()),
     });
     const { pageItems, pagination } = usePaginate(databases);
     const deleteDialog = useDeleteDialog({

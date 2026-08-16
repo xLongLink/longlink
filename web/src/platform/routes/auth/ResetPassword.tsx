@@ -7,9 +7,9 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { api, ApiError } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/lib/hooks/use-toast';
-import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
@@ -32,10 +32,10 @@ export default function ResetPassword() {
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                return requestApi('/api/v1/auth/reset-password/setup');
+                return api('/api/v1/auth/reset-password/setup');
             }
 
-            return requestApiJson('/api/v1/auth/reset-password/verify', { token: resetToken }, { method: 'POST' });
+            return api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST' });
         },
         onSuccess: () => {
             sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
@@ -49,7 +49,7 @@ export default function ResetPassword() {
     });
     const resetPassword = useMutation({
         mutationFn: (payload: ResetPasswordValues) =>
-            requestApiJson('/api/v1/auth/reset-password', payload, { method: 'POST' }),
+            api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }),
     });
     const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);

@@ -12,9 +12,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { api } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { fetchApiJson, requestApi } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -30,19 +30,17 @@ export default function Settings() {
     const { mutateAsync: updateUser } = useMutation({
         mutationFn: async (payload: UserUpdate) =>
             zUserSummary.parse(
-                await fetchApiJson('/api/v1/me', {
+                await api('/api/v1/me', {
+                    json: payload,
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                })
+                }).json()
             ),
         onSuccess: (updatedUser) => {
             queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
         },
     });
     const deleteOrganization = useMutation({
-        mutationFn: (organizationId: string) =>
-            requestApi(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
+        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),

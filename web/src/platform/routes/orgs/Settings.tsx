@@ -13,8 +13,8 @@ import { proportional } from '@astryxdesign/core/Table';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { api } from '@/lib/api';
 import { S3 } from '@/components/svg/S3';
-import { fetchApiJson } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
 import { hasMinimumRole } from '@/lib/roles';
@@ -93,7 +93,7 @@ function OrganizationSettings() {
                 .int()
                 .gte(0)
                 .nullable()
-                .parse(await fetchApiJson(databasePath, { signal }));
+                .parse(await api(databasePath, { signal }).json());
         },
         retry: false,
     });
@@ -112,7 +112,7 @@ function OrganizationSettings() {
                 throw new Error('Storage path is unavailable');
             }
 
-            return zOrganizationStorageUsageResponse.nullable().parse(await fetchApiJson(storagePath, { signal }));
+            return zOrganizationStorageUsageResponse.nullable().parse(await api(storagePath, { signal }).json());
         },
         retry: false,
     });

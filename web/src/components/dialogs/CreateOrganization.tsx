@@ -9,7 +9,7 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { requestApi } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 
 const createOrganizationSchema = z.object({
@@ -28,10 +28,9 @@ export default function CreateOrganization() {
     const queryClient = useQueryClient();
     const createOrganization = useMutation({
         mutationFn: ({ name }: CreateOrganizationValues) =>
-            requestApi('/api/v1/organizations', {
+            api('/api/v1/organizations', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name }),
+                json: { name },
             }),
         onSuccess: () =>
             Promise.all([

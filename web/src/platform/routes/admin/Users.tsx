@@ -10,7 +10,7 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { fetchApiJson } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -25,7 +25,7 @@ export default function AdminUsers() {
         isLoading,
     } = useQuery({
         queryKey: ['api', '/api/v1/users'],
-        queryFn: async ({ signal }) => zUserSummary.array().parse(await fetchApiJson('/api/v1/users', { signal })),
+        queryFn: async ({ signal }) => zUserSummary.array().parse(await api('/api/v1/users', { signal }).json()),
     });
     const { pageItems, pagination } = usePaginate(users);
     return (

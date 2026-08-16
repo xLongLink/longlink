@@ -5,7 +5,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { fetchApiJson } from '@/lib/api';
+import { api } from '@/lib/api';
 
 /** Parses the application log response. */
 function parseLogLines(value: unknown): string[] {
@@ -34,7 +34,7 @@ export default function Logs({
     } = useQuery({
         queryKey: ['api', `/api/v1/applications/${applicationId}/logs`],
         queryFn: async ({ signal }) =>
-            parseLogLines(await fetchApiJson(`/api/v1/applications/${applicationId}/logs`, { signal })),
+            parseLogLines(await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json()),
     });
 
     return (

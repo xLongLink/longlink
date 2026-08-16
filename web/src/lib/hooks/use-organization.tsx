@@ -5,8 +5,8 @@ import type {
     OrganizationMemberUpdate,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
+import { api, ApiError } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { ApiError, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const disabledApiQueryKey = ['api', 'disabled'] as const;
@@ -26,7 +26,7 @@ export function useOrganization(organizationSlug: string) {
                 throw new Error('Organization path is unavailable');
             }
 
-            return zOrganizationDetails.parse(await fetchApiJson(organizationPath, { signal }));
+            return zOrganizationDetails.parse(await api(organizationPath, { signal }).json());
         },
         refetchInterval: 5000,
         retry: false,
@@ -61,7 +61,8 @@ export function useOrganizationMembers(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApiJson(`/api/v1/organizations/${organizationId}/invitations`, payload, {
+            await api(`/api/v1/organizations/${organizationId}/invitations`, {
+                json: payload,
                 method: 'POST',
             });
         },
@@ -76,13 +77,10 @@ export function useOrganizationMembers(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApiJson(
-                `/api/v1/organizations/${organizationId}/members/${memberId}`,
-                { role },
-                {
-                    method: 'PATCH',
-                }
-            );
+            await api(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
+                json: { role },
+                method: 'PATCH',
+            });
         },
         onSuccess: () =>
             Promise.all([
@@ -105,7 +103,8 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApiJson(`/api/v1/organizations/${organizationId}/applications`, payload, {
+            await api(`/api/v1/organizations/${organizationId}/applications`, {
+                json: payload,
                 method: 'POST',
             });
         },
@@ -128,7 +127,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            await requestApi(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
+            await api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
         },
         onSuccess: () =>
             Promise.all([
@@ -149,11 +148,10 @@ export function useUpdateOrganization(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            const response = await requestApiJson(
-                `/api/v1/organizations/${organizationId}`,
-                { avatar },
-                { method: 'PATCH' }
-            );
+            const response = await api(`/api/v1/organizations/${organizationId}`, {
+                json: { avatar },
+                method: 'PATCH',
+            });
 
             return zOrganizationSummary.parse(await response.json());
         },

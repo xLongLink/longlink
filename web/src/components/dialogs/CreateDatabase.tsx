@@ -12,7 +12,7 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { fetchApiJson } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { zDatabaseRegistryResponse, zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -43,11 +43,10 @@ export default function CreateDatabase() {
     const mutation = useMutation({
         mutationFn: async (payload: Values) =>
             zDatabaseRegistryResponse.parse(
-                await fetchApiJson('/api/v1/databases', {
+                await api('/api/v1/databases', {
+                    json: payload,
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                })
+                }).json()
             ),
         onSuccess: () => {
             setOpen(false);
