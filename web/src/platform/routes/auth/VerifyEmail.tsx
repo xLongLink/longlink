@@ -1,14 +1,9 @@
-import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
-import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -21,47 +16,19 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { AuthLayout } from './AuthLayout';
+import { TermsNotice } from './TermsNotice';
+import { passwordSchema } from './validation';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({
     name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
     surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
-    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+    password: passwordSchema,
 });
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
 type RegistrationSetup = z.infer<typeof zEmailPayload>;
-
-/** Renders email verification content within the standalone account page. */
-function AuthLayout({
-    children,
-    description,
-    title,
-}: {
-    children: ReactNode;
-    description: ReactNode;
-    title: ReactNode;
-}) {
-    return (
-        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-            <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
-                <Stack gap={1}>
-                    <Heading justify="center" level={1}>
-                        {title}
-                    </Heading>
-                    {typeof description === 'string' ? (
-                        <Text as="p" color="secondary" justify="center" type="supporting">
-                            {description}
-                        </Text>
-                    ) : (
-                        description
-                    )}
-                </Stack>
-                {children}
-            </Stack>
-        </Center>
-    );
-}
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -170,9 +137,7 @@ export default function VerifyEmail() {
     if (completionError?.status === 409) {
         return (
             <AuthLayout title="Complete your account" description={completionError?.message ?? 'error'}>
-                <Stack gap={3}>
-                    <Button href={recoveryRegisterHref} label="Request a new registration link" />
-                </Stack>
+                <Button href={recoveryRegisterHref} label="Request a new registration link" />
             </AuthLayout>
         );
     }
@@ -259,17 +224,7 @@ export default function VerifyEmail() {
                     />
                 </Stack>
                 <Divider />
-                <Text as="p" color="secondary" justify="center" type="supporting">
-                    By continuing, you agree to our <br />
-                    <Link href="/terms" hasUnderline type="inherit">
-                        Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
-                        Privacy Policy
-                    </Link>
-                    .
-                </Text>
+                <TermsNotice />
             </Stack>
         </AuthLayout>
     );

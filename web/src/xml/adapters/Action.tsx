@@ -20,7 +20,7 @@ export function Action({ props, nodes }: Props) {
 
     /** Sends the configured request and shows a minimal toast result. */
     function handleAction(): void {
-        void executeAction(props, ctx, services, fetch, toast, closeDialog).catch((error: unknown) => {
+        void executeAction(props, ctx, services, undefined, toast, closeDialog).catch((error: unknown) => {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         });
     }
@@ -33,7 +33,7 @@ export async function executeAction(
     props: Props['props'],
     ctx: Scope,
     services: RuntimeServices,
-    fetchImpl: typeof fetch,
+    fetchImpl: typeof fetch | undefined,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
 ): Promise<void> {
@@ -116,7 +116,8 @@ export async function executeAction(
 
     // Send the action request through the API client.
     try {
-        status = (await api.extend({ fetch: fetchImpl })(requestUrl, init)).status;
+        const client = fetchImpl ? api.extend({ fetch: fetchImpl }) : api;
+        status = (await client(requestUrl, init)).status;
     } catch (error: unknown) {
         toast({
             body:

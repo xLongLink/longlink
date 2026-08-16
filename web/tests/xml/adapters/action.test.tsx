@@ -67,7 +67,6 @@ describe('Action', () => {
         ctx.services.invalidate = async () => {
             invalidationCalls += 1;
         };
-
         await executeAction(
             compileProps({ action: '/example/profile', invalidate: '${["profile", "activity"]}' }),
             ctx.scope,
@@ -95,7 +94,6 @@ describe('Action', () => {
         ctx.services.invalidate = async () => {
             invalidationCalls += 1;
         };
-
         await executeAction(
             compileProps({ action: '/example/profile', invalidate: '${["profile", "activity"]}' }),
             ctx.scope,
@@ -222,7 +220,6 @@ describe('Action', () => {
 
                 return new Response(null, { status: 204 });
             }) satisfies typeof fetch;
-
             await executeAction(testCase.props, ctx.scope, ctx.services, fetchImpl, (options) => {
                 if (options.type === 'error') errorMessage = String(options.body);
 

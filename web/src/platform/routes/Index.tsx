@@ -358,14 +358,10 @@ export default function Home() {
             </section>
             <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
-                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
+                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} width="100%">
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
-                            <Stack key={title} gap={0} width="100%">
-                                <Stack
-                                    aria-hidden={!isComingSoon}
-                                    className={isComingSoon ? undefined : 'invisible'}
-                                    gap={0}
-                                >
+                            <Stack key={title} width="100%">
+                                <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
                                     <Banner
                                         container="section"
                                         status="warning"

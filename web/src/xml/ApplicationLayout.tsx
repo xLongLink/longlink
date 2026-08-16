@@ -49,7 +49,7 @@ export function ApplicationLayout({ basePath, children, pages }: ApplicationLayo
     return (
         <TopLayout
             topMenu={
-                <Stack gap={0}>
+                <Stack>
                     <TopNav
                         className="px-7"
                         endContent={

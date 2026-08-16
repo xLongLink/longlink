@@ -14,13 +14,7 @@ import { createContext as createXmlContext, parseXML, RenderXML } from '.';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from './pages';
 
 /** Renders XML pages registered by an application manifest. */
-export function RuntimeApplicationView({
-    basePath = '/',
-    pages = '/pages.json',
-}: {
-    basePath?: string;
-    pages?: string;
-}) {
+export function RuntimeApplicationView({ basePath, pages }: { basePath: string; pages: string }) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
@@ -140,5 +134,3 @@ export function RuntimeApplicationView({
         </ApplicationLayout>
     );
 }
-
-export default RuntimeApplicationView;

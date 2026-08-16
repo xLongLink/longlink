@@ -29,7 +29,7 @@ function AdminContent() {
     return (
         <TopLayout
             topMenu={
-                <Stack gap={0}>
+                <Stack>
                     <TopNav
                         className="min-h-11 px-7"
                         endContent={<ProfileMenu user={user} />}

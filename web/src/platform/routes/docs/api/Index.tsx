@@ -91,7 +91,7 @@ function PlatformFlowDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <UserRound aria-hidden className="text-accent" size={20} />
-                        <Stack gap={0} align="center">
+                        <Stack align="center">
                             <Text weight="semibold">User</Text>
                             <Text type="supporting">Browser</Text>
                         </Stack>
@@ -106,7 +106,7 @@ function PlatformFlowDiagram() {
             <Card padding={6} variant="muted">
                 <Stack gap={3} align="center">
                     <ServerCog aria-hidden className="text-accent" size={20} />
-                    <Stack gap={0} align="center">
+                    <Stack align="center">
                         <Wordmark />
                         <Text type="supporting">Platform</Text>
                     </Stack>
@@ -136,7 +136,7 @@ function PlatformFlowDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <CapabilityIcon {...capabilities.applicationContract} className="text-accent" size={20} />
-                        <Stack gap={0} align="center">
+                        <Stack align="center">
                             <Text weight="semibold">Application</Text>
                             <Text type="supporting">Runtime</Text>
                         </Stack>

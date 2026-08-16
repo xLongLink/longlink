@@ -19,14 +19,14 @@ export default function OrganizationLayout() {
     return (
         <TopLayout
             topMenu={
-                <Stack gap={0}>
+                <Stack>
                     <TopNav
                         className="min-h-11 px-7"
                         endContent={<ProfileMenu user={user} />}
                         heading={<PageBreadcrumb />}
                         label="Main navigation"
                     />
-                    <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                    <Stack direction="horizontal" paddingInline={4} width="100%">
                         <TabList
                             aria-label="Section navigation"
                             hasDivider

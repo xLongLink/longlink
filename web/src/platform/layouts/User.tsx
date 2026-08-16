@@ -17,7 +17,7 @@ export default function UserLayout() {
     return (
         <TopLayout
             topMenu={
-                <Stack gap={0}>
+                <Stack>
                     <TopNav
                         className="min-h-11 px-7"
                         endContent={<ProfileMenu user={user} />}
@@ -28,7 +28,7 @@ export default function UserLayout() {
                         }
                         label="Main navigation"
                     />
-                    <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                    <Stack direction="horizontal" paddingInline={4} width="100%">
                         <TabList
                             aria-label="Section navigation"
                             hasDivider

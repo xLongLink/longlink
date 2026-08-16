@@ -1,57 +1,24 @@
-import type { ReactNode } from 'react';
 import { z } from 'zod';
-import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
 import { useMutation } from '@tanstack/react-query';
-import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { AuthLayout } from './AuthLayout';
+import { passwordSchema } from './validation';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
-const passwordSchema = z.object({
-    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+const resetPasswordSchema = z.object({
+    password: passwordSchema,
 });
 
-type ResetPasswordValues = z.infer<typeof passwordSchema>;
-
-/** Renders password reset content within the standalone account page. */
-function AuthLayout({
-    children,
-    description,
-    title,
-}: {
-    children: ReactNode;
-    description: ReactNode;
-    title: ReactNode;
-}) {
-    return (
-        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-            <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
-                <Stack gap={1}>
-                    <Heading justify="center" level={1}>
-                        {title}
-                    </Heading>
-                    {typeof description === 'string' ? (
-                        <Text as="p" color="secondary" justify="center" type="supporting">
-                            {description}
-                        </Text>
-                    ) : (
-                        description
-                    )}
-                </Stack>
-                {children}
-            </Stack>
-        </Center>
-    );
-}
+type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
@@ -59,7 +26,7 @@ export default function ResetPassword() {
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
-        resolver: zodResolver(passwordSchema),
+        resolver: zodResolver(resetPasswordSchema),
     });
     const isBadTokenError = (error: unknown) =>
         error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN';
