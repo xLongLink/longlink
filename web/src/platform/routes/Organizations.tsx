@@ -10,7 +10,7 @@ import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { PageError, PageLoading } from '@/components/layouts/State';
+import { PageError, PageLoading } from '@/components/Utils';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for the authenticated user. */

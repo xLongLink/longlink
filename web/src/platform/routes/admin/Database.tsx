@@ -13,8 +13,8 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { PageError, PageLoading } from '@/components/Utils';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { PageError, PageLoading } from '@/components/layouts/State';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 

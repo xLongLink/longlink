@@ -1,4 +1,4 @@
-import { PageError } from './State';
+import { PageError } from '@/components/Utils';
 
 /** Renders the shared 404 state for unknown or unavailable routes. */
 export default function NotFoundLayout() {

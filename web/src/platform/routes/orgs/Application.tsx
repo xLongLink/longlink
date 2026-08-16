@@ -4,8 +4,8 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
+import { PageError, PageLoading } from '@/components/Utils';
 import { RuntimeApplicationView } from '@/xml/ApplicationView';
-import { PageError, PageLoading } from '@/components/layouts/State';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */

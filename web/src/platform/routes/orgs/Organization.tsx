@@ -12,7 +12,7 @@ import type { OrganizationApplicationSummary } from '@/lib/generated/platform-ap
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { PageError, PageLoading } from '@/components/layouts/State';
+import { PageError, PageLoading } from '@/components/Utils';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders the organization applications page. */
