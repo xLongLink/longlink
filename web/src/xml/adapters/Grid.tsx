@@ -5,15 +5,6 @@ import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Grid?tab=properties
- * - columns: positive integer
- * - maxColumns: positive integer
- * - minColumnWidth: positive number
- * - repeat: 'fill' | 'fit'
- * - children: ReactNode
- */
 export function Grid({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const repeat = resolveXml(props, 'repeat', ctx);
@@ -67,11 +58,7 @@ export function Grid({ props, nodes }: Props) {
             ? ({
                   minWidth,
                   ...(maxColumns != null && { max: maxColumns }),
-                  ...(repeat === 'fill'
-                      ? { repeat: 'fill' as const }
-                      : repeat === 'fit'
-                        ? { repeat: 'fit' as const }
-                        : {}),
+                  ...(repeat ? { repeat } : {}),
               } as const)
             : columnCount;
 

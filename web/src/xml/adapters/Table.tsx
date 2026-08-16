@@ -8,14 +8,6 @@ import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXml
 
 type TableRow = Record<string, unknown>;
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Table?tab=properties
- * - data: object[]
- * - idKey: string
- * - emptyLabel: string
- * - children: TableColumn
- */
 export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;

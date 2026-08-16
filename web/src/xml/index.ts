@@ -19,6 +19,5 @@ export function parseXML(xml: string): [ASTNode] {
 }
 
 export { createContext } from './core/context';
-export { resolveRequestUrl } from './core/url';
 export { RenderXML } from './renderers';
 export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './types';

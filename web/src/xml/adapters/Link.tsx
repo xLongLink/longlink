@@ -5,14 +5,6 @@ import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Link?tab=properties
- * - href: string
- * - to: string
- * - isDisabled: bool
- * - children: ReactNode
- */
 export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 

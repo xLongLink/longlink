@@ -7,13 +7,6 @@ import { useBindableValue } from '../core/binding';
 import { resolveNavigationUrl } from '../core/url';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/TabList?tab=properties
- * - label: string
- * - value: string
- * - children: Tab
- */
 export function TabList({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const tabs = nodes

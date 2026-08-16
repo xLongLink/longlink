@@ -11,14 +11,8 @@ import { ApplicationLayout, applicationHref } from '@/platform/layouts/Applicati
 import { requestApi } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import {
-    createContext as createXmlContext,
-    parseXML,
-    RenderXML,
-    resolveRequestUrl,
-    type ASTNode,
-    type XmlRuntime,
-} from '@/xml';
+import { resolveRequestUrl } from '@/xml/core/url';
+import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '@/xml';
 
 const pageSchema = z.object({
     tab: z.string().trim().min(1),
@@ -36,7 +30,7 @@ type ViewProps = {
     pages: string | null;
 };
 
-type ErrorStateProps = { message: string; title: string };
+type ErrorStateProps = { message: string; organization?: string; title: string };
 
 type PageState = {
     ast: [ASTNode] | null;
@@ -97,9 +91,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
     const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
 
-    const activePageStateKey = activePage
-        ? `${pages}\u0000${activePage.path}\u0000${routePath}\u0000${activePage.tab}`
-        : '';
+    const activePageStateKey = activePage ? `${pages}\u0000${activePage.path}\u0000${routePath}` : '';
     const visiblePageState = activePageState?.key === activePageStateKey ? activePageState : null;
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
@@ -123,10 +115,9 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             return;
         }
 
-        const runtimeContext = createXmlContext();
+        const runtimeContext = createXmlContext(activeRouteParams);
 
         runtimeContext.services.navigationBaseUrl = applicationHref('', organization, application);
-        runtimeContext.scope.bindings.params = activeRouteParams;
 
         const loadingPageState: PageState = { ast: null, error: null, runtimeContext };
         let pageUrl: string;
@@ -160,7 +151,6 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
                     setActivePageState({
                         ...loadingPageState,
                         ast,
-                        error: null,
                         key: activePageStateKey,
                     });
                 }
@@ -211,6 +201,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationState = (
             <ErrorState
                 message="This application is unavailable while LongLink removes it."
+                organization={organization}
                 title="Application is being deleted"
             />
         );
@@ -219,6 +210,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
         applicationState = (
             <ErrorState
                 message={error.message || 'The application definition could not be loaded.'}
+                organization={organization}
                 title="Unable to load this application"
             />
         );
@@ -245,11 +237,18 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
             activeFallback = (
                 <ErrorState
                     message="The application did not expose any pages to render."
+                    organization={organization}
                     title="Unexpected application response"
                 />
             );
         } else if (visiblePageState?.error) {
-            activeFallback = <ErrorState message={visiblePageState.error} title="Unable to load this page" />;
+            activeFallback = (
+                <ErrorState
+                    message={visiblePageState.error}
+                    organization={organization}
+                    title="Unable to load this page"
+                />
+            );
         } else if (!visiblePageState?.ast) {
             activeFallback = <Spinner label="Loading" />;
         }
@@ -280,8 +279,7 @@ export default function View({ applicationStatus, isApplicationLoading, pages }:
 }
 
 /** Renders a centered in-shell application state message. */
-function ErrorState({ message, title }: ErrorStateProps) {
-    const { organization } = useParams();
+function ErrorState({ message, organization, title }: ErrorStateProps) {
     const actionHref = organization ? `/orgs/${organization}` : '/organizations';
     const actionLabel = organization ? 'Back to organization' : 'Back to organizations';
 

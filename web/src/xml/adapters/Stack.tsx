@@ -5,15 +5,6 @@ import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
 import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/Stack?tab=properties
- * - direction: str
- * - justify: str
- * - align: str
- * - wrap: str
- * - children: ReactNode
- */
 export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const directionValue = resolveXml(props, 'direction', ctx);

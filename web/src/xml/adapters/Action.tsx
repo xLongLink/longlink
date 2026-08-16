@@ -32,7 +32,7 @@ export async function executeAction(
     props: Props['props'],
     ctx: Scope,
     services: RuntimeServices,
-    fetchImpl: typeof fetch = fetch,
+    fetchImpl: typeof fetch,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
 ): Promise<void> {
