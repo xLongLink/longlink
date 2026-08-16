@@ -83,6 +83,7 @@ longlink/
 - Do not add tests unless explicitly requested. Test the real implementation, avoid mocks where practical, and never duplicate production logic in tests.
 - Run formatting, linting, type checking, and relevant existing tests, then review the implementation for further simplification.
 - Use only `lucide-react` icons, do not use `Astryx` icons
+- Each page shall be simple and standalone, prefer duplication of code where clarity benefict.
 
 ## Astryx Guidelines
 

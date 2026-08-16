@@ -8,13 +8,13 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { requestApiJson } from '@/lib/api';
-import { AuthPage } from '@/components/AuthPage';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
+import { AuthLayout } from './AuthLayout';
+import { emailSchema } from './validation';
 
 const forgotPasswordSchema = z.object({
-    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+    email: emailSchema,
 });
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
@@ -28,7 +28,7 @@ export default function ForgotPassword() {
     });
     const requestReset = useMutation({
         mutationFn: (payload: ForgotPasswordValues) =>
-            requestApiJson(platformApiPath('/auth/forgot-password'), payload, { method: 'POST' }),
+            api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
         onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : 'Please try again in a moment.',
@@ -38,7 +38,7 @@ export default function ForgotPassword() {
     });
 
     return (
-        <AuthPage
+        <AuthLayout
             title="Reset your password"
             description="Enter your account email and LongLink will send password reset instructions."
         >
@@ -48,7 +48,7 @@ export default function ForgotPassword() {
                         status="success"
                         title="If an account exists for that email, password reset instructions are on the way."
                     />
-                    <Button href="/organizations" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit((values) => requestReset.mutate(values))}>
@@ -83,11 +83,11 @@ export default function ForgotPassword() {
             )}
             {!requestReset.isSuccess ? (
                 <Text as="p" color="secondary" justify="center" type="supporting">
-                    <Link href="/organizations" type="inherit" weight="medium">
+                    <Link href="/login" type="inherit" weight="medium">
                         Back to sign in
                     </Link>
                 </Text>
             ) : null}
-        </AuthPage>
+        </AuthLayout>
     );
 }

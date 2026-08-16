@@ -1,4 +1,4 @@
-import { Selector as AstryxSelector } from '@astryxdesign/core-0-3/Selector';
+import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';

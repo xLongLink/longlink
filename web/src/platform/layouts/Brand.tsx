@@ -2,13 +2,13 @@ import { Outlet } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Wordmark } from '@/components/Wordmark';
-import Platform from '@/components/layouts/Platform';
+import TopLayout from '@/components/layouts/TopLayout';
 
 /** Renders the brand-only shell around public platform routes. */
 export default function Brand() {
     return (
-        <Platform
-            topNav={
+        <TopLayout
+            topMenu={
                 <TopNav
                     className="min-h-11 px-7"
                     endContent={
@@ -26,6 +26,6 @@ export default function Brand() {
             }
         >
             <Outlet />
-        </Platform>
+        </TopLayout>
     );
 }

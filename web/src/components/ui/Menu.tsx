@@ -1,12 +1,12 @@
 import { useLocation } from 'react-router';
+import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
-import type { StoneIconName } from '@/icons';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, type StoneIconName } from '@/components/ui/Icon';
 
 type MenuProps = { children?: ReactNode };
 type MenuSectionProps = {
@@ -86,29 +86,41 @@ export function Menu({ children }: MenuProps) {
     const activeItem = items.find((item) => menuItemHref(item.props.label) === hash) ?? items[0];
 
     return (
-        <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-            <AstryxSideNav className="h-auto w-full">
-                {sections.map(({ entries, section }) => (
-                    <AstryxSideNavSection {...section.props} key={section.props.title}>
-                        {entries.map((entry) => {
-                            if (entry.kind === 'subsection') {
-                                const items = Children.toArray(entry.subSection.props.children).filter(isMenuItem);
-                                const { children: _children, ...subSectionProps } = entry.subSection.props;
+        <Layout
+            height="auto"
+            start={
+                <LayoutPanel label="Settings navigation" role="navigation" width={260}>
+                    <AstryxSideNav>
+                        {sections.map(({ entries, section }) => (
+                            <AstryxSideNavSection {...section.props} key={section.props.title}>
+                                {entries.map((entry) => {
+                                    if (entry.kind === 'subsection') {
+                                        const items = Children.toArray(entry.subSection.props.children).filter(
+                                            isMenuItem
+                                        );
+                                        const { children: _children, ...subSectionProps } = entry.subSection.props;
 
-                                return (
-                                    <AstryxSideNavItem {...subSectionProps} collapsible key={subSectionProps.label}>
-                                        {items.map((item) => renderMenuItem(item, activeItem))}
-                                    </AstryxSideNavItem>
-                                );
-                            }
+                                        return (
+                                            <AstryxSideNavItem
+                                                {...subSectionProps}
+                                                collapsible
+                                                key={subSectionProps.label}
+                                            >
+                                                {items.map((item) => renderMenuItem(item, activeItem))}
+                                            </AstryxSideNavItem>
+                                        );
+                                    }
 
-                            return renderMenuItem(entry.item, activeItem);
-                        })}
-                    </AstryxSideNavSection>
-                ))}
-            </AstryxSideNav>
-            <div className="min-w-0">{activeItem?.props.children}</div>
-        </div>
+                                    return renderMenuItem(entry.item, activeItem);
+                                })}
+                            </AstryxSideNavSection>
+                        ))}
+                    </AstryxSideNav>
+                </LayoutPanel>
+            }
+        >
+            {activeItem?.props.children}
+        </Layout>
     );
 }
 

@@ -9,10 +9,8 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { requestApi } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
-import { userOrganizationsQueryKey } from '@/lib/query-keys';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
@@ -30,12 +28,15 @@ export default function CreateOrganization() {
     const queryClient = useQueryClient();
     const createOrganization = useMutation({
         mutationFn: ({ name }: CreateOrganizationValues) =>
-            requestApi(platformApiPath('/organizations'), {
+            api('/api/v1/organizations', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name }),
+                json: { name },
             }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+            ]),
     });
     const formId = useId();
     const [open, setOpen] = useState(false);

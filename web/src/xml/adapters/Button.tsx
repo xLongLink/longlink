@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { Button as AstryxButton } from '@astryxdesign/core-0-3/Button';
+import { Button as AstryxButton } from '@astryxdesign/core/Button';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

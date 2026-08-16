@@ -1,4 +1,4 @@
-import { Divider as AstryxDivider } from '@astryxdesign/core-0-3/Divider';
+import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
 import type { Props } from '../types';
 import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';

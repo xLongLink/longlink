@@ -1,5 +1,5 @@
-import { Stack } from '@astryxdesign/core-0-3/Stack';
-import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core-0-3/TabList';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

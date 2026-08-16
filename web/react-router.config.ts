@@ -1,7 +1,6 @@
 import type { Config } from '@react-router/dev/config';
 import path from 'node:path';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import { publicRoutePath, SITE_URL } from './src/lib/urls';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -72,7 +71,7 @@ export default {
     appDirectory: isApplication ? 'src/application' : 'src/platform',
     buildDirectory: path.resolve(import.meta.dirname, 'build', isApplication ? 'sdk' : 'api'),
     ssr: false,
-    prerender: isApplication ? undefined : publicPagePaths.map(publicRoutePath),
+    prerender: isApplication ? undefined : publicPagePaths.map((pagePath) => (pagePath === '/' ? '/' : `${pagePath}/`)),
 
     /** Adapts Framework Mode's output to the embedded FastAPI frontend contract. */
     async buildEnd({ reactRouterConfig }) {
@@ -87,7 +86,10 @@ export default {
         } else {
             // Generate crawler URLs from the same inventory used for prerendering.
             const urls = publicPagePaths
-                .map((pagePath) => `    <url><loc>${SITE_URL}${publicRoutePath(pagePath)}</loc></url>`)
+                .map(
+                    (pagePath) =>
+                        `    <url><loc>${import.meta.env.VITE_SITE_URL}${pagePath === '/' ? '/' : `${pagePath}/`}</loc></url>`
+                )
                 .join('\n');
             await writeFile(
                 path.join(clientDirectory, 'sitemap.xml'),

@@ -4,7 +4,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -63,9 +62,6 @@ export const metadata = {
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Privacy.tsx',
 };
-
-/** Returns SEO metadata for the privacy article. */
-export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the privacy policy. */
 export default function Privacy() {

@@ -3,7 +3,6 @@ import { useState, type ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import '@/index.css';
 import { AstryxProvider } from '@/providers';
-import { UserProvider } from '@/lib/hooks/use-user';
 import { createQueryClient } from '@/lib/react-query';
 import { Document } from '@/components/layouts/Document';
 
@@ -18,11 +17,9 @@ export default function PlatformRoot() {
 
     return (
         <QueryClientProvider client={client}>
-            <UserProvider>
-                <AstryxProvider>
-                    <Outlet />
-                </AstryxProvider>
-            </UserProvider>
+            <AstryxProvider>
+                <Outlet />
+            </AstryxProvider>
         </QueryClientProvider>
     );
 }

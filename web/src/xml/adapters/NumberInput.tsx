@@ -1,4 +1,4 @@
-import { NumberInput as AstryxNumberInput } from '@astryxdesign/core-0-3/NumberInput';
+import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';

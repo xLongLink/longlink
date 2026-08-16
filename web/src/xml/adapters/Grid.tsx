@@ -1,4 +1,4 @@
-import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core-0-3/Grid';
+import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { GRID_REPEATS } from '../constants';

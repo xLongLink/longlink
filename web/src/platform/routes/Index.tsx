@@ -7,18 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { publicSeoMeta } from '@/lib/seo';
 import { Globe } from '@/components/Globe';
-
-export const metadata = {
-    path: '/',
-    title: 'LongLink',
-    seoTitle: 'LongLink | Python Platform for Business Applications',
-    description:
-        'LongLink is an open-source platform for building and running custom business-process applications with Python.',
-};
-
-export const meta = () => publicSeoMeta(metadata);
+import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
 
 const paths = [
     {
@@ -334,7 +324,7 @@ export default function Home() {
                                         className="block h-auto w-full object-contain"
                                         decoding="async"
                                         loading="lazy"
-                                        src="/human_robot_hands_vector.svg"
+                                        src={humanRobotHands}
                                     />
                                 </div>
                             </div>
@@ -368,14 +358,10 @@ export default function Home() {
             </section>
             <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
-                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
+                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} width="100%">
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
-                            <Stack key={title} gap={0} width="100%">
-                                <Stack
-                                    aria-hidden={!isComingSoon}
-                                    className={isComingSoon ? undefined : 'invisible'}
-                                    gap={0}
-                                >
+                            <Stack key={title} width="100%">
+                                <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
                                     <Banner
                                         container="section"
                                         status="warning"

@@ -1,21 +1,16 @@
 import type { ASTNode } from './types';
 import { parseXML as parseAst } from './core/parser';
 
-/** Verifies that an XML document contains one LongLink root. */
-function assertPageRoot(ast: ASTNode[]): asserts ast is [ASTNode] {
+/** Parses one XML document. */
+export function parseXML(xml: string): [ASTNode] {
+    const ast = parseAst(xml);
     const [root] = ast;
 
     if (ast.length !== 1 || root?.name !== 'longlink') {
         throw new Error('XML pages must contain exactly one longlink root');
     }
-}
 
-/** Parses one XML document. */
-export function parseXML(xml: string): [ASTNode] {
-    const ast = parseAst(xml);
-
-    assertPageRoot(ast);
-    return ast;
+    return [root];
 }
 
 export { createContext } from './core/context';

@@ -2,7 +2,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { publicSeoMeta } from '@/lib/seo';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
@@ -19,8 +18,6 @@ export const metadata = {
 };
 
 /** Returns SEO metadata for the impressum article. */
-export const meta = () => publicSeoMeta(metadata);
-
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (

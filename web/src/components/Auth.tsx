@@ -1,21 +1,15 @@
 import type { ReactElement } from 'react';
+import { Navigate } from 'react-router';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
-import NotFound from '@/platform/NotFound';
-import { SignInCard } from '@/components/SignInCard';
-import { useCurrentUser } from '@/lib/hooks/use-user';
+import NotFoundLayout from '@/components/layouts/NotFound';
+import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
-export function Auth({
-    children,
-    requiresAdministrator = false,
-}: {
-    children: ReactElement;
-    requiresAdministrator?: boolean;
-}) {
+export function Auth({ children, administrator = false }: { children: ReactElement; administrator?: boolean }) {
     const { user, isLoading, error, refetch } = useCurrentUser();
 
     // Wait for profile loading before deciding access.
@@ -35,19 +29,15 @@ export function Auth({
         );
     }
 
-    // Show sign-in UI for unauthenticated users.
+    // Keep protected routes focused on authenticated application content.
     if (!user) {
-        return (
-            <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-                <SignInCard />
-            </Center>
-        );
+        return <Navigate replace to="/login" />;
     }
 
     // Hide administrator routes from regular Platform users.
-    if (requiresAdministrator && !user.administrator) {
-        return <NotFound />;
+    if (administrator && !user.administrator) {
+        return <NotFoundLayout />;
     }
 
-    return children;
+    return <AuthenticatedUserProvider user={user}>{children}</AuthenticatedUserProvider>;
 }

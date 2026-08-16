@@ -1,11 +1,11 @@
 import { Stack } from '@astryxdesign/core/Stack';
+import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { useApiQuery } from '@/lib/hooks/use-api';
-import { platformApiPath } from '@/lib/platform-api';
+import { api } from '@/lib/api';
 
 /** Parses the application log response. */
 function parseLogLines(value: unknown): string[] {
@@ -31,8 +31,10 @@ export default function Logs({
         data: logLines = [],
         error,
         isFetching,
-    } = useApiQuery<string[]>(platformApiPath(`/applications/${applicationId}/logs`), {
-        parse: parseLogLines,
+    } = useQuery({
+        queryKey: ['api', `/api/v1/applications/${applicationId}/logs`],
+        queryFn: async ({ signal }) =>
+            parseLogLines(await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json()),
     });
 
     return (

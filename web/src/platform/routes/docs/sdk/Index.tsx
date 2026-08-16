@@ -5,8 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
-import { publicSeoMeta } from '@/lib/seo';
-import { CodeTabs } from '@/components/CodeTabs';
 import { Article } from '@/components/layouts/Article';
 
 /** Renders the local SDK runtime request flow diagram. */
@@ -17,7 +15,7 @@ function LocalRuntimeDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <UserRound aria-hidden className="text-accent" size={20} />
-                        <Stack gap={0} align="center">
+                        <Stack align="center">
                             <Text weight="semibold">User</Text>
                             <Text type="supporting">Browser</Text>
                         </Stack>
@@ -33,7 +31,7 @@ function LocalRuntimeDiagram() {
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
                         <AppWindow aria-hidden className="text-accent" size={20} />
-                        <Stack gap={0} align="center">
+                        <Stack align="center">
                             <Text weight="semibold">Application</Text>
                             <Text type="supporting">Runtime</Text>
                         </Stack>
@@ -52,7 +50,6 @@ function LocalRuntimeDiagram() {
 export const metadata = {
     path: '/docs/sdk',
     title: 'Overview',
-    seoTitle: 'Applications Documentation | LongLink',
     description:
         'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
     toc: [
@@ -63,8 +60,6 @@ export const metadata = {
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Index.tsx',
 };
-
-export const meta = () => publicSeoMeta(metadata);
 
 export default function DocsArticleRoute() {
     return (
@@ -90,12 +85,7 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-project" level={2}>
                     Create a Project
                 </Heading>
-                <CodeTabs
-                    items={[
-                        { code: 'pip install longlink\nlonglink init', label: 'pip', value: 'pip' },
-                        { code: 'uv add longlink\nuv run longlink init', label: 'uv', value: 'uv' },
-                    ]}
-                />
+                <CodeBlock code={'uv add longlink\nuv run longlink init'} language="bash" />
                 <Text as="p">It creates an Application scaffold with everything you need to get started.</Text>
                 <CodeBlock
                     code={
@@ -113,12 +103,7 @@ export default function DocsArticleRoute() {
                 <Heading id="local-development" level={2}>
                     Local Development
                 </Heading>
-                <CodeTabs
-                    items={[
-                        { code: 'pip install .[dev]\nlonglink dev', label: 'pip', value: 'pip' },
-                        { code: 'uv sync --extra dev\nuv run longlink dev', label: 'uv', value: 'uv' },
-                    ]}
-                />
+                <CodeBlock code={'uv sync --extra dev\nuv run longlink dev'} language="bash" />
                 <Text as="p">
                     Navigate to{' '}
                     <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">

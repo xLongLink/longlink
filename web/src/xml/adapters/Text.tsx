@@ -1,4 +1,4 @@
-import { Text as AstryxText } from '@astryxdesign/core-0-3/Text';
+import { Text as AstryxText } from '@astryxdesign/core/Text';
 import type { Props } from '../types';
 import { TEXT_ELEMENTS } from '../constants';
 import { useXmlRuntime } from '../core/context';

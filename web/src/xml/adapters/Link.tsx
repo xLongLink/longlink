@@ -1,4 +1,4 @@
-import { Link as AstryxLink } from '@astryxdesign/core-0-3/Link';
+import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { resolveXml } from '../core/props';
@@ -14,13 +14,15 @@ export function Link({ props, nodes }: Props) {
 
     const href = resolveXml(props, 'href', ctx);
     const to = resolveXml(props, 'to', ctx);
-    const resolvedHref = resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
-    const resolvedTo = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
 
     return (
         <AstryxLink
-            href={resolvedTo || resolvedHref || undefined}
+            href={
+                resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '') ||
+                resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '') ||
+                undefined
+            }
             isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
         >
             {renderNode(nodes, ctx)}

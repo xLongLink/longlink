@@ -5,22 +5,22 @@ import { Outlet, useLocation } from 'react-router';
 import { Building2, Settings2 } from 'lucide-react';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Wordmark } from '@/components/Wordmark';
-import Platform from '@/components/layouts/Platform';
-import { useCurrentUser } from '@/lib/hooks/use-user';
-import { AccountAction } from '@/components/AccountAction';
+import { ProfileMenu } from '@/components/Profile';
+import TopLayout from '@/components/layouts/TopLayout';
+import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {
     const { pathname } = useLocation();
-    const { user } = useCurrentUser();
+    const user = useAuthenticatedUser();
 
     return (
-        <Platform
-            topNav={
-                <Stack gap={0}>
+        <TopLayout
+            topMenu={
+                <Stack>
                     <TopNav
                         className="min-h-11 px-7"
-                        endContent={<AccountAction user={user ?? null} />}
+                        endContent={<ProfileMenu user={user} />}
                         heading={
                             <Link href="/" label="LongLink home" color="inherit">
                                 <Wordmark />
@@ -28,34 +28,32 @@ export default function UserLayout() {
                         }
                         label="Main navigation"
                     />
-                    {user ? (
-                        <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                hasDivider
-                                onChange={() => undefined}
-                                size="sm"
-                                value={pathname === '/settings' ? '/settings' : '/organizations'}
-                            >
-                                <Tab
-                                    href="/organizations"
-                                    icon={<Building2 aria-hidden="true" size={16} />}
-                                    label="Organizations"
-                                    value="/organizations"
-                                />
-                                <Tab
-                                    href="/settings"
-                                    icon={<Settings2 aria-hidden="true" size={16} />}
-                                    label="Settings"
-                                    value="/settings"
-                                />
-                            </TabList>
-                        </Stack>
-                    ) : null}
+                    <Stack direction="horizontal" paddingInline={4} width="100%">
+                        <TabList
+                            aria-label="Section navigation"
+                            hasDivider
+                            onChange={() => undefined}
+                            size="sm"
+                            value={pathname === '/settings' ? '/settings' : '/organizations'}
+                        >
+                            <Tab
+                                href="/organizations"
+                                icon={<Building2 aria-hidden="true" size={16} />}
+                                label="Organizations"
+                                value="/organizations"
+                            />
+                            <Tab
+                                href="/settings"
+                                icon={<Settings2 aria-hidden="true" size={16} />}
+                                label="Settings"
+                                value="/settings"
+                            />
+                        </TabList>
+                    </Stack>
                 </Stack>
             }
         >
             <Outlet />
-        </Platform>
+        </TopLayout>
     );
 }

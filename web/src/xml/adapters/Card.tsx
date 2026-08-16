@@ -1,4 +1,4 @@
-import { Card as AstryxCard } from '@astryxdesign/core-0-3/Card';
+import { Card as AstryxCard } from '@astryxdesign/core/Card';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

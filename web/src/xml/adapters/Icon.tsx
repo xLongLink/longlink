@@ -1,4 +1,4 @@
-import { Icon as AstryxIcon } from '@astryxdesign/core-0-3/Icon';
+import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
 import type { Props } from '../types';
 import { ICON_NAMES } from '../constants';
 import { useXmlRuntime } from '../core/context';

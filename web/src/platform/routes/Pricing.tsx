@@ -6,15 +6,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { publicSeoMeta } from '@/lib/seo';
-
-export const metadata = {
-    path: '/pricing',
-    title: 'Pricing',
-    description: 'Simple LongLink pricing for building and running business-process applications.',
-};
-
-export const meta = () => publicSeoMeta(metadata);
 
 /** Renders the public pricing page. */
 export default function Pricing() {

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { ApiError, requestApi } from '@/lib/api';
+import { ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import type { Props, RuntimeServices, Scope } from '../types';
 import { renderNode } from '../core/node';
@@ -19,7 +19,7 @@ export function Action({ props, nodes }: Props) {
 
     /** Sends the configured request and shows a minimal toast result. */
     function handleAction(): void {
-        void executeAction(props, ctx, services, fetch, toast, closeDialog).catch((error: unknown) => {
+        void executeAction(props, ctx, services, undefined, toast, closeDialog).catch((error: unknown) => {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         });
     }
@@ -32,7 +32,7 @@ export async function executeAction(
     props: Props['props'],
     ctx: Scope,
     services: RuntimeServices,
-    fetchImpl: typeof fetch,
+    fetchImpl: typeof fetch | undefined,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
 ): Promise<void> {
@@ -105,18 +105,29 @@ export async function executeAction(
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
             init.body = JSON.stringify(jsonValue);
-            init.headers = { 'content-type': 'application/json' };
+            init.headers = { 'Content-Type': 'application/json' };
         }
     } catch (error: unknown) {
         toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         return;
     }
 
-    let response: Response;
+    let status: number;
 
     // Send the action request through the API client.
     try {
-        response = await requestApi(requestUrl, init, fetchImpl);
+        const headers = new Headers(init.headers);
+        headers.set('Accept', 'application/json');
+        const response = await (fetchImpl ?? fetch)(requestUrl, {
+            ...init,
+            credentials: 'include',
+            headers,
+        });
+        if (!response.ok) {
+            throw new ApiError(`API request failed (${response.status})`, response.status);
+        }
+
+        status = response.status;
     } catch (error: unknown) {
         toast({
             body:
@@ -135,7 +146,7 @@ export async function executeAction(
     // Close the containing dialog only after the request and invalidation succeed.
     if (resolveXml(props, 'closeDialog', ctx)) closeDialog?.();
 
-    toast({ body: `Request completed with status ${response.status}` });
+    toast({ body: `Request completed with status ${status}` });
 }
 
 /** Builds multipart form data from an XML action form expression. */

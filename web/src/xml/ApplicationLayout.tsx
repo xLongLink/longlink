@@ -1,33 +1,33 @@
 import type { ReactNode } from 'react';
 import startCase from 'lodash/startCase';
+import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { generatePath, useLocation, useParams } from 'react-router';
 import { findActiveTab } from '@/lib/paths';
-import { getIconComponent } from '@/lib/icons';
 import { Wordmark } from '@/components/Wordmark';
-import Platform from '@/components/layouts/Platform';
+import TopLayout from '@/components/layouts/TopLayout';
+import { getIconComponent } from '@/components/ui/Icon';
 import { PageContainer } from '@/components/PageContainer';
-import { pageRouteIsDynamic, type RuntimePage } from '@/application/runtime/pages';
+import { pageRouteIsDynamic, type RuntimePage } from './pages';
 
-/** Builds an application-shell href for one runtime page route. */
-export function applicationHref(route: string, organization?: string, application?: string): string {
-    const basePath =
-        application && organization
-            ? generatePath('/orgs/:organization/apps/:application', { organization, application })
-            : organization
-              ? generatePath('/orgs/:organization', { organization })
-              : '';
+type ApplicationLayoutProps = {
+    basePath: string;
+    children: ReactNode;
+    pages: readonly RuntimePage[];
+};
 
-    return route ? `${basePath}/${route}` : basePath || '/';
+/** Builds an application runtime href for one page route. */
+export function applicationHref(route: string, basePath: string): string {
+    const normalizedBasePath = basePath === '/' ? '' : basePath;
+
+    return route ? `${normalizedBasePath}/${route}` : normalizedBasePath || '/';
 }
 
 /** Renders application content with navigation derived from the runtime page manifest. */
-export function ApplicationLayout({ children, pages }: { children: ReactNode; pages: readonly RuntimePage[] }) {
+export function ApplicationLayout({ basePath, children, pages }: ApplicationLayoutProps) {
     const { pathname } = useLocation();
-    const { application, organization } = useParams();
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
@@ -37,7 +37,7 @@ export function ApplicationLayout({ children, pages }: { children: ReactNode; pa
         }
 
         tabGroups.set(page.tab, {
-            href: applicationHref(page.route, organization, application),
+            href: applicationHref(page.route, basePath),
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
         });
@@ -47,9 +47,9 @@ export function ApplicationLayout({ children, pages }: { children: ReactNode; pa
     const activeTab = findActiveTab(tabs, pathname);
 
     return (
-        <Platform
-            topNav={
-                <Stack gap={0}>
+        <TopLayout
+            topMenu={
+                <Stack>
                     <TopNav
                         className="px-7"
                         endContent={
@@ -100,6 +100,6 @@ export function ApplicationLayout({ children, pages }: { children: ReactNode; pa
             }
         >
             <PageContainer minHeight="100%">{children}</PageContainer>
-        </Platform>
+        </TopLayout>
     );
 }

@@ -4,18 +4,18 @@ import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
-import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { requestApiJson } from '@/lib/api';
-import { AuthPage } from '@/components/AuthPage';
+import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
+import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { AuthLayout } from './AuthLayout';
+import { emailSchema } from './validation';
 
 const registerSchema = z.object({
-    email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+    email: emailSchema,
 });
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -30,10 +30,9 @@ export default function Register() {
         resolver: zodResolver(registerSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInHref = email ? `/organizations?${new URLSearchParams({ email })}` : '/organizations';
+    const signInHref = email ? `/login?${new URLSearchParams({ email })}` : '/login';
     const registration = useMutation({
-        mutationFn: (payload: RegisterValues) =>
-            requestApiJson(platformApiPath('/auth/register'), payload, { method: 'POST' }),
+        mutationFn: (payload: RegisterValues) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
         onSuccess: () => {
             showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' });
         },
@@ -43,7 +42,7 @@ export default function Register() {
     });
 
     return (
-        <AuthPage title={<WelcomeTitle />} description={<Divider label="Please enter your email" />}>
+        <AuthLayout description={<Divider>{'Please enter your email'}</Divider>} title={<WelcomeTitle />}>
             <Stack gap={3}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
                     <Controller
@@ -74,17 +73,13 @@ export default function Register() {
                         variant="primary"
                     />
                 </Stack>
-                <Divider
-                    label={
-                        <>
-                            Already have an account?{' '}
-                            <Link href={signInHref} type="inherit" weight="medium">
-                                Sign In
-                            </Link>
-                        </>
-                    }
-                />
+                <Divider>
+                    Already have an account?{' '}
+                    <Link href={signInHref} type="inherit" weight="medium">
+                        Sign In
+                    </Link>
+                </Divider>
             </Stack>
-        </AuthPage>
+        </AuthLayout>
     );
 }

@@ -1,7 +1,7 @@
 import { getVersion, subscribe } from 'valtio';
-import { Stack } from '@astryxdesign/core-0-3/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
 import { useEffect, useMemo, useState } from 'react';
-import { Banner } from '@astryxdesign/core-0-3/Banner';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
@@ -11,13 +11,13 @@ import { setupContext, XmlContext } from './core/context';
 type RenderXMLProps = {
     ast: [ASTNode];
     ctx: XmlRuntime;
-    baseUrl?: string;
+    baseUrl: string;
 };
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx, baseUrl = '' }: RenderXMLProps) {
+export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     ctx.services.requestBaseUrl = baseUrl;
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
@@ -137,12 +137,11 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
     const setupNodes: ASTNode[] = [];
 
     function walk(currentNodes: ASTNode[]): void {
-        // Validate each declaration before checking descendants.
+        // Validate setup declarations before checking descendants.
         for (const node of currentNodes) {
-            validateSetupNode(node);
-
             // Collect setup declarations outside loop-local scope.
             if (node.name === 'State' || node.name === 'Query') {
+                validateSetupNode(node);
                 setupNodes.push(node);
             }
 

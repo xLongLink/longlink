@@ -1,4 +1,4 @@
-import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core-0-3/CheckboxInput';
+import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import type { Props } from '../types';
 import { COMPACT_SIZES } from '../constants';
 import { resolveInputStatus } from '../input';

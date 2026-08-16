@@ -8,4 +8,4 @@ export const administratorTabs = [
     { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
     { href: '/admin/compute', icon: Wrench, label: 'Compute' },
     { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
-] as const;
+];

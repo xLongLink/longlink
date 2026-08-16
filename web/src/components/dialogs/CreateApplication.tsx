@@ -6,16 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
+import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useApiQuery } from '@/lib/hooks/use-api';
-import { ApiError, fetchApiJson } from '@/lib/api';
-import { platformApiPath } from '@/lib/platform-api';
-import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -73,8 +72,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const hasImage = image.trim().length > 0;
     const hasRequiredMetadata = hasImage && name.trim().length > 0;
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? platformApiPath('/icons') : null, {
-        parse: (value) => zIcon.array().parse(value),
+    const { data: iconCatalog } = useQuery({
+        queryKey: ['api', '/api/v1/icons'],
+        queryFn: open
+            ? async ({ signal }) => zIcon.array().parse(await api('/api/v1/icons', { signal }).json())
+            : skipToken,
         staleTime: Infinity,
     });
 
@@ -94,7 +96,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = zLongLinkMetadata.parse(await fetchApiJson(platformApiPath(`/image?${query.toString()}`)));
+            const metadata = zLongLinkMetadata.parse(await api(`/api/v1/image?${query.toString()}`).json());
 
             setDeclaredEnvironments(metadata.environments ?? []);
             form.setValue('description', metadata.description ?? '', { shouldValidate: true });
@@ -142,7 +144,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 name: application.data.name,
                 image: application.data.image,
                 description: application.data.description.length > 0 ? application.data.description : null,
-                icon: isIconName(application.data.icon) ? application.data.icon : null,
+                icon: application.data.icon || null,
                 envs,
             });
             setOpen(false);

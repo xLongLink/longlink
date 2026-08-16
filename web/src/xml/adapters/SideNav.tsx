@@ -1,8 +1,4 @@
-import {
-    SideNav as AstryxSideNav,
-    SideNavItem as AstryxSideNavItem,
-    SideNavSection,
-} from '@astryxdesign/core-0-3/SideNav';
+import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

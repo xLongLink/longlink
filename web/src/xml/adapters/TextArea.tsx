@@ -1,4 +1,4 @@
-import { TextArea as AstryxTextArea } from '@astryxdesign/core-0-3/TextArea';
+import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';

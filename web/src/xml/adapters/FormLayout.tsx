@@ -1,4 +1,4 @@
-import { FormLayout as AstryxFormLayout } from '@astryxdesign/core-0-3/FormLayout';
+import { FormLayout as AstryxFormLayout } from '@astryxdesign/core/FormLayout';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

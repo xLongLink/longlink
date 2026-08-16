@@ -1,4 +1,4 @@
-import type { InputStatus } from '@astryxdesign/core-0-3/Field';
+import type { InputStatus } from '@astryxdesign/core/Field';
 import type { ASTProps, Scope } from './types';
 import { INPUT_STATUSES } from './constants';
 import { isXmlEnum, resolveXml } from './core/props';

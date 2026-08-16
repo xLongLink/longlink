@@ -7,18 +7,18 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { AuthPage } from '@/components/AuthPage';
+import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
-import { platformApiPath } from '@/lib/platform-api';
-import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { AuthLayout } from './AuthLayout';
+import { passwordSchema } from './validation';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
-const passwordSchema = z.object({
-    password: z.string().min(1, 'Password is required').max(1024, 'Password cannot exceed 1024 characters'),
+const resetPasswordSchema = z.object({
+    password: passwordSchema,
 });
 
-type ResetPasswordValues = z.infer<typeof passwordSchema>;
+type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
@@ -26,21 +26,17 @@ export default function ResetPassword() {
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
-        resolver: zodResolver(passwordSchema),
+        resolver: zodResolver(resetPasswordSchema),
     });
     const isBadTokenError = (error: unknown) =>
         error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN';
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
-                return requestApi(platformApiPath('/auth/reset-password/setup'));
+                return api('/api/v1/auth/reset-password/setup');
             }
 
-            return requestApiJson(
-                platformApiPath('/auth/reset-password/verify'),
-                { token: resetToken },
-                { method: 'POST' }
-            );
+            return api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST' });
         },
         onSuccess: () => {
             sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
@@ -54,7 +50,7 @@ export default function ResetPassword() {
     });
     const resetPassword = useMutation({
         mutationFn: (payload: ResetPasswordValues) =>
-            requestApiJson(platformApiPath('/auth/reset-password'), payload, { method: 'POST' }),
+            api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }),
     });
     const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
@@ -83,7 +79,7 @@ export default function ResetPassword() {
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {
         return (
-            <AuthPage
+            <AuthLayout
                 title="Set a new password"
                 description="This password reset link is invalid or expired. Request a new link to continue."
             >
@@ -94,27 +90,27 @@ export default function ResetPassword() {
                     />
                     <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
                 </Stack>
-            </AuthPage>
+            </AuthLayout>
         );
     }
 
     // Keep transient exchange failures retryable without exposing the credential again.
     if (verification.error) {
         return (
-            <AuthPage title="Set a new password" description="Please try again in a moment.">
+            <AuthLayout title="Set a new password" description="Please try again in a moment.">
                 <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
-            </AuthPage>
+            </AuthLayout>
         );
     }
 
     return (
-        <AuthPage title="Set a new password" description="Choose a new password for your LongLink account.">
+        <AuthLayout title="Set a new password" description="Choose a new password for your LongLink account.">
             {!verification.isSuccess ? (
                 <Button isLoading label="Reset password" variant="primary" />
             ) : resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title="Your password has been reset. You can now sign in." />
-                    <Button href="/organizations" label="Back to sign in" variant="primary" />
+                    <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>
@@ -146,6 +142,6 @@ export default function ResetPassword() {
                     />
                 </Stack>
             )}
-        </AuthPage>
+        </AuthLayout>
     );
 }

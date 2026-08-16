@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(tags=["auth"])
 
-
 @router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
@@ -188,7 +187,10 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     try:
         email = token.registration_claims(payload.token)
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
+        raise HTTPException(
+            status_code=400,
+            detail="This registration link is invalid or expired. Request a new link to continue.",
+        ) from exc
     response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
         "longlink_registration",
@@ -210,7 +212,10 @@ async def get_registration_setup(response: Response, registration_token: str | N
     try:
         email = token.registration_claims(registration_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
+        raise HTTPException(
+            status_code=400,
+            detail="This registration link is invalid or expired. Request a new link to continue.",
+        ) from exc
     response.headers["Cache-Control"] = "no-store"
     return {"email": email}
 
@@ -228,15 +233,24 @@ async def complete_registration(
     try:
         email = token.registration_claims(registration_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
+        raise HTTPException(
+            status_code=400,
+            detail="This registration link is invalid or expired. Request a new link to continue.",
+        ) from exc
 
     # Prevent another browser tab's setup cookie from changing the displayed account identity.
     if payload.email != email:
-        raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
+        raise HTTPException(
+            status_code=409,
+            detail="Another registration was verified in this browser. Reopen the link for this email to continue safely.",
+        )
 
     # Reject token replay and concurrent account creation before expensive password hashing.
     if await users.by_email(session, email) is not None:
-        raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS")
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this email already exists. Sign in or reset your password to continue.",
+        )
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
@@ -244,7 +258,10 @@ async def complete_registration(
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
-        raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this email already exists. Sign in or reset your password to continue.",
+        ) from exc
 
     changed_organization_ids = await invitations.accept(session, user)
     await session.commit()

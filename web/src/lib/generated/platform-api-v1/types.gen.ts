@@ -977,6 +977,38 @@ export type ListApplicationsApiV1ApplicationsGetResponses = {
 
 export type ListApplicationsApiV1ApplicationsGetResponse = ListApplicationsApiV1ApplicationsGetResponses[keyof ListApplicationsApiV1ApplicationsGetResponses];
 
+export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Organization Id
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/{organization_id}/applications';
+};
+
+export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetError = GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors[keyof GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors];
+
+export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses = {
+    /**
+     * Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get
+     *
+     * Successful Response
+     */
+    200: Array<OrganizationApplicationSummary>;
+};
+
+export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse = GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses[keyof GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses];
+
 export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostData = {
     body: ApplicationCreate;
     path: {
@@ -1002,7 +1034,7 @@ export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostRes
     /**
      * Successful Response
      */
-    202: ApplicationResponse;
+    204: void;
 };
 
 export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
@@ -1094,7 +1126,7 @@ export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses = {
     /**
      * Successful Response
      */
-    202: ApplicationResponse;
+    204: void;
 };
 
 export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses];

@@ -4,8 +4,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
 
-/** Renders the shared shell for standalone account authentication pages. */
-export function AuthPage({
+/** Renders the shared standalone account page frame. */
+export function AuthLayout({
     children,
     description,
     title,

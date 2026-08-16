@@ -1,4 +1,4 @@
-import { Stack as AstryxStack } from '@astryxdesign/core-0-3/Stack';
+import { Stack as AstryxStack } from '@astryxdesign/core/Stack';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';

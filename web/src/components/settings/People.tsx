@@ -17,17 +17,17 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { Role } from '@/lib/roles';
 import type {
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
+    OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useOrganizationMembers } from '@/lib/hooks/use-organization';
 
-const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
+const ORGANIZATION_ROLE_LABELS: Record<OrganizationRoles, string> = {
     read: 'read',
     write: 'write',
     maintain: 'maintainer',
@@ -58,10 +58,10 @@ export default function People({
     const toast = useToast();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<Role>('write');
+    const [inviteRole, setInviteRole] = useState<OrganizationRoles>('write');
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
         member: OrganizationMemberAccessResponse;
-        role: Role;
+        role: OrganizationRoles;
     } | null>(null);
     const { inviteMember, changeMemberRole } = useOrganizationMembers(organizationId);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
@@ -164,7 +164,7 @@ export default function People({
                         <Button
                             label="Invite"
                             variant="primary"
-                            isDisabled={organizationId.length === 0}
+                            isDisabled={organizationId.length === 0 || !canInviteMembers}
                             onClick={() => setInviteOpen(true)}
                         />
                     </HStack>
@@ -263,11 +263,6 @@ export default function People({
                                 }}
                             >
                                 <VStack gap={4}>
-                                    {canInviteMembers ? null : (
-                                        <Text type="supporting">
-                                            You need maintainer, admin, or owner access to invite members.
-                                        </Text>
-                                    )}
                                     <FormLayout>
                                         <TextInput
                                             label="Email"
@@ -282,7 +277,7 @@ export default function People({
                                             label="Role"
                                             options={[...ROLE_NAMES]}
                                             value={inviteRole}
-                                            onChange={(value) => setInviteRole(value as Role)}
+                                            onChange={(value) => setInviteRole(value as OrganizationRoles)}
                                         />
                                     </FormLayout>
                                     <HStack gap={2} justify="end" wrap="wrap">
