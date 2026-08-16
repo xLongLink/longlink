@@ -7,6 +7,7 @@ import { platformApiPath } from '@/lib/platform-api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
+const AuthenticatedUserContext = createContext<UserSummary | undefined>(undefined);
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -38,24 +39,33 @@ export function useCurrentUser() {
     };
 }
 
+/** Provides the authenticated user to routes protected by Auth. */
+export function AuthenticatedUserProvider({ children, user }: { children: React.ReactNode; user: UserSummary }) {
+    return <AuthenticatedUserContext.Provider value={user}>{children}</AuthenticatedUserContext.Provider>;
+}
+
+/** Reads the user guaranteed by the authenticated route boundary. */
+export function useAuthenticatedUser() {
+    const user = useContext(AuthenticatedUserContext);
+    if (user === undefined) {
+        throw new Error('useAuthenticatedUser must be used within an AuthenticatedUserProvider');
+    }
+
+    return user;
+}
+
 /** Reads the current user profile and organization memberships. */
 export function useUserProfile() {
-    const { error, isLoading, refetch, user } = useCurrentUser();
-    const organizations = useApiQuery<UserOrganizationMembership[]>(
-        user ? platformApiPath('/me/organizations') : null,
-        {
-            parse: (value) => zUserOrganizationMembership.array().parse(value),
-        }
-    );
+    const user = useAuthenticatedUser();
+    const organizations = useApiQuery<UserOrganizationMembership[]>(platformApiPath('/me/organizations'), {
+        parse: (value) => zUserOrganizationMembership.array().parse(value),
+    });
 
     return {
-        user: user ?? null,
+        user,
         memberships: organizations.data ?? [],
-        isLoading,
         isOrganizationsLoading: organizations.isLoading,
-        error,
         organizationsError: organizations.error ?? null,
-        refetch,
     };
 }
 

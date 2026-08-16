@@ -6,7 +6,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
 import NotFound from '@/platform/NotFound';
 import { SignInCard } from '@/components/SignInCard';
-import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes and optionally restricts access to Platform administrators. */
 export function Auth({
@@ -49,5 +49,5 @@ export function Auth({
         return <NotFound />;
     }
 
-    return children;
+    return <AuthenticatedUserProvider user={user}>{children}</AuthenticatedUserProvider>;
 }

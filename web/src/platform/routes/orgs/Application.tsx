@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
 import View from '@/application/runtime/View';
 import { platformApiPath } from '@/lib/platform-api';
@@ -27,11 +26,7 @@ function OrganizationApplicationContent() {
     );
 }
 
-/** Protects one proxy-backed organization application. */
+/** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {
-    return (
-        <Auth>
-            <OrganizationApplicationContent />
-        </Auth>
-    );
+    return <OrganizationApplicationContent />;
 }

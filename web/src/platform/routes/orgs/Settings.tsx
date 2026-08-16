@@ -13,7 +13,6 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { S3 } from '@/svg/S3';
-import { Auth } from '@/components/Auth';
 import { formatBytes } from '@/lib/utils';
 import NotFound from '@/platform/NotFound';
 import { hasMinimumRole } from '@/lib/roles';
@@ -316,11 +315,7 @@ function OrganizationSettings() {
     );
 }
 
-/** Protects the organization settings page. */
+/** Renders organization settings after route authentication. */
 export default function OrganizationSettingsRoute() {
-    return (
-        <Auth>
-            <OrganizationSettings />
-        </Auth>
-    );
+    return <OrganizationSettings />;
 }

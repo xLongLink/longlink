@@ -76,26 +76,28 @@ export default [
         ]),
         route('*', './NotFound.tsx'),
     ]),
-    layout('./layouts/User.tsx', [
-        route('organizations', './routes/Organizations.tsx'),
-        route('settings', './routes/Settings.tsx'),
-    ]),
-    ...prefix('admin', [
-        layout('./layouts/Admin.tsx', [
-            route('users', './routes/admin/Users.tsx'),
-            route('applications', './routes/admin/Applications.tsx'),
-            route('organizations', './routes/admin/Organizations.tsx'),
-            route('database', './routes/admin/Database.tsx'),
-            route('storage', './routes/admin/Storage.tsx'),
-            route('compute', './routes/admin/Compute.tsx'),
-            route('operations', './routes/admin/Operations.tsx'),
+    layout('./layouts/Authenticated.tsx', [
+        layout('./layouts/User.tsx', [
+            route('organizations', './routes/Organizations.tsx'),
+            route('settings', './routes/Settings.tsx'),
         ]),
-    ]),
-    ...prefix('orgs/:organization', [
-        layout('./layouts/Organization.tsx', [
-            index('./routes/orgs/Organization.tsx'),
-            route('settings', './routes/orgs/Settings.tsx'),
+        ...prefix('admin', [
+            layout('./layouts/Admin.tsx', [
+                route('users', './routes/admin/Users.tsx'),
+                route('applications', './routes/admin/Applications.tsx'),
+                route('organizations', './routes/admin/Organizations.tsx'),
+                route('database', './routes/admin/Database.tsx'),
+                route('storage', './routes/admin/Storage.tsx'),
+                route('compute', './routes/admin/Compute.tsx'),
+                route('operations', './routes/admin/Operations.tsx'),
+            ]),
         ]),
-        route('apps/:application/*', './routes/orgs/Application.tsx'),
+        ...prefix('orgs/:organization', [
+            layout('./layouts/Organization.tsx', [
+                index('./routes/orgs/Organization.tsx'),
+                route('settings', './routes/orgs/Settings.tsx'),
+            ]),
+            route('apps/:application/*', './routes/orgs/Application.tsx'),
+        ]),
     ]),
 ] satisfies RouteConfig;

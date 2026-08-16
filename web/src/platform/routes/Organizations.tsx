@@ -1,6 +1,5 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useSearchParams } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -9,43 +8,20 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { proportional } from '@astryxdesign/core/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
-import { SignInCard } from '@/components/SignInCard';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
-/** Renders the organizations landing page for signed-in and anonymous users. */
+/** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
-    const {
-        user,
-        memberships,
-        isLoading: isProfileLoading,
-        isOrganizationsLoading,
-        error: profileError,
-        organizationsError,
-    } = useUserProfile();
-    const [searchParams] = useSearchParams();
+    const { memberships, isOrganizationsLoading, organizationsError } = useUserProfile();
     const organizationState =
-        memberships.length === 0 && (isProfileLoading || isOrganizationsLoading)
+        memberships.length === 0 && isOrganizationsLoading
             ? 'loading'
-            : memberships.length === 0 && (profileError || organizationsError)
+            : memberships.length === 0 && organizationsError
               ? 'error'
               : 'content';
-
-    // Show sign-in prompt for anonymous visitors.
-    if (!user) {
-        return (
-            <VStack
-                minHeight="calc(100dvh - var(--appshell-header-height, 0px))"
-                justify="center"
-                align="center"
-                width="100%"
-            >
-                <SignInCard initialEmail={searchParams.get('email') ?? ''} />
-            </VStack>
-        );
-    }
 
     return (
         <PageContainer gap={8}>

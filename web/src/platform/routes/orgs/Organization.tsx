@@ -10,7 +10,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { proportional } from '@astryxdesign/core/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { Auth } from '@/components/Auth';
 import NotFound from '@/platform/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -69,11 +68,7 @@ function OrganizationContent() {
     );
 }
 
-/** Protects the organization applications page. */
+/** Renders the organization applications page after route authentication. */
 export default function Organization() {
-    return (
-        <Auth>
-            <OrganizationContent />
-        </Auth>
-    );
+    return <OrganizationContent />;
 }
