@@ -59,7 +59,7 @@ export default [
                     route('text-input', './routes/docs/sdk/pages/TextInput.tsx'),
                 ]),
             ]),
-            route('*', './NotFound.tsx', { id: 'docs-not-found' }),
+            route('*', '../components/layouts/NotFound.tsx', { id: 'docs-not-found' }),
         ]),
     ]),
     layout('./layouts/Legal.tsx', [
@@ -74,7 +74,7 @@ export default [
             route('forgot-password', './routes/auth/ForgotPassword.tsx'),
             route('reset-password', './routes/auth/ResetPassword.tsx'),
         ]),
-        route('*', './NotFound.tsx'),
+        route('*', '../components/layouts/NotFound.tsx'),
     ]),
     route('login', './routes/Login.tsx'),
     layout('./layouts/Authenticated.tsx', [

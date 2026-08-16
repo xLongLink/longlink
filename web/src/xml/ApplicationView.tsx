@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
@@ -14,18 +13,15 @@ import { pageRouteIsDynamic, pageSchema, type RuntimePage } from './pages';
 import { createContext as createXmlContext, parseXML, RenderXML, type ASTNode, type XmlRuntime } from '.';
 
 type RuntimeApplicationViewProps = {
-    basePath: string;
-    errorAction?: ReactNode;
-    pages: string;
+    basePath?: string;
+    pages?: string;
 };
 
-type ErrorStateProps = { action?: ReactNode; message: string; title: string };
+type ErrorStateProps = { message: string; title: string };
 
 type PageState = { status: 'loading' } | { ast: [ASTNode]; status: 'ready' } | { message: string; status: 'error' };
 
 type ActivePageState = PageState & { key: string; runtimeContext: XmlRuntime };
-
-const emptyRouteParams: Record<string, string> = {};
 
 /** Finds the best runtime page for the current app-relative browser path. */
 function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
@@ -47,7 +43,7 @@ function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string) {
 }
 
 /** Renders XML pages registered by an application manifest. */
-export function RuntimeApplicationView({ basePath, errorAction, pages }: RuntimeApplicationViewProps) {
+export function RuntimeApplicationView({ basePath = '/', pages = '/pages.json' }: RuntimeApplicationViewProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [activePageState, setActivePageState] = useState<ActivePageState | null>(null);
@@ -65,7 +61,7 @@ export function RuntimeApplicationView({ basePath, errorAction, pages }: Runtime
 
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
-    const activeRouteParams = activeRouteMatch?.params ?? emptyRouteParams;
+    const activeRouteParams = activeRouteMatch?.params;
     const activePageStateKey = activePage ? `${pages}\u0000${activePage.path}\u0000${routePath}` : '';
     const visiblePageState = activePageState?.key === activePageStateKey ? activePageState : null;
 
@@ -90,7 +86,7 @@ export function RuntimeApplicationView({ basePath, errorAction, pages }: Runtime
             return;
         }
 
-        const runtimeContext = createXmlContext(activeRouteParams);
+        const runtimeContext = createXmlContext(activeRouteParams ?? {});
 
         runtimeContext.services.navigationBaseUrl = applicationHref('', basePath);
 
@@ -148,74 +144,48 @@ export function RuntimeApplicationView({ basePath, errorAction, pages }: Runtime
         };
     }, [activePage, activePageStateKey, activeRouteParams, basePath, resolvedPagesBaseUrl]);
 
-    let content: ReactNode;
-
-    if (error) {
-        // Surface page manifest loading failures in the shell.
-        content = (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <ErrorState
-                    action={errorAction}
-                    message={error.message || 'The application definition could not be loaded.'}
-                    title="Unable to load this application"
-                />
-            </Center>
-        );
-    } else {
-        // Show the shared 404 state for unknown application routes.
-        if (registeredPages && routePath && !activeRouteMatch) {
-            return <NotFoundLayout />;
-        }
-
-        let activeFallback: ReactNode = null;
-
-        // Choose the visible fallback for the active page.
-        if (!activePage) {
-            activeFallback = (
-                <ErrorState
-                    action={errorAction}
-                    message="The application did not expose any pages to render."
-                    title="Unexpected application response"
-                />
-            );
-        } else if (visiblePageState?.status === 'error') {
-            activeFallback = (
-                <ErrorState action={errorAction} message={visiblePageState.message} title="Unable to load this page" />
-            );
-        } else if (visiblePageState?.status !== 'ready') {
-            activeFallback = <Spinner label="Loading" />;
-        }
-
-        content = (
-            <>
-                {visiblePageState?.status === 'ready' ? (
-                    <RenderXML
-                        ast={visiblePageState.ast}
-                        baseUrl={resolvedPagesBaseUrl}
-                        ctx={visiblePageState.runtimeContext}
-                    />
-                ) : null}
-                {activeFallback && (
-                    <Center minHeight="calc(100vh - 14rem)" width="100%">
-                        {activeFallback}
-                    </Center>
-                )}
-            </>
-        );
-    }
-
     return (
         <ApplicationLayout basePath={basePath} pages={registeredPages ?? []}>
-            {content}
+            {!error && registeredPages && routePath && !activeRouteMatch ? (
+                <NotFoundLayout />
+            ) : error ? (
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
+                    <ErrorState
+                        message={error.message || 'The application definition could not be loaded.'}
+                        title="Unable to load this application"
+                    />
+                </Center>
+            ) : visiblePageState?.status === 'ready' ? (
+                <RenderXML
+                    ast={visiblePageState.ast}
+                    baseUrl={resolvedPagesBaseUrl}
+                    ctx={visiblePageState.runtimeContext}
+                />
+            ) : (
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
+                    {!activePage ? (
+                        <ErrorState
+                            message="The application did not expose any pages to render."
+                            title="Unexpected application response"
+                        />
+                    ) : visiblePageState?.status === 'error' ? (
+                        <ErrorState message={visiblePageState.message} title="Unable to load this page" />
+                    ) : (
+                        <Spinner label="Loading" />
+                    )}
+                </Center>
+            )}
         </ApplicationLayout>
     );
 }
 
+export default RuntimeApplicationView;
+
 /** Renders a centered in-shell application state message. */
-function ErrorState({ action, message, title }: ErrorStateProps) {
+function ErrorState({ message, title }: ErrorStateProps) {
     return (
         <Card maxWidth={576} padding={6} width="100%">
-            <EmptyState actions={action} description={message} headingLevel={1} role="alert" title={title} />
+            <EmptyState description={message} headingLevel={1} role="alert" title={title} />
         </Card>
     );
 }

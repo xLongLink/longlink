@@ -144,7 +144,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 name: application.data.name,
                 image: application.data.image,
                 description: application.data.description.length > 0 ? application.data.description : null,
-                icon: isIconName(application.data.icon) ? application.data.icon : null,
+                icon: application.data.icon || null,
                 envs,
             });
             setOpen(false);

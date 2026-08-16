@@ -9,6 +9,15 @@ import { api, ApiError } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
+/** Returns a resolved organization identifier for mutation requests. */
+function requireOrganizationId(organizationId: string): string {
+    if (!organizationId) {
+        throw new Error('Organization not found');
+    }
+
+    return organizationId;
+}
+
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
@@ -51,11 +60,9 @@ export function useOrganizationMembers(organizationId: string) {
     const inviteMember = useMutation({
         mutationFn: async (payload: OrganizationInvitationCreate) => {
             // Require a resolved organization before mutating.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
+            const id = requireOrganizationId(organizationId);
 
-            await api(`/api/v1/organizations/${organizationId}/invitations`, {
+            await api(`/api/v1/organizations/${id}/invitations`, {
                 json: payload,
                 method: 'POST',
             });
@@ -67,11 +74,9 @@ export function useOrganizationMembers(organizationId: string) {
     const changeMemberRole = useMutation({
         mutationFn: async ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) => {
             // Require a resolved organization before mutating.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
+            const id = requireOrganizationId(organizationId);
 
-            await api(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
+            await api(`/api/v1/organizations/${id}/members/${memberId}`, {
                 json: { role },
                 method: 'PATCH',
             });
@@ -93,11 +98,9 @@ export function useCreateOrganizationApplication(organizationId: string) {
     return useMutation({
         mutationFn: async (payload: ApplicationCreate) => {
             // Require a resolved organization before creating apps.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
+            const id = requireOrganizationId(organizationId);
 
-            await api(`/api/v1/organizations/${organizationId}/applications`, {
+            await api(`/api/v1/organizations/${id}/applications`, {
                 json: payload,
                 method: 'POST',
             });
@@ -117,9 +120,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
     return useMutation({
         mutationFn: async (applicationId: string) => {
             // Require a resolved organization before deleting apps.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
+            requireOrganizationId(organizationId);
 
             await api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
         },
@@ -138,11 +139,9 @@ export function useUpdateOrganization(organizationId: string) {
     return useMutation({
         mutationFn: async ({ avatar }: OrganizationUpdate) => {
             // Require a resolved organization before updating its settings.
-            if (!organizationId) {
-                throw new Error('Organization not found');
-            }
+            const id = requireOrganizationId(organizationId);
 
-            const response = await api(`/api/v1/organizations/${organizationId}`, {
+            const response = await api(`/api/v1/organizations/${id}`, {
                 json: { avatar },
                 method: 'PATCH',
             });

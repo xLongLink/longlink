@@ -164,7 +164,7 @@ export default function People({
                         <Button
                             label="Invite"
                             variant="primary"
-                            isDisabled={organizationId.length === 0}
+                            isDisabled={organizationId.length === 0 || !canInviteMembers}
                             onClick={() => setInviteOpen(true)}
                         />
                     </HStack>
@@ -263,11 +263,6 @@ export default function People({
                                 }}
                             >
                                 <VStack gap={4}>
-                                    {canInviteMembers ? null : (
-                                        <Text type="supporting">
-                                            You need maintainer, admin, or owner access to invite members.
-                                        </Text>
-                                    )}
                                     <FormLayout>
                                         <TextInput
                                             label="Email"

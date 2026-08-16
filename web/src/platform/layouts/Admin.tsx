@@ -3,10 +3,10 @@ import { TopNav } from '@astryxdesign/core/TopNav';
 import { Outlet, useLocation } from 'react-router';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Auth } from '@/components/Auth';
-import { administratorTabs } from '@/lib/administrator';
 import { findActiveTab } from '@/lib/paths';
 import { ProfileMenu } from '@/components/Profile';
 import TopLayout from '@/components/layouts/TopLayout';
+import { administratorTabs } from '@/lib/administrator';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
@@ -44,19 +44,15 @@ function AdminContent() {
                             size="sm"
                             value={activeTab ?? ''}
                         >
-                            {administratorTabs.map((tab) => {
-                                const TabIcon = tab.icon;
-
-                                return (
-                                    <Tab
-                                        key={tab.label}
-                                        href={tab.href}
-                                        icon={<TabIcon aria-hidden="true" size={16} />}
-                                        label={tab.label}
-                                        value={tab.href}
-                                    />
-                                );
-                            })}
+                            {administratorTabs.map((tab) => (
+                                <Tab
+                                    key={tab.label}
+                                    href={tab.href}
+                                    icon={<tab.icon aria-hidden="true" size={16} />}
+                                    label={tab.label}
+                                    value={tab.href}
+                                />
+                            ))}
                         </TabList>
                     </Stack>
                 </Stack>

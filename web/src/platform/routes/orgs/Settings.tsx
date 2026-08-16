@@ -49,7 +49,7 @@ function OrganizationOwner({ avatar, name }: { avatar: string; name: string }) {
 }
 
 /** Renders the organization settings page. */
-function OrganizationSettings() {
+export default function OrganizationSettings() {
     const { organization = '' } = useParams();
     const toast = useToast();
     const location = useLocation();
@@ -71,6 +71,15 @@ function OrganizationSettings() {
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
+    const peopleProps = {
+        organizationId,
+        members,
+        invitations,
+        canInviteMembers: hasOrganizationApplicationAccess,
+        canManageMembers: canManageOrganization,
+        isLoading,
+        error,
+    };
     const hashSection = location.hash.slice(1);
     const databasePath =
         hashSection === 'database' && organizationId ? `/api/v1/organizations/${organizationId}/database` : null;
@@ -183,28 +192,10 @@ function OrganizationSettings() {
                     </MenuItem>
                     <MenuSubSection icon="users" label="People">
                         <MenuItem label="Members">
-                            <People
-                                organizationId={organizationId}
-                                members={members}
-                                invitations={invitations}
-                                activeSection="members"
-                                canInviteMembers={hasOrganizationApplicationAccess}
-                                canManageMembers={canManageOrganization}
-                                isLoading={isLoading}
-                                error={error}
-                            />
+                            <People {...peopleProps} activeSection="members" />
                         </MenuItem>
                         <MenuItem label="Invitations">
-                            <People
-                                organizationId={organizationId}
-                                members={members}
-                                invitations={invitations}
-                                activeSection="invitations"
-                                canInviteMembers={hasOrganizationApplicationAccess}
-                                canManageMembers={canManageOrganization}
-                                isLoading={isLoading}
-                                error={error}
-                            />
+                            <People {...peopleProps} activeSection="invitations" />
                         </MenuItem>
                     </MenuSubSection>
                     <MenuItem icon="boxes" label="Applications">
@@ -323,9 +314,4 @@ function OrganizationSettings() {
             </Menu>
         </PageContainer>
     );
-}
-
-/** Renders organization settings after route authentication. */
-export default function OrganizationSettingsRoute() {
-    return <OrganizationSettings />;
 }

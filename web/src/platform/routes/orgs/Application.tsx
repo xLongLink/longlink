@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
@@ -24,36 +23,38 @@ export default function OrganizationApplication() {
         return <NotFoundLayout />;
     }
 
-    if (applicationAccess.status === 'creating') {
-        return <ApplicationState message="Please try again in a moment." title="Application is being deployed" />;
-    }
-
-    if (applicationAccess.status === 'deleting') {
+    if (applicationAccess.status === 'creating' || applicationAccess.status === 'deleting') {
         return (
-            <ApplicationState
-                action={<Button href={organizationHref} label="Back to organization" variant="primary" />}
-                message="This application is unavailable while LongLink removes it."
-                title="Application is being deleted"
-            />
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                <Card maxWidth={576} padding={6} width="100%">
+                    <EmptyState
+                        actions={
+                            applicationAccess.status === 'deleting' ? (
+                                <Button href={organizationHref} label="Back to organization" variant="primary" />
+                            ) : undefined
+                        }
+                        description={
+                            applicationAccess.status === 'creating'
+                                ? 'Please try again in a moment.'
+                                : 'This application is unavailable while LongLink removes it.'
+                        }
+                        headingLevel={1}
+                        role="alert"
+                        title={
+                            applicationAccess.status === 'creating'
+                                ? 'Application is being deployed'
+                                : 'Application is being deleted'
+                        }
+                    />
+                </Card>
+            </Center>
         );
     }
 
     return (
         <RuntimeApplicationView
             basePath={`${organizationHref}/apps/${application}`}
-            errorAction={<Button href={organizationHref} label="Back to organization" variant="primary" />}
             pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
         />
-    );
-}
-
-/** Renders a Platform-owned application lifecycle state. */
-function ApplicationState({ action, message, title }: { action?: ReactNode; message: string; title: string }) {
-    return (
-        <Center minHeight="calc(100vh - 14rem)" width="100%">
-            <Card maxWidth={576} padding={6} width="100%">
-                <EmptyState actions={action} description={message} headingLevel={1} role="alert" title={title} />
-            </Card>
-        </Center>
     );
 }
