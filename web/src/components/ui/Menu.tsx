@@ -6,8 +6,7 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
-import type { StoneIconName } from '@/icons';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, type StoneIconName } from '@/components/ui/Icon';
 
 type MenuProps = { children?: ReactNode };
 type MenuSectionProps = {

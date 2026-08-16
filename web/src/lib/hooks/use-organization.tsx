@@ -8,17 +8,17 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { useUserProfile } from '@/lib/hooks/use-user';
-import { ApiError, apiQueryKey, fetchApiJson, requestApi, requestApiJson } from '@/lib/api';
+import { ApiError, requestApi, requestApiJson } from '@/lib/api';
 import { zOrganizationDetails, zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
-    const organizationId = membership?.organization.id ?? '';
+    const organizationId = membership?.organization.id;
 
     const organizationQuery = useApiQuery<OrganizationDetails>(
-        organizationId.length > 0 ? `/api/v1/organizations/${organizationId}` : null,
+        organizationId ? `/api/v1/organizations/${organizationId}` : null,
         {
             parse: (value) => zOrganizationDetails.parse(value),
             refetchInterval: 5000,
@@ -28,7 +28,7 @@ export function useOrganization(organizationSlug: string) {
 
     const error: (Error & { status?: number }) | null =
         organizationQuery.error ??
-        (!isUserLoading && organizationSlug.length > 0 && organizationId.length === 0
+        (!isUserLoading && organizationSlug.length > 0 && !organizationId
             ? new ApiError('Organization not found', 404)
             : null);
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
@@ -60,7 +60,7 @@ export function useOrganizationMembers(organizationId: string) {
             });
         },
         onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
+            queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
     });
 
     const changeMemberRole = useMutation({
@@ -80,8 +80,8 @@ export function useOrganizationMembers(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
             ]),
     });
 
@@ -105,8 +105,8 @@ export function useCreateOrganizationApplication(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
+                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
             ]),
     });
 }
@@ -126,8 +126,8 @@ export function useDeleteOrganizationApplication(organizationId: string) {
         },
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
+                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
             ]),
     });
 }
@@ -135,7 +135,6 @@ export function useDeleteOrganizationApplication(organizationId: string) {
 /** Updates mutable organization settings and refreshes organization caches. */
 export function useUpdateOrganization(organizationId: string) {
     const queryClient = useQueryClient();
-    const organizationPath = `/api/v1/organizations/${organizationId}`;
 
     return useMutation({
         mutationFn: async ({ avatar }: OrganizationUpdate) => {
@@ -144,21 +143,21 @@ export function useUpdateOrganization(organizationId: string) {
                 throw new Error('Organization not found');
             }
 
-            return zOrganizationSummary.parse(
-                await fetchApiJson(organizationPath, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ avatar }),
-                })
+            const response = await requestApiJson(
+                `/api/v1/organizations/${organizationId}`,
+                { avatar },
+                { method: 'PATCH' }
             );
+
+            return zOrganizationSummary.parse(await response.json());
         },
         // Refresh every response that embeds Organization metadata.
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey(`/api/v1/organizations/${organizationId}`) }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/applications') }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
+                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
             ]),
     });
 }

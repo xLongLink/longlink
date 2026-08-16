@@ -12,7 +12,7 @@ import { S3 } from '@/components/svg/S3';
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { apiQueryKey, requestApi } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import CreateStorage from '@/components/dialogs/CreateStorage';
@@ -28,7 +28,7 @@ export default function AdminStorage() {
             await requestApi(`/api/v1/storages/${storageId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/storages') });
+            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/storages'] });
             toast({ body: 'Storage deleted' });
         },
     });

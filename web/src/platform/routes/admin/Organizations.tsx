@@ -14,7 +14,7 @@ import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { apiQueryKey, requestApi } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
@@ -30,8 +30,8 @@ export default function AdminOrganizations() {
         },
         onSuccess: async () => {
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
             ]);
             toast({ body: 'Organization deleted' });
         },

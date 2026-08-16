@@ -17,7 +17,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { apiQueryKey, fetchApiJson, requestApi } from '@/lib/api';
+import { fetchApiJson, requestApi } from '@/lib/api';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
@@ -37,7 +37,7 @@ export default function Settings() {
                 })
             ),
         onSuccess: (updatedUser) => {
-            queryClient.setQueryData(apiQueryKey('/api/v1/me'), updatedUser);
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
         },
     });
     const deleteOrganization = useMutation({
@@ -45,8 +45,8 @@ export default function Settings() {
             requestApi(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/organizations') }),
-                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/me/organizations') }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
             ]),
     });
     const [editedName, setEditedName] = useState<string | null>(null);

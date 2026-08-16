@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { clearSessionQueries } from '@/lib/react-query';
-import { ApiError, apiQueryKey, fetchApiJson, type ApiQueryKey } from '@/lib/api';
+import { ApiError, fetchApiJson, type ApiQueryKey } from '@/lib/api';
 
 type UseApiQueryOptions<TQueryFnData> = Omit<
     UseQueryOptions<TQueryFnData, Error, TQueryFnData, ApiQueryKey>,
@@ -22,7 +22,7 @@ export function useApiQuery<TQueryFnData>(
     return useQuery<TQueryFnData, Error, TQueryFnData, ApiQueryKey>({
         ...queryOptions,
         enabled: path !== null && (queryOptions.enabled ?? true),
-        queryKey: path !== null ? apiQueryKey(path) : disabledApiQueryKey,
+        queryKey: path !== null ? ['api', path] : disabledApiQueryKey,
         queryFn: async ({ signal }) => {
             // Normalize known API errors before React Query stores them.
             try {
@@ -31,7 +31,7 @@ export function useApiQuery<TQueryFnData>(
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
                     await clearSessionQueries(queryClient);
-                    queryClient.setQueryData(apiQueryKey('/api/v1/me'), null);
+                    queryClient.setQueryData(['api', '/api/v1/me'], null);
                 }
 
                 throw error;

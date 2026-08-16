@@ -11,7 +11,7 @@ import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/t
 import { useDeleteDialog } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
-import { apiQueryKey, requestApi } from '@/lib/api';
+import { requestApi } from '@/lib/api';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -28,7 +28,7 @@ export default function AdminDatabase() {
             await requestApi(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/v1/databases') });
+            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
             toast({ body: 'Database deleted' });
         },
     });

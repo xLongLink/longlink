@@ -17,7 +17,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { ApiError, apiQueryKey, fetchApiJson, requestApiJson } from '@/lib/api';
+import { ApiError, fetchApiJson, requestApiJson } from '@/lib/api';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
@@ -83,7 +83,7 @@ export default function VerifyEmail() {
             const user = await completion.mutateAsync(payload);
 
             await clearSessionQueries(queryClient);
-            queryClient.setQueryData(apiQueryKey('/api/v1/me'), user);
+            queryClient.setQueryData(['api', '/api/v1/me'], user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             navigate('/organizations', { replace: true });
         } catch (error) {

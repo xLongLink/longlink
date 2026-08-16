@@ -7,7 +7,7 @@
  */
 
 import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
-import { stoneIconRegistry } from './icons';
+import { stoneIconRegistry } from './components/ui/Icon';
 
 /**
  * VS Code Dark syntax palette keeps code familiar and readable in every mode.

@@ -14,7 +14,7 @@ import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen
 import { useToast } from '@/lib/hooks/use-toast';
 import { useApiQuery } from '@/lib/hooks/use-api';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { ICON_NAMES, isIconName, type IconName } from '@/components/ui/Icon';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
