@@ -1,10 +1,9 @@
+import { Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { Outlet, useLocation } from 'react-router';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Auth } from '@/components/Auth';
-import { findActiveTab } from '@/lib/paths';
 import { ProfileMenu } from '@/components/Profile';
+import { Navigation } from '@/components/Navigation';
 import TopLayout from '@/components/layouts/TopLayout';
 import { administratorTabs } from '@/lib/administrator';
 import { PageContainer } from '@/components/PageContainer';
@@ -22,9 +21,7 @@ export default function Admin() {
 
 /** Renders administrator navigation after the administrator guard passes. */
 function AdminContent() {
-    const { pathname } = useLocation();
     const user = useAuthenticatedUser();
-    const activeTab = findActiveTab(administratorTabs, pathname);
 
     return (
         <TopLayout
@@ -36,25 +33,7 @@ function AdminContent() {
                         heading={<PageBreadcrumb />}
                         label="Main navigation"
                     />
-                    <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                        <TabList
-                            aria-label="Section navigation"
-                            hasDivider
-                            onChange={() => undefined}
-                            size="sm"
-                            value={activeTab ?? ''}
-                        >
-                            {administratorTabs.map((tab) => (
-                                <Tab
-                                    key={tab.label}
-                                    href={tab.href}
-                                    icon={<tab.icon aria-hidden="true" size={16} />}
-                                    label={tab.label}
-                                    value={tab.href}
-                                />
-                            ))}
-                        </TabList>
-                    </Stack>
+                    <Navigation tabs={administratorTabs} />
                 </Stack>
             }
         >

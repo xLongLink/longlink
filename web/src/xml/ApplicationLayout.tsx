@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react';
 import startCase from 'lodash/startCase';
-import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { findActiveTab } from '@/lib/paths';
 import { Wordmark } from '@/components/Wordmark';
+import { Navigation } from '@/components/Navigation';
 import TopLayout from '@/components/layouts/TopLayout';
 import { getIconComponent } from '@/components/ui/Icon';
 import { PageContainer } from '@/components/PageContainer';
@@ -27,7 +25,6 @@ export function applicationHref(route: string, basePath: string): string {
 
 /** Renders application content with navigation derived from the runtime page manifest. */
 export function ApplicationLayout({ basePath, children, pages }: ApplicationLayoutProps) {
-    const { pathname } = useLocation();
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
@@ -44,8 +41,6 @@ export function ApplicationLayout({ basePath, children, pages }: ApplicationLayo
     }
 
     const tabs = [...tabGroups.values()];
-    const activeTab = findActiveTab(tabs, pathname);
-
     return (
         <TopLayout
             topMenu={
@@ -71,31 +66,7 @@ export function ApplicationLayout({ basePath, children, pages }: ApplicationLayo
                         }
                         label="Main navigation"
                     />
-                    {tabs.length > 0 ? (
-                        <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                            <TabList
-                                aria-label="Section navigation"
-                                hasDivider
-                                onChange={() => undefined}
-                                size="sm"
-                                value={activeTab ?? ''}
-                            >
-                                {tabs.map((tab) => {
-                                    const TabIcon = tab.icon;
-
-                                    return (
-                                        <Tab
-                                            key={tab.label}
-                                            href={tab.href}
-                                            icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
-                                            label={tab.label}
-                                            value={tab.href}
-                                        />
-                                    );
-                                })}
-                            </TabList>
-                        </Stack>
-                    ) : null}
+                    {tabs.length > 0 ? <Navigation tabs={tabs} /> : null}
                 </Stack>
             }
         >
