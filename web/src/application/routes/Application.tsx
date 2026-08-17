@@ -7,21 +7,34 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
+import { resolveRequestUrl } from '@/xml/core/url';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { resolveRequestUrl } from './core/url';
-import { ApplicationLayout, applicationHref } from './ApplicationLayout';
-import { createContext as createXmlContext, parseXML, RenderXML } from '.';
-import { pageRouteIsDynamic, pageSchema, type RuntimePage } from './pages';
+import { pageRouteIsDynamic, type RuntimePage } from '@/xml/pages';
+import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
+import ApplicationLayout, { useApplicationLayout } from '../layouts/Application';
+
+/** Builds an application runtime href for one page route. */
+function applicationHref(route: string, basePath: string): string {
+    const normalizedBasePath = basePath === '/' ? '' : basePath;
+
+    return route ? `${normalizedBasePath}/${route}` : normalizedBasePath || '/';
+}
 
 /** Renders XML pages registered by an application manifest. */
 export function RuntimeApplicationView({ basePath, pages }: { basePath: string; pages: string }) {
+    return (
+        <ApplicationLayout basePath={basePath} pagesUrl={pages}>
+            <ApplicationContent />
+        </ApplicationLayout>
+    );
+}
+
+/** Resolves and renders the active XML application page. */
+function ApplicationContent() {
+    const { basePath, error, pagesUrl, registeredPages } = useApplicationLayout();
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
-    const resolvedPagesBaseUrl = pages.replace(/pages\.json(?:[?#].*)?$/i, '');
-    const { data: registeredPages, error } = useQuery({
-        queryKey: ['api', pages],
-        queryFn: async ({ signal }) => pageSchema.array().parse(await api(pages, { signal }).json()),
-    });
+    const resolvedPagesBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(() => {
         const [match] =
@@ -56,7 +69,7 @@ export function RuntimeApplicationView({ basePath, pages }: { basePath: string; 
     }, [activePage, activeRouteMatch?.params, basePath]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
-        queryKey: ['application-page', pages, activePage?.path],
+        queryKey: ['application-page', pagesUrl, activePage?.path],
         queryFn: async ({ signal }) => {
             if (!activePage) throw new Error('No active application page');
 
@@ -128,9 +141,14 @@ export function RuntimeApplicationView({ basePath, pages }: { basePath: string; 
         );
     }
 
+    return content;
+}
+
+/** Renders an SDK application from its local page manifest. */
+export default function Application() {
     return (
-        <ApplicationLayout basePath={basePath} pages={registeredPages ?? []}>
-            {content}
+        <ApplicationLayout pagesUrl="/pages.json">
+            <ApplicationContent />
         </ApplicationLayout>
     );
 }

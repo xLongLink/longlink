@@ -5,7 +5,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageError, PageLoading } from '@/components/Utils';
-import { RuntimeApplicationView } from '@/xml/ApplicationView';
+import { ApplicationLayout } from '@/platform/layouts/Application';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */
@@ -59,9 +59,9 @@ export default function OrganizationApplication() {
     }
 
     return (
-        <RuntimeApplicationView
+        <ApplicationLayout
             basePath={`/orgs/${organization}/apps/${application}`}
-            pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
+            applicationId={applicationAccess.id}
         />
     );
 }
