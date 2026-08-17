@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
 import { Card } from '@astryxdesign/core/Card';
 import { useQuery } from '@tanstack/react-query';
@@ -11,11 +10,10 @@ import { resolveRequestUrl } from '@/xml/core/url';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { pageRouteIsDynamic, type RuntimePage } from '@/xml/pages';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
-import ApplicationLayout, { useApplicationLayout } from '../layouts/Application';
+import ApplicationLayout, { type ApplicationRuntime } from '../layouts/Application';
 
 /** Resolves and renders the active XML application page. */
-function ApplicationContent() {
-    const { error, pagesUrl, registeredPages } = useApplicationLayout();
+function ApplicationContent({ error, pagesUrl, registeredPages }: ApplicationRuntime) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const resolvedPagesBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
@@ -78,12 +76,12 @@ function ApplicationContent() {
         }
     }, [firstTabPage, navigate, routePath]);
 
-    let content: ReactNode;
-
     if (!error && registeredPages && routePath && !activeRouteMatch) {
-        content = <NotFoundLayout />;
-    } else if (error) {
-        content = (
+        return <NotFoundLayout />;
+    }
+
+    if (error) {
+        return (
             <Center minHeight="calc(100vh - 14rem)" width="100%">
                 <Card maxWidth={576} padding={6} width="100%">
                     <EmptyState
@@ -95,44 +93,50 @@ function ApplicationContent() {
                 </Card>
             </Center>
         );
-    } else if (activePageAst && runtimeContext) {
-        content = <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
-    } else {
-        content = (
+    }
+
+    if (activePageAst && runtimeContext) {
+        return <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
+    }
+
+    if (!activePage) {
+        return (
             <Center minHeight="calc(100vh - 14rem)" width="100%">
-                {!activePage ? (
-                    <Card maxWidth={576} padding={6} width="100%">
-                        <EmptyState
-                            description="The application did not expose any pages to render."
-                            headingLevel={1}
-                            role="alert"
-                            title="Unexpected application response"
-                        />
-                    </Card>
-                ) : activePageError ? (
-                    <Card maxWidth={576} padding={6} width="100%">
-                        <EmptyState
-                            description={activePageError.message || 'Failed to load page'}
-                            headingLevel={1}
-                            role="alert"
-                            title="Unable to load this page"
-                        />
-                    </Card>
-                ) : (
-                    <Spinner label="Loading" />
-                )}
+                <Card maxWidth={576} padding={6} width="100%">
+                    <EmptyState
+                        description="The application did not expose any pages to render."
+                        headingLevel={1}
+                        role="alert"
+                        title="Unexpected application response"
+                    />
+                </Card>
             </Center>
         );
     }
 
-    return content;
+    if (activePageError) {
+        return (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                <Card maxWidth={576} padding={6} width="100%">
+                    <EmptyState
+                        description={activePageError.message || 'Failed to load page'}
+                        headingLevel={1}
+                        role="alert"
+                        title="Unable to load this page"
+                    />
+                </Card>
+            </Center>
+        );
+    }
+
+    return (
+        <Center minHeight="calc(100vh - 14rem)" width="100%">
+            <Spinner label="Loading" />
+        </Center>
+    );
 }
 
 /** Renders an SDK application from its local page manifest. */
 export default function Application() {
-    return (
-        <ApplicationLayout pagesUrl="/pages.json">
-            <ApplicationContent />
-        </ApplicationLayout>
-    );
+    return <ApplicationLayout pagesUrl="/pages.json">{ApplicationContent}</ApplicationLayout>;
 }

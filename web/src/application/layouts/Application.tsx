@@ -3,7 +3,6 @@ import startCase from 'lodash/startCase';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
-import { createContext, useContext } from 'react';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { api } from '@/lib/api';
 import { Wordmark } from '@/components/Wordmark';
@@ -13,26 +12,20 @@ import { getIconComponent } from '@/components/ui/Icon';
 import { PageContainer } from '@/components/PageContainer';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/xml/pages';
 
-type ApplicationRuntime = {
+export type ApplicationRuntime = {
     error: Error | null;
     pagesUrl: string;
     registeredPages: RuntimePage[] | undefined;
 };
 
-const ApplicationContext = createContext<ApplicationRuntime | null>(null);
-
-/** Returns the manifest state managed by the application layout. */
-export function useApplicationLayout(): ApplicationRuntime {
-    const application = useContext(ApplicationContext);
-    if (!application) {
-        throw new Error('useApplicationLayout must be used inside ApplicationLayout');
-    }
-
-    return application;
-}
-
 /** Renders the application shell and manifest-derived navigation. */
-export default function ApplicationLayout({ children, pagesUrl }: { children: ReactNode; pagesUrl: string }) {
+export default function ApplicationLayout({
+    children,
+    pagesUrl,
+}: {
+    children: (runtime: ApplicationRuntime) => ReactNode;
+    pagesUrl: string;
+}) {
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
@@ -53,37 +46,35 @@ export default function ApplicationLayout({ children, pagesUrl }: { children: Re
     }
 
     return (
-        <ApplicationContext.Provider value={{ error, pagesUrl, registeredPages }}>
-            <TopLayout
-                topMenu={
-                    <Stack>
-                        <TopNav
-                            className="px-7"
-                            endContent={
-                                <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                                    Documentation
-                                </Link>
-                            }
-                            heading={
-                                <Link
-                                    as="a"
-                                    href="https://longlink.dev"
-                                    label="LongLink home"
-                                    color="inherit"
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                >
-                                    <Wordmark />
-                                </Link>
-                            }
-                            label="Main navigation"
-                        />
-                        {tabGroups.size > 0 ? <Navigation tabs={[...tabGroups.values()]} /> : null}
-                    </Stack>
-                }
-            >
-                <PageContainer minHeight="100%">{children}</PageContainer>
-            </TopLayout>
-        </ApplicationContext.Provider>
+        <TopLayout
+            topMenu={
+                <Stack>
+                    <TopNav
+                        className="px-7"
+                        endContent={
+                            <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
+                                Documentation
+                            </Link>
+                        }
+                        heading={
+                            <Link
+                                as="a"
+                                href="https://longlink.dev"
+                                label="LongLink home"
+                                color="inherit"
+                                rel="noopener noreferrer"
+                                target="_blank"
+                            >
+                                <Wordmark />
+                            </Link>
+                        }
+                        label="Main navigation"
+                    />
+                    {tabGroups.size > 0 ? <Navigation tabs={[...tabGroups.values()]} /> : null}
+                </Stack>
+            }
+        >
+            <PageContainer minHeight="100%">{children({ error, pagesUrl, registeredPages })}</PageContainer>
+        </TopLayout>
     );
 }
