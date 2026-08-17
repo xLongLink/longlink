@@ -1,16 +1,14 @@
-import type { ReactNode } from 'react';
 import startCase from 'lodash/startCase';
 import { useEffect, useMemo } from 'react';
-import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
+import { PageError } from '@/components/Utils';
 import { Wordmark } from '@/components/Wordmark';
 import { resolveRequestUrl } from '@/xml/core/url';
 import { Navigation } from '@/components/Navigation';
@@ -20,11 +18,6 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/xml/pages';
-
-/** Builds a proxy application href for one page route. */
-function applicationHref(route: string, basePath: string): string {
-    return route ? `${basePath}/${route}` : basePath;
-}
 
 /** Renders a platform application from its authenticated proxy manifest. */
 export function ApplicationLayout({ applicationId }: { applicationId: string }) {
@@ -64,7 +57,7 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
 
         const context = createXmlContext(activeRouteMatch?.params ?? {});
 
-        context.services.navigationBaseUrl = applicationHref('', basePath);
+        context.services.navigationBaseUrl = basePath;
         return context;
     }, [activePage, activeRouteMatch?.params, basePath]);
     const { data: activePageAst, error: activePageError } = useQuery({
@@ -89,7 +82,7 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
         }
 
         tabGroups.set(page.tab, {
-            href: applicationHref(page.route, basePath),
+            href: `${basePath}/${page.route}`,
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
         });
@@ -101,38 +94,47 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
             return;
         }
 
-        navigate(applicationHref(firstTabPage.route, basePath), { replace: true });
+        navigate(`${basePath}/${firstTabPage.route}`, { replace: true });
     }, [basePath, firstTabPage, navigate, routePath]);
 
-    let content: ReactNode;
+    /** Selects the active page result after all runtime hooks have run. */
+    function renderContent() {
+        if (!error && registeredPages && routePath && !activeRouteMatch) {
+            return <NotFoundLayout />;
+        }
 
-    if (!error && registeredPages && routePath && !activeRouteMatch) {
-        content = <NotFoundLayout />;
-    } else if (error) {
-        content = (
-            <ApplicationError
-                description={error.message || 'The application definition could not be loaded.'}
-                title="Unable to load this application"
-            />
-        );
-    } else if (activePageAst && runtimeContext) {
-        content = <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
-    } else if (!activePage) {
-        content = (
-            <ApplicationError
-                description="The application did not expose any pages to render."
-                title="Unexpected application response"
-            />
-        );
-    } else if (activePageError) {
-        content = (
-            <ApplicationError
-                description={activePageError.message || 'Failed to load page'}
-                title="Unable to load this page"
-            />
-        );
-    } else {
-        content = (
+        if (error) {
+            return (
+                <PageError
+                    description={error.message || 'The application definition could not be loaded.'}
+                    title="Unable to load this application"
+                />
+            );
+        }
+
+        if (activePageAst && runtimeContext) {
+            return <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
+        }
+
+        if (!activePage) {
+            return (
+                <PageError
+                    description="The application did not expose any pages to render."
+                    title="Unexpected application response"
+                />
+            );
+        }
+
+        if (activePageError) {
+            return (
+                <PageError
+                    description={activePageError.message || 'Failed to load page'}
+                    title="Unable to load this page"
+                />
+            );
+        }
+
+        return (
             <Center minHeight="calc(100vh - 14rem)" width="100%">
                 <Spinner label="Loading" />
             </Center>
@@ -168,18 +170,7 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
                 </Stack>
             }
         >
-            <PageContainer minHeight="100%">{content}</PageContainer>
+            <PageContainer minHeight="100%">{renderContent()}</PageContainer>
         </TopLayout>
-    );
-}
-
-/** Renders an application loading or request error. */
-function ApplicationError({ description, title }: { description: string; title: string }) {
-    return (
-        <Center minHeight="calc(100vh - 14rem)" width="100%">
-            <Card maxWidth={576} padding={6} width="100%">
-                <EmptyState description={description} headingLevel={1} role="alert" title={title} />
-            </Card>
-        </Center>
     );
 }

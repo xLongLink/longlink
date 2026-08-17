@@ -1,11 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { Card } from '@astryxdesign/core/Card';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
+import { PageError } from '@/components/Utils';
 import { resolveRequestUrl } from '@/xml/core/url';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { pageRouteIsDynamic, type RuntimePage } from '@/xml/pages';
@@ -16,7 +15,6 @@ import ApplicationLayout, { type ApplicationRuntime } from '../layouts/Applicati
 function ApplicationContent({ error, pagesUrl, registeredPages }: ApplicationRuntime) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
-    const resolvedPagesBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
     const routePath = wildcardPath ?? '';
     const activeRouteMatch = useMemo(() => {
         const [match] =
@@ -55,7 +53,7 @@ function ApplicationContent({ error, pagesUrl, registeredPages }: ApplicationRun
         queryFn: async ({ signal }) => {
             if (!activePage) throw new Error('No active application page');
 
-            const pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
+            const pageUrl = resolveRequestUrl('/', activePage.path);
             const content = await api(pageUrl, { headers: { Accept: 'application/xml' }, signal }).text();
 
             return parseXML(content);
@@ -82,50 +80,32 @@ function ApplicationContent({ error, pagesUrl, registeredPages }: ApplicationRun
 
     if (error) {
         return (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Card maxWidth={576} padding={6} width="100%">
-                    <EmptyState
-                        description={error.message || 'The application definition could not be loaded.'}
-                        headingLevel={1}
-                        role="alert"
-                        title="Unable to load this application"
-                    />
-                </Card>
-            </Center>
+            <PageError
+                description={error.message || 'The application definition could not be loaded.'}
+                title="Unable to load this application"
+            />
         );
     }
 
     if (activePageAst && runtimeContext) {
-        return <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
+        return <RenderXML ast={activePageAst} baseUrl="/" ctx={runtimeContext} />;
     }
 
     if (!activePage) {
         return (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Card maxWidth={576} padding={6} width="100%">
-                    <EmptyState
-                        description="The application did not expose any pages to render."
-                        headingLevel={1}
-                        role="alert"
-                        title="Unexpected application response"
-                    />
-                </Card>
-            </Center>
+            <PageError
+                description="The application did not expose any pages to render."
+                title="Unexpected application response"
+            />
         );
     }
 
     if (activePageError) {
         return (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Card maxWidth={576} padding={6} width="100%">
-                    <EmptyState
-                        description={activePageError.message || 'Failed to load page'}
-                        headingLevel={1}
-                        role="alert"
-                        title="Unable to load this page"
-                    />
-                </Card>
-            </Center>
+            <PageError
+                description={activePageError.message || 'Failed to load page'}
+                title="Unable to load this page"
+            />
         );
     }
 
