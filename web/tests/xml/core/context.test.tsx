@@ -50,7 +50,13 @@ describe('core/context', () => {
 
         await expect(
             setupContext(
-                [{ name: 'Query', params: compileProps({ id: 'issue', path: 'https://evil.example/issues' }), children: [] }],
+                [
+                    {
+                        name: 'Query',
+                        params: compileProps({ id: 'issue', path: 'https://evil.example/issues' }),
+                        children: [],
+                    },
+                ],
                 ctx,
                 '/proxy'
             )

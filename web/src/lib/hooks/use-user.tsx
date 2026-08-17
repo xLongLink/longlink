@@ -77,6 +77,6 @@ export function useSignOut() {
     return async () => {
         await api('/api/v1/auth/logout', { method: 'POST' });
         queryClient.clear();
-        window.location.assign('/organizations');
+        window.location.assign('/user/organizations');
     };
 }

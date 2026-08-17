@@ -45,14 +45,14 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                     >
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
-                            href="/organizations"
+                            href="/user/organizations"
                             label="Organizations"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
-                            href="/settings"
+                            href="/user/settings"
                             label="Settings"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}

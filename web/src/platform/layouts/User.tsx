@@ -34,19 +34,19 @@ export default function UserLayout() {
                             hasDivider
                             onChange={() => undefined}
                             size="sm"
-                            value={pathname === '/settings' ? '/settings' : '/organizations'}
+                            value={pathname === '/user/settings' ? '/user/settings' : '/user/organizations'}
                         >
                             <Tab
-                                href="/organizations"
+                                href="/user/organizations"
                                 icon={<Building2 aria-hidden="true" size={16} />}
                                 label="Organizations"
-                                value="/organizations"
+                                value="/user/organizations"
                             />
                             <Tab
-                                href="/settings"
+                                href="/user/settings"
                                 icon={<Settings2 aria-hidden="true" size={16} />}
                                 label="Settings"
-                                value="/settings"
+                                value="/user/settings"
                             />
                         </TabList>
                     </Stack>

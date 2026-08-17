@@ -45,7 +45,7 @@ export default function Login() {
         try {
             await login.mutateAsync(payload);
             await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me'] });
-            navigate('/organizations', { replace: true });
+            navigate('/user/organizations', { replace: true });
         } catch (loginError) {
             showToast({
                 body: loginError instanceof Error ? loginError.message : 'Sign in failed',

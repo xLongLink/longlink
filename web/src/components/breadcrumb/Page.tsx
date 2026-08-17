@@ -11,7 +11,7 @@ export function PageBreadcrumb() {
 
     return (
         <Breadcrumbs separator=">" variant="supporting">
-            <BreadcrumbItem href="/organizations">
+            <BreadcrumbItem href="/user/organizations">
                 <Wordmark />
             </BreadcrumbItem>
             <BreadcrumbItem isCurrent>{label}</BreadcrumbItem>
