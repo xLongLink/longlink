@@ -13,25 +13,9 @@ import { pageRouteIsDynamic, type RuntimePage } from '@/xml/pages';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 import ApplicationLayout, { useApplicationLayout } from '../layouts/Application';
 
-/** Builds an application runtime href for one page route. */
-function applicationHref(route: string, basePath: string): string {
-    const normalizedBasePath = basePath === '/' ? '' : basePath;
-
-    return route ? `${normalizedBasePath}/${route}` : normalizedBasePath || '/';
-}
-
-/** Renders XML pages registered by an application manifest. */
-export function RuntimeApplicationView({ basePath, pages }: { basePath: string; pages: string }) {
-    return (
-        <ApplicationLayout basePath={basePath} pagesUrl={pages}>
-            <ApplicationContent />
-        </ApplicationLayout>
-    );
-}
-
 /** Resolves and renders the active XML application page. */
 function ApplicationContent() {
-    const { basePath, error, pagesUrl, registeredPages } = useApplicationLayout();
+    const { error, pagesUrl, registeredPages } = useApplicationLayout();
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const resolvedPagesBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
@@ -64,9 +48,9 @@ function ApplicationContent() {
 
         const context = createXmlContext(activeRouteMatch?.params ?? {});
 
-        context.services.navigationBaseUrl = applicationHref('', basePath);
+        context.services.navigationBaseUrl = '/';
         return context;
-    }, [activePage, activeRouteMatch?.params, basePath]);
+    }, [activePage, activeRouteMatch?.params]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
         queryKey: ['application-page', pagesUrl, activePage?.path],
@@ -90,9 +74,9 @@ function ApplicationContent() {
 
         // Keep root-routed tabs at the application root.
         if (firstTabPage.route) {
-            navigate(applicationHref(firstTabPage.route, basePath), { replace: true });
+            navigate(`/${firstTabPage.route}`, { replace: true });
         }
-    }, [basePath, firstTabPage, navigate, routePath]);
+    }, [firstTabPage, navigate, routePath]);
 
     let content: ReactNode;
 

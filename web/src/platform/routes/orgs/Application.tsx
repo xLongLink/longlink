@@ -58,10 +58,5 @@ export default function OrganizationApplication() {
         );
     }
 
-    return (
-        <ApplicationLayout
-            basePath={`/orgs/${organization}/apps/${application}`}
-            applicationId={applicationAccess.id}
-        />
-    );
+    return <ApplicationLayout applicationId={applicationAccess.id} />;
 }

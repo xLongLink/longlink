@@ -14,7 +14,6 @@ import { PageContainer } from '@/components/PageContainer';
 import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/xml/pages';
 
 type ApplicationRuntime = {
-    basePath: string;
     error: Error | null;
     pagesUrl: string;
     registeredPages: RuntimePage[] | undefined;
@@ -33,15 +32,7 @@ export function useApplicationLayout(): ApplicationRuntime {
 }
 
 /** Renders the application shell and manifest-derived navigation. */
-export default function ApplicationLayout({
-    basePath = '/',
-    children,
-    pagesUrl,
-}: {
-    basePath?: string;
-    children: ReactNode;
-    pagesUrl: string;
-}) {
+export default function ApplicationLayout({ children, pagesUrl }: { children: ReactNode; pagesUrl: string }) {
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
@@ -54,17 +45,15 @@ export default function ApplicationLayout({
             continue;
         }
 
-        const normalizedBasePath = basePath === '/' ? '' : basePath;
-
         tabGroups.set(page.tab, {
-            href: `${normalizedBasePath}/${page.route}`,
+            href: `/${page.route}`,
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
         });
     }
 
     return (
-        <ApplicationContext.Provider value={{ basePath, error, pagesUrl, registeredPages }}>
+        <ApplicationContext.Provider value={{ error, pagesUrl, registeredPages }}>
             <TopLayout
                 topMenu={
                     <Stack>
