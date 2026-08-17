@@ -183,7 +183,7 @@ function validateSetupNode(node: ASTNode): void {
     }
 
     // Validate query declarations.
-    if (node.name === 'Query') {
+    else if (node.name === 'Query') {
         // Require a declared query key.
         if (!node.params.id) throw new Error('Query requires a string id');
 

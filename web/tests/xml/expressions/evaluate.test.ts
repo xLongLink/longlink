@@ -17,12 +17,6 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${index + 1}. ${name}'), ctx)).toBe('1. Hero');
     });
 
-    it('preserves literal expression syntax without parsing it', () => {
-        const ctx: Scope = { bindings: {} };
-
-        expect(evaluate(compileAttribute('${not valid', true), ctx)).toBe('${not valid');
-    });
-
     /* Object literals inside `${...}` should be evaluated as objects, not strings. */
     it('parses object literals wrapped in `${...}`', () => {
         const ctx: Scope = { bindings: { value: 5 } };

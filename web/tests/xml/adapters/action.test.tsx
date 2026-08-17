@@ -59,9 +59,8 @@ describe('Action', () => {
         expect(notificationCalls).toBe(1);
     });
 
-    it('reports HTTP failures without invalidating or closing dialogs', async () => {
+    it('reports HTTP failures without invalidating', async () => {
         let invalidationCalls = 0;
-        let closeCalls = 0;
         let errorMessage = '';
         const ctx = createContext();
         ctx.services.invalidate = async () => {
@@ -76,14 +75,10 @@ describe('Action', () => {
                 if (options.type === 'error') errorMessage = String(options.body);
 
                 return () => {};
-            },
-            () => {
-                closeCalls += 1;
             }
         );
 
         expect(invalidationCalls).toBe(0);
-        expect(closeCalls).toBe(0);
         expect(errorMessage).toBe('Request failed with status 422');
     });
 

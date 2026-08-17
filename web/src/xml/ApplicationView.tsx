@@ -56,7 +56,7 @@ export function RuntimeApplicationView({ basePath, pages }: { basePath: string; 
     }, [activePage, activeRouteMatch?.params, basePath]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
-        queryKey: ['application-page', pages, activePage?.path, routePath],
+        queryKey: ['application-page', pages, activePage?.path],
         queryFn: async ({ signal }) => {
             if (!activePage) throw new Error('No active application page');
 

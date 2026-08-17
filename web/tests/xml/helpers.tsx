@@ -6,9 +6,7 @@ import { compileAttribute } from '@/xml/expressions';
 
 /** Compiles string fixture attributes through the same document compiler rules. */
 export function compileProps(props: Record<string, string>): ASTProps {
-    return Object.fromEntries(
-        Object.entries(props).map(([name, value]) => [name, compileAttribute(value, name === 'field')])
-    );
+    return Object.fromEntries(Object.entries(props).map(([name, value]) => [name, compileAttribute(value)]));
 }
 
 /** Renders XML AST to static markup. */

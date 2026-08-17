@@ -61,7 +61,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
             services.setups[id]();
         }
 
-        if (node.name === 'Query') {
+        else if (node.name === 'Query') {
             const params = node.params;
             const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
             const pathAttribute = params.path;

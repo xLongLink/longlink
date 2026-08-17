@@ -57,7 +57,8 @@ function toNodes(input: unknown): ASTNode[] {
     if (!input || typeof input !== 'object') return [];
 
     const record = input as Record<string, unknown>;
-    const attributes = collectParams(record[':@']);
+    const params = collectParams(record[':@']);
+    validateParams(params);
 
     // Preserve sibling order while stripping parser metadata.
     return Object.entries(record).flatMap(([key, value]) => {
@@ -74,7 +75,7 @@ function toNodes(input: unknown): ASTNode[] {
         return [
             {
                 name: key,
-                params: attributes,
+                params,
                 children: toNodes(value),
             },
         ];
@@ -97,9 +98,26 @@ function collectParams(input: unknown): ASTProps {
         // Compile string attributes without resolving runtime values.
         if (typeof entry === 'string') {
             const name = key.replace(/^@_/, '');
-            params[name] = compileAttribute(entry, name === 'field');
+
+            // Table fields are literal paths rather than runtime values.
+            params[name] = name === 'field' ? { kind: 'text', value: entry } : compileAttribute(entry);
         }
     }
 
     return params;
+}
+
+/** Rejects XML attributes that would let consumers control adapter behavior or styling. */
+function validateParams(params: ASTProps): void {
+    for (const name of Object.keys(params)) {
+        const lowerName = name.toLowerCase();
+
+        if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
+            throw new Error(`${name} is not supported in XML`);
+        }
+
+        if (lowerName.startsWith('on')) {
+            throw new Error(`Event handler attribute "${name}" is not supported in XML`);
+        }
+    }
 }

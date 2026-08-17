@@ -9,18 +9,6 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
         const props = node.params;
 
-        // Reject consumer styling and callbacks so adapters retain control of behavior.
-        for (const name of Object.keys(props)) {
-            const lowerName = name.toLowerCase();
-            if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
-                throw new Error(`${name} is not supported in XML`);
-            }
-
-            if (lowerName.startsWith('on')) {
-                throw new Error(`Event handler attribute "${name}" is not supported in XML`);
-            }
-        }
-
         // Handle conditional rendering with "if" parameter.
         if (!isVisibleXmlNode(node, ctx)) return null;
 
