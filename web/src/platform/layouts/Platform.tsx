@@ -51,14 +51,16 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
             topNav={
                 <Stack>
                     <TopNav
+                        className="min-h-11 px-7"
                         endContent={action}
                         heading={
-                            <Link href="/" label="LongLink home" color="inherit">
-                                <Wordmark />
-                            </Link>
+                            breadcrumb ?? (
+                                <Link href="/" label="LongLink home" color="inherit">
+                                    <Wordmark />
+                                </Link>
+                            )
                         }
                         label="Platform navigation"
-                        startContent={breadcrumb}
                     />
                     <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
                         <TabList
