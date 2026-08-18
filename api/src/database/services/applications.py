@@ -68,15 +68,14 @@ async def create(
 
     # Lock the Organization and its assigned Compute registry before validating the assignment.
     result = await session.execute(
-        select(Organization, ComputeRegistry.id)
+        select(Organization)
         .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .where(Organization.id == organization_id)
         .with_for_update()
     )
-    row = result.one_or_none()
-    if row is None:
+    organization = result.scalar_one_or_none()
+    if organization is None:
         raise NotFoundError("Organization not found")
-    organization, _ = row
     if organization.deleted_at is not None:
         raise ConflictError("Organization is not available")
 
@@ -92,7 +91,6 @@ async def create(
     )
     application.created_id = user.id
     application.updated_id = user.id
-    application.organization = organization
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
@@ -183,12 +181,15 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
 
     # Lock the Organization and Application state before tombstoning.
     result = await session.execute(
-        select(Organization, Application).join(Application.organization).where(Application.id == application_id).with_for_update()
+        select(Application, Organization.compute_id)
+        .join(Application.organization)
+        .where(Application.id == application_id)
+        .with_for_update()
     )
     row = result.one_or_none()
     if row is None:
         return None
-    organization, application = row
+    application, compute_id = row
 
     # Record the tombstone once; repeated requests only ensure cleanup remains queued.
     if application.deleted_at is None:
@@ -198,11 +199,9 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
         application.deleted_id = user.id
         application.updated_id = user.id
 
-    # Retain the already locked Organization for detached response serialization.
-    application.organization = organization
     await operations.enqueue(
         session,
-        organization.compute_id,
+        compute_id,
         kind=OperationKind.application_delete,
         target_id=application.id,
     )

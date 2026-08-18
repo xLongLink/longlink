@@ -9,8 +9,3 @@ export const pageSchema = z.object({
 });
 
 export type RuntimePage = z.infer<typeof pageSchema>;
-
-/** Returns true when a page route contains dynamic path segments. */
-export function pageRouteIsDynamic(route: string): boolean {
-    return /(?:^|\/):/.test(route);
-}

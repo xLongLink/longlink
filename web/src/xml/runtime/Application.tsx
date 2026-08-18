@@ -16,8 +16,8 @@ import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { resolveRequestUrl } from '../core/url';
+import { pageSchema, type RuntimePage } from '../pages';
 import { createContext as createXmlContext, parseXML, RenderXML } from '..';
-import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '../pages';
 
 type XmlApplicationProps = {
     navigationBaseUrl: string;
@@ -53,7 +53,8 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
             ),
         };
     }, [registeredPages, routePath]);
-    const firstTabPage = registeredPages?.find((page) => !pageRouteIsDynamic(page.route));
+    const staticPages = (registeredPages ?? []).filter((page) => !/(?:^|\/):/.test(page.route));
+    const firstTabPage = staticPages[0];
 
     // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
@@ -81,8 +82,8 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
     // Build one static navigation target per runtime tab.
-    for (const page of registeredPages ?? []) {
-        if (!page.route || pageRouteIsDynamic(page.route) || tabGroups.has(page.tab)) {
+    for (const page of staticPages) {
+        if (!page.route || tabGroups.has(page.tab)) {
             continue;
         }
 
