@@ -132,21 +132,6 @@ async def fetch(session: AsyncSession) -> Sequence[Organization]:
     return result.all()
 
 
-async def mark_running(session: AsyncSession, organization_id: UUID) -> None:
-    """Publish one active Organization after its creation lifecycle completes."""
-
-    # Guard lifecycle writes from stale attempts after deletion or another transition.
-    await session.execute(
-        sql_update(Organization)
-        .where(
-            Organization.id == organization_id,
-            Organization.deleted_at.is_(None),
-            Organization.status == Status.creating,
-        )
-        .values(status=Status.running)
-    )
-
-
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
     """Hard-delete one organization after all applications and external resources are gone."""
 
@@ -158,7 +143,7 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
         raise RuntimeError("Active organizations cannot be purged")
     await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
     await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
-    await session.execute(delete(Organization).where(Organization.id == organization_id))
+    await session.delete(organization)
 
 
 async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:

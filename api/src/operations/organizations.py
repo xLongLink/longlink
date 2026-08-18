@@ -1,4 +1,5 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
@@ -6,6 +7,7 @@ from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
 async def reconcile(claimed: Operation) -> str | None:
@@ -43,7 +45,15 @@ async def reconcile(claimed: Operation) -> str | None:
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     async with session_scope() as session:
-        await organizations.mark_running(session, organization.id)
+        await session.execute(
+            update(Organization)
+            .where(
+                Organization.id == organization.id,
+                Organization.deleted_at.is_(None),
+                Organization.status == Status.creating,
+            )
+            .values(status=Status.running)
+        )
         await session.commit()
 
 

@@ -1,10 +1,13 @@
 import secrets
+from sqlalchemy import update
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.operations import Operation
+from src.database.models.applications import Application
 
 
 async def create(claimed: Operation) -> str | None:
@@ -62,10 +65,17 @@ async def create(claimed: Operation) -> str | None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
         async with session_scope() as session:
-            persisted_secrets = await applications.add_runtime_secrets(session, application.id, runtime_secrets)
+            # Lock the Application so only the first creation attempt writes generated credentials.
+            persisted_application = await session.get(Application, application.id, with_for_update=True)
+            if persisted_application is None or persisted_application.deleted_at is not None:
+                return None
+
+            # Reuse durable runtime values after an interrupted creation attempt.
+            if "LONGLINK_ENV" not in persisted_application.secrets:
+                # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
+                persisted_application.secrets = {**persisted_application.secrets, **runtime_secrets}
+            persisted_secrets = persisted_application.secrets
             await session.commit()
-        if persisted_secrets is None:
-            return None
         application.secrets = persisted_secrets
 
     # Apply the captured desired release so reconciliation repairs workload drift.
@@ -75,7 +85,15 @@ async def create(claimed: Operation) -> str | None:
 
     # Publish the applied release only after workload readiness.
     async with session_scope() as session:
-        await applications.publish_deployment(session, application.id)
+        await session.execute(
+            update(Application)
+            .where(
+                Application.id == application.id,
+                Application.deleted_at.is_(None),
+                Application.status == Status.creating,
+            )
+            .values(status=Status.running)
+        )
         await session.commit()
 
 

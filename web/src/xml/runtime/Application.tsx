@@ -1,11 +1,11 @@
 import startCase from 'lodash/startCase';
-import { useEffect, useMemo } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { Spinner } from '@astryxdesign/core/Spinner';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
 import { PageError } from '@/components/Utils';
@@ -23,10 +23,11 @@ type XmlApplicationProps = {
     navigationBaseUrl: string;
     pagesUrl: string;
     requestBaseUrl: string;
+    topNav?: ReactNode;
 };
 
 /** Renders a manifest-driven XML application within a host-specific URL context. */
-export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: XmlApplicationProps) {
+export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl, topNav }: XmlApplicationProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const routePath = wildcardPath ?? '';
@@ -142,27 +143,29 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
         <TopLayout
             topMenu={
                 <Stack>
-                    <TopNav
-                        className="px-7"
-                        endContent={
-                            <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                                Documentation
-                            </Link>
-                        }
-                        heading={
-                            <Link
-                                as="a"
-                                href="https://longlink.dev"
-                                label="LongLink home"
-                                color="inherit"
-                                rel="noopener noreferrer"
-                                target="_blank"
-                            >
-                                <Wordmark />
-                            </Link>
-                        }
-                        label="Main navigation"
-                    />
+                    {topNav ?? (
+                        <TopNav
+                            className="px-7"
+                            endContent={
+                                <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
+                                    Documentation
+                                </Link>
+                            }
+                            heading={
+                                <Link
+                                    as="a"
+                                    href="https://longlink.dev"
+                                    label="LongLink home"
+                                    color="inherit"
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                >
+                                    <Wordmark />
+                                </Link>
+                            }
+                            label="Main navigation"
+                        />
+                    )}
                     {tabGroups.size > 0 ? <Navigation tabs={[...tabGroups.values()]} /> : null}
                 </Stack>
             }

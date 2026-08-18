@@ -144,36 +144,6 @@ async def release(
     return application
 
 
-async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secrets: dict[str, str]) -> dict[str, str] | None:
-    """Persist generated runtime secrets unless a previous attempt already did."""
-
-    # Lock the Application so only the first creation attempt writes generated credentials.
-    application = await session.get(Application, application_id, with_for_update=True)
-    if application is None or application.deleted_at is not None:
-        return None
-
-    # Reuse durable runtime values after an interrupted creation attempt.
-    if "LONGLINK_ENV" not in application.secrets:
-        # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-        application.secrets = {**application.secrets, **secrets}
-    return application.secrets
-
-
-async def publish_deployment(session: AsyncSession, application_id: UUID) -> None:
-    """Publish an applied release and Application readiness."""
-
-    # Publish only an active Application's initial deployment transition.
-    await session.execute(
-        update(Application)
-        .where(
-            Application.id == application_id,
-            Application.deleted_at.is_(None),
-            Application.status == Status.creating,
-        )
-        .values(status=Status.running)
-    )
-
-
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
     """Tombstone a LongLink Application."""
 

@@ -99,8 +99,8 @@ export default [
             layout('./layouts/Organization.tsx', [
                 index('./routes/orgs/Organization.tsx'),
                 route('settings', './routes/orgs/Settings.tsx'),
-                route('apps/:application/*', './routes/orgs/Application.tsx'),
             ]),
+            route('apps/:application/*', './routes/orgs/Application.tsx'),
         ]),
     ]),
 ] satisfies RouteConfig;
