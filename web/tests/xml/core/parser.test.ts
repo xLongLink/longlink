@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
 
 describe('parseXML', () => {
-    /* XML attributes are compiled without resolving runtime values. */
     it('compiles literal attribute params', () => {
         expect(parseXML('<Button isDisabled="false" count="5" label="Save" />')).toEqual([
             {
@@ -17,7 +16,6 @@ describe('parseXML', () => {
         ]);
     });
 
-    /* Preserve nested and repeated elements while omitting compiler metadata. */
     it('parses page structure', () => {
         expect(
             parseXML(
@@ -71,6 +69,17 @@ describe('parseXML', () => {
 
         for (const xml of unsupportedXml) {
             expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
+        }
+    });
+
+    it('rejects styling and event handler attributes on XML nodes', () => {
+        const cases = [
+            { name: 'className', expected: 'className is not supported in XML' },
+            { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
+        ];
+
+        for (const testCase of cases) {
+            expect(() => parseXML(`<Button ${testCase.name}="value" />`)).toThrow(testCase.expected);
         }
     });
 });

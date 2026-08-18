@@ -98,6 +98,8 @@ export default function OrganizationSettings() {
                       zOrganizationStorageUsageResponse.nullable().parse(await api(storagePath, { signal }).json()),
         retry: false,
     });
+    const storageResourceError = error ?? storageError;
+
     /** Saves the Organization avatar URL when focus leaves the setting. */
     async function saveAvatar() {
         setAvatarError(null);
@@ -219,10 +221,8 @@ export default function OrganizationSettings() {
                                     <Heading level={2}>Storage</Heading>
                                     <Text type="supporting">Review storage usage for this organization.</Text>
                                 </VStack>
-                                {isLoading || isStorageLoading ? null : error ? (
-                                    <Banner status="error" title={error.message} />
-                                ) : storageError ? (
-                                    <Banner status="error" title={storageError.message} />
+                                {isLoading || isStorageLoading ? null : storageResourceError ? (
+                                    <Banner status="error" title={storageResourceError.message} />
                                 ) : storageUsage === null || storageUsage === undefined ? (
                                     <EmptyState title="No storage resources found." isCompact />
                                 ) : (

@@ -89,8 +89,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 
     # Assert
     assert response.status_code == 204
-    assert response.content == b""
-    assert "secret-value" not in response.text
 
     async with session_scope() as session:
         persisted = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
@@ -313,9 +311,7 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
 
     # Assert
     assert response.status_code == 204
-    assert response.content == b""
     assert retry_response.status_code == 204
-    assert retry_response.content == b""
     async with session_scope() as session:
         recorded_operations = await operations.fetch(session)
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

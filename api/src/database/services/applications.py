@@ -11,7 +11,6 @@ from src.database.services import operations
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -66,10 +65,9 @@ async def create(
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
-    # Lock the Organization and its assigned Compute registry before validating the assignment.
+    # Lock the Organization before creating an Application against its assignment.
     result = await session.execute(
         select(Organization)
-        .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .where(Organization.id == organization_id)
         .with_for_update()
     )
@@ -81,7 +79,7 @@ async def create(
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
-        organization_id=organization.id,
+        organization_id=organization_id,
         name=name,
         slug=slug,
         description=description,
@@ -193,9 +191,8 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
 
     # Record the tombstone once; repeated requests only ensure cleanup remains queued.
     if application.deleted_at is None:
-        now = utcnow()
         application.status = Status.deleting
-        application.deleted_at = now
+        application.deleted_at = utcnow()
         application.deleted_id = user.id
         application.updated_id = user.id
 

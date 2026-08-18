@@ -3,7 +3,6 @@ import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
-    /* A badge's sole visual child is its Astryx icon slot. */
     it('renders an explicit icon slot without forwarding the slot attribute', () => {
         const output = renderXmlToMarkup(parseXML('<Badge label="Active"><Icon slot="icon" icon="check" /></Badge>'));
 

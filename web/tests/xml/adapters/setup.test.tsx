@@ -3,7 +3,6 @@ import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('setup adapters', () => {
-    /* State and Query nodes should expose setup validation failures through the XML renderer. */
     it('renders setup validation errors', () => {
         const cases = [
             {

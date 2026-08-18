@@ -1,4 +1,4 @@
-import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
     OrganizationInvitationCreate,
@@ -17,14 +17,33 @@ import {
 function useOrganizationMembership(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
+    const organizationId = membership?.organization.id;
+    const notFoundError =
+        !isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null;
 
-    return { membership, isUserLoading };
+    return { membership, organizationId, isUserLoading, notFoundError };
+}
+
+/** Invalidates cached data that contains an organization's applications. */
+function invalidateOrganizationApplicationQueries(
+    queryClient: QueryClient,
+    organizationId: string,
+) {
+    return Promise.all([
+        queryClient.invalidateQueries({
+            queryKey: ['api', `/api/v1/organizations/${organizationId}`],
+        }),
+        queryClient.invalidateQueries({
+            queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
+    ]);
 }
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
-    const { membership, isUserLoading } = useOrganizationMembership(organizationSlug);
-    const organizationId = membership?.organization.id;
+    const { membership, organizationId, isUserLoading, notFoundError } =
+        useOrganizationMembership(organizationSlug);
 
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
     const organizationQuery = useQuery({
@@ -37,9 +56,7 @@ export function useOrganization(organizationSlug: string) {
         retry: false,
     });
 
-    const error: (Error & { status?: number }) | null =
-        organizationQuery.error ??
-        (!isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null);
+    const error: (Error & { status?: number }) | null = organizationQuery.error ?? notFoundError;
     const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
 
     return {
@@ -55,8 +72,8 @@ export function useOrganization(organizationSlug: string) {
 
 /** Fetches organization applications without loading people-management data. */
 export function useOrganizationApplications(organizationSlug: string) {
-    const { membership, isUserLoading } = useOrganizationMembership(organizationSlug);
-    const organizationId = membership?.organization.id;
+    const { organizationId, isUserLoading, notFoundError } =
+        useOrganizationMembership(organizationSlug);
     const applicationsPath = organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
     const applicationsQuery = useQuery({
         queryKey: ['api', applicationsPath],
@@ -68,9 +85,7 @@ export function useOrganizationApplications(organizationSlug: string) {
         refetchInterval: 5000,
         retry: false,
     });
-    const error: (Error & { status?: number }) | null =
-        applicationsQuery.error ??
-        (!isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null);
+    const error: (Error & { status?: number }) | null = applicationsQuery.error ?? notFoundError;
 
     return {
         applications: applicationsQuery.data ?? [],
@@ -122,14 +137,7 @@ export function useCreateOrganizationApplication(organizationId: string) {
                 method: 'POST',
             });
         },
-        onSuccess: () =>
-            Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-                queryClient.invalidateQueries({
-                    queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
-                }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
-            ]),
+        onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
     });
 }
 
@@ -141,14 +149,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
         mutationFn: async (applicationId: string) => {
             await api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
         },
-        onSuccess: () =>
-            Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-                queryClient.invalidateQueries({
-                    queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
-                }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
-            ]),
+        onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
     });
 }
 

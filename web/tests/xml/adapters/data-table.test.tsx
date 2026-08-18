@@ -4,7 +4,6 @@ import { createContext } from '@/xml/core/context';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
-    /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }];
@@ -21,7 +20,6 @@ describe('Table', () => {
         expect(output).toContain('Ada Lovelace');
     });
 
-    /* Headers and cells should accept rich nested XML content. */
     it('renders rich header and cell slots', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];

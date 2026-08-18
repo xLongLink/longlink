@@ -4,7 +4,6 @@ import { createContext } from '@/xml/core/context';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Link', () => {
-    /* App navigation targets should resolve against the view route base, not the API request base. */
     it('renders app navigation and internal anchors', () => {
         const navigationContext = createContext();
         navigationContext.services.navigationBaseUrl = '/orgs/acme/apps/tracker';

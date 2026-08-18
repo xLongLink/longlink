@@ -42,6 +42,7 @@ Find unnecessary or repeated:
 - parsing, serialization, transformations, filtering, sorting, copying, or conversions;
 - computation, object construction, collection materialization, and allocations;
 - validation, authorization, existence checks, defensive checks, synchronization, or transaction boundaries.
+- early returns, short-circuiting, and guard clauses that can be simplified or removed.
 
 ### 2. Dead and unused code
 

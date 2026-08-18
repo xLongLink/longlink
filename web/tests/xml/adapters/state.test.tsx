@@ -3,7 +3,6 @@ import { createContext, setupContext } from '@/xml/core/context';
 import { compileProps } from '../helpers';
 
 describe('State', () => {
-    /* Multiple state attributes should seed a proxied object slot. */
     it('seeds multi-field state values', async () => {
         const ctx = createContext();
 

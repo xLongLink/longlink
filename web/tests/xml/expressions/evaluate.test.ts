@@ -3,35 +3,30 @@ import type { Scope } from '@/xml/types';
 import { compileAttribute, evaluate } from '@/xml/expressions';
 
 describe('evaluate', () => {
-    /* Evaluation should resolve expressions against the flat runtime context. */
     it('resolves expressions against flat context values', () => {
         const ctx: Scope = { bindings: { count: 1, total: 10 } };
 
         expect(evaluate(compileAttribute('${count + total}'), ctx)).toBe(11);
     });
 
-    /* Plain and mixed text should render interpolated values. */
     it('interpolates text containing expressions', () => {
         const ctx: Scope = { bindings: { index: 0, name: 'Hero' } };
 
         expect(evaluate(compileAttribute('${index + 1}. ${name}'), ctx)).toBe('1. Hero');
     });
 
-    /* Object literals inside `${...}` should be evaluated as objects, not strings. */
     it('parses object literals wrapped in `${...}`', () => {
         const ctx: Scope = { bindings: { value: 5 } };
 
         expect(evaluate(compileAttribute('${{ next: value + 1 }}'), ctx)).toEqual({ next: 6 });
     });
 
-    /* Brace characters inside strings should not break wrapped-expression detection. */
     it('evaluates wrapped expressions containing brace characters in strings', () => {
         const ctx: Scope = { bindings: {} };
 
         expect(evaluate(compileAttribute('${"{"}'), ctx)).toBe('{');
     });
 
-    /* `${...}` expressions should resolve directly to nested values. */
     it('resolves nested value expression', () => {
         const ctx: Scope = { bindings: { form: { value: 'draft', placeholder: 'Name' } } };
 

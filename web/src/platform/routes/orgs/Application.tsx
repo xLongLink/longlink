@@ -60,7 +60,12 @@ export default function OrganizationApplication() {
 
     const navigationBaseUrl = `/orgs/${organization}/apps/${application}`;
     const pagesUrl = `/api/v1/applications/${applicationAccess.id}/proxy/pages.json`;
-    const requestBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
 
-    return <XmlApplication navigationBaseUrl={navigationBaseUrl} pagesUrl={pagesUrl} requestBaseUrl={requestBaseUrl} />;
+    return (
+        <XmlApplication
+            navigationBaseUrl={navigationBaseUrl}
+            pagesUrl={pagesUrl}
+            requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
+        />
+    );
 }

@@ -124,7 +124,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     if (setup.nodes.length && initializedAst.current !== ast) return null;
 
     return (
-        <XmlErrorBoundary resetKey={resetKey}>
+        <XmlErrorBoundary key={resetKey}>
             <XmlContext.Provider value={ctx}>
                 <Stack gap={6}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>

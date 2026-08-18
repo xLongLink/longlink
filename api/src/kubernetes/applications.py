@@ -80,15 +80,14 @@ class Applications:
             await route_resource.refresh()
             route_status = route_resource.raw.get("status")
             parents = route_status.get("parents", []) if isinstance(route_status, dict) else []
-            route_conditions = [
-                condition
-                for parent in parents
-                if isinstance(parent, dict)
-                for condition in parent.get("conditions", [])
-                if isinstance(condition, dict)
-            ]
             route_ready = all(
-                any(condition.get("type") == condition_type and condition.get("status") == "True" for condition in route_conditions)
+                any(
+                    condition.get("type") == condition_type and condition.get("status") == "True"
+                    for parent in parents
+                    if isinstance(parent, dict)
+                    for condition in parent.get("conditions", [])
+                    if isinstance(condition, dict)
+                )
                 for condition_type in ("Accepted", "ResolvedRefs")
             )
             if deployment_is_ready(deployed) and route_ready:
@@ -117,9 +116,14 @@ class Applications:
                         await resource.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            pods = [pod async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})]
-            if not remaining and not any(pod.raw["status"].get("phase") not in {"Succeeded", "Failed"} for pod in pods):
-                return
+            if not remaining:
+                async for pod in Pod.list(
+                    api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}
+                ):
+                    if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}:
+                        break
+                else:
+                    return
             await asyncio.sleep(5)
 
     async def logs(self, application_id: UUID, namespace: str) -> list[str]:

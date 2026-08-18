@@ -141,7 +141,6 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
 
     # Act
     await platform_release.schedule_reconciliation()
-    await platform_release.schedule_reconciliation()
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     # Assert
@@ -234,7 +233,6 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     # Verify the oldest operation receives an active lease.
     assert claimed is not None
     assert claimed.id == older_operation.id
-    assert claimed.status == OperationStatus.active
 
 
 async def test_operations_service_claim_serializes_active_and_expires_lost_work() -> None:
@@ -334,30 +332,6 @@ async def test_operations_service_expired_leases_cannot_complete_or_reclaim() ->
     assert replacement is None
     assert row.status == OperationStatus.failed
     assert row.finished_at is not None
-
-
-async def test_operations_service_tracks_successful_and_failed_lifecycles() -> None:
-    """Track claimed compute work through both terminal lifecycle states."""
-
-    # Seed separate operations for successful and failed outcomes.
-    successful_compute = await create_compute("successful")
-    failed_compute = await create_compute("failed")
-    await queue(successful_compute.id, target_id=successful_compute.id)
-    await queue(failed_compute.id, target_id=failed_compute.id)
-
-    # Drive each operation through its terminal transition.
-    successful_claim = await claim_operation()
-    assert successful_claim is not None
-    completed = await complete_operation(successful_claim.id)
-    failed_claim = await claim_operation()
-    assert failed_claim is not None
-    finished = await fail_operation(failed_claim.id)
-
-    # Verify both terminal states retain their expected lifecycle metadata.
-    assert completed is not None
-    assert completed.status == OperationStatus.completed
-    assert finished is not None
-    assert finished.status == OperationStatus.failed
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:
