@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -114,7 +113,6 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
                 <Stack gap={3}>
-                    <Banner status="error" title={verificationError?.message ?? 'error'} />
                     {invalidToken ? null : (
                         <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
                     )}

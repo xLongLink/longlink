@@ -83,13 +83,7 @@ export default function ResetPassword() {
                 title="Set a new password"
                 description="This password reset link is invalid or expired. Request a new link to continue."
             >
-                <Stack gap={4}>
-                    <Banner
-                        status="error"
-                        title="This password reset link is invalid or expired. Request a new link to continue."
-                    />
-                    <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
-                </Stack>
+                <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
             </AuthLayout>
         );
     }
