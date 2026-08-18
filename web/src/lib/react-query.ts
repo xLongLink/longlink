@@ -8,7 +8,7 @@ export function createQueryClient(): QueryClient {
         onError: (error, query) => {
             // Clear only API data when an API request loses its authenticated session.
             if (query.queryKey[0] === 'api' && error instanceof ApiError && error.status === 401) {
-                void clearSessionQueries(client).then(() => {
+                void clearSessionQueries(client, true).then(() => {
                     client.setQueryData(['api', '/api/v1/me'], null);
                 });
             }
@@ -31,8 +31,9 @@ export function createQueryClient(): QueryClient {
 }
 
 /** Cancels and removes cached API data from the previous identity. */
-export async function clearSessionQueries(client: QueryClient): Promise<void> {
-    const isSessionQuery = (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === 'api';
+export async function clearSessionQueries(client: QueryClient, preserveCurrentUser = false): Promise<void> {
+    const isSessionQuery = (query: { queryKey: readonly unknown[] }) =>
+        query.queryKey[0] === 'api' && (!preserveCurrentUser || query.queryKey[1] !== '/api/v1/me');
 
     // Stop requests from the previous identity before removing their cached results.
     await client.cancelQueries({ predicate: isSessionQuery });

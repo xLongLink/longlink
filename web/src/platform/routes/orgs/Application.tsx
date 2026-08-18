@@ -2,16 +2,15 @@ import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { TopNav } from '@astryxdesign/core/TopNav';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { ProfileMenu } from '@/components/Profile';
-import TopLayout from '@/components/layouts/TopLayout';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { XmlApplication } from '@/xml/runtime/Application';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
+import Platform from '@/platform/layouts/Platform';
 
 /** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {
@@ -36,18 +35,12 @@ export default function OrganizationApplication() {
         return <NotFoundLayout />;
     }
 
-    const topNav = (
-        <TopNav
-            className="min-h-11 px-7"
-            endContent={<ProfileMenu user={user} />}
-            heading={<PageBreadcrumb applicationName={applicationAccess.name} />}
-            label="Main navigation"
-        />
-    );
+    const action = <ProfileMenu user={user} />;
+    const breadcrumb = <PageBreadcrumb applicationName={applicationAccess.name} />;
 
     if (applicationAccess.status === 'creating' || applicationAccess.status === 'deleting') {
         return (
-            <TopLayout topMenu={topNav}>
+            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <Card maxWidth={576} padding={6} width="100%">
                         <EmptyState
@@ -75,7 +68,7 @@ export default function OrganizationApplication() {
                         />
                     </Card>
                 </Center>
-            </TopLayout>
+            </Platform>
         );
     }
 
@@ -87,7 +80,8 @@ export default function OrganizationApplication() {
             navigationBaseUrl={navigationBaseUrl}
             pagesUrl={pagesUrl}
             requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
-            topNav={topNav}
+            action={action}
+            breadcrumb={breadcrumb}
         />
     );
 }

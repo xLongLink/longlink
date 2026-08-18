@@ -1,33 +1,36 @@
 import startCase from 'lodash/startCase';
 import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
-import { TopNav } from '@astryxdesign/core/TopNav';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
 import { PageError } from '@/components/Utils';
-import { Wordmark } from '@/components/Wordmark';
-import { Navigation } from '@/components/Navigation';
-import TopLayout from '@/components/layouts/TopLayout';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
+import Platform from '@/platform/layouts/Platform';
 import { resolveRequestUrl } from '../core/url';
 import { pageSchema, type RuntimePage } from '../pages';
 import { createContext as createXmlContext, parseXML, RenderXML } from '..';
 
 type XmlApplicationProps = {
+    action?: ReactNode;
+    breadcrumb?: ReactNode;
     navigationBaseUrl: string;
     pagesUrl: string;
     requestBaseUrl: string;
-    topNav?: ReactNode;
 };
 
 /** Renders a manifest-driven XML application within a host-specific URL context. */
-export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl, topNav }: XmlApplicationProps) {
+export function XmlApplication({
+    action,
+    breadcrumb,
+    navigationBaseUrl,
+    pagesUrl,
+    requestBaseUrl,
+}: XmlApplicationProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const routePath = wildcardPath ?? '';
@@ -140,37 +143,18 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl, to
     }
 
     return (
-        <TopLayout
-            topMenu={
-                <Stack>
-                    {topNav ?? (
-                        <TopNav
-                            className="px-7"
-                            endContent={
-                                <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                                    Documentation
-                                </Link>
-                            }
-                            heading={
-                                <Link
-                                    as="a"
-                                    href="https://longlink.dev"
-                                    label="LongLink home"
-                                    color="inherit"
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                >
-                                    <Wordmark />
-                                </Link>
-                            }
-                            label="Main navigation"
-                        />
-                    )}
-                    {tabGroups.size > 0 ? <Navigation tabs={[...tabGroups.values()]} /> : null}
-                </Stack>
+        <Platform
+            action={
+                action ?? (
+                    <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
+                        Documentation
+                    </Link>
+                )
             }
+            breadcrumb={breadcrumb ?? null}
+            tabs={[...tabGroups.values()]}
         >
             <PageContainer minHeight="100%">{content}</PageContainer>
-        </TopLayout>
+        </Platform>
     );
 }
