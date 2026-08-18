@@ -38,16 +38,16 @@ class Operation(PlatformModel, table=True):
             nullable=False,
         )
     )
-    target_id: UUID = Field(nullable=False)
+    target_id: UUID
 
     # State
-    failed: bool = Field(default=False, nullable=False)
+    failed: bool = Field(default=False)
     # Lock
-    lease_expires_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    lease_expires_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # Timestamps
-    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
-    finished_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
+    finished_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     @property
     def status(self) -> OperationStatus:

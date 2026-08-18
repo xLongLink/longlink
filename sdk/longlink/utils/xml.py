@@ -18,8 +18,7 @@ def load_xml_schema() -> etree.XMLSchema:
     """Compile and cache the bundled XML schema."""
 
     # Load bundled schemas with external entities and network access disabled.
-    parser = create_xml_parser()
-    schema_doc = etree.parse(str(ROOT / ".static" / "xsd" / "schema.xsd"), parser)
+    schema_doc = etree.parse(str(ROOT / ".static" / "xsd" / "schema.xsd"), create_xml_parser())
     return etree.XMLSchema(schema_doc)
 
 
@@ -50,12 +49,11 @@ class Element:
             raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
-        parser = create_xml_parser()
         schema = load_xml_schema()
 
         # Parse user XML once for validation and downstream metadata extraction.
         try:
-            xml_doc = etree.XML(self.content.encode("utf-8"), parser)
+            xml_doc = etree.XML(self.content.encode("utf-8"), create_xml_parser())
         except etree.XMLSyntaxError as error:
             raise ValueError(f"XML syntax is invalid: {error}") from error
 

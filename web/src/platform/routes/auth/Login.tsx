@@ -6,10 +6,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { AuthLayout } from './AuthLayout';
@@ -28,6 +29,7 @@ export default function Login() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const showToast = useToast();
+    const { user } = useCurrentUser();
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
@@ -37,6 +39,11 @@ export default function Login() {
     const login = useMutation({
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
     });
+
+    // Keep authenticated users out of the sign-in page.
+    if (user) {
+        return <Navigate replace to="/user/organizations" />;
+    }
 
     /** Signs in with an email and password. */
     async function handlePasswordSignIn(payload: LoginValues) {

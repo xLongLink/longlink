@@ -114,11 +114,10 @@ def test_element_validation_rejects_unsupported_markup(_name: str, content: str,
     # Build a document containing unsupported browser markup.
     path = tmp_path / "page.xml"
     path.write_text(content, encoding="utf-8")
-    element = Element(path)
 
     # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
-        element.validate()
+        Element(path).validate()
 
 
 @pytest.mark.parametrize(("_name", "content"), VALID_FRAGMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
@@ -128,8 +127,7 @@ def test_root_schema_accepts_valid_fragments(_name: str, content: str, tmp_path:
     # Build and validate the fragment through the application page schema.
     path = tmp_path / "page.xml"
     path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
-    element = Element(path)
-    element.validate()
+    Element(path).validate()
 
 
 @pytest.mark.parametrize(("_name", "content"), INVALID_FRAGMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
@@ -139,8 +137,7 @@ def test_root_schema_rejects_invalid_fragments(_name: str, content: str, tmp_pat
     # Build the invalid fragment through the application page schema.
     path = tmp_path / "page.xml"
     path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
-    element = Element(path)
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):
-        element.validate()
+        Element(path).validate()

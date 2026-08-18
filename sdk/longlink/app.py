@@ -82,18 +82,19 @@ class LongLink:
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory)
-        page_routes = [
-            self.app.router.route_class(
-                definition.path,
-                partial(render_page, content),
-                methods=["GET"],
-                include_in_schema=False,
-            )
-            for definition, content in discovered_pages
-        ]
 
         # Pages are registered once before the frontend mount is installed.
-        self.app.router.routes.extend(page_routes)
+        self.app.router.routes.extend(
+            [
+                self.app.router.route_class(
+                    definition.path,
+                    partial(render_page, content),
+                    methods=["GET"],
+                    include_in_schema=False,
+                )
+                for definition, content in discovered_pages
+            ]
+        )
         self.app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
 
     def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
@@ -108,7 +109,7 @@ class LongLink:
             path_without_suffix = relative_path.removesuffix(".xml")
 
             # FastAPI parameter syntax is reserved for application routes, not page file names.
-            if not path_without_suffix or any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
+            if any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
                 raise ValueError("Page endpoint paths cannot contain empty names or FastAPI parameters")
 
             registered_path = f"/pages/{path_without_suffix}"
