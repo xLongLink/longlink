@@ -1,15 +1,10 @@
-import { createContext, useContext } from 'react';
-import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
-const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
-const AuthenticatedUserContext = createContext<UserSummary | undefined>(undefined);
-
-/** Provides the authenticated user query to the app tree. */
-export function UserProvider({ children }: { children: React.ReactNode }) {
-    const user = useQuery({
+/** Reads the current authenticated user without loading organization memberships. */
+export function useCurrentUser() {
+    const currentUser = useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
         queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
@@ -18,18 +13,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         retry: false,
     });
 
-    return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
-}
-
-/** Reads the current authenticated user without loading organization memberships. */
-export function useCurrentUser() {
-    // Fail fast when the provider is missing.
-    const context = useContext(UserContext);
-    if (context === undefined) {
-        throw new Error('useCurrentUser must be used within a UserProvider');
-    }
-
-    const { data: user, error, isLoading, refetch } = context;
+    const { data: user, error, isLoading, refetch } = currentUser;
     return {
         user,
         isLoading,
@@ -38,16 +22,11 @@ export function useCurrentUser() {
     };
 }
 
-/** Provides the authenticated user to routes protected by Auth. */
-export function AuthenticatedUserProvider({ children, user }: { children: React.ReactNode; user: UserSummary }) {
-    return <AuthenticatedUserContext.Provider value={user}>{children}</AuthenticatedUserContext.Provider>;
-}
-
 /** Reads the user guaranteed by the authenticated route boundary. */
 export function useAuthenticatedUser() {
-    const user = useContext(AuthenticatedUserContext);
+    const { user } = useCurrentUser();
     if (user === undefined) {
-        throw new Error('useAuthenticatedUser must be used within an AuthenticatedUserProvider');
+        throw new Error('useAuthenticatedUser must be used within an authenticated route');
     }
 
     return user;
@@ -77,6 +56,6 @@ export function useSignOut() {
     return async () => {
         await api('/api/v1/auth/logout', { method: 'POST' });
         queryClient.clear();
-        window.location.assign('/organizations');
+        window.location.assign('/user/organizations');
     };
 }

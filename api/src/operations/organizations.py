@@ -31,12 +31,11 @@ async def reconcile(claimed: Operation) -> str | None:
         await organizations.sync_users(session, organization.id, db)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
-    object_storage = Exoscale(
+    await Exoscale(
         infrastructure.storage.endpoint_url,
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
-    )
-    await object_storage.create(organization.id.hex)
+    ).create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and ingress policy.
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
@@ -56,8 +55,7 @@ async def delete(claimed: Operation) -> str | None:
         infrastructure = await organizations.infrastructure(session, claimed.target_id)
     if infrastructure is None:
         return None
-    organization = infrastructure.organization
-    if organization.deleted_at is None:
+    if infrastructure.organization.deleted_at is None:
         return "Active Organizations cannot be deleted by lifecycle cleanup"
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
 
@@ -76,17 +74,19 @@ async def delete(claimed: Operation) -> str | None:
 
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
     async with session_scope() as session:
-        application_ids_result = await session.scalars(select(Application.id).where(Application.organization_id == organization.id))
+        application_ids_result = await session.scalars(
+            select(Application.id).where(Application.organization_id == infrastructure.organization.id)
+        )
         application_ids = application_ids_result.all()
-    await cluster.organizations.delete(organization.id.hex)
+    await cluster.organizations.delete(infrastructure.organization.id.hex)
     for application_id in application_ids:
-        await db.delete_schema(organization.id, application_id)
+        await db.delete_schema(infrastructure.organization.id, application_id)
         await object_storage.revoke(application_id.hex)
 
-    await db.delete_database(organization.id)
-    await object_storage.delete(organization.id.hex)
+    await db.delete_database(infrastructure.organization.id)
+    await object_storage.delete(infrastructure.organization.id.hex)
     async with session_scope() as session:
         for application_id in application_ids:
             await applications.purge(session, application_id)
-        await organizations.purge(session, organization.id)
+        await organizations.purge(session, infrastructure.organization.id)
         await session.commit()

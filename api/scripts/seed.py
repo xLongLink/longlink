@@ -2,15 +2,23 @@ import asyncio
 import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
+from sqlmodel import col
 from contextlib import suppress
+from sqlalchemy import select
 from src.errors import ConflictError
-from src.models.types import DatabaseSSLMode
+from src.environments import env
+from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
-from src.database.services import compute, storage, database
+from src.database.services import users, compute, storage, database, applications, organizations
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
+from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
 class SeedSettings(BaseSettings):
@@ -95,10 +103,7 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
 
 
 async def seed_local_development(settings: SeedSettings) -> None:
-    """Register development infrastructure from seed settings."""
-
-    # Load the Organization relationship target before the first ORM query configures SQLAlchemy mappers.
-    from src.database.models import applications
+    """Register local development desired state from seed settings."""
 
     # Validate the configured Kubernetes compute before mutating Platform state.
     compute_config = ComputeRegistryCreate.model_validate(
@@ -139,6 +144,50 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 settings.EXOSCALE_API_SECRET,
             )
             await session.commit()
+
+    # Queue the sample Organization and Application after their registries exist, without waiting for reconciliation.
+    async with session_scope() as session:
+        administrator = await users.by_email(session, env.ADMIN_EMAIL)
+        if administrator is None:
+            raise RuntimeError("Configured administrator is not available")
+
+        compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == "development compute"))
+        database_registry = await session.scalar(
+            select(DatabaseRegistry).where(col(DatabaseRegistry.name) == "development database")
+        )
+        storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == "local storage"))
+        if compute_registry is None or database_registry is None or storage_registry is None:
+            raise RuntimeError("Development infrastructure is not available")
+
+        organization = await session.scalar(select(Organization).where(col(Organization.slug) == "development"))
+        if organization is None:
+            organization = await organizations.create(
+                session,
+                "Development",
+                "development",
+                administrator,
+                compute_id=compute_registry.id,
+                storage_id=storage_registry.id,
+                database_id=database_registry.id,
+            )
+
+        application = await session.scalar(
+            select(Application).where(
+                col(Application.organization_id) == organization.id,
+                col(Application.slug) == "longlink-app",
+            )
+        )
+        if application is None:
+            await applications.create(
+                session,
+                organization.id,
+                "LongLink App",
+                "longlink-app",
+                Image("localhost:15000/longlink-app:dev"),
+                administrator,
+                {},
+            )
+        await session.commit()
 
 
 def main() -> None:

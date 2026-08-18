@@ -19,7 +19,7 @@ export function Action({ props, nodes }: Props) {
 
     /** Sends the configured request and shows a minimal toast result. */
     function handleAction(): void {
-        void executeAction(props, ctx, services, undefined, toast, closeDialog).catch((error: unknown) => {
+        void executeAction(props, ctx, services, toast, closeDialog).catch((error: unknown) => {
             toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
         });
     }
@@ -28,11 +28,10 @@ export function Action({ props, nodes }: Props) {
 }
 
 /** Executes the action request and invalidation flow. */
-export async function executeAction(
+async function executeAction(
     props: Props['props'],
     ctx: Scope,
     services: RuntimeServices,
-    fetchImpl: typeof fetch | undefined,
     toast: ReturnType<typeof useToast>,
     closeDialog: (() => void) | null = null
 ): Promise<void> {
@@ -118,7 +117,7 @@ export async function executeAction(
     try {
         const headers = new Headers(init.headers);
         headers.set('Accept', 'application/json');
-        const response = await (fetchImpl ?? fetch)(requestUrl, {
+        const response = await fetch(requestUrl, {
             ...init,
             credentials: 'include',
             headers,

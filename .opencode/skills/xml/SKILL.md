@@ -1,6 +1,6 @@
 ---
 name: xml
-description: XML runtime adapters, versioning, Astryx alignment, and SDK XSD schemas. Use when changing XML components, props, schemas, or XML validation.
+description: XML runtime adapters, Astryx alignment, and SDK XSD schemas. Use when changing XML components, props, schemas, or XML validation.
 ---
 
 Keep improving the XML:
@@ -11,7 +11,7 @@ Keep improving the XML:
 ## Data Model
 
 ```xml
-<longlink version="0.3">
+<longlink>
   <State id="filters" status="open" />
   <Query id="issues" path="/issues?status=${filters.status}" />
 

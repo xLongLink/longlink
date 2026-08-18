@@ -3,17 +3,16 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
-import { Heading } from '@astryxdesign/core/Heading';
+import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { AuthLayout } from './AuthLayout';
 import { TermsNotice } from './TermsNotice';
 import { emailSchema, passwordSchema } from './validation';
 
@@ -28,7 +27,6 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function Login() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const showToast = useToast();
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
@@ -40,12 +38,11 @@ export default function Login() {
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
     });
 
-    /** Signs in with an email and password, then refreshes the current profile. */
+    /** Signs in with an email and password. */
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me'] });
-            navigate('/organizations', { replace: true });
+            navigate('/user/organizations', { replace: true });
         } catch (loginError) {
             showToast({
                 body: loginError instanceof Error ? loginError.message : 'Sign in failed',
@@ -55,15 +52,8 @@ export default function Login() {
     }
 
     return (
-        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-            <Stack gap={4} maxWidth={384} width="100%">
-                <Stack gap={1} hAlign="center">
-                    <Heading level={1} justify="center">
-                        <WelcomeTitle />
-                    </Heading>
-                    <Divider>{'Sign in with your email and password.'}</Divider>
-                </Stack>
-
+        <AuthLayout title={<WelcomeTitle />} description={<Divider>{'Sign in with your email and password.'}</Divider>}>
+            <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
                     <Controller
                         control={form.control}
@@ -133,6 +123,6 @@ export default function Login() {
 
                 <TermsNotice />
             </Stack>
-        </Center>
+        </AuthLayout>
     );
 }

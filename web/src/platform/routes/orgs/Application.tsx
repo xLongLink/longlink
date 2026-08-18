@@ -4,8 +4,8 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
+import { XmlApplication } from '@/xml/runtime/Application';
 import { PageError, PageLoading } from '@/components/Utils';
-import { RuntimeApplicationView } from '@/xml/ApplicationView';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */
@@ -58,10 +58,9 @@ export default function OrganizationApplication() {
         );
     }
 
-    return (
-        <RuntimeApplicationView
-            basePath={`/orgs/${organization}/apps/${application}`}
-            pages={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
-        />
-    );
+    const navigationBaseUrl = `/orgs/${organization}/apps/${application}`;
+    const pagesUrl = `/api/v1/applications/${applicationAccess.id}/proxy/pages.json`;
+    const requestBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
+
+    return <XmlApplication navigationBaseUrl={navigationBaseUrl} pagesUrl={pagesUrl} requestBaseUrl={requestBaseUrl} />;
 }

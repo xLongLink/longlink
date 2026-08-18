@@ -3,9 +3,6 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="DividerType">
     <xsd:attribute name="label" type="xsd:string" />
-    <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
-    <xsd:attribute name="variant" type="DividerVariantType" default="subtle" />
-    <xsd:attribute name="isFullBleed" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Divider" type="DividerType">

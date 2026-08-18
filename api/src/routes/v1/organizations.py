@@ -248,9 +248,6 @@ async def create_organization(
 ):
     """Create Organization desired state and queue infrastructure creation."""
 
-    # Derive the Organization's URL slug from its display name.
-    slug = names.slugify(payload.name)
-
     # Resolve the least-used ready infrastructure registries.
     compute_id = await compute.available(session)
     if compute_id is None:
@@ -266,7 +263,7 @@ async def create_organization(
     organization = await organizations.create(
         session,
         payload.name,
-        slug,
+        names.slugify(payload.name),
         user,
         compute_id=compute_id,
         storage_id=storage_id,

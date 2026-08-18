@@ -13,7 +13,9 @@ export function Navbar() {
             <Center axis="horizontal" width="100%">
                 <Card maxWidth={620} padding={0} width="100%">
                     <TopNav
-                        endContent={<Button href="/organizations" label="Get Started" size="sm" variant="primary" />}
+                        endContent={
+                            <Button href="/user/organizations" label="Get Started" size="sm" variant="primary" />
+                        }
                         heading={
                             <Link href="/" label="LongLink home" color="inherit">
                                 <Wordmark />

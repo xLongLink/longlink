@@ -7,15 +7,6 @@
     <xsd:attribute name="justify" type="StackJustifyType" default="start" />
     <xsd:attribute name="align" type="BoxAlignType" default="stretch" />
     <xsd:attribute name="wrap" type="StackWrapType" default="nowrap" />
-    <xsd:attribute name="gap" type="SpacingType" />
-    <xsd:attribute name="padding" type="SpacingType" />
-    <xsd:attribute name="paddingInline" type="SpacingType" />
-    <xsd:attribute name="paddingBlock" type="SpacingType" />
-    <xsd:attribute name="isScrollable" type="xsd:string" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="height" type="xsd:string" />
-    <xsd:attribute name="maxWidth" type="xsd:string" />
-    <xsd:attribute name="minHeight" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Stack" type="StackType">

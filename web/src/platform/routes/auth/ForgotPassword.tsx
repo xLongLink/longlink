@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -11,24 +10,17 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { AuthLayout } from './AuthLayout';
-import { emailSchema } from './validation';
-
-const forgotPasswordSchema = z.object({
-    email: emailSchema,
-});
-
-type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const showToast = useToast();
-    const form = useForm<ForgotPasswordValues>({
+    const form = useForm<EmailPayload>({
         defaultValues: { email: '' },
-        resolver: zodResolver(forgotPasswordSchema),
+        resolver: zodResolver(emailPayloadSchema),
     });
     const requestReset = useMutation({
-        mutationFn: (payload: ForgotPasswordValues) =>
-            api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
+        mutationFn: (payload: EmailPayload) => api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
         onError: (error) => {
             showToast({
                 body: error instanceof Error ? error.message : 'Please try again in a moment.',

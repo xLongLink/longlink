@@ -1,19 +1,16 @@
 import pytest
 from uuid import uuid4
-from sqlmodel import col
 from factories import create_application, create_organization
-from sqlalchemy import update
 from src.errors import ConflictError
 from src.models.types import Image
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import applications, organizations
 from src.database.models.users import User
-from src.database.models.organizations import Organization
 
 
-async def test_create_requires_running_organization(users: tuple[User, User, User]) -> None:
-    """Create Applications only for running Organizations."""
+async def test_create_allows_creating_organization(users: tuple[User, User, User]) -> None:
+    """Create Applications for Organizations queued for reconciliation."""
 
     # Arrange
     user = users[0]
@@ -21,17 +18,6 @@ async def test_create_requires_running_organization(users: tuple[User, User, Use
 
     # Act
     async with session_scope() as session:
-        with pytest.raises(ConflictError) as exc:
-            await applications.create(
-                session,
-                organization.id,
-                "Dashboard",
-                slug="dashboard",
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-                user=user,
-                secrets={},
-            )
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         application = await applications.create(
             session,
             organization.id,
@@ -44,7 +30,6 @@ async def test_create_requires_running_organization(users: tuple[User, User, Use
         await session.commit()
 
     # Assert
-    assert str(exc.value) == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
     assert application.image_desired == "ghcr.io/longlink/dashboard@sha256:test"

@@ -2,7 +2,7 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
 from factories import create_application, create_organization
-from sqlalchemy import update
+from sqlalchemy import select, update
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -12,6 +12,7 @@ from src.database.services import operations, applications
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -92,7 +93,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert "secret-value" not in response.text
 
     async with session_scope() as session:
-        persisted = await applications.get(session, (await applications.fetch(session))[0].id)
+        persisted = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
         assert persisted is not None
         assert persisted.organization_id == organization.id
         assert persisted.status == Status.creating

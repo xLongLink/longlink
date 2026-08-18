@@ -1,5 +1,4 @@
 from uuid import UUID
-from sqlmodel import col
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
@@ -228,8 +227,8 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
     if db is None:
         result = await session.execute(
             select(Organization, DatabaseRegistry)
-            .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-            .where(col(Organization.id) == organization_id)
+            .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+            .where(Organization.id == organization_id)
         )
         assigned = result.tuples().one_or_none()
         if assigned is None:
@@ -347,7 +346,7 @@ async def create(
 
     # Lock every requested registry while validating the immutable infrastructure assignment.
     result = await session.execute(
-        select(ComputeRegistry.status, DatabaseRegistry.id, StorageRegistry.id)
+        select(ComputeRegistry.id, DatabaseRegistry.id, StorageRegistry.id)
         .select_from(ComputeRegistry)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == storage_id)
@@ -357,9 +356,7 @@ async def create(
     assignment = result.one_or_none()
     if assignment is None:
         raise UnavailableError("No compute registry available")
-    compute_status, database_registry_id, storage_registry_id = assignment
-    if compute_status != Status.running:
-        raise UnavailableError("No ready compute registry available")
+    _, database_registry_id, storage_registry_id = assignment
     if database_registry_id is None:
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:
@@ -429,7 +426,6 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
     if organization.deleted_at is None:
         now = utcnow()
-        organization.status = Status.deleting
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now

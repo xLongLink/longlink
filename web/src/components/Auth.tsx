@@ -5,11 +5,10 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
 import { ApiError } from '@/lib/api';
-import NotFoundLayout from '@/components/layouts/NotFound';
-import { AuthenticatedUserProvider, useCurrentUser } from '@/lib/hooks/use-user';
+import { useCurrentUser } from '@/lib/hooks/use-user';
 
-/** Protects routes and optionally restricts access to Platform administrators. */
-export function Auth({ children, administrator = false }: { children: ReactElement; administrator?: boolean }) {
+/** Protects routes behind the current user query. */
+export function Auth({ children }: { children: ReactElement }) {
     const { user, isLoading, error, refetch } = useCurrentUser();
 
     // Wait for profile loading before deciding access.
@@ -34,10 +33,5 @@ export function Auth({ children, administrator = false }: { children: ReactEleme
         return <Navigate replace to="/login" />;
     }
 
-    // Hide administrator routes from regular Platform users.
-    if (administrator && !user.administrator) {
-        return <NotFoundLayout />;
-    }
-
-    return <AuthenticatedUserProvider user={user}>{children}</AuthenticatedUserProvider>;
+    return children;
 }

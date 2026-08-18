@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink version="0.3" name="Settings" icon="settings-2">
+<longlink name="Settings" icon="settings-2">
     <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
     <State id="reviewer" name="Mira Tanner" initials="MT" badge="Approver" avatarUrl="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner" />
     <State id="emailUpdates" value="${true}" />
@@ -14,17 +14,17 @@
 
     <SideNav label="Settings sections">
         <SideNavItem value="application" icon="viewColumns" label="Application">
-            <Stack gap="4">
+            <Stack>
                 <Heading level="2">Application</Heading>
                 <Text as="p" value="Edit the sample application's local owner, cost-center, and reviewer note fields." />
-                <Card variant="muted">
-                    <Stack direction="horizontal" align="center" gap="3">
-                        <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" size="lg" />
-                        <Stack gap="1">
+                <Card>
+                    <Stack direction="horizontal" align="center">
+                        <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />
+                        <Stack>
                             <Text weight="semibold" value="Default reviewer" />
                             <Text color="secondary" value="$reviewer.initials" />
                         </Stack>
-                        <Badge label="$reviewer.badge" variant="info" />
+                        <Badge label="$reviewer.badge" />
                     </Stack>
                 </Card>
                 <FormLayout>
@@ -45,7 +45,7 @@
         </SideNavItem>
 
         <SideNavItem value="preferences" icon="wrench" label="Preferences">
-            <Stack gap="4">
+            <Stack>
                 <Heading level="2">Preferences</Heading>
                 <Text as="p" value="Toggle notification controls and adjust a slider-backed approval threshold." />
                 <FormLayout>
@@ -66,7 +66,7 @@
         </SideNavItem>
 
         <SideNavItem value="workflow" icon="arrowsUpDown" label="Workflow">
-            <Stack gap="4">
+            <Stack>
                 <Heading level="2">Workflow</Heading>
                 <Text as="p" value="Use radio lists and selectors to model workflow defaults." />
                 <FormLayout>

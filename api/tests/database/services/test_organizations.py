@@ -184,8 +184,8 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     assert memberships[deleted_member.email].deleted_at is not None
 
 
-async def test_create_requires_available_ready_compute(users: tuple[User, User, User]) -> None:
-    """Require an available reconciled compute target before creating an Organization."""
+async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
+    """Create Organizations queued behind their creating compute target."""
 
     # Arrange
     owner = users[0]
@@ -198,17 +198,15 @@ async def test_create_requires_available_ready_compute(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    with pytest.raises(UnavailableError) as exc:
-        await create_organization(owner, infrastructure=infrastructure)
+    organization = await create_organization(owner, infrastructure=infrastructure)
 
     # Assert
-    assert str(exc.value) == "No ready compute registry available"
     async with session_scope() as session:
-        assert await organizations.fetch(session) == []
+        assert await organizations.fetch(session) == [organization]
         reloaded_compute = await compute.get(session, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
-        assert await operations.fetch(session) == []
+        assert len(await operations.fetch(session)) == 1
 
 
 async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:

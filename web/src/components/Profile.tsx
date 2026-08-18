@@ -8,11 +8,22 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { BookOpen, Building2, ChevronRight, ExternalLink, Settings2 } from 'lucide-react';
+import {
+    AppWindow,
+    ArrowUpDown,
+    BookOpen,
+    Building2,
+    ChevronRight,
+    Database,
+    ExternalLink,
+    HardDrive,
+    Settings2,
+    Users,
+    Wrench,
+} from 'lucide-react';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useSignOut } from '@/lib/hooks/use-user';
-import { administratorTabs } from '@/lib/administrator';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: UserSummary }) {
@@ -45,14 +56,14 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                     >
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
-                            href="/organizations"
+                            href="/user/organizations"
                             label="Organizations"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
-                            href="/settings"
+                            href="/user/settings"
                             label="Settings"
                             onClickCapture={() => setIsOpen(false)}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
@@ -78,15 +89,50 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                                     </Text>
                                 }
                             >
-                                {administratorTabs.map(({ href, icon: Icon, label }) => (
-                                    <ListItem
-                                        key={href}
-                                        href={href}
-                                        label={label}
-                                        onClickCapture={() => setIsOpen(false)}
-                                        startContent={<Icon aria-hidden="true" className="text-secondary" size={16} />}
-                                    />
-                                ))}
+                                <ListItem
+                                    href="/admin/users"
+                                    label="Users"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/applications"
+                                    label="Applications"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/organizations"
+                                    label="Organizations"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/database"
+                                    label="Database"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<Database aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/storage"
+                                    label="Storage"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<HardDrive aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/compute"
+                                    label="Compute"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={<Wrench aria-hidden="true" className="text-secondary" size={16} />}
+                                />
+                                <ListItem
+                                    href="/admin/operations"
+                                    label="Operations"
+                                    onClickCapture={() => setIsOpen(false)}
+                                    startContent={
+                                        <ArrowUpDown aria-hidden="true" className="text-secondary" size={16} />
+                                    }
+                                />
                             </List>
                             <Divider />
                         </>

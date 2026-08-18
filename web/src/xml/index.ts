@@ -2,7 +2,7 @@ import type { ASTNode } from './types';
 import { parseXML as parseAst } from './core/parser';
 
 /** Parses one XML document. */
-export function parseXML(xml: string): [ASTNode] {
+export function parseXML(xml: string): ASTNode {
     const ast = parseAst(xml);
     const [root] = ast;
 
@@ -10,7 +10,7 @@ export function parseXML(xml: string): [ASTNode] {
         throw new Error('XML pages must contain exactly one longlink root');
     }
 
-    return [root];
+    return root;
 }
 
 export { createContext } from './core/context';

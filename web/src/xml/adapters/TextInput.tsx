@@ -5,16 +5,6 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/TextInput?tab=properties
- * - label: string
- * - description: string
- * - value: string
- * - type: str
- * - isDisabled: bool
- * - isRequired: bool
- */
 export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));

@@ -7,13 +7,13 @@ VALID_FRAGMENTS = [
         "action",
         '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
     ),
-    ("avatar", '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", '<Badge id="item-status" label="$item.status" variant="success"><Icon slot="icon" icon="check" /></Badge>'),
+    ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
+    ("badge", '<Badge label="$item.status"><Icon slot="icon" icon="check" /></Badge>'),
     (
         "button",
         '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
     ),
-    ("card", '<Card variant="muted" padding="4" elevation="low"><Text value="Card content" /></Card>'),
+    ("card", '<Card><Text value="Card content" /></Card>'),
     (
         "checkbox-input",
         '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
@@ -22,23 +22,26 @@ VALID_FRAGMENTS = [
         "dialog",
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text value="This action cannot be undone." /></Dialog>',
     ),
-    ("divider", '<Divider label="or" variant="strong" />'),
+    ("divider", '<Divider label="or" />'),
     ("divider-runtime-attributes", '<Divider if="show" slot="content" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
     ("for", '<For each="items" as="item"><Text value="$item.name" /></For>'),
     (
         "form-layout",
-        '<FormLayout direction="horizontal"><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
+        '<FormLayout><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
     ),
-    ("grid", '<Grid minColumnWidth="240" maxColumns="3" gap="4" rowHeight="32"><Card /></Grid>'),
+    ("grid", '<Grid minColumnWidth="240" maxColumns="3"><Card /></Grid>'),
     (
         "heading",
         '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',
     ),
-    ("icon", '<Icon icon="info" size="sm" if="show" />'),
+    ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123"><Text value="Open issue" /></Link>'),
     ("longlink", '<longlink name="dashboard" icon="layout-dashboard" />'),
-    ("number-input", '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />'),
+    (
+        "number-input",
+        '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />',
+    ),
     ("query", '<Query id="projects" path="/projects" />'),
     (
         "radio-list",
@@ -49,9 +52,12 @@ VALID_FRAGMENTS = [
         '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
-    ("stack", '<Stack direction="horizontal" justify="between" gap="4"><Text value="First" /></Stack>'),
+    ("stack", '<Stack direction="horizontal" justify="between"><Text value="First" /></Stack>'),
     ("state", '<State id="filters" value="[]" />'),
-    ("switch", '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />'),
+    (
+        "switch",
+        '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />',
+    ),
     (
         "table",
         '<Table data="$items" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
@@ -64,14 +70,17 @@ VALID_FRAGMENTS = [
         "text",
         '<Text id="item-name" as="p" type="large" size="lg" color="accent" value="$item.name" weight="semibold" display="block" justify="center" maxLines="2" textWrap="balance" wordBreak="break-word" hasCapsize="true" hasStrikethrough="true" hasTabularNumbers="true" hasTruncateTooltip="below" />',
     ),
-    ("text-area", '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />'),
+    (
+        "text-area",
+        '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />',
+    ),
     ("text-input", '<TextInput label="Name" value="$form.name" type="text" size="lg" isLoading="true" statusVariant="tooltip" />'),
 ]
 
 INVALID_FRAGMENTS = [
     ("unknown-action-attribute", '<Action tone="accent"><Button label="Save" /></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
-    ("invalid-icon-color", '<Icon icon="info" color="violet" />'),
+    ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-unsupported-child", '<Badge label="Active"><Text value="Active" /></Badge>'),
     ("badge-duplicate-icon", '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
     ("missing-button-label", "<Button />"),
@@ -93,8 +102,8 @@ INVALID_FRAGMENTS = [
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", '<!DOCTYPE longlink><longlink />'),
-    ("cdata", '<longlink><![CDATA[hidden]]></longlink>'),
+    ("doctype", "<!DOCTYPE longlink><longlink />"),
+    ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
 ]
 
 
@@ -118,7 +127,7 @@ def test_root_schema_accepts_valid_fragments(_name: str, content: str, tmp_path:
 
     # Build and validate the fragment through the application page schema.
     path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f'<longlink>{content}</longlink>', encoding="utf-8")
+    path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
     element = Element(path)
     element.validate()
 
@@ -129,7 +138,7 @@ def test_root_schema_rejects_invalid_fragments(_name: str, content: str, tmp_pat
 
     # Build the invalid fragment through the application page schema.
     path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f'<longlink>{content}</longlink>', encoding="utf-8")
+    path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
     element = Element(path)
 
     # Require schema validation to reject the fragment.

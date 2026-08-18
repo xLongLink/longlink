@@ -30,7 +30,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Icon icon="info" size="sm" />'} language="xml" />
+                <CodeBlock code={'<Icon icon="info" />'} language="xml" />
             </Stack>
         </Article>
     );

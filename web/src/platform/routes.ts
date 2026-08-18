@@ -78,9 +78,11 @@ export default [
         route('*', '../components/layouts/NotFound.tsx'),
     ]),
     layout('./layouts/Authenticated.tsx', [
-        layout('./layouts/User.tsx', [
-            route('organizations', './routes/Organizations.tsx'),
-            route('settings', './routes/Settings.tsx'),
+        ...prefix('user', [
+            layout('./layouts/User.tsx', [
+                route('organizations', './routes/user/Organizations.tsx'),
+                route('settings', './routes/user/Settings.tsx'),
+            ]),
         ]),
         ...prefix('admin', [
             layout('./layouts/Admin.tsx', [

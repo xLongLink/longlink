@@ -1,15 +1,15 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink version="0.3" name="Items" icon="package">
+<longlink name="Items" icon="package">
     <Query id="items" path="/api/items" />
     <State id="draft" />
 
-    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
+    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">Items</Heading>
             <Text as="p" color="secondary" value="Track catalog items and their supporting files." />
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
-            <Stack gap="3">
+            <Stack>
                 <FormLayout>
                     <TextInput
                         label="Name"
@@ -33,7 +33,7 @@
 
     <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
         <TableColumn key="item" header="Item">
-            <Stack gap="1">
+            <Stack>
                 <Link to="/items/${row.id}">
                     <Text value="$row.name" />
                 </Link>

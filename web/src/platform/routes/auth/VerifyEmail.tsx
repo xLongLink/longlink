@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -71,7 +70,7 @@ export default function VerifyEmail() {
             return zUserSummary.parse(await response.json());
         },
     });
-    const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
+    const { mutate: verifyToken } = verification;
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -80,7 +79,7 @@ export default function VerifyEmail() {
             await clearSessionQueries(queryClient);
             queryClient.setQueryData(['api', '/api/v1/me'], user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-            navigate('/organizations', { replace: true });
+            navigate('/user/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
@@ -99,7 +98,7 @@ export default function VerifyEmail() {
 
     useEffect(() => {
         verifyToken(token);
-    }, [token]);
+    }, [token, verifyToken]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
@@ -114,7 +113,6 @@ export default function VerifyEmail() {
         return (
             <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
                 <Stack gap={3}>
-                    <Banner status="error" title={verificationError?.message ?? 'error'} />
                     {invalidToken ? null : (
                         <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
                     )}

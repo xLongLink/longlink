@@ -1,16 +1,16 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink version="0.3" name="Items" icon="package">
+<longlink name="Items" icon="package">
     <Query id="item" path="/api/items/${params.item}" />
     <Query id="attachments" path="/api/items/${params.item}/attachments" />
     <State id="attachment" file="${null}" />
 
-    <Stack direction="horizontal" justify="between" align="center" wrap="wrap" gap="3">
+    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">$item.name</Heading>
             <Text color="secondary" value="${`CHF ${item.price}`}" />
         </Stack>
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
-            <Stack gap="3">
+            <Stack>
                 <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
                 <Action
                     action="/api/items/${params.item}/attachments"

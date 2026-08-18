@@ -3,7 +3,6 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="FormLayoutType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="direction" type="FormDirectionType" default="vertical" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="FormLayout" type="FormLayoutType">

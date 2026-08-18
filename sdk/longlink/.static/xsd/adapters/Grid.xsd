@@ -7,16 +7,6 @@
     <xsd:attribute name="minColumnWidth" type="PositiveDecimalType" />
     <xsd:attribute name="maxColumns" type="xsd:positiveInteger" />
     <xsd:attribute name="repeat" type="GridRepeatType" default="fill" />
-    <xsd:attribute name="gap" type="SpacingType" />
-    <xsd:attribute name="rowGap" type="SpacingType" />
-    <xsd:attribute name="rowHeight" type="PositiveDecimalType" />
-    <xsd:attribute name="columnGap" type="SpacingType" />
-    <xsd:attribute name="align" type="BoxAlignType" default="stretch" />
-    <xsd:attribute name="justify" type="BoxAlignType" default="stretch" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="height" type="xsd:string" />
-    <xsd:attribute name="maxWidth" type="xsd:string" />
-    <xsd:attribute name="minHeight" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Grid" type="GridType">

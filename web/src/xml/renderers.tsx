@@ -1,7 +1,7 @@
 import { getVersion, subscribe } from 'valtio';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
@@ -9,7 +9,7 @@ import { isSafePropertyName } from './expressions';
 import { setupContext, XmlContext } from './core/context';
 
 type RenderXMLProps = {
-    ast: [ASTNode];
+    ast: ASTNode;
     ctx: XmlRuntime;
     baseUrl: string;
 };
@@ -22,13 +22,13 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {
-            return { error: null, nodes: getSetupNodes(ast) };
+            return { error: null, nodes: getSetupNodes(ast.children) };
         } catch (error: unknown) {
             return { error: error instanceof Error ? error : new Error('XML setup validation failed'), nodes: [] };
         }
     }, [ast]);
-    const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (setup.nodes.length ? null : ast));
-    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode[]; baseUrl: string; error: unknown } | null>(null);
+    const initializedAst = useRef<ASTNode | null>(setup.nodes.length ? null : ast);
+    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; baseUrl: string; error: unknown } | null>(null);
     const [resetKey, setResetKey] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
@@ -94,7 +94,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
 
                 // Publish initialized AST only while mounted.
                 if (mounted) {
-                    setInitializedAst(ast);
+                    initializedAst.current = ast;
                     setResetKey((current) => current + 1);
                 }
             })
@@ -121,12 +121,12 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     }
 
     // Wait for setup before rendering dependent nodes.
-    if (setup.nodes.length && initializedAst !== ast) return null;
+    if (setup.nodes.length && initializedAst.current !== ast) return null;
 
     return (
         <XmlErrorBoundary resetKey={resetKey}>
             <XmlContext.Provider value={ctx}>
-                <Stack gap={6}>{renderNode(ast[0].children, ctx.scope)}</Stack>
+                <Stack gap={6}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );
@@ -183,7 +183,7 @@ function validateSetupNode(node: ASTNode): void {
     }
 
     // Validate query declarations.
-    if (node.name === 'Query') {
+    else if (node.name === 'Query') {
         // Require a declared query key.
         if (!node.params.id) throw new Error('Query requires a string id');
 

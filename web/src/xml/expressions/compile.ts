@@ -9,11 +9,11 @@ type InterpolationSegment = {
 };
 
 /** Compiles an XML attribute without evaluating it against runtime state. */
-export function compileAttribute(value: string, literal = false): ASTAttribute {
+export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
     // Preserve literal empty attribute values.
-    if (input === '' || literal) return { kind: 'text', value };
+    if (input === '') return { kind: 'text', value };
 
     const standaloneExpression = readStandaloneExpression(input);
 
