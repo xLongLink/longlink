@@ -5,7 +5,6 @@ import { api } from '@/lib/api';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const UserContext = createContext<UseQueryResult<UserSummary, Error> | undefined>(undefined);
-const AuthenticatedUserContext = createContext<UserSummary | undefined>(undefined);
 
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -38,16 +37,11 @@ export function useCurrentUser() {
     };
 }
 
-/** Provides the authenticated user to routes protected by Auth. */
-export function AuthenticatedUserProvider({ children, user }: { children: React.ReactNode; user: UserSummary }) {
-    return <AuthenticatedUserContext.Provider value={user}>{children}</AuthenticatedUserContext.Provider>;
-}
-
 /** Reads the user guaranteed by the authenticated route boundary. */
 export function useAuthenticatedUser() {
-    const user = useContext(AuthenticatedUserContext);
+    const { user } = useCurrentUser();
     if (user === undefined) {
-        throw new Error('useAuthenticatedUser must be used within an AuthenticatedUserProvider');
+        throw new Error('useAuthenticatedUser must be used within an authenticated route');
     }
 
     return user;

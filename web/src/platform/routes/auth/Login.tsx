@@ -3,8 +3,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Center } from '@astryxdesign/core/Center';
-import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -14,6 +12,7 @@ import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { AuthLayout } from './AuthLayout';
 import { TermsNotice } from './TermsNotice';
 import { emailSchema, passwordSchema } from './validation';
 
@@ -55,15 +54,8 @@ export default function Login() {
     }
 
     return (
-        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
-            <Stack gap={4} maxWidth={384} width="100%">
-                <Stack gap={1} hAlign="center">
-                    <Heading level={1} justify="center">
-                        <WelcomeTitle />
-                    </Heading>
-                    <Divider>{'Sign in with your email and password.'}</Divider>
-                </Stack>
-
+        <AuthLayout title={<WelcomeTitle />} description={<Divider>{'Sign in with your email and password.'}</Divider>}>
+            <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
                     <Controller
                         control={form.control}
@@ -133,6 +125,6 @@ export default function Login() {
 
                 <TermsNotice />
             </Stack>
-        </Center>
+        </AuthLayout>
     );
 }

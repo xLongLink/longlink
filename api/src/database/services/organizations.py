@@ -1,5 +1,4 @@
 from uuid import UUID
-from sqlmodel import col
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
@@ -228,8 +227,8 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
     if db is None:
         result = await session.execute(
             select(Organization, DatabaseRegistry)
-            .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-            .where(col(Organization.id) == organization_id)
+            .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+            .where(Organization.id == organization_id)
         )
         assigned = result.tuples().one_or_none()
         if assigned is None:
@@ -429,7 +428,6 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
     if organization.deleted_at is None:
         now = utcnow()
-        organization.status = Status.deleting
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now

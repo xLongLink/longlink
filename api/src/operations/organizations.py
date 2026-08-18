@@ -31,12 +31,11 @@ async def reconcile(claimed: Operation) -> str | None:
         await organizations.sync_users(session, organization.id, db)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
-    object_storage = Exoscale(
+    await Exoscale(
         infrastructure.storage.endpoint_url,
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
-    )
-    await object_storage.create(organization.id.hex)
+    ).create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and ingress policy.
     cluster = Kubernetes(infrastructure.compute.kubeconfig)

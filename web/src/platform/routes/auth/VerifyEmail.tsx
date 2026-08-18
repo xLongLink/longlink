@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -7,7 +8,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { useEffect, useEffectEvent, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -71,7 +71,7 @@ export default function VerifyEmail() {
             return zUserSummary.parse(await response.json());
         },
     });
-    const verifyToken = useEffectEvent((value: string) => verification.mutate(value));
+    const { mutate: verifyToken } = verification;
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -99,7 +99,7 @@ export default function VerifyEmail() {
 
     useEffect(() => {
         verifyToken(token);
-    }, [token]);
+    }, [token, verifyToken]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
     const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';

@@ -2,26 +2,22 @@ import { Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
-import { Auth } from '@/components/Auth';
 import { ProfileMenu } from '@/components/Profile';
 import { Navigation } from '@/components/Navigation';
 import TopLayout from '@/components/layouts/TopLayout';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
-    return (
-        <Auth administrator>
-            <AdminContent />
-        </Auth>
-    );
-}
-
-/** Renders administrator navigation after the administrator guard passes. */
-function AdminContent() {
     const user = useAuthenticatedUser();
+
+    // Hide administrator routes from regular Platform users.
+    if (!user.administrator) {
+        return <NotFoundLayout />;
+    }
 
     return (
         <TopLayout
