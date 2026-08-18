@@ -346,7 +346,7 @@ async def create(
 
     # Lock every requested registry while validating the immutable infrastructure assignment.
     result = await session.execute(
-        select(ComputeRegistry.status, DatabaseRegistry.id, StorageRegistry.id)
+        select(ComputeRegistry.id, DatabaseRegistry.id, StorageRegistry.id)
         .select_from(ComputeRegistry)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == storage_id)
@@ -356,9 +356,7 @@ async def create(
     assignment = result.one_or_none()
     if assignment is None:
         raise UnavailableError("No compute registry available")
-    compute_status, database_registry_id, storage_registry_id = assignment
-    if compute_status != Status.running:
-        raise UnavailableError("No ready compute registry available")
+    _, database_registry_id, storage_registry_id = assignment
     if database_registry_id is None:
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:

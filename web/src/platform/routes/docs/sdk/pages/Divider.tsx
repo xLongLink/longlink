@@ -30,7 +30,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Divider label="Or" variant="strong" />'} language="xml" />
+                <CodeBlock code={'<Divider label="Or" />'} language="xml" />
             </Stack>
         </Article>
     );

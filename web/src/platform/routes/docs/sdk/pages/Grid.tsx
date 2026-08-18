@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Grid minColumnWidth="240" maxColumns="3" repeat="fit" gap="4">\n  <Card><Text value="First" /></Card>\n  <Card><Text value="Second" /></Card>\n</Grid>'
+                        '<Grid minColumnWidth="240" maxColumns="3" repeat="fit">\n  <Card><Text value="First" /></Card>\n  <Card><Text value="Second" /></Card>\n</Grid>'
                     }
                     language="xml"
                 />

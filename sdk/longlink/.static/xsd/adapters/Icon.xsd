@@ -3,9 +3,7 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="IconType">
     <xsd:attribute name="icon" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="color" type="IconColorType" />
     <xsd:attribute name="label" type="xsd:string" />
-    <xsd:attribute name="size" type="IconSizeType" default="md" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Icon" type="IconType">

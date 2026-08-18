@@ -3,13 +3,6 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="CardType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="variant" type="CardVariantType" default="default" />
-    <xsd:attribute name="padding" type="SpacingType" />
-    <xsd:attribute name="elevation" type="ElevationType" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="height" type="xsd:string" />
-    <xsd:attribute name="maxWidth" type="xsd:string" />
-    <xsd:attribute name="minHeight" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Card" type="CardType">

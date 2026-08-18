@@ -66,9 +66,9 @@ async def create(
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
-    # Lock the Organization and its assigned Compute registry before validating their lifecycle state.
+    # Lock the Organization and its assigned Compute registry before validating the assignment.
     result = await session.execute(
-        select(Organization, ComputeRegistry.status)
+        select(Organization, ComputeRegistry.id)
         .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .where(Organization.id == organization_id)
         .with_for_update()
@@ -76,11 +76,9 @@ async def create(
     row = result.one_or_none()
     if row is None:
         raise NotFoundError("Organization not found")
-    organization, compute_status = row
-    if compute_status != Status.running:
-        raise ConflictError("Compute registry is not ready")
-    if organization.deleted_at is not None or organization.status != Status.running:
-        raise ConflictError("Organization is not ready")
+    organization, _ = row
+    if organization.deleted_at is not None:
+        raise ConflictError("Organization is not available")
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(

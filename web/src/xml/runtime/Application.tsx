@@ -10,23 +10,26 @@ import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-rou
 import { api } from '@/lib/api';
 import { PageError } from '@/components/Utils';
 import { Wordmark } from '@/components/Wordmark';
-import { resolveRequestUrl } from '@/xml/core/url';
 import { Navigation } from '@/components/Navigation';
 import TopLayout from '@/components/layouts/TopLayout';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
-import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
-import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '@/xml/pages';
+import { resolveRequestUrl } from '../core/url';
+import { createContext as createXmlContext, parseXML, RenderXML } from '..';
+import { pageRouteIsDynamic, pageSchema, type RuntimePage } from '../pages';
 
-/** Renders a platform application from its authenticated proxy manifest. */
-export function ApplicationLayout({ applicationId }: { applicationId: string }) {
-    const { organization = '', application = '', '*': wildcardPath } = useParams();
+type XmlApplicationProps = {
+    navigationBaseUrl: string;
+    pagesUrl: string;
+    requestBaseUrl: string;
+};
+
+/** Renders a manifest-driven XML application within a host-specific URL context. */
+export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: XmlApplicationProps) {
+    const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
-    const basePath = `/orgs/${organization}/apps/${application}`;
-    const pagesUrl = `/api/v1/applications/${applicationId}/proxy/pages.json`;
     const routePath = wildcardPath ?? '';
-    const resolvedPagesBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
@@ -51,22 +54,24 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
         };
     }, [registeredPages, routePath]);
     const firstTabPage = registeredPages?.find((page) => !pageRouteIsDynamic(page.route));
+
+    // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
     const runtimeContext = useMemo(() => {
         if (!activePage) return null;
 
         const context = createXmlContext(activeRouteMatch?.params ?? {});
 
-        context.services.navigationBaseUrl = basePath;
+        context.services.navigationBaseUrl = navigationBaseUrl;
         return context;
-    }, [activePage, activeRouteMatch?.params, basePath]);
+    }, [activePage, activeRouteMatch?.params, navigationBaseUrl]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
         queryKey: ['application-page', pagesUrl, activePage?.path],
         queryFn: async ({ signal }) => {
             if (!activePage) throw new Error('No active application page');
 
-            const pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePage.path);
+            const pageUrl = resolveRequestUrl(requestBaseUrl, activePage.path);
             const content = await api(pageUrl, { headers: { Accept: 'application/xml' }, signal }).text();
 
             return parseXML(content);
@@ -75,66 +80,57 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
     });
     const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
 
-    // Build one proxy-prefixed navigation target per runtime tab.
+    // Build one static navigation target per runtime tab.
     for (const page of registeredPages ?? []) {
         if (!page.route || pageRouteIsDynamic(page.route) || tabGroups.has(page.tab)) {
             continue;
         }
 
         tabGroups.set(page.tab, {
-            href: `${basePath}/${page.route}`,
+            href: `${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${page.route}`,
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
         });
     }
 
-    // Make the first navigable tab explicit in the proxy URL.
+    // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
         if (!firstTabPage || routePath || !firstTabPage.route) {
             return;
         }
 
-        navigate(`${basePath}/${firstTabPage.route}`, { replace: true });
-    }, [basePath, firstTabPage, navigate, routePath]);
+        navigate(`${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${firstTabPage.route}`, { replace: true });
+    }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
 
-    /** Selects the active page result after all runtime hooks have run. */
-    function renderContent() {
-        if (!error && registeredPages && routePath && !activeRouteMatch) {
-            return <NotFoundLayout />;
-        }
+    let content;
 
-        if (error) {
-            return (
-                <PageError
-                    description={error.message || 'The application definition could not be loaded.'}
-                    title="Unable to load this application"
-                />
-            );
-        }
-
-        if (activePageAst && runtimeContext) {
-            return <RenderXML ast={activePageAst} baseUrl={resolvedPagesBaseUrl} ctx={runtimeContext} />;
-        }
-
-        if (!activePage) {
-            return (
-                <PageError
-                    description="The application did not expose any pages to render."
-                    title="Unexpected application response"
-                />
-            );
-        }
-
-        if (activePageError) {
-            return (
-                <PageError
-                    description={activePageError.message || 'Failed to load page'}
-                    title="Unable to load this page"
-                />
-            );
-        }
-
-        return (
+    if (!error && registeredPages && routePath && !activeRouteMatch) {
+        content = <NotFoundLayout />;
+    } else if (error) {
+        content = (
+            <PageError
+                description={error.message || 'The application definition could not be loaded.'}
+                title="Unable to load this application"
+            />
+        );
+    } else if (activePageAst && runtimeContext) {
+        content = <RenderXML ast={activePageAst} baseUrl={requestBaseUrl} ctx={runtimeContext} />;
+    } else if (!activePage) {
+        content = (
+            <PageError
+                description="The application did not expose any pages to render."
+                title="Unexpected application response"
+            />
+        );
+    } else if (activePageError) {
+        content = (
+            <PageError
+                description={activePageError.message || 'Failed to load page'}
+                title="Unable to load this page"
+            />
+        );
+    } else {
+        content = (
             <Center minHeight="calc(100vh - 14rem)" width="100%">
                 <Spinner label="Loading" />
             </Center>
@@ -170,7 +166,7 @@ export function ApplicationLayout({ applicationId }: { applicationId: string }) 
                 </Stack>
             }
         >
-            <PageContainer minHeight="100%">{renderContent()}</PageContainer>
+            <PageContainer minHeight="100%">{content}</PageContainer>
         </TopLayout>
     );
 }

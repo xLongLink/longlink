@@ -14,12 +14,12 @@ def create_xml_parser() -> etree.XMLParser:
 
 
 @cache
-def load_xml_schema(schema_path: Path) -> etree.XMLSchema:
-    """Compile and cache one trusted XSD schema by its resolved path."""
+def load_xml_schema() -> etree.XMLSchema:
+    """Compile and cache the bundled XML schema."""
 
     # Load bundled schemas with external entities and network access disabled.
     parser = create_xml_parser()
-    schema_doc = etree.parse(str(schema_path), parser)
+    schema_doc = etree.parse(str(ROOT / ".static" / "xsd" / "schema.xsd"), parser)
     return etree.XMLSchema(schema_doc)
 
 
@@ -32,18 +32,15 @@ class Element:
         self.path = Path(path)
         self._content: str | None = None
 
-
     @property
     def content(self) -> str:
         """Return the raw XML payload."""
 
         # Cache disk content after the first read.
         if self._content is None:
-
             # Read XML as text so parse errors can report the original content.
             self._content = self.path.read_text(encoding="utf-8")
         return self._content
-
 
     def validate(self) -> etree._Element:
         """Validate and return the parsed XML document."""
@@ -54,7 +51,7 @@ class Element:
 
         # Reuse the compiled schema while parsing user XML with external access disabled.
         parser = create_xml_parser()
-        schema = load_xml_schema((ROOT / ".static" / "xsd" / "schema.xsd").resolve())
+        schema = load_xml_schema()
 
         # Parse user XML once for validation and downstream metadata extraction.
         try:

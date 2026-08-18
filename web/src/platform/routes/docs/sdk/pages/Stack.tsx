@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Stack direction="horizontal" justify="between" align="center" gap="3">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
+                        '<Stack direction="horizontal" justify="between" align="center">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
                     }
                     language="xml"
                 />

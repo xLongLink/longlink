@@ -5,10 +5,7 @@
     <xsd:sequence><xsd:any minOccurs="1" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="href" type="xsd:string" />
     <xsd:attribute name="to" type="xsd:string" />
-    <xsd:attribute name="color" type="TextColorType" default="accent" />
-    <xsd:attribute name="hasUnderline" type="xsd:string" />
     <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isExternalLink" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Link" type="LinkType">

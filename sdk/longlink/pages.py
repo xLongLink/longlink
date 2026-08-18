@@ -59,9 +59,3 @@ def page_file_route(relative_path: str) -> str:
         route_segments.append(segment)
 
     return "/".join(route_segments)
-
-
-def page_route_key(route: str) -> str:
-    """Return a route key that treats dynamic parameter names as equivalent."""
-
-    return "/".join(":" if segment.startswith(":") else segment for segment in route.split("/"))

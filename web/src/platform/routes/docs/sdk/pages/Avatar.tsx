@@ -31,7 +31,7 @@ export default function DocsArticleRoute() {
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={'<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="lg" />'}
+                    code={'<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" />'}
                     language="xml"
                 />
             </Stack>
