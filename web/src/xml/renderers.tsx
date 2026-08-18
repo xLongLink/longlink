@@ -88,7 +88,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             setResetKey((current) => current + 1);
         };
 
-        void setupContext(setup.nodes, ctx, baseUrl)
+        void setupContext(setup.nodes, ctx)
             .then(() => {
                 subscribeToStateValues();
 

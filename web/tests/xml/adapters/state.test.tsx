@@ -14,8 +14,7 @@ describe('State', () => {
                     children: [],
                 },
             ],
-            ctx,
-            ''
+            ctx
         );
 
         expect(ctx.scope.bindings.state1).toEqual({ value1: 'first value', score: '10', list: '[]' });

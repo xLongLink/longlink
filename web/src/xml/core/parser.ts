@@ -22,9 +22,7 @@ export function parseXML(xml: string): ASTNode[] {
     }
 
     // Validate first because the preserve-order parser can otherwise recover from malformed tags.
-    const validationResult = XMLValidator.validate(xml) as
-        | true
-        | { err?: { col?: number; line?: number; msg?: string } };
+    const validationResult = XMLValidator.validate(xml);
 
     // Surface parser validation errors with location details.
     if (validationResult !== true) {

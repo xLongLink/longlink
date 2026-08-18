@@ -9,10 +9,10 @@ describe('core/context', () => {
         const ctx = createContext();
         const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }), children: [] }];
 
-        await setupContext(ast, ctx, '/api');
+        await setupContext(ast, ctx);
         const filter = ctx.scope.bindings.filter as { value: string };
         filter.value = 'week';
-        await setupContext(ast, ctx, '/api');
+        await setupContext(ast, ctx);
 
         expect(filter.value).toBe('week');
 
@@ -30,13 +30,14 @@ describe('core/context', () => {
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };
+        ctx.services.requestBaseUrl = '/proxy';
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
             requestedUrl = String(input);
 
             return new Response(JSON.stringify({ id: '123' }));
         });
 
-        await setupContext(ast, ctx, '/proxy');
+        await setupContext(ast, ctx);
 
         expect(requestedUrl).toBe('/proxy/api/issues/123');
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
@@ -46,6 +47,7 @@ describe('core/context', () => {
         const ctx = createContext();
         const fetchImpl = vi.fn();
 
+        ctx.services.requestBaseUrl = '/proxy';
         vi.stubGlobal('fetch', fetchImpl);
 
         await expect(
@@ -57,8 +59,7 @@ describe('core/context', () => {
                         children: [],
                     },
                 ],
-                ctx,
-                '/proxy'
+                ctx
             )
         ).rejects.toThrow('XML request URL must be app-relative');
 
