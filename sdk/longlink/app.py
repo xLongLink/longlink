@@ -12,7 +12,7 @@ from longlink.context import install_context_middleware
 from fastapi.responses import Response
 from starlette.routing import Match
 from longlink.constants import ROOT
-from longlink.utils.xml import Element
+from longlink.utils.xml import validate_xml
 from longlink.middleware import install_frontend_middleware
 from longlink.storage.base import create_fs
 from longlink.utils.settings import Envs
@@ -87,7 +87,7 @@ class LongLink:
         self.app.router.routes.extend(
             [
                 self.app.router.route_class(
-                    definition.path,
+                    f"/{definition.path}",
                     partial(render_page, content),
                     methods=["GET"],
                     include_in_schema=False,
@@ -108,15 +108,12 @@ class LongLink:
             relative_path = page_file.relative_to(pages_directory).as_posix()
             path_without_suffix = relative_path.removesuffix(".xml")
 
-            # FastAPI parameter syntax is reserved for application routes, not page file names.
-            if any("{" in segment or "}" in segment for segment in path_without_suffix.split("/")):
-                raise ValueError("Page endpoint paths cannot contain empty names or FastAPI parameters")
-
-            registered_path = f"/pages/{path_without_suffix}"
+            page_path = f"pages/{path_without_suffix}"
+            registered_path = f"/{page_path}"
 
             # Validate XML pages and extract optional display metadata.
-            page = Element(page_file)
-            page_root = page.validate()
+            content = page_file.read_text(encoding="utf-8")
+            page_root = validate_xml(content)
             page_name = (page_root.get("name") or "").strip() or None
             page_icon = (page_root.get("icon") or "").strip() or None
 
@@ -129,21 +126,20 @@ class LongLink:
                 raise ValueError(f"Browser route '{page_route}' is already registered")
 
             # Application routes take precedence, so ambiguous page endpoints are rejected.
-            for application_route in self.application_routes:
-                match, _ = application_route.matches({"type": "http", "method": "GET", "path": registered_path})
-                if match is Match.FULL:
-                    raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
+            scope = {"type": "http", "method": "GET", "path": registered_path}
+            if any(application_route.matches(scope)[0] is Match.FULL for application_route in self.application_routes):
+                raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
 
             discovered_pages.append(
                 (
                     PageDefinition(
-                        path=registered_path,
+                        path=page_path,
                         route=page_route,
                         tab=tab,
                         name=page_name,
                         icon=page_icon,
                     ),
-                    page.content,
+                    content,
                 )
             )
             registered_route_keys.add(route_key)

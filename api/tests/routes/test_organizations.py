@@ -3,7 +3,7 @@ from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.services import operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -124,8 +124,7 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     platform_admin, org_admin = users[0], users[1]
     owned_organization = await create_organization(platform_admin)
     admin_owned_organization = await create_organization(org_admin, name="globex", slug="globex")
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
         await session.commit()
 
@@ -326,8 +325,7 @@ async def test_organization_resource_endpoints_require_elevated_role(
     owner, regular_member, _ = users
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -363,8 +361,7 @@ async def test_get_organization_returns_invitations(
         invitation = await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
         await session.commit()
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -374,12 +371,9 @@ async def test_get_organization_returns_invitations(
         )
         await session.commit()
 
-    client = clients[0]
-    regular_member_client = clients[2]
-
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}")
-    regular_member_response = await regular_member_client.get(f"/api/v1/organizations/{organization.id}")
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    regular_member_response = await clients[2].get(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
@@ -451,8 +445,7 @@ async def test_create_organization_invitation_returns_204(
     invitee = users[invitee_index]
     organization = await create_organization(owner)
     if caller_role is not None:
-        Session = await get_session()
-        async with Session() as session:
+        async with session_scope() as session:
             session.add(
                 UserOrganization(
                     user_id=users[caller_index].id,
@@ -489,8 +482,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     # Arrange
     owner, maintainer, invitee = users
     organization = await create_organization(owner)
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
         await session.commit()
     client = clients[1]
@@ -518,8 +510,7 @@ async def test_update_organization_member_changes_role(
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -554,8 +545,7 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     # Arrange
     owner, admin, member = users
     organization = await create_organization(owner)
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(UserOrganization(user_id=admin.id, organization_id=organization.id, role=OrganizationRoles.admin))
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
         await session.commit()
@@ -582,8 +572,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     owner, regular_member, target_member = users[0], users[1], users[2]
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -613,57 +602,43 @@ async def test_update_organization_member_returns_403_for_regular_member(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_create_organization_invitation_returns_403_for_non_member(
+@pytest.mark.parametrize(
+    ("caller_role", "expected_detail"),
+    [
+        pytest.param(None, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
+    ],
+)
+async def test_create_organization_invitation_returns_403_without_maintainer_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    caller_role: OrganizationRoles | None,
+    expected_detail: str,
 ) -> None:
-    """Reject invitation creation when the caller is not an organization member."""
+    """Reject invitation creation without organization maintenance permissions."""
 
     # Arrange
-    owner, invitee = users[0], users[1]
+    owner, caller, invitee = users
     organization = await create_organization(owner)
-    client = clients[1]
-
-    # Act
-    response = await client.post(
-        f"/api/v1/organizations/{organization.id}/invitations",
-        json={"email": invitee.email, "role": "write"},
-    )
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Access required"}
-
-
-async def test_create_organization_invitation_returns_403_for_regular_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject invitation creation when the member lacks invite permissions."""
-
-    # Arrange
-    owner, regular_member, invitee = users[0], users[1], users[2]
-    organization = await create_organization(owner)
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=regular_member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
+    if caller_role is not None:
+        async with session_scope() as session:
+            session.add(
+                UserOrganization(
+                    user_id=caller.id,
+                    organization_id=organization.id,
+                    role=caller_role,
+                )
             )
-        )
-        await session.commit()
-
-    client = clients[1]
+            await session.commit()
 
     # Act
-    response = await client.post(
+    response = await clients[1].post(
         f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
+    assert response.json() == {"detail": expected_detail}
+    async with session_scope() as session:
+        assert await organizations.invitations(session, organization.id) == []

@@ -50,7 +50,7 @@ def page_file_route(relative_path: str) -> str:
             continue
 
         # Static file names cannot introduce browser route parameters or wildcards.
-        if segment.startswith(":") or "*" in segment:
+        if segment.startswith(":") or "*" in segment or "{" in segment or "}" in segment:
             raise ValueError("Static page route segments cannot contain route parameters or wildcards")
 
         route_segments.append(segment)

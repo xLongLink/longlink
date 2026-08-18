@@ -8,7 +8,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -48,8 +48,7 @@ async def test_members_returns_users_from_membership_table(users: tuple[User, Us
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -92,8 +91,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     owner, member, non_member = users
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -150,8 +148,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     deleted_at = utcnow()
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -190,8 +187,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
         registry.status = Status.creating
@@ -231,8 +227,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
         await session.commit()
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
