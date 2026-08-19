@@ -8,7 +8,7 @@ export const metadata = {
     path: '/docs/sdk/pages/stack',
     title: 'Stack',
     description:
-        'Stack arranges items in a row or column with consistent spacing. Use the gap prop to control the space between items.',
+        'Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -33,7 +33,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Stack direction="horizontal" justify="between" align="center">\n  $order.number\n  <Button label="Open" />\n</Stack>'
+                        '<Stack direction="horizontal" gap="2" align="center">\n  <StackItem>$order.number</StackItem>\n  <StackItem size="fill">Order details</StackItem>\n  <StackItem><Button label="Open" /></StackItem>\n</Stack>'
                     }
                     language="xml"
                 />

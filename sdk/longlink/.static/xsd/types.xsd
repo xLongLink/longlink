@@ -127,6 +127,12 @@
       </xsd:simpleType>
     </xsd:union>
   </xsd:simpleType>
+  <xsd:simpleType name="StackItemSizeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="static" />
+      <xsd:enumeration value="fill" />
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="AlignType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="start" />

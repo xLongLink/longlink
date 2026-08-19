@@ -7,13 +7,14 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Slider } from '@astryxdesign/core/Slider';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
@@ -282,10 +283,16 @@ export default function DocsArticleRoute() {
                             </Menu>
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
-                            <Stack gap={2} align="center">
-                                <Badge>First</Badge>
-                                <Badge>Second</Badge>
-                                <Badge>Third</Badge>
+                            <Stack gap={3} width="100%">
+                                <StackItem size="static">
+                                    <Skeleton height={16} index={0} />
+                                </StackItem>
+                                <StackItem size="fill">
+                                    <Skeleton height={16} index={1} />
+                                </StackItem>
+                                <StackItem size="static">
+                                    <Skeleton height={16} index={2} />
+                                </StackItem>
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Tabs" path="/docs/sdk/pages/tabs">

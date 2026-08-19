@@ -15,6 +15,7 @@
   <xsd:include schemaLocation="adapters/Button.xsd" />
   <xsd:include schemaLocation="adapters/Card.xsd" />
   <xsd:include schemaLocation="adapters/Stack.xsd" />
+  <xsd:include schemaLocation="adapters/StackItem.xsd" />
   <xsd:include schemaLocation="adapters/Grid.xsd" />
   <xsd:include schemaLocation="adapters/GridSpan.xsd" />
   <xsd:include schemaLocation="adapters/TextInput.xsd" />

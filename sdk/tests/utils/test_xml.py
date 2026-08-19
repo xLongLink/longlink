@@ -52,7 +52,7 @@ VALID_FRAGMENTS = [
         '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
-    ("stack", '<Stack direction="horizontal" justify="between">First</Stack>'),
+    ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",

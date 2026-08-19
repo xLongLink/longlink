@@ -7,6 +7,7 @@ import { Link } from '../adapters/Link';
 import { Menu } from '../adapters/Menu';
 import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
+import { StackItem } from '../adapters/StackItem';
 import { Table } from '../adapters/Table';
 import type { ComponentType } from 'react';
 import { Action } from '../adapters/Action';
@@ -49,6 +50,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Selector,
     Slider,
     Stack,
+    StackItem,
     Switch,
     Tabs,
     Table,
