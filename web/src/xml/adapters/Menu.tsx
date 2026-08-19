@@ -34,11 +34,7 @@ function renderSection(node: ASTNode, ctx: Scope) {
     const title = requireXmlString(node.params, 'title', ctx, 'MenuSection');
 
     return (
-        <ApplicationMenuSection
-            isHeaderHidden={isHeaderHidden}
-            key={title}
-            title={title}
-        >
+        <ApplicationMenuSection isHeaderHidden={isHeaderHidden} key={title} title={title}>
             {node.children.filter((child) => isVisibleXmlNode(child, ctx)).map((child) => renderEntry(child, ctx))}
         </ApplicationMenuSection>
     );

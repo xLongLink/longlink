@@ -2,8 +2,8 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
-import { StackItem as AstryxStackItem } from '@astryxdesign/core/Stack';
 import { BOX_ALIGNS, STACK_ITEM_SIZES } from '../constants';
+import { StackItem as AstryxStackItem } from '@astryxdesign/core/Stack';
 
 export function StackItem({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
