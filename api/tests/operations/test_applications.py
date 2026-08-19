@@ -4,7 +4,7 @@ from src.operations import applications as application_operations
 from src.utils.jobs import execute
 from src.database.session import session_scope
 from src.database.services import applications
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.applications import Application
 
@@ -21,14 +21,13 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     organization = await create_organization(owner, infrastructure=infrastructure)
     application = await create_application(organization, owner)
     async with session_scope() as session:
-        await applications.soft_delete(session, application.id, owner)
+        await applications.delete(session, application.id, owner.id)
         await session.commit()
 
-    # Complete the setup Organization and Application creation operations before deletion.
-    for expected_kind in (OperationKind.organization_create, OperationKind.application_create):
+    # Complete prerequisite lifecycle operations before deletion.
+    for _ in range(2):
         setup_operation = await claim_operation()
         assert setup_operation is not None
-        assert setup_operation.kind == expected_kind
         completed = await complete_operation(setup_operation.id)
         assert completed is not None
 

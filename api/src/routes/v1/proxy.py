@@ -8,7 +8,7 @@ from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient
-from src.database.services import compute, organizations
+from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -32,10 +32,10 @@ async def proxy_application_request(
     """
 
     # Resolve active Application access before proxying traffic to its runtime.
-    access = await organizations.application_access(session, user.id, application_id)
+    access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application, _, role, registry = access
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
@@ -51,7 +51,6 @@ async def proxy_application_request(
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # The immutable compute assignment owns the only gateway this Application can use.
-    registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise RuntimeError("Application Organization compute registry is missing")
     if registry.gateway_url is None or registry.gateway_certificate is None or registry.gateway_client_identity is None:

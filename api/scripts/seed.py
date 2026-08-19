@@ -181,7 +181,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 organization.id,
                 "LongLink App",
                 Image("localhost:15000/longlink-app:dev"),
-                administrator,
+                administrator.id,
                 {},
             )
         await session.commit()

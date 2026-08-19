@@ -221,7 +221,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             organization.id,
             "Dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
-            owner,
+            owner.id,
             {},
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)

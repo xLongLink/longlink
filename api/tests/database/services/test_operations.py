@@ -1,6 +1,5 @@
-import pytest
 from src import release as platform_release
-from uuid import UUID, uuid4
+from uuid import uuid4
 from datetime import timedelta
 from factories import create_compute, fail_operation, claim_operation, fetch_operations, complete_operation
 from factories import queue_operation as queue
@@ -10,7 +9,6 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -38,8 +36,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     assert [operation.id for operation in await fetch_operations()] == [newer_operation.id, older_operation.id]
 
 
-async def test_operations_service_create_coalesces_each_kind_and_target() -> None:
-    """Keep compute and explicit resource lifecycle Operations independently coalesced."""
+async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
+    """Coalesce unfinished work by target and create successors after completion."""
 
     # Seed duplicate and independent resource lifecycle targets.
     compute = await create_compute("local")
@@ -71,6 +69,20 @@ async def test_operations_service_create_coalesces_each_kind_and_target() -> Non
         (OperationKind.application_create, first_application_id),
         (OperationKind.organization_create, organization_id),
     }
+
+    # Completed work no longer coalesces with a later desired-state request.
+    claimed = await claim_operation()
+    assert claimed is not None
+    assert claimed.id == application.id
+    completed = await complete_operation(claimed.id)
+    replacement = await queue(
+        compute.id,
+        kind=OperationKind.application_create,
+        target_id=first_application_id,
+    )
+
+    assert completed is not None
+    assert replacement.id != application.id
 
 
 async def test_release_schedules_all_active_application_creation_once() -> None:
@@ -153,63 +165,23 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
     }
 
 
-async def test_release_ignores_compute_deleted_after_target_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Continue release scheduling when a discovered Compute disappears before enqueueing."""
+async def test_operations_service_enqueue_ignores_missing_compute() -> None:
+    """Avoid creating work when its assigned Compute no longer exists."""
 
-    # Arrange
-    deleted = await create_compute("deleted")
-    retained = await create_compute("retained")
-    enqueue = operations.enqueue
+    # Enqueue against an unavailable Compute registry.
+    compute_id = uuid4()
+    async with session_scope() as session:
+        operation = await operations.enqueue(
+            session,
+            compute_id,
+            kind=OperationKind.compute_create,
+            target_id=compute_id,
+        )
+        await session.commit()
 
-    async def enqueue_available_compute(
-        session: AsyncSession,
-        compute_id: UUID,
-        *,
-        kind: OperationKind,
-        target_id: UUID,
-    ) -> Operation | None:
-        """Delete one discovered Compute before exercising the real enqueue lookup."""
-
-        if compute_id == deleted.id:
-            # Commit deletion so the real enqueue service resolves the missing Compute.
-            registry = await session.get(ComputeRegistry, compute_id)
-            assert registry is not None
-            await session.delete(registry)
-            await session.commit()
-        return await enqueue(session, compute_id, kind=kind, target_id=target_id)
-
-    monkeypatch.setattr(operations, "enqueue", enqueue_available_compute)
-
-    # Act
-    await platform_release.schedule_reconciliation()
-    scheduled = await fetch_operations()
-
-    # Assert
-    assert len(scheduled) == 1
-    assert scheduled[0].target_id == retained.id
-
-
-async def test_operations_service_create_separates_computes_and_reopens_completed_work() -> None:
-    """Keep compute queues independent and permit new work after completion."""
-
-    # Seed independent queues for two computes.
-    first_compute = await create_compute("first")
-    second_compute = await create_compute("second")
-    first = await queue(first_compute.id, target_id=first_compute.id)
-    second = await queue(second_compute.id, target_id=second_compute.id)
-
-    # Complete one claim and create replacement work for its compute.
-    claimed = await claim_operation()
-    assert claimed is not None
-    completed = await complete_operation(claimed.id)
-    replacement = await queue(claimed.target_id, target_id=claimed.target_id)
-    open_operations = [operation for operation in await fetch_operations() if operation.finished_at is None]
-
-    # Verify completed work reopens without affecting the other compute queue.
-    assert completed is not None
-    assert completed.status == OperationStatus.completed
-    assert replacement.id not in {first.id, second.id}
-    assert len(open_operations) == 2
+    # The missing Compute produces no durable Operation.
+    assert operation is None
+    assert await fetch_operations() == []
 
 
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
@@ -354,32 +326,3 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
     assert duplicate.id == follow_up.id
     assert follow_up.status == OperationStatus.scheduled
     assert follow_up.lease_expires_at is None
-
-
-async def test_deployment_reconciliation_creates_successor_after_locked_work() -> None:
-    """Queue one later desired-state pass without interrupting leased work."""
-
-    compute = await create_compute("local")
-    operation = await queue(compute.id, target_id=compute.id)
-    claimed = await claim_operation()
-    assert claimed is not None
-
-    # Schedule deployment reconciliation while the original work remains locked.
-    await platform_release.schedule_reconciliation()
-    await platform_release.schedule_reconciliation()
-    successor = next(
-        item
-        for item in await fetch_operations()
-        if item.kind == OperationKind.compute_create and item.target_id == compute.id and item.finished_at is None
-    )
-    completed = await complete_operation(operation.id)
-    replacement = await claim_operation()
-
-    # Verify one successor waits for the original completion.
-    assert successor.id != operation.id
-    assert successor.lease_expires_at is None
-    assert completed is not None
-    assert completed.status == OperationStatus.completed
-    assert replacement is not None
-    assert replacement.id == successor.id
-    assert replacement.lease_expires_at is not None

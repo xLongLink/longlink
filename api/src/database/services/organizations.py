@@ -79,6 +79,32 @@ async def application_access(
     return application, organization, role
 
 
+async def application_runtime_access(
+    session: AsyncSession, user_id: UUID, application_id: UUID
+) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry | None] | None:
+    """Return one user's active application access with its compute registry."""
+
+    # Resolve the requested runtime and its active Organization membership in one scoped query.
+    result = await session.execute(
+        select(Application, Organization, UserOrganization.role, ComputeRegistry)
+        .join(Organization, Organization.id == Application.organization_id)
+        .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+        .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+            UserOrganization.user_id == user_id,
+            UserOrganization.deleted_at.is_(None),
+        )
+    )
+    row = result.one_or_none()
+    if row is None:
+        return None
+    application, organization, role, compute = row
+    return application, organization, role, compute
+
+
 async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 

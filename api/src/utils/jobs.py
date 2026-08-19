@@ -68,9 +68,9 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
         raise
     except TimeoutError:
         reason = "Operation timed out"
-    except Exception as exc:
-        logger.exception("Operation %s failed: %r", operation.id, exc)
-        reason = str(exc) or type(exc).__name__
+    except Exception:
+        logger.exception("Operation %s failed", operation.id)
+        reason = "Operation failed"
 
     # Persist exactly one transition that releases the claimed operation.
     if reason is None:

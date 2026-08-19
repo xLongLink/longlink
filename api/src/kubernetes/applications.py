@@ -132,14 +132,14 @@ class Applications:
         # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
-            active = [
-                pod
-                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)})
-                if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}
-            ]
-            if not active:
+            pod = None
+            async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                if candidate.raw["status"].get("phase") in {"Succeeded", "Failed"}:
+                    continue
+                if pod is None or candidate.name < pod.name:
+                    pod = candidate
+            if pod is None:
                 raise RuntimeError("Application logs unavailable")
-            pod = min(active, key=lambda item: item.name)
             return [line async for line in pod.logs(tail_lines=200)]
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
             raise RuntimeError("Application logs unavailable") from exc

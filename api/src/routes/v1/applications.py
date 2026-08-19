@@ -4,7 +4,7 @@ from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
 from src.logger import logger
 from src.models.roles import OrganizationRoles
-from src.database.services import compute, applications, organizations
+from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
@@ -56,7 +56,7 @@ async def create_application(
         image=metadata.image,
         description=payload.description,
         icon=payload.icon,
-        user=user,
+        user_id=user.id,
         secrets=payload.envs,
     )
     await session.commit()
@@ -95,7 +95,7 @@ async def release_application(
         application_id,
         metadata.image,
         payload.description,
-        user,
+        user.id,
     )
     if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -112,17 +112,16 @@ async def get_application_logs(
     """Return recent pod logs for one managed application."""
 
     # Resolve active Application access before inspecting its runtime logs.
-    access = await organizations.application_access(session, user.id, application_id)
+    access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role = access
+    application, organization, role, registry = access
 
     # Application logs require Organization maintenance authority.
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
     # The Organization's compute registry is the Application's only cluster assignment.
-    registry = await compute.get(session, organization.compute_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -142,15 +141,6 @@ async def delete_application(
 ):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
-    # Application deletion requires Organization maintenance authority.
-    access = await organizations.application_access(session, user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    _, _, role = access
-    if not roles.atleast(role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    if not await applications.soft_delete(session, application_id, user):
-        raise HTTPException(status_code=404, detail="Application not found")
+    await applications.delete(session, application_id, user.id)
 
     await session.commit()
