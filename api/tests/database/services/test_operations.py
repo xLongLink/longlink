@@ -88,7 +88,6 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
 async def test_release_schedules_all_active_application_creation_once() -> None:
     """Queue one reconciliation Operation for every Application lifecycle state."""
 
-    # Arrange
     compute = await create_compute("local")
     database = DatabaseRegistry(
         name="Primary Database",
@@ -142,20 +141,12 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
             status=Status.running,
             deleted_at=utcnow(),
         )
-        session.add_all(
-            [
-                running,
-                pending,
-                deleted,
-            ]
-        )
+        session.add_all([running, pending, deleted])
         await session.commit()
 
-    # Act
     await platform_release.schedule_reconciliation()
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
-    # Assert
     assert scheduled == {
         (OperationKind.compute_create, compute.id),
         (OperationKind.organization_create, organization.id),

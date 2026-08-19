@@ -138,13 +138,9 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         """Record the terminal failure transition."""
 
         transitions.append(operation_id)
-        return Operation(
-            id=operation_id,
-            kind=operation.kind,
-            target_id=operation.target_id,
-            failed=True,
-            finished_at=utcnow(),
-        )
+        operation.failed = True
+        operation.finished_at = utcnow()
+        return operation
 
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 

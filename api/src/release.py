@@ -8,10 +8,8 @@ async def schedule_reconciliation() -> None:
 
     # Discover deployment reconciliation targets in dependency order.
     async with session_scope() as session:
-        targets = await operations.discover(session)
-
         # Create or reuse every desired-state operation in one transaction.
-        for kind, target_id, compute_id in targets:
+        for kind, target_id, compute_id in await operations.discover(session):
             # Skip targets whose Compute was deleted after release discovery.
             await operations.enqueue(
                 session,

@@ -1,10 +1,8 @@
 import type { Scope } from '../types';
 
-const UNSAFE_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
-
 /** Returns whether a property can be read from XML runtime data. */
 export function isSafePropertyName(key: string): boolean {
-    return !UNSAFE_PROPERTY_NAMES.has(key);
+    return key !== '__proto__' && key !== 'constructor' && key !== 'prototype';
 }
 
 /** Reads one own property without traversing prototypes. */
@@ -17,12 +15,12 @@ export function readSafeProperty(value: unknown, key: string): unknown {
 }
 
 /** Resolves a value from the current XML runtime scope chain. */
-export function resolveValue(scope: Scope | null | undefined, key: string): unknown {
+export function resolveValue(scope: Scope, key: string): unknown {
     // Block unsafe top-level scope lookups.
     if (!isSafePropertyName(key)) return undefined;
 
     // Walk lexical scopes from child to parent.
-    for (let currentScope = scope; currentScope; currentScope = currentScope.parent) {
+    for (let currentScope: Scope | undefined = scope; currentScope; currentScope = currentScope.parent) {
         const bindings = currentScope.bindings;
 
         // Read only bindings declared in the lexical scope.

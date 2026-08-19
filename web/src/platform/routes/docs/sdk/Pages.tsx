@@ -7,7 +7,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -260,10 +260,12 @@ export default function DocsArticleRoute() {
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="Card" path="/docs/sdk/pages/card">
-                            <Stack gap={1} align="center">
-                                <Text weight="semibold">Card surface</Text>
-                                <Text type="supporting">Grouped content</Text>
-                            </Stack>
+                            <Card elevation="low" padding={3}>
+                                <Stack gap={1} align="center">
+                                    <Text weight="semibold">Card surface</Text>
+                                    <Text type="supporting">Grouped content</Text>
+                                </Stack>
+                            </Card>
                         </SummaryCard>
                         <SummaryCard name="Grid" path="/docs/sdk/pages/grid">
                             <Grid columns={2} gap={2} justify="center">
@@ -283,15 +285,9 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
                             <Stack align="center" gap={2} width="100%">
-                                <StackItem size="static">
-                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                </StackItem>
-                                <StackItem size="fill">
-                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                </StackItem>
-                                <StackItem size="static">
-                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                </StackItem>
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Tabs" path="/docs/sdk/pages/tabs">

@@ -9,9 +9,9 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { isSafePropertyName, resolveValue } from '../expressions';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
-type ActionEffect = { kind: 'request'; props: ASTProps } | { kind: 'patch'; props: ASTProps };
+type ActionEffect = { kind: 'request' | 'patch'; props: ASTProps };
 
 type ActionPlan = {
     button: ASTNode;
@@ -113,7 +113,7 @@ async function executeRequest(
 ): Promise<{ closeDialog: boolean; status: number }> {
     const url = requireXmlString(props, 'url', ctx, 'Request');
     const method = requireXmlString(props, 'method', ctx, 'Request').trim().toUpperCase();
-    if (!isXmlMethod(method)) {
+    if (!isXmlEnum(method, ACTION_METHODS)) {
         throw new Error(`Unsupported request method ${method}`);
     }
 
@@ -212,11 +212,6 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
     const prototype = Object.getPrototypeOf(value);
     return prototype === Object.prototype || prototype === null;
-}
-
-/** Returns whether a method is supported by the XML request runtime. */
-function isXmlMethod(value: string): value is (typeof ACTION_METHODS)[number] {
-    return ACTION_METHODS.includes(value as (typeof ACTION_METHODS)[number]);
 }
 
 /** Rejects attributes outside an XML component's public contract. */
