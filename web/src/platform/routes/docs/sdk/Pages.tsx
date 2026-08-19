@@ -264,10 +264,7 @@ export default function DocsArticleRoute() {
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="Card" path="/docs/sdk/pages/card">
                             <Card elevation="low" padding={3}>
-                                <Stack gap={1} align="center">
-                                    <Text weight="semibold">Card surface</Text>
-                                    <Text type="supporting">Grouped content</Text>
-                                </Stack>
+                                Lorem ipsum dolor sit amet.
                             </Card>
                         </SummaryCard>
                         <SummaryCard name="Grid" path="/docs/sdk/pages/grid">

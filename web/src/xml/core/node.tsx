@@ -16,13 +16,13 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
             return value == null ? null : String(value);
         }
 
-        // Handle conditional rendering with "if" parameter.
-        if (!isVisibleXmlNode(node, ctx)) return null;
-
         // Suppress setup-only nodes during render.
         if (node.name === 'State' || node.name === 'Query') {
             return null;
         }
+
+        // Handle conditional rendering with "if" parameter.
+        if (!isVisibleXmlNode(node, ctx)) return null;
 
         const RegisteredComponent = xmlComponentRegistry[node.name];
 

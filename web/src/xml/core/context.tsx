@@ -37,11 +37,6 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
 
     // Seed setup declarations before rendering the component tree.
     for (const node of nodes) {
-        // Ignore render-only nodes included by direct setup callers.
-        if (node.name !== 'State' && node.name !== 'Query') {
-            continue;
-        }
-
         const params = node.params;
         const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
 

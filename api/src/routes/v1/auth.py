@@ -246,16 +246,10 @@ async def complete_registration(
             detail="Another registration was verified in this browser. Reopen the link for this email to continue safely.",
         )
 
-    # Reject token replay and concurrent account creation before expensive password hashing.
-    if await users.by_email(session, email) is not None:
-        raise HTTPException(
-            status_code=409,
-            detail="An account with this email already exists. Sign in or reset your password to continue.",
-        )
-
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         user = await users.register(session, payload.name, email, payload.password)
+        changed_organization_ids = await invitations.accept(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
@@ -263,9 +257,6 @@ async def complete_registration(
             status_code=409,
             detail="An account with this email already exists. Sign in or reset your password to continue.",
         ) from exc
-
-    changed_organization_ids = await invitations.accept(session, user)
-    await session.commit()
 
     for organization_id in changed_organization_ids:
         await organizations.sync_users(session, organization_id)

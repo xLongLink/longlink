@@ -144,12 +144,13 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
             if (node.name === 'State' || node.name === 'Query') {
                 validateSetupNode(node);
                 setupNodes.push(node);
+                continue;
             }
 
             // Skip nested loop content because it has its own scope.
-            if (node.name !== 'For') {
-                walk(node.children);
-            }
+            if (node.name === 'For') continue;
+
+            walk(node.children);
         }
     }
 

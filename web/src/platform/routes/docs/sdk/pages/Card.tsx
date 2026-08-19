@@ -31,12 +31,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock
-                    code={
-                        '<Card>\n  <Stack>\n    <Heading level="3">Order</Heading>\n    $order.number\n  </Stack>\n</Card>'
-                    }
-                    language="xml"
-                />
+                <CodeBlock code={'<Card>\n  Lorem ipsum dolor sit amet.\n</Card>'} language="xml" />
             </Stack>
         </Article>
     );
