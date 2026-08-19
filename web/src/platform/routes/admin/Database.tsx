@@ -26,8 +26,8 @@ export default function AdminDatabase() {
         mutationFn: async (databaseId: string) => {
             await api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
             toast({ body: 'Database deleted' });
         },
     });

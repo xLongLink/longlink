@@ -14,28 +14,19 @@ export function DeleteConfirmation({
     onConfirm,
     onOpenChange,
 }: DeleteConfirmationProps) {
+    /** Prevent closing while the destructive request is in flight. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && isPending) {
+            return;
+        }
+
+        onOpenChange(nextOpen);
+    }
+
     return (
-        <Dialog
-            isOpen={open}
-            onOpenChange={(nextOpen) => {
-                if (!nextOpen && isPending) {
-                    return;
-                }
-                onOpenChange(nextOpen);
-            }}
-            purpose={isPending ? 'required' : 'form'}
-        >
+        <Dialog isOpen={open} onOpenChange={handleOpenChange} purpose={isPending ? 'required' : 'form'}>
             <Layout
-                header={
-                    <DialogHeader
-                        title={title}
-                        onOpenChange={(nextOpen) => {
-                            if (!isPending) {
-                                onOpenChange(nextOpen);
-                            }
-                        }}
-                    />
-                }
+                header={<DialogHeader title={title} onOpenChange={handleOpenChange} />}
                 content={
                     <LayoutContent>
                         <Text as="div" color="secondary">
@@ -50,7 +41,7 @@ export function DeleteConfirmation({
                                 label="Cancel"
                                 variant="ghost"
                                 isDisabled={isPending}
-                                clickAction={() => onOpenChange(false)}
+                                clickAction={() => handleOpenChange(false)}
                             />
                             <Button
                                 label="Delete"

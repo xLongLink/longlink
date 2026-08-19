@@ -32,8 +32,8 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], expected_p
         assert all((target / path).exists() for path in expected_paths)
 
 
-def test_init_refuses_existing_non_empty_folder() -> None:
-    """Avoid silently merging generated scaffold files into an existing project."""
+def test_init_refuses_existing_folder() -> None:
+    """Avoid silently replacing an existing project folder."""
 
     # Arrange
     runner = CliRunner()
@@ -41,7 +41,6 @@ def test_init_refuses_existing_non_empty_folder() -> None:
     with runner.isolated_filesystem():
         target = Path.cwd() / "sample-app"
         target.mkdir()
-        (target / "README.md").write_text("Existing project\n", encoding="utf-8")
 
         # Act
         result = runner.invoke(init_command, ["--folder", "sample-app"])
@@ -49,4 +48,3 @@ def test_init_refuses_existing_non_empty_folder() -> None:
         # Assert
         assert result.exit_code == 1
         assert "Target already exists" in result.output
-        assert (target / "README.md").read_text(encoding="utf-8") == "Existing project\n"

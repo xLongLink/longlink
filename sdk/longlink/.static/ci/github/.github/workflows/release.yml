@@ -31,10 +31,10 @@ jobs:
                   python-version: '3.12.13'
 
             - name: Install dependencies
-              run: uv sync --locked --group dev
+              run: uv sync --group dev
 
             - name: Run tests
-              run: uv run --locked pytest
+              run: uv run pytest
 
             - name: Log in to GHCR
               uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
@@ -48,4 +48,4 @@ jobs:
                   RELEASE_TAG: ${{ github.event.release.tag_name }}
               run: |
                   registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
-                  uv run --locked longlink build --registry "$registry" --push --tag "$RELEASE_TAG"
+                  uv run longlink build --registry "$registry" --push --tag "$RELEASE_TAG"

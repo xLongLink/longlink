@@ -26,8 +26,8 @@ export default function AdminCompute() {
         mutationFn: async (computeId: string) => {
             await api(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
             toast({ body: 'Compute deleted' });
         },
     });
