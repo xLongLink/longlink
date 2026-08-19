@@ -217,12 +217,12 @@ async def delete_organization(
 
     # The initiating owner may retry cleanup after memberships are removed.
     if not user.administrator:
-        tombstone = await organizations.get(session, organization_id, include_deleted=True)
-        if tombstone is not None and tombstone.deleted_at is not None and tombstone.deleted_id != user.id:
+        tombstone = await organizations.get_tombstone(session, organization_id)
+        if tombstone is not None and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
         # Require active Organization ownership for the first deletion request.
-        if tombstone is None or tombstone.deleted_at is None:
+        if tombstone is None:
             membership = await organizations.membership(session, user.id, organization_id)
             if membership is None:
                 raise HTTPException(status_code=403, detail="Access required")

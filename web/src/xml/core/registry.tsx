@@ -21,7 +21,6 @@ import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
 import { FileInput } from '../adapters/FileInput';
 import { TextInput } from '../adapters/TextInput';
-import { FormLayout } from '../adapters/FormLayout';
 import { NumberInput } from '../adapters/NumberInput';
 import { CheckboxInput } from '../adapters/CheckboxInput';
 import { RadioList, RadioListItem } from '../adapters/RadioList';
@@ -37,7 +36,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Dialog,
     Divider,
     FileInput,
-    FormLayout,
     Grid,
     Heading,
     Icon,

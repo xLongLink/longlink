@@ -21,9 +21,9 @@ class Organization(PlatformModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Metadata
-    name: str = Field(unique=True, max_length=128)
+    name: str = Field(max_length=128)
     slug: str = Field(unique=True, max_length=128)
-    avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
+    avatar: str = Field(default="", max_length=2048)
 
     # Infrastructure
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)

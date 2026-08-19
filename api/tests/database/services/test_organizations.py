@@ -242,7 +242,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         result = await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
         active_organization = await organizations.get(session, organization.id)
-        deleted_organization = await organizations.get(session, organization.id, include_deleted=True)
+        deleted_organization = await organizations.get_tombstone(session, organization.id)
         deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)

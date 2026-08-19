@@ -10,14 +10,14 @@
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack>
-                <FormLayout>
+                <Stack>
                     <TextInput
                         label="Name"
                         value="$draft.name"
                         isRequired="true"
                     />
                     <NumberInput label="Price" units="CHF" value="$draft.price" min="0" isRequired="true" />
-                </FormLayout>
+                </Stack>
                 <Action>
                     <Request
                         url="/api/items"

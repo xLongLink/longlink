@@ -27,7 +27,7 @@ VALID_FRAGMENTS = [
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
         "form-layout",
-        '<FormLayout><TextInput label="Name" /><NumberInput label="Quantity" /></FormLayout>',
+        '<Stack><TextInput label="Name" /><NumberInput label="Quantity" /></Stack>',
     ),
     ("grid", '<Grid minColumnWidth="240" maxColumns="3"><Card /></Grid>'),
     (

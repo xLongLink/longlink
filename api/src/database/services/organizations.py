@@ -202,14 +202,18 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     return result.all()
 
 
-async def get(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Organization | None:
-    """Return one organization by id."""
+async def get(session: AsyncSession, organization_id: UUID) -> Organization | None:
+    """Return one active organization by id."""
 
-    # Load the requested organization by its primary key.
-    organization = await session.get(Organization, organization_id)
-    if organization is None or (not include_deleted and organization.deleted_at is not None):
-        return None
-    return organization
+    # Load the requested active organization.
+    return await session.scalar(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)))
+
+
+async def get_tombstone(session: AsyncSession, organization_id: UUID) -> Organization | None:
+    """Return one tombstoned organization by id."""
+
+    # Load tombstones only for lifecycle retry authorization.
+    return await session.scalar(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_not(None)))
 
 
 async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
