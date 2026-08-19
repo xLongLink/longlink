@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/heading',
     title: 'Heading',
-    description: 'Creates semantic section headings.',
+    description:
+        'Semantic heading component that renders h1-h6 elements with themed styling, themed sizing via type scale tokens, and line-clamp truncation.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,7 @@ export default function DocsArticleRoute() {
                         {'Heading'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Creates semantic section headings.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

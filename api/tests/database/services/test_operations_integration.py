@@ -66,10 +66,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         assert claimed[0].lease_expires_at is not None
         assert len(persisted) == 2
         persisted_by_id = {operation.id: operation for operation in persisted}
-        active = persisted_by_id[claimed[0].id]
-        queued = persisted_by_id[waiting.id]
-        assert active.lease_expires_at == claimed[0].lease_expires_at
-        assert queued.lease_expires_at is None
+        assert persisted_by_id[claimed[0].id].lease_expires_at == claimed[0].lease_expires_at
+        assert persisted_by_id[waiting.id].lease_expires_at is None
     finally:
         # Dispose database connections before removing the PostgreSQL container.
         try:

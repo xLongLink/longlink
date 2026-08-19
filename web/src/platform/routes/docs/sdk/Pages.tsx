@@ -1,18 +1,21 @@
 import { Info } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Badge } from '@astryxdesign/core/Badge';
+import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
+import { Dialog } from '@astryxdesign/core/Dialog';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -23,91 +26,29 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-
-type ComponentSummary = {
-    name: string;
-    path: string;
-};
-
-type ComponentCategoryConfiguration = {
-    id: string;
-    title: string;
-};
-
-type ComponentCategory = ComponentCategoryConfiguration & {
-    components: ComponentSummary[];
-};
-
-const componentSummaries: (ComponentSummary & { category: string })[] = [
-    { category: 'Runtime', path: '/docs/sdk/pages/if', name: 'if' },
-    { category: 'Runtime', path: '/docs/sdk/pages/expressions', name: 'Expressions' },
-    { category: 'Runtime', path: '/docs/sdk/pages/bindings', name: 'Bindings' },
-    { category: 'State', path: '/docs/sdk/pages/state', name: 'State' },
-    { category: 'State', path: '/docs/sdk/pages/query', name: 'Query' },
-    { category: 'State', path: '/docs/sdk/pages/action', name: 'Action' },
-    { category: 'State', path: '/docs/sdk/pages/for', name: 'For' },
-    { category: 'Action', path: '/docs/sdk/pages/button', name: 'Button' },
-    { category: 'Action', path: '/docs/sdk/pages/link', name: 'Link' },
-    { category: 'Layout', path: '/docs/sdk/pages/card', name: 'Card' },
-    { category: 'Content', path: '/docs/sdk/pages/avatar', name: 'Avatar' },
-    { category: 'Content', path: '/docs/sdk/pages/heading', name: 'Heading' },
-    { category: 'Content', path: '/docs/sdk/pages/icon', name: 'Icon' },
-    { category: 'Content', path: '/docs/sdk/pages/text', name: 'Text' },
-    { category: 'Form', path: '/docs/sdk/pages/checkbox-input', name: 'CheckboxInput' },
-    { category: 'Form', path: '/docs/sdk/pages/file-input', name: 'FileInput' },
-    { category: 'Form', path: '/docs/sdk/pages/number-input', name: 'NumberInput' },
-    { category: 'Form', path: '/docs/sdk/pages/radio-list', name: 'RadioList' },
-    { category: 'Form', path: '/docs/sdk/pages/radio-list-item', name: 'RadioListItem' },
-    { category: 'Form', path: '/docs/sdk/pages/selector', name: 'Selector' },
-    { category: 'Form', path: '/docs/sdk/pages/selector-option', name: 'SelectorOption' },
-    { category: 'Form', path: '/docs/sdk/pages/slider', name: 'Slider' },
-    { category: 'Form', path: '/docs/sdk/pages/switch', name: 'Switch' },
-    { category: 'Form', path: '/docs/sdk/pages/text-area', name: 'TextArea' },
-    { category: 'Form', path: '/docs/sdk/pages/text-input', name: 'TextInput' },
-    { category: 'Content', path: '/docs/sdk/pages/badge', name: 'Badge' },
-    { category: 'Layout', path: '/docs/sdk/pages/divider', name: 'Divider' },
-    { category: 'Layout', path: '/docs/sdk/pages/grid', name: 'Grid' },
-    { category: 'Layout', path: '/docs/sdk/pages/stack', name: 'Stack' },
-    { category: 'Layout', path: '/docs/sdk/pages/side-nav', name: 'SideNav' },
-    { category: 'Layout', path: '/docs/sdk/pages/tab', name: 'Tab' },
-    { category: 'Layout', path: '/docs/sdk/pages/dialog', name: 'Dialog' },
-    { category: 'Layout', path: '/docs/sdk/pages/table', name: 'Table' },
-];
-
-const componentCategoryConfigurations: ComponentCategoryConfiguration[] = [
-    {
-        id: 'longlink-runtime-concepts',
-        title: 'Runtime',
-    },
-    {
-        id: 'longlink-state-elements',
-        title: 'State',
-    },
-    {
-        id: 'action',
-        title: 'Action',
-    },
-    {
-        id: 'content',
-        title: 'Content',
-    },
-    {
-        id: 'form',
-        title: 'Form',
-    },
-    {
-        id: 'layout',
-        title: 'Layout',
-    },
-];
-
-const componentCategories: ComponentCategory[] = componentCategoryConfigurations.map((category) => ({
-    ...category,
-    components: componentSummaries.filter((component) => component.category === category.title),
-}));
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 const noop = () => undefined;
+
+function SummaryCard({ children, name, path }: { children: React.ReactNode; name: string; path: string }) {
+    return (
+        <Stack className="relative" gap={2}>
+            <Card aria-hidden="true" inert minHeight={190} padding={0} variant="muted">
+                <Center minHeight={190}>{children}</Center>
+            </Card>
+            <Text color="secondary" type="supporting">
+                {name}
+            </Text>
+            <RouterLink
+                aria-label={`Open ${name} documentation`}
+                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                to={path}
+            />
+        </Stack>
+    );
+}
 
 export const metadata = {
     path: '/docs/sdk/pages',
@@ -126,206 +67,6 @@ export const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Pages.tsx',
 };
 
-/** Renders one categorized group of XML page components. */
-function ComponentCategorySection({ category }: { category: ComponentCategory }) {
-    return (
-        <Stack gap={3}>
-            <Heading id={category.id} level={2}>
-                {category.title}
-            </Heading>
-            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                {category.components.map((component) => (
-                    <ComponentSummaryCard key={component.name} component={component} />
-                ))}
-            </Grid>
-        </Stack>
-    );
-}
-
-/** Renders one component summary card in the XML page gallery. */
-function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
-    return (
-        <Stack className="relative" gap={2}>
-            <Card aria-hidden="true" inert minHeight={190} variant="muted">
-                <Center minHeight={150}>{renderComponentPreview(component)}</Center>
-            </Card>
-            <Text color="secondary" type="supporting">
-                {component.name}
-            </Text>
-            <RouterLink
-                aria-label={`Open ${component.name} documentation`}
-                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={component.path}
-            />
-        </Stack>
-    );
-}
-
-/** Renders a compact live or symbolic preview for one XML page element. */
-function renderComponentPreview({ name, path }: ComponentSummary) {
-    switch (name) {
-        case 'if':
-            return <Code>{'if="${order.open}"'}</Code>;
-        case 'Expressions':
-            return <Code>{'${order.total > 0}'}</Code>;
-        case 'Bindings':
-            return <Code>{'value="$form.name"'}</Code>;
-        case 'Button':
-            return (
-                <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                    <Button label="Save" size="sm" variant="primary" />
-                    <Button label="Edit" size="sm" variant="secondary" />
-                    <Button label="View" size="sm" variant="ghost" />
-                </Stack>
-            );
-        case 'Link':
-            return (
-                <Link href={path} type="inherit" hasUnderline>
-                    Docs
-                </Link>
-            );
-        case 'Card':
-            return (
-                <Stack gap={1} align="center">
-                    <Text weight="semibold">Card surface</Text>
-                    <Text type="supporting">Grouped content</Text>
-                </Stack>
-            );
-        case 'Avatar':
-            return <Avatar name="Ada Lovelace" size="lg" />;
-        case 'Heading':
-            return <Heading level={3}>Orders</Heading>;
-        case 'Icon':
-            return <Info aria-hidden="true" className="text-accent" size={20} />;
-        case 'Text':
-            return <Text type="supporting">Readable text</Text>;
-        case 'CheckboxInput':
-            return <CheckboxInput label="Approved" size="sm" value onChange={noop} />;
-        case 'FileInput':
-            return (
-                <Stack width={140}>
-                    <FileInput
-                        accept=".pdf"
-                        isLabelHidden
-                        label="Attachment"
-                        mode="input"
-                        placeholder="File"
-                        value={null}
-                        onChange={noop}
-                    />
-                </Stack>
-            );
-        case 'NumberInput':
-            return (
-                <NumberInput
-                    isLabelHidden
-                    label="Quantity"
-                    min={1}
-                    size="sm"
-                    units="qty"
-                    value={3}
-                    width={130}
-                    onChange={noop}
-                />
-            );
-        case 'RadioList':
-            return (
-                <Stack width={150}>
-                    <RadioList
-                        label="Plan"
-                        orientation="horizontal"
-                        size="sm"
-                        value="team"
-                        onChange={noop}
-                        isLabelHidden
-                    >
-                        <RadioListItem label="Solo" value="solo" />
-                        <RadioListItem label="Team" value="team" />
-                    </RadioList>
-                </Stack>
-            );
-        case 'RadioListItem':
-            return <Code>{'<RadioListItem />'}</Code>;
-        case 'Selector':
-            return (
-                <Selector
-                    label="Status"
-                    options={[
-                        { value: 'open', label: 'Open' },
-                        { value: 'closed', label: 'Closed' },
-                    ]}
-                    size="sm"
-                    value="open"
-                    width={120}
-                    onChange={noop}
-                    isLabelHidden
-                />
-            );
-        case 'SelectorOption':
-            return <Code>{'<SelectorOption />'}</Code>;
-        case 'Slider':
-            return (
-                <Stack width={150}>
-                    <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />
-                </Stack>
-            );
-        case 'Switch':
-            return <Switch label="Enabled" value onChange={noop} />;
-        case 'TextArea':
-            return (
-                <Stack width={150}>
-                    <TextArea isLabelHidden label="Notes" rows={1} size="sm" value="Review complete" onChange={noop} />
-                </Stack>
-            );
-        case 'TextInput':
-            return <TextInput isLabelHidden label="Name" size="sm" value="New order" width={140} onChange={noop} />;
-        case 'Badge':
-            return <Badge label="Open" variant="info" />;
-        case 'Divider':
-            return (
-                <Stack gap={3} width="100%">
-                    <Text type="supporting">Before</Text>
-                    <Divider />
-                    <Text type="supporting">After</Text>
-                </Stack>
-            );
-        case 'Grid':
-            return (
-                <Grid columns={2} gap={2}>
-                    <Badge label="One" />
-                    <Badge label="Two" />
-                    <Badge label="Three" />
-                    <Badge label="Four" />
-                </Grid>
-            );
-        case 'Stack':
-            return (
-                <Stack gap={2} align="center">
-                    <Badge label="First" />
-                    <Badge label="Second" />
-                    <Badge label="Third" />
-                </Stack>
-            );
-        case 'SideNav':
-            return <Code>{'<SideNav />'}</Code>;
-        case 'Tab':
-            return <Code>{'<Tab />'}</Code>;
-        case 'Dialog':
-            return <Code>{'<Dialog />'}</Code>;
-        case 'Table':
-            return (
-                <Stack width={170}>
-                    <Table data={[{ item: 'Order', status: 'Open' }]} density="compact">
-                        <TableColumn field="item" header="Item" />
-                        <TableColumn field="status" header="Status" />
-                    </Table>
-                </Stack>
-            );
-        default:
-            return <Code>{`<${name} />`}</Code>;
-    }
-}
-
 export default function DocsArticleRoute() {
     return (
         <Article page={metadata}>
@@ -341,10 +82,264 @@ export default function DocsArticleRoute() {
                     . Use this page as the component map for LongLink Applications: start with LongLink state elements,
                     then compose the screen with supported XML components.
                 </Text>
-                <CodeBlock code={'<longlink>\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
-                {componentCategories.map((category) => (
-                    <ComponentCategorySection key={category.id} category={category} />
-                ))}
+                <CodeBlock code={'<longlink>\n  Welcome\n</longlink>'} language="xml" />
+                <Stack gap={3}>
+                    <Heading id="longlink-runtime-concepts" level={2}>
+                        Runtime
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="if" path="/docs/sdk/pages/if">
+                            <Code>{'if="${order.open}"'}</Code>
+                        </SummaryCard>
+                        <SummaryCard name="Expressions" path="/docs/sdk/pages/expressions">
+                            <Code>{'${order.total > 0}'}</Code>
+                        </SummaryCard>
+                        <SummaryCard name="Bindings" path="/docs/sdk/pages/bindings">
+                            <Code>{'value="$form.name"'}</Code>
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
+                <Stack gap={3}>
+                    <Heading id="longlink-state-elements" level={2}>
+                        State
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="State" path="/docs/sdk/pages/state">
+                            <Code>{'<State />'}</Code>
+                        </SummaryCard>
+                        <SummaryCard name="Query" path="/docs/sdk/pages/query">
+                            <Code>{'<Query />'}</Code>
+                        </SummaryCard>
+                        <SummaryCard name="Action" path="/docs/sdk/pages/action">
+                            <Code>{'<Action />'}</Code>
+                        </SummaryCard>
+                        <SummaryCard name="For" path="/docs/sdk/pages/for">
+                            <Code>{'<For />'}</Code>
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
+                <Stack gap={3}>
+                    <Heading id="action" level={2}>
+                        Action
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="Button" path="/docs/sdk/pages/button">
+                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                                <Button label="Save" size="sm" variant="primary" />
+                                <Button label="Edit" size="sm" variant="secondary" />
+                                <Button label="View" size="sm" variant="ghost" />
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="Link" path="/docs/sdk/pages/link">
+                            <Link href="/docs/sdk/pages/link" type="inherit" hasUnderline>
+                                Docs
+                            </Link>
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
+                <Stack gap={3}>
+                    <Heading id="content" level={2}>
+                        Content
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="Avatar" path="/docs/sdk/pages/avatar">
+                            <Avatar name="Ada Lovelace" size="lg" />
+                        </SummaryCard>
+                        <SummaryCard name="Heading" path="/docs/sdk/pages/heading">
+                            <Heading className="mt-0" level={3}>
+                                Orders
+                            </Heading>
+                        </SummaryCard>
+                        <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
+                            <Info aria-hidden="true" className="text-accent" size={20} />
+                        </SummaryCard>
+                        <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
+                            <Badge variant="info">Open</Badge>
+                        </SummaryCard>
+                        <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
+                            <Stack justify="center" minHeight={150} width="100%">
+                                <Divider>{'Or'}</Divider>
+                            </Stack>
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
+                <Stack gap={3}>
+                    <Heading id="form" level={2}>
+                        Form
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="CheckboxInput" path="/docs/sdk/pages/checkbox-input">
+                            <CheckboxInput label="Approved" size="sm" value onChange={noop} />
+                        </SummaryCard>
+                        <SummaryCard name="FileInput" path="/docs/sdk/pages/file-input">
+                            <Stack width={140}>
+                                <FileInput
+                                    accept=".pdf"
+                                    isLabelHidden
+                                    label="Attachment"
+                                    mode="input"
+                                    placeholder="File"
+                                    value={null}
+                                    onChange={noop}
+                                />
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="NumberInput" path="/docs/sdk/pages/number-input">
+                            <NumberInput
+                                isLabelHidden
+                                label="Quantity"
+                                min={1}
+                                size="sm"
+                                units="qty"
+                                value={3}
+                                width={130}
+                                onChange={noop}
+                            />
+                        </SummaryCard>
+                        <SummaryCard name="RadioList" path="/docs/sdk/pages/radio-list">
+                            <Stack width={150}>
+                                <RadioList
+                                    label="Plan"
+                                    orientation="horizontal"
+                                    size="sm"
+                                    value="team"
+                                    onChange={noop}
+                                    isLabelHidden
+                                >
+                                    <RadioListItem label="Solo" value="solo" />
+                                    <RadioListItem label="Team" value="team" />
+                                </RadioList>
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="Selector" path="/docs/sdk/pages/selector">
+                            <Selector
+                                label="Status"
+                                options={[
+                                    { value: 'open', label: 'Open' },
+                                    { value: 'closed', label: 'Closed' },
+                                ]}
+                                size="sm"
+                                value="open"
+                                width={120}
+                                onChange={noop}
+                                isLabelHidden
+                            />
+                        </SummaryCard>
+                        <SummaryCard name="Slider" path="/docs/sdk/pages/slider">
+                            <Stack width={150}>
+                                <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="Switch" path="/docs/sdk/pages/switch">
+                            <Switch label="Enabled" value onChange={noop} />
+                        </SummaryCard>
+                        <SummaryCard name="TextArea" path="/docs/sdk/pages/text-area">
+                            <Stack width={150}>
+                                <TextArea
+                                    isLabelHidden
+                                    label="Notes"
+                                    rows={1}
+                                    size="sm"
+                                    value="Review complete"
+                                    onChange={noop}
+                                />
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="TextInput" path="/docs/sdk/pages/text-input">
+                            <TextInput
+                                isLabelHidden
+                                label="Name"
+                                size="sm"
+                                value="New order"
+                                width={140}
+                                onChange={noop}
+                            />
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
+                <Stack gap={3}>
+                    <Heading id="layout" level={2}>
+                        Layout
+                    </Heading>
+                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                        <SummaryCard name="Card" path="/docs/sdk/pages/card">
+                            <Card elevation="low" padding={3}>
+                                Lorem ipsum dolor sit amet.
+                            </Card>
+                        </SummaryCard>
+                        <SummaryCard name="Grid" path="/docs/sdk/pages/grid">
+                            <Grid columns={2} gap={2} justify="center">
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                            </Grid>
+                        </SummaryCard>
+                        <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
+                            <Menu>
+                                <MenuSection title="Settings">
+                                    <MenuItem label="General" />
+                                    <MenuItem label="Workflow" />
+                                </MenuSection>
+                            </Menu>
+                        </SummaryCard>
+                        <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
+                            <Stack align="center" gap={2} width="100%">
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                            </Stack>
+                        </SummaryCard>
+                        <SummaryCard name="Tabs" path="/docs/sdk/pages/tabs">
+                            <Tabs>
+                                <Tab label="Overview" value="overview" />
+                                <Tab label="Activity" value="activity" />
+                            </Tabs>
+                        </SummaryCard>
+                        <SummaryCard name="Dialog" path="/docs/sdk/pages/dialog">
+                            <Dialog
+                                aria-label="Dialog preview"
+                                isInline
+                                isOpen
+                                purpose="info"
+                                width={160}
+                                onOpenChange={noop}
+                            >
+                                <Layout
+                                    className="relative"
+                                    header={
+                                        <LayoutHeader className="absolute right-1 top-1 z-10" padding={0}>
+                                            <Stack direction="horizontal" justify="end">
+                                                <Button
+                                                    icon={<Icon icon="close" size="sm" />}
+                                                    isIconOnly
+                                                    label="Close dialog"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={noop}
+                                                />
+                                            </Stack>
+                                        </LayoutHeader>
+                                    }
+                                >
+                                    <LayoutContent padding={3}>
+                                        <Center minHeight={64} width="100%">
+                                            <Text>Content</Text>
+                                        </Center>
+                                    </LayoutContent>
+                                </Layout>
+                            </Dialog>
+                        </SummaryCard>
+                        <SummaryCard name="Table" path="/docs/sdk/pages/table">
+                            <Stack width={170}>
+                                <Table data={[{ item: 'Order', status: 'Open' }]} density="compact">
+                                    <TableColumn field="item" header="Item" />
+                                    <TableColumn field="status" header="Status" />
+                                </Table>
+                            </Stack>
+                        </SummaryCard>
+                    </Grid>
+                </Stack>
             </Stack>
         </Article>
     );

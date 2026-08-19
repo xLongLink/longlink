@@ -16,14 +16,16 @@ Keep improving the XML:
   <Query id="issues" path="/issues?status=${filters.status}" />
 
   <For each="issues" as="issue">
-    <Text value="${issue.title}" />
+    ${issue.title}
   </For>
 
-  <Action action="/issues/${issue.id}" method="PATCH" json="${{ status: 'closed' }}" invalidate="${['issues']}">
+  <Action>
+    <Request url="/issues/${issue.id}" method="PATCH" json="${{ status: 'closed' }}" />
+    <Patch state="issues" invalidate="true" />
     <Button label="Close" />
   </Action>
 
-  <Badge label="Active">
+  <Badge>Active
     <Icon slot="icon" icon="check" />
   </Badge>
 </longlink>
@@ -34,9 +36,10 @@ Keep improving the XML:
   app-relative `path`; the result is available at its id.
 - `<For />` iterates an array. It requires `each` and `as`; its children can read the
   item alias and zero-based `index`.
-- `<Action />` wraps a trigger such as `Button`, sends an app-relative `GET`, `POST`,
-  `PUT`, `PATCH`, or `DELETE` request, then invalidates requested data ids. Use one payload: `json` or `form`. `GET` cannot send a payload.
-  `invalidate` accepts `State` and `Query` ids. `closeDialog` closes a containing dialog after success.
+- `<Action />` runs ordered `Request` and `Patch` effects from a direct `Button` trigger.
+  `Request` sends an app-relative `GET`, `POST`, `PUT`, `PATCH`, or `DELETE` request with one payload: `json` or `form`.
+  `Patch` either updates one declared State value or invalidates one State or Query by its literal `state` id.
+  `Request closeDialog="true"` closes a containing dialog after all effects succeed.
 
 - `if` conditionally renders a node.
 - `slot` is a named child slot. Used with the props type is `ReactNode`

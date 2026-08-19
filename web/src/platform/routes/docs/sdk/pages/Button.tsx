@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/button',
     title: 'Button',
-    description: 'Renders a labeled command, submit trigger, or action trigger.',
+    description:
+        'Button triggers an action when clicked. Use it for form submissions, confirmations, navigation, or any interaction that needs a clear call to action.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,13 +27,13 @@ export default function DocsArticleRoute() {
                         {'Button'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Renders a labeled command, submit trigger, or action trigger.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
+                        '<Action>\n  <Request url="/api/orders" method="POST" />\n  <Button label="Save" variant="primary" />\n</Action>'
                     }
                     language="xml"
                 />

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="FormLayoutType">
+  <xsd:complexType name="GridSpanType" mixed="true">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
+    <xsd:attribute name="columns" type="GridSpanColumnsType" />
+    <xsd:attribute name="rows" type="xsd:positiveInteger" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
-  <xsd:element name="FormLayout" type="FormLayoutType">
-    <xsd:annotation><xsd:documentation>Arranges Astryx form fields.</xsd:documentation></xsd:annotation>
+  <xsd:element name="GridSpan" type="GridSpanType">
+    <xsd:annotation><xsd:documentation>Spans a direct Grid child across columns or rows.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

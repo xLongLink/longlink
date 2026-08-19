@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
+import { Badge } from '@/components/ui/Badge';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -85,7 +85,7 @@ export default function People({
             key: 'membership',
             header: 'Role',
             width: pixel(128),
-            renderCell: (member) => <Badge label={member.role} />,
+            renderCell: (member) => <Badge>{member.role}</Badge>,
         },
         {
             key: 'actions',

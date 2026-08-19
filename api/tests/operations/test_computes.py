@@ -5,15 +5,14 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute
 from src.models.operations import OperationStatus
 from src.kubernetes.gateway import GatewayTLS
+from src.database.models.computes import ComputeRegistry
 
 
 async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     """Create the shared Envoy Gateway and preserve published access during reconciliation."""
 
-    # Arrange
     compute_registry = await create_compute()
     generation = 0
 
@@ -60,7 +59,6 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     claimed = await claim_operation()
     assert claimed is not None
 
-    # Act
     completed = await execute(claimed, compute_operations.create)
 
     # Reconcile the Compute again after a deployment schedules another pass.
@@ -72,11 +70,10 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert recreated_claim is not None
     recreated = await execute(recreated_claim, compute_operations.create)
 
-    # Assert
     assert completed.status == OperationStatus.completed
     assert recreated.status == OperationStatus.completed
     async with session_scope() as session:
-        refreshed = await compute.get(session, compute_registry.id)
+        refreshed = await session.get(ComputeRegistry, compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
     assert refreshed.gateway_url == "https://192.0.2.1"
@@ -87,7 +84,6 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make a compute and its single Operation terminal after a provider error."""
 
-    # Arrange
     compute_registry = await create_compute()
 
     class FailingGateway:
@@ -112,12 +108,10 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     claimed = await claim_operation()
     assert claimed is not None
 
-    # Act
     failed = await execute(claimed, compute_operations.create)
 
-    # Assert
     assert failed.status == OperationStatus.failed
     async with session_scope() as session:
-        refreshed = await compute.get(session, compute_registry.id)
+        refreshed = await session.get(ComputeRegistry, compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.creating

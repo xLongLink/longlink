@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Dialog title="Edit order" isOpen="$dialog.open">\n  <FormLayout>\n    <TextInput label="Name" value="$form.name" />\n  </FormLayout>\n</Dialog>'
+                        '<Dialog title="Edit order" isOpen="$dialog.open">\n  <TextInput label="Name" value="$form.name" />\n</Dialog>'
                     }
                     language="xml"
                 />

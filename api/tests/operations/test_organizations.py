@@ -2,12 +2,13 @@ import pytest
 from datetime import datetime, timedelta
 from factories import create_organization, create_ready_infrastructure
 from src.models.roles import OrganizationRoles
+from src.models.statuses import Status
 from src.database.session import get_session, session_scope
-from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
 from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -45,16 +46,14 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
 
     monkeypatch.setattr(organization_service.shared_audit, "sync", sync)
 
-    # Act
-    db = Postgres(
-        infrastructure.database.host,
-        infrastructure.database.port,
-        infrastructure.database.username,
-        infrastructure.database.password,
-        infrastructure.database.sslmode,
-    )
     async with session_scope() as session:
-        await organization_service.sync_users(session, organization.id, db)
+        organization_row = await session.get(Organization, organization.id)
+        assert organization_row is not None
+        organization_row.status = Status.running
+        await session.commit()
+
+    async with session_scope() as session:
+        await organization_service.sync_users(session, organization.id)
 
     # Assert
     rows = {row.id: row for row in calls[0][1]}

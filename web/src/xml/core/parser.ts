@@ -44,11 +44,11 @@ function toNodes(input: unknown): ASTNode[] {
         return input.flatMap((item) => toNodes(item));
     }
 
-    // Compile visible text into the existing Text adapter so XML elements can use natural text children.
+    // Compile visible text into private AST nodes so XML elements can use natural text children.
     if (typeof input === 'string') {
         const value = input.trim();
 
-        return value ? [{ name: 'Text', params: { value: compileAttribute(value) }, children: [] }] : [];
+        return value ? [{ name: '$text', params: { value: compileAttribute(value) }, children: [] }] : [];
     }
 
     // Treat empty or unsupported parser output as no nodes.
@@ -87,19 +87,17 @@ function collectParams(input: unknown): ASTProps {
         return {};
     }
 
-    const record = input as Record<string, unknown>;
+    const record = input as Record<string, string>;
 
     const params: ASTProps = {};
 
-    // Copy string attributes without parser prefixes.
+    // Copy attributes without parser prefixes.
     for (const [key, entry] of Object.entries(record)) {
         // Compile string attributes without resolving runtime values.
-        if (typeof entry === 'string') {
-            const name = key.replace(/^@_/, '');
+        const name = key.replace(/^@_/, '');
 
-            // Table fields are literal paths rather than runtime values.
-            params[name] = name === 'field' ? { kind: 'text', value: entry } : compileAttribute(entry);
-        }
+        // Table fields are literal paths rather than runtime values.
+        params[name] = name === 'field' ? { kind: 'text', value: entry } : compileAttribute(entry);
     }
 
     return params;

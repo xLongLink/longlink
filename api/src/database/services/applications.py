@@ -1,16 +1,17 @@
 from uuid import UUID
-from src.utils import names
+from src.utils import names, roles
 from sqlalchemy import select
-from src.errors import ConflictError, NotFoundError
+from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, contains_eager
 from collections.abc import Sequence
+from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.services import operations
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User
+from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -47,7 +48,7 @@ async def create(
     organization_id: UUID,
     name: str,
     image: Image,
-    user: User,
+    user_id: UUID,
     secrets: dict[str, str],
     description: str | None = None,
     icon: str | None = None,
@@ -72,8 +73,8 @@ async def create(
         icon=icon,
         secrets=secrets,
     )
-    application.created_id = user.id
-    application.updated_id = user.id
+    application.created_id = user_id
+    application.updated_id = user_id
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
@@ -98,7 +99,7 @@ async def release(
     application_id: UUID,
     image: Image,
     description: str | None,
-    user: User,
+    user_id: UUID,
 ) -> Application | None:
     """Record one desired Application release and queue its deployment."""
 
@@ -121,7 +122,7 @@ async def release(
     # Persist the image-derived desired release before scheduling its convergence.
     application.image_desired = image
     application.description = description
-    application.updated_id = user.id
+    application.updated_id = user_id
     await operations.enqueue(
         session,
         compute_id,
@@ -131,26 +132,34 @@ async def release(
     return application
 
 
-async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
-    """Tombstone a LongLink Application."""
+async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> None:
+    """Authorize, tombstone, and queue cleanup for one LongLink Application."""
 
-    # Lock the Organization and Application state before tombstoning.
+    # Lock active application access before changing its lifecycle state.
     result = await session.execute(
-        select(Application, Organization.compute_id)
+        select(Application, Organization.compute_id, UserOrganization.role)
         .join(Application.organization)
-        .where(Application.id == application_id)
+        .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+            UserOrganization.user_id == user_id,
+            UserOrganization.deleted_at.is_(None),
+        )
         .with_for_update()
     )
     row = result.one_or_none()
     if row is None:
-        return None
-    application, compute_id = row
+        raise ForbiddenError("Access required")
+    application, compute_id, role = row
+    if not roles.atleast(role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
 
-    # Record the tombstone once; repeated requests only ensure cleanup remains queued.
-    if application.deleted_at is None:
-        application.deleted_at = utcnow()
-        application.deleted_id = user.id
-        application.updated_id = user.id
+    # Record the tombstone and schedule external cleanup in one transaction.
+    application.deleted_at = utcnow()
+    application.deleted_id = user_id
+    application.updated_id = user_id
 
     await operations.enqueue(
         session,
@@ -158,5 +167,3 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
         kind=OperationKind.application_delete,
         target_id=application.id,
     )
-
-    return application

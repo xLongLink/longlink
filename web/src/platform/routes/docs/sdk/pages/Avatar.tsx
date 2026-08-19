@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/avatar',
     title: 'Avatar',
-    description: 'Shows a user or team identity from an image or name.',
+    description:
+        'Avatar represents a person or team with a profile photo, initials, or a default icon. Use it in comment headers, contact lists, chat messages, user cards, and anywhere you need to identify someone visually.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,7 @@ export default function DocsArticleRoute() {
                         {'Avatar'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Shows a user or team identity from an image or name.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

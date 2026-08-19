@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/divider',
     title: 'Divider',
-    description: 'Separates related regions with a rule.',
+    description:
+        'A visual separator that divides content into distinct sections. Use it to create clear boundaries between groups of related content, or to demarcate interactive regions within a layout.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,11 +27,11 @@ export default function DocsArticleRoute() {
                         {'Divider'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Separates related regions with a rule.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Divider label="Or" />'} language="xml" />
+                <CodeBlock code={'<Divider>Or</Divider>'} language="xml" />
             </Stack>
         </Article>
     );

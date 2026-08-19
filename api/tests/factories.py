@@ -160,7 +160,7 @@ async def create_application(
             organization.id,
             name,
             image=resolved_image,
-            user=owner,
+            user_id=owner.id,
             secrets={} if secrets is None else secrets,
         )
         await session.commit()

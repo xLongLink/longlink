@@ -9,25 +9,26 @@
 
     <Stack>
         <Heading level="3">Application settings</Heading>
-        <Text as="p" color="secondary" value="Configure application defaults with local XML state and Astryx form controls." />
+        Configure application defaults with local XML state and Astryx form controls.
     </Stack>
 
-    <SideNav label="Settings sections">
-        <SideNavItem value="application" icon="viewColumns" label="Application">
+    <Menu>
+        <MenuSection title="Settings sections">
+        <MenuItem icon="viewColumns" label="Application">
             <Stack>
-                <Heading level="2">Application</Heading>
-                <Text as="p" value="Edit the sample application's local owner, cost-center, and reviewer note fields." />
+                <Heading id="application" level="2">Application</Heading>
+                Edit the sample application's local owner, cost-center, and reviewer note fields.
                 <Card>
                     <Stack direction="horizontal" align="center">
                         <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />
                         <Stack>
-                            <Text weight="semibold" value="Default reviewer" />
-                            <Text color="secondary" value="$reviewer.initials" />
+                            Default reviewer
+                            $reviewer.initials
                         </Stack>
-                        <Badge label="$reviewer.badge" />
+                        <Badge>$reviewer.badge</Badge>
                     </Stack>
                 </Card>
-                <FormLayout>
+                <Stack>
                     <TextInput
                         label="Workflow owner"
                         description="This state is bound directly from XML."
@@ -40,15 +41,15 @@
                         rows="4"
                         value="$profile.note"
                     />
-                </FormLayout>
+                </Stack>
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-        <SideNavItem value="preferences" icon="wrench" label="Preferences">
+        <MenuItem icon="wrench" label="Preferences">
             <Stack>
-                <Heading level="2">Preferences</Heading>
-                <Text as="p" value="Toggle notification controls and adjust a slider-backed approval threshold." />
-                <FormLayout>
+                <Heading id="preferences" level="2">Preferences</Heading>
+                Toggle notification controls and adjust a slider-backed approval threshold.
+                <Stack>
                     <CheckboxInput
                         label="Email updates"
                         description="Send a digest when item status changes."
@@ -60,16 +61,16 @@
                         value="$notifications"
                     />
                     <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
-                </FormLayout>
-                <Text value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
+                </Stack>
+                ${`Auto-approve up to CHF ${budgetLimit.value}`}
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-        <SideNavItem value="workflow" icon="arrowsUpDown" label="Workflow">
+        <MenuItem icon="arrowsUpDown" label="Workflow">
             <Stack>
-                <Heading level="2">Workflow</Heading>
-                <Text as="p" value="Use radio lists and selectors to model workflow defaults." />
-                <FormLayout>
+                <Heading id="workflow" level="2">Workflow</Heading>
+                Use radio lists and selectors to model workflow defaults.
+                <Stack>
                     <RadioList label="Default approver" value="$workflow.owner">
                         <RadioListItem value="manager" label="Manager" />
                         <RadioListItem value="finance" label="Finance" />
@@ -80,9 +81,10 @@
                         <SelectorOption value="medium" label="Medium" />
                         <SelectorOption value="high" label="High" />
                     </Selector>
-                </FormLayout>
+                </Stack>
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-    </SideNav>
+        </MenuSection>
+    </Menu>
 </longlink>

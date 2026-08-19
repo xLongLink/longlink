@@ -1,10 +1,11 @@
 import ipaddress
+from uuid import UUID
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls
-from src.database.models.operations import Operation
+from src.database.models.computes import ComputeRegistry
 
 
 def gateway_url(address: str) -> str:
@@ -18,12 +19,12 @@ def gateway_url(address: str) -> str:
     return f"https://[{address}]" if ":" in address else f"https://{address}"
 
 
-async def create(claimed: Operation) -> str | None:
+async def create(compute_id: UUID) -> str | None:
     """Reconcile one Compute's shared authenticated Envoy Gateway."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
     async with session_scope() as session:
-        registry = await compute.get(session, claimed.target_id)
+        registry = await session.get(ComputeRegistry, compute_id)
     if registry is None:
         return None
     cluster = Kubernetes(registry.kubeconfig)

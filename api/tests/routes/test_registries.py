@@ -10,10 +10,8 @@ async def test_platform_user_cannot_access_administrator_collections(
 ) -> None:
     """Reject Platform users from every administrator collection."""
 
-    # Act
     response = await clients[1].get(f"/api/v1/{path}")
 
-    # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
 
@@ -57,15 +55,12 @@ async def test_registry_endpoints_return_registered_backend(
 ) -> None:
     """Return each independently registered backend without its secrets."""
 
-    # Arrange
     infrastructure = await create_ready_infrastructure()
     backend = getattr(infrastructure, registry)
 
-    # Act
     list_response = await clients[0].get(f"/api/v1/{path}")
     get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
 
-    # Assert
     assert list_response.status_code == 200
     assert str(backend.id) in {item["id"] for item in list_response.json()}
     assert get_response.status_code == 200
@@ -107,7 +102,6 @@ async def test_registry_create_duplicate_and_delete(
 ) -> None:
     """Create, reject duplicate registration, and delete each unassigned registry type."""
 
-    # Act
     create_response = await clients[0].post(f"/api/v1/{path}", json=payload)
     duplicate_response = await clients[0].post(f"/api/v1/{path}", json=payload)
     created = create_response.json()
@@ -115,7 +109,6 @@ async def test_registry_create_duplicate_and_delete(
     delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
     get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
 
-    # Assert
     assert create_response.status_code == 201
     assert created["name"] == payload["name"]
     assert all(field not in created and str(payload[field]) not in create_response.text for field in secret_fields)
@@ -142,14 +135,11 @@ async def test_registry_delete_rejects_assigned_registry(
 ) -> None:
     """Keep registries while an Organization references them."""
 
-    # Arrange
     infrastructure = await create_ready_infrastructure()
     await create_organization(users[0], infrastructure=infrastructure)
     registry_id = getattr(infrastructure, registry).id
 
-    # Act
     response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
 
-    # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": error}

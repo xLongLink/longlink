@@ -34,13 +34,6 @@ async def available(session: AsyncSession) -> UUID | None:
     )
 
 
-async def get(session: AsyncSession, registry_id: UUID) -> ComputeRegistry | None:
-    """Return one compute backend by id."""
-
-    # Load the requested compute registration.
-    return await session.get(ComputeRegistry, registry_id)
-
-
 async def create(session: AsyncSession, name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
     """Register one compute target."""
 

@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/checkbox-input',
     title: 'CheckboxInput',
-    description: 'Captures one boolean value.',
+    description:
+        'CheckboxInput toggles a single on/off value. Use it for settings like "Enable notifications", terms acceptance, or opt-in choices. For multiple checkboxes in a group, use CheckboxList instead.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,7 @@ export default function DocsArticleRoute() {
                         {'CheckboxInput'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Captures one boolean value.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

@@ -4,7 +4,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import defer, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -54,16 +54,17 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     return result.scalar_one_or_none()
 
 
-async def application_access(
+async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, OrganizationRoles] | None:
-    """Return one user's active access to one active Application."""
+) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry | None] | None:
+    """Return one user's active application access with its compute registry."""
 
-    # Resolve the requested Application and its active Organization membership in one scoped query.
+    # Resolve the requested runtime and its active Organization membership in one scoped query.
     result = await session.execute(
-        select(Application, Organization, UserOrganization.role)
+        select(Application, Organization, UserOrganization.role, ComputeRegistry)
         .join(Organization, Organization.id == Application.organization_id)
         .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+        .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .where(
             Application.id == application_id,
             Application.deleted_at.is_(None),
@@ -75,21 +76,20 @@ async def application_access(
     row = result.one_or_none()
     if row is None:
         return None
-    application, organization, role = row
-    return application, organization, role
+    application, organization, role, compute = row
+    return application, organization, role, compute
 
 
 async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
-    statement = (
+    result = await session.execute(
         select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
         .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
         .join(StorageRegistry, StorageRegistry.id == Organization.storage_id)
         .where(Organization.id == organization_id)
     )
-    result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
@@ -97,15 +97,13 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def application_infrastructure(
-    session: AsyncSession, application_id: UUID, include_deleted: bool = False
-) -> tuple[Application, Infrastructure | None] | None:
+async def application_infrastructure(session: AsyncSession, application_id: UUID) -> tuple[Application, Infrastructure | None] | None:
     """Return one Application and its assigned infrastructure when all assignments exist."""
 
     # Load the Application and its infrastructure in one lifecycle query.
     statement = (
         select(Application, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
-        .outerjoin(Organization, Organization.id == Application.organization_id)
+        .join(Organization, Organization.id == Application.organization_id)
         .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
@@ -116,9 +114,7 @@ async def application_infrastructure(
     if row is None:
         return None
     application, organization, compute, database, storage = row
-    if application.deleted_at is not None and not include_deleted:
-        return None
-    if organization is None or compute is None or database is None or storage is None:
+    if compute is None or database is None or storage is None:
         return application, None
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
@@ -152,6 +148,7 @@ async def applications(session: AsyncSession, organization_id: UUID) -> Sequence
     # Query active organization applications in one session.
     statement = (
         select(Application)
+        .options(defer(Application.secrets))
         .where(
             Application.organization_id == organization_id,
             Application.deleted_at.is_(None),
@@ -179,14 +176,11 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     return result.all()
 
 
-async def get(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Organization | None:
-    """Return one organization by id."""
+async def get_tombstone(session: AsyncSession, organization_id: UUID) -> Organization | None:
+    """Return one tombstoned organization by id."""
 
-    # Load the requested organization by its primary key.
-    organization = await session.get(Organization, organization_id)
-    if organization is None or (not include_deleted and organization.deleted_at is not None):
-        return None
-    return organization
+    # Load tombstones only for lifecycle retry authorization.
+    return await session.scalar(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_not(None)))
 
 
 async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
@@ -205,32 +199,27 @@ async def members(session: AsyncSession, organization_id: UUID, include_deleted:
     return result.all()
 
 
-async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres | None = None) -> None:
-    """Project Platform-owned users and memberships into one Organization database."""
+async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
+    """Project users into one active, running Organization database."""
 
-    # Load the database assignment only when constructing a new client.
-    if db is None:
-        result = await session.execute(
-            select(Organization, DatabaseRegistry)
-            .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
-            .where(Organization.id == organization_id)
+    # Load the active running Organization with its assigned database.
+    result = await session.execute(
+        select(Organization, DatabaseRegistry)
+        .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+        .where(
+            Organization.id == organization_id,
+            Organization.deleted_at.is_(None),
+            Organization.status == Status.running,
         )
-        assigned = result.tuples().one_or_none()
-        if assigned is None:
-            return
-        organization, database = assigned
-    else:
-        result = await session.scalars(select(Organization).where(Organization.id == organization_id))
-        organization = result.one_or_none()
-        if organization is None:
-            return
-    if organization.deleted_at is not None:
+    )
+    assigned = result.tuples().one_or_none()
+    if assigned is None:
         return
-    if organization.status != Status.running and db is None:
-        return
+    organization, database = assigned
+    db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    memberships = await members(session, organization_id, include_deleted=True)
+    memberships = await members(session, organization.id, include_deleted=True)
     rows: list[Audit] = []
     for membership in memberships:
         user = membership.user
@@ -249,10 +238,8 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
             )
         )
 
-    # The Platform is authoritative; reuse the prepared client during Organization creation.
-    if db is None:
-        db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
-    await shared_audit.sync(db.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False), rows)
+    # The Platform is authoritative over Organization user projections.
+    await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 
 
 async def update_member_role(
@@ -331,7 +318,7 @@ async def create(
 
     # Lock every requested registry while validating the immutable infrastructure assignment.
     result = await session.execute(
-        select(ComputeRegistry.id, DatabaseRegistry.id, StorageRegistry.id)
+        select(DatabaseRegistry.id, StorageRegistry.id)
         .select_from(ComputeRegistry)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == storage_id)
@@ -341,7 +328,7 @@ async def create(
     assignment = result.one_or_none()
     if assignment is None:
         raise UnavailableError("No compute registry available")
-    _, database_registry_id, storage_registry_id = assignment
+    database_registry_id, storage_registry_id = assignment
     if database_registry_id is None:
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:

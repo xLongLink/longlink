@@ -6,25 +6,26 @@
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">Items</Heading>
-            <Text as="p" color="secondary" value="Track catalog items and their supporting files." />
+            Track catalog items and their supporting files.
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack>
-                <FormLayout>
+                <Stack>
                     <TextInput
                         label="Name"
                         value="$draft.name"
                         isRequired="true"
                     />
                     <NumberInput label="Price" units="CHF" value="$draft.price" min="0" isRequired="true" />
-                </FormLayout>
-                <Action
-                    action="/api/items"
-                    method="POST"
-                    invalidate='${["items"]}'
-                    closeDialog="true"
-                    json="${{ name: draft.name, price: draft.price }}"
-                >
+                </Stack>
+                <Action>
+                    <Request
+                        url="/api/items"
+                        method="POST"
+                        closeDialog="true"
+                        json="${{ name: draft.name, price: draft.price }}"
+                    />
+                    <Patch state="items" invalidate="true" />
                     <Button isDisabled="${draft.name === ''}" variant="primary" label="Create item" />
                 </Action>
             </Stack>
@@ -32,12 +33,12 @@
     </Stack>
 
     <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
-        <TableColumn key="item" header="Item">
+        <TableColumn field="name" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">
-                    <Text value="$row.name" />
+                    $row.name
                 </Link>
-                <Text color="secondary" value="${`CHF ${row.price}`}" hasTabularNumbers="true" />
+                ${`CHF ${row.price}`}
             </Stack>
         </TableColumn>
     </Table>

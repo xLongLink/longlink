@@ -1,4 +1,5 @@
 import secrets
+from uuid import UUID
 from sqlalchemy import update
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -6,27 +7,28 @@ from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.operations import Operation
 from src.database.models.applications import Application
 
 
-async def create(claimed: Operation) -> str | None:
+async def create(application_id: UUID) -> str | None:
     """Converge one Application lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
-        target = await organizations.application_infrastructure(session, claimed.target_id)
+        target = await organizations.application_infrastructure(session, application_id)
         if target is None:
             return None
         application, infrastructure = target
-    if infrastructure is None or infrastructure.organization.deleted_at is not None:
+    if application.deleted_at is not None:
+        return None
+    if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization
     runtime_secrets = application.secrets
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
-    if "LONGLINK_ENV" not in application.secrets:
+    if "LONGLINK_ENV" not in runtime_secrets:
         # Resolve the Application's immutable provider assignments.
         db = Postgres(
             infrastructure.database.host,
@@ -97,12 +99,12 @@ async def create(claimed: Operation) -> str | None:
         await session.commit()
 
 
-async def delete(claimed: Operation) -> str | None:
+async def delete(application_id: UUID) -> str | None:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        target = await organizations.application_infrastructure(session, claimed.target_id, include_deleted=True)
+        target = await organizations.application_infrastructure(session, application_id)
         if target is None:
             return None
         application, infrastructure = target

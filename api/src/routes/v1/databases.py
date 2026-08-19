@@ -6,6 +6,7 @@ from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryRespons
 from src.adapters.postgres import Postgres
 from src.database.services import database
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.databases import DatabaseRegistry
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -39,7 +40,7 @@ async def get_database_registry(registry_id: UUID, session: AsyncSession = Depen
     """Return one database backend registration."""
 
     # Resolve the requested database registry.
-    registry = await database.get(session, registry_id)
+    registry = await session.get(DatabaseRegistry, registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
@@ -64,7 +65,7 @@ async def get_database_usage(registry_id: UUID, session: AsyncSession = Depends(
     """
 
     # Resolve the requested database registry before connecting to its backend.
-    registry = await database.get(session, registry_id)
+    registry = await session.get(DatabaseRegistry, registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 

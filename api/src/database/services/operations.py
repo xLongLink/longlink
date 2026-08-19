@@ -40,20 +40,17 @@ async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUI
     )
     application_rows = result.all()
 
-    targets = [(OperationKind.compute_create, compute_id, compute_id) for compute_id in compute_ids]
-    targets.extend(
-        (
-            OperationKind.organization_delete if deleted else OperationKind.organization_create,
-            organization_id,
-            compute_id,
-        )
-        for organization_id, deleted, compute_id in organization_rows
-    )
-    targets.extend(
-        (OperationKind.application_delete if deleted else OperationKind.application_create, application_id, compute_id)
-        for application_id, deleted, compute_id in application_rows
-    )
-    return targets
+    return [
+        *((OperationKind.compute_create, compute_id, compute_id) for compute_id in compute_ids),
+        *(
+            (OperationKind.organization_delete if deleted else OperationKind.organization_create, organization_id, compute_id)
+            for organization_id, deleted, compute_id in organization_rows
+        ),
+        *(
+            (OperationKind.application_delete if deleted else OperationKind.application_create, application_id, compute_id)
+            for application_id, deleted, compute_id in application_rows
+        ),
+    ]
 
 
 async def enqueue(

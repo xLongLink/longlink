@@ -65,10 +65,10 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     # Arrange
     operation = leased_operation()
 
-    async def complete_handler(claimed: Operation) -> str | None:
+    async def complete_handler(target_id: UUID) -> str | None:
         """Complete one claimed compute Operation."""
 
-        assert claimed is operation
+        assert target_id == operation.target_id
 
     async def fake_complete(session, operation_id: UUID) -> None:
         """Report that the worker no longer owns the operation lease."""
@@ -92,10 +92,10 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def complete_handler(claimed: Operation) -> str | None:
+    async def complete_handler(target_id: UUID) -> str | None:
         """Complete one claimed Operation."""
 
-        assert claimed is operation
+        assert target_id == operation.target_id
 
     async def fake_complete(session, operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""
@@ -128,23 +128,19 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     operation = leased_operation()
     transitions: list[UUID] = []
 
-    async def failing_handler(claimed: Operation) -> str | None:
+    async def failing_handler(target_id: UUID) -> str | None:
         """Return one explicit terminal failure."""
 
-        assert claimed is operation
+        assert target_id == operation.target_id
         return "workload deployment failed"
 
     async def fake_fail(session, operation_id: UUID) -> Operation:
         """Record the terminal failure transition."""
 
         transitions.append(operation_id)
-        return Operation(
-            id=operation_id,
-            kind=operation.kind,
-            target_id=operation.target_id,
-            failed=True,
-            finished_at=utcnow(),
-        )
+        operation.failed = True
+        operation.finished_at = utcnow()
+        return operation
 
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 

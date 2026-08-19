@@ -12,24 +12,17 @@ class PageDefinition:
     icon: str | None = None
 
 
-def page_file_route(relative_path: str) -> str:
-    """Return the browser route pattern for one page file path."""
+def page_stem_route(page_stem: str) -> str:
+    """Return the browser route pattern for one suffix-free page path."""
 
-    normalized_path = relative_path.strip("/")
-
-    # Page routes are backed by XML files.
-    if not normalized_path.endswith(".xml"):
-        raise ValueError("Page file routes must end with '.xml'")
-
-    path_without_suffix = normalized_path.removesuffix(".xml")
     route_segments: list[str] = []
 
     # Empty file stems cannot provide either an endpoint or browser route.
-    if not path_without_suffix:
+    if not page_stem:
         raise ValueError("Page file routes must include a file name")
 
     # Convert filesystem route conventions into React Router-style route patterns.
-    for segment in path_without_suffix.split("/"):
+    for segment in page_stem.split("/"):
         # Index segments map to the current route level.
         if segment == "index":
             continue

@@ -16,8 +16,7 @@
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="key" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="field" type="FieldPathType" />
+    <xsd:attribute name="field" type="FieldPathType" use="required" />
     <xsd:attribute name="header" type="xsd:string" />
     <xsd:attribute name="align" type="AlignType" default="start" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
@@ -26,6 +25,6 @@
     <xsd:annotation><xsd:documentation>Renders row data with the Astryx Table API.</xsd:documentation></xsd:annotation>
   </xsd:element>
   <xsd:element name="TableColumn" type="TableColumnType">
-    <xsd:annotation><xsd:documentation>Defines a keyed Astryx column; field optionally selects a different row path and children form renderCell content.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Defines an Astryx column by its row field path; children form renderCell content.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

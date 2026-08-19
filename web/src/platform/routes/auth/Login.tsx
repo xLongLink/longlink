@@ -58,7 +58,7 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>{'Sign in with your email and password.'}</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider>Sign in with your email and password.</Divider>}>
             <Stack gap={4}>
                 <Stack
                     as="form"
@@ -116,26 +116,18 @@ export default function Login() {
                             )}
                         />
                     </Stack>
-                    <Button
-                        isLoading={login.isPending}
-                        label={login.isPending ? 'Signing in...' : 'Sign In'}
-                        type="submit"
-                        variant="primary"
-                        width="100%"
-                    />
+                    <Button isLoading={login.isPending} label="Sign In" type="submit" variant="primary" width="100%" />
                 </Stack>
 
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {
                         const trimmedEmail = email.trim();
-                        const registerHref = trimmedEmail
-                            ? `/auth/register?${new URLSearchParams({ email: trimmedEmail })}`
-                            : '/auth/register';
+                        const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
                         return (
                             <Divider>
                                 New to LongLink?{' '}
-                                <Link href={registerHref} type="inherit" weight="medium">
+                                <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
                                     Create account
                                 </Link>
                             </Divider>

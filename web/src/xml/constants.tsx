@@ -47,6 +47,6 @@ export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const SLIDER_VALUE_DISPLAYS = ['tooltip', 'text', 'none'] as const;
 export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'around', 'evenly'] as const;
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;
+export const STACK_ITEM_SIZES = ['static', 'fill'] as const;
 export const SWITCH_LABEL_POSITIONS = ['start', 'end'] as const;
 export const SWITCH_LABEL_SPACINGS = ['hug', 'spread'] as const;
-export const TEXT_ELEMENTS = ['span', 'p', 'div', 'label', 'h1', 'h2', 'h3'] as const;

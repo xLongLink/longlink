@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
+import { Badge } from '@/components/ui/Badge';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
-import { Badge } from '@astryxdesign/core/Badge';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -89,7 +89,7 @@ export default function AdminApplications() {
                     )}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="status" header="Status" width={pixel(128)}>
-                    {(app) => <Badge label={statusLabels[app.status]} variant={statusVariants[app.status]} />}
+                    {(app) => <Badge variant={statusVariants[app.status]}>{statusLabels[app.status]}</Badge>}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="image_desired" header="Image" width={proportional(2)}>
                     {(app) => <Text type="supporting">{app.image_desired}</Text>}

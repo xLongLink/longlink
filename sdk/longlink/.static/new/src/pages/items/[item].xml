@@ -7,18 +7,19 @@
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">$item.name</Heading>
-            <Text color="secondary" value="${`CHF ${item.price}`}" />
+            ${`CHF ${item.price}`}
         </Stack>
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack>
                 <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
-                <Action
-                    action="/api/items/${params.item}/attachments"
-                    method="POST"
-                    invalidate='${["attachments"]}'
-                    closeDialog="true"
-                    form="${{ file: attachment.file }}"
-                >
+                <Action>
+                    <Request
+                        url="/api/items/${params.item}/attachments"
+                        method="POST"
+                        closeDialog="true"
+                        form="${{ file: attachment.file }}"
+                    />
+                    <Patch state="attachments" invalidate="true" />
                     <Button isDisabled="${attachment.file === null}" variant="primary" label="Upload attachment" />
                 </Action>
             </Stack>
@@ -26,6 +27,6 @@
     </Stack>
 
     <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
-        <TableColumn key="name" field="name" header="File" />
+        <TableColumn field="name" header="File" />
     </Table>
 </longlink>

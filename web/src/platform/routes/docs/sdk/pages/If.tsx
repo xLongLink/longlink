@@ -34,7 +34,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Badge if="${order.blocked}" label="Blocked" />\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'
+                        '<Badge if="${order.blocked}">Blocked</Badge>\n\n<Selector label="Status" value="$filters.status">\n  <SelectorOption value="open" label="Open" />\n  <SelectorOption if="${user.canClose}" value="closed" label="Closed" />\n</Selector>'
                     }
                     language="xml"
                 />

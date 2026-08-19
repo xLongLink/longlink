@@ -36,7 +36,7 @@ describe('renderNode', () => {
                     id: 'orders-heading',
                     level: '1',
                 }),
-                children: [{ name: 'Text', params: compileProps({ value: 'Orders' }), children: [] }],
+                children: [{ name: '$text', params: compileProps({ value: 'Orders' }), children: [] }],
             },
         ]);
 

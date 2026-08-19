@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from factories import create_application, create_organization
-from src.errors import ConflictError
+from src.errors import ConflictError, ForbiddenError
 from src.models.types import Image
 from src.database.session import session_scope
 from src.database.services import applications, organizations
@@ -23,7 +23,7 @@ async def test_create_allows_creating_organization(users: tuple[User, User, User
             organization.id,
             "Dashboard",
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-            user=user,
+            user_id=user.id,
             secrets={},
         )
         await session.commit()
@@ -50,7 +50,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 organization.id,
                 "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-                user=user,
+                user_id=user.id,
                 secrets={},
             )
         created = await applications.create(
@@ -58,7 +58,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
             organization.id,
             "Reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
-            user=user,
+            user_id=user.id,
             secrets={},
         )
         await session.commit()
@@ -67,8 +67,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
     assert created.slug == "reports"
 
 
-async def test_fetch_and_organization_applications_ignore_deleted_applications(users: tuple[User, User, User]) -> None:
-    """Return only active applications from collection read services."""
+async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]) -> None:
+    """Return only active applications for administrator views."""
 
     # Arrange
     user = users[0]
@@ -80,22 +80,20 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications(u
             organization.id,
             "Reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
-            user=user,
+            user_id=user.id,
             secrets={},
         )
-        await applications.soft_delete(session, deleted_application.id, user)
+        await applications.delete(session, deleted_application.id, user.id)
         await session.commit()
 
         # Act
         fetched = await applications.fetch(session)
-        listed = await organizations.applications(session, organization.id)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
-    assert [application.id for application in listed] == [active_application.id]
 
 
-async def test_soft_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:
+async def test_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:
     """Soft-delete an application while scheduling its cleanup operation."""
 
     # Arrange
@@ -105,18 +103,15 @@ async def test_soft_delete_marks_application_deleted(users: tuple[User, User, Us
 
     # Act
     async with session_scope() as session:
-        await applications.soft_delete(session, application.id, user)
+        await applications.delete(session, application.id, user.id)
         await session.commit()
         deleted_application = await session.get(Application, application.id)
-        second_delete = await applications.soft_delete(session, application.id, user)
-        missing_delete = await applications.soft_delete(session, uuid4(), user)
+        with pytest.raises(ForbiddenError):
+            await applications.delete(session, uuid4(), user.id)
 
     # Assert
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
-    assert second_delete is not None
-    assert second_delete.id == application.id
-    assert missing_delete is None
 
 
 async def test_release_requires_an_active_organization(users: tuple[User, User, User]) -> None:
@@ -135,7 +130,7 @@ async def test_release_requires_an_active_organization(users: tuple[User, User, 
             application.id,
             Image("ghcr.io/longlink/dashboard@sha256:release"),
             "Updated dashboard",
-            user,
+            user.id,
         )
         await session.commit()
 

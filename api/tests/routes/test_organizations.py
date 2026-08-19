@@ -9,6 +9,7 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
@@ -138,7 +139,9 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     assert non_owner_response.json() == {"detail": "Permission required"}
     assert platform_admin_response.status_code == 202
     async with session_scope() as session:
-        assert await organizations.get(session, admin_owned_organization.id) is None
+        deleted_organization = await session.get(Organization, admin_owned_organization.id)
+    assert deleted_organization is not None
+    assert deleted_organization.deleted_at is not None
 
 
 async def test_other_organization_user_cannot_delete_application(

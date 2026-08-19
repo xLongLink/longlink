@@ -7,7 +7,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/action',
     title: 'Action',
-    description: 'Provides request behavior to child triggers and refreshes selected runtime values.',
+    description: 'Runs ordered requests and runtime state effects from a child trigger.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,15 +26,13 @@ export default function DocsArticleRoute() {
                         {'Action'}
                     </Heading>
                 </Stack>
-                <Text as="p">
-                    {'Provides request behavior to child triggers and refreshes selected runtime values.'}
-                </Text>
+                <Text as="p">{'Runs ordered requests and runtime state effects from a child trigger.'}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Action action="/api/orders/${order.id}/complete" method="PATCH" invalidate="${[\'orders\']}">\n  <Button label="Complete" />\n</Action>'
+                        '<Action>\n  <Request url="/api/orders/${order.id}/complete" method="PATCH" />\n  <Patch state="pager" value="${{ page: pager.page + 1 }}" />\n  <Patch state="orders" invalidate="true" />\n  <Button label="Complete" />\n</Action>'
                     }
                     language="xml"
                 />

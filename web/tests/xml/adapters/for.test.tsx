@@ -14,7 +14,7 @@ describe('For', () => {
 
         const output = renderXmlToMarkup(
             parseXML(
-                '<For each="$groups" as="item"><For each="$item.items" as="item"><Text value="${title + \' #\' + params.issue + \' \' + item.name + \' \' + index}" /></For></For>'
+                '<For each="$groups" as="item"><For each="$item.items" as="item">${title + \' #\' + params.issue + \' \' + item.name + \' \' + index}</For></For>'
             ),
             ctx
         );

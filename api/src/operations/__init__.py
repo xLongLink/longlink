@@ -1,9 +1,9 @@
 from . import computes, applications, organizations
+from uuid import UUID
 from collections.abc import Callable, Awaitable
 from src.models.operations import OperationKind
-from src.database.models.operations import Operation
 
-OperationHandler = Callable[[Operation], Awaitable[str | None]]
+OperationHandler = Callable[[UUID], Awaitable[str | None]]
 
 handlers: dict[OperationKind, OperationHandler] = {
     OperationKind.compute_create: computes.create,

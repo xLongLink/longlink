@@ -5,7 +5,7 @@ from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.pages import PageDefinition, page_file_route
+from longlink.pages import PageDefinition, page_stem_route
 from longlink.logger import ApiAccessFilter
 from longlink.routes import root, router
 from longlink.context import install_context_middleware
@@ -40,11 +40,10 @@ class LongLink:
 
         # Preserve Application routes so page collisions are rejected during discovery.
         self.application_routes = list(app.router.routes)
-        self.app = app
 
-        # Resolve the runtime environment and initialize mutable page state.
+        # Resolve the runtime environment and initialize application storage.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
-        app.state.longlink = RuntimeState(pages=[], storage=create_fs())
+        storage = create_fs()
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -68,25 +67,15 @@ class LongLink:
         pages_directory = Path.cwd() / "src" / "pages"
         if not pages_directory.is_dir():
             raise ValueError(f"Application source directory is required: {pages_directory}")
-        self._register_page_directory(pages_directory)
-
-        # Start applications on their first static page instead of an unselected shell.
-        root.install_redirect(app)
-
-        # Serve the embedded frontend last so Application routes retain precedence.
-        if (ROOT / ".static" / "web").exists():
-            app.frontend("/", directory=ROOT / ".static" / "web")
-
-    def _register_page_directory(self, pages_directory: Path) -> None:
-        """Register XML files from a directory as SDK pages."""
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory)
+        app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage)
 
         # Pages are registered once before the frontend mount is installed.
-        self.app.router.routes.extend(
+        app.router.routes.extend(
             [
-                self.app.router.route_class(
+                app.router.route_class(
                     f"/{definition.path}",
                     partial(render_page, content),
                     methods=["GET"],
@@ -95,7 +84,13 @@ class LongLink:
                 for definition, content in discovered_pages
             ]
         )
-        self.app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
+
+        # Start applications on their first static page instead of an unselected shell.
+        root.install_redirect(app)
+
+        # Serve the embedded frontend last so Application routes retain precedence.
+        if (ROOT / ".static" / "web").exists():
+            app.frontend("/", directory=ROOT / ".static" / "web")
 
     def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
         """Discover and validate all XML pages before registering any route."""
@@ -105,8 +100,7 @@ class LongLink:
 
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
-            relative_path = page_file.relative_to(pages_directory).as_posix()
-            path_without_suffix = relative_path.removesuffix(".xml")
+            path_without_suffix = page_file.relative_to(pages_directory).as_posix().removesuffix(".xml")
 
             page_path = f"pages/{path_without_suffix}"
             registered_path = f"/{page_path}"
@@ -117,7 +111,7 @@ class LongLink:
             page_name = (page_root.get("name") or "").strip() or None
             page_icon = (page_root.get("icon") or "").strip() or None
 
-            page_route = page_file_route(relative_path)
+            page_route = page_stem_route(path_without_suffix)
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in page_route.split("/"))
             tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 

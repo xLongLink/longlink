@@ -93,9 +93,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
-        env_name = field_info.pop("env_name") or field_name
         env_entry: dict[str, object] = {
-            "name": env_name,
+            "name": field_info.pop("env_name") or field_name,
             "required": bool(field_info.get("required", False)),
         }
 

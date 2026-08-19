@@ -87,8 +87,8 @@ export function resolveNavigationUrl(baseUrl: string, path: string): string {
 export function resolveAnchorUrl(baseUrl: string, path: string): string {
     const value = path.trim();
 
-    // Drop empty, protocol-relative, and backslash-containing anchors.
-    if (!value || value.startsWith('//') || value.includes('\\')) return '';
+    // Drop empty and backslash-containing anchors.
+    if (!value || value.includes('\\')) return '';
 
     // Validate absolute browser links before returning them.
     if (hasProtocol(value)) {

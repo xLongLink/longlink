@@ -4,6 +4,7 @@ from src.auth import authadmin, get_session
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.computes import ComputeRegistry
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -29,7 +30,7 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
-    registry = await compute.get(session, registry_id)
+    registry = await session.get(ComputeRegistry, registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 

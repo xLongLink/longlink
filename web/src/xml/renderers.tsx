@@ -1,5 +1,6 @@
+import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
-import { getVersion, subscribe } from 'valtio';
+import { isValtioProxy } from './core/state';
 import { XmlErrorBoundary } from './core/errors';
 import { Stack } from '@astryxdesign/core/Stack';
 import { isSafePropertyName } from './expressions';
@@ -58,7 +59,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             // Subscribe to reactive state values in the context.
             for (const value of Object.values(ctx.scope.bindings)) {
                 // Skip non-reactive context values.
-                if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
+                if (!isValtioProxy(value)) continue;
 
                 unsubscribers.push(
                     subscribe(value, () => {
@@ -143,12 +144,13 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
             if (node.name === 'State' || node.name === 'Query') {
                 validateSetupNode(node);
                 setupNodes.push(node);
+                continue;
             }
 
             // Skip nested loop content because it has its own scope.
-            if (node.name !== 'For') {
-                walk(node.children);
-            }
+            if (node.name === 'For') continue;
+
+            walk(node.children);
         }
     }
 
@@ -183,7 +185,7 @@ function validateSetupNode(node: ASTNode): void {
     }
 
     // Validate query declarations.
-    else if (node.name === 'Query') {
+    else {
         // Require a declared query key.
         if (!node.params.id) throw new Error('Query requires a string id');
 

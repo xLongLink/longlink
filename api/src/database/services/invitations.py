@@ -26,7 +26,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
         raise NotFoundError("Organization not found")
 
     # Reject emails that already belong to the organization.
-    result = await session.scalars(
+    if await session.scalar(
         select(User.id)
         .join(UserOrganization, UserOrganization.user_id == User.id)
         .where(
@@ -34,8 +34,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
             UserOrganization.deleted_at.is_(None),
             func.lower(User.email) == normalized_email,
         )
-    )
-    if result.one_or_none() is not None:
+    ) is not None:
         raise ConflictError("User is already a member")
 
     # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
@@ -79,15 +78,13 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
 async def accept(session: AsyncSession, user: User) -> set[UUID]:
     """Accept active email grants and return the Organizations with changed memberships."""
 
-    normalized_email = user.email.strip().lower()
-
     # Lock the recipient's active grants before creating or restoring memberships.
     result = await session.scalars(
         select(OrganizationInvitation)
         .join(Organization, Organization.id == OrganizationInvitation.organization_id)
         .where(
             Organization.deleted_at.is_(None),
-            OrganizationInvitation.email == normalized_email,
+            OrganizationInvitation.email == user.email,
         )
         .with_for_update()
     )

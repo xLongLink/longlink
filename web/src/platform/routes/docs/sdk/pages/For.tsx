@@ -31,9 +31,7 @@ export default function DocsArticleRoute() {
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={
-                        '<For each="$orders.items" as="order">\n  <Card>\n    <Text value="$order.number" />\n  </Card>\n</For>'
-                    }
+                    code={'<For each="$orders.items" as="order">\n  <Card>\n    $order.number\n  </Card>\n</For>'}
                     language="xml"
                 />
             </Stack>

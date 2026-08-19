@@ -12,9 +12,6 @@ type InterpolationSegment = {
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
-    // Preserve literal empty attribute values.
-    if (input === '') return { kind: 'text', value };
-
     const standaloneExpression = readStandaloneExpression(input);
 
     // Keep standalone expressions typed when they are evaluated.
@@ -23,7 +20,13 @@ export function compileAttribute(value: string): ASTAttribute {
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
     if (reference && (reference[1] || input.includes('.'))) {
-        return { kind: 'path', parts: input.slice(reference[1] ? 1 : 0).split('.'), isBinding: Boolean(reference[1]) };
+        const [first = '', ...rest] = input.slice(reference[1] ? 1 : 0).split('.');
+
+        return {
+            kind: 'path',
+            parts: [first, ...rest],
+            isBinding: Boolean(reference[1]),
+        };
     }
 
     // Compile mixed text and expressions into segments that render as text.

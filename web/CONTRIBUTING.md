@@ -48,7 +48,7 @@ Theme preferences are defined in `src/lib/theme.ts` and applied programmatically
 ## Primitives
 
 ```xml
-<Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Dialog>, <Divider>, <FileInput>, <FormLayout>, <Grid>, <Heading>, <Icon>, <Link>, <NumberInput>, <RadioList>, <RadioListItem>, <Selector>, <SelectorOption>, <Slider>, <Stack>, <Switch>, <Tab>, <TabList>, <Table>, <TableColumn>, <Text>, <TextArea>, <TextInput>
+<Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Dialog>, <Divider>, <FileInput>, <Grid>, <GridSpan>, <Heading>, <Icon>, <Link>, <NumberInput>, <RadioList>, <RadioListItem>, <Selector>, <SelectorOption>, <Slider>, <Stack>, <StackItem>, <Switch>, <Tab>, <Tabs>, <Table>, <TableColumn>, <TextArea>, <TextInput>
 ```
 
 Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.

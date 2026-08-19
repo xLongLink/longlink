@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Query id="orders" path="/api/orders" />\n\n<For each="$orders.items" as="order">\n  <Text value="$order.number" />\n</For>'
+                        '<Query id="orders" path="/api/orders" />\n\n<For each="$orders.items" as="order">\n  $order.number\n</For>'
                     }
                     language="xml"
                 />

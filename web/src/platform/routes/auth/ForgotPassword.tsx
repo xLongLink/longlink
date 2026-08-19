@@ -44,50 +44,50 @@ export default function ForgotPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <Stack
-                    as="form"
-                    gap={4}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void form.handleSubmit();
-                    }}
-                >
-                    <form.Field
-                        name="email"
-                        children={(field) => (
-                            <TextInput
-                                {...{ autoComplete: 'email' }}
-                                htmlName="email"
-                                isRequired
-                                label="Email"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
-                                type="email"
-                                value={field.state.value}
-                                width="100%"
-                            />
-                        )}
-                    />
-                    <Button
-                        isLoading={requestReset.isPending}
-                        label={requestReset.isPending ? 'Sending reset email...' : 'Send reset email'}
-                        type="submit"
-                        variant="primary"
-                    />
-                </Stack>
+                <>
+                    <Stack
+                        as="form"
+                        gap={4}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            void form.handleSubmit();
+                        }}
+                    >
+                        <form.Field
+                            name="email"
+                            children={(field) => (
+                                <TextInput
+                                    {...{ autoComplete: 'email' }}
+                                    htmlName="email"
+                                    isRequired
+                                    label="Email"
+                                    onBlur={field.handleBlur}
+                                    onChange={field.handleChange}
+                                    status={
+                                        field.state.meta.errors.length > 0
+                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                            : undefined
+                                    }
+                                    type="email"
+                                    value={field.state.value}
+                                    width="100%"
+                                />
+                            )}
+                        />
+                        <Button
+                            isLoading={requestReset.isPending}
+                            label="Send reset email"
+                            type="submit"
+                            variant="primary"
+                        />
+                    </Stack>
+                    <Text as="p" color="secondary" justify="center" type="supporting">
+                        <Link href="/login" type="inherit" weight="medium">
+                            Back to sign in
+                        </Link>
+                    </Text>
+                </>
             )}
-            {!requestReset.isSuccess ? (
-                <Text as="p" color="secondary" justify="center" type="supporting">
-                    <Link href="/login" type="inherit" weight="medium">
-                        Back to sign in
-                    </Link>
-                </Text>
-            ) : null}
         </AuthLayout>
     );
 }

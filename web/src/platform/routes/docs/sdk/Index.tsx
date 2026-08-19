@@ -7,46 +7,6 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
-/** Renders the local SDK runtime request flow diagram. */
-function LocalRuntimeDiagram() {
-    return (
-        <Stack direction="horizontal" gap={8} align="center" justify="center" paddingBlock={4} width="100%">
-            <Stack hAlign="end" width="calc((100% - (var(--spacing-6) * 2)) / 3)">
-                <Card width="80%" variant="muted">
-                    <Stack gap={3} align="center">
-                        <UserRound aria-hidden className="text-accent" size={20} />
-                        <Stack align="center">
-                            <Text weight="semibold">User</Text>
-                            <Text type="supporting">Browser</Text>
-                        </Stack>
-                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
-                            <Palette aria-label="Theming" className="text-secondary" size={16} />
-                            <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
-                        </Stack>
-                    </Stack>
-                </Card>
-            </Stack>
-            <ArrowLeftRight aria-label="Local runtime request flow" className="text-secondary" size={16} />
-            <Stack hAlign="start" width="calc((100% - (var(--spacing-6) * 2)) / 3)">
-                <Card width="80%" variant="muted">
-                    <Stack gap={3} align="center">
-                        <AppWindow aria-hidden className="text-accent" size={20} />
-                        <Stack align="center">
-                            <Text weight="semibold">Application</Text>
-                            <Text type="supporting">Runtime</Text>
-                        </Stack>
-                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
-                            <Code2 aria-label="Application logic" className="text-secondary" size={16} />
-                            <Database aria-label="Database logic" className="text-secondary" size={16} />
-                            <HardDrive aria-label="File storage" className="text-secondary" size={16} />
-                        </Stack>
-                    </Stack>
-                </Card>
-            </Stack>
-        </Stack>
-    );
-}
-
 export const metadata = {
     path: '/docs/sdk',
     title: 'Overview',
@@ -81,7 +41,40 @@ export default function DocsArticleRoute() {
                     structured way, so the Platform can display it consistently while the Application continues to own
                     the information and actions behind each page.
                 </Text>
-                <LocalRuntimeDiagram />
+                <Stack direction="horizontal" gap={8} align="center" justify="center" paddingBlock={4} width="100%">
+                    <Stack hAlign="end" width="calc((100% - (var(--spacing-6) * 2)) / 3)">
+                        <Card width="80%" variant="muted">
+                            <Stack gap={3} align="center">
+                                <UserRound aria-hidden className="text-accent" size={20} />
+                                <Stack align="center">
+                                    <Text weight="semibold">User</Text>
+                                    <Text type="supporting">Browser</Text>
+                                </Stack>
+                                <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                                    <Palette aria-label="Theming" className="text-secondary" size={16} />
+                                    <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
+                                </Stack>
+                            </Stack>
+                        </Card>
+                    </Stack>
+                    <ArrowLeftRight aria-label="Local runtime request flow" className="text-secondary" size={16} />
+                    <Stack hAlign="start" width="calc((100% - (var(--spacing-6) * 2)) / 3)">
+                        <Card width="80%" variant="muted">
+                            <Stack gap={3} align="center">
+                                <AppWindow aria-hidden className="text-accent" size={20} />
+                                <Stack align="center">
+                                    <Text weight="semibold">Application</Text>
+                                    <Text type="supporting">Runtime</Text>
+                                </Stack>
+                                <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                                    <Code2 aria-label="Application logic" className="text-secondary" size={16} />
+                                    <Database aria-label="Database logic" className="text-secondary" size={16} />
+                                    <HardDrive aria-label="File storage" className="text-secondary" size={16} />
+                                </Stack>
+                            </Stack>
+                        </Card>
+                    </Stack>
+                </Stack>
                 <Heading id="create-a-project" level={2}>
                     Create a Project
                 </Heading>

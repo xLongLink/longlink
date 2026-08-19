@@ -1,13 +1,12 @@
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { Stack } from '@astryxdesign/core/Stack';
 import { useBindableValue } from '../core/binding';
 import { resolveNavigationUrl } from '../core/url';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
-import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
+import { Tab as ApplicationTab, Tabs as ApplicationTabs } from '@/components/ui/Tabs';
 
-export function TabList({ props, nodes }: Props) {
+export function Tabs({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
@@ -24,25 +23,18 @@ export function TabList({ props, nodes }: Props) {
 
     // Tab navigation without options is not meaningful or accessible.
     if (tabs.length === 0) {
-        throw new Error('TabList requires at least one Tab');
+        throw new Error('Tabs requires at least one Tab');
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const label = resolveXml(props, 'label', ctx);
-    const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
-        <Stack gap={0}>
-            <AstryxTabList
-                aria-label={typeof label === 'string' ? label : 'Tabs'}
-                onChange={binding.setValue}
-                value={binding.value}
-            >
-                {tabs.map((tab) => (
-                    <AstryxTab href={tab.href} key={tab.value} label={tab.label} value={tab.value} />
-                ))}
-            </AstryxTabList>
-            {activeTab && renderNode(activeTab.nodes, ctx)}
-        </Stack>
+        <ApplicationTabs onChange={binding.setValue} value={binding.value}>
+            {tabs.map((tab) => (
+                <ApplicationTab href={tab.href} key={tab.value} label={tab.label} value={tab.value}>
+                    {renderNode(tab.nodes, ctx)}
+                </ApplicationTab>
+            ))}
+        </ApplicationTabs>
     );
 }

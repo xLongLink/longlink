@@ -7,10 +7,12 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/radio-list',
     title: 'RadioList',
-    description: 'Presents one visible single-choice option group.',
+    description:
+        'A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'items', label: 'Items', level: 2 },
     ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/pages/RadioList.tsx',
@@ -26,7 +28,7 @@ export default function DocsArticleRoute() {
                         {'RadioList'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Presents one visible single-choice option group.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
@@ -34,6 +36,14 @@ export default function DocsArticleRoute() {
                     code={
                         '<RadioList label="Plan" value="$form.plan" orientation="horizontal">\n  <RadioListItem value="solo" label="Solo" />\n  <RadioListItem value="team" label="Team" />\n</RadioList>'
                     }
+                    language="xml"
+                />
+                <Heading id="items" level={2}>
+                    Items
+                </Heading>
+                <Text as="p">{'Define each choice with a RadioListItem child.'}</Text>
+                <CodeBlock
+                    code={'<RadioListItem value="team" label="Team" description="Shared workspace" />'}
                     language="xml"
                 />
             </Stack>

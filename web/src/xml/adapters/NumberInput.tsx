@@ -4,20 +4,6 @@ import { useBindableValue } from '../core/binding';
 import { requireXmlString, resolveXml } from '../core/props';
 import { NumberInput as AstryxNumberInput } from '@astryxdesign/core/NumberInput';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/NumberInput?tab=properties
- * - label: string
- * - units: string
- * - description: string
- * - value: int | float | undefined
- * - min: int | float
- * - max: int | float
- * - step: int | float
- * - isDisabled: bool
- * - isRequired: bool
- * - isIntegerOnly: bool
- */
 export function NumberInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : Number(value)));

@@ -2,7 +2,6 @@ import type { Props } from '../types';
 import { createContext } from 'react';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { Stack } from '@astryxdesign/core/Stack';
 import { useBindableValue } from '../core/binding';
 import { Button } from '@astryxdesign/core/Button';
 import { requireXmlString, resolveXml } from '../core/props';
@@ -35,11 +34,7 @@ export function Dialog({ props, nodes }: Props) {
                                 title={title}
                             />
                         }
-                        content={
-                            <LayoutContent>
-                                <Stack gap={4}>{renderNode(nodes, ctx)}</Stack>
-                            </LayoutContent>
-                        }
+                        content={<LayoutContent>{renderNode(nodes, ctx)}</LayoutContent>}
                     />
                 </AstryxDialog>
             </DialogCloseContext.Provider>

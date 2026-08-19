@@ -1,7 +1,7 @@
 import { renderNode } from '../core/node';
 import { Text } from '@astryxdesign/core/Text';
-import { readSafeProperty } from '../expressions';
 import type { ASTNode, Props, Scope } from '../types';
+import { readSafeProperty } from '../expressions/resolve';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
@@ -53,29 +53,24 @@ function buildColumn(
     rows: TableRow[]
 ): AstryxTableColumn<TableRow> {
     const props = node.params;
-    const key = readXmlProp(props, 'key');
-
-    // Column keys and field paths are literal identifiers, not expressions.
-    if (key?.kind !== 'text' || !key.value.trim()) {
-        throw new Error('TableColumn requires a string key');
-    }
-
     const fieldAttribute = readXmlProp(props, 'field');
-    if (fieldAttribute != null && fieldAttribute.kind !== 'text') {
+    if (fieldAttribute?.kind !== 'text' || !fieldAttribute.value.trim()) {
         throw new Error('TableColumn requires a usable field path');
     }
-    const field = fieldAttribute?.value ?? key.value;
+    const field = fieldAttribute.value;
+
+    // Column field paths are literal identifiers, not expressions.
     if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
         throw new Error('TableColumn requires a usable field path');
     }
     const fieldParts = field.split('.');
     const headerValue = resolveXml(props, 'header', ctx);
-    const header = typeof headerValue === 'string' ? headerValue : key.value;
+    const header = typeof headerValue === 'string' ? headerValue : field;
     const cellNodes = node.children;
 
     return {
         header,
-        key: key.value,
+        key: field,
         renderCell: (row) => {
             const value = fieldParts.reduce<unknown>((current, segment) => readSafeProperty(current, segment), row);
 

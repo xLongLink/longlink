@@ -126,7 +126,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["storage_id"], ["storage_registries.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
     )
     op.create_index("ix_organizations_compute_id", "organizations", ["compute_id"])

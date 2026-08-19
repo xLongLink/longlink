@@ -1,21 +1,28 @@
 import { For } from './for';
 import type { ReactNode } from 'react';
-import { isVisibleXmlNode } from './props';
 import type { ASTNode, Scope } from '../types';
 import { xmlComponentRegistry } from './registry';
+import { isVisibleXmlNode, resolveXml } from './props';
 
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
         const props = node.params;
 
-        // Handle conditional rendering with "if" parameter.
-        if (!isVisibleXmlNode(node, ctx)) return null;
+        // Render parser-generated text directly rather than through a public XML component.
+        if (node.name === '$text') {
+            const value = resolveXml(props, 'value', ctx);
+
+            return value == null ? null : String(value);
+        }
 
         // Suppress setup-only nodes during render.
         if (node.name === 'State' || node.name === 'Query') {
             return null;
         }
+
+        // Handle conditional rendering with "if" parameter.
+        if (!isVisibleXmlNode(node, ctx)) return null;
 
         const RegisteredComponent = xmlComponentRegistry[node.name];
 

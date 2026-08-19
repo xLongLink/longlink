@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
+import { Badge } from '@/components/ui/Badge';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Badge } from '@astryxdesign/core/Badge';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -66,7 +66,7 @@ export default function AdminUsers() {
                     {(user) => <Text type="code">{user.id}</Text>}
                 </TableColumn>
                 <TableColumn<UserSummary> field="administrator" header="Access" width={pixel(128)}>
-                    {(user) => <Badge label={user.administrator ? 'Administrator' : 'User'} />}
+                    {(user) => <Badge>{user.administrator ? 'Administrator' : 'User'}</Badge>}
                 </TableColumn>
                 <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
                     {(user) => (

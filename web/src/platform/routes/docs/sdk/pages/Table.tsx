@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Table data="$orders.items">\n  <TableColumn key="number" header="Number" field="number" />\n  <TableColumn key="status" header="Status" field="status" />\n</Table>'
+                        '<Table data="$orders.items">\n  <TableColumn field="number" header="Number" />\n  <TableColumn field="status" header="Status" />\n</Table>'
                     }
                     language="xml"
                 />

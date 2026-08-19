@@ -9,7 +9,7 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute, operations, invitations, applications, organizations
+from src.database.services import operations, invitations, applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
@@ -34,8 +34,9 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.status == Status.creating
 
     async with session_scope() as session:
-        reloaded = await organizations.get(session, organization.id)
+        reloaded = await session.get(Organization, organization.id)
         assert reloaded is not None
+        assert reloaded.deleted_at is None
         memberships = await organizations.members(session, organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
@@ -200,7 +201,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
     # Assert
     async with session_scope() as session:
         assert await organizations.fetch(session) == [organization]
-        reloaded_compute = await compute.get(session, infrastructure.compute.id)
+        reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
         assert len(await operations.fetch(session)) == 1
@@ -221,7 +222,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             organization.id,
             "Dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
-            owner,
+            owner.id,
             {},
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
@@ -241,8 +242,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     async with session_scope() as session:
         result = await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
-        active_organization = await organizations.get(session, organization.id)
-        deleted_organization = await organizations.get(session, organization.id, include_deleted=True)
+        deleted_organization = await organizations.get_tombstone(session, organization.id)
         deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)
@@ -251,7 +251,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     # Assert
     assert result is not None
     assert result.deleted_id == owner.id
-    assert active_organization is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_id == owner.id
     async with session_scope() as session:

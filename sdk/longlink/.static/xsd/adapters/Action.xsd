@@ -3,17 +3,29 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="ActionType">
     <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
+      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+        <xsd:element name="Request">
+          <xsd:complexType>
+            <xsd:attribute name="url" type="xsd:string" use="required" />
+            <xsd:attribute name="method" type="ActionMethodType" use="required" />
+            <xsd:attribute name="form" type="xsd:string" />
+            <xsd:attribute name="json" type="xsd:string" />
+            <xsd:attribute name="closeDialog" type="xsd:string" />
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Patch">
+          <xsd:complexType>
+            <xsd:attribute name="state" type="xsd:string" use="required" />
+            <xsd:attribute name="value" type="xsd:string" />
+            <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true" />
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:choice>
+      <xsd:element ref="Button" />
     </xsd:sequence>
-    <xsd:attribute name="action" type="xsd:string" use="required" />
-    <xsd:attribute name="form" type="xsd:string" />
-    <xsd:attribute name="json" type="xsd:string" />
-    <xsd:attribute name="invalidate" type="xsd:string" />
-    <xsd:attribute name="closeDialog" type="xsd:string" />
-    <xsd:attribute name="method" type="ActionMethodType" default="POST" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="if" type="xsd:string" />
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">
-    <xsd:annotation><xsd:documentation>Runs an app-relative request from its child trigger.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Runs ordered request and state effects from its child button.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

@@ -3,7 +3,7 @@ from lxml import etree
 from functools import cache
 from longlink.constants import ROOT
 
-UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[", re.IGNORECASE)
+UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*DOCTYPE\b|<!\[CDATA\[", re.IGNORECASE)
 
 
 def create_xml_parser() -> etree.XMLParser:
@@ -26,16 +26,16 @@ def validate_xml(content: str) -> etree._Element:
 
     # Reject XML constructs that the web runtime parser does not support.
     if UNSUPPORTED_XML_MARKUP_PATTERN.search(content):
-        raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
-
-    # Reuse the compiled schema while parsing user XML with external access disabled.
-    schema = load_xml_schema()
+        raise ValueError("XML DOCTYPE and CDATA constructs are not supported")
 
     # Parse user XML once for validation and downstream metadata extraction.
     try:
         xml_doc = etree.XML(content.encode("utf-8"), create_xml_parser())
     except etree.XMLSyntaxError as error:
         raise ValueError(f"XML syntax is invalid: {error}") from error
+
+    # Reuse the compiled schema only after parsing user XML successfully.
+    schema = load_xml_schema()
 
     # Surface schema validation details instead of a generic lxml failure.
     if not schema.validate(xml_doc):

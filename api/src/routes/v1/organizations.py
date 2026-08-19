@@ -19,7 +19,9 @@ from src.models.organizations import (
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
+from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
@@ -104,7 +106,7 @@ async def get_organization_database_usage(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Load the Organization's immutable database assignment.
-    registry = await database.get(session, membership.organization.database_id)
+    registry = await session.get(DatabaseRegistry, membership.organization.database_id)
     assert registry is not None
 
     # Inspect the exact Organization database and return its physical size when available.
@@ -133,7 +135,7 @@ async def get_organization_storage_usage(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Load the Organization's immutable storage assignment.
-    registry = await storage.get(session, membership.organization.storage_id)
+    registry = await session.get(StorageRegistry, membership.organization.storage_id)
     assert registry is not None
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
@@ -152,10 +154,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    if usage is None:
-        return None
-
-    return {"bucket_name": bucket_name, "space_used": usage}
+    return None if usage is None else {"bucket_name": bucket_name, "space_used": usage}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
@@ -217,12 +216,12 @@ async def delete_organization(
 
     # The initiating owner may retry cleanup after memberships are removed.
     if not user.administrator:
-        tombstone = await organizations.get(session, organization_id, include_deleted=True)
-        if tombstone is not None and tombstone.deleted_at is not None and tombstone.deleted_id != user.id:
+        tombstone = await organizations.get_tombstone(session, organization_id)
+        if tombstone is not None and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 
         # Require active Organization ownership for the first deletion request.
-        if tombstone is None or tombstone.deleted_at is None:
+        if tombstone is None:
             membership = await organizations.membership(session, user.id, organization_id)
             if membership is None:
                 raise HTTPException(status_code=403, detail="Access required")

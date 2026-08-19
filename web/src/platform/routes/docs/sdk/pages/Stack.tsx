@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/stack',
     title: 'Stack',
-    description: 'Arranges children vertically or horizontally.',
+    description:
+        'Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,13 +27,13 @@ export default function DocsArticleRoute() {
                         {'Stack'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Arranges children vertically or horizontally.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Stack direction="horizontal" justify="between" align="center">\n  <Text value="$order.number" />\n  <Button label="Open" />\n</Stack>'
+                        '<Stack direction="horizontal" gap="2" align="center">\n  $order.number\n  <StackItem size="fill">Order details</StackItem>\n  <Button label="Open" />\n</Stack>'
                     }
                     language="xml"
                 />

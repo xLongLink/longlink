@@ -29,9 +29,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
 
     // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
-        const value = readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
-
-        return value;
+        return readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
     }
 
     // Allow selected static helper namespaces.
@@ -48,9 +46,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
 
         // Resolve safe Math helpers.
         if (callee.object.name === 'Math') {
-            const value = readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
-
-            return value;
+            return readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
         }
     }
 
