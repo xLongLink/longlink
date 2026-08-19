@@ -20,11 +20,11 @@ export function compileAttribute(value: string): ASTAttribute {
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
     if (reference && (reference[1] || input.includes('.'))) {
-        const [first = '', ...rest] = input.slice(reference[1] ? 1 : 0).split('.');
+        const parts = input.slice(reference[1] ? 1 : 0).split('.') as [string, ...string[]];
 
         return {
             kind: 'path',
-            parts: [first, ...rest],
+            parts,
             isBinding: Boolean(reference[1]),
         };
     }

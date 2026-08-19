@@ -8,7 +8,6 @@ import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
 import { Tabs } from '../adapters/TabList';
-import { Bold, Italic, Text } from '../adapters/Text';
 import type { ComponentType } from 'react';
 import { Action } from '../adapters/Action';
 import { Avatar } from '../adapters/Avatar';
@@ -25,6 +24,7 @@ import { FileInput } from '../adapters/FileInput';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
+import { Bold, Italic, Text } from '../adapters/Text';
 import { CheckboxInput } from '../adapters/CheckboxInput';
 import { RadioList, RadioListItem } from '../adapters/RadioList';
 

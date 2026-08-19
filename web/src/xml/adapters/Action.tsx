@@ -7,7 +7,7 @@ import { useXmlRuntime } from '../core/context';
 import { resolveRequestUrl } from '../core/url';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
-import { isSafePropertyName, resolveValue } from '../expressions';
+import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 

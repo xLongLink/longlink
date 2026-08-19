@@ -3,7 +3,7 @@ import { isValtioProxy } from './state';
 import { resolveXmlValue } from './props';
 import { proxy, useSnapshot } from 'valtio';
 import type { ASTProps, Scope } from '../types';
-import { isSafePropertyName, resolvePath } from '../expressions';
+import { isSafePropertyName, resolvePath } from '../expressions/resolve';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});
 

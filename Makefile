@@ -128,6 +128,7 @@ down:
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
+	@docker image rm --force "localhost:15000/longlink-app:dev" >/dev/null 2>&1 || true
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 
