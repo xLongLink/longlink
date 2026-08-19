@@ -16,9 +16,8 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
-    const initialEmail = searchParams.get('email') ?? '';
     const form = useForm({
-        defaultValues: { email: initialEmail },
+        defaultValues: { email: searchParams.get('email') ?? '' },
         validationLogic: revalidateLogic(),
         validators: { onDynamic: emailPayloadSchema },
         onSubmit: ({ value }) => registration.mutate(value),
@@ -67,7 +66,7 @@ export default function Register() {
                     />
                     <Button
                         isLoading={registration.isPending}
-                        label={registration.isPending ? 'Sending registration link...' : 'Send registration link'}
+                        label="Send registration link"
                         type="submit"
                         variant="primary"
                     />
@@ -75,9 +74,8 @@ export default function Register() {
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {
                         const trimmedEmail = email.trim();
-                        const signInHref = trimmedEmail
-                            ? `/login?${new URLSearchParams({ email: trimmedEmail })}`
-                            : '/login';
+                        const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
+                        const signInHref = `/login${signInSearch}`;
 
                         return (
                             <Divider>

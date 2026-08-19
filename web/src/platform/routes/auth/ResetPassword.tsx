@@ -138,7 +138,7 @@ export default function ResetPassword() {
                     />
                     <Button
                         isLoading={resetPassword.isPending}
-                        label={resetPassword.isPending ? 'Resetting password...' : 'Reset password'}
+                        label="Reset password"
                         type="submit"
                         variant="primary"
                     />

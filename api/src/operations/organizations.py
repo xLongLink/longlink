@@ -29,8 +29,6 @@ async def reconcile(claimed: Operation) -> str | None:
         infrastructure.database.sslmode,
     )
     await db.prepare_organization_database(organization.id)
-    async with session_scope() as session:
-        await organizations.sync_users(session, organization.id, db)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
     await Exoscale(
@@ -54,6 +52,9 @@ async def reconcile(claimed: Operation) -> str | None:
             )
             .values(status=Status.running)
         )
+
+        # Synchronize users only after every Organization boundary is ready for publication.
+        await organizations.sync_users(session, organization.id)
         await session.commit()
 
 

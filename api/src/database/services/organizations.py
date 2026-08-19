@@ -232,32 +232,27 @@ async def members(session: AsyncSession, organization_id: UUID, include_deleted:
     return result.all()
 
 
-async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres | None = None) -> None:
-    """Project Platform-owned users and memberships into one Organization database."""
+async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
+    """Project users into one active, running Organization database."""
 
-    # Load the database assignment only when constructing a new client.
-    if db is None:
-        result = await session.execute(
-            select(Organization, DatabaseRegistry)
-            .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
-            .where(Organization.id == organization_id)
+    # Load the active running Organization with its assigned database.
+    result = await session.execute(
+        select(Organization, DatabaseRegistry)
+        .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+        .where(
+            Organization.id == organization_id,
+            Organization.deleted_at.is_(None),
+            Organization.status == Status.running,
         )
-        assigned = result.tuples().one_or_none()
-        if assigned is None:
-            return
-        organization, database = assigned
-    else:
-        result = await session.scalars(select(Organization).where(Organization.id == organization_id))
-        organization = result.one_or_none()
-        if organization is None:
-            return
-    if organization.deleted_at is not None:
+    )
+    assigned = result.tuples().one_or_none()
+    if assigned is None:
         return
-    if organization.status != Status.running and db is None:
-        return
+    organization, database = assigned
+    db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    memberships = await members(session, organization_id, include_deleted=True)
+    memberships = await members(session, organization.id, include_deleted=True)
     rows: list[Audit] = []
     for membership in memberships:
         user = membership.user
@@ -276,10 +271,8 @@ async def sync_users(session: AsyncSession, organization_id: UUID, db: Postgres 
             )
         )
 
-    # The Platform is authoritative; reuse the prepared client during Organization creation.
-    if db is None:
-        db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
-    await shared_audit.sync(db.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False), rows)
+    # The Platform is authoritative over Organization user projections.
+    await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 
 
 async def update_member_role(

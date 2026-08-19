@@ -116,21 +116,14 @@ export default function Login() {
                             )}
                         />
                     </Stack>
-                    <Button
-                        isLoading={login.isPending}
-                        label={login.isPending ? 'Signing in...' : 'Sign In'}
-                        type="submit"
-                        variant="primary"
-                        width="100%"
-                    />
+                    <Button isLoading={login.isPending} label="Sign In" type="submit" variant="primary" width="100%" />
                 </Stack>
 
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {
                         const trimmedEmail = email.trim();
-                        const registerHref = trimmedEmail
-                            ? `/auth/register?${new URLSearchParams({ email: trimmedEmail })}`
-                            : '/auth/register';
+                        const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
+                        const registerHref = `/auth/register${registerSearch}`;
 
                         return (
                             <Divider>

@@ -194,12 +194,7 @@ export default function VerifyEmail() {
                             />
                         )}
                     />
-                    <Button
-                        isLoading={completion.isPending}
-                        label={completion.isPending ? 'Creating account...' : 'Create account'}
-                        type="submit"
-                        variant="primary"
-                    />
+                    <Button isLoading={completion.isPending} label="Create account" type="submit" variant="primary" />
                 </Stack>
                 <Divider />
                 <TermsNotice />
