@@ -8,6 +8,7 @@
   <xsd:include schemaLocation="adapters/Text.xsd" />
   <xsd:include schemaLocation="adapters/Heading.xsd" />
   <xsd:include schemaLocation="adapters/Link.xsd" />
+  <xsd:include schemaLocation="adapters/Menu.xsd" />
   <xsd:include schemaLocation="adapters/Divider.xsd" />
   <xsd:include schemaLocation="adapters/Icon.xsd" />
   <xsd:include schemaLocation="adapters/Avatar.xsd" />
@@ -27,7 +28,6 @@
   <xsd:include schemaLocation="adapters/Selector.xsd" />
   <xsd:include schemaLocation="adapters/RadioList.xsd" />
   <xsd:include schemaLocation="adapters/Dialog.xsd" />
-  <xsd:include schemaLocation="adapters/SideNav.xsd" />
   <xsd:include schemaLocation="adapters/TabList.xsd" />
   <xsd:include schemaLocation="adapters/Table.xsd" />
 </xsd:schema>

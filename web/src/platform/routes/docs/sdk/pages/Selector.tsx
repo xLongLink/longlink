@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/selector',
     title: 'Selector',
-    description: 'Presents a dropdown selection control.',
+    description:
+        'A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -27,7 +28,7 @@ export default function DocsArticleRoute() {
                         {'Selector'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Presents a dropdown selection control.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

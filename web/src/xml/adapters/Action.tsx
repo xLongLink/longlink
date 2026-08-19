@@ -43,7 +43,7 @@ export function Action({ props, nodes }: Props) {
 
 /** Validates the direct Action children and converts them into executable effects. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
-    assertAllowedProps(props, new Set(['if', 'slot']), 'Action');
+    assertAllowedProps(props, new Set(['if']), 'Action');
 
     const button = nodes.at(-1);
     if (!button || button.name !== 'Button') {

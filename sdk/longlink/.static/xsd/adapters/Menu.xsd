@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="../types.xsd" />
+  <xsd:complexType name="MenuType">
+    <xsd:sequence><xsd:element ref="MenuSection" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="MenuSectionType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+        <xsd:element ref="MenuItem" />
+        <xsd:element ref="MenuSubSection" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="title" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="isHeaderHidden" type="xsd:string" />
+    <xsd:attribute name="if" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="MenuItemType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="icon" type="xsd:string" />
+    <xsd:attribute name="if" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:complexType name="MenuSubSectionType">
+    <xsd:sequence><xsd:element ref="MenuItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="icon" type="xsd:string" />
+    <xsd:attribute name="if" type="xsd:string" />
+  </xsd:complexType>
+  <xsd:element name="Menu" type="MenuType">
+    <xsd:annotation><xsd:documentation>Renders the application menu with hash-selected item content.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+  <xsd:element name="MenuSection" type="MenuSectionType" />
+  <xsd:element name="MenuItem" type="MenuItemType" />
+  <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
+</xsd:schema>

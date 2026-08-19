@@ -23,7 +23,7 @@
       </xsd:choice>
       <xsd:element ref="Button" />
     </xsd:sequence>
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="if" type="xsd:string" />
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">
     <xsd:annotation><xsd:documentation>Runs ordered request and state effects from its child button.</xsd:documentation></xsd:annotation>

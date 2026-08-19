@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/card',
     title: 'Card',
-    description: 'Groups one discrete item on an Astryx surface.',
+    description:
+        'Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are not the default layout tool. Most content groups do not need a container; spacing and alignment create visual grouping naturally. Only use a Card when items need clear interaction boundaries or visual comparison in a grid.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,7 @@ export default function DocsArticleRoute() {
                         {'Card'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Groups one discrete item on an Astryx surface.'}</Text>
+                <Text as="p">{metadata.description}</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

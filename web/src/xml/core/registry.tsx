@@ -3,6 +3,7 @@ import { Card } from '../adapters/Card';
 import { Grid } from '../adapters/Grid';
 import { Icon } from '../adapters/Icon';
 import { Link } from '../adapters/Link';
+import { Menu } from '../adapters/Menu';
 import { Text } from '../adapters/Text';
 import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
@@ -16,7 +17,6 @@ import { Slider } from '../adapters/Slider';
 import { Switch } from '../adapters/Switch';
 import { Divider } from '../adapters/Divider';
 import { Heading } from '../adapters/Heading';
-import { SideNav } from '../adapters/SideNav';
 import { TabList } from '../adapters/TabList';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
@@ -43,11 +43,11 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Heading,
     Icon,
     Link,
+    Menu,
     NumberInput,
     RadioList,
     RadioListItem,
     Selector,
-    SideNav,
     Slider,
     Stack,
     Switch,

@@ -12,10 +12,11 @@
         <Text as="p" color="secondary" value="Configure application defaults with local XML state and Astryx form controls." />
     </Stack>
 
-    <SideNav label="Settings sections">
-        <SideNavItem value="application" icon="viewColumns" label="Application">
+    <Menu>
+        <MenuSection title="Settings sections">
+        <MenuItem icon="viewColumns" label="Application">
             <Stack>
-                <Heading level="2">Application</Heading>
+                <Heading id="application" level="2">Application</Heading>
                 <Text as="p" value="Edit the sample application's local owner, cost-center, and reviewer note fields." />
                 <Card>
                     <Stack direction="horizontal" align="center">
@@ -42,11 +43,11 @@
                     />
                 </FormLayout>
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-        <SideNavItem value="preferences" icon="wrench" label="Preferences">
+        <MenuItem icon="wrench" label="Preferences">
             <Stack>
-                <Heading level="2">Preferences</Heading>
+                <Heading id="preferences" level="2">Preferences</Heading>
                 <Text as="p" value="Toggle notification controls and adjust a slider-backed approval threshold." />
                 <FormLayout>
                     <CheckboxInput
@@ -63,11 +64,11 @@
                 </FormLayout>
                 <Text value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-        <SideNavItem value="workflow" icon="arrowsUpDown" label="Workflow">
+        <MenuItem icon="arrowsUpDown" label="Workflow">
             <Stack>
-                <Heading level="2">Workflow</Heading>
+                <Heading id="workflow" level="2">Workflow</Heading>
                 <Text as="p" value="Use radio lists and selectors to model workflow defaults." />
                 <FormLayout>
                     <RadioList label="Default approver" value="$workflow.owner">
@@ -82,7 +83,8 @@
                     </Selector>
                 </FormLayout>
             </Stack>
-        </SideNavItem>
+        </MenuItem>
 
-    </SideNav>
+        </MenuSection>
+    </Menu>
 </longlink>
