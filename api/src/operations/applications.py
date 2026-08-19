@@ -21,7 +21,7 @@ async def create(application_id: UUID) -> str | None:
         application, infrastructure = target
     if application.deleted_at is not None:
         return None
-    if infrastructure is None or infrastructure.organization.deleted_at is not None:
+    if infrastructure is None:
         return "Application Organization not found"
     organization = infrastructure.organization
     runtime_secrets = application.secrets
@@ -92,6 +92,7 @@ async def create(application_id: UUID) -> str | None:
             .where(
                 Application.id == application.id,
                 Application.deleted_at.is_(None),
+                Application.status == Status.creating,
             )
             .values(status=Status.running)
         )

@@ -54,31 +54,6 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     return result.scalar_one_or_none()
 
 
-async def application_access(
-    session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, OrganizationRoles] | None:
-    """Return one user's active access to one active Application."""
-
-    # Resolve the requested Application and its active Organization membership in one scoped query.
-    result = await session.execute(
-        select(Application, Organization, UserOrganization.role)
-        .join(Organization, Organization.id == Application.organization_id)
-        .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-        .where(
-            Application.id == application_id,
-            Application.deleted_at.is_(None),
-            Organization.deleted_at.is_(None),
-            UserOrganization.user_id == user_id,
-            UserOrganization.deleted_at.is_(None),
-        )
-    )
-    row = result.one_or_none()
-    if row is None:
-        return None
-    application, organization, role = row
-    return application, organization, role
-
-
 async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
 ) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry | None] | None:
@@ -128,7 +103,7 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     # Load the Application and its infrastructure in one lifecycle query.
     statement = (
         select(Application, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
-        .outerjoin(Organization, Organization.id == Application.organization_id)
+        .join(Organization, Organization.id == Application.organization_id)
         .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
@@ -139,7 +114,7 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     if row is None:
         return None
     application, organization, compute, database, storage = row
-    if organization is None or compute is None or database is None or storage is None:
+    if compute is None or database is None or storage is None:
         return application, None
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 

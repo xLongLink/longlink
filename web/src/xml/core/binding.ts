@@ -61,9 +61,6 @@ function resolveBindableTarget(
 
     const { parts } = attribute;
 
-    // Reject empty binding paths.
-    if (parts.length === 0) return undefined;
-
     // Restrict path segments to safe keys.
     if (!parts.every(isSafePropertyName)) {
         throw new Error('XML binding path must use safe property names');
@@ -76,7 +73,7 @@ function resolveBindableTarget(
         return isBindableValue(state) ? { state } : undefined;
     }
 
-    const parent = resolvePath(ctx, parts.slice(0, -1));
+    const parent = resolvePath(ctx, [parts[0], ...parts.slice(1, -1)]);
 
     // Nested bindings require a reactive parent.
     if (!isBindableValue(parent)) return undefined;

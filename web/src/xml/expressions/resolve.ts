@@ -33,10 +33,7 @@ export function resolveValue(scope: Scope | null | undefined, key: string): unkn
 }
 
 /** Resolves a dotted or `$` reference path against the current XML runtime scope chain. */
-export function resolvePath(scope: Scope, parts: string[]): unknown {
-    // Empty paths do not resolve to a value.
-    if (parts.length === 0) return undefined;
-
+export function resolvePath(scope: Scope, parts: [string, ...string[]]): unknown {
     let current = resolveValue(scope, parts[0]);
 
     // Walk the remaining path segments directly on the live value.

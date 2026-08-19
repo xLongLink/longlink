@@ -1,7 +1,7 @@
 import { renderNode } from '../core/node';
 import { Text } from '@astryxdesign/core/Text';
-import { readSafeProperty } from '../expressions';
 import type { ASTNode, Props, Scope } from '../types';
+import { readSafeProperty } from '../expressions/resolve';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';

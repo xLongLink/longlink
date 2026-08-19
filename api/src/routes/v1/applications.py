@@ -72,10 +72,10 @@ async def release_application(
     """Record one desired Application release and queue its deployment."""
 
     # Application releases require Organization maintenance authority.
-    access = await organizations.application_access(session, user.id, application_id)
+    access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, _, role = access
+    application, _, role, _ = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 

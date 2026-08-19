@@ -14,7 +14,6 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Slider } from '@astryxdesign/core/Slider';
-import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
@@ -267,11 +266,11 @@ export default function DocsArticleRoute() {
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Grid" path="/docs/sdk/pages/grid">
-                            <Grid columns={2} gap={2}>
-                                <Badge>One</Badge>
-                                <Badge>Two</Badge>
-                                <Badge>Three</Badge>
-                                <Badge>Four</Badge>
+                            <Grid columns={2} gap={2} justify="center">
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
@@ -283,15 +282,15 @@ export default function DocsArticleRoute() {
                             </Menu>
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
-                            <Stack gap={3} width="100%">
+                            <Stack align="center" gap={2} width="100%">
                                 <StackItem size="static">
-                                    <Skeleton height={16} index={0} />
+                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 </StackItem>
                                 <StackItem size="fill">
-                                    <Skeleton height={16} index={1} />
+                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 </StackItem>
                                 <StackItem size="static">
-                                    <Skeleton height={16} index={2} />
+                                    <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 </StackItem>
                             </Stack>
                         </SummaryCard>

@@ -24,6 +24,7 @@ longlink/
 
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
+- For bounded, infrequent work, prefer clear iteration over query-count optimizations unless measurement shows a material cost.
 - Prefer standard-library or established libraries over handwritten implementations.
 
 ## Python Guidelines
