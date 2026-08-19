@@ -3289,8 +3289,7 @@
         "type": "string",
         "enum": [
           "creating",
-          "running",
-          "deleting"
+          "running"
         ],
         "title": "Status",
         "description": "Lifecycle states shared by Platform-managed resources."

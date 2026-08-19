@@ -561,7 +561,7 @@ export type RegistrationComplete = {
  *
  * Lifecycle states shared by Platform-managed resources.
  */
-export type Status = 'creating' | 'running' | 'deleting';
+export type Status = 'creating' | 'running';
 
 /**
  * StorageRegistryCreate

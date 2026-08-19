@@ -21,7 +21,6 @@ import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v
 const statusVariants = {
     creating: 'info',
     running: 'neutral',
-    deleting: 'neutral',
 } satisfies Record<Status, ComponentProps<typeof Badge>['variant']>;
 
 /** Renders the admin applications page. */
@@ -29,7 +28,6 @@ export default function AdminApplications() {
     const statusLabels: Record<Status, string> = {
         creating: 'Creating',
         running: 'Running',
-        deleting: 'Deleting',
     };
     const {
         data: applications = [],

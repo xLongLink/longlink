@@ -2,7 +2,6 @@ import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
-import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
@@ -39,33 +38,16 @@ export default function OrganizationApplication() {
     const action = <ProfileMenu user={user} />;
     const breadcrumb = <PageBreadcrumb applicationName={applicationAccess.name} />;
 
-    if (applicationAccess.status === 'creating' || applicationAccess.status === 'deleting') {
+    if (applicationAccess.status === 'creating') {
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <Card maxWidth={576} padding={6} width="100%">
                         <EmptyState
-                            actions={
-                                applicationAccess.status === 'deleting' ? (
-                                    <Button
-                                        href={`/orgs/${organization}`}
-                                        label="Back to organization"
-                                        variant="primary"
-                                    />
-                                ) : undefined
-                            }
-                            description={
-                                applicationAccess.status === 'creating'
-                                    ? 'Please try again in a moment.'
-                                    : 'This application is unavailable while LongLink removes it.'
-                            }
+                            description="Please try again in a moment."
                             headingLevel={1}
                             role="alert"
-                            title={
-                                applicationAccess.status === 'creating'
-                                    ? 'Application is being deployed'
-                                    : 'Application is being deleted'
-                            }
+                            title="Application is being deployed"
                         />
                     </Card>
                 </Center>

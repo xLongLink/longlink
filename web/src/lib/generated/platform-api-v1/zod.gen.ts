@@ -334,11 +334,7 @@ export const zRegistrationComplete = z.object({
  *
  * Lifecycle states shared by Platform-managed resources.
  */
-export const zStatus = z.enum([
-    'creating',
-    'running',
-    'deleting'
-]);
+export const zStatus = z.enum(['creating', 'running']);
 
 /**
  * ApplicationResponse
