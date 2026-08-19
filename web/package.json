@@ -30,11 +30,11 @@
         "@tanstack/react-query": "^5.101.4",
         "acorn": "^8.17.0",
         "d3-geo": "^3.1.1",
-        "fast-xml-parser": "^5.10.1",
+        "fast-xml-parser": "^5.11.0",
         "isbot": "^5",
         "ky": "^2.0.2",
         "lodash": "^4.18.1",
-        "lucide-react": "^1.30.0",
+        "lucide-react": "^1.31.0",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
         "react-router": "8.3.0",
@@ -58,7 +58,7 @@
         "eslint-plugin-perfectionist": "^5.10.1",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.8",
-        "vite-plus": "0.2.8"
+        "vite-plus": "0.2.9"
     },
     "overrides": {
         "@babel/core": "7.29.7",
