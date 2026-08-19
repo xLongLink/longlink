@@ -30,8 +30,7 @@ class RegistrationComplete(BaseModel):
     """Validate profile and password setup after email authentication."""
 
     # Profile
-    name: str = Field(min_length=1, max_length=127)
-    surname: str = Field(min_length=1, max_length=127)
+    name: str = Field(min_length=1, max_length=255)
 
     # Identity
     email: Email = Field(max_length=254)

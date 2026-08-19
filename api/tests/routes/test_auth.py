@@ -41,9 +41,8 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     # Arrange
     email = "registered@example.com"
     completion_payload = {
-        "name": "Registered",
+        "name": "Registered User",
         "email": email,
-        "surname": "User",
         "password": TEST_PASSWORD,
     }
     login_payload = {"email": email, "password": TEST_PASSWORD}
@@ -119,9 +118,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
 
     assert repeat_verify_response.status_code == 200
     assert repeat_response.status_code == 409
-    assert repeat_response.json() == {
-        "detail": "An account with this email already exists. Sign in or reset your password to continue."
-    }
+    assert repeat_response.json() == {"detail": "An account with this email already exists. Sign in or reset your password to continue."}
     assert repeat_client.cookies.get("longlink_auth") is None
 
     # Password login still works after the verification-link login path.

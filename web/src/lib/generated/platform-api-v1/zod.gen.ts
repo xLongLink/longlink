@@ -324,8 +324,7 @@ export const zPasswordResetComplete = z.object({
  * Validate profile and password setup after email authentication.
  */
 export const zRegistrationComplete = z.object({
-    name: z.string().min(1).max(127),
-    surname: z.string().min(1).max(127),
+    name: z.string().min(1).max(255),
     email: z.email().max(254),
     password: z.string().min(1).max(1024)
 });

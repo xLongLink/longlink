@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -20,8 +19,7 @@ import { passwordSchema } from './validation';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({
-    name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
-    surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
+    name: z.string().trim().min(1, 'Name is required').max(255, 'Name cannot exceed 255 characters'),
     password: passwordSchema,
 });
 
@@ -36,7 +34,7 @@ export default function VerifyEmail() {
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const form = useForm({
-        defaultValues: { name: '', surname: '', password: '' },
+        defaultValues: { name: '', password: '' },
         validationLogic: revalidateLogic(),
         validators: { onDynamic: registrationCompleteSchema },
         onSubmit: ({ value }) => handleComplete(value),
@@ -155,49 +153,27 @@ export default function VerifyEmail() {
                         void form.handleSubmit();
                     }}
                 >
-                    <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
-                        <form.Field
-                            name="name"
-                            children={(field) => (
-                                <TextInput
-                                    {...{ autoComplete: 'given-name' }}
-                                    hasAutoFocus
-                                    htmlName="name"
-                                    isRequired
-                                    label="Name"
-                                    onBlur={field.handleBlur}
-                                    onChange={field.handleChange}
-                                    status={
-                                        field.state.meta.errors.length > 0
-                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                            : undefined
-                                    }
-                                    value={field.state.value}
-                                    width="100%"
-                                />
-                            )}
-                        />
-                        <form.Field
-                            name="surname"
-                            children={(field) => (
-                                <TextInput
-                                    {...{ autoComplete: 'family-name' }}
-                                    htmlName="surname"
-                                    isRequired
-                                    label="Surname"
-                                    onBlur={field.handleBlur}
-                                    onChange={field.handleChange}
-                                    status={
-                                        field.state.meta.errors.length > 0
-                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                            : undefined
-                                    }
-                                    value={field.state.value}
-                                    width="100%"
-                                />
-                            )}
-                        />
-                    </Grid>
+                    <form.Field
+                        name="name"
+                        children={(field) => (
+                            <TextInput
+                                {...{ autoComplete: 'name' }}
+                                hasAutoFocus
+                                htmlName="name"
+                                isRequired
+                                label="Name"
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
+                                status={
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
+                                }
+                                value={field.state.value}
+                                width="100%"
+                            />
+                        )}
+                    />
                     <form.Field
                         name="password"
                         children={(field) => (

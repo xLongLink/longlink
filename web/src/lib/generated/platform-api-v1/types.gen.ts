@@ -547,10 +547,6 @@ export type RegistrationComplete = {
      */
     name: string;
     /**
-     * Surname
-     */
-    surname: string;
-    /**
      * Email
      */
     email: string;
