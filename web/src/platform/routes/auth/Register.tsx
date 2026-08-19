@@ -33,7 +33,7 @@ export default function Register() {
     });
 
     return (
-        <AuthLayout description={<Divider>{'Please enter your email'}</Divider>} title={<WelcomeTitle />}>
+        <AuthLayout description={<Divider>Please enter your email</Divider>} title={<WelcomeTitle />}>
             <Stack gap={3}>
                 <Stack
                     as="form"
@@ -75,12 +75,11 @@ export default function Register() {
                     {(email) => {
                         const trimmedEmail = email.trim();
                         const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
-                        const signInHref = `/login${signInSearch}`;
 
                         return (
                             <Divider>
                                 Already have an account?{' '}
-                                <Link href={signInHref} type="inherit" weight="medium">
+                                <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
                                     Sign In
                                 </Link>
                             </Divider>

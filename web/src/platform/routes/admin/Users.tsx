@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
+import { Badge } from '@/components/ui/Badge';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Badge } from '@/components/ui/Badge';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';

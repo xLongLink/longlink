@@ -16,7 +16,7 @@ import { Slider } from '../adapters/Slider';
 import { Switch } from '../adapters/Switch';
 import { Divider } from '../adapters/Divider';
 import { Heading } from '../adapters/Heading';
-import { TabList } from '../adapters/TabList';
+import { Tabs } from '../adapters/TabList';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
 import { FileInput } from '../adapters/FileInput';
@@ -48,7 +48,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Slider,
     Stack,
     Switch,
-    TabList,
+    Tabs,
     Table,
     TextArea,
     TextInput,

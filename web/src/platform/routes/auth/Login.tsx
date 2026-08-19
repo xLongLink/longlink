@@ -58,7 +58,7 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>{'Sign in with your email and password.'}</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider>Sign in with your email and password.</Divider>}>
             <Stack gap={4}>
                 <Stack
                     as="form"
@@ -123,12 +123,11 @@ export default function Login() {
                     {(email) => {
                         const trimmedEmail = email.trim();
                         const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
-                        const registerHref = `/auth/register${registerSearch}`;
 
                         return (
                             <Divider>
                                 New to LongLink?{' '}
-                                <Link href={registerHref} type="inherit" weight="medium">
+                                <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
                                     Create account
                                 </Link>
                             </Divider>

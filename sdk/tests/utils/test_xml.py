@@ -62,8 +62,8 @@ VALID_FRAGMENTS = [
         '<Table data="$items" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
     ),
     (
-        "tab-list",
-        '<TabList value="$tabs.value" label="Views"><Tab value="overview" label="Overview">Overview panel</Tab></TabList>',
+        "tabs",
+        '<Tabs value="$tabs.value"><Tab value="overview" label="Overview">Overview panel</Tab></Tabs>',
     ),
     (
         "text-area",
@@ -91,7 +91,7 @@ INVALID_FRAGMENTS = [
     ("missing-query-path", '<Query id="projects" />'),
     ("missing-state-id", '<State value="[]" />'),
     ("missing-table-column-key", '<Table data="$items"><TableColumn field="sku" /></Table>'),
-    ("missing-tab-value", '<TabList><Tab label="Overview">Overview</Tab></TabList>'),
+    ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
     ("malformed-longlink", '<longlink>Dashboard</longlink'),
 ]
 

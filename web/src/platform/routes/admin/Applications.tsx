@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
+import { Badge } from '@/components/ui/Badge';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
-import { Badge } from '@/components/ui/Badge';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';

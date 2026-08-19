@@ -1,18 +1,19 @@
 import { Info } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Badge } from '@/components/ui/Badge';
+import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Divider } from '@/components/ui/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -281,8 +282,11 @@ export default function DocsArticleRoute() {
                                 <Badge>Third</Badge>
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="Tab" path="/docs/sdk/pages/tab">
-                            <Code>{'<Tab />'}</Code>
+                        <SummaryCard name="Tabs" path="/docs/sdk/pages/tabs">
+                            <Tabs>
+                                <Tab label="Overview" value="overview" />
+                                <Tab label="Activity" value="activity" />
+                            </Tabs>
                         </SummaryCard>
                         <SummaryCard name="Dialog" path="/docs/sdk/pages/dialog">
                             <Code>{'<Dialog />'}</Code>

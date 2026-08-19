@@ -56,7 +56,7 @@ const publicPagePaths = [
     '/docs/sdk/pages/stack',
     '/docs/sdk/pages/state',
     '/docs/sdk/pages/switch',
-    '/docs/sdk/pages/tab',
+    '/docs/sdk/pages/tabs',
     '/docs/sdk/pages/table',
     '/docs/sdk/pages/text-area',
     '/docs/sdk/pages/text-input',

@@ -24,7 +24,6 @@ const registrationCompleteSchema = z.object({
 });
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
-type RegistrationSetup = z.infer<typeof zEmailPayload>;
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -32,7 +31,7 @@ export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
-    const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
+    const [lastVerifiedSetup, setLastVerifiedSetup] = useState<z.infer<typeof zEmailPayload> | null>(null);
     const form = useForm({
         defaultValues: { name: '', password: '' },
         validationLogic: revalidateLogic(),
@@ -140,10 +139,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthLayout
-            title={<WelcomeTitle />}
-            description={<Divider>{'Email verified. Complete your profile.'}</Divider>}
-        >
+        <AuthLayout title={<WelcomeTitle />} description={<Divider>Email verified. Complete your profile.</Divider>}>
             <Stack gap={4}>
                 <Stack
                     as="form"

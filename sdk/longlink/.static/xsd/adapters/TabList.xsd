@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="TabListType">
+  <xsd:complexType name="TabsType">
     <xsd:sequence><xsd:element ref="Tab" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" default="Tabs" />
     <xsd:attribute name="value" type="xsd:string" />
     <xsd:attribute name="size" type="SizeType" default="md" />
     <xsd:attribute name="layout" type="TabLayoutType" default="hug" />
@@ -17,8 +16,8 @@
     <xsd:attribute name="to" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
-  <xsd:element name="TabList" type="TabListType">
-    <xsd:annotation><xsd:documentation>Renders controlled Astryx tab navigation and one panel.</xsd:documentation></xsd:annotation>
+  <xsd:element name="Tabs" type="TabsType">
+    <xsd:annotation><xsd:documentation>Renders controlled tab navigation and one panel.</xsd:documentation></xsd:annotation>
   </xsd:element>
   <xsd:element name="Tab" type="TabType">
     <xsd:annotation><xsd:documentation>Defines one tab and its panel children.</xsd:documentation></xsd:annotation>

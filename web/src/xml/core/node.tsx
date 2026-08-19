@@ -1,8 +1,8 @@
 import { For } from './for';
 import type { ReactNode } from 'react';
-import { isVisibleXmlNode, resolveXml } from './props';
 import type { ASTNode, Scope } from '../types';
 import { xmlComponentRegistry } from './registry';
+import { isVisibleXmlNode, resolveXml } from './props';
 
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {

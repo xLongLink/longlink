@@ -1,7 +1,7 @@
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { useXmlRuntime } from '../core/context';
 import { resolveXml } from '../core/props';
+import { useXmlRuntime } from '../core/context';
 import { Badge as UiBadge } from '@/components/ui/Badge';
 
 export function Badge({ nodes }: Props) {

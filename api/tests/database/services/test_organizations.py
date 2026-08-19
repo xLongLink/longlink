@@ -34,8 +34,9 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.status == Status.creating
 
     async with session_scope() as session:
-        reloaded = await organizations.get(session, organization.id)
+        reloaded = await session.get(Organization, organization.id)
         assert reloaded is not None
+        assert reloaded.deleted_at is None
         memberships = await organizations.members(session, organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
@@ -241,7 +242,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     async with session_scope() as session:
         result = await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
-        active_organization = await organizations.get(session, organization.id)
         deleted_organization = await organizations.get_tombstone(session, organization.id)
         deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
@@ -251,7 +251,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     # Assert
     assert result is not None
     assert result.deleted_id == owner.id
-    assert active_organization is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_id == owner.id
     async with session_scope() as session:

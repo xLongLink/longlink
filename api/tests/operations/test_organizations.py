@@ -4,7 +4,6 @@ from factories import create_organization, create_ready_infrastructure
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
-from src.adapters.postgres import Postgres
 from src.database.services import organizations as organization_service
 from longlink.shared.models import Audit
 from src.database.models.users import User
@@ -47,14 +46,6 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
 
     monkeypatch.setattr(organization_service.shared_audit, "sync", sync)
 
-    # Act
-    db = Postgres(
-        infrastructure.database.host,
-        infrastructure.database.port,
-        infrastructure.database.username,
-        infrastructure.database.password,
-        infrastructure.database.sslmode,
-    )
     async with session_scope() as session:
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None

@@ -3,10 +3,14 @@ import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState, Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 
-type TabsProps = Omit<ComponentProps<typeof AstryxTabList>, 'children' | 'onChange' | 'value'> & {
+type AstryxTabListProps = ComponentProps<typeof AstryxTabList>;
+
+type TabsProps = Omit<AstryxTabListProps, 'children' | 'onChange' | 'value'> & {
     children?: ReactNode;
+    onChange?: AstryxTabListProps['onChange'];
+    value?: AstryxTabListProps['value'];
 };
-type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon' | 'value'> & {
+type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon'> & {
     children?: ReactNode;
     icon?: StoneIconName;
 };
@@ -16,8 +20,10 @@ export function Tabs({ children, ...props }: TabsProps) {
     const tabs = Children.toArray(children).filter(
         (child): child is ReactElement<TabProps> => isValidElement(child) && child.type === Tab
     );
-    const [value, setValue] = useState(tabs[0]?.props.label ?? '');
-    const activeTab = tabs.find((tab) => tab.props.label === value) ?? tabs[0];
+    const [uncontrolledValue, setUncontrolledValue] = useState(tabs[0]?.props.value ?? '');
+    const { onChange, value: controlledValue, ...tabListProps } = props;
+    const value = controlledValue ?? uncontrolledValue;
+    const activeTab = tabs.find((tab) => tab.props.value === value) ?? tabs[0];
 
     if (!activeTab) {
         return null;
@@ -26,10 +32,15 @@ export function Tabs({ children, ...props }: TabsProps) {
     return (
         <Stack gap={0}>
             <AstryxTabList
-                {...props}
-                aria-label={props['aria-label'] ?? 'Tabs'}
-                onChange={setValue}
-                value={activeTab.props.label}
+                {...tabListProps}
+                onChange={(nextValue) => {
+                    if (controlledValue === undefined) {
+                        setUncontrolledValue(nextValue);
+                    }
+
+                    onChange?.(nextValue);
+                }}
+                value={value}
             >
                 {tabs.map((tab) => {
                     const { children: _children, icon, ...tabProps } = tab.props;
@@ -39,7 +50,7 @@ export function Tabs({ children, ...props }: TabsProps) {
                             {...tabProps}
                             icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                             key={tabProps.label}
-                            value={tabProps.label}
+                            value={tabProps.value}
                         />
                     );
                 })}

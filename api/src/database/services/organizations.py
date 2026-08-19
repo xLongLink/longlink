@@ -108,14 +108,13 @@ async def application_runtime_access(
 async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
-    statement = (
+    result = await session.execute(
         select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
         .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
         .join(StorageRegistry, StorageRegistry.id == Organization.storage_id)
         .where(Organization.id == organization_id)
     )
-    result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
@@ -200,13 +199,6 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     )
     result = await session.scalars(statement)
     return result.all()
-
-
-async def get(session: AsyncSession, organization_id: UUID) -> Organization | None:
-    """Return one active organization by id."""
-
-    # Load the requested active organization.
-    return await session.scalar(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)))
 
 
 async def get_tombstone(session: AsyncSession, organization_id: UUID) -> Organization | None:
@@ -351,7 +343,7 @@ async def create(
 
     # Lock every requested registry while validating the immutable infrastructure assignment.
     result = await session.execute(
-        select(ComputeRegistry.id, DatabaseRegistry.id, StorageRegistry.id)
+        select(DatabaseRegistry.id, StorageRegistry.id)
         .select_from(ComputeRegistry)
         .outerjoin(DatabaseRegistry, DatabaseRegistry.id == database_id)
         .outerjoin(StorageRegistry, StorageRegistry.id == storage_id)
@@ -361,7 +353,7 @@ async def create(
     assignment = result.one_or_none()
     if assignment is None:
         raise UnavailableError("No compute registry available")
-    _, database_registry_id, storage_registry_id = assignment
+    database_registry_id, storage_registry_id = assignment
     if database_registry_id is None:
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:
