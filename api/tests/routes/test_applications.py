@@ -15,6 +15,27 @@ from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 
 
+class FakeCompute:
+    """Fake Kubernetes log client with a configured result."""
+
+    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str] | None = None) -> None:
+        """Expose the application log client and its configured outcome."""
+
+        self.applications = self
+        self.outcome = outcome
+        self.captured = captured
+
+    async def logs(self, application_id: UUID, namespace: str) -> list[str]:
+        """Record a request and return or raise the configured outcome."""
+
+        if self.captured is not None:
+            self.captured["logs"] = application_id
+            self.captured["namespace"] = namespace
+        if isinstance(self.outcome, RuntimeError):
+            raise self.outcome
+        return self.outcome
+
+
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -113,11 +134,12 @@ async def test_application_responses_do_not_expose_environment_secrets(
     # Response models must omit both the secret field and its raw value.
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
-    for response_applications in (list_response.json(), organization_response.json()["applications"]):
+    list_applications = list_response.json()
+    for response_applications in (list_applications, organization_response.json()["applications"]):
         assert all("secrets" not in item and "envs" not in item for item in response_applications)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
-    assert str(application.id) in {item["id"] for item in list_response.json()}
+    assert str(application.id) in {item["id"] for item in list_applications}
 
 
 async def test_invalid_application_payload_makes_no_persistence_changes(
@@ -193,24 +215,10 @@ async def test_get_app_logs_returns_pod_logs(
     user = users[0]
     organization = await create_organization(user)
     app = await create_application(organization, user)
-    captured: dict[str, object] = {}
-
-    class FakeCompute:
-        """Fake compute adapter for application log tests."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Accept compute registry configuration."""
-
-            self.applications = self
-
-        async def logs(self, application_id: UUID, namespace: str) -> list[str]:
-            """Record the log request and return fake pod logs."""
-
-            captured["logs"] = application_id
-            captured["namespace"] = namespace
-            return ["line 1", "line 2"]
-
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FakeCompute)
+    captured: dict[str, UUID | str] = {}
+    monkeypatch.setattr(
+        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured)
+    )
 
     # Act
     response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
@@ -256,21 +264,9 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     owner = users[0]
     organization = await create_organization(owner)
     app = await create_application(organization, owner)
-
-    class FailingCompute:
-        """Fail the log request through the Kubernetes adapter boundary."""
-
-        def __init__(self, kubeconfig: str) -> None:
-            """Accept a compute registry configuration."""
-
-            self.applications = self
-
-        async def logs(self, application_id: UUID, namespace: str) -> list[str]:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("logs unavailable")
-
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FailingCompute)
+    monkeypatch.setattr(
+        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"))
+    )
 
     # Act
     response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")

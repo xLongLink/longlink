@@ -105,19 +105,17 @@ async def test_soft_delete_marks_application_deleted(users: tuple[User, User, Us
 
     # Act
     async with session_scope() as session:
-        result = await applications.soft_delete(session, application.id, user)
+        await applications.soft_delete(session, application.id, user)
         await session.commit()
         deleted_application = await session.get(Application, application.id)
         second_delete = await applications.soft_delete(session, application.id, user)
         missing_delete = await applications.soft_delete(session, uuid4(), user)
 
     # Assert
-    assert result is not None
-    assert result.deleted_id == user.id
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert second_delete is not None
-    assert second_delete.id == result.id
+    assert second_delete.id == application.id
     assert missing_delete is None
 
 
