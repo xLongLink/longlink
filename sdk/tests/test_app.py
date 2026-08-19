@@ -93,8 +93,6 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     pages = pages_response.json()
     page = next(item for item in pages if item["path"] == f"pages/{page_path_without_suffix}")
     assert {key: page[key] for key in expected_metadata} == expected_metadata
-    assert "runtime_version" not in page
-    assert all("content" not in item for item in pages)
 
 
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:

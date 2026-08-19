@@ -15,13 +15,7 @@ class PageDefinition:
 def page_file_route(relative_path: str) -> str:
     """Return the browser route pattern for one page file path."""
 
-    normalized_path = relative_path.strip("/")
-
-    # Page routes are backed by XML files.
-    if not normalized_path.endswith(".xml"):
-        raise ValueError("Page file routes must end with '.xml'")
-
-    path_without_suffix = normalized_path.removesuffix(".xml")
+    path_without_suffix = relative_path.removesuffix(".xml")
     route_segments: list[str] = []
 
     # Empty file stems cannot provide either an endpoint or browser route.

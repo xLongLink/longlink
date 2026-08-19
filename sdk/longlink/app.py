@@ -40,7 +40,6 @@ class LongLink:
 
         # Preserve Application routes so page collisions are rejected during discovery.
         self.application_routes = list(app.router.routes)
-        self.app = app
 
         # Resolve the runtime environment and initialize mutable page state.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
@@ -68,25 +67,14 @@ class LongLink:
         pages_directory = Path.cwd() / "src" / "pages"
         if not pages_directory.is_dir():
             raise ValueError(f"Application source directory is required: {pages_directory}")
-        self._register_page_directory(pages_directory)
-
-        # Start applications on their first static page instead of an unselected shell.
-        root.install_redirect(app)
-
-        # Serve the embedded frontend last so Application routes retain precedence.
-        if (ROOT / ".static" / "web").exists():
-            app.frontend("/", directory=ROOT / ".static" / "web")
-
-    def _register_page_directory(self, pages_directory: Path) -> None:
-        """Register XML files from a directory as SDK pages."""
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory)
 
         # Pages are registered once before the frontend mount is installed.
-        self.app.router.routes.extend(
+        app.router.routes.extend(
             [
-                self.app.router.route_class(
+                app.router.route_class(
                     f"/{definition.path}",
                     partial(render_page, content),
                     methods=["GET"],
@@ -95,7 +83,14 @@ class LongLink:
                 for definition, content in discovered_pages
             ]
         )
-        self.app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
+        app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
+
+        # Start applications on their first static page instead of an unselected shell.
+        root.install_redirect(app)
+
+        # Serve the embedded frontend last so Application routes retain precedence.
+        if (ROOT / ".static" / "web").exists():
+            app.frontend("/", directory=ROOT / ".static" / "web")
 
     def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
         """Discover and validate all XML pages before registering any route."""

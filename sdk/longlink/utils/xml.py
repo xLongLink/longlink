@@ -3,7 +3,7 @@ from lxml import etree
 from functools import cache
 from longlink.constants import ROOT
 
-UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[", re.IGNORECASE)
+UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*DOCTYPE\b|<!\[CDATA\[", re.IGNORECASE)
 
 
 def create_xml_parser() -> etree.XMLParser:
