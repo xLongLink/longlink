@@ -7,8 +7,10 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -297,7 +299,13 @@ export default function DocsArticleRoute() {
                             </Tabs>
                         </SummaryCard>
                         <SummaryCard name="Dialog" path="/docs/sdk/pages/dialog">
-                            <Code>{'<Dialog />'}</Code>
+                            <Dialog isInline isOpen purpose="info" width="100%" onOpenChange={noop}>
+                                <Layout header={<DialogHeader title="Dialog" />}>
+                                    <LayoutContent>
+                                        <Text>Dialog content</Text>
+                                    </LayoutContent>
+                                </Layout>
+                            </Dialog>
                         </SummaryCard>
                         <SummaryCard name="Table" path="/docs/sdk/pages/table">
                             <Stack width={170}>

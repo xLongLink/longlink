@@ -33,7 +33,7 @@
     </Stack>
 
     <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
-        <TableColumn key="item" header="Item">
+        <TableColumn field="name" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">
                     $row.name

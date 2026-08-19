@@ -1,7 +1,7 @@
-import { getVersion } from 'valtio';
 import { ApiError } from '@/lib/api';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
+import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
 import { resolveRequestUrl } from '../core/url';
@@ -12,6 +12,10 @@ import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types'
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
 type ActionEffect = { kind: 'request' | 'patch'; props: ASTProps };
+
+const ACTION_ALLOWED_PROPS = new Set(['if']);
+const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
+const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 type ActionPlan = {
     button: ASTNode;
@@ -43,7 +47,7 @@ export function Action({ props, nodes }: Props) {
 
 /** Validates the direct Action children and converts them into executable effects. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
-    assertAllowedProps(props, new Set(['if']), 'Action');
+    assertAllowedProps(props, ACTION_ALLOWED_PROPS, 'Action');
 
     const button = nodes.at(-1);
     if (!button || button.name !== 'Button') {
@@ -56,12 +60,12 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
         }
 
         if (node.name === 'Request') {
-            assertAllowedProps(node.params, new Set(['url', 'method', 'form', 'json', 'closeDialog']), 'Request');
+            assertAllowedProps(node.params, REQUEST_ALLOWED_PROPS, 'Request');
             return { kind: 'request', props: node.params };
         }
 
         if (node.name === 'Patch') {
-            assertAllowedProps(node.params, new Set(['state', 'value', 'invalidate']), 'Patch');
+            assertAllowedProps(node.params, PATCH_ALLOWED_PROPS, 'Patch');
             return { kind: 'patch', props: node.params };
         }
 
@@ -171,7 +175,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
 
     const target = resolveValue(ctx, state);
-    if (!isState(target)) {
+    if (!isValtioProxy(target)) {
         throw new Error(`Patch state "${state}" must reference a declared State`);
     }
 
@@ -197,11 +201,6 @@ function requireLiteralId(props: ASTProps, name: string, componentName: string):
     }
 
     return attribute.value.trim();
-}
-
-/** Returns whether a value is a mutable Valtio State proxy. */
-function isState(value: unknown): value is Record<string, unknown> {
-    return value != null && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
 /** Returns whether a value can safely be merged into a State proxy. */

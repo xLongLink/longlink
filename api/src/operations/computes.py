@@ -5,6 +5,7 @@ from src.database.session import session_scope
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls
+from src.database.models.computes import ComputeRegistry
 
 
 def gateway_url(address: str) -> str:
@@ -23,7 +24,7 @@ async def create(compute_id: UUID) -> str | None:
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
     async with session_scope() as session:
-        registry = await compute.get(session, compute_id)
+        registry = await session.get(ComputeRegistry, compute_id)
     if registry is None:
         return None
     cluster = Kubernetes(registry.kubeconfig)

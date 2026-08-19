@@ -7,10 +7,8 @@ async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifec
 ) -> None:
     """Create one Compute registry, reject a duplicate, and retain its pending lifecycle target."""
 
-    # Arrange
     client = clients[0]
 
-    # Act
     create_response = await client.post(
         "/api/v1/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
@@ -24,7 +22,6 @@ async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifec
     delete_response = await client.delete(f"/api/v1/computes/{registry_id}")
     get_response = await client.get(f"/api/v1/computes/{registry_id}")
 
-    # Assert
     assert create_response.status_code == 202
     assert created["name"] == "Ephemeral Compute"
     assert created["gateway_url"] is None
@@ -42,15 +39,12 @@ async def test_compute_registry_deletes_unused_ready_registration(
 ) -> None:
     """Remove a ready Compute registration with no unfinished lifecycle Operation."""
 
-    # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
 
-    # Act
     delete_response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
     retry_response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
 
-    # Assert
     assert delete_response.status_code == 204
     assert retry_response.status_code == 404
 
@@ -60,7 +54,6 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
 ) -> None:
     """Remove a ready Compute registration after its lifecycle Operation completes."""
 
-    # Arrange
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     await queue_operation(infrastructure.compute.id, target_id=infrastructure.compute.id)
@@ -68,8 +61,6 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
     assert claimed is not None
     await complete_operation(claimed.id)
 
-    # Act
     response = await client.delete(f"/api/v1/computes/{infrastructure.compute.id}")
 
-    # Assert
     assert response.status_code == 204

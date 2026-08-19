@@ -1,3 +1,4 @@
+import { ref } from 'valtio';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
@@ -8,17 +9,12 @@ import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(
-        props,
-        'value',
-        ctx,
-        (value): File | File[] | null =>
-            value == null ||
-            typeof File === 'undefined' ||
-            (!(value instanceof File) && !(Array.isArray(value) && value.every((entry) => entry instanceof File)))
-                ? null
-                : value,
-        'file'
+    const binding = useBindableValue(props, 'value', ctx, (value): File | File[] | null =>
+        value == null ||
+        typeof File === 'undefined' ||
+        (!(value instanceof File) && !(Array.isArray(value) && value.every((entry) => entry instanceof File)))
+            ? null
+            : value
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);
@@ -57,7 +53,7 @@ export function FileInput({ props }: Props) {
             maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}
             maxSize={typeof maxSize === 'number' ? maxSize : undefined}
             mode={isXmlEnum(mode, FILE_INPUT_MODES) ? mode : 'input'}
-            onChange={binding.setValue}
+            onChange={(value) => binding.setValue(value == null ? value : ref(value))}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
             statusVariant={statusVariant}

@@ -27,6 +27,6 @@
     </Stack>
 
     <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
-        <TableColumn key="name" field="name" header="File" />
+        <TableColumn field="name" header="File" />
     </Table>
 </longlink>

@@ -9,7 +9,7 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute, operations, invitations, applications, organizations
+from src.database.services import operations, invitations, applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
@@ -201,7 +201,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
     # Assert
     async with session_scope() as session:
         assert await organizations.fetch(session) == [organization]
-        reloaded_compute = await compute.get(session, infrastructure.compute.id)
+        reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
         assert len(await operations.fetch(session)) == 1

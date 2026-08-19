@@ -1,5 +1,6 @@
+import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
-import { getVersion, subscribe } from 'valtio';
+import { isValtioProxy } from './core/state';
 import { XmlErrorBoundary } from './core/errors';
 import { Stack } from '@astryxdesign/core/Stack';
 import { isSafePropertyName } from './expressions';
@@ -58,7 +59,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             // Subscribe to reactive state values in the context.
             for (const value of Object.values(ctx.scope.bindings)) {
                 // Skip non-reactive context values.
-                if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
+                if (!isValtioProxy(value)) continue;
 
                 unsubscribers.push(
                     subscribe(value, () => {

@@ -4,17 +4,6 @@ import { useBindableValue } from '../core/binding';
 import { requireXmlString, resolveXml } from '../core/props';
 import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
 
-/**
- * checked: 2026-08-13
- * https://astryx.atmeta.com/components/TextArea?tab=properties
- * - label: string
- * - description: string
- * - value: string
- * - rows: positive integer
- * - maxLength: non-negative integer
- * - isDisabled: bool
- * - isRequired: bool
- */
 export function TextArea({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));

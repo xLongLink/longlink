@@ -60,7 +60,7 @@ VALID_FRAGMENTS = [
     ),
     (
         "table",
-        '<Table data="$items" emptyLabel="No items"><TableColumn key="sku-column" field="sku" header="SKU" /></Table>',
+        '<Table data="$items" emptyLabel="No items"><TableColumn field="sku" header="SKU" /></Table>',
     ),
     (
         "tabs",
@@ -91,7 +91,7 @@ INVALID_FRAGMENTS = [
     ),
     ("missing-query-path", '<Query id="projects" />'),
     ("missing-state-id", '<State value="[]" />'),
-    ("missing-table-column-key", '<Table data="$items"><TableColumn field="sku" /></Table>'),
+    ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
     ("malformed-longlink", '<longlink>Dashboard</longlink'),
 ]

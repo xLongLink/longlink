@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { isValtioProxy } from './state';
 import { resolveXmlValue } from './props';
+import { proxy, useSnapshot } from 'valtio';
 import type { ASTProps, Scope } from '../types';
-import { getVersion, proxy, ref, useSnapshot } from 'valtio';
 import { isSafePropertyName, resolvePath } from '../expressions';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});
@@ -11,19 +12,8 @@ type BindingTarget = {
     key?: string;
 };
 
-/** Returns whether an XML control value is backed by a Valtio proxy. */
-function isBindableValue(value: unknown): value is Record<string, unknown> {
-    return !!value && typeof value === 'object' && getVersion(value) !== undefined;
-}
-
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue<T>(
-    props: ASTProps,
-    name: string,
-    ctx: Scope,
-    coerce: (value: unknown) => T,
-    type?: 'file'
-) {
+export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
     const value = resolveXmlValue(props, name, ctx);
     const target = resolveBindableTarget(props[name], value, ctx);
     const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
@@ -40,8 +30,7 @@ export function useBindableValue<T>(
 
             // Write named properties or the direct binding value slot.
             if (target.key || 'value' in target.state) {
-                target.state[target.key ?? 'value'] =
-                    type === 'file' && nextValue !== null && typeof nextValue === 'object' ? ref(nextValue) : nextValue;
+                target.state[target.key ?? 'value'] = nextValue;
             }
         },
     };
@@ -54,7 +43,7 @@ function resolveBindableTarget(
     ctx: Scope
 ): BindingTarget | undefined {
     // Use resolved proxy values directly.
-    if (isBindableValue(value)) return { state: value };
+    if (isValtioProxy(value)) return { state: value };
 
     // Only reference expressions can be written.
     if (attribute?.kind !== 'path' || !attribute.isBinding) return undefined;
@@ -70,13 +59,13 @@ function resolveBindableTarget(
     if (parts.length === 1) {
         const state = resolvePath(ctx, parts);
 
-        return isBindableValue(state) ? { state } : undefined;
+        return isValtioProxy(state) ? { state } : undefined;
     }
 
     const parent = resolvePath(ctx, [parts[0], ...parts.slice(1, -1)]);
 
     // Nested bindings require a reactive parent.
-    if (!isBindableValue(parent)) return undefined;
+    if (!isValtioProxy(parent)) return undefined;
 
     return {
         key: parts[parts.length - 1],
