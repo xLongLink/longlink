@@ -1,7 +1,7 @@
 import startCase from 'lodash/startCase';
 import { useLocation } from 'react-router';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Wordmark } from '@/components/Wordmark';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders the top navigation breadcrumb for organization and admin routes. */
 export function PageBreadcrumb({ applicationName }: { applicationName?: string }) {

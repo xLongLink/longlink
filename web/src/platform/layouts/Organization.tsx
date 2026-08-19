@@ -1,9 +1,9 @@
 import { Outlet, useParams } from 'react-router';
-import { AppWindow, Settings2 } from 'lucide-react';
 import { ProfileMenu } from '@/components/Profile';
+import Platform from '@/platform/layouts/Platform';
+import { AppWindow, Settings2 } from 'lucide-react';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import Platform from '@/platform/layouts/Platform';
 
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {

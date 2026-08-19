@@ -1,15 +1,15 @@
+import { api } from '@/lib/api';
+import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
-import { Divider } from '@/components/ui/Divider';
-import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { AuthLayout } from './AuthLayout';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Starts stateless account registration with an email verification link. */

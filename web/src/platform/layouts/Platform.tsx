@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react';
-import { AppShell } from '@astryxdesign/core/AppShell';
+import { useLocation } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { TopNav } from '@astryxdesign/core/TopNav';
 import type { LucideIcon } from 'lucide-react';
-import { useLocation } from 'react-router';
-import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 import { Wordmark } from '@/components/Wordmark';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import { AppShell } from '@astryxdesign/core/AppShell';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 type NavigationTab = {
     href: string;
@@ -63,7 +63,13 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
                         label="Platform navigation"
                     />
                     {tabs.length > 0 ? (
-                        <Stack className="overflow-y-hidden" direction="horizontal" isScrollable paddingInline={4} width="100%">
+                        <Stack
+                            className="overflow-y-hidden"
+                            direction="horizontal"
+                            isScrollable
+                            paddingInline={4}
+                            width="100%"
+                        >
                             <TabList
                                 aria-label="Section navigation"
                                 onChange={() => undefined}
@@ -105,7 +111,9 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack className="relative z-10" padding={2}>{children}</Stack>
+                <Stack className="relative z-10" padding={2}>
+                    {children}
+                </Stack>
             </Stack>
         </AppShell>
     );

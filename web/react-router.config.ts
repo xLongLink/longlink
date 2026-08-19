@@ -1,5 +1,5 @@
-import type { Config } from '@react-router/dev/config';
 import path from 'node:path';
+import type { Config } from '@react-router/dev/config';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 
 const requestedMode = import.meta.env.MODE;

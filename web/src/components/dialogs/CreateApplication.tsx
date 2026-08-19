@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { useId, useState } from 'react';
+import { api, ApiError } from '@/lib/api';
 import { useForm } from '@tanstack/react-form';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -8,13 +10,11 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
-import { api, ApiError } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
-import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
-import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const createApplicationFormSchema = z.object({

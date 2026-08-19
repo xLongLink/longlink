@@ -1,7 +1,7 @@
-import type { InputStatus } from '@astryxdesign/core/Field';
-import type { ASTProps, Scope } from './types';
 import { INPUT_STATUSES } from './constants';
+import type { ASTProps, Scope } from './types';
 import { isXmlEnum, resolveXml } from './core/props';
+import type { InputStatus } from '@astryxdesign/core/Field';
 
 /** Builds a validated Astryx input status from XML scalar attributes. */
 export function resolveInputStatus(props: ASTProps, ctx: Scope): InputStatus | undefined {

@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -5,7 +6,6 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { api } from '@/lib/api';
 import { zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the application logs dialog for an organization. */
@@ -26,7 +26,7 @@ export default function Logs({
         queryKey: ['api', `/api/v1/applications/${applicationId}/logs`],
         queryFn: async ({ signal }) =>
             zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse.parse(
-                await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json(),
+                await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json()
             ),
     });
 

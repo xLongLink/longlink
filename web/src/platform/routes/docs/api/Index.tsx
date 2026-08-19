@@ -1,8 +1,10 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
+import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Article } from '@/components/layouts/Article';
 import {
     Activity,
     AppWindow,
@@ -21,8 +23,6 @@ import {
     ShieldCheck,
     UserRound,
 } from 'lucide-react';
-import { Wordmark } from '@/components/Wordmark';
-import { Article } from '@/components/layouts/Article';
 
 const capabilities = {
     authentication: {

@@ -1,7 +1,7 @@
 import { Link } from '@astryxdesign/core/Link';
-import { ApplicationRuntime } from '@/components/Application';
-import { PageContainer } from '@/components/PageContainer';
 import Platform from '@/platform/layouts/Platform';
+import { PageContainer } from '@/components/PageContainer';
+import { ApplicationRuntime } from '@/components/Application';
 
 /** Renders an SDK application from its local page manifest. */
 export default function Application() {

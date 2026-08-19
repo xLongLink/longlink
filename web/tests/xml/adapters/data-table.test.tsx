@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
-import { createContext } from '@/xml/core/context';
+import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
+import { createContext } from '@/xml/core/context';
 
 describe('Table', () => {
     it('renders shorthand field columns', () => {

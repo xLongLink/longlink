@@ -1,8 +1,8 @@
-import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
+import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
+import { describe, expect, it } from 'vitest';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {

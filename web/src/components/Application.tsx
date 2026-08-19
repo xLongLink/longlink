@@ -1,16 +1,16 @@
+import { api } from '@/lib/api';
 import startCase from 'lodash/startCase';
+import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
+import { resolveRequestUrl } from '@/xml/core/url';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { useEffect, useMemo, type ReactNode } from 'react';
-import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import { api } from '@/lib/api';
-import { PageError } from '@/components/Utils';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { resolveRequestUrl } from '@/xml/core/url';
 import { pageSchema, type RuntimePage } from '@/xml/pages';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
+import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 
 type ApplicationRuntimeProps = {
     children: (application: { content: ReactNode; tabs: readonly ApplicationTab[] }) => ReactNode;

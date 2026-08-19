@@ -2,12 +2,12 @@ import { Package } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Center } from '@astryxdesign/core/Center';
-import { Divider } from '@astryxdesign/core/Divider';
 import { GitHub } from '@/components/svg/GitHub';
 import { Wordmark } from '@/components/Wordmark';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
 import { LinkedIn } from '@/components/svg/LinkedIn';
+import { Divider } from '@astryxdesign/core/Divider';
 
 /** Renders the public landing page footer. */
 export function Footer() {

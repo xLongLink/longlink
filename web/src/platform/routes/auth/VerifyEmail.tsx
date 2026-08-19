@@ -1,21 +1,21 @@
 import { z } from 'zod';
-import { useNavigate } from 'react-router';
-import { useEffect, useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
+import { useNavigate } from 'react-router';
+import { TermsNotice } from './TermsNotice';
+import { useEffect, useState } from 'react';
+import { passwordSchema } from './validation';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
+import { Button } from '@astryxdesign/core/Button';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { AuthLayout } from './AuthLayout';
-import { TermsNotice } from './TermsNotice';
-import { passwordSchema } from './validation';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({

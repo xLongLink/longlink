@@ -1,6 +1,6 @@
+import { compileProps } from '../helpers';
 import { describe, expect, it } from 'vitest';
 import { createContext, setupContext } from '@/xml/core/context';
-import { compileProps } from '../helpers';
 
 describe('State', () => {
     it('seeds multi-field state values', async () => {

@@ -1,9 +1,9 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import type { DeleteConfirmationProps } from '@/lib/utils';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import type { DeleteConfirmationProps } from '@/lib/utils';
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmation({

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -6,11 +7,10 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import { dateFormatter } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
 import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 type ArticlePage = {
     path: string;

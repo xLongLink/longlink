@@ -1,7 +1,7 @@
-import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
 import type { Props } from '../types';
 import { ICON_NAMES } from '../constants';
 import { useXmlRuntime } from '../core/context';
+import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
 export function Icon({ props }: Props) {

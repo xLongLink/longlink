@@ -1,9 +1,9 @@
-import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 import type { Props } from '../types';
 import { TEXT_INPUT_TYPES } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 
 export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();

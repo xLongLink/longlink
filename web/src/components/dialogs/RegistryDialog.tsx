@@ -1,13 +1,13 @@
 import type { z } from 'zod';
+import { api } from '@/lib/api';
 import { useForm } from '@tanstack/react-form';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useId, useState, type ReactNode } from 'react';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
 
 type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     defaultValues: TValues;

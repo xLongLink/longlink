@@ -7,13 +7,13 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { proportional } from '@astryxdesign/core/Table';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organization applications page. */
 export default function Organization() {

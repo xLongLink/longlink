@@ -1,6 +1,6 @@
+import { compileProps } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, setupContext } from '@/xml/core/context';
-import { compileProps } from '../helpers';
 
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());

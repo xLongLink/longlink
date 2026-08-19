@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
+import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {

@@ -1,26 +1,26 @@
+import { api } from '@/lib/api';
 import { useState } from 'react';
+import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
-import { api } from '@/lib/api';
-import { useDeleteDialog } from '@/lib/utils';
-import { useToast } from '@/lib/hooks/use-toast';
-import { useUserProfile } from '@/lib/hooks/use-user';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 /** Renders the authenticated settings page. */
 export default function Settings() {

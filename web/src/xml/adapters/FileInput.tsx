@@ -1,10 +1,10 @@
-import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();

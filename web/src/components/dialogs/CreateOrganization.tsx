@@ -1,6 +1,8 @@
 import { z } from 'zod';
+import { api } from '@/lib/api';
 import { useId, useState } from 'react';
 import { useForm } from '@tanstack/react-form';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -8,8 +10,6 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),

@@ -1,5 +1,5 @@
-import type { OrganizationRoles } from '@/lib/generated/platform-api-v1/types.gen';
 import { zOrganizationRoles } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { OrganizationRoles } from '@/lib/generated/platform-api-v1/types.gen';
 
 export const ROLE_NAMES = zOrganizationRoles.options;
 

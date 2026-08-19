@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router';
-import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 import { ProfileMenu } from '@/components/Profile';
+import Platform from '@/platform/layouts/Platform';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import Platform from '@/platform/layouts/Platform';
+import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {

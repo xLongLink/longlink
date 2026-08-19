@@ -1,8 +1,8 @@
-import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { requireXmlString, resolveXml } from '../core/props';
+import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
 
 export function Badge({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();

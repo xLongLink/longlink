@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router';
+import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import {
@@ -6,7 +7,6 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
-import { Icon, type StoneIconName } from '@/components/ui/Icon';
 
 type MenuProps = { children?: ReactNode };
 type MenuSectionProps = {

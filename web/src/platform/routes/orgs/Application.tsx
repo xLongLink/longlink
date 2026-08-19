@@ -1,17 +1,17 @@
 import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
+import { ProfileMenu } from '@/components/Profile';
+import Platform from '@/platform/layouts/Platform';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { ProfileMenu } from '@/components/Profile';
-import { ApplicationRuntime } from '@/components/Application';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { ApplicationRuntime } from '@/components/Application';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
-import Platform from '@/platform/layouts/Platform';
 
 /** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {

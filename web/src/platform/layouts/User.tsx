@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router';
-import { Building2, Settings2 } from 'lucide-react';
 import { ProfileMenu } from '@/components/Profile';
-import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import Platform from '@/platform/layouts/Platform';
+import { Building2, Settings2 } from 'lucide-react';
+import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {

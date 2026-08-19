@@ -1,5 +1,5 @@
-import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 
 /** Creates an isolated query cache for one browser or prerendered document. */
 export function createQueryClient(): QueryClient {

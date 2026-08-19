@@ -4,14 +4,14 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { proportional } from '@astryxdesign/core/Table';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 import { useUserProfile } from '@/lib/hooks/use-user';
+import { proportional } from '@astryxdesign/core/Table';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {

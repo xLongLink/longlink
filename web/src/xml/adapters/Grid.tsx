@@ -1,9 +1,9 @@
-import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
+import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
 
 export function Grid({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();

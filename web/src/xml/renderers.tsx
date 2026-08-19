@@ -1,12 +1,12 @@
-import { getVersion, subscribe } from 'valtio';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ASTNode, XmlRuntime } from './types';
 import { renderNode } from './core/node';
+import { getVersion, subscribe } from 'valtio';
 import { XmlErrorBoundary } from './core/errors';
+import { Stack } from '@astryxdesign/core/Stack';
 import { isSafePropertyName } from './expressions';
+import type { ASTNode, XmlRuntime } from './types';
+import { Banner } from '@astryxdesign/core/Banner';
 import { setupContext, XmlContext } from './core/context';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type RenderXMLProps = {
     ast: ASTNode;

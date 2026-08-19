@@ -1,20 +1,20 @@
 import { z } from 'zod';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
-import { Divider } from '@/components/ui/Divider';
-import { useCurrentUser } from '@/lib/hooks/use-user';
-import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { AuthLayout } from './AuthLayout';
 import { TermsNotice } from './TermsNotice';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Divider } from '@/components/ui/Divider';
+import { Button } from '@astryxdesign/core/Button';
+import { useMutation } from '@tanstack/react-query';
+import { useCurrentUser } from '@/lib/hooks/use-user';
+import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailSchema, passwordSchema } from './validation';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 
 const loginSchema = z.object({
     email: emailSchema,

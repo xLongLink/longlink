@@ -1,34 +1,30 @@
+import { api, ApiError } from '@/lib/api';
+import { useUserProfile } from '@/lib/hooks/use-user';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    zOrganizationApplicationSummary,
+    zOrganizationDetails,
+    zOrganizationSummary,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 import type {
     ApplicationCreate,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import { api, ApiError } from '@/lib/api';
-import { useUserProfile } from '@/lib/hooks/use-user';
-import {
-    zOrganizationApplicationSummary,
-    zOrganizationDetails,
-    zOrganizationSummary,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Returns current-user membership data for one organization route slug. */
 function useOrganizationMembership(organizationSlug: string) {
     const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
     const membership = memberships.find((item) => item.organization.slug === organizationSlug);
     const organizationId = membership?.organization.id;
-    const notFoundError =
-        !isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null;
+    const notFoundError = !isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null;
 
     return { membership, organizationId, isUserLoading, notFoundError };
 }
 
 /** Invalidates cached data that contains an organization's applications. */
-function invalidateOrganizationApplicationQueries(
-    queryClient: QueryClient,
-    organizationId: string,
-) {
+function invalidateOrganizationApplicationQueries(queryClient: QueryClient, organizationId: string) {
     return Promise.all([
         queryClient.invalidateQueries({
             queryKey: ['api', `/api/v1/organizations/${organizationId}`],
@@ -42,8 +38,7 @@ function invalidateOrganizationApplicationQueries(
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string) {
-    const { membership, organizationId, isUserLoading, notFoundError } =
-        useOrganizationMembership(organizationSlug);
+    const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
 
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
     const organizationQuery = useQuery({
@@ -72,8 +67,7 @@ export function useOrganization(organizationSlug: string) {
 
 /** Fetches organization applications without loading people-management data. */
 export function useOrganizationApplications(organizationSlug: string) {
-    const { organizationId, isUserLoading, notFoundError } =
-        useOrganizationMembership(organizationSlug);
+    const { organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
     const applicationsPath = organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
     const applicationsQuery = useQuery({
         queryKey: ['api', applicationsPath],

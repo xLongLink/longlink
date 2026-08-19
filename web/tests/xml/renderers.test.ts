@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import type { ASTNode } from '@/xml/types';
+import { describe, expect, it } from 'vitest';
 import { createContext } from '@/xml/core/context';
 import { compileProps, renderXmlToMarkup } from './helpers';
 
