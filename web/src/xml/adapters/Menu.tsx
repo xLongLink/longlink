@@ -31,11 +31,13 @@ function renderSection(node: ASTNode, ctx: Scope) {
         throw new Error('MenuSection isHeaderHidden must resolve to a boolean');
     }
 
+    const title = requireXmlString(node.params, 'title', ctx, 'MenuSection');
+
     return (
         <ApplicationMenuSection
             isHeaderHidden={isHeaderHidden}
-            key={requireXmlString(node.params, 'title', ctx, 'MenuSection')}
-            title={requireXmlString(node.params, 'title', ctx, 'MenuSection')}
+            key={title}
+            title={title}
         >
             {node.children.filter((child) => isVisibleXmlNode(child, ctx)).map((child) => renderEntry(child, ctx))}
         </ApplicationMenuSection>

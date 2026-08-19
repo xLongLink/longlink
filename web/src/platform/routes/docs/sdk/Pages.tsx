@@ -7,10 +7,11 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog } from '@astryxdesign/core/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -299,10 +300,35 @@ export default function DocsArticleRoute() {
                             </Tabs>
                         </SummaryCard>
                         <SummaryCard name="Dialog" path="/docs/sdk/pages/dialog">
-                            <Dialog isInline isOpen purpose="info" width="100%" onOpenChange={noop}>
-                                <Layout header={<DialogHeader title="Dialog" />}>
-                                    <LayoutContent>
-                                        <Text>Dialog content</Text>
+                            <Dialog
+                                aria-label="Dialog preview"
+                                isInline
+                                isOpen
+                                purpose="info"
+                                width={160}
+                                onOpenChange={noop}
+                            >
+                                <Layout
+                                    className="relative"
+                                    header={
+                                        <LayoutHeader className="absolute right-1 top-1 z-10" padding={0}>
+                                            <Stack direction="horizontal" justify="end">
+                                                <Button
+                                                    icon={<Icon icon="close" size="sm" />}
+                                                    isIconOnly
+                                                    label="Close dialog"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={noop}
+                                                />
+                                            </Stack>
+                                        </LayoutHeader>
+                                    }
+                                >
+                                    <LayoutContent padding={3}>
+                                        <Center minHeight={64} width="100%">
+                                            <Text>Content</Text>
+                                        </Center>
                                     </LayoutContent>
                                 </Layout>
                             </Dialog>

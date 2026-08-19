@@ -11,7 +11,6 @@ from src.database.models.organizations import Organization
 async def fetch(session: AsyncSession) -> Sequence[StorageRegistry]:
     """Return all registered storage backends."""
 
-    # Open a session for the registry list query.
     result = await session.scalars(select(StorageRegistry))
     return result.all()
 
@@ -26,13 +25,6 @@ async def available(session: AsyncSession) -> UUID | None:
         .scalar_subquery()
     )
     return await session.scalar(select(StorageRegistry.id).order_by(assignments, StorageRegistry.name).limit(1))
-
-
-async def get(session: AsyncSession, registry_id: UUID) -> StorageRegistry | None:
-    """Return one storage backend by id."""
-
-    # Open a session for the registry lookup.
-    return await session.get(StorageRegistry, registry_id)
 
 
 async def create(session: AsyncSession, name: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:

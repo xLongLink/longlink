@@ -29,7 +29,10 @@ export function Auth({ children }: { children: ReactElement }) {
                 }
                 tabs={[]}
             >
-                <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+                <Center
+                    minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-4))"
+                    width="100%"
+                >
                     <VStack gap={4} align="center">
                         <Banner status="error" title={error.message} />
                         <Button label="Retry" onClick={() => void refetch()} variant="primary" />

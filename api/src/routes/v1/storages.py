@@ -4,6 +4,7 @@ from src.auth import authadmin, get_session
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.storages import StorageRegistry
 
 router = APIRouter(dependencies=[Depends(authadmin)])
 
@@ -35,7 +36,7 @@ async def get_storage_registry(registry_id: UUID, session: AsyncSession = Depend
     """Return one storage backend registration."""
 
     # Resolve the requested storage registry.
-    registry = await storage.get(session, registry_id)
+    registry = await session.get(StorageRegistry, registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Storage registry not found")
 

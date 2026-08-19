@@ -8,7 +8,6 @@ export function TextArea({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const rows = resolveXml(props, 'rows', ctx);
-    const label = requireXmlString(props, 'label', ctx, 'TextArea');
     const maxLength = resolveXml(props, 'maxLength', ctx);
     const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
@@ -25,7 +24,7 @@ export function TextArea({ props }: Props) {
     return (
         <AstryxTextArea
             rows={typeof rows === 'number' ? rows : undefined}
-            label={label}
+            label={requireXmlString(props, 'label', ctx, 'TextArea')}
             value={binding.value}
             onChange={binding.setValue}
             maxLength={typeof maxLength === 'number' ? maxLength : undefined}

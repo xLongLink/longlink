@@ -19,7 +19,9 @@ from src.models.organizations import (
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
+from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
@@ -104,7 +106,7 @@ async def get_organization_database_usage(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Load the Organization's immutable database assignment.
-    registry = await database.get(session, membership.organization.database_id)
+    registry = await session.get(DatabaseRegistry, membership.organization.database_id)
     assert registry is not None
 
     # Inspect the exact Organization database and return its physical size when available.
@@ -133,7 +135,7 @@ async def get_organization_storage_usage(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Load the Organization's immutable storage assignment.
-    registry = await storage.get(session, membership.organization.storage_id)
+    registry = await session.get(StorageRegistry, membership.organization.storage_id)
     assert registry is not None
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
