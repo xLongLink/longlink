@@ -22,6 +22,7 @@ async def create(claimed: Operation) -> str | None:
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
+    runtime_secrets = application.secrets
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
@@ -74,13 +75,12 @@ async def create(claimed: Operation) -> str | None:
             if "LONGLINK_ENV" not in persisted_application.secrets:
                 # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
                 persisted_application.secrets = {**persisted_application.secrets, **runtime_secrets}
-            persisted_secrets = persisted_application.secrets
+            runtime_secrets = persisted_application.secrets
             await session.commit()
-        application.secrets = persisted_secrets
 
     # Apply the captured desired release so reconciliation repairs workload drift.
     await Kubernetes(infrastructure.compute.kubeconfig).applications.apply(
-        application.id, organization.id.hex, application.image_desired, application.secrets
+        application.id, organization.id.hex, application.image_desired, runtime_secrets
     )
 
     # Publish the applied release only after workload readiness.

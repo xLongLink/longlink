@@ -4,10 +4,11 @@ from factories import create_application, create_organization, create_ready_infr
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import operations, invitations, applications, organizations
+from src.database.services import operations, invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
 
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
@@ -162,7 +163,7 @@ async def test_other_organization_user_cannot_delete_application(
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
-        assert await applications.get(session, target_application.id) is not None
+        assert await session.get(Application, target_application.id) is not None
         assert [operation.id for operation in await operations.fetch(session)] == operation_ids
 
 

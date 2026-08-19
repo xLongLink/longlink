@@ -2,7 +2,7 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
 from factories import create_application, create_organization
-from sqlalchemy import select, update
+from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -13,7 +13,6 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -31,13 +30,10 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
         globex,
         user,
         name="console",
-        slug="console",
         image="ghcr.io/longlink/console:latest",
     )
-    client = clients[0]
-
     # Act
-    response = await client.get("/api/v1/applications")
+    response = await clients[0].get("/api/v1/applications")
 
     # Assert
     assert response.status_code == 200
@@ -57,9 +53,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
 
     async def inspect_image(image: str) -> LongLinkMetadata:
         """Return immutable metadata with one required user environment value."""
@@ -71,10 +64,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         )
 
     monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
-    client = clients[0]
 
     # Act
-    response = await client.post(
+    response = await clients[0].post(
         f"/api/v1/organizations/{organization.id}/applications",
         json={
             "name": "dashboard",
@@ -179,10 +171,8 @@ async def test_create_app_returns_403_for_regular_member(
         )
         await session.commit()
 
-    client = clients[1]
-
     # Act
-    response = await client.post(
+    response = await clients[1].post(
         f"/api/v1/organizations/{organization.id}/applications",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
@@ -221,10 +211,9 @@ async def test_get_app_logs_returns_pod_logs(
             return ["line 1", "line 2"]
 
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FakeCompute)
-    client = clients[0]
 
     # Act
-    response = await client.get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -247,10 +236,9 @@ async def test_app_logs_require_maintainer_access(
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
-    client = clients[1]
 
     # Act
-    response = await client.get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[1].get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 403
@@ -283,10 +271,9 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             raise RuntimeError("logs unavailable")
 
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", FailingCompute)
-    client = clients[0]
 
     # Act
-    response = await client.get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 503
@@ -303,15 +290,14 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
     user = users[0]
     organization = await create_organization(user)
     app = await create_application(organization, user)
-    client = clients[0]
 
     # Act
-    response = await client.delete(f"/api/v1/applications/{app.id}")
-    retry_response = await client.delete(f"/api/v1/applications/{app.id}")
+    response = await clients[0].delete(f"/api/v1/applications/{app.id}")
+    retry_response = await clients[0].delete(f"/api/v1/applications/{app.id}")
 
     # Assert
     assert response.status_code == 204
-    assert retry_response.status_code == 204
+    assert retry_response.status_code == 403
     async with session_scope() as session:
         recorded_operations = await operations.fetch(session)
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

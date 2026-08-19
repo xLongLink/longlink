@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
-from src.utils import names, roles, images
+from src.utils import roles, images
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.database.services import compute, applications, organizations
@@ -53,7 +53,6 @@ async def create_application(
         session,
         organization_id,
         payload.name,
-        names.slugify(payload.name),
         image=metadata.image,
         description=payload.description,
         icon=payload.icon,
@@ -143,19 +142,13 @@ async def delete_application(
 ):
     """Mark one Application absent and queue explicit lifecycle cleanup."""
 
-    # Active Applications require Organization maintenance authority.
+    # Application deletion requires Organization maintenance authority.
     access = await organizations.application_access(session, user.id, application_id)
-    if access is not None:
-        _, _, role = access
-        if not roles.atleast(role, OrganizationRoles.maintain):
-            raise HTTPException(status_code=403, detail="Permission required")
-    else:
-        # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
-        tombstone = await applications.get(session, application_id, include_deleted=True)
-        if tombstone is None or tombstone.deleted_at is None:
-            raise HTTPException(status_code=403, detail="Access required")
-        if not user.administrator and tombstone.deleted_id != user.id:
-            raise HTTPException(status_code=403, detail="Access required")
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    _, _, role = access
+    if not roles.atleast(role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     if await applications.soft_delete(session, application_id, user) is None:
         raise HTTPException(status_code=404, detail="Application not found")

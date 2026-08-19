@@ -47,7 +47,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "deleting",
                 name="compute_status_enum",
                 native_enum=False,
                 create_constraint=True,
@@ -107,7 +106,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "deleting",
                 name="organization_status_enum",
                 native_enum=False,
                 create_constraint=True,
@@ -151,7 +149,6 @@ def upgrade() -> None:
             sa.Enum(
                 "creating",
                 "running",
-                "deleting",
                 name="application_status_enum",
                 native_enum=False,
                 create_constraint=True,

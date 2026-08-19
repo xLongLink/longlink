@@ -93,7 +93,7 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
             <Stack className="relative" minHeight="calc(100dvh - var(--appshell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
-                    className="pointer-events-none absolute z-20 end-0 bottom-0 start-0 top-0 border-8 border-body bg-transparent"
+                    className="pointer-events-none absolute z-20 end-0 bottom-0 start-0 top-0 border-x-8 border-b-8 border-body bg-transparent"
                     padding={0}
                     variant="transparent"
                 />

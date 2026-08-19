@@ -24,7 +24,7 @@ export function Tabs({ children, ...props }: TabsProps) {
     }
 
     return (
-        <Stack gap={4}>
+        <Stack gap={0}>
             <AstryxTabList
                 {...props}
                 aria-label={props['aria-label'] ?? 'Tabs'}

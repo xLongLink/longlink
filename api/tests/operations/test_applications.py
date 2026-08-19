@@ -6,6 +6,7 @@ from src.database.session import session_scope
 from src.database.services import applications
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
+from src.database.models.applications import Application
 
 
 async def test_application_delete_failure_stops_before_provider_credential_cleanup(
@@ -63,6 +64,6 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     # The failed operation retains its tombstone and never reaches provider cleanup.
     assert failed.status == OperationStatus.failed
     async with session_scope() as session:
-        retained = await applications.get(session, application.id, include_deleted=True)
+        retained = await session.get(Application, application.id)
     assert retained is not None
     assert retained.deleted_at is not None

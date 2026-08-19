@@ -32,7 +32,7 @@ export function TabList({ props, nodes }: Props) {
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
-        <Stack gap={4}>
+        <Stack gap={0}>
             <AstryxTabList
                 aria-label={typeof label === 'string' ? label : 'Tabs'}
                 onChange={binding.setValue}

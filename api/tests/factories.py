@@ -146,7 +146,6 @@ async def create_application(
     organization: Organization,
     owner: User,
     name: str = "dashboard",
-    slug: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
     secrets: dict[str, str] | None = None,
 ) -> Application:
@@ -160,7 +159,6 @@ async def create_application(
             session,
             organization.id,
             name,
-            slug=slug,
             image=resolved_image,
             user=owner,
             secrets={} if secrets is None else secrets,

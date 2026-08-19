@@ -429,7 +429,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
                 Application.organization_id == organization_id,
                 Application.deleted_at.is_(None),
             )
-            .values(status=Status.deleting, **tombstone)
+            .values(**tombstone)
         )
         await session.execute(
             sql_update(UserOrganization)

@@ -152,9 +152,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             raise RuntimeError("Configured administrator is not available")
 
         compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == "development compute"))
-        database_registry = await session.scalar(
-            select(DatabaseRegistry).where(col(DatabaseRegistry.name) == "development database")
-        )
+        database_registry = await session.scalar(select(DatabaseRegistry).where(col(DatabaseRegistry.name) == "development database"))
         storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == "local storage"))
         if compute_registry is None or database_registry is None or storage_registry is None:
             raise RuntimeError("Development infrastructure is not available")
@@ -182,7 +180,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 session,
                 organization.id,
                 "LongLink App",
-                "longlink-app",
                 Image("localhost:15000/longlink-app:dev"),
                 administrator,
                 {},

@@ -13,6 +13,7 @@ from src.database.services import compute, operations, invitations, applications
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -219,7 +220,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             session,
             organization.id,
             "Dashboard",
-            "dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
             owner,
             {},
@@ -243,8 +243,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await session.commit()
         active_organization = await organizations.get(session, organization.id)
         deleted_organization = await organizations.get(session, organization.id, include_deleted=True)
-        active_application = await applications.get(session, application.id)
-        deleted_application = await applications.get(session, application.id, include_deleted=True)
+        deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)
         await session.commit()
@@ -259,7 +258,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         assert await organizations.members(session, organization.id) == []
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
-    assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is not None
