@@ -9,7 +9,7 @@
 
     <Stack>
         <Heading level="3">Application settings</Heading>
-        <Text as="p" color="secondary" value="Configure application defaults with local XML state and Astryx form controls." />
+        Configure application defaults with local XML state and Astryx form controls.
     </Stack>
 
     <Menu>
@@ -17,15 +17,15 @@
         <MenuItem icon="viewColumns" label="Application">
             <Stack>
                 <Heading id="application" level="2">Application</Heading>
-                <Text as="p" value="Edit the sample application's local owner, cost-center, and reviewer note fields." />
+                Edit the sample application's local owner, cost-center, and reviewer note fields.
                 <Card>
                     <Stack direction="horizontal" align="center">
                         <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />
                         <Stack>
-                            <Text weight="semibold" value="Default reviewer" />
-                            <Text color="secondary" value="$reviewer.initials" />
+                            Default reviewer
+                            $reviewer.initials
                         </Stack>
-                        <Badge><Text value="$reviewer.badge" /></Badge>
+                        <Badge>$reviewer.badge</Badge>
                     </Stack>
                 </Card>
                 <FormLayout>
@@ -48,7 +48,7 @@
         <MenuItem icon="wrench" label="Preferences">
             <Stack>
                 <Heading id="preferences" level="2">Preferences</Heading>
-                <Text as="p" value="Toggle notification controls and adjust a slider-backed approval threshold." />
+                Toggle notification controls and adjust a slider-backed approval threshold.
                 <FormLayout>
                     <CheckboxInput
                         label="Email updates"
@@ -62,14 +62,14 @@
                     />
                     <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
                 </FormLayout>
-                <Text value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
+                ${`Auto-approve up to CHF ${budgetLimit.value}`}
             </Stack>
         </MenuItem>
 
         <MenuItem icon="arrowsUpDown" label="Workflow">
             <Stack>
                 <Heading id="workflow" level="2">Workflow</Heading>
-                <Text as="p" value="Use radio lists and selectors to model workflow defaults." />
+                Use radio lists and selectors to model workflow defaults.
                 <FormLayout>
                     <RadioList label="Default approver" value="$workflow.owner">
                         <RadioListItem value="manager" label="Manager" />

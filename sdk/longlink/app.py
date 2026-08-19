@@ -5,7 +5,7 @@ from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.pages import PageDefinition, page_file_route
+from longlink.pages import PageDefinition, page_stem_route
 from longlink.logger import ApiAccessFilter
 from longlink.routes import root, router
 from longlink.context import install_context_middleware
@@ -112,7 +112,7 @@ class LongLink:
             page_name = (page_root.get("name") or "").strip() or None
             page_icon = (page_root.get("icon") or "").strip() or None
 
-            page_route = page_file_route(relative_path)
+            page_route = page_stem_route(path_without_suffix)
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in page_route.split("/"))
             tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
 

@@ -42,25 +42,25 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     [
         pytest.param(
             "index.xml",
-            '<longlink><Text value="Home" /></longlink>',
+            '<longlink>Home</longlink>',
             {"tab": "index", "route": ""},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
-            '<longlink name="Dashboard" icon="layout-dashboard"><Text value="Dashboard" /></longlink>',
+            '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
             {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink><Text value="Users" /></longlink>',
+            '<longlink>Users</longlink>',
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
-            '<longlink name="Issue"><Text value="Issue" /></longlink>',
+            '<longlink name="Issue">Issue</longlink>',
             {"tab": "issues", "route": "issues/:issue"},
             id="dynamic",
         ),
@@ -115,7 +115,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
 
     # Create a page whose endpoint is already owned by the Application.
     (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink><Text value="Dashboard" /></longlink>',
+        '<longlink>Dashboard</longlink>',
         encoding="utf-8",
     )
     app = FastAPI()

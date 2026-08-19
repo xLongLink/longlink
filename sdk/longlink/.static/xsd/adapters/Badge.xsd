@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="BadgeType">
+  <xsd:complexType name="BadgeType" mixed="true">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>

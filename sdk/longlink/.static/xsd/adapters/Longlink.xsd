@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="LonglinkType">
+  <xsd:complexType name="LonglinkType" mixed="true">
     <xsd:annotation>
       <xsd:documentation>Contains one LongLink XML page. Page name and icon are metadata.</xsd:documentation>
     </xsd:annotation>

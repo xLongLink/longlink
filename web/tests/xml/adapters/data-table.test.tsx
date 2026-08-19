@@ -25,7 +25,7 @@ describe('Table', () => {
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items"><TableColumn key="item" header="Item"><Stack direction="horizontal"><Text value="$row.name" /><Badge><Text value="$row.sku" /></Badge></Stack></TableColumn></Table>'
+                '<Table data="$items"><TableColumn key="item" header="Item"><Stack direction="horizontal">$row.name<Badge>$row.sku</Badge></Stack></TableColumn></Table>'
             ),
             ctx
         );
@@ -42,7 +42,7 @@ describe('Table', () => {
 
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items"><TableColumn key="tags"><For each="$row.tags" as="tag"><Text value="${prefix + \' \' + tag.name + \' \' + index}" /></For></TableColumn></Table>'
+                '<Table data="$items"><TableColumn key="tags"><For each="$row.tags" as="tag">${prefix + \' \' + tag.name + \' \' + index}</For></TableColumn></Table>'
             ),
             ctx
         );

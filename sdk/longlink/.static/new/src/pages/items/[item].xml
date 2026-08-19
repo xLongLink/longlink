@@ -7,7 +7,7 @@
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">$item.name</Heading>
-            <Text color="secondary" value="${`CHF ${item.price}`}" />
+            ${`CHF ${item.price}`}
         </Stack>
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack>

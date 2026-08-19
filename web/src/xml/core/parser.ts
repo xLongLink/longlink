@@ -44,11 +44,11 @@ function toNodes(input: unknown): ASTNode[] {
         return input.flatMap((item) => toNodes(item));
     }
 
-    // Compile visible text into the existing Text adapter so XML elements can use natural text children.
+    // Compile visible text into private AST nodes so XML elements can use natural text children.
     if (typeof input === 'string') {
         const value = input.trim();
 
-        return value ? [{ name: 'Text', params: { value: compileAttribute(value) }, children: [] }] : [];
+        return value ? [{ name: '$text', params: { value: compileAttribute(value) }, children: [] }] : [];
     }
 
     // Treat empty or unsupported parser output as no nodes.

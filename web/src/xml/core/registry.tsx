@@ -4,7 +4,6 @@ import { Grid } from '../adapters/Grid';
 import { Icon } from '../adapters/Icon';
 import { Link } from '../adapters/Link';
 import { Menu } from '../adapters/Menu';
-import { Text } from '../adapters/Text';
 import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
@@ -53,7 +52,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Switch,
     TabList,
     Table,
-    Text,
     TextArea,
     TextInput,
 };

@@ -31,7 +31,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Link to="/orders/${order.id}"><Text value="Open order" /></Link>'} language="xml" />
+                <CodeBlock code={'<Link to="/orders/${order.id}">Open order</Link>'} language="xml" />
             </Stack>
         </Article>
     );

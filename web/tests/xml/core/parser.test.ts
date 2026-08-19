@@ -47,7 +47,7 @@ describe('parseXML', () => {
                 params: { level: { kind: 'text', value: '1' } },
                 children: [
                     {
-                        name: 'Text',
+                        name: '$text',
                         params: { value: { kind: 'text', value: 'Hello, world' } },
                         children: [],
                     },

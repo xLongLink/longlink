@@ -77,7 +77,7 @@ export default function DocsArticleRoute() {
                     . Use this page as the component map for LongLink Applications: start with LongLink state elements,
                     then compose the screen with supported XML components.
                 </Text>
-                <CodeBlock code={'<longlink>\n  <Text>Welcome</Text>\n</longlink>'} language="xml" />
+                <CodeBlock code={'<longlink>\n  Welcome\n</longlink>'} language="xml" />
                 <Stack gap={3}>
                     <Heading id="longlink-runtime-concepts" level={2}>
                         Runtime
@@ -147,9 +147,6 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
                             <Info aria-hidden="true" className="text-accent" size={20} />
-                        </SummaryCard>
-                        <SummaryCard name="Text" path="/docs/sdk/pages/text">
-                            <Text type="supporting">Readable text</Text>
                         </SummaryCard>
                         <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
                             <Badge variant="info">Open</Badge>

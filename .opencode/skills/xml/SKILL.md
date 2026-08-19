@@ -16,7 +16,7 @@ Keep improving the XML:
   <Query id="issues" path="/issues?status=${filters.status}" />
 
   <For each="issues" as="issue">
-    <Text value="${issue.title}" />
+    ${issue.title}
   </For>
 
   <Action>
@@ -25,8 +25,7 @@ Keep improving the XML:
     <Button label="Close" />
   </Action>
 
-  <Badge>
-    <Text value="Active" />
+  <Badge>Active
     <Icon slot="icon" icon="check" />
   </Badge>
 </longlink>

@@ -31,7 +31,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Badge>\n  <Text value="$order.status" />\n</Badge>'} language="xml" />
+                <CodeBlock code={'<Badge>$order.status</Badge>'} language="xml" />
             </Stack>
         </Article>
     );

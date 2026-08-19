@@ -52,7 +52,6 @@ export default [
                     route('switch', './routes/docs/sdk/pages/Switch.tsx'),
                     route('tab', './routes/docs/sdk/pages/Tab.tsx'),
                     route('table', './routes/docs/sdk/pages/Table.tsx'),
-                    route('text', './routes/docs/sdk/pages/Text.tsx'),
                     route('text-area', './routes/docs/sdk/pages/TextArea.tsx'),
                     route('text-input', './routes/docs/sdk/pages/TextInput.tsx'),
                 ]),

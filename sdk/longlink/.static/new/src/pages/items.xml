@@ -6,7 +6,7 @@
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
             <Heading level="3">Items</Heading>
-            <Text as="p" color="secondary" value="Track catalog items and their supporting files." />
+            Track catalog items and their supporting files.
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack>
@@ -36,9 +36,9 @@
         <TableColumn key="item" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">
-                    <Text value="$row.name" />
+                    $row.name
                 </Link>
-                <Text color="secondary" value="${`CHF ${row.price}`}" hasTabularNumbers="true" />
+                ${`CHF ${row.price}`}
             </Stack>
         </TableColumn>
     </Table>

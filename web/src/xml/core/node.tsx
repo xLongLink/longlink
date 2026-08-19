@@ -1,6 +1,6 @@
 import { For } from './for';
 import type { ReactNode } from 'react';
-import { isVisibleXmlNode } from './props';
+import { isVisibleXmlNode, resolveXml } from './props';
 import type { ASTNode, Scope } from '../types';
 import { xmlComponentRegistry } from './registry';
 
@@ -8,6 +8,13 @@ import { xmlComponentRegistry } from './registry';
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
         const props = node.params;
+
+        // Render parser-generated text directly rather than through a public XML component.
+        if (node.name === '$text') {
+            const value = resolveXml(props, 'value', ctx);
+
+            return value == null ? null : String(value);
+        }
 
         // Handle conditional rendering with "if" parameter.
         if (!isVisibleXmlNode(node, ctx)) return null;

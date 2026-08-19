@@ -10,7 +10,7 @@
     <xsd:attribute name="hasDivider" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
-  <xsd:complexType name="TabType">
+  <xsd:complexType name="TabType" mixed="true">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="value" type="NonBlankStringType" use="required" />
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
