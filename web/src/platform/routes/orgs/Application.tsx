@@ -4,8 +4,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { ProfileMenu } from '@/components/Profile';
+import { ApplicationRuntime } from '@/components/Application';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { XmlApplication } from '@/xml/runtime/Application';
+import { PageContainer } from '@/components/PageContainer';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
@@ -76,12 +77,16 @@ export default function OrganizationApplication() {
     const pagesUrl = `/api/v1/applications/${applicationAccess.id}/proxy/pages.json`;
 
     return (
-        <XmlApplication
+        <ApplicationRuntime
             navigationBaseUrl={navigationBaseUrl}
             pagesUrl={pagesUrl}
             requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
-            action={action}
-            breadcrumb={breadcrumb}
-        />
+        >
+            {({ content, tabs }) => (
+                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
+                    <PageContainer minHeight="100%">{content}</PageContainer>
+                </Platform>
+            )}
+        </ApplicationRuntime>
     );
 }

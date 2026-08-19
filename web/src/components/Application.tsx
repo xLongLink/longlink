@@ -1,5 +1,4 @@
 import startCase from 'lodash/startCase';
-import { Link } from '@astryxdesign/core/Link';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
@@ -9,28 +8,25 @@ import { api } from '@/lib/api';
 import { PageError } from '@/components/Utils';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { PageContainer } from '@/components/PageContainer';
-import Platform from '@/platform/layouts/Platform';
-import { resolveRequestUrl } from '../core/url';
-import { pageSchema, type RuntimePage } from '../pages';
-import { createContext as createXmlContext, parseXML, RenderXML } from '..';
+import { resolveRequestUrl } from '@/xml/core/url';
+import { pageSchema, type RuntimePage } from '@/xml/pages';
+import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
-type XmlApplicationProps = {
-    action?: ReactNode;
-    breadcrumb?: ReactNode;
+type ApplicationRuntimeProps = {
+    children: (application: { content: ReactNode; tabs: readonly ApplicationTab[] }) => ReactNode;
     navigationBaseUrl: string;
     pagesUrl: string;
     requestBaseUrl: string;
 };
 
-/** Renders a manifest-driven XML application within a host-specific URL context. */
-export function XmlApplication({
-    action,
-    breadcrumb,
-    navigationBaseUrl,
-    pagesUrl,
-    requestBaseUrl,
-}: XmlApplicationProps) {
+type ApplicationTab = {
+    href: string;
+    icon?: ReturnType<typeof getIconComponent>;
+    label: string;
+};
+
+/** Resolves and renders the current manifest-defined application page. */
+export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requestBaseUrl }: ApplicationRuntimeProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const routePath = wildcardPath ?? '';
@@ -83,15 +79,15 @@ export function XmlApplication({
         },
         retry: false,
     });
-    const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
+    const tabs = new Map<string, ApplicationTab>();
 
     // Build one static navigation target per runtime tab.
     for (const page of staticPages) {
-        if (!page.route || tabGroups.has(page.tab)) {
+        if (!page.route || tabs.has(page.tab)) {
             continue;
         }
 
-        tabGroups.set(page.tab, {
+        tabs.set(page.tab, {
             href: `${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${page.route}`,
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
@@ -107,7 +103,7 @@ export function XmlApplication({
         navigate(`${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${firstTabPage.route}`, { replace: true });
     }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
 
-    let content;
+    let content: ReactNode;
 
     if (!error && registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
@@ -142,19 +138,5 @@ export function XmlApplication({
         );
     }
 
-    return (
-        <Platform
-            action={
-                action ?? (
-                    <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                        Documentation
-                    </Link>
-                )
-            }
-            breadcrumb={breadcrumb ?? null}
-            tabs={[...tabGroups.values()]}
-        >
-            <PageContainer minHeight="100%">{content}</PageContainer>
-        </Platform>
-    );
+    return children({ content, tabs: [...tabs.values()] });
 }

@@ -18,7 +18,7 @@ type NavigationTab = {
 
 type PlatformProps = {
     action: ReactNode;
-    breadcrumb: ReactNode;
+    breadcrumb?: ReactNode;
     children: ReactNode;
     tabs: readonly NavigationTab[];
 };
@@ -44,7 +44,7 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
     return (
         <AppShell
             banner={<DevelopmentNotice />}
-            className="platform-top-layout"
+            className="[&_.astryx-app-shell-header]:static"
             contentPadding={0}
             height="auto"
             mobileNav={false}
@@ -63,10 +63,9 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
                         label="Platform navigation"
                     />
                     {tabs.length > 0 ? (
-                        <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                        <Stack className="overflow-y-hidden" direction="horizontal" isScrollable paddingInline={4} width="100%">
                             <TabList
                                 aria-label="Section navigation"
-                                hasDivider
                                 onChange={() => undefined}
                                 size="sm"
                                 value={findActiveTab(tabs, pathname) ?? ''}
@@ -91,13 +90,13 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
             }
             variant="wash"
         >
-            <Card
-                aria-hidden="true"
-                className="pointer-events-none fixed z-30 end-0 bottom-0 start-0 top-0 border-8 border-body bg-transparent"
-                padding={0}
-                variant="transparent"
-            />
-            <Stack className="relative z-10" minHeight="calc(100dvh - var(--appshell-header-height, 0px))" padding={2}>
+            <Stack className="relative" minHeight="calc(100dvh - var(--appshell-header-height, 0px))">
+                <Card
+                    aria-hidden="true"
+                    className="pointer-events-none absolute z-20 end-0 bottom-0 start-0 top-0 border-8 border-body bg-transparent"
+                    padding={0}
+                    variant="transparent"
+                />
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip"
@@ -106,7 +105,7 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack className="relative z-10">{children}</Stack>
+                <Stack className="relative z-10" padding={2}>{children}</Stack>
             </Stack>
         </AppShell>
     );

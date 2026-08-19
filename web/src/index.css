@@ -28,10 +28,6 @@
 @layer astryx-theme {
     /* Astryx compound parts are exposed through stable classes but are not accepted by the theme compiler. */
     @scope (:is([data-astryx-theme^='longlink-'], [data-astryx-theme='stone'])) to ([data-astryx-theme]) {
-        .platform-top-layout .astryx-app-shell-header {
-            position: static;
-        }
-
         .astryx-breadcrumb-item {
             margin-inline-start: var(--spacing-1);
             gap: var(--spacing-2);

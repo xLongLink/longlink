@@ -11,7 +11,6 @@ export default function Brand() {
                     Documentation
                 </Link>
             }
-            breadcrumb={null}
             tabs={[]}
         >
             <Outlet />

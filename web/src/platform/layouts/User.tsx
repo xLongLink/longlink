@@ -9,7 +9,6 @@ export default function UserLayout() {
     return (
         <Platform
             action={<ProfileMenu user={useAuthenticatedUser()} />}
-            breadcrumb={null}
             tabs={[
                 { href: '/user/organizations', icon: Building2, label: 'Organizations' },
                 { href: '/user/settings', icon: Settings2, label: 'Settings' },
