@@ -8,6 +8,7 @@ import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
 import { Tabs } from '../adapters/TabList';
+import { Bold, Italic, Text } from '../adapters/Text';
 import type { ComponentType } from 'react';
 import { Action } from '../adapters/Action';
 import { Avatar } from '../adapters/Avatar';
@@ -32,6 +33,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Action,
     Avatar,
     Badge,
+    b: Bold,
     Button,
     Card,
     CheckboxInput,
@@ -42,6 +44,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     GridSpan,
     Heading,
     Icon,
+    i: Italic,
     Link,
     Menu,
     NumberInput,
@@ -55,5 +58,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Tabs,
     Table,
     TextArea,
+    Text,
     TextInput,
 };

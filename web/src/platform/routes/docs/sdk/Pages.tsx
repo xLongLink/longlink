@@ -150,6 +150,11 @@ export default function DocsArticleRoute() {
                                 Orders
                             </Heading>
                         </SummaryCard>
+                        <SummaryCard name="Text" path="/docs/sdk/pages/text">
+                            <Text>
+                                Normal <b>bold</b> and <i>italic</i> text.
+                            </Text>
+                        </SummaryCard>
                         <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
                             <Info aria-hidden="true" className="text-accent" size={20} />
                         </SummaryCard>

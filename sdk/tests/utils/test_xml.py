@@ -66,6 +66,7 @@ VALID_FRAGMENTS = [
         "tabs",
         '<Tabs value="$tabs.value"><Tab value="overview" label="Overview">Overview panel</Tab></Tabs>',
     ),
+    ("text", '<Text>Normal <b>bold</b> and <i>italic</i> text.</Text>'),
     (
         "text-area",
         '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />',

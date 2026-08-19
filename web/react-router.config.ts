@@ -58,6 +58,7 @@ const publicPagePaths = [
     '/docs/sdk/pages/switch',
     '/docs/sdk/pages/tabs',
     '/docs/sdk/pages/table',
+    '/docs/sdk/pages/text',
     '/docs/sdk/pages/text-area',
     '/docs/sdk/pages/text-input',
 ];

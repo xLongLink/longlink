@@ -6,6 +6,7 @@
   <xsd:include schemaLocation="adapters/For.xsd" />
   <xsd:include schemaLocation="adapters/Action.xsd" />
   <xsd:include schemaLocation="adapters/Heading.xsd" />
+  <xsd:include schemaLocation="adapters/Text.xsd" />
   <xsd:include schemaLocation="adapters/Link.xsd" />
   <xsd:include schemaLocation="adapters/Menu.xsd" />
   <xsd:include schemaLocation="adapters/Divider.xsd" />
