@@ -21,7 +21,7 @@ VALID_FRAGMENTS = [
         "dialog",
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form"><Text value="This action cannot be undone." /></Dialog>',
     ),
-    ("divider", '<Divider label="or" />'),
+    ("divider", '<Divider><Text value="or" /></Divider>'),
     ("divider-runtime-attributes", '<Divider if="show" slot="content" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
     ("for", '<For each="items" as="item"><Text value="$item.name" /></For>'),

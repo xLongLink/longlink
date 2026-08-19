@@ -19,6 +19,8 @@ async def create(claimed: Operation) -> str | None:
         if target is None:
             return None
         application, infrastructure = target
+    if application.deleted_at is not None:
+        return None
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return "Application Organization not found"
     organization = infrastructure.organization
@@ -26,7 +28,7 @@ async def create(claimed: Operation) -> str | None:
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
-    if "LONGLINK_ENV" not in application.secrets:
+    if "LONGLINK_ENV" not in runtime_secrets:
         # Resolve the Application's immutable provider assignments.
         db = Postgres(
             infrastructure.database.host,
@@ -90,7 +92,6 @@ async def create(claimed: Operation) -> str | None:
             .where(
                 Application.id == application.id,
                 Application.deleted_at.is_(None),
-                Application.status == Status.creating,
             )
             .values(status=Status.running)
         )
@@ -102,7 +103,7 @@ async def delete(claimed: Operation) -> str | None:
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        target = await organizations.application_infrastructure(session, claimed.target_id, include_deleted=True)
+        target = await organizations.application_infrastructure(session, claimed.target_id)
         if target is None:
             return None
         application, infrastructure = target

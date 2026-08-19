@@ -1,11 +1,10 @@
 import type { Props } from '../types';
-import { resolveXml } from '../core/props';
+import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
+import { Divider as UiDivider } from '@/components/ui/Divider';
 
-export function Divider({ props }: Props) {
+export function Divider({ nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const label = resolveXml(props, 'label', ctx);
 
-    return <AstryxDivider label={typeof label === 'string' ? label : undefined} />;
+    return <UiDivider>{renderNode(nodes, ctx)}</UiDivider>;
 }

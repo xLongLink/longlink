@@ -31,7 +31,7 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Divider label="Or" />'} language="xml" />
+                <CodeBlock code={'<Divider>\n  <Text value="Or" />\n</Divider>'} language="xml" />
             </Stack>
         </Article>
     );

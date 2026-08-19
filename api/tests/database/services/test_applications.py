@@ -67,8 +67,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
     assert created.slug == "reports"
 
 
-async def test_fetch_and_organization_applications_ignore_deleted_applications(users: tuple[User, User, User]) -> None:
-    """Return only active applications from collection read services."""
+async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]) -> None:
+    """Return only active applications for administrator views."""
 
     # Arrange
     user = users[0]
@@ -88,11 +88,9 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications(u
 
         # Act
         fetched = await applications.fetch(session)
-        listed = await organizations.applications(session, organization.id)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
-    assert [application.id for application in listed] == [active_application.id]
 
 
 async def test_soft_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:
@@ -105,18 +103,16 @@ async def test_soft_delete_marks_application_deleted(users: tuple[User, User, Us
 
     # Act
     async with session_scope() as session:
-        await applications.soft_delete(session, application.id, user)
+        deleted = await applications.soft_delete(session, application.id, user)
         await session.commit()
         deleted_application = await session.get(Application, application.id)
-        second_delete = await applications.soft_delete(session, application.id, user)
         missing_delete = await applications.soft_delete(session, uuid4(), user)
 
     # Assert
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
-    assert second_delete is not None
-    assert second_delete.id == application.id
-    assert missing_delete is None
+    assert deleted
+    assert not missing_delete
 
 
 async def test_release_requires_an_active_organization(users: tuple[User, User, User]) -> None:

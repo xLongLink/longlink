@@ -4,7 +4,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import defer, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -97,9 +97,7 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def application_infrastructure(
-    session: AsyncSession, application_id: UUID, include_deleted: bool = False
-) -> tuple[Application, Infrastructure | None] | None:
+async def application_infrastructure(session: AsyncSession, application_id: UUID) -> tuple[Application, Infrastructure | None] | None:
     """Return one Application and its assigned infrastructure when all assignments exist."""
 
     # Load the Application and its infrastructure in one lifecycle query.
@@ -116,8 +114,6 @@ async def application_infrastructure(
     if row is None:
         return None
     application, organization, compute, database, storage = row
-    if application.deleted_at is not None and not include_deleted:
-        return None
     if organization is None or compute is None or database is None or storage is None:
         return application, None
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
@@ -152,6 +148,7 @@ async def applications(session: AsyncSession, organization_id: UUID) -> Sequence
     # Query active organization applications in one session.
     statement = (
         select(Application)
+        .options(defer(Application.secrets))
         .where(
             Application.organization_id == organization_id,
             Application.deleted_at.is_(None),

@@ -131,26 +131,28 @@ async def release(
     return application
 
 
-async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
+async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> bool:
     """Tombstone a LongLink Application."""
 
     # Lock the Organization and Application state before tombstoning.
     result = await session.execute(
         select(Application, Organization.compute_id)
         .join(Application.organization)
-        .where(Application.id == application_id)
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+        )
         .with_for_update()
     )
     row = result.one_or_none()
     if row is None:
-        return None
+        return False
     application, compute_id = row
 
-    # Record the tombstone once; repeated requests only ensure cleanup remains queued.
-    if application.deleted_at is None:
-        application.deleted_at = utcnow()
-        application.deleted_id = user.id
-        application.updated_id = user.id
+    # Record the tombstone and schedule external cleanup in one transaction.
+    application.deleted_at = utcnow()
+    application.deleted_id = user.id
+    application.updated_id = user.id
 
     await operations.enqueue(
         session,
@@ -159,4 +161,4 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
         target_id=application.id,
     )
 
-    return application
+    return True

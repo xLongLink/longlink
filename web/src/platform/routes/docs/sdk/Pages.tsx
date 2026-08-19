@@ -12,7 +12,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
-import { Divider } from '@astryxdesign/core/Divider';
+import { Divider } from '@/components/ui/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -30,8 +30,8 @@ const noop = () => undefined;
 function SummaryCard({ children, name, path }: { children: React.ReactNode; name: string; path: string }) {
     return (
         <Stack className="relative" gap={2}>
-            <Card aria-hidden="true" inert minHeight={190} variant="muted">
-                <Center minHeight={150}>{children}</Center>
+            <Card aria-hidden="true" inert minHeight={190} padding={0} variant="muted">
+                <Center minHeight={190}>{children}</Center>
             </Card>
             <Text color="secondary" type="supporting">
                 {name}
@@ -141,7 +141,9 @@ export default function DocsArticleRoute() {
                             <Avatar name="Ada Lovelace" size="lg" />
                         </SummaryCard>
                         <SummaryCard name="Heading" path="/docs/sdk/pages/heading">
-                            <Heading level={3}>Orders</Heading>
+                            <Heading className="mt-0" level={3}>
+                                Orders
+                            </Heading>
                         </SummaryCard>
                         <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
                             <Info aria-hidden="true" className="text-accent" size={20} />
@@ -151,6 +153,11 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
                             <Badge label="Open" variant="info" />
+                        </SummaryCard>
+                        <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
+                            <Stack justify="center" minHeight={150} width="100%">
+                                <Divider>{'Or'}</Divider>
+                            </Stack>
                         </SummaryCard>
                     </Grid>
                 </Stack>
@@ -257,13 +264,6 @@ export default function DocsArticleRoute() {
                             <Stack gap={1} align="center">
                                 <Text weight="semibold">Card surface</Text>
                                 <Text type="supporting">Grouped content</Text>
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
-                            <Stack gap={3} width="100%">
-                                <Text type="supporting">Before</Text>
-                                <Divider />
-                                <Text type="supporting">After</Text>
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Grid" path="/docs/sdk/pages/grid">

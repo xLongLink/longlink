@@ -2,10 +2,10 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="DividerType">
-    <xsd:attribute name="label" type="xsd:string" />
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Divider" type="DividerType">
-    <xsd:annotation><xsd:documentation>Renders an Astryx divider.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders a divider between related content.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

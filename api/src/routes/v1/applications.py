@@ -150,7 +150,7 @@ async def delete_application(
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    if await applications.soft_delete(session, application_id, user) is None:
+    if not await applications.soft_delete(session, application_id, user):
         raise HTTPException(status_code=404, detail="Application not found")
 
     await session.commit()
