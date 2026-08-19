@@ -1,6 +1,7 @@
 import type { Props } from '../types';
 import { Card } from '../adapters/Card';
 import { Grid } from '../adapters/Grid';
+import { GridSpan } from '../adapters/GridSpan';
 import { Icon } from '../adapters/Icon';
 import { Link } from '../adapters/Link';
 import { Menu } from '../adapters/Menu';
@@ -37,6 +38,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Divider,
     FileInput,
     Grid,
+    GridSpan,
     Heading,
     Icon,
     Link,

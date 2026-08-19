@@ -30,11 +30,12 @@ def accepts_gzip(value: str) -> bool:
                 except ValueError:
                     quality = 0.0
 
-        normalized_quality = quality if 0.0 <= quality <= 1.0 else 0.0
+        if not 0.0 <= quality <= 1.0:
+            quality = 0.0
         if normalized_encoding == "gzip":
-            gzip_quality = normalized_quality
+            gzip_quality = quality
         else:
-            wildcard_quality = normalized_quality
+            wildcard_quality = quality
 
     return (gzip_quality if gzip_quality is not None else wildcard_quality or 0.0) > 0.0
 

@@ -6,6 +6,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
+import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
@@ -273,7 +274,12 @@ export default function DocsArticleRoute() {
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
-                            <Code>{'<Menu />'}</Code>
+                            <Menu>
+                                <MenuSection title="Settings">
+                                    <MenuItem label="General" />
+                                    <MenuItem label="Workflow" />
+                                </MenuSection>
+                            </Menu>
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
                             <Stack gap={2} align="center">

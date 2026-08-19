@@ -232,11 +232,16 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert expired_claim is not None
     async with session_scope() as session:
         row = await session.get(Operation, expired.id)
+        expired_compute_row = await session.get(ComputeRegistry, expired_compute.id)
         assert row is not None
+        assert expired_compute_row is not None
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
+        expired_compute_row.status = Status.running
         await session.commit()
     replacement_claim = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
+    async with session_scope() as session:
+        expired_compute_row = await session.get(ComputeRegistry, expired_compute.id)
 
     # Verify only eligible waiting work was claimed.
     assert second_active_claim is None
@@ -245,41 +250,12 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert replacement_claim is None
     assert expired_row.status == OperationStatus.failed
     assert expired_row.lease_expires_at is None
+    assert expired_compute_row is not None
+    assert expired_compute_row.status == Status.running
 
 
-async def test_operations_service_expiry_preserves_published_compute_success() -> None:
-    """Fail an expired Operation without regressing its already published compute target."""
-
-    # Claim reconciliation and publish its target before simulating worker loss.
-    compute = await create_compute("published")
-    operation = await queue(compute.id, target_id=compute.id)
-    claimed = await claim_operation()
-    assert claimed is not None
-    async with session_scope() as session:
-        operation_row = await session.get(Operation, operation.id)
-        compute_row = await session.get(ComputeRegistry, compute.id)
-        assert operation_row is not None
-        assert compute_row is not None
-        operation_row.lease_expires_at = utcnow() - timedelta(seconds=1)
-        compute_row.status = Status.running
-        await session.commit()
-
-    # Reap the expired lease.
-    replacement = await claim_operation()
-    async with session_scope() as session:
-        operation_row = await session.get(Operation, operation.id)
-        compute_row = await session.get(ComputeRegistry, compute.id)
-
-    # Verify only the abandoned Operation fails.
-    assert replacement is None
-    assert operation_row is not None
-    assert operation_row.status == OperationStatus.failed
-    assert compute_row is not None
-    assert compute_row.status == Status.running
-
-
-async def test_operations_service_expired_leases_cannot_complete_or_reclaim() -> None:
-    """Fail expired work without completing or reclaiming its Operation."""
+async def test_operations_service_expired_leases_cannot_complete() -> None:
+    """Fail expired work without completing its Operation."""
 
     # Claim an operation and expire its only lease.
     compute = await create_compute("local")
@@ -295,13 +271,11 @@ async def test_operations_service_expired_leases_cannot_complete_or_reclaim() ->
         await session.commit()
     expired_completion = await complete_operation(operation.id)
     expired_failure = await fail_operation(operation.id)
-    replacement = await claim_operation()
     row = next(item for item in await fetch_operations() if item.id == operation.id)
 
-    # Verify an expired lease cannot complete or reclaim its terminal Operation.
+    # Verify an expired lease cannot complete its terminal Operation.
     assert expired_completion is None
     assert expired_failure is not None
-    assert replacement is None
     assert row.status == OperationStatus.failed
     assert row.finished_at is not None
 

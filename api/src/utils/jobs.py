@@ -58,13 +58,13 @@ async def execute(operation: Operation, handler: OperationHandler) -> Operation:
     # Bound one complete handler execution under its worker lease.
     try:
         async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
-            reason = await handler(operation)
+            reason = await handler(operation.target_id)
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
             await _finish_transition(operations.fail, operation.id)
-        except Exception as exc:
-            logger.exception("Could not fail cancelled Operation %s: %r", operation.id, exc)
+        except Exception:
+            logger.exception("Could not fail cancelled Operation %s", operation.id)
         raise
     except TimeoutError:
         reason = "Operation timed out"
@@ -99,8 +99,8 @@ async def run_operation_scheduler() -> None:
             async with session_scope() as session:
                 operation = await operations.claim(session)
                 await session.commit()
-        except Exception as exc:
-            logger.exception("Operation scheduler polling failed: %r", exc)
+        except Exception:
+            logger.exception("Operation scheduler polling failed")
 
         # Sleep briefly when the queue has no claimable work.
         if operation is None:
@@ -110,5 +110,5 @@ async def run_operation_scheduler() -> None:
         # Execute and release one claimed operation before locking more work.
         try:
             await execute(operation, handlers[operation.kind])
-        except Exception as exc:
-            logger.exception("Operation scheduler failed for %s: %r", operation.id, exc)
+        except Exception:
+            logger.exception("Operation scheduler failed for %s", operation.id)

@@ -118,6 +118,15 @@
       <xsd:enumeration value="fit" />
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="GridSpanColumnsType">
+    <xsd:union memberTypes="xsd:positiveInteger">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="full" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:union>
+  </xsd:simpleType>
   <xsd:simpleType name="AlignType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="start" />

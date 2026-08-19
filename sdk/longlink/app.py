@@ -41,9 +41,9 @@ class LongLink:
         # Preserve Application routes so page collisions are rejected during discovery.
         self.application_routes = list(app.router.routes)
 
-        # Resolve the runtime environment and initialize mutable page state.
+        # Resolve the runtime environment and initialize application storage.
         environment = Envs().ENV if env is None else Envs(ENV=env).ENV
-        app.state.longlink = RuntimeState(pages=[], storage=create_fs())
+        storage = create_fs()
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
@@ -70,6 +70,7 @@ class LongLink:
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory)
+        app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage)
 
         # Pages are registered once before the frontend mount is installed.
         app.router.routes.extend(
@@ -83,7 +84,6 @@ class LongLink:
                 for definition, content in discovered_pages
             ]
         )
-        app.state.longlink.pages.extend(definition for definition, _ in discovered_pages)
 
         # Start applications on their first static page instead of an unselected shell.
         root.install_redirect(app)
@@ -100,8 +100,7 @@ class LongLink:
 
         # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
-            relative_path = page_file.relative_to(pages_directory).as_posix()
-            path_without_suffix = relative_path.removesuffix(".xml")
+            path_without_suffix = page_file.relative_to(pages_directory).as_posix().removesuffix(".xml")
 
             page_path = f"pages/{path_without_suffix}"
             registered_path = f"/{page_path}"

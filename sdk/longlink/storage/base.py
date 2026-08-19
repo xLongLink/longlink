@@ -35,16 +35,12 @@ def create_fs() -> AbstractFileSystem:
     # Production uses remote object storage supplied by the platform.
     else:
 
-        # Production runtimes receive S3 connection options from the LongLink Platform.
-        options: dict[str, object] = {
-            "endpoint_url": env.STORAGE_ENDPOINT_URL,
-            "key": env.STORAGE_USERNAME,
-            "secret": env.STORAGE_PASSWORD,
-            "client_kwargs": {"region_name": env.STORAGE_REGION},
-        }
         filesystem = fsspec.filesystem(
             "s3",
-            **options,
+            endpoint_url=env.STORAGE_ENDPOINT_URL,
+            key=env.STORAGE_USERNAME,
+            secret=env.STORAGE_PASSWORD,
+            client_kwargs={"region_name": env.STORAGE_REGION},
         )
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.

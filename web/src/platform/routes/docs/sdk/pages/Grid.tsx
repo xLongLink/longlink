@@ -8,7 +8,7 @@ export const metadata = {
     path: '/docs/sdk/pages/grid',
     title: 'Grid',
     description:
-        'A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Supports fixed column counts and responsive columns that reflow based on available width.',
+        'A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -33,7 +33,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Grid minColumnWidth="240" maxColumns="3" repeat="fit">\n  <Card>First</Card>\n  <Card>Second</Card>\n</Grid>'
+                        '<Grid minColumnWidth="240" maxColumns="3" repeat="fit">\n  <Card>First</Card>\n  <Card>Second</Card>\n</Grid>\n\n<Grid columns="3">\n  <GridSpan columns="2"><Card>Featured</Card></GridSpan>\n  <Card>Standard</Card>\n</Grid>'
                     }
                     language="xml"
                 />

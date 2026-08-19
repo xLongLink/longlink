@@ -30,6 +30,7 @@ VALID_FRAGMENTS = [
         '<Stack><TextInput label="Name" /><NumberInput label="Quantity" /></Stack>',
     ),
     ("grid", '<Grid minColumnWidth="240" maxColumns="3"><Card /></Grid>'),
+    ("grid-span", '<Grid columns="3"><GridSpan columns="2" rows="2"><Card /></GridSpan></Grid>'),
     (
         "heading",
         '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',

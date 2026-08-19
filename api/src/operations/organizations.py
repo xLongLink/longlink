@@ -1,3 +1,4 @@
+from uuid import UUID
 from sqlalchemy import select, update
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -5,17 +6,16 @@ from src.adapters.postgres import Postgres
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def reconcile(claimed: Operation) -> str | None:
+async def reconcile(organization_id: UUID) -> str | None:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
     # Skip removed Organizations.
     async with session_scope() as session:
-        infrastructure = await organizations.infrastructure(session, claimed.target_id)
+        infrastructure = await organizations.infrastructure(session, organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
         return None
     organization = infrastructure.organization
@@ -58,12 +58,12 @@ async def reconcile(claimed: Operation) -> str | None:
         await session.commit()
 
 
-async def delete(claimed: Operation) -> str | None:
+async def delete(organization_id: UUID) -> str | None:
     """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        infrastructure = await organizations.infrastructure(session, claimed.target_id)
+        infrastructure = await organizations.infrastructure(session, organization_id)
     if infrastructure is None:
         return None
     if infrastructure.organization.deleted_at is None:
