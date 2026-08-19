@@ -60,7 +60,6 @@ const componentSummaries: (ComponentSummary & { category: string })[] = [
     { category: 'Form', path: '/docs/sdk/pages/radio-list', name: 'RadioList' },
     { category: 'Form', path: '/docs/sdk/pages/radio-list-item', name: 'RadioListItem' },
     { category: 'Form', path: '/docs/sdk/pages/selector', name: 'Selector' },
-    { category: 'Form', path: '/docs/sdk/pages/selector-option', name: 'SelectorOption' },
     { category: 'Form', path: '/docs/sdk/pages/slider', name: 'Slider' },
     { category: 'Form', path: '/docs/sdk/pages/switch', name: 'Switch' },
     { category: 'Form', path: '/docs/sdk/pages/text-area', name: 'TextArea' },
@@ -261,8 +260,6 @@ function renderComponentPreview({ name, path }: ComponentSummary) {
                     isLabelHidden
                 />
             );
-        case 'SelectorOption':
-            return <Code>{'<SelectorOption />'}</Code>;
         case 'Slider':
             return (
                 <Stack width={150}>

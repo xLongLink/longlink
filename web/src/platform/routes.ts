@@ -46,7 +46,6 @@ export default [
                     route('radio-list', './routes/docs/sdk/pages/RadioList.tsx'),
                     route('radio-list-item', './routes/docs/sdk/pages/RadioListItem.tsx'),
                     route('selector', './routes/docs/sdk/pages/Selector.tsx'),
-                    route('selector-option', './routes/docs/sdk/pages/SelectorOption.tsx'),
                     route('side-nav', './routes/docs/sdk/pages/SideNav.tsx'),
                     route('slider', './routes/docs/sdk/pages/Slider.tsx'),
                     route('stack', './routes/docs/sdk/pages/Stack.tsx'),

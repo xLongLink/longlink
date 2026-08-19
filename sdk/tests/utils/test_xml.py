@@ -4,7 +4,7 @@ from longlink.utils.xml import validate_xml
 VALID_FRAGMENTS = [
     (
         "action",
-        '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
+        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button label="Save" /></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
     ("badge", '<Badge label="$item.status"><Icon slot="icon" icon="check" /></Badge>'),
@@ -77,7 +77,7 @@ VALID_FRAGMENTS = [
 ]
 
 INVALID_FRAGMENTS = [
-    ("unknown-action-attribute", '<Action tone="accent"><Button label="Save" /></Action>'),
+    ("invalid-action-effect-order", '<Action><Button label="Save" /><Request url="/profile" method="PATCH" /></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-unsupported-child", '<Badge label="Active"><Text value="Active" /></Badge>'),

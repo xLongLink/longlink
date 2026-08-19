@@ -18,13 +18,14 @@
                     />
                     <NumberInput label="Price" units="CHF" value="$draft.price" min="0" isRequired="true" />
                 </FormLayout>
-                <Action
-                    action="/api/items"
-                    method="POST"
-                    invalidate='${["items"]}'
-                    closeDialog="true"
-                    json="${{ name: draft.name, price: draft.price }}"
-                >
+                <Action>
+                    <Request
+                        url="/api/items"
+                        method="POST"
+                        closeDialog="true"
+                        json="${{ name: draft.name, price: draft.price }}"
+                    />
+                    <Patch state="items" invalidate="true" />
                     <Button isDisabled="${draft.name === ''}" variant="primary" label="Create item" />
                 </Action>
             </Stack>

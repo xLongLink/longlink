@@ -11,6 +11,7 @@ export const metadata = {
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'options', label: 'Options', level: 2 },
     ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/pages/Selector.tsx',
@@ -36,6 +37,11 @@ export default function DocsArticleRoute() {
                     }
                     language="xml"
                 />
+                <Heading id="options" level={2}>
+                    Options
+                </Heading>
+                <Text as="p">{'Define each selectable value with a SelectorOption child.'}</Text>
+                <CodeBlock code={'<SelectorOption value="open" label="Open" />'} language="xml" />
             </Stack>
         </Article>
     );

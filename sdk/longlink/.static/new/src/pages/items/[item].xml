@@ -12,13 +12,14 @@
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack>
                 <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
-                <Action
-                    action="/api/items/${params.item}/attachments"
-                    method="POST"
-                    invalidate='${["attachments"]}'
-                    closeDialog="true"
-                    form="${{ file: attachment.file }}"
-                >
+                <Action>
+                    <Request
+                        url="/api/items/${params.item}/attachments"
+                        method="POST"
+                        closeDialog="true"
+                        form="${{ file: attachment.file }}"
+                    />
+                    <Patch state="attachments" invalidate="true" />
                     <Button isDisabled="${attachment.file === null}" variant="primary" label="Upload attachment" />
                 </Action>
             </Stack>

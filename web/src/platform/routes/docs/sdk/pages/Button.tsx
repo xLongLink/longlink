@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Action action="/api/orders" invalidate="orders">\n  <Button label="Save" variant="primary" />\n</Action>'
+                        '<Action>\n  <Request url="/api/orders" method="POST" />\n  <Button label="Save" variant="primary" />\n</Action>'
                     }
                     language="xml"
                 />
