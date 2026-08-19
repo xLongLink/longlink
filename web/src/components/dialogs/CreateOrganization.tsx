@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { useId, useState } from 'react';
+import { useForm } from '@tanstack/react-form';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -40,10 +39,22 @@ export default function CreateOrganization() {
     });
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const form = useForm<CreateOrganizationValues>({
+    const form = useForm({
         defaultValues: defaultCreateOrganizationValues,
-        mode: 'onChange',
-        resolver: zodResolver(createOrganizationSchema),
+        validators: { onChange: createOrganizationSchema },
+        onSubmit: async ({ value }) => {
+            // Create the organization and close the dialog on success.
+            try {
+                await createOrganization.mutateAsync(value);
+                setOpen(false);
+                form.reset(defaultCreateOrganizationValues);
+            } catch (mutationError) {
+                toast({
+                    body: mutationError instanceof Error ? mutationError.message : 'Failed to create organization',
+                    type: 'error',
+                });
+            }
+        },
     });
 
     /** Updates dialog state while protecting an in-flight creation. */
@@ -80,37 +91,31 @@ export default function CreateOrganization() {
                         <LayoutContent>
                             <form
                                 id={formId}
-                                onSubmit={form.handleSubmit(async (payload) => {
-                                    // Create the organization and close the dialog on success.
-                                    try {
-                                        await createOrganization.mutateAsync(payload);
-                                        setOpen(false);
-                                        form.reset(defaultCreateOrganizationValues);
-                                    } catch (mutationError) {
-                                        toast({
-                                            body:
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to create organization',
-                                            type: 'error',
-                                        });
-                                    }
-                                })}
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    void form.handleSubmit();
+                                }}
                             >
                                 <FormLayout>
-                                    <Controller
-                                        control={form.control}
+                                    <form.Field
                                         name="name"
-                                        render={({ field }) => (
+                                        children={(field) => (
                                             <TextInput
-                                                ref={field.ref}
                                                 label="Name"
-                                                value={field.value}
-                                                htmlName={field.name}
+                                                value={field.state.value}
+                                                htmlName="name"
                                                 isRequired
                                                 placeholder="Example LongLink"
-                                                onBlur={field.onBlur}
-                                                onChange={field.onChange}
+                                                onBlur={field.handleBlur}
+                                                onChange={field.handleChange}
+                                                status={
+                                                    field.state.meta.errors.length > 0
+                                                        ? {
+                                                              type: 'error',
+                                                              message: field.state.meta.errors[0]?.message,
+                                                          }
+                                                        : undefined
+                                                }
                                             />
                                         )}
                                     />
@@ -132,7 +137,7 @@ export default function CreateOrganization() {
                                     type="submit"
                                     label={createOrganization.isPending ? 'Creating...' : 'Create'}
                                     variant="primary"
-                                    isDisabled={!form.formState.isValid}
+                                    isDisabled={!form.state.canSubmit}
                                     isLoading={createOrganization.isPending}
                                 />
                             </Stack>

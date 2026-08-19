@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -36,9 +35,11 @@ export default function VerifyEmail() {
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const form = useForm<RegistrationCompleteValues>({
+    const form = useForm({
         defaultValues: { name: '', surname: '', password: '' },
-        resolver: zodResolver(registrationCompleteSchema),
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: registrationCompleteSchema },
+        onSubmit: ({ value }) => handleComplete(value),
     });
     const verification = useMutation({
         mutationFn: async (registrationToken: string) => {
@@ -146,69 +147,72 @@ export default function VerifyEmail() {
             description={<Divider>{'Email verified. Complete your profile.'}</Divider>}
         >
             <Stack gap={4}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
+                <Stack
+                    as="form"
+                    gap={3}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
                     <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
-                        <Controller
-                            control={form.control}
+                        <form.Field
                             name="name"
-                            render={({ field, fieldState }) => (
+                            children={(field) => (
                                 <TextInput
                                     {...{ autoComplete: 'given-name' }}
-                                    ref={field.ref}
                                     hasAutoFocus
-                                    htmlName={field.name}
+                                    htmlName="name"
                                     isRequired
                                     label="Name"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
+                                    onBlur={field.handleBlur}
+                                    onChange={field.handleChange}
                                     status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
+                                        field.state.meta.errors.length > 0
+                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
                                             : undefined
                                     }
-                                    value={field.value}
+                                    value={field.state.value}
                                     width="100%"
                                 />
                             )}
                         />
-                        <Controller
-                            control={form.control}
+                        <form.Field
                             name="surname"
-                            render={({ field, fieldState }) => (
+                            children={(field) => (
                                 <TextInput
                                     {...{ autoComplete: 'family-name' }}
-                                    ref={field.ref}
-                                    htmlName={field.name}
+                                    htmlName="surname"
                                     isRequired
                                     label="Surname"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
+                                    onBlur={field.handleBlur}
+                                    onChange={field.handleChange}
                                     status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
+                                        field.state.meta.errors.length > 0
+                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
                                             : undefined
                                     }
-                                    value={field.value}
+                                    value={field.state.value}
                                     width="100%"
                                 />
                             )}
                         />
                     </Grid>
-                    <Controller
-                        control={form.control}
+                    <form.Field
                         name="password"
-                        render={({ field, fieldState }) => (
+                        children={(field) => (
                             <TextInput
-                                ref={field.ref}
-                                htmlName={field.name}
+                                htmlName="password"
                                 isRequired
                                 label="Password"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
                                 status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
                                 }
-                                value={field.value}
+                                value={field.state.value}
                                 width="100%"
                                 type="password"
                             />

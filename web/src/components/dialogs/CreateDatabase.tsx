@@ -1,11 +1,9 @@
 import { z } from 'zod';
-import { Controller } from 'react-hook-form';
 import { Grid } from '@astryxdesign/core/Grid';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { TextField } from '@/components/forms/TextField';
 import { zDatabaseSslMode } from '@/lib/generated/platform-api-v1/zod.gen';
 import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/RegistryDialog';
 
@@ -29,7 +27,7 @@ export default function CreateDatabase() {
         endpoint: '/api/v1/databases',
         errorMessage: 'Failed to connect database',
         queryKey: ['api', '/api/v1/databases'],
-        resolver: zodResolver(schema),
+        schema,
     });
 
     return (
@@ -41,48 +39,73 @@ export default function CreateDatabase() {
             width={520}
         >
             <FormLayout>
-                <TextField control={dialog.form.control} name="name" label="Name" />
+                <dialog.form.Field name="name">
+                    {(field) => (
+                        <TextInput label="Name" value={field.state.value} isRequired onChange={field.handleChange} />
+                    )}
+                </dialog.form.Field>
                 <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={4}>
-                    <TextField control={dialog.form.control} name="host" label="Host" />
-                    <Controller
-                        control={dialog.form.control}
-                        name="port"
-                        render={({ field }) => (
+                    <dialog.form.Field name="host">
+                        {(field) => (
+                            <TextInput
+                                label="Host"
+                                value={field.state.value}
+                                isRequired
+                                onChange={field.handleChange}
+                            />
+                        )}
+                    </dialog.form.Field>
+                    <dialog.form.Field name="port">
+                        {(field) => (
                             <NumberInput
-                                ref={field.ref}
                                 label="Port"
-                                value={field.value}
-                                htmlName={field.name}
+                                value={field.state.value}
                                 isIntegerOnly
                                 isRequired
                                 min={1}
                                 max={65535}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onChange={field.handleChange}
                             />
                         )}
-                    />
+                    </dialog.form.Field>
                 </Grid>
-                <Controller
-                    control={dialog.form.control}
-                    name="sslmode"
-                    render={({ field }) => (
+                <dialog.form.Field name="sslmode">
+                    {(field) => (
                         <Selector
                             label="SSL mode"
                             options={SSL_MODE_OPTIONS}
-                            value={field.value}
-                            htmlName={field.name}
+                            value={field.state.value}
                             isRequired
                             onChange={(value) => {
-                                if (value !== null) {
-                                    field.onChange(value);
+                                const sslmode = zDatabaseSslMode.safeParse(value);
+                                if (sslmode.success) {
+                                    field.handleChange(sslmode.data);
                                 }
                             }}
                         />
                     )}
-                />
-                <TextField control={dialog.form.control} name="username" label="Username" />
-                <TextField control={dialog.form.control} name="password" label="Password" type="password" />
+                </dialog.form.Field>
+                <dialog.form.Field name="username">
+                    {(field) => (
+                        <TextInput
+                            label="Username"
+                            value={field.state.value}
+                            isRequired
+                            onChange={field.handleChange}
+                        />
+                    )}
+                </dialog.form.Field>
+                <dialog.form.Field name="password">
+                    {(field) => (
+                        <TextInput
+                            label="Password"
+                            value={field.state.value}
+                            isRequired
+                            type="password"
+                            onChange={field.handleChange}
+                        />
+                    )}
+                </dialog.form.Field>
             </FormLayout>
         </RegistryDialog>
     );

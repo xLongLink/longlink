@@ -1,22 +1,23 @@
+import type { z } from 'zod';
+import { useForm } from '@tanstack/react-form';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useId, useState, type ReactNode } from 'react';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { useForm, type DefaultValues, type FieldValues, type Resolver } from 'react-hook-form';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 
-type RegistryDialogOptions<TValues extends FieldValues> = {
-    defaultValues: DefaultValues<TValues>;
+type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
+    defaultValues: TValues;
     endpoint: string;
     errorMessage: string;
     queryKey: readonly unknown[];
-    resolver: Resolver<TValues>;
+    schema: z.ZodType<TValues, TValues>;
 };
 
-type RegistryDialogProps<TValues extends FieldValues> = {
+type RegistryDialogProps<TValues extends Record<string, unknown>> = {
     children: ReactNode;
     dialog: ReturnType<typeof useRegistryDialog<TValues>>;
     subtitle: string;
@@ -26,17 +27,16 @@ type RegistryDialogProps<TValues extends FieldValues> = {
 };
 
 /** Manages a registry creation form and its request lifecycle. */
-export function useRegistryDialog<TValues extends FieldValues>({
+export function useRegistryDialog<TValues extends Record<string, unknown>>({
     defaultValues,
     endpoint,
     errorMessage,
     queryKey,
-    resolver,
+    schema,
 }: RegistryDialogOptions<TValues>) {
     const toast = useToast();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
-    const form = useForm<TValues>({ defaultValues, mode: 'onChange', resolver });
     const mutation = useMutation({
         mutationFn: (payload: TValues) => api(endpoint, { json: payload, method: 'POST' }),
         onError: (error) => {
@@ -47,6 +47,11 @@ export function useRegistryDialog<TValues extends FieldValues>({
             form.reset();
             void queryClient.invalidateQueries({ queryKey });
         },
+    });
+    const form = useForm({
+        defaultValues,
+        validators: { onChange: schema },
+        onSubmit: ({ value }) => mutation.mutate(value),
     });
 
     /** Updates dialog state while protecting an in-flight registration. */
@@ -67,12 +72,12 @@ export function useRegistryDialog<TValues extends FieldValues>({
         open,
         openDialog: () => setOpen(true),
         handleOpenChange,
-        submit: form.handleSubmit((payload) => mutation.mutate(payload)),
+        submit: form.handleSubmit,
     };
 }
 
 /** Renders a registry creation dialog around a resource-specific form. */
-export function RegistryDialog<TValues extends FieldValues>({
+export function RegistryDialog<TValues extends Record<string, unknown>>({
     children,
     dialog,
     subtitle,
@@ -96,7 +101,13 @@ export function RegistryDialog<TValues extends FieldValues>({
                     header={<DialogHeader title={title} subtitle={subtitle} onOpenChange={dialog.handleOpenChange} />}
                     content={
                         <LayoutContent>
-                            <form id={formId} onSubmit={dialog.submit}>
+                            <form
+                                id={formId}
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    void dialog.submit();
+                                }}
+                            >
                                 {children}
                             </form>
                         </LayoutContent>
@@ -110,14 +121,18 @@ export function RegistryDialog<TValues extends FieldValues>({
                                     isDisabled={dialog.isPending}
                                     clickAction={() => dialog.handleOpenChange(false)}
                                 />
-                                <Button
-                                    form={formId}
-                                    type="submit"
-                                    label={dialog.isPending ? 'Creating...' : 'Create'}
-                                    variant="primary"
-                                    isDisabled={!dialog.form.formState.isValid}
-                                    isLoading={dialog.isPending}
-                                />
+                                <dialog.form.Subscribe selector={(state) => state.isValid}>
+                                    {(isValid) => (
+                                        <Button
+                                            form={formId}
+                                            type="submit"
+                                            label={dialog.isPending ? 'Creating...' : 'Create'}
+                                            variant="primary"
+                                            isDisabled={!isValid}
+                                            isLoading={dialog.isPending}
+                                        />
+                                    )}
+                                </dialog.form.Subscribe>
                             </Stack>
                         </LayoutFooter>
                     }

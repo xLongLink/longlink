@@ -4,9 +4,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { api } from '@/lib/api';
 import { useToast } from '@/lib/hooks/use-toast';
 import { AuthLayout } from './AuthLayout';
@@ -15,9 +14,11 @@ import { emailPayloadSchema, type EmailPayload } from './validation';
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const showToast = useToast();
-    const form = useForm<EmailPayload>({
+    const form = useForm({
         defaultValues: { email: '' },
-        resolver: zodResolver(emailPayloadSchema),
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: emailPayloadSchema },
+        onSubmit: ({ value }) => requestReset.mutate(value),
     });
     const requestReset = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
@@ -43,24 +44,31 @@ export default function ForgotPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit((values) => requestReset.mutate(values))}>
-                    <Controller
-                        control={form.control}
+                <Stack
+                    as="form"
+                    gap={4}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
+                    <form.Field
                         name="email"
-                        render={({ field, fieldState }) => (
+                        children={(field) => (
                             <TextInput
                                 {...{ autoComplete: 'email' }}
-                                ref={field.ref}
-                                htmlName={field.name}
+                                htmlName="email"
                                 isRequired
                                 label="Email"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
                                 status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
                                 }
                                 type="email"
-                                value={field.value}
+                                value={field.state.value}
                                 width="100%"
                             />
                         )}

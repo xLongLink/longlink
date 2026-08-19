@@ -1,9 +1,7 @@
 import { z } from 'zod';
-import { Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { TextField } from '@/components/forms/TextField';
 import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/RegistryDialog';
 
 const schema = z.object({
@@ -20,7 +18,7 @@ export default function CreateCompute() {
         endpoint: '/api/v1/computes',
         errorMessage: 'Failed to connect compute',
         queryKey: ['api', '/api/v1/computes'],
-        resolver: zodResolver(schema),
+        schema,
     });
 
     return (
@@ -32,23 +30,22 @@ export default function CreateCompute() {
             width={640}
         >
             <FormLayout>
-                <TextField control={dialog.form.control} name="name" label="Name" />
-                <Controller
-                    control={dialog.form.control}
-                    name="kubeconfig"
-                    render={({ field }) => (
+                <dialog.form.Field name="name">
+                    {(field) => (
+                        <TextInput label="Name" value={field.state.value} isRequired onChange={field.handleChange} />
+                    )}
+                </dialog.form.Field>
+                <dialog.form.Field name="kubeconfig">
+                    {(field) => (
                         <TextArea
-                            ref={field.ref}
                             label="Kubeconfig"
-                            value={field.value}
-                            htmlName={field.name}
+                            value={field.state.value}
                             isRequired
                             rows={12}
-                            onBlur={field.onBlur}
-                            onChange={field.onChange}
+                            onChange={field.handleChange}
                         />
                     )}
-                />
+                </dialog.form.Field>
             </FormLayout>
         </RegistryDialog>
     );
