@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/state',
     title: 'State',
-    description: 'Declares local reactive page state before the page renders.',
+    description:
+        'Use State for information that changes while someone uses a page, such as form entries or selected options.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,11 @@ export default function DocsArticleRoute() {
                         {'State'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Declares local reactive page state before the page renders.'}</Text>
+                <Text as="p">
+                    {
+                        'Use State for information that changes while someone uses a page, such as form entries or selected options.'
+                    }
+                </Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

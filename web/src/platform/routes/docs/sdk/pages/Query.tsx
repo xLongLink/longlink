@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/query',
     title: 'Query',
-    description: 'Fetches JSON data before rendering and stores it in the XML runtime scope.',
+    description:
+        'Use Query to bring the information a page needs into view, such as a list of orders or customer details.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,16 +27,15 @@ export default function DocsArticleRoute() {
                         {'Query'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Fetches JSON data before rendering and stores it in the XML runtime scope.'}</Text>
+                <Text as="p">
+                    {
+                        'Use Query to bring the information a page needs into view, such as a list of orders or customer details.'
+                    }
+                </Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock
-                    code={
-                        '<Query id="orders" path="/api/orders" />\n\n<For each="$orders.items" as="order">\n  $order.number\n</For>'
-                    }
-                    language="xml"
-                />
+                <CodeBlock code={'<Query id="orders" path="/api/orders" />'} language="xml" />
             </Stack>
         </Article>
     );

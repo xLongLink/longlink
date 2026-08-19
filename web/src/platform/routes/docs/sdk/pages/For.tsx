@@ -7,7 +7,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/for',
     title: 'For',
-    description: 'Repeats child XML for every item in an array.',
+    description: 'Use For to turn a collection, such as a list of orders, into repeated content on a page.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +26,9 @@ export default function DocsArticleRoute() {
                         {'For'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Repeats child XML for every item in an array.'}</Text>
+                <Text as="p">
+                    {'Use For to turn a collection, such as a list of orders, into repeated content on a page.'}
+                </Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

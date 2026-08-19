@@ -7,7 +7,8 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 export const metadata = {
     path: '/docs/sdk/pages/action',
     title: 'Action',
-    description: 'Runs ordered requests and runtime state effects from a child trigger.',
+    description:
+        'Use Action to carry out a task after someone submits a form or presses a button, such as saving changes.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -26,7 +27,11 @@ export default function DocsArticleRoute() {
                         {'Action'}
                     </Heading>
                 </Stack>
-                <Text as="p">{'Runs ordered requests and runtime state effects from a child trigger.'}</Text>
+                <Text as="p">
+                    {
+                        'Use Action to carry out a task after someone submits a form or presses a button, such as saving changes.'
+                    }
+                </Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
