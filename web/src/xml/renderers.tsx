@@ -29,7 +29,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     }, [ast]);
     const initializedAst = useRef<ASTNode | null>(setup.nodes.length ? null : ast);
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; baseUrl: string; error: unknown } | null>(null);
-    const [resetKey, setResetKey] = useState(0);
+    const [, setRenderVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
     useEffect(() => {
@@ -63,7 +63,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
                 unsubscribers.push(
                     subscribe(value, () => {
                         // Refresh only while this renderer is mounted.
-                        if (mounted) setResetKey((current) => current + 1);
+                        if (mounted) setRenderVersion((current) => current + 1);
                     })
                 );
             }
@@ -85,7 +85,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             }
 
             subscribeToStateValues();
-            setResetKey((current) => current + 1);
+            setRenderVersion((current) => current + 1);
         };
 
         void setupContext(setup.nodes, ctx)
@@ -95,7 +95,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
                 // Publish initialized AST only while mounted.
                 if (mounted) {
                     initializedAst.current = ast;
-                    setResetKey((current) => current + 1);
+                    setRenderVersion((current) => current + 1);
                 }
             })
             .catch((error) => {
@@ -124,7 +124,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
     if (setup.nodes.length && initializedAst.current !== ast) return null;
 
     return (
-        <XmlErrorBoundary key={resetKey}>
+        <XmlErrorBoundary>
             <XmlContext.Provider value={ctx}>
                 <Stack gap={6}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>
