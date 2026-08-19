@@ -1,8 +1,8 @@
-import { renderToStaticMarkup } from 'react-dom/server';
-import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
 import { RenderXML } from '@/xml';
 import { createContext } from '@/xml/core/context';
 import { compileAttribute } from '@/xml/expressions';
+import { renderToStaticMarkup } from 'react-dom/server';
+import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
 
 /** Compiles string fixture attributes through the same document compiler rules. */
 export function compileProps(props: Record<string, string>): ASTProps {

@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { ROLE_NAMES } from '@/lib/roles';
+import { dateFormatter } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -15,6 +18,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { useOrganizationMembers } from '@/lib/hooks/use-organization';
 import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type {
@@ -22,10 +26,6 @@ import type {
     OrganizationMemberAccessResponse,
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import { ROLE_NAMES } from '@/lib/roles';
-import { dateFormatter } from '@/lib/utils';
-import { useToast } from '@/lib/hooks/use-toast';
-import { useOrganizationMembers } from '@/lib/hooks/use-organization';
 
 const ORGANIZATION_ROLE_LABELS: Record<OrganizationRoles, string> = {
     read: 'read',

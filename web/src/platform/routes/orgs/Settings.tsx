@@ -1,25 +1,25 @@
 import { z } from 'zod';
+import { api } from '@/lib/api';
 import { useState } from 'react';
+import { S3 } from '@/components/svg/S3';
+import { formatBytes } from '@/lib/utils';
+import { hasMinimumRole } from '@/lib/roles';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
+import People from '@/components/settings/People';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useLocation, useParams } from 'react-router';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { skipToken, useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { S3 } from '@/components/svg/S3';
-import { formatBytes } from '@/lib/utils';
-import { hasMinimumRole } from '@/lib/roles';
-import { useToast } from '@/lib/hooks/use-toast';
-import People from '@/components/settings/People';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
@@ -98,6 +98,8 @@ export default function OrganizationSettings() {
                       zOrganizationStorageUsageResponse.nullable().parse(await api(storagePath, { signal }).json()),
         retry: false,
     });
+    const storageResourceError = error ?? storageError;
+
     /** Saves the Organization avatar URL when focus leaves the setting. */
     async function saveAvatar() {
         setAvatarError(null);
@@ -219,10 +221,8 @@ export default function OrganizationSettings() {
                                     <Heading level={2}>Storage</Heading>
                                     <Text type="supporting">Review storage usage for this organization.</Text>
                                 </VStack>
-                                {isLoading || isStorageLoading ? null : error ? (
-                                    <Banner status="error" title={error.message} />
-                                ) : storageError ? (
-                                    <Banner status="error" title={storageError.message} />
+                                {isLoading || isStorageLoading ? null : storageResourceError ? (
+                                    <Banner status="error" title={storageResourceError.message} />
                                 ) : storageUsage === null || storageUsage === undefined ? (
                                     <EmptyState title="No storage resources found." isCompact />
                                 ) : (

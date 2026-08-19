@@ -1,17 +1,16 @@
 import { z } from 'zod';
 import { useEffect } from 'react';
+import { AuthLayout } from './AuthLayout';
+import { api, ApiError } from '@/lib/api';
+import { passwordSchema } from './validation';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { api, ApiError } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
-import { AuthLayout } from './AuthLayout';
-import { passwordSchema } from './validation';
 
 const PASSWORD_RESET_TOKEN_KEY = 'longlink.password-reset.token';
 const resetPasswordSchema = z.object({
@@ -24,9 +23,11 @@ type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export default function ResetPassword() {
     const showToast = useToast();
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
-    const form = useForm<ResetPasswordValues>({
+    const form = useForm({
         defaultValues: { password: '' },
-        resolver: zodResolver(resetPasswordSchema),
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: resetPasswordSchema },
+        onSubmit: ({ value }) => handleResetPassword(value),
     });
     const isBadTokenError = (error: unknown) =>
         error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN';
@@ -107,22 +108,29 @@ export default function ResetPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>
-                    <Controller
-                        control={form.control}
+                <Stack
+                    as="form"
+                    gap={4}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
+                    <form.Field
                         name="password"
-                        render={({ field, fieldState }) => (
+                        children={(field) => (
                             <TextInput
-                                ref={field.ref}
-                                htmlName={field.name}
+                                htmlName="password"
                                 isRequired
                                 label="New password"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
                                 status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
                                 }
-                                value={field.value}
+                                value={field.state.value}
                                 width="100%"
                                 type="password"
                             />

@@ -1,8 +1,8 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Article } from '@/components/layouts/Article';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
     path: '/docs/sdk/pages/selector-option',

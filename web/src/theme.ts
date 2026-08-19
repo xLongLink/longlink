@@ -6,8 +6,8 @@
  * Montserrat for headings, Figtree for body, JetBrains Mono for code.
  */
 
-import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
 import { stoneIconRegistry } from './components/ui/Icon';
+import { defineTheme, defineSyntaxTheme } from '@astryxdesign/core/theme';
 
 /**
  * VS Code Dark syntax palette keeps code familiar and readable in every mode.

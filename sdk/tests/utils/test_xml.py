@@ -1,6 +1,5 @@
 import pytest
-from pathlib import Path
-from longlink.utils.xml import Element
+from longlink.utils.xml import validate_xml
 
 VALID_FRAGMENTS = [
     (
@@ -108,39 +107,26 @@ UNSUPPORTED_MARKUP_FRAGMENTS = [
 
 
 @pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])
-def test_element_validation_rejects_unsupported_markup(_name: str, content: str, tmp_path: Path) -> None:
+def test_xml_validation_rejects_unsupported_markup(_name: str, content: str) -> None:
     """Reject XML markup unsupported by the browser runtime."""
-
-    # Build a document containing unsupported browser markup.
-    path = tmp_path / "page.xml"
-    path.write_text(content, encoding="utf-8")
-    element = Element(path)
 
     # Validate the document at the shared XML boundary.
     with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
-        element.validate()
+        validate_xml(content)
 
 
 @pytest.mark.parametrize(("_name", "content"), VALID_FRAGMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
-def test_root_schema_accepts_valid_fragments(_name: str, content: str, tmp_path: Path) -> None:
+def test_root_schema_accepts_valid_fragments(_name: str, content: str) -> None:
     """Validate representative XML fragments through the application page schema."""
 
-    # Build and validate the fragment through the application page schema.
-    path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
-    element = Element(path)
-    element.validate()
+    # Validate the fragment through the application page schema.
+    validate_xml(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>")
 
 
 @pytest.mark.parametrize(("_name", "content"), INVALID_FRAGMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
-def test_root_schema_rejects_invalid_fragments(_name: str, content: str, tmp_path: Path) -> None:
+def test_root_schema_rejects_invalid_fragments(_name: str, content: str) -> None:
     """Reject representative invalid XML fragments through the application page schema."""
-
-    # Build the invalid fragment through the application page schema.
-    path = tmp_path / "page.xml"
-    path.write_text(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>", encoding="utf-8")
-    element = Element(path)
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):
-        element.validate()
+        validate_xml(content if content.startswith("<longlink") else f"<longlink>{content}</longlink>")

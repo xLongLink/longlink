@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Wrench } from 'lucide-react';
+import Logs from '@/components/dialogs/Logs';
+import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import Logs from '@/components/dialogs/Logs';
-import { useDeleteDialog } from '@/lib/utils';
-import { useToast } from '@/lib/hooks/use-toast';
 import CreateApplication from '@/components/dialogs/CreateApplication';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDeleteOrganizationApplication } from '@/lib/hooks/use-organization';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({

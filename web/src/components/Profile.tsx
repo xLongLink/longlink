@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useSignOut } from '@/lib/hooks/use-user';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import {
     AppWindow,
     ArrowUpDown,
@@ -21,9 +24,6 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
-import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { useToast } from '@/lib/hooks/use-toast';
-import { useSignOut } from '@/lib/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: UserSummary }) {

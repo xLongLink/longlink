@@ -1,8 +1,8 @@
-import { Stack as AstryxStack } from '@astryxdesign/core/Stack';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
+import { Stack as AstryxStack } from '@astryxdesign/core/Stack';
 import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
 export function Stack({ props, nodes }: Props) {

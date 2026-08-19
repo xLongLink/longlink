@@ -1,17 +1,16 @@
 from uuid import UUID
-from sqlalchemy import select, update
+from src.utils import names
+from sqlalchemy import select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, contains_eager
 from collections.abc import Sequence
 from src.models.types import Image
 from longlink.utils.time import utcnow
-from src.models.statuses import Status
 from src.database.services import operations
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -43,21 +42,10 @@ async def purge(session: AsyncSession, application_id: UUID) -> None:
     await session.delete(application)
 
 
-async def get(session: AsyncSession, application_id: UUID, include_deleted: bool = False) -> Application | None:
-    """Return a registered application by id."""
-
-    # Load the requested application by primary key.
-    application = await session.get(Application, application_id)
-    if application is None or (not include_deleted and application.deleted_at is not None):
-        return None
-    return application
-
-
 async def create(
     session: AsyncSession,
     organization_id: UUID,
     name: str,
-    slug: str,
     image: Image,
     user: User,
     secrets: dict[str, str],
@@ -66,13 +54,8 @@ async def create(
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
-    # Lock the Organization and its assigned Compute registry before validating the assignment.
-    result = await session.execute(
-        select(Organization)
-        .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
-        .where(Organization.id == organization_id)
-        .with_for_update()
-    )
+    # Lock the Organization before creating an Application against its assignment.
+    result = await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
     organization = result.scalar_one_or_none()
     if organization is None:
         raise NotFoundError("Organization not found")
@@ -81,9 +64,9 @@ async def create(
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
-        organization_id=organization.id,
+        organization_id=organization_id,
         name=name,
-        slug=slug,
+        slug=names.slugify(name),
         description=description,
         image_desired=image,
         icon=icon,
@@ -123,15 +106,17 @@ async def release(
     result = await session.execute(
         select(Application, Organization.compute_id)
         .join(Application.organization)
-        .where(Application.id == application_id, Organization.deleted_at.is_(None))
+        .where(
+            Application.id == application_id,
+            Application.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+        )
         .with_for_update()
     )
     row = result.one_or_none()
     if row is None:
         return None
     application, compute_id = row
-    if application.deleted_at is not None:
-        return None
 
     # Persist the image-derived desired release before scheduling its convergence.
     application.image_desired = image
@@ -144,36 +129,6 @@ async def release(
         target_id=application.id,
     )
     return application
-
-
-async def add_runtime_secrets(session: AsyncSession, application_id: UUID, secrets: dict[str, str]) -> dict[str, str] | None:
-    """Persist generated runtime secrets unless a previous attempt already did."""
-
-    # Lock the Application so only the first creation attempt writes generated credentials.
-    application = await session.get(Application, application_id, with_for_update=True)
-    if application is None or application.deleted_at is not None:
-        return None
-
-    # Reuse durable runtime values after an interrupted creation attempt.
-    if "LONGLINK_ENV" not in application.secrets:
-        # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-        application.secrets = {**application.secrets, **secrets}
-    return application.secrets
-
-
-async def publish_deployment(session: AsyncSession, application_id: UUID) -> None:
-    """Publish an applied release and Application readiness."""
-
-    # Publish only an active Application's initial deployment transition.
-    await session.execute(
-        update(Application)
-        .where(
-            Application.id == application_id,
-            Application.deleted_at.is_(None),
-            Application.status == Status.creating,
-        )
-        .values(status=Status.running)
-    )
 
 
 async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -> Application | None:
@@ -193,9 +148,7 @@ async def soft_delete(session: AsyncSession, application_id: UUID, user: User) -
 
     # Record the tombstone once; repeated requests only ensure cleanup remains queued.
     if application.deleted_at is None:
-        now = utcnow()
-        application.status = Status.deleting
-        application.deleted_at = now
+        application.deleted_at = utcnow()
         application.deleted_id = user.id
         application.updated_id = user.id
 

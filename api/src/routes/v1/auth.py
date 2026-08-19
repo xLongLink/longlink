@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(tags=["auth"])
 
+
 @router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
@@ -254,7 +255,7 @@ async def complete_registration(
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
-        user = await users.register(session, f"{payload.name} {payload.surname}", email, payload.password)
+        user = await users.register(session, payload.name, email, payload.password)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()

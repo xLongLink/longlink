@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import type { Props } from '../types';
 import { Card } from '../adapters/Card';
 import { Grid } from '../adapters/Grid';
@@ -8,6 +7,7 @@ import { Text } from '../adapters/Text';
 import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
+import type { ComponentType } from 'react';
 import { Action } from '../adapters/Action';
 import { Avatar } from '../adapters/Avatar';
 import { Button } from '../adapters/Button';

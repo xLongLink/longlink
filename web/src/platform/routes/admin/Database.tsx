@@ -1,22 +1,22 @@
-import { Text } from '@astryxdesign/core/Text';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { api } from '@/lib/api';
 import { useDeleteDialog } from '@/lib/utils';
+import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
@@ -26,8 +26,8 @@ export default function AdminDatabase() {
         mutationFn: async (databaseId: string) => {
             await api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
             toast({ body: 'Database deleted' });
         },
     });

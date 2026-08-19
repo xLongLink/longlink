@@ -1,11 +1,11 @@
-import { Stack } from '@astryxdesign/core/Stack';
-import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useBindableValue } from '../core/binding';
 import { resolveNavigationUrl } from '../core/url';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 
 export function TabList({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -32,7 +32,7 @@ export function TabList({ props, nodes }: Props) {
     const activeTab = tabs.find((tab) => tab.value === binding.value);
 
     return (
-        <Stack gap={4}>
+        <Stack gap={0}>
             <AstryxTabList
                 aria-label={typeof label === 'string' ? label : 'Tabs'}
                 onChange={binding.setValue}

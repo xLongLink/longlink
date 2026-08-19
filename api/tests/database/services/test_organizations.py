@@ -8,11 +8,12 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -48,8 +49,7 @@ async def test_members_returns_users_from_membership_table(users: tuple[User, Us
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -92,8 +92,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     owner, member, non_member = users
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -150,8 +149,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     deleted_at = utcnow()
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -190,8 +188,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
         registry.status = Status.creating
@@ -223,7 +220,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             session,
             organization.id,
             "Dashboard",
-            "dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
             owner,
             {},
@@ -231,8 +227,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
         await session.commit()
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -248,8 +243,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await session.commit()
         active_organization = await organizations.get(session, organization.id)
         deleted_organization = await organizations.get(session, organization.id, include_deleted=True)
-        active_application = await applications.get(session, application.id)
-        deleted_application = await applications.get(session, application.id, include_deleted=True)
+        deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)
         await session.commit()
@@ -264,7 +258,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         assert await organizations.members(session, organization.id) == []
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
-    assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is not None

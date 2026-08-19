@@ -1,8 +1,8 @@
-import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
+import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
 

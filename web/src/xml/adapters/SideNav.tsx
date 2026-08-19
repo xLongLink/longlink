@@ -1,9 +1,9 @@
-import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 
 export function SideNav({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();

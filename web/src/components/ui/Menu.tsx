@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router';
+import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
 import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import {
@@ -6,7 +7,6 @@ import {
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
-import { Icon, type StoneIconName } from '@/components/ui/Icon';
 
 type MenuProps = { children?: ReactNode };
 type MenuSectionProps = {
@@ -14,14 +14,14 @@ type MenuSectionProps = {
     isHeaderHidden?: boolean;
     title: string;
 };
-type MenuItemProps = {
+type MenuMarkerProps = {
     children?: ReactNode;
     icon?: StoneIconName;
     label: string;
 };
 type MenuEntry =
-    | { item: ReactElement<MenuItemProps>; kind: 'item' }
-    | { kind: 'subsection'; subSection: ReactElement<MenuItemProps> };
+    | { item: ReactElement<MenuMarkerProps>; kind: 'item' }
+    | { kind: 'subsection'; subSection: ReactElement<MenuMarkerProps> };
 
 /** Converts a menu label into its hash navigation target. */
 function menuItemHref(label: string): string {
@@ -33,28 +33,13 @@ function menuItemHref(label: string): string {
 }
 
 /** Returns whether a node defines selectable menu content. */
-function isMenuItem(node: ReactNode): node is ReactElement<MenuItemProps> {
+function isMenuItem(node: ReactNode): node is ReactElement<MenuMarkerProps> {
     return isValidElement(node) && node.type === MenuItem;
 }
 
 /** Returns whether a node groups nested menu items. */
-function isMenuSubSection(node: ReactNode): node is ReactElement<MenuItemProps> {
+function isMenuSubSection(node: ReactNode): node is ReactElement<MenuMarkerProps> {
     return isValidElement(node) && node.type === MenuSubSection;
-}
-
-/** Renders a selectable SideNav item from its Menu marker. */
-function renderMenuItem(item: ReactElement<MenuItemProps>, activeItem: ReactElement<MenuItemProps> | undefined) {
-    const { children: _children, icon, ...itemProps } = item.props;
-
-    return (
-        <AstryxSideNavItem
-            {...itemProps}
-            icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-            href={menuItemHref(itemProps.label)}
-            isSelected={item === activeItem}
-            key={itemProps.label}
-        />
-    );
 }
 
 /** Renders section navigation beside the selected item's content. */
@@ -89,7 +74,7 @@ export function Menu({ children }: MenuProps) {
         <Layout
             height="auto"
             start={
-                <LayoutPanel isScrollable={false} label="Settings navigation" role="navigation" width={260}>
+                <LayoutPanel isScrollable={false} label="Settings navigation" padding={4} role="navigation" width={260}>
                     <AstryxSideNav className="w-full">
                         {sections.map(({ entries, section }) => (
                             <AstryxSideNavSection {...section.props} key={section.props.title}>
@@ -98,20 +83,45 @@ export function Menu({ children }: MenuProps) {
                                         const items = Children.toArray(entry.subSection.props.children).filter(
                                             isMenuItem
                                         );
-                                        const { children: _children, ...subSectionProps } = entry.subSection.props;
+                                        const { icon, label } = entry.subSection.props;
 
                                         return (
                                             <AstryxSideNavItem
-                                                {...subSectionProps}
                                                 collapsible
-                                                key={subSectionProps.label}
+                                                icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
+                                                key={label}
+                                                label={label}
                                             >
-                                                {items.map((item) => renderMenuItem(item, activeItem))}
+                                                {items.map((item) => (
+                                                    <AstryxSideNavItem
+                                                        href={menuItemHref(item.props.label)}
+                                                        icon={
+                                                            item.props.icon ? (
+                                                                <Icon icon={item.props.icon} size="sm" />
+                                                            ) : undefined
+                                                        }
+                                                        isSelected={item === activeItem}
+                                                        key={item.props.label}
+                                                        label={item.props.label}
+                                                    />
+                                                ))}
                                             </AstryxSideNavItem>
                                         );
                                     }
 
-                                    return renderMenuItem(entry.item, activeItem);
+                                    return (
+                                        <AstryxSideNavItem
+                                            href={menuItemHref(entry.item.props.label)}
+                                            icon={
+                                                entry.item.props.icon ? (
+                                                    <Icon icon={entry.item.props.icon} size="sm" />
+                                                ) : undefined
+                                            }
+                                            isSelected={entry.item === activeItem}
+                                            key={entry.item.props.label}
+                                            label={entry.item.props.label}
+                                        />
+                                    );
                                 })}
                             </AstryxSideNavSection>
                         ))}
@@ -130,11 +140,11 @@ export function MenuSection(_props: MenuSectionProps) {
 }
 
 /** Defines a navigation item and its associated content for Menu. */
-export function MenuItem(_props: MenuItemProps) {
+export function MenuItem(_props: MenuMarkerProps) {
     return null;
 }
 
 /** Defines a collapsible group of related MenuItems. */
-export function MenuSubSection(_props: MenuItemProps) {
+export function MenuSubSection(_props: MenuMarkerProps) {
     return null;
 }

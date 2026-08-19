@@ -1,22 +1,22 @@
+import { api } from '@/lib/api';
 import { Wrench } from 'lucide-react';
+import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@/lib/hooks/use-toast';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { api } from '@/lib/api';
-import { useDeleteDialog } from '@/lib/utils';
-import { useToast } from '@/lib/hooks/use-toast';
-import { usePaginate } from '@/lib/hooks/pagination';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateCompute from '@/components/dialogs/CreateCompute';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
@@ -26,8 +26,8 @@ export default function AdminCompute() {
         mutationFn: async (computeId: string) => {
             await api(`/api/v1/computes/${computeId}`, { method: 'DELETE' });
         },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
             toast({ body: 'Compute deleted' });
         },
     });

@@ -47,28 +47,29 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
         )
         .with_for_update()
     )
-    if invitation is not None:
-        invitation.role = role
-        invitation.created_at = utcnow()
-        return invitation
+    is_reinvite = invitation is not None
 
     # Resolve concurrent re-invites to the one database-enforced active grant.
-    try:
-        async with session.begin_nested():
-            invitation = OrganizationInvitation(organization_id=organization_id, email=normalized_email, role=role)
-            session.add(invitation)
-            await session.flush()
-    except IntegrityError as exc:
-        invitation = await session.scalar(
-            select(OrganizationInvitation)
-            .where(
-                OrganizationInvitation.organization_id == organization_id,
-                OrganizationInvitation.email == normalized_email,
+    if invitation is None:
+        try:
+            async with session.begin_nested():
+                invitation = OrganizationInvitation(organization_id=organization_id, email=normalized_email, role=role)
+                session.add(invitation)
+                await session.flush()
+        except IntegrityError as exc:
+            invitation = await session.scalar(
+                select(OrganizationInvitation)
+                .where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.email == normalized_email,
+                )
+                .with_for_update()
             )
-            .with_for_update()
-        )
-        if invitation is None:
-            raise ConflictError("Invitation could not be created") from exc
+            if invitation is None:
+                raise ConflictError("Invitation could not be created") from exc
+            is_reinvite = True
+
+    if is_reinvite:
         invitation.role = role
         invitation.created_at = utcnow()
 

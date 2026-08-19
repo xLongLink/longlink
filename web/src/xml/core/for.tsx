@@ -1,6 +1,6 @@
-import type { Props } from '../types';
 import { renderNode } from './node';
 import { resolveXml } from './props';
+import type { Props } from '../types';
 import { evaluate } from '../expressions';
 import { useXmlRuntime, XmlContext } from './context';
 

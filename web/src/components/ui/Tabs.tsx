@@ -1,7 +1,7 @@
 import { Stack } from '@astryxdesign/core/Stack';
+import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState, Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
-import { Icon, type StoneIconName } from '@/components/ui/Icon';
 
 type TabsProps = Omit<ComponentProps<typeof AstryxTabList>, 'children' | 'onChange' | 'value'> & {
     children?: ReactNode;
@@ -24,7 +24,7 @@ export function Tabs({ children, ...props }: TabsProps) {
     }
 
     return (
-        <Stack gap={4}>
+        <Stack gap={0}>
             <AstryxTabList
                 {...props}
                 aria-label={props['aria-label'] ?? 'Tabs'}

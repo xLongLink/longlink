@@ -1,6 +1,6 @@
-import { XMLParser, XMLValidator } from 'fast-xml-parser';
-import type { ASTNode, ASTProps } from '../types';
 import { compileAttribute } from '../expressions';
+import type { ASTNode, ASTProps } from '../types';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
 const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
 
@@ -22,9 +22,7 @@ export function parseXML(xml: string): ASTNode[] {
     }
 
     // Validate first because the preserve-order parser can otherwise recover from malformed tags.
-    const validationResult = XMLValidator.validate(xml) as
-        | true
-        | { err?: { col?: number; line?: number; msg?: string } };
+    const validationResult = XMLValidator.validate(xml);
 
     // Surface parser validation errors with location details.
     if (validationResult !== true) {

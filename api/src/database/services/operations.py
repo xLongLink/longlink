@@ -69,8 +69,7 @@ async def enqueue(
         raise ValueError("Compute operations must target their compute registry")
 
     # Require the assigned compute before scheduling its resource work.
-    compute_result = await session.scalar(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
-    if compute_result is None:
+    if await session.scalar(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update()) is None:
         return None
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
@@ -122,16 +121,17 @@ async def claim(session: AsyncSession) -> Operation | None:
         return None
 
     # Acquire the lease conditionally because SQLite ignores the row locks above.
-    result = await session.execute(
-        update(Operation)
-        .where(
-            Operation.id == operation.id,
-            Operation.finished_at.is_(None),
-            Operation.lease_expires_at.is_(None),
+    if (
+        await session.execute(
+            update(Operation)
+            .where(
+                Operation.id == operation.id,
+                Operation.finished_at.is_(None),
+                Operation.lease_expires_at.is_(None),
+            )
+            .values(lease_expires_at=now + timedelta(minutes=30))
         )
-        .values(lease_expires_at=now + timedelta(minutes=30))
-    )
-    if result.rowcount != 1:
+    ).rowcount != 1:
         return None
     return operation
 

@@ -1,10 +1,10 @@
-import type { ReactElement } from 'react';
+import { ApiError } from '@/lib/api';
 import { Navigate } from 'react-router';
+import type { ReactElement } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { VStack } from '@astryxdesign/core/VStack';
-import { ApiError } from '@/lib/api';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Protects routes behind the current user query. */

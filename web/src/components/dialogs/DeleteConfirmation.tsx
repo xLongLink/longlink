@@ -1,9 +1,9 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import type { DeleteConfirmationProps } from '@/lib/utils';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import type { DeleteConfirmationProps } from '@/lib/utils';
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmation({
@@ -14,28 +14,19 @@ export function DeleteConfirmation({
     onConfirm,
     onOpenChange,
 }: DeleteConfirmationProps) {
+    /** Prevent closing while the destructive request is in flight. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && isPending) {
+            return;
+        }
+
+        onOpenChange(nextOpen);
+    }
+
     return (
-        <Dialog
-            isOpen={open}
-            onOpenChange={(nextOpen) => {
-                if (!nextOpen && isPending) {
-                    return;
-                }
-                onOpenChange(nextOpen);
-            }}
-            purpose={isPending ? 'required' : 'form'}
-        >
+        <Dialog isOpen={open} onOpenChange={handleOpenChange} purpose={isPending ? 'required' : 'form'}>
             <Layout
-                header={
-                    <DialogHeader
-                        title={title}
-                        onOpenChange={(nextOpen) => {
-                            if (!isPending) {
-                                onOpenChange(nextOpen);
-                            }
-                        }}
-                    />
-                }
+                header={<DialogHeader title={title} onOpenChange={handleOpenChange} />}
                 content={
                     <LayoutContent>
                         <Text as="div" color="secondary">
@@ -50,7 +41,7 @@ export function DeleteConfirmation({
                                 label="Cancel"
                                 variant="ghost"
                                 isDisabled={isPending}
-                                clickAction={() => onOpenChange(false)}
+                                clickAction={() => handleOpenChange(false)}
                             />
                             <Button
                                 label="Delete"

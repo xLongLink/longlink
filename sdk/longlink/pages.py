@@ -1,7 +1,4 @@
-import re
 from dataclasses import dataclass
-
-PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 @dataclass(slots=True)
@@ -46,14 +43,14 @@ def page_file_route(relative_path: str) -> str:
                 raise ValueError("Dynamic page parameters cannot be empty")
 
             # Dynamic route parameters must be safe identifiers.
-            if not PAGE_PARAMETER_PATTERN.fullmatch(parameter_name):
+            if not parameter_name.isascii() or not parameter_name.isidentifier():
                 raise ValueError("Dynamic page parameters must be valid identifier names")
 
             route_segments.append(f":{parameter_name}")
             continue
 
         # Static file names cannot introduce browser route parameters or wildcards.
-        if segment.startswith(":") or "*" in segment:
+        if segment.startswith(":") or "*" in segment or "{" in segment or "}" in segment:
             raise ValueError("Static page route segments cannot contain route parameters or wildcards")
 
         route_segments.append(segment)

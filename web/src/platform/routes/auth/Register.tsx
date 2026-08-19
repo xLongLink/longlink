@@ -1,16 +1,15 @@
+import { api } from '@/lib/api';
+import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
+import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Divider } from '@/components/ui/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
-import { Divider } from '@/components/ui/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
-import { AuthLayout } from './AuthLayout';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Starts stateless account registration with an email verification link. */
@@ -18,12 +17,12 @@ export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
     const initialEmail = searchParams.get('email') ?? '';
-    const form = useForm<EmailPayload>({
+    const form = useForm({
         defaultValues: { email: initialEmail },
-        resolver: zodResolver(emailPayloadSchema),
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: emailPayloadSchema },
+        onSubmit: ({ value }) => registration.mutate(value),
     });
-    const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInHref = email ? `/login?${new URLSearchParams({ email })}` : '/login';
     const registration = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
         onSuccess: () => {
@@ -37,24 +36,31 @@ export default function Register() {
     return (
         <AuthLayout description={<Divider>{'Please enter your email'}</Divider>} title={<WelcomeTitle />}>
             <Stack gap={3}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit((values) => registration.mutate(values))}>
-                    <Controller
-                        control={form.control}
+                <Stack
+                    as="form"
+                    gap={3}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
+                    <form.Field
                         name="email"
-                        render={({ field, fieldState }) => (
+                        children={(field) => (
                             <TextInput
                                 {...{ autoComplete: 'email' }}
-                                ref={field.ref}
-                                htmlName={field.name}
+                                htmlName="email"
                                 isRequired
                                 label="Email"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
                                 status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
                                 }
                                 type="email"
-                                value={field.value}
+                                value={field.state.value}
                                 width="100%"
                             />
                         )}
@@ -66,12 +72,23 @@ export default function Register() {
                         variant="primary"
                     />
                 </Stack>
-                <Divider>
-                    Already have an account?{' '}
-                    <Link href={signInHref} type="inherit" weight="medium">
-                        Sign In
-                    </Link>
-                </Divider>
+                <form.Subscribe selector={(state) => state.values.email}>
+                    {(email) => {
+                        const trimmedEmail = email.trim();
+                        const signInHref = trimmedEmail
+                            ? `/login?${new URLSearchParams({ email: trimmedEmail })}`
+                            : '/login';
+
+                        return (
+                            <Divider>
+                                Already have an account?{' '}
+                                <Link href={signInHref} type="inherit" weight="medium">
+                                    Sign In
+                                </Link>
+                            </Divider>
+                        );
+                    }}
+                </form.Subscribe>
             </Stack>
         </AuthLayout>
     );

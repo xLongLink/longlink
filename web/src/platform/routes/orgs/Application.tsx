@@ -1,16 +1,21 @@
 import { useParams } from 'react-router';
 import { Card } from '@astryxdesign/core/Card';
-import { Button } from '@astryxdesign/core/Button';
+import { ProfileMenu } from '@/components/Profile';
+import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { XmlApplication } from '@/xml/runtime/Application';
+import { PageContainer } from '@/components/PageContainer';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
+import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { ApplicationRuntime } from '@/components/Application';
+import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization application after route authentication. */
 export default function OrganizationApplication() {
     const { organization = '', application = '' } = useParams();
+    const user = useAuthenticatedUser();
     const { applications, isLoading, error } = useOrganizationApplications(organization);
     const applicationAccess = applications.find((item) => item.slug === application);
 
@@ -30,37 +35,40 @@ export default function OrganizationApplication() {
         return <NotFoundLayout />;
     }
 
-    if (applicationAccess.status === 'creating' || applicationAccess.status === 'deleting') {
+    const action = <ProfileMenu user={user} />;
+    const breadcrumb = <PageBreadcrumb applicationName={applicationAccess.name} />;
+
+    if (applicationAccess.status === 'creating') {
         return (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Card maxWidth={576} padding={6} width="100%">
-                    <EmptyState
-                        actions={
-                            applicationAccess.status === 'deleting' ? (
-                                <Button href={`/orgs/${organization}`} label="Back to organization" variant="primary" />
-                            ) : undefined
-                        }
-                        description={
-                            applicationAccess.status === 'creating'
-                                ? 'Please try again in a moment.'
-                                : 'This application is unavailable while LongLink removes it.'
-                        }
-                        headingLevel={1}
-                        role="alert"
-                        title={
-                            applicationAccess.status === 'creating'
-                                ? 'Application is being deployed'
-                                : 'Application is being deleted'
-                        }
-                    />
-                </Card>
-            </Center>
+            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
+                    <Card maxWidth={576} padding={6} width="100%">
+                        <EmptyState
+                            description="Please try again in a moment."
+                            headingLevel={1}
+                            role="alert"
+                            title="Application is being deployed"
+                        />
+                    </Card>
+                </Center>
+            </Platform>
         );
     }
 
     const navigationBaseUrl = `/orgs/${organization}/apps/${application}`;
     const pagesUrl = `/api/v1/applications/${applicationAccess.id}/proxy/pages.json`;
-    const requestBaseUrl = pagesUrl.replace(/pages\.json(?:[?#].*)?$/i, '');
 
-    return <XmlApplication navigationBaseUrl={navigationBaseUrl} pagesUrl={pagesUrl} requestBaseUrl={requestBaseUrl} />;
+    return (
+        <ApplicationRuntime
+            navigationBaseUrl={navigationBaseUrl}
+            pagesUrl={pagesUrl}
+            requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
+        >
+            {({ content, tabs }) => (
+                <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
+                    <PageContainer minHeight="100%">{content}</PageContainer>
+                </Platform>
+            )}
+        </ApplicationRuntime>
+    );
 }

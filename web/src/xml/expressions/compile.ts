@@ -18,7 +18,7 @@ export function compileAttribute(value: string): ASTAttribute {
     const standaloneExpression = readStandaloneExpression(input);
 
     // Keep standalone expressions typed when they are evaluated.
-    if (standaloneExpression) return { kind: 'expression', node: standaloneExpression.node };
+    if (standaloneExpression) return { kind: 'expression', node: standaloneExpression };
 
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
@@ -71,13 +71,13 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
 }
 
 /** Returns one standalone expression when the entire value is wrapped in `${...}`. */
-function readStandaloneExpression(input: string): InterpolationSegment | null {
+function readStandaloneExpression(input: string): ExpressionNode | null {
     // Only wrapped values can be standalone expressions.
     if (!input.startsWith('${')) return null;
 
     const segment = readInterpolationSegment(input, 0);
 
-    return segment.end === input.length - 1 ? segment : null;
+    return segment.end === input.length - 1 ? segment.node : null;
 }
 
 /** Reads every `${...}` interpolation segment from a mixed string value. */

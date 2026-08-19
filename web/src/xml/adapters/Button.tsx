@@ -1,9 +1,9 @@
 import { useContext } from 'react';
-import { Button as AstryxButton } from '@astryxdesign/core/Button';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { ActionHandlerContext } from './Action';
+import { Button as AstryxButton } from '@astryxdesign/core/Button';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { BUTTON_HTML_TYPES, BUTTON_VARIANTS, ELEVATIONS, SIZES } from '../constants';
 

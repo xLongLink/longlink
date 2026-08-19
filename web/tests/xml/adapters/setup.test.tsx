@@ -1,9 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
+import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('setup adapters', () => {
-    /* State and Query nodes should expose setup validation failures through the XML renderer. */
     it('renders setup validation errors', () => {
         const cases = [
             {

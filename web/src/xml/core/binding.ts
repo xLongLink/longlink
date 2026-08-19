@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { getVersion, proxy, ref, useSnapshot } from 'valtio';
-import type { ASTProps, Scope } from '../types';
 import { resolveXmlValue } from './props';
+import type { ASTProps, Scope } from '../types';
+import { getVersion, proxy, ref, useSnapshot } from 'valtio';
 import { isSafePropertyName, resolvePath } from '../expressions';
 
 const EMPTY_BINDING = proxy<Record<string, unknown>>({});

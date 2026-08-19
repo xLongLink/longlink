@@ -1,32 +1,32 @@
-import startCase from 'lodash/startCase';
-import { useEffect, useMemo } from 'react';
-import { Link } from '@astryxdesign/core/Link';
-import { Stack } from '@astryxdesign/core/Stack';
-import { useQuery } from '@tanstack/react-query';
-import { Center } from '@astryxdesign/core/Center';
-import { TopNav } from '@astryxdesign/core/TopNav';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import { api } from '@/lib/api';
+import startCase from 'lodash/startCase';
 import { PageError } from '@/components/Utils';
-import { Wordmark } from '@/components/Wordmark';
-import { Navigation } from '@/components/Navigation';
-import TopLayout from '@/components/layouts/TopLayout';
+import { useQuery } from '@tanstack/react-query';
+import { resolveRequestUrl } from '@/xml/core/url';
+import { Center } from '@astryxdesign/core/Center';
+import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { PageContainer } from '@/components/PageContainer';
-import { resolveRequestUrl } from '../core/url';
-import { pageSchema, type RuntimePage } from '../pages';
-import { createContext as createXmlContext, parseXML, RenderXML } from '..';
+import { pageSchema, type RuntimePage } from '@/xml/pages';
+import { useEffect, useMemo, type ReactNode } from 'react';
+import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
+import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 
-type XmlApplicationProps = {
+type ApplicationRuntimeProps = {
+    children: (application: { content: ReactNode; tabs: readonly ApplicationTab[] }) => ReactNode;
     navigationBaseUrl: string;
     pagesUrl: string;
     requestBaseUrl: string;
 };
 
-/** Renders a manifest-driven XML application within a host-specific URL context. */
-export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: XmlApplicationProps) {
+type ApplicationTab = {
+    href: string;
+    icon?: ReturnType<typeof getIconComponent>;
+    label: string;
+};
+
+/** Resolves and renders the current manifest-defined application page. */
+export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requestBaseUrl }: ApplicationRuntimeProps) {
     const { '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const routePath = wildcardPath ?? '';
@@ -79,15 +79,15 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
         },
         retry: false,
     });
-    const tabGroups = new Map<string, { href: string; icon?: ReturnType<typeof getIconComponent>; label: string }>();
+    const tabs = new Map<string, ApplicationTab>();
 
     // Build one static navigation target per runtime tab.
     for (const page of staticPages) {
-        if (!page.route || tabGroups.has(page.tab)) {
+        if (!page.route || tabs.has(page.tab)) {
             continue;
         }
 
-        tabGroups.set(page.tab, {
+        tabs.set(page.tab, {
             href: `${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${page.route}`,
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
@@ -103,7 +103,7 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
         navigate(`${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${firstTabPage.route}`, { replace: true });
     }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
 
-    let content;
+    let content: ReactNode;
 
     if (!error && registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
@@ -138,36 +138,5 @@ export function XmlApplication({ navigationBaseUrl, pagesUrl, requestBaseUrl }: 
         );
     }
 
-    return (
-        <TopLayout
-            topMenu={
-                <Stack>
-                    <TopNav
-                        className="px-7"
-                        endContent={
-                            <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
-                                Documentation
-                            </Link>
-                        }
-                        heading={
-                            <Link
-                                as="a"
-                                href="https://longlink.dev"
-                                label="LongLink home"
-                                color="inherit"
-                                rel="noopener noreferrer"
-                                target="_blank"
-                            >
-                                <Wordmark />
-                            </Link>
-                        }
-                        label="Main navigation"
-                    />
-                    {tabGroups.size > 0 ? <Navigation tabs={[...tabGroups.values()]} /> : null}
-                </Stack>
-            }
-        >
-            <PageContainer minHeight="100%">{content}</PageContainer>
-        </TopLayout>
-    );
+    return children({ content, tabs: [...tabs.values()] });
 }

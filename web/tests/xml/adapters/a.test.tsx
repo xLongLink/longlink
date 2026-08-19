@@ -1,10 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
-import { createContext } from '@/xml/core/context';
+import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
+import { createContext } from '@/xml/core/context';
 
 describe('Link', () => {
-    /* App navigation targets should resolve against the view route base, not the API request base. */
     it('renders app navigation and internal anchors', () => {
         const navigationContext = createContext();
         navigationContext.services.navigationBaseUrl = '/orgs/acme/apps/tracker';

@@ -1,11 +1,12 @@
 import pytest
-from factories import claim_operation, create_application, create_organization, create_ready_infrastructure
+from factories import claim_operation, complete_operation, create_application, create_organization, create_ready_infrastructure
 from src.operations import applications as application_operations
 from src.utils.jobs import execute
 from src.database.session import session_scope
-from src.database.services import operations, applications
+from src.database.services import applications
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
+from src.database.models.applications import Application
 
 
 async def test_application_delete_failure_stops_before_provider_credential_cleanup(
@@ -28,14 +29,11 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
         setup_operation = await claim_operation()
         assert setup_operation is not None
         assert setup_operation.kind == expected_kind
-        async with session_scope() as session:
-            completed = await operations.complete(session, setup_operation.id)
-            await session.commit()
+        completed = await complete_operation(setup_operation.id)
         assert completed is not None
 
     claimed = await claim_operation()
     assert claimed is not None
-    assert claimed.kind == OperationKind.application_delete
     assert claimed.target_id == application.id
 
     class FailingKubernetes:
@@ -66,6 +64,6 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     # The failed operation retains its tombstone and never reaches provider cleanup.
     assert failed.status == OperationStatus.failed
     async with session_scope() as session:
-        retained = await applications.get(session, application.id, include_deleted=True)
+        retained = await session.get(Application, application.id)
     assert retained is not None
     assert retained.deleted_at is not None

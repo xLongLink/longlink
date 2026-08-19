@@ -14,16 +14,16 @@ import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Article } from '@/components/layouts/Article';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Table, TableColumn } from '@/components/ui/Table';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { Article } from '@/components/layouts/Article';
-import { Table, TableColumn } from '@/components/ui/Table';
 
 type ComponentSummary = {
     name: string;

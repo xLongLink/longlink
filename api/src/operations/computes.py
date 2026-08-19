@@ -12,12 +12,10 @@ def gateway_url(address: str) -> str:
 
     # Bracket IPv6 literals while preserving controller-published hostnames and IPv4 addresses.
     try:
-        parsed_address = ipaddress.ip_address(address)
+        address = str(ipaddress.ip_address(address))
     except ValueError:
-        host = address
-    else:
-        host = f"[{parsed_address}]" if parsed_address.version == 6 else str(parsed_address)
-    return f"https://{host}"
+        return f"https://{address}"
+    return f"https://[{address}]" if ":" in address else f"https://{address}"
 
 
 async def create(claimed: Operation) -> str | None:
@@ -54,14 +52,13 @@ async def create(claimed: Operation) -> str | None:
 
     # Publish connection material only after the desired gateway Deployment is serving.
     async with session_scope() as session:
-        recorded = await compute.record_success(
+        if not await compute.record_success(
             session,
             registry.id,
             gateway_url(gateway_address),
             tls.ca_certificate,
             f"{tls.client_certificate}\n{tls.client_private_key}",
             registry.status,
-        )
+        ):
+            return "Compute gateway state was not recorded"
         await session.commit()
-    if not recorded:
-        return "Compute gateway state was not recorded"

@@ -1,9 +1,9 @@
 import { proxy } from 'valtio';
-import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { ApiError } from '@/lib/api';
-import type { ASTNode, XmlRuntime } from '../types';
 import { evaluate } from '../expressions';
 import { resolveRequestUrl } from './url';
+import type { ASTNode, XmlRuntime } from '../types';
+import { createContext as createReactContext, useContext as useReactContext } from 'react';
 
 export const XmlContext = createReactContext<XmlRuntime | null>(null);
 
@@ -32,15 +32,20 @@ export function useXmlRuntime(): XmlRuntime {
 }
 
 /** Resolves validated State and Query nodes before rendering the page tree. */
-export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUrl: string): Promise<void> {
+export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promise<void> {
     const { scope, services } = runtime;
 
     // Seed setup declarations before rendering the component tree.
     for (const node of nodes) {
-        if (node.name === 'State') {
-            const params = node.params;
-            const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
+        // Ignore render-only nodes included by direct setup callers.
+        if (node.name !== 'State' && node.name !== 'Query') {
+            continue;
+        }
 
+        const params = node.params;
+        const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
+
+        if (node.name === 'State') {
             // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
             services.setups[id] = () => {
                 // Only seed state that is not already present.
@@ -59,9 +64,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
                 }
             };
             services.setups[id]();
-        } else if (node.name === 'Query') {
-            const params = node.params;
-            const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
+        } else {
             const pathAttribute = params.path;
 
             // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
@@ -73,7 +76,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, baseUr
                     throw new Error('Query path must resolve to a string');
                 }
 
-                const url = resolveRequestUrl(baseUrl, String(path));
+                const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
                 const response = await fetch(url, {
                     credentials: 'include',

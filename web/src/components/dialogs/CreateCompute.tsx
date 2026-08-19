@@ -1,18 +1,8 @@
 import { z } from 'zod';
-import { useId, useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
-import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/RegistryDialog';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -23,135 +13,40 @@ type Values = z.infer<typeof schema>;
 
 /** Registers one compute target. */
 export default function CreateCompute() {
-    const toast = useToast();
-    const queryClient = useQueryClient();
-    const formId = useId();
-    const [open, setOpen] = useState(false);
-    const form = useForm<Values>({
+    const dialog = useRegistryDialog<Values>({
         defaultValues: { name: '', kubeconfig: '' },
-        mode: 'onChange',
-        resolver: zodResolver(schema),
+        endpoint: '/api/v1/computes',
+        errorMessage: 'Failed to connect compute',
+        queryKey: ['api', '/api/v1/computes'],
+        schema,
     });
-    const mutation = useMutation({
-        mutationFn: async (payload: Values) =>
-            zComputeRegistryResponse.parse(
-                await api('/api/v1/computes', {
-                    json: payload,
-                    method: 'POST',
-                }).json()
-            ),
-        onSuccess: () => {
-            setOpen(false);
-            form.reset();
-            return queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
-        },
-    });
-
-    /** Updates dialog state while protecting an in-flight registration. */
-    function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && mutation.isPending) {
-            return;
-        }
-        setOpen(nextOpen);
-        if (!nextOpen) {
-            form.reset();
-        }
-    }
 
     return (
-        <>
-            <Button label="Connect compute" clickAction={() => setOpen(true)} />
-            <Dialog
-                isOpen={open}
-                onOpenChange={handleOpenChange}
-                purpose={mutation.isPending ? 'required' : 'form'}
-                width={640}
-                maxHeight="calc(100dvh - 2rem)"
-            >
-                <Layout
-                    header={
-                        <DialogHeader
-                            title="Connect compute"
-                            subtitle="Register a compute backend for orchestration."
-                            onOpenChange={handleOpenChange}
+        <RegistryDialog
+            dialog={dialog}
+            subtitle="Register a compute backend for orchestration."
+            title="Connect compute"
+            triggerLabel="Connect compute"
+            width={640}
+        >
+            <FormLayout>
+                <dialog.form.Field name="name">
+                    {(field) => (
+                        <TextInput label="Name" value={field.state.value} isRequired onChange={field.handleChange} />
+                    )}
+                </dialog.form.Field>
+                <dialog.form.Field name="kubeconfig">
+                    {(field) => (
+                        <TextArea
+                            label="Kubeconfig"
+                            value={field.state.value}
+                            isRequired
+                            rows={12}
+                            onChange={field.handleChange}
                         />
-                    }
-                    content={
-                        <LayoutContent>
-                            <form
-                                id={formId}
-                                onSubmit={form.handleSubmit(async (payload) => {
-                                    try {
-                                        await mutation.mutateAsync(payload);
-                                    } catch (mutationError) {
-                                        toast({
-                                            body:
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to connect compute',
-                                            type: 'error',
-                                        });
-                                    }
-                                })}
-                            >
-                                <FormLayout>
-                                    <Controller
-                                        control={form.control}
-                                        name="name"
-                                        render={({ field }) => (
-                                            <TextInput
-                                                ref={field.ref}
-                                                label="Name"
-                                                value={field.value}
-                                                htmlName={field.name}
-                                                isRequired
-                                                onBlur={field.onBlur}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                    <Controller
-                                        control={form.control}
-                                        name="kubeconfig"
-                                        render={({ field }) => (
-                                            <TextArea
-                                                ref={field.ref}
-                                                label="Kubeconfig"
-                                                value={field.value}
-                                                htmlName={field.name}
-                                                isRequired
-                                                rows={12}
-                                                onBlur={field.onBlur}
-                                                onChange={field.onChange}
-                                            />
-                                        )}
-                                    />
-                                </FormLayout>
-                            </form>
-                        </LayoutContent>
-                    }
-                    footer={
-                        <LayoutFooter>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={mutation.isPending}
-                                    clickAction={() => handleOpenChange(false)}
-                                />
-                                <Button
-                                    form={formId}
-                                    type="submit"
-                                    label={mutation.isPending ? 'Creating...' : 'Create'}
-                                    variant="primary"
-                                    isDisabled={!form.formState.isValid}
-                                    isLoading={mutation.isPending}
-                                />
-                            </Stack>
-                        </LayoutFooter>
-                    }
-                />
-            </Dialog>
-        </>
+                    )}
+                </dialog.form.Field>
+            </FormLayout>
+        </RegistryDialog>
     );
 }

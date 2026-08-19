@@ -1,8 +1,8 @@
-import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { isXmlEnum, resolveXml } from '../core/props';
+import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();

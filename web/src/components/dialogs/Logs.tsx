@@ -1,3 +1,4 @@
+import { api } from '@/lib/api';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -5,17 +6,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { api } from '@/lib/api';
-
-/** Parses the application log response. */
-function parseLogLines(value: unknown): string[] {
-    // The logs endpoint returns one JSON string per log line.
-    if (!Array.isArray(value) || !value.every((line) => typeof line === 'string')) {
-        throw new Error('Invalid application logs response');
-    }
-
-    return value;
-}
+import { zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the application logs dialog for an organization. */
 export default function Logs({
@@ -34,7 +25,9 @@ export default function Logs({
     } = useQuery({
         queryKey: ['api', `/api/v1/applications/${applicationId}/logs`],
         queryFn: async ({ signal }) =>
-            parseLogLines(await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json()),
+            zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse.parse(
+                await api(`/api/v1/applications/${applicationId}/logs`, { signal }).json()
+            ),
     });
 
     return (

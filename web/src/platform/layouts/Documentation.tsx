@@ -1,8 +1,10 @@
 import { Link } from '@astryxdesign/core/Link';
+import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Outlet, useLocation } from 'react-router';
 import { Divider } from '@astryxdesign/core/Divider';
+import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import {
     AppWindow,
@@ -18,8 +20,6 @@ import {
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
-import { Wordmark } from '@/components/Wordmark';
-import { SideLayout } from '@/components/layouts/SideLayout';
 
 /** Renders documentation content with the fixed documentation navigation. */
 export default function Documentation() {

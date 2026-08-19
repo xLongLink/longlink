@@ -1,10 +1,9 @@
 import pytest
 import asyncio
-from factories import queue_operation
+from factories import claim_operation, queue_operation
 from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
-from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.base import PlatformModel
 from src.database.models.computes import ComputeRegistry
@@ -54,14 +53,6 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         )
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
-        async def claim_operation() -> Operation | None:
-            """Claim and commit work with one concurrent worker session."""
-
-            async with session_factory() as session:
-                operation = await operations.claim(session)
-                await session.commit()
-                return operation
-
         claims = await asyncio.gather(claim_operation(), claim_operation())
         claimed = [claim for claim in claims if claim is not None]
 

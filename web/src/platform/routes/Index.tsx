@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react';
+import { Globe } from '@/components/Globe';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -7,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { Globe } from '@/components/Globe';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
 
 const paths = [

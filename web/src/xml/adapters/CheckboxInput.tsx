@@ -1,10 +1,10 @@
-import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import type { Props } from '../types';
 import { COMPACT_SIZES } from '../constants';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/CheckboxInput';
 
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();

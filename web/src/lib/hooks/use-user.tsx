@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Reads the current authenticated user without loading organization memberships. */

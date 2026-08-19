@@ -44,7 +44,9 @@ export default defineConfig(({ mode }) => {
                     'error',
                     {
                         fallbackSort: { type: 'alphabetical' },
+                        groups: ['import'],
                         newlinesBetween: 0,
+                        order: 'asc',
                         type: 'line-length',
                     },
                 ],

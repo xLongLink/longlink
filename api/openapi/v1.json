@@ -3259,15 +3259,9 @@
         "properties": {
           "name": {
             "type": "string",
-            "maxLength": 127,
+            "maxLength": 255,
             "minLength": 1,
             "title": "Name"
-          },
-          "surname": {
-            "type": "string",
-            "maxLength": 127,
-            "minLength": 1,
-            "title": "Surname"
           },
           "email": {
             "type": "string",
@@ -3285,7 +3279,6 @@
         "type": "object",
         "required": [
           "name",
-          "surname",
           "email",
           "password"
         ],
@@ -3296,8 +3289,7 @@
         "type": "string",
         "enum": [
           "creating",
-          "running",
-          "deleting"
+          "running"
         ],
         "title": "Status",
         "description": "Lifecycle states shared by Platform-managed resources."

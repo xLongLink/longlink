@@ -1,28 +1,25 @@
 import { z } from 'zod';
-import { useNavigate } from 'react-router';
-import { useEffect, useState } from 'react';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
+import { useNavigate } from 'react-router';
+import { TermsNotice } from './TermsNotice';
+import { useEffect, useState } from 'react';
+import { passwordSchema } from './validation';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
+import { Button } from '@astryxdesign/core/Button';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { AuthLayout } from './AuthLayout';
-import { TermsNotice } from './TermsNotice';
-import { passwordSchema } from './validation';
 
 const REGISTRATION_TOKEN_KEY = 'longlink.registration.token';
 const registrationCompleteSchema = z.object({
-    name: z.string().trim().min(1, 'Name is required').max(127, 'Name cannot exceed 127 characters'),
-    surname: z.string().trim().min(1, 'Surname is required').max(127, 'Surname cannot exceed 127 characters'),
+    name: z.string().trim().min(1, 'Name is required').max(255, 'Name cannot exceed 255 characters'),
     password: passwordSchema,
 });
 
@@ -36,9 +33,11 @@ export default function VerifyEmail() {
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const form = useForm<RegistrationCompleteValues>({
-        defaultValues: { name: '', surname: '', password: '' },
-        resolver: zodResolver(registrationCompleteSchema),
+    const form = useForm({
+        defaultValues: { name: '', password: '' },
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: registrationCompleteSchema },
+        onSubmit: ({ value }) => handleComplete(value),
     });
     const verification = useMutation({
         mutationFn: async (registrationToken: string) => {
@@ -146,69 +145,50 @@ export default function VerifyEmail() {
             description={<Divider>{'Email verified. Complete your profile.'}</Divider>}
         >
             <Stack gap={4}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
-                    <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
-                        <Controller
-                            control={form.control}
-                            name="name"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    {...{ autoComplete: 'given-name' }}
-                                    ref={field.ref}
-                                    hasAutoFocus
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Name"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    value={field.value}
-                                    width="100%"
-                                />
-                            )}
-                        />
-                        <Controller
-                            control={form.control}
-                            name="surname"
-                            render={({ field, fieldState }) => (
-                                <TextInput
-                                    {...{ autoComplete: 'family-name' }}
-                                    ref={field.ref}
-                                    htmlName={field.name}
-                                    isRequired
-                                    label="Surname"
-                                    onBlur={field.onBlur}
-                                    onChange={field.onChange}
-                                    status={
-                                        fieldState.error
-                                            ? { type: 'error', message: fieldState.error.message }
-                                            : undefined
-                                    }
-                                    value={field.value}
-                                    width="100%"
-                                />
-                            )}
-                        />
-                    </Grid>
-                    <Controller
-                        control={form.control}
-                        name="password"
-                        render={({ field, fieldState }) => (
+                <Stack
+                    as="form"
+                    gap={3}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
+                    <form.Field
+                        name="name"
+                        children={(field) => (
                             <TextInput
-                                ref={field.ref}
-                                htmlName={field.name}
+                                {...{ autoComplete: 'name' }}
+                                hasAutoFocus
+                                htmlName="name"
+                                isRequired
+                                label="Name"
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
+                                status={
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
+                                }
+                                value={field.state.value}
+                                width="100%"
+                            />
+                        )}
+                    />
+                    <form.Field
+                        name="password"
+                        children={(field) => (
+                            <TextInput
+                                htmlName="password"
                                 isRequired
                                 label="Password"
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
+                                onBlur={field.handleBlur}
+                                onChange={field.handleChange}
                                 status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                    field.state.meta.errors.length > 0
+                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
+                                        : undefined
                                 }
-                                value={field.value}
+                                value={field.state.value}
                                 width="100%"
                                 type="password"
                             />

@@ -1,8 +1,8 @@
-import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
+import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
 export function Link({ props, nodes }: Props) {

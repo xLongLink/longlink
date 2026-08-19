@@ -3,8 +3,8 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Article } from '@/components/layouts/Article';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 export const metadata = {
     path: '/privacy',

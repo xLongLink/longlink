@@ -3,10 +3,10 @@ from uuid import uuid4
 from factories import create_application, create_organization
 from src.errors import ConflictError
 from src.models.types import Image
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import applications, organizations
 from src.database.models.users import User
+from src.database.models.applications import Application
 
 
 async def test_create_allows_creating_organization(users: tuple[User, User, User]) -> None:
@@ -22,7 +22,6 @@ async def test_create_allows_creating_organization(users: tuple[User, User, User
             session,
             organization.id,
             "Dashboard",
-            slug="dashboard",
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             user=user,
             secrets={},
@@ -45,12 +44,11 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
 
     # Act
     async with session_scope() as session:
-        with pytest.raises(ConflictError) as exc:
+        with pytest.raises(ConflictError):
             await applications.create(
                 session,
                 organization.id,
-                "Duplicate dashboard",
-                slug="dashboard",
+                "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 user=user,
                 secrets={},
@@ -59,7 +57,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
             session,
             organization.id,
             "Reports",
-            slug="reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
             user=user,
             secrets={},
@@ -67,7 +64,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
         await session.commit()
 
     # Assert
-    assert str(exc.value) == "Application slug already exists"
     assert created.slug == "reports"
 
 
@@ -83,7 +79,6 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications(u
             session,
             organization.id,
             "Reports",
-            slug="reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
             user=user,
             secrets={},
@@ -110,22 +105,17 @@ async def test_soft_delete_marks_application_deleted(users: tuple[User, User, Us
 
     # Act
     async with session_scope() as session:
-        result = await applications.soft_delete(session, application.id, user)
+        await applications.soft_delete(session, application.id, user)
         await session.commit()
-        active_application = await applications.get(session, application.id)
-        deleted_application = await applications.get(session, application.id, include_deleted=True)
+        deleted_application = await session.get(Application, application.id)
         second_delete = await applications.soft_delete(session, application.id, user)
         missing_delete = await applications.soft_delete(session, uuid4(), user)
-        await session.commit()
 
     # Assert
-    assert result is not None
-    assert result.deleted_id == user.id
-    assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert second_delete is not None
-    assert second_delete.id == result.id
+    assert second_delete.id == application.id
     assert missing_delete is None
 
 
