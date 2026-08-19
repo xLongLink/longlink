@@ -25,7 +25,7 @@
                             <Text weight="semibold" value="Default reviewer" />
                             <Text color="secondary" value="$reviewer.initials" />
                         </Stack>
-                        <Badge label="$reviewer.badge" />
+                        <Badge><Text value="$reviewer.badge" /></Badge>
                     </Stack>
                 </Card>
                 <FormLayout>

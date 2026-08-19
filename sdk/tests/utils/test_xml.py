@@ -7,7 +7,7 @@ VALID_FRAGMENTS = [
         '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button label="Save" /></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", '<Badge label="$item.status"><Icon slot="icon" icon="check" /></Badge>'),
+    ("badge", '<Badge><Text value="$item.status" /><Icon slot="icon" icon="check" /></Badge>'),
     (
         "button",
         '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
@@ -80,8 +80,7 @@ INVALID_FRAGMENTS = [
     ("invalid-action-effect-order", '<Action><Button label="Save" /><Request url="/profile" method="PATCH" /></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
-    ("badge-unsupported-child", '<Badge label="Active"><Text value="Active" /></Badge>'),
-    ("badge-duplicate-icon", '<Badge label="Active"><Icon icon="check" /><Icon icon="x" /></Badge>'),
+    ("badge-label-attribute", '<Badge label="Active" />'),
     ("missing-button-label", "<Button />"),
     ("missing-for-as", '<For each="items" />'),
     ("forbidden-style-through-root", '<longlink><Button label="Save" style="color: red" /></longlink>'),

@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="BadgeIconType">
-    <xsd:attribute name="icon" type="NonBlankStringType" use="required" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
-  </xsd:complexType>
   <xsd:complexType name="BadgeType">
-    <xsd:sequence><xsd:element name="Icon" type="BadgeIconType" minOccurs="0" maxOccurs="1" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">
-    <xsd:annotation><xsd:documentation>Renders an Astryx status or category badge. Its optional Icon child fills the icon slot and may declare slot="icon".</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders a status or category badge from child content. Its optional Icon child fills the icon slot and may declare slot="icon".</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

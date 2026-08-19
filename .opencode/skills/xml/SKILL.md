@@ -25,7 +25,8 @@ Keep improving the XML:
     <Button label="Close" />
   </Action>
 
-  <Badge label="Active">
+  <Badge>
+    <Text value="Active" />
     <Icon slot="icon" icon="check" />
   </Badge>
 </longlink>

@@ -4,7 +4,7 @@ import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Badge } from '@astryxdesign/core/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Link as RouterLink } from 'react-router';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -152,7 +152,7 @@ export default function DocsArticleRoute() {
                             <Text type="supporting">Readable text</Text>
                         </SummaryCard>
                         <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
-                            <Badge label="Open" variant="info" />
+                            <Badge variant="info">Open</Badge>
                         </SummaryCard>
                         <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
                             <Stack justify="center" minHeight={150} width="100%">
@@ -268,10 +268,10 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Grid" path="/docs/sdk/pages/grid">
                             <Grid columns={2} gap={2}>
-                                <Badge label="One" />
-                                <Badge label="Two" />
-                                <Badge label="Three" />
-                                <Badge label="Four" />
+                                <Badge>One</Badge>
+                                <Badge>Two</Badge>
+                                <Badge>Three</Badge>
+                                <Badge>Four</Badge>
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
@@ -279,9 +279,9 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
                             <Stack gap={2} align="center">
-                                <Badge label="First" />
-                                <Badge label="Second" />
-                                <Badge label="Third" />
+                                <Badge>First</Badge>
+                                <Badge>Second</Badge>
+                                <Badge>Third</Badge>
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Tab" path="/docs/sdk/pages/tab">
