@@ -53,14 +53,7 @@ export function Grid({ props, nodes }: Props) {
         throw new Error('Grid repeat requires minColumnWidth');
     }
 
-    const columns: GridColumns | undefined =
-        minWidth != null
-            ? ({
-                  minWidth,
-                  ...(maxColumns != null && { max: maxColumns }),
-                  ...(repeat ? { repeat } : {}),
-              } as const)
-            : columnCount;
+    const columns: GridColumns | undefined = minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount;
 
     return <AstryxGrid columns={columns}>{renderNode(nodes, ctx)}</AstryxGrid>;
 }

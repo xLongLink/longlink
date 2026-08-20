@@ -21,10 +21,8 @@ export function resolveValue(scope: Scope, key: string): unknown {
 
     // Walk lexical scopes from child to parent.
     for (let currentScope: Scope | undefined = scope; currentScope; currentScope = currentScope.parent) {
-        const bindings = currentScope.bindings;
-
         // Read only bindings declared in the lexical scope.
-        if (Object.prototype.hasOwnProperty.call(bindings, key)) return bindings[key];
+        if (Object.prototype.hasOwnProperty.call(currentScope.bindings, key)) return currentScope.bindings[key];
     }
 
     return undefined;
@@ -36,6 +34,8 @@ export function resolvePath(scope: Scope, parts: [string, ...string[]]): unknown
 
     // Walk the remaining path segments directly on the live value.
     for (let index = 1; index < parts.length; index += 1) {
+        if (current == null) return undefined;
+
         current = readSafeProperty(current, parts[index]);
     }
 

@@ -21,17 +21,19 @@ import { GridSpan } from '../adapters/GridSpan';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
 import { FileInput } from '../adapters/FileInput';
+import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
+import { Bold, Italic, Text } from '../adapters/Text';
 import { CheckboxInput } from '../adapters/CheckboxInput';
-import { RadioList, RadioListItem } from '../adapters/RadioList';
 
 /** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Action,
     Avatar,
     Badge,
+    b: Bold,
     Button,
     Card,
     CheckboxInput,
@@ -42,11 +44,11 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     GridSpan,
     Heading,
     Icon,
+    i: Italic,
     Link,
     Menu,
     NumberInput,
     RadioList,
-    RadioListItem,
     Selector,
     Slider,
     Stack,
@@ -55,5 +57,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Tabs,
     Table,
     TextArea,
+    Text,
     TextInput,
 };

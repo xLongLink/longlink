@@ -4,26 +4,26 @@ from longlink.utils.xml import validate_xml
 VALID_FRAGMENTS = [
     (
         "action",
-        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button label="Save" /></Action>',
+        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button>Save</Button></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", '<Badge>$item.status<Icon slot="icon" icon="check" /></Badge>'),
+    ("badge", '<Badge>$item.status<Icon icon="check" /></Badge>'),
     (
         "button",
-        '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
+        '<Button variant="primary" if="${canSave}">Save</Button>',
     ),
-    ("card", '<Card>Card content</Card>'),
+    ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
-        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
+        '<CheckboxInput label="Archive" value="$form.archive" />',
     ),
     (
         "dialog",
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form">This action cannot be undone.</Dialog>',
     ),
-    ("divider", '<Divider>or</Divider>'),
-    ("divider-runtime-attributes", '<Divider if="show" slot="content" />'),
-    ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
+    ("divider", "<Divider>or</Divider>"),
+    ("divider-runtime-attributes", '<Divider if="show" />'),
+    ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
         "form-layout",
@@ -33,14 +33,13 @@ VALID_FRAGMENTS = [
     ("grid-span", '<Grid columns="3"><GridSpan columns="2" rows="2"><Card /></GridSpan></Grid>'),
     (
         "heading",
-        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',
+        '<Heading level="1">Dashboard</Heading>',
     ),
     ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123">Open issue</Link>'),
-    ("longlink", '<longlink name="dashboard" icon="layout-dashboard" />'),
     (
         "number-input",
-        '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />',
+        '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />',
     ),
     ("query", '<Query id="projects" path="/projects" />'),
     (
@@ -49,41 +48,45 @@ VALID_FRAGMENTS = [
     ),
     (
         "selector",
-        '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",
-        '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />',
+        '<Switch label="Notifications" value="$settings.notifications" />',
     ),
     (
         "table",
-        '<Table data="$items" emptyLabel="No items"><TableColumn field="sku" header="SKU" /></Table>',
+        '<Table data="$items"><TableColumn field="sku" header="SKU" /></Table>',
     ),
     (
         "tabs",
         '<Tabs value="$tabs.value"><Tab value="overview" label="Overview">Overview panel</Tab></Tabs>',
     ),
+    ("text", "<Text>Normal <b>bold</b> and <i>italic</i> text.</Text>"),
     (
         "text-area",
-        '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />',
+        '<TextArea label="Notes" value="$form.notes" if="canEdit" />',
     ),
-    ("text-input", '<TextInput label="Name" value="$form.name" type="text" size="lg" isLoading="true" statusVariant="tooltip" />'),
+    ("text-input", '<TextInput label="Name" value="$form.name" type="text" />'),
 ]
 
 INVALID_FRAGMENTS = [
-    ("invalid-action-effect-order", '<Action><Button label="Save" /><Request url="/profile" method="PATCH" /></Action>'),
+    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>'),
+    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
+    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-label-attribute", '<Badge label="Active" />'),
-    ("missing-button-label", "<Button />"),
+    ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
+    ("button-label-attribute", '<Button label="Save">Save</Button>'),
     ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style-through-root", '<longlink><Button label="Save" style="color: red" /></longlink>'),
+    ("forbidden-style", '<Button style="color: red">Save</Button>'),
     (
-        "invalid-child-through-root",
-        '<longlink><Action tone="accent"><Button label="Save" /></Action></longlink>',
+        "invalid-action-child",
+        '<Action tone="accent"><Button>Save</Button></Action>',
     ),
     (
         "missing-selector-option-value",
@@ -93,48 +96,31 @@ INVALID_FRAGMENTS = [
     ("missing-state-id", '<State value="[]" />'),
     ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
-    ("malformed-longlink", '<longlink>Dashboard</longlink'),
 ]
 
-UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", "<!DOCTYPE longlink><longlink />"),
-    ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
-]
+VALID_DOCUMENTS = [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS]
+INVALID_DOCUMENTS = [f"<longlink>{content}</longlink>" for _, content in INVALID_FRAGMENTS]
+
+def test_xml_validation_rejects_malformed_entity() -> None:
+    """Reject malformed entity declarations through the secure parser."""
+
+    # Validate the malformed document at the shared XML boundary.
+    with pytest.raises(ValueError, match="XML syntax is invalid"):
+        validate_xml('<!ENTITY hidden "value"><longlink>&hidden;</longlink>')
 
 
-def root_document(content: str) -> str:
-    """Wrap an XML component fragment in the LongLink document root."""
-
-    # Preserve fixture documents that already exercise root attributes or markup.
-    if content.startswith("<longlink"):
-        return content
-
-    return f"<longlink>{content}</longlink>"
-
-
-@pytest.mark.parametrize(
-    "content", [content for _, content in UNSUPPORTED_MARKUP_FRAGMENTS], ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS]
-)
-def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
-    """Reject XML markup unsupported by the browser runtime."""
-
-    # Validate the document at the shared XML boundary.
-    with pytest.raises(ValueError, match="DOCTYPE and CDATA"):
-        validate_xml(content)
-
-
-@pytest.mark.parametrize("content", [content for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS])
+@pytest.mark.parametrize("content", VALID_DOCUMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the application page schema."""
 
     # Validate the fragment through the application page schema.
-    validate_xml(root_document(content))
+    validate_xml(content)
 
 
-@pytest.mark.parametrize("content", [content for _, content in INVALID_FRAGMENTS], ids=[case[0] for case in INVALID_FRAGMENTS])
+@pytest.mark.parametrize("content", INVALID_DOCUMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
 def test_root_schema_rejects_invalid_fragments(content: str) -> None:
     """Reject representative invalid XML fragments through the application page schema."""
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):
-        validate_xml(root_document(content))
+        validate_xml(content)

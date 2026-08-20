@@ -1,38 +1,34 @@
 import { z } from 'zod';
-import { useId, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { skipToken, useQuery } from '@tanstack/react-query';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
-import { zIcon, zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
     name: z.string().trim(),
     description: z.string().trim(),
     icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
-    envs: z
-        .record(z.string(), z.string().optional())
-        .default({})
-        .transform((envs) =>
-            Object.entries(envs).reduce<Record<string, string>>((configured, [name, value]) => {
-                if (value !== undefined) {
-                    configured[name] = value;
-                }
-                return configured;
-            }, {})
-        ),
+    envs: z.record(z.string(), z.string().optional()).transform((envs) =>
+        Object.entries(envs).reduce<Record<string, string>>((configured, [name, value]) => {
+            if (value !== undefined) {
+                configured[name] = value;
+            }
+            return configured;
+        }, {})
+    ),
 });
 
 const createApplicationSubmitSchema = createApplicationFormSchema.extend({
@@ -78,20 +74,18 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         },
     });
     const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
-    const { data: iconCatalog } = useQuery({
-        queryKey: ['api', '/api/v1/icons'],
-        queryFn: open
-            ? async ({ signal }) => zIcon.array().parse(await api('/api/v1/icons', { signal }).json())
-            : skipToken,
-        staleTime: Infinity,
-    });
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
         form.reset(defaultCreateApplicationValues);
-        setDeclaredEnvironments([]);
         setError(null);
+    }
+
+    /** Submits the form without navigating the browser. */
+    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        void form.handleSubmit();
     }
 
     /** Inspect the image and advance to the app details step. */
@@ -183,7 +177,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             >
                 {([image, name, icon, isValid]) => {
                     const hasImage = image.trim().length > 0;
-                    const hasRequiredMetadata = hasImage && name.trim().length > 0;
+                    const hasName = name.trim().length > 0;
 
                     return (
                         <Dialog
@@ -210,13 +204,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 content={
                                     <LayoutContent>
                                         {step === 'image' ? (
-                                            <form
-                                                id={formId}
-                                                onSubmit={(event) => {
-                                                    event.preventDefault();
-                                                    form.handleSubmit();
-                                                }}
-                                            >
+                                            <form id={formId} onSubmit={handleSubmit}>
                                                 <FormLayout>
                                                     <form.Field name="image">
                                                         {(field) => (
@@ -235,14 +223,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 </FormLayout>
                                             </form>
                                         ) : step === 'metadata' ? (
-                                            <form
-                                                id={formId}
-                                                onSubmit={(event) => {
-                                                    event.preventDefault();
-
-                                                    form.handleSubmit();
-                                                }}
-                                            >
+                                            <form id={formId} onSubmit={handleSubmit}>
                                                 <FormLayout>
                                                     <form.Field name="name">
                                                         {(field) => (
@@ -274,7 +255,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         label="Icon"
                                                         options={[
                                                             { value: '__none__', label: 'None' },
-                                                            ...(iconCatalog ?? []).map((name) => ({
+                                                            ...ICON_NAMES.map((name) => ({
                                                                 value: name,
                                                                 label: name,
                                                             })),
@@ -290,13 +271,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 </FormLayout>
                                             </form>
                                         ) : (
-                                            <form
-                                                id={formId}
-                                                onSubmit={(event) => {
-                                                    event.preventDefault();
-                                                    form.handleSubmit();
-                                                }}
-                                            >
+                                            <form id={formId} onSubmit={handleSubmit}>
                                                 <FormLayout>
                                                     {declaredEnvironments.map((env) => (
                                                         <form.Field
@@ -369,7 +344,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         type="submit"
                                                         label="Next"
                                                         variant="primary"
-                                                        isDisabled={!hasRequiredMetadata}
+                                                        isDisabled={!hasName}
                                                     />
                                                 </Stack>
                                             </Stack>
@@ -396,7 +371,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         type="submit"
                                                         label={createApplication.isPending ? 'Creating...' : 'Create'}
                                                         variant="primary"
-                                                        isDisabled={!hasRequiredMetadata || !isValid}
+                                                        isDisabled={!hasName || !isValid}
                                                         isLoading={createApplication.isPending}
                                                     />
                                                 </Stack>

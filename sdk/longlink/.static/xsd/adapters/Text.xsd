@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="TextType" mixed="true">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:complexType name="InlineTextType" mixed="true">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="Text" type="TextType">
+    <xsd:annotation>
+      <xsd:documentation>Renders normal body text with standard bold and italic inline elements.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="text" category="Content" lastUpdated="2026-08-19" source="adapters/Text.xsd"/>
+        <longlink:example>&lt;Text&gt;Normal &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/Text&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:element name="b" type="InlineTextType"/>
+  <xsd:element name="i" type="InlineTextType"/>
+</xsd:schema>

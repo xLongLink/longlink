@@ -176,13 +176,6 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     return result.all()
 
 
-async def get_tombstone(session: AsyncSession, organization_id: UUID) -> Organization | None:
-    """Return one tombstoned organization by id."""
-
-    # Load tombstones only for lifecycle retry authorization.
-    return await session.scalar(select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_not(None)))
-
-
 async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
     """Return organization member rows for one organization."""
 
@@ -249,7 +242,7 @@ async def update_member_role(
     role: OrganizationRoles,
     user: User,
     caller_role: OrganizationRoles,
-) -> bool:
+) -> bool | None:
     """Change one active Organization membership and synchronize its user projection."""
 
     # Update the member role inside one transaction.
@@ -268,7 +261,7 @@ async def update_member_role(
     result = await session.scalars(statement)
     membership = result.one_or_none()
     if membership is None:
-        return False
+        return None
 
     # Only owners may grant or change owner access.
     if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
@@ -276,7 +269,7 @@ async def update_member_role(
 
     # Repeated role assignments do not require persistence or reconciliation.
     if membership.role == role:
-        return True
+        return False
 
     # Protect organizations from losing their last owner.
     if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:

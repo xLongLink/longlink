@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="GridSpanType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="columns" type="GridSpanColumnsType" />
-    <xsd:attribute name="rows" type="xsd:positiveInteger" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="columns" type="GridSpanColumnsType">
+      <xsd:annotation>
+        <xsd:documentation>Number of columns.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="rows" type="xsd:positiveInteger">
+      <xsd:annotation>
+        <xsd:documentation>Number of rows.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="GridSpan" type="GridSpanType">
-    <xsd:annotation><xsd:documentation>Spans a direct Grid child across columns or rows.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example><![CDATA[<Grid minColumnWidth="240" maxColumns="3" repeat="fit">
+  <Card>First</Card>
+  <Card>Second</Card>
+</Grid>
+
+<Grid columns="3">
+  <GridSpan columns="2"><Card>Featured</Card></GridSpan>
+  <Card>Standard</Card>
+</Grid>]]></longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

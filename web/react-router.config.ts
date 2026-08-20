@@ -43,7 +43,6 @@ const publicPagePaths = [
     '/docs/sdk/pages/grid',
     '/docs/sdk/pages/heading',
     '/docs/sdk/pages/icon',
-    '/docs/sdk/pages/if',
     '/docs/sdk/pages/link',
     '/docs/sdk/pages/menu',
     '/docs/sdk/pages/number-input',
@@ -58,6 +57,7 @@ const publicPagePaths = [
     '/docs/sdk/pages/switch',
     '/docs/sdk/pages/tabs',
     '/docs/sdk/pages/table',
+    '/docs/sdk/pages/text',
     '/docs/sdk/pages/text-area',
     '/docs/sdk/pages/text-input',
 ];

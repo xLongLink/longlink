@@ -74,8 +74,8 @@ export function Menu({ children }: MenuProps) {
         <Layout
             height="auto"
             start={
-                <LayoutPanel isScrollable={false} label="Settings navigation" padding={4} role="navigation" width={260}>
-                    <AstryxSideNav className="w-full">
+                <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
+                    <AstryxSideNav className="w-full pr-4">
                         {sections.map(({ entries, section }) => (
                             <AstryxSideNavSection {...section.props} key={section.props.title}>
                                 {entries.map((entry) => {

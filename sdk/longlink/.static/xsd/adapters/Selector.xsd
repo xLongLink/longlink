@@ -1,43 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="SelectorType">
-    <xsd:sequence><xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
-    <xsd:attribute name="variant" type="SelectorVariantType" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="placeholder" type="xsd:string" />
-    <xsd:attribute name="searchPlaceholder" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="placement" type="LayerPlacementType" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType" />
-    <xsd:attribute name="hasClear" type="xsd:string" />
-    <xsd:attribute name="hasSearch" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:boolean" />
-    <xsd:attribute name="isDefaultOpen" type="xsd:boolean" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
-  </xsd:complexType>
-  <xsd:complexType name="SelectorOptionType">
-    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="label" type="NonBlankStringType" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:element ref="Option" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected option value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Selector" type="SelectorType">
-    <xsd:annotation><xsd:documentation>Collects one value from data-oriented Astryx options.</xsd:documentation></xsd:annotation>
-  </xsd:element>
-  <xsd:element name="SelectorOption" type="SelectorOptionType">
-    <xsd:annotation><xsd:documentation>Defines one option for Selector.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="selector" category="Form" lastUpdated="2026-07-21" source="adapters/Selector.xsd"/>
+        <longlink:example>&lt;Selector label="Status" value="$filters.status"&gt;
+  &lt;Option value="open" label="Open" /&gt;
+  &lt;Option value="closed" label="Closed" /&gt;
+&lt;/Selector&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

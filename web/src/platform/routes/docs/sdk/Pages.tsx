@@ -10,6 +10,7 @@ import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
+import { componentDocumentation } from '@/lib/xsd';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -32,11 +33,29 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 const noop = () => undefined;
 
-function SummaryCard({ children, name, path }: { children: React.ReactNode; name: string; path: string }) {
+function SummaryCard({
+    children,
+    name,
+    padding = 0,
+    path,
+}: {
+    children: React.ReactNode;
+    name: string;
+    padding?: 0 | 3;
+    path: string;
+}) {
+    const component = componentDocumentation.find((candidate) => candidate.name === name);
+
     return (
         <Stack className="relative" gap={2}>
-            <Card aria-hidden="true" inert minHeight={190} padding={0} variant="muted">
-                <Center minHeight={190}>{children}</Center>
+            <Card aria-hidden="true" inert padding={padding} variant="muted">
+                <Center
+                    className="scale-90"
+                    axis={padding === 3 ? 'vertical' : 'both'}
+                    minHeight={padding === 3 ? 166 : 190}
+                >
+                    {children}
+                </Center>
             </Card>
             <Text color="secondary" type="supporting">
                 {name}
@@ -44,7 +63,7 @@ function SummaryCard({ children, name, path }: { children: React.ReactNode; name
             <RouterLink
                 aria-label={`Open ${name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={path}
+                to={component ? `/docs/sdk/pages/${component.slug}` : path}
             />
         </Stack>
     );
@@ -57,7 +76,6 @@ export const metadata = {
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
-        { id: 'longlink-state-elements', label: 'State', level: 2 },
         { id: 'action', label: 'Action', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
         { id: 'form', label: 'Form', level: 2 },
@@ -88,22 +106,12 @@ export default function DocsArticleRoute() {
                         Runtime
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="if" path="/docs/sdk/pages/if">
-                            <Code>{'if="${order.open}"'}</Code>
-                        </SummaryCard>
                         <SummaryCard name="Expressions" path="/docs/sdk/pages/expressions">
                             <Code>{'${order.total > 0}'}</Code>
                         </SummaryCard>
                         <SummaryCard name="Bindings" path="/docs/sdk/pages/bindings">
                             <Code>{'value="$form.name"'}</Code>
                         </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="longlink-state-elements" level={2}>
-                        State
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="State" path="/docs/sdk/pages/state">
                             <Code>{'<State />'}</Code>
                         </SummaryCard>
@@ -149,6 +157,11 @@ export default function DocsArticleRoute() {
                             <Heading className="mt-0" level={3}>
                                 Orders
                             </Heading>
+                        </SummaryCard>
+                        <SummaryCard name="Text" path="/docs/sdk/pages/text">
+                            <Text>
+                                Normal <b>bold</b> and <i>italic</i> text.
+                            </Text>
                         </SummaryCard>
                         <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
                             <Info aria-hidden="true" className="text-accent" size={20} />
@@ -197,7 +210,7 @@ export default function DocsArticleRoute() {
                             />
                         </SummaryCard>
                         <SummaryCard name="RadioList" path="/docs/sdk/pages/radio-list">
-                            <Stack width={150}>
+                            <Stack width={170}>
                                 <RadioList
                                     label="Plan"
                                     orientation="horizontal"
@@ -238,7 +251,7 @@ export default function DocsArticleRoute() {
                                 <TextArea
                                     isLabelHidden
                                     label="Notes"
-                                    rows={1}
+                                    rows={2}
                                     size="sm"
                                     value="Review complete"
                                     onChange={noop}
@@ -275,7 +288,7 @@ export default function DocsArticleRoute() {
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Grid>
                         </SummaryCard>
-                        <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
+                        <SummaryCard name="Menu" padding={3} path="/docs/sdk/pages/menu">
                             <Menu>
                                 <MenuSection title="Settings">
                                     <MenuItem label="General" />

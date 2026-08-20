@@ -22,11 +22,6 @@ const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
 
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
-    // Unwrap optional chains before resolving the callee.
-    if (callee.type === 'ChainExpression') {
-        return resolveSafeCall(callee.expression);
-    }
-
     // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
         return readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
@@ -172,9 +167,6 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
             // Reject calls outside the allowlist.
             const callback = resolveSafeCall(node.callee);
             if (!callback) {
-                // Optional calls resolve to undefined when missing.
-                if (node.optional) return undefined;
-
                 throw new Error('Function call not allowed');
             }
 
@@ -184,28 +176,31 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
         case 'ArrayExpression':
             return node.elements.map((element) => (element ? evaluateNode(element, ctx) : null));
 
-        case 'ObjectExpression':
-            return node.properties.reduce<Record<string, unknown>>((result, property) => {
+        case 'ObjectExpression': {
+            const result: Record<string, unknown> = Object.create(null);
+
+            for (const property of node.properties) {
                 // Ignore entries that are not plain properties.
-                if (property.type !== 'Property') return result;
+                if (property.type !== 'Property') continue;
 
                 const key =
                     property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
 
                 // Skip prototype-related keys so XML object literals cannot mutate prototypes.
-                if (!isSafePropertyName(key)) return result;
+                if (!isSafePropertyName(key)) continue;
 
                 result[key] = evaluateNode(property.value, ctx);
+            }
 
-                return result;
-            }, Object.create(null));
+            return result;
+        }
 
         case 'TemplateLiteral': {
             let output = '';
 
             // Stitch cooked template chunks with evaluated expressions.
             for (let index = 0; index < node.quasis.length; index += 1) {
-                output += node.quasis[index]?.value.cooked ?? '';
+                output += node.quasis[index].value.cooked;
 
                 // Insert the matching evaluated expression between chunks.
                 if (index < node.expressions.length) {

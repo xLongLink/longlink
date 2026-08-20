@@ -2,7 +2,7 @@ import type { ExpressionNode } from './expressions/types';
 
 export type ASTAttribute =
     | { kind: 'text'; value: string }
-    | { kind: 'path'; parts: [string, ...string[]]; isBinding: boolean }
+    | { kind: 'path'; parts: [string, ...string[]]; isBinding?: true }
     | { kind: 'expression'; node: ExpressionNode }
     | {
           kind: 'interpolation';
@@ -34,6 +34,7 @@ export type Scope = {
 /** Renderer and host services available to the XML runtime. */
 export type RuntimeServices = {
     invalidate: (ids: string[]) => Promise<void>;
+    navigate: (url: string) => void;
     navigationBaseUrl: string;
     requestBaseUrl: string;
     setups: Record<string, () => Promise<void> | void>;

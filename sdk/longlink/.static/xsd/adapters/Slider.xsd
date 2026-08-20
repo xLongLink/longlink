@@ -1,29 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="SliderType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="min" type="xsd:decimal" />
-    <xsd:attribute name="max" type="xsd:decimal" />
-    <xsd:attribute name="step" type="PositiveDecimalType" />
-    <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
-    <xsd:attribute name="valueDisplay" type="SliderValueDisplayType" default="tooltip" />
-    <xsd:attribute name="minStepsBetweenThumbs" type="xsd:nonNegativeInteger" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Numeric field value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="min" type="xsd:decimal">
+      <xsd:annotation>
+        <xsd:documentation>Minimum allowed value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="max" type="xsd:decimal">
+      <xsd:annotation>
+        <xsd:documentation>Maximum allowed value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="step" type="PositiveDecimalType">
+      <xsd:annotation>
+        <xsd:documentation>Increment between allowed values.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Slider" type="SliderType">
-    <xsd:annotation><xsd:documentation>Collects one numeric value with Astryx Slider.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A draggable control for selecting a numeric value within defined bounds. Use it when users need to explore a continuous range, such as volume, price, or percentage.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="slider" category="Form" lastUpdated="2026-07-21" source="adapters/Slider.xsd"/>
+        <longlink:example>&lt;Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

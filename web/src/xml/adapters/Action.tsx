@@ -1,30 +1,30 @@
-import { ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
-import { resolveRequestUrl } from '../core/url';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
-import { isSafePropertyName, resolveValue } from '../expressions';
+import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
+import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
-type ActionEffect = { kind: 'request' | 'patch'; props: ASTProps };
+type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
 
 const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 type ActionPlan = {
-    button: ASTNode;
-    effects: ActionEffect[];
+    control: ASTNode;
+    steps: ActionStep[];
 };
 
 export const ActionHandlerContext = createContext<(() => void) | null>(null);
 
-/** Runs ordered request and state effects from its direct child button. */
+/** Runs ordered effects from any child Button or Link trigger. */
 export function Action({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const closeDialog = useContext(DialogCloseContext);
@@ -40,43 +40,53 @@ export function Action({ props, nodes }: Props) {
 
     return (
         <ActionHandlerContext.Provider value={handleAction}>
-            {renderNode([plan.button], ctx)}
+            {renderNode([plan.control], ctx)}
         </ActionHandlerContext.Provider>
     );
 }
 
-/** Validates the direct Action children and converts them into executable effects. */
+/** Validates direct Action children and converts them into ordered executable steps. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     assertAllowedProps(props, ACTION_ALLOWED_PROPS, 'Action');
 
-    const button = nodes.at(-1);
-    if (!button || button.name !== 'Button') {
-        throw new Error('Action requires one direct Button trigger after its effects');
-    }
+    const steps: ActionStep[] = [];
+    let control: ASTNode | undefined;
 
-    const effects: ActionEffect[] = nodes.slice(0, -1).map((node): ActionEffect => {
-        if (node.children.length > 0) {
-            throw new Error(`${node.name} cannot have children`);
+    for (const node of nodes) {
+        if (node.name === 'Request' || node.name === 'Patch') {
+            if (control) {
+                throw new Error('Action effects must precede its Button or Link trigger');
+            }
+            if (node.children.length > 0) {
+                throw new Error(`${node.name} cannot have children`);
+            }
+
+            assertAllowedProps(
+                node.params,
+                node.name === 'Request' ? REQUEST_ALLOWED_PROPS : PATCH_ALLOWED_PROPS,
+                node.name
+            );
+            steps.push({ kind: node.name === 'Request' ? 'request' : 'patch', props: node.params });
+            continue;
         }
 
-        if (node.name === 'Request') {
-            assertAllowedProps(node.params, REQUEST_ALLOWED_PROPS, 'Request');
-            return { kind: 'request', props: node.params };
-        }
+        if (node.name === 'Button' || node.name === 'Link') {
+            if (control) {
+                throw new Error('Action requires exactly one direct Button or Link trigger');
+            }
 
-        if (node.name === 'Patch') {
-            assertAllowedProps(node.params, PATCH_ALLOWED_PROPS, 'Patch');
-            return { kind: 'patch', props: node.params };
+            control = node;
+            continue;
         }
 
         throw new Error(`Action does not support direct ${node.name} children`);
-    });
-
-    if (effects.length === 0) {
-        throw new Error('Action requires at least one Request or Patch effect');
     }
 
-    return { button, effects };
+    if (!control) {
+        throw new Error('Action requires exactly one direct Button or Link trigger');
+    }
+
+    return { control, steps };
 }
 
 /** Executes one Action plan in document order. */
@@ -90,14 +100,21 @@ async function executeAction(
     let closeOnSuccess = false;
     let status: number | null = null;
 
-    for (const effect of plan.effects) {
-        if (effect.kind === 'request') {
-            const result = await executeRequest(effect.props, ctx, services.requestBaseUrl);
+    for (const step of plan.steps) {
+        if (step.kind === 'request') {
+            const result = await executeRequest(step.props, ctx, services.requestBaseUrl);
             closeOnSuccess ||= result.closeDialog;
             status = result.status;
-        } else {
-            await executePatch(effect.props, ctx, services);
+            continue;
         }
+
+        await executePatch(step.props, ctx, services);
+    }
+
+    const url = resolveActionNavigationUrl(plan.control, ctx, services);
+    if (url) {
+        services.navigate(url);
+        return;
     }
 
     if (closeOnSuccess) {
@@ -107,6 +124,22 @@ async function executeAction(
     if (status !== null) {
         toast({ body: `Request completed with status ${status}` });
     }
+}
+
+/** Resolves a terminal navigation destination from one Action control. */
+function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: RuntimeServices): string {
+    const to = resolveXml(node.params, 'to', ctx);
+    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
+    if (navigationUrl) {
+        return navigationUrl;
+    }
+
+    if (node.name !== 'Link') {
+        return '';
+    }
+
+    const href = resolveXml(node.params, 'href', ctx);
+    return resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
 }
 
 /** Sends one configured app-relative request. */
@@ -130,33 +163,37 @@ async function executeRequest(
         throw new Error('GET requests cannot send payloads');
     }
 
-    const init: RequestInit = { method };
-    if (formValue !== undefined) {
-        init.body = createActionFormData(formValue);
-    } else if (jsonValue !== undefined) {
-        init.body = JSON.stringify(jsonValue);
-        init.headers = { 'Content-Type': 'application/json' };
-    }
-
-    const requestUrl = resolveRequestUrl(requestBaseUrl, url);
-    const headers = new Headers(init.headers);
-    headers.set('Accept', 'application/json');
-    const response = await fetch(requestUrl, { ...init, credentials: 'include', headers });
-    if (!response.ok) {
-        throw new ApiError(`API request failed (${response.status})`, response.status);
-    }
-
     const closeDialog = resolveXml(props, 'closeDialog', ctx);
     if (closeDialog !== undefined && typeof closeDialog !== 'boolean') {
         throw new Error('Request closeDialog must resolve to a boolean');
     }
 
+    const headers = new Headers({ Accept: 'application/json' });
+    let body: FormData | string | undefined;
+
+    if (formValue !== undefined) {
+        body = createActionFormData(formValue);
+    } else if (jsonValue !== undefined) {
+        body = JSON.stringify(jsonValue);
+        headers.set('Content-Type', 'application/json');
+    }
+
+    const requestUrl = resolveRequestUrl(requestBaseUrl, url);
+    const response = await api(requestUrl, { body, headers, method });
+
     return { closeDialog: closeDialog === true, status: response.status };
 }
 
-/** Updates a State value or invalidates one State or Query setup slot. */
+/** Updates a State value or invalidates one State or Query setup. */
 async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServices): Promise<void> {
-    const state = requireLiteralId(props, 'state', 'Patch');
+    const stateAttribute = readXmlProp(props, 'state');
+    if (stateAttribute?.kind !== 'text') {
+        throw new Error('Patch requires a literal state ID');
+    }
+    const state = stateAttribute.value.trim();
+    if (!state || !isSafePropertyName(state)) {
+        throw new Error('Patch requires a literal state ID');
+    }
     const valueAttribute = readXmlProp(props, 'value');
     const invalidate = resolveXml(props, 'invalidate', ctx);
     if ((valueAttribute != null) === (invalidate === true)) {
@@ -180,7 +217,12 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
 
     const value = resolveXmlValue(props, 'value', ctx);
-    if (!isPlainObject(value)) {
+    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error('Patch value must evaluate to an object');
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) {
         throw new Error('Patch value must evaluate to an object');
     }
 
@@ -191,26 +233,6 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
 
         target[key] = entry;
     }
-}
-
-/** Requires a literal XML setup ID without evaluating a runtime expression. */
-function requireLiteralId(props: ASTProps, name: string, componentName: string): string {
-    const attribute = readXmlProp(props, name);
-    if (attribute?.kind !== 'text' || !attribute.value.trim() || !isSafePropertyName(attribute.value.trim())) {
-        throw new Error(`${componentName} requires a literal ${name} ID`);
-    }
-
-    return attribute.value.trim();
-}
-
-/** Returns whether a value can safely be merged into a State proxy. */
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-        return false;
-    }
-
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
 }
 
 /** Rejects attributes outside an XML component's public contract. */

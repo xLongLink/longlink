@@ -3,15 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {
-        expect(parseXML('<Button isDisabled="false" count="5" label="Save" />')).toEqual([
+        expect(parseXML('<Button isDisabled="false" count="5">Save</Button>')).toEqual([
             {
                 name: 'Button',
                 params: {
                     count: { kind: 'text', value: '5' },
                     isDisabled: { kind: 'text', value: 'false' },
-                    label: { kind: 'text', value: 'Save' },
                 },
-                children: [],
+                children: [{ name: '$text', params: { value: { kind: 'text', value: 'Save' } }, children: [] }],
             },
         ]);
     });
@@ -22,7 +21,7 @@ describe('parseXML', () => {
                 `<?xml version="1.0"?>
                 <longlink>
                     <!-- hidden -->
-                    <Button label="Save" />
+                    <Button>Save</Button>
                     <State id="first" />
                     <State id="second" />
                 </longlink>`
@@ -32,7 +31,11 @@ describe('parseXML', () => {
                 name: 'longlink',
                 params: {},
                 children: [
-                    { name: 'Button', params: { label: { kind: 'text', value: 'Save' } }, children: [] },
+                    {
+                        name: 'Button',
+                        params: {},
+                        children: [{ name: '$text', params: { value: { kind: 'text', value: 'Save' } }, children: [] }],
+                    },
                     { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },
                     { name: 'State', params: { id: { kind: 'text', value: 'second' } }, children: [] },
                 ],

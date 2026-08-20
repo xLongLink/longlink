@@ -11,12 +11,8 @@
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack>
                 <Stack>
-                    <TextInput
-                        label="Name"
-                        value="$draft.name"
-                        isRequired="true"
-                    />
-                    <NumberInput label="Price" units="CHF" value="$draft.price" min="0" isRequired="true" />
+                    <TextInput label="Name" value="$draft.name" />
+                    <NumberInput label="Price" value="$draft.price" min="0" />
                 </Stack>
                 <Action>
                     <Request
@@ -26,13 +22,13 @@
                         json="${{ name: draft.name, price: draft.price }}"
                     />
                     <Patch state="items" invalidate="true" />
-                    <Button isDisabled="${draft.name === ''}" variant="primary" label="Create item" />
+                    <Button variant="primary">Create item</Button>
                 </Action>
             </Stack>
         </Dialog>
     </Stack>
 
-    <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
+    <Table data="$items" idKey="id">
         <TableColumn field="name" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">

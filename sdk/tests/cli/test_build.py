@@ -98,7 +98,9 @@ def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path)
     # Assert
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n"
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
+        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
+    )
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(tmp_path: Path) -> None:

@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="BadgeType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">
-    <xsd:annotation><xsd:documentation>Renders a status or category badge from child content. Its optional Icon child fills the icon slot and may declare slot="icon".</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Badge highlights a status or category at a glance. Use it sparingly: only when a value represents a distinct state (Active, Failed) or a grouping tag (Engineering, Design). Most metadata (dates, durations, counts, descriptions) should be plain description text, not badges.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="badge" category="Content" lastUpdated="2026-07-21" source="adapters/Badge.xsd"/>
+        <longlink:example>&lt;Badge&gt;$order.status&lt;/Badge&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="SwitchType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="size" type="CompactSizeType" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType" default="end" />
-    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType" default="hug" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:boolean" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected boolean value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">
-    <xsd:annotation><xsd:documentation>Collects an on or off setting with Astryx Switch.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A toggle control for on/off states that take effect immediately. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="switch" category="Form" lastUpdated="2026-07-21" source="adapters/Switch.xsd"/>
+        <longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

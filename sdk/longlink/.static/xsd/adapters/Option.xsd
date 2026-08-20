@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="OptionType">
+    <xsd:attribute name="value" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Current value or binding expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType">
+      <xsd:annotation>
+        <xsd:documentation>Visible and accessible label. Defaults to the value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="Option" type="OptionType">
+    <xsd:annotation>
+      <xsd:documentation>A selectable option in a Selector or RadioList.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Option value="open" label="Open" /&gt;</ns2:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

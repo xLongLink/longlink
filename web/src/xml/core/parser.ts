@@ -1,5 +1,5 @@
-import { compileAttribute } from '../expressions';
 import type { ASTNode, ASTProps } from '../types';
+import { compileAttribute } from '../expressions/compile';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
 const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
@@ -94,7 +94,7 @@ function collectParams(input: unknown): ASTProps {
     // Copy attributes without parser prefixes.
     for (const [key, entry] of Object.entries(record)) {
         // Compile string attributes without resolving runtime values.
-        const name = key.replace(/^@_/, '');
+        const name = key.slice(2);
 
         // Table fields are literal paths rather than runtime values.
         params[name] = name === 'field' ? { kind: 'text', value: entry } : compileAttribute(entry);

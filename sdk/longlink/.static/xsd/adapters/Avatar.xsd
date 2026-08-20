@@ -1,14 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="AvatarType">
-    <xsd:attribute name="src" type="xsd:string" />
-    <xsd:attribute name="fallbackSrc" type="xsd:string" />
-    <xsd:attribute name="name" type="xsd:string" />
-    <xsd:attribute name="alt" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="src" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Avatar image URL.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="fallbackSrc" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Fallback image URL.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="name" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Name used for the avatar fallback.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="alt" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Alternative text for the image.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Avatar" type="AvatarType">
-    <xsd:annotation><xsd:documentation>Renders a data-oriented Astryx avatar.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Avatar represents a person or team with a profile photo, initials, or a default icon. Use it in comment headers, contact lists, chat messages, user cards, and anywhere you need to identify someone visually.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="avatar" category="Content" lastUpdated="2026-07-21" source="adapters/Avatar.xsd"/>
+        <longlink:example>&lt;Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

@@ -1,6 +1,7 @@
 import type { Scope } from '@/xml/types';
 import { describe, expect, it } from 'vitest';
-import { compileAttribute, evaluate } from '@/xml/expressions';
+import { evaluate } from '@/xml/expressions/evaluate';
+import { compileAttribute } from '@/xml/expressions/compile';
 
 describe('evaluate', () => {
     it('resolves expressions against flat context values', () => {
@@ -40,9 +41,21 @@ describe('evaluate', () => {
     });
 
     it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
-        const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
+        const ctx: Scope = { bindings: {} };
 
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
+    });
+
+    it('rejects unknown optional calls', () => {
+        const ctx: Scope = { bindings: {} };
+
+        expect(() => evaluate(compileAttribute('${unknown?.()}'), ctx)).toThrow('Function call not allowed');
+    });
+
+    it('allows optional calls to whitelisted helpers', () => {
+        const ctx: Scope = { bindings: {} };
+
+        expect(evaluate(compileAttribute('${Boolean?.(1)}'), ctx)).toBe(true);
     });
 
     it('ignores unsafe object literal keys', () => {

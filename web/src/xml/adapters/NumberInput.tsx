@@ -10,24 +10,14 @@ export function NumberInput({ props }: Props) {
     const max = resolveXml(props, 'max', ctx);
     const min = resolveXml(props, 'min', ctx);
     const step = resolveXml(props, 'step', ctx);
-    const units = resolveXml(props, 'units', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
-    const description = resolveXml(props, 'description', ctx);
-    const isIntegerOnly = resolveXml(props, 'isIntegerOnly', ctx);
     return (
         <AstryxNumberInput
             max={typeof max === 'number' ? max : undefined}
             min={typeof min === 'number' ? min : undefined}
             step={typeof step === 'number' ? step : undefined}
             label={requireXmlString(props, 'label', ctx, 'NumberInput')}
-            units={typeof units === 'string' ? units : undefined}
             value={binding.value}
             onChange={binding.setValue}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
-            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
-            description={typeof description === 'string' ? description : undefined}
-            isIntegerOnly={typeof isIntegerOnly === 'boolean' ? isIntegerOnly : undefined}
         />
     );
 }

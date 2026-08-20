@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="FileInputType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="accept" type="xsd:string" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="placeholder" type="xsd:string" />
-    <xsd:attribute name="mode" type="FileInputModeType" default="input" />
-    <xsd:attribute name="maxSize" type="xsd:positiveInteger" />
-    <xsd:attribute name="maxFiles" type="xsd:positiveInteger" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType" />
-    <xsd:attribute name="isMultiple" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected file value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="accept" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Accepted file types.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="FileInput" type="FileInputType">
-    <xsd:annotation><xsd:documentation>Collects File values for multipart actions.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>FileInput provides single-file upload.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21" source="adapters/FileInput.xsd"/>
+        <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

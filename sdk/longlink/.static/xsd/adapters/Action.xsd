@@ -1,31 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="ActionType">
     <xsd:sequence>
-      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element name="Request">
           <xsd:complexType>
-            <xsd:attribute name="url" type="xsd:string" use="required" />
-            <xsd:attribute name="method" type="ActionMethodType" use="required" />
-            <xsd:attribute name="form" type="xsd:string" />
-            <xsd:attribute name="json" type="xsd:string" />
-            <xsd:attribute name="closeDialog" type="xsd:string" />
+            <xsd:attribute name="url" type="xsd:string" use="required">
+              <xsd:annotation>
+                <xsd:documentation>App-relative request URL.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="method" type="ActionMethodType" use="required">
+              <xsd:annotation>
+                <xsd:documentation>HTTP request method.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="form" type="xsd:string"/>
+            <xsd:attribute name="json" type="xsd:string"/>
+            <xsd:attribute name="closeDialog" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="Patch">
           <xsd:complexType>
-            <xsd:attribute name="state" type="xsd:string" use="required" />
-            <xsd:attribute name="value" type="xsd:string" />
-            <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true" />
+            <xsd:attribute name="state" type="xsd:string" use="required">
+              <xsd:annotation>
+                <xsd:documentation>State identifier to update.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="value" type="xsd:string">
+              <xsd:annotation>
+                <xsd:documentation>Current value or binding expression.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true">
+              <xsd:annotation>
+                <xsd:documentation>Invalidates the referenced state.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
           </xsd:complexType>
         </xsd:element>
       </xsd:choice>
-      <xsd:element ref="Button" />
+      <xsd:choice>
+        <xsd:element ref="Button"/>
+        <xsd:element ref="Link"/>
+      </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">
-    <xsd:annotation><xsd:documentation>Runs ordered request and state effects from its child button.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Use Action to run requests and state changes in order when someone presses its one terminal Button or Link. A control with to navigates and ends the action.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="action" category="State" lastUpdated="2026-07-21" source="adapters/Action.xsd"/>
+        <ns3:example xmlns:ns3="urn:longlink:xsd-docs">&lt;Action&gt;
+  &lt;Request url="/api/orders/${order.id}/complete" method="PATCH" /&gt;
+  &lt;Patch state="orders" invalidate="true" /&gt;
+  &lt;Button to="/orders/${order.id}"&gt;Complete and view order&lt;/Button&gt;
+&lt;/Action&gt;</ns3:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

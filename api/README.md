@@ -92,7 +92,7 @@ uv run alembic upgrade head
 uv run python -m src.release             # Schedule deployment reconciliation once
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 # In another terminal:
-DEVELOPMENT=true uv run python -m scripts.seed
+DEVELOPMENT=true uv run python -m scripts.seed  # Local infrastructure and example data
 ```
 
 <br />

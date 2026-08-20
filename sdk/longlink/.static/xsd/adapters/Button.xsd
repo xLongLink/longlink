@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
-  <xsd:complexType name="ButtonType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="variant" type="ButtonVariantType" default="secondary" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
-    <xsd:attribute name="type" type="ButtonHtmlType" default="button" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:string" />
-    <xsd:attribute name="isIconOnly" type="xsd:string" />
-    <xsd:attribute name="tooltip" type="xsd:string" />
-    <xsd:attribute name="elevation" type="ElevationType" />
-    <xsd:attribute name="isInterruptible" type="xsd:boolean" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="ButtonType" mixed="true">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="variant" type="ButtonVariantType" default="secondary">
+      <xsd:annotation>
+        <xsd:documentation>Visual emphasis: primary, secondary, ghost, or destructive.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="to" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Application-relative navigation destination.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Button" type="ButtonType">
-    <xsd:annotation><xsd:documentation>Renders an Astryx action button.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Button triggers an action when clicked. Use it for form submissions, confirmations, or simple application navigation with to.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="button" category="Action" lastUpdated="2026-07-21" source="adapters/Button.xsd"/>
+        <longlink:example>&lt;Action&gt;
+  &lt;Request url="/api/orders" method="POST" /&gt;
+  &lt;Button variant="primary"&gt;Save&lt;/Button&gt;
+&lt;/Action&gt;
+
+ &lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="TextAreaType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="placeholder" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="rows" type="xsd:positiveInteger" />
-    <xsd:attribute name="maxLength" type="xsd:nonNegativeInteger" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attribute name="hasSpellCheck" type="xsd:string" />
-    <xsd:attribute name="hasAutoFocus" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:boolean" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Text field value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="TextArea" type="TextAreaType">
-    <xsd:annotation><xsd:documentation>Collects multi-line text with an accessible Astryx field.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>TextArea is a multi-line text input for collecting longer-form content like comments, descriptions, or messages. Use it when the expected input spans multiple lines. For shorter, single-line values, use TextInput.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="text-area" category="Form" lastUpdated="2026-07-21" source="adapters/TextArea.xsd"/>
+        <longlink:example>&lt;TextArea label="Notes" value="$form.notes" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

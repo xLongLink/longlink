@@ -1,36 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="RadioListType">
-    <xsd:sequence><xsd:element ref="RadioListItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="CompactSizeType" default="md" />
-    <xsd:attribute name="orientation" type="OrientationType" default="vertical" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
-  </xsd:complexType>
-  <xsd:complexType name="RadioListItemType">
-    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:element ref="Option" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected option value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="RadioList" type="RadioListType">
-    <xsd:annotation><xsd:documentation>Collects one value from an accessible Astryx radio group.</xsd:documentation></xsd:annotation>
-  </xsd:element>
-  <xsd:element name="RadioListItem" type="RadioListItemType">
-    <xsd:annotation><xsd:documentation>Defines one RadioList option.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="radio-list" category="Form" lastUpdated="2026-07-21" source="adapters/RadioList.xsd"/>
+        <longlink:example>&lt;RadioList label="Plan" value="$form.plan"&gt;
+  &lt;Option value="solo" label="Solo" /&gt;
+  &lt;Option value="team" label="Team" /&gt;
+&lt;/RadioList&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

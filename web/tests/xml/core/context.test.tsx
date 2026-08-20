@@ -5,12 +5,19 @@ import { createContext, setupContext } from '@/xml/core/context';
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it('preserves state across setup reruns until the slot is invalidated', async () => {
+    it('preserves state across setup reruns until invalidation', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }), children: [] }];
+        const ast = [
+            {
+                name: 'State',
+                params: compileProps({ id: 'filter', value: 'day', score: '10', list: '[]' }),
+                children: [],
+            },
+        ];
 
         await setupContext(ast, ctx);
-        const filter = ctx.scope.bindings.filter as { value: string };
+        const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
+        expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
         await setupContext(ast, ctx);
 
@@ -19,7 +26,7 @@ describe('core/context', () => {
         delete ctx.scope.bindings.filter;
         await ctx.services.setups.filter();
 
-        expect((ctx.scope.bindings.filter as { value: string }).value).toBe('day');
+        expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
     });
 
     it('evaluates query paths against route params', async () => {
@@ -30,16 +37,16 @@ describe('core/context', () => {
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };
-        ctx.services.requestBaseUrl = '/proxy';
+        ctx.services.requestBaseUrl = 'http://localhost/proxy';
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-            requestedUrl = String(input);
+            requestedUrl = input instanceof Request ? input.url : String(input);
 
             return new Response(JSON.stringify({ id: '123' }));
         });
 
         await setupContext(ast, ctx);
 
-        expect(requestedUrl).toBe('/proxy/api/issues/123');
+        expect(requestedUrl).toBe('http://localhost/proxy/api/issues/123');
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 

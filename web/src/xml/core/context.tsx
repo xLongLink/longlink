@@ -1,7 +1,7 @@
 import { proxy } from 'valtio';
-import { ApiError } from '@/lib/api';
-import { evaluate } from '../expressions';
+import { api } from '@/lib/api';
 import { resolveRequestUrl } from './url';
+import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, XmlRuntime } from '../types';
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
 
@@ -13,6 +13,7 @@ export function createContext(params: Record<string, string> = {}): XmlRuntime {
         scope: { bindings: { params } },
         services: {
             invalidate: async () => {},
+            navigate: () => {},
             navigationBaseUrl: '',
             requestBaseUrl: '',
             setups: {},
@@ -41,7 +42,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
         const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
 
         if (node.name === 'State') {
-            // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
+            // Preserve local state across renderer refreshes; invalidation deletes it before setup runs.
             services.setups[id] = () => {
                 // Only seed state that is not already present.
                 if (!(id in scope.bindings)) {
@@ -73,15 +74,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
 
                 const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
-                const response = await fetch(url, {
-                    credentials: 'include',
-                    headers: { Accept: 'application/json' },
-                });
-                if (!response.ok) {
-                    throw new ApiError(`API request failed (${response.status})`, response.status);
-                }
-
-                scope.bindings[id] = await response.json();
+                scope.bindings[id] = await api(url).json();
             };
             await services.setups[id]();
         }

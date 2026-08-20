@@ -1,25 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="TabsType">
-    <xsd:sequence><xsd:element ref="Tab" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
-    <xsd:attribute name="layout" type="TabLayoutType" default="hug" />
-    <xsd:attribute name="hasDivider" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:element ref="Tab" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected tab value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="TabType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="to" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="value" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Current value or binding expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Accessible label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Tabs" type="TabsType">
-    <xsd:annotation><xsd:documentation>Renders controlled tab navigation and one panel.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Displays tab navigation and the active tab content.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="tabs" category="Layout" lastUpdated="2026-07-21" source="adapters/TabList.xsd"/>
+        <longlink:example>&lt;Tabs value="$tabs.value"&gt;
+  &lt;Tab value="overview" label="Overview"&gt;Overview content&lt;/Tab&gt;
+  &lt;Tab value="activity" label="Activity"&gt;Activity content&lt;/Tab&gt;
+&lt;/Tabs&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
   <xsd:element name="Tab" type="TabType">
-    <xsd:annotation><xsd:documentation>Defines one tab and its panel children.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Displays tab navigation and the active tab content.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Tabs value="$tabs.value"&gt;
+  &lt;Tab value="overview" label="Overview"&gt;Overview content&lt;/Tab&gt;
+  &lt;Tab value="activity" label="Activity"&gt;Activity content&lt;/Tab&gt;
+&lt;/Tabs&gt;</ns2:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

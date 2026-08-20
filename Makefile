@@ -128,6 +128,7 @@ down:
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
+	@docker image rm --force "localhost:15000/longlink-app:dev" >/dev/null 2>&1 || true
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 
@@ -147,7 +148,7 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Seed the configured Kubernetes compute without preparing local infrastructure.
+# Seed local infrastructure and create the local example Organization and Application.
 seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head

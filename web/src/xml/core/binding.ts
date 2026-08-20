@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { isValtioProxy } from './state';
 import { resolveXmlValue } from './props';
-import { proxy, useSnapshot } from 'valtio';
 import type { ASTProps, Scope } from '../types';
-import { isSafePropertyName, resolvePath } from '../expressions';
-
-const EMPTY_BINDING = proxy<Record<string, unknown>>({});
+import { isSafePropertyName, resolvePath } from '../expressions/resolve';
 
 type BindingTarget = {
     state: Record<string, unknown>;
@@ -16,8 +13,11 @@ type BindingTarget = {
 export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
     const value = resolveXmlValue(props, name, ctx);
     const target = resolveBindableTarget(props[name], value, ctx);
-    const snapshot = useSnapshot(target?.state ?? EMPTY_BINDING);
-    const currentValue = target?.key ? snapshot[target.key] : 'value' in snapshot ? snapshot.value : '';
+    const currentValue = target?.key
+        ? target.state[target.key]
+        : target && 'value' in target.state
+          ? target.state.value
+          : '';
     const [localValue, setLocalValue] = useState(() => coerce(value));
 
     return {
@@ -28,7 +28,7 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
                 return;
             }
 
-            // Write named properties or the direct binding value slot.
+            // Write named properties or the direct binding value.
             if (target.key || 'value' in target.state) {
                 target.state[target.key ?? 'value'] = nextValue;
             }
@@ -55,11 +55,9 @@ function resolveBindableTarget(
         throw new Error('XML binding path must use safe property names');
     }
 
-    // Resolve direct state references.
+    // Direct references were already resolved above and were not reactive.
     if (parts.length === 1) {
-        const state = resolvePath(ctx, parts);
-
-        return isValtioProxy(state) ? { state } : undefined;
+        return undefined;
     }
 
     const parent = resolvePath(ctx, [parts[0], ...parts.slice(1, -1)]);

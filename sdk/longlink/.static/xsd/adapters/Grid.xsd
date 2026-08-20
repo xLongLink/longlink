@@ -1,15 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="GridType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="columns" type="xsd:positiveInteger" />
-    <xsd:attribute name="minColumnWidth" type="PositiveDecimalType" />
-    <xsd:attribute name="maxColumns" type="xsd:positiveInteger" />
-    <xsd:attribute name="repeat" type="GridRepeatType" default="fill" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="columns" type="xsd:positiveInteger">
+      <xsd:annotation>
+        <xsd:documentation>Number of fixed columns.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="minColumnWidth" type="PositiveDecimalType">
+      <xsd:annotation>
+        <xsd:documentation>Minimum width for responsive columns.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="maxColumns" type="xsd:positiveInteger">
+      <xsd:annotation>
+        <xsd:documentation>Maximum responsive column count.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="repeat" type="GridRepeatType" default="fill">
+      <xsd:annotation>
+        <xsd:documentation>Responsive repeat mode: fill or fit.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Grid" type="GridType">
-    <xsd:annotation><xsd:documentation>Arranges XML children in an Astryx grid. Use columns for a fixed grid, or minColumnWidth with optional maxColumns and repeat for a responsive grid.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="grid" category="Layout" lastUpdated="2026-07-21" source="adapters/Grid.xsd"/>
+        <longlink:example>&lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
+  &lt;Card&gt;First&lt;/Card&gt;
+  &lt;Card&gt;Second&lt;/Card&gt;
+&lt;/Grid&gt;
+
+&lt;Grid columns="3"&gt;
+  &lt;GridSpan columns="2"&gt;&lt;Card&gt;Featured&lt;/Card&gt;&lt;/GridSpan&gt;
+  &lt;Card&gt;Standard&lt;/Card&gt;
+&lt;/Grid&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

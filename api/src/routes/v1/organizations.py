@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, names, roles
+from sqlalchemy import select
 from src.errors import UnavailableError
 from src.logger import logger
 from src.models.roles import OrganizationRoles
@@ -23,6 +24,7 @@ from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -44,19 +46,14 @@ async def get_organization(
     # Reuse the active Organization loaded with the authorized membership.
     organization = membership.organization
 
-    active_applications = await organizations.applications(session, organization.id)
-    memberships = await organizations.members(session, organization.id)
-
     # Show invitations only to organization managers.
-    active_invitations = (
-        await organizations.invitations(session, organization.id) if roles.atleast(membership.role, OrganizationRoles.maintain) else []
-    )
-
     return {
         "organization": organization,
-        "members": memberships,
-        "invitations": active_invitations,
-        "applications": active_applications,
+        "members": await organizations.members(session, organization.id),
+        "invitations": await organizations.invitations(session, organization.id)
+        if roles.atleast(membership.role, OrganizationRoles.maintain)
+        else [],
+        "applications": await organizations.applications(session, organization.id),
     }
 
 
@@ -87,6 +84,8 @@ async def update_organization(
     organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+    if not session.is_modified(organization):
+        return organization
     await session.commit()
     return organization
 
@@ -193,7 +192,7 @@ async def update_organization_member(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Persist the requested role only for an active Organization member.
-    updated = await organizations.update_member_role(
+    changed = await organizations.update_member_role(
         session,
         membership.organization_id,
         member_id,
@@ -201,9 +200,10 @@ async def update_organization_member(
         user,
         membership.role,
     )
-    if not updated:
+    if changed is None:
         raise HTTPException(status_code=404, detail="Organization member not found")
-    await session.commit()
+    if changed:
+        await session.commit()
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
@@ -216,7 +216,9 @@ async def delete_organization(
 
     # The initiating owner may retry cleanup after memberships are removed.
     if not user.administrator:
-        tombstone = await organizations.get_tombstone(session, organization_id)
+        tombstone = await session.scalar(
+            select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_not(None))
+        )
         if tombstone is not None and tombstone.deleted_id != user.id:
             raise HTTPException(status_code=403, detail="Access required")
 

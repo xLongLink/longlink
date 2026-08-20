@@ -11,7 +11,7 @@
         </Stack>
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack>
-                <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
+                <FileInput label="Attachment" value="$attachment.file" />
                 <Action>
                     <Request
                         url="/api/items/${params.item}/attachments"
@@ -20,13 +20,13 @@
                         form="${{ file: attachment.file }}"
                     />
                     <Patch state="attachments" invalidate="true" />
-                    <Button isDisabled="${attachment.file === null}" variant="primary" label="Upload attachment" />
+                    <Button variant="primary">Upload attachment</Button>
                 </Action>
             </Stack>
         </Dialog>
     </Stack>
 
-    <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
+    <Table data="$attachments" idKey="id">
         <TableColumn field="name" header="File" />
     </Table>
 </longlink>

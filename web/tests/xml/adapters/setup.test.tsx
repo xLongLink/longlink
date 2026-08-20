@@ -6,7 +6,7 @@ describe('setup adapters', () => {
     it('renders setup validation errors', () => {
         const cases = [
             {
-                xml: '<State id="filter" value="day"><Button label="Ready" /></State>',
+                xml: '<State id="filter" value="day"><Button>Ready</Button></State>',
                 expectedError: 'State cannot have children',
             },
             {
@@ -14,7 +14,7 @@ describe('setup adapters', () => {
                 expectedError: 'State requires a string id',
             },
             {
-                xml: '<Query id="user" path="/api/user"><Button label="Ready" /></Query>',
+                xml: '<Query id="user" path="/api/user"><Button>Ready</Button></Query>',
                 expectedError: 'Query cannot have children',
             },
             {

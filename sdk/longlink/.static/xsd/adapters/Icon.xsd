@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="IconType">
-    <xsd:attribute name="icon" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="label" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:attribute name="icon" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Astryx theme icon name.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Accessible icon label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Icon" type="IconType">
-    <xsd:annotation><xsd:documentation>Renders a semantic icon from the Astryx theme registry.</xsd:documentation></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>Icons are small visual symbols that represent actions, objects, or concepts. They improve scannability and reinforce meaning alongside text. Supports both direct SVG components and semantic icon names that adapt to the active theme.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="icon" category="Content" lastUpdated="2026-07-21" source="adapters/Icon.xsd"/>
+        <longlink:example>&lt;Icon icon="info" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

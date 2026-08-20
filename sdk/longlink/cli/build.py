@@ -19,7 +19,8 @@ DOCKERFILE_TEMPLATE = """FROM python:3.12.13-bookworm@sha256:9bed8554e926c07c6f9
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
 
-COPY . /workspace
+COPY {dependency_source}pyproject.toml {dependency_source}uv.lock {workdir}/
+{local_dependency_manifests}
 
 WORKDIR {workdir}
 
@@ -27,7 +28,12 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 ENV UV_PYTHON=/usr/local/bin/python
 ENV UV_PYTHON_DOWNLOADS=never
 
-RUN uv sync --locked --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
+# Install locked remote dependencies before application source changes can invalidate this layer.
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-install-local
+
+COPY . /workspace
+
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
 
 FROM python:3.12.13-slim-bookworm@sha256:d50fb7611f86d04a3b0471b46d7557818d88983fc3136726336b2a4c657aa30b
 
@@ -206,7 +212,7 @@ def render_image_labels(description: str | None, environments: Sequence[Mapping[
     return "\n".join(rendered_labels)
 
 
-def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None = None) -> tuple[Path, str]:
+def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None = None) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
     # Validate the application root and initialize local dependency traversal.
@@ -269,7 +275,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
         relative_root = root.relative_to(common_root)
         workdir = f"/workspace/{relative_root.as_posix()}"
 
-    return common_root, workdir
+    return common_root, workdir, sorted(seen_paths)
 
 
 def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
@@ -278,7 +284,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     # Resolve build paths and collect project metadata for the image.
     root = (base_path or Path.cwd()).resolve()
     pyproject_data = read_pyproject(root)
-    source_root, workdir = resolve_docker_paths(root, pyproject_data)
+    source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
     env_spec = read_env_spec(root, pyproject_data)
     project_data = pyproject_data.get("project")
     if not isinstance(project_data, dict):
@@ -328,12 +334,25 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     # Apply the closest repository ignore rules when Docker uploads the context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = source.read_text(encoding="utf-8") if source is not None else ""
-    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n", encoding="utf-8")
+    build_context.joinpath(".dockerignore").write_text(
+        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8"
+    )
 
     # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"
+    dependency_source = workdir.removeprefix("/workspace/")
+    if dependency_source:
+        dependency_source += "/"
+    local_dependency_manifests = "\n".join(
+        f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
+        f"/workspace/{source_path.relative_to(source_root).as_posix()}/"
+        for source_path in local_source_paths
+        if source_path != root
+    )
     dockerfile_path.write_text(
         DOCKERFILE_TEMPLATE.format(
+            dependency_source=dependency_source,
+            local_dependency_manifests=local_dependency_manifests,
             workdir=workdir,
             labels=labels,
             sdk_version=json.dumps(sdk_version),

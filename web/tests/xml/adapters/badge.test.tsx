@@ -3,25 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
-    it('renders an explicit icon slot without forwarding the slot attribute', () => {
-        const output = renderXmlToMarkup(parseXML('<Badge>Active<Icon slot="icon" icon="check" /></Badge>'));
-
-        expect(output).toContain('svg');
-        expect(output).not.toContain('slot=');
-    });
-
-    it('keeps direct icon children as the unambiguous icon slot', () => {
+    it('renders a direct Icon child', () => {
         const output = renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" /></Badge>'));
 
         expect(output).toContain('svg');
     });
 
-    it('rejects unsupported slot names, child tags, and duplicate icons', () => {
-        expect(() =>
-            renderXmlToMarkup(parseXML('<Badge>Active<Icon slot="endContent" icon="check" /></Badge>'))
-        ).toThrow('Badge does not support the endContent slot');
+    it('rejects duplicate icons', () => {
         expect(() =>
             renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" /><Icon icon="x" /></Badge>'))
-        ).toThrow('Badge icon slot accepts one child');
+        ).toThrow('Badge accepts one Icon child');
     });
 });
