@@ -34,12 +34,18 @@ export function compileAttribute(value: string): ASTAttribute {
         const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }> = [];
         let cursor = 0;
 
-        for (const segment of readInterpolationSegments(value)) {
+        // Scan the string for interpolation starts.
+        for (let index = 0; index < value.length; index += 1) {
+            // Ignore characters that do not start an interpolation.
+            if (value[index] !== '$' || value[index + 1] !== '{') continue;
+
+            const segment = readInterpolationSegment(value, index);
             if (cursor < segment.start) {
                 segments.push({ kind: 'text', value: value.slice(cursor, segment.start) });
             }
             segments.push({ kind: 'expression', node: segment.node });
             cursor = segment.end + 1;
+            index = segment.end;
         }
 
         if (cursor < value.length) {
@@ -81,21 +87,4 @@ function readStandaloneExpression(input: string): ExpressionNode | null {
     const segment = readInterpolationSegment(input, 0);
 
     return segment.end === input.length - 1 ? segment.node : null;
-}
-
-/** Reads every `${...}` interpolation segment from a mixed string value. */
-function readInterpolationSegments(input: string): InterpolationSegment[] {
-    const segments: InterpolationSegment[] = [];
-
-    // Scan the string for interpolation starts.
-    for (let index = 0; index < input.length; index += 1) {
-        // Ignore characters that do not start an interpolation.
-        if (input[index] !== '$' || input[index + 1] !== '{') continue;
-
-        const segment = readInterpolationSegment(input, index);
-        segments.push(segment);
-        index = segment.end;
-    }
-
-    return segments;
 }

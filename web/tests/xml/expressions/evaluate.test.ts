@@ -40,7 +40,7 @@ describe('evaluate', () => {
     });
 
     it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
-        const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
+        const ctx: Scope = { bindings: {} };
 
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
     });

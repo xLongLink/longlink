@@ -35,10 +35,10 @@ export function resolvePath(scope: Scope, parts: [string, ...string[]]): unknown
     let current = resolveValue(scope, parts[0]);
 
     // Walk the remaining path segments directly on the live value.
-    for (let index = 1; index < parts.length; index += 1) {
+    for (const part of parts.slice(1)) {
         if (current == null) return undefined;
 
-        current = readSafeProperty(current, parts[index]);
+        current = readSafeProperty(current, part);
     }
 
     return current;

@@ -189,28 +189,31 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
         case 'ArrayExpression':
             return node.elements.map((element) => (element ? evaluateNode(element, ctx) : null));
 
-        case 'ObjectExpression':
-            return node.properties.reduce<Record<string, unknown>>((result, property) => {
+        case 'ObjectExpression': {
+            const result: Record<string, unknown> = Object.create(null);
+
+            for (const property of node.properties) {
                 // Ignore entries that are not plain properties.
-                if (property.type !== 'Property') return result;
+                if (property.type !== 'Property') continue;
 
                 const key =
                     property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
 
                 // Skip prototype-related keys so XML object literals cannot mutate prototypes.
-                if (!isSafePropertyName(key)) return result;
+                if (!isSafePropertyName(key)) continue;
 
                 result[key] = evaluateNode(property.value, ctx);
+            }
 
-                return result;
-            }, Object.create(null));
+            return result;
+        }
 
         case 'TemplateLiteral': {
             let output = '';
 
             // Stitch cooked template chunks with evaluated expressions.
             for (let index = 0; index < node.quasis.length; index += 1) {
-                output += node.quasis[index]?.value.cooked ?? '';
+                output += node.quasis[index].value.cooked;
 
                 // Insert the matching evaluated expression between chunks.
                 if (index < node.expressions.length) {
@@ -243,7 +246,9 @@ export function evaluate(attribute: ASTAttribute, ctx: Scope): unknown {
         case 'interpolation':
             return attribute.segments
                 .map((segment) =>
-                    segment.kind === 'text' ? segment.value : stringifyInterpolationValue(evaluateNode(segment.node, ctx))
+                    segment.kind === 'text'
+                        ? segment.value
+                        : stringifyInterpolationValue(evaluateNode(segment.node, ctx))
                 )
                 .join('');
     }
