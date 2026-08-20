@@ -9,7 +9,6 @@ export function TextArea({ props }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const rows = resolveXml(props, 'rows', ctx);
     const maxLength = resolveXml(props, 'maxLength', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
 
@@ -28,7 +27,6 @@ export function TextArea({ props }: Props) {
             value={binding.value}
             onChange={binding.setValue}
             maxLength={typeof maxLength === 'number' ? maxLength : undefined}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
         />

@@ -60,11 +60,6 @@
         <xsd:documentation>Options layer placement.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="disabledMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Message shown when disabled.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="status" type="InputStatusType">
       <xsd:annotation>
         <xsd:documentation>Validation status.</xsd:documentation>
@@ -88,11 +83,6 @@
     <xsd:attribute name="hasSearch" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Shows a search field.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Disables the field.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="isRequired" type="xsd:string">
@@ -131,11 +121,6 @@
     <xsd:attribute name="label" type="NonBlankStringType">
       <xsd:annotation>
         <xsd:documentation>Accessible label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Disables interaction.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>

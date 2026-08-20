@@ -18,8 +18,6 @@ export function FileInput({ props }: Props) {
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
     const isMultiple = resolveXml(props, 'isMultiple', ctx);
@@ -41,8 +39,6 @@ export function FileInput({ props }: Props) {
         <AstryxFileInput
             accept={typeof accept === 'string' ? accept : undefined}
             description={typeof description === 'string' ? description : undefined}
-            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
             isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
             isMultiple={typeof isMultiple === 'boolean' ? isMultiple : undefined}

@@ -37,11 +37,6 @@
         <xsd:documentation>Increment between allowed values.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Disables the field.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="isRequired" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Marks the field as required.</xsd:documentation>

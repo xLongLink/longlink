@@ -15,7 +15,7 @@ VALID_FRAGMENTS = [
     ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
-        '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
+        '<CheckboxInput label="Archive" value="$form.archive" size="sm" isLoading="true" />',
     ),
     (
         "dialog",

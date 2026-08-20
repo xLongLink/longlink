@@ -18,9 +18,8 @@ export function Selector({ props, nodes }: Props) {
             const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
             const labelValue = resolveXml(node.params, 'label', ctx);
             const label = typeof labelValue === 'string' ? labelValue : value;
-            const disabledValue = resolveXml(node.params, 'isDisabled', ctx);
 
-            return { value, label, disabled: typeof disabledValue === 'boolean' ? disabledValue : undefined };
+            return { value, label };
         });
 
     // Selectors require at least one serializable option.
@@ -32,7 +31,6 @@ export function Selector({ props, nodes }: Props) {
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const hasSearch = resolveXml(props, 'hasSearch', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
@@ -42,7 +40,6 @@ export function Selector({ props, nodes }: Props) {
     const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
     if (!isXmlEnum(size, [undefined, ...SIZES])) {
@@ -71,7 +68,6 @@ export function Selector({ props, nodes }: Props) {
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
         isLoading: typeof isLoading === 'boolean' ? isLoading : undefined,
-        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
         isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
         isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
         description: typeof description === 'string' ? description : undefined,
@@ -81,7 +77,6 @@ export function Selector({ props, nodes }: Props) {
         isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
         isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
         statusVariant,
-        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
         searchPlaceholder: typeof searchPlaceholder === 'string' ? searchPlaceholder : undefined,
     };
 

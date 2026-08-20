@@ -32,11 +32,6 @@
         <xsd:documentation>Control width.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="disabledMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Message shown when disabled.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="status" type="InputStatusType">
       <xsd:annotation>
         <xsd:documentation>Validation status.</xsd:documentation>
@@ -45,16 +40,6 @@
     <xsd:attribute name="statusMessage" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Validation status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Disables the field.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isReadOnly" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Makes the field read-only.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="isRequired" type="xsd:string">

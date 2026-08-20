@@ -9,7 +9,6 @@ export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const type = resolveXml(props, 'type', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
 
@@ -23,7 +22,6 @@ export function TextInput({ props }: Props) {
             label={requireXmlString(props, 'label', ctx, 'TextInput')}
             value={binding.value}
             onChange={binding.setValue}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
         />

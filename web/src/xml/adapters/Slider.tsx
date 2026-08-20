@@ -41,9 +41,7 @@ export function Slider({ props }: Props) {
     }
 
     const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
@@ -53,9 +51,7 @@ export function Slider({ props }: Props) {
 
     const commonProps = {
         description: typeof description === 'string' ? description : undefined,
-        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
-        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
         isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
         isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
         isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,

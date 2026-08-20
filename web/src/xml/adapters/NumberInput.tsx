@@ -11,7 +11,6 @@ export function NumberInput({ props }: Props) {
     const min = resolveXml(props, 'min', ctx);
     const step = resolveXml(props, 'step', ctx);
     const units = resolveXml(props, 'units', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
     const isIntegerOnly = resolveXml(props, 'isIntegerOnly', ctx);
@@ -24,7 +23,6 @@ export function NumberInput({ props }: Props) {
             units={typeof units === 'string' ? units : undefined}
             value={binding.value}
             onChange={binding.setValue}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
             isIntegerOnly={typeof isIntegerOnly === 'boolean' ? isIntegerOnly : undefined}

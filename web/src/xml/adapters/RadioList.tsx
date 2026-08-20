@@ -15,9 +15,7 @@ export function RadioList({ props, nodes }: Props) {
     const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'vertical';
     const size = isXmlEnum(sizeValue, COMPACT_SIZES) ? sizeValue : 'md';
     const description = resolveXml(props, 'description', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
@@ -27,9 +25,7 @@ export function RadioList({ props, nodes }: Props) {
     return (
         <AstryxRadioList
             description={typeof description === 'string' ? description : undefined}
-            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
@@ -50,12 +46,10 @@ export function RadioList({ props, nodes }: Props) {
 export function RadioListItem({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const description = resolveXml(props, 'description', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
 
     return (
         <AstryxRadioListItem
             description={typeof description === 'string' ? description : undefined}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             label={requireXmlString(props, 'label', ctx, 'RadioListItem')}
             value={requireXmlString(props, 'value', ctx, 'RadioListItem')}
         />

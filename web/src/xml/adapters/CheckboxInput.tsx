@@ -15,13 +15,10 @@ export function CheckboxInput({ props }: Props) {
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const isLoading = resolveXml(props, 'isLoading', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
     const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isReadOnly = resolveXml(props, 'isReadOnly', ctx);
     const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
     const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
 
     if (!isXmlEnum(size, [undefined, ...COMPACT_SIZES])) {
         throw new Error(`Unsupported CheckboxInput size '${String(size)}'`);
@@ -37,13 +34,10 @@ export function CheckboxInput({ props }: Props) {
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
             isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
             isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
-            isReadOnly={typeof isReadOnly === 'boolean' ? isReadOnly : undefined}
             isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
             isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
-            disabledMessage={typeof disabledMessage === 'string' ? disabledMessage : undefined}
         />
     );
 }
