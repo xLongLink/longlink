@@ -5,12 +5,6 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { proportional, Table } from '@astryxdesign/core/Table';
 
-const parameters = [
-    { description: 'The visible button text.', name: 'label' },
-    { description: 'An application-relative destination to navigate to.', name: 'to' },
-    { description: 'The visual emphasis: primary, secondary, ghost, or destructive.', name: 'variant' },
-];
-
 export const metadata = {
     path: '/docs/sdk/pages/button',
     title: 'Button',
@@ -36,11 +30,17 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <Text as="p">{metadata.description}</Text>
                 <Table
+                    data={[
+                        ['label', 'Visible button text.'],
+                        ['variant', 'Visual emphasis: primary, secondary, ghost, or destructive.'],
+                        ['to', 'Application-relative navigation destination.'],
+                        ['if', 'Conditional rendering expression.'],
+                        ['slot', 'Named child slot.'],
+                    ].map(([parameter, description]) => ({ parameter, description }))}
                     columns={[
-                        { header: 'Parameter', key: 'name', width: proportional(1) },
-                        { header: 'Description', key: 'description', width: proportional(3) },
+                        { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                        { key: 'description', header: 'Description', width: proportional(3) },
                     ]}
-                    data={parameters}
                     density="compact"
                     dividers="rows"
                 />

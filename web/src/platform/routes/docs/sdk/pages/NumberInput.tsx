@@ -3,6 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { proportional, Table } from '@astryxdesign/core/Table';
 
 export const metadata = {
     path: '/docs/sdk/pages/number-input',
@@ -28,6 +29,28 @@ export default function DocsArticleRoute() {
                     </Heading>
                 </Stack>
                 <Text as="p">{metadata.description}</Text>
+                <Table
+                    data={[
+                        ['label', 'Visible field label.'],
+                        ['value', 'Numeric field value.'],
+                        ['description', 'Supporting field text.'],
+                        ['units', 'Units shown with the value.'],
+                        ['min', 'Minimum allowed value.'],
+                        ['max', 'Maximum allowed value.'],
+                        ['step', 'Increment between allowed values.'],
+                        ['isDisabled', 'Disables the field.'],
+                        ['isRequired', 'Marks the field as required.'],
+                        ['isIntegerOnly', 'Restricts values to integers.'],
+                        ['if', 'Conditional rendering expression.'],
+                        ['slot', 'Named child slot.'],
+                    ].map(([parameter, description]) => ({ parameter, description }))}
+                    columns={[
+                        { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                        { key: 'description', header: 'Description', width: proportional(3) },
+                    ]}
+                    density="compact"
+                    dividers="rows"
+                />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

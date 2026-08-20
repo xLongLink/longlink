@@ -3,6 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { proportional, Table } from '@astryxdesign/core/Table';
 
 export const metadata = {
     path: '/docs/sdk/pages/selector',
@@ -29,6 +30,41 @@ export default function DocsArticleRoute() {
                     </Heading>
                 </Stack>
                 <Text as="p">{metadata.description}</Text>
+                <Table
+                    data={[
+                        ['label', 'Visible field label.'],
+                        ['value', 'Selected option value.'],
+                        ['size', 'Control size.'],
+                        ['variant', 'Control variant.'],
+                        ['description', 'Supporting field text.'],
+                        ['placeholder', 'Placeholder text.'],
+                        ['searchPlaceholder', 'Search field placeholder.'],
+                        ['htmlName', 'HTML form field name.'],
+                        ['width', 'Control width.'],
+                        ['labelTooltip', 'Tooltip for the label.'],
+                        ['placement', 'Options layer placement.'],
+                        ['disabledMessage', 'Message shown when disabled.'],
+                        ['status', 'Validation status.'],
+                        ['statusMessage', 'Validation status message.'],
+                        ['statusVariant', 'Presentation of the status message.'],
+                        ['hasClear', 'Shows a clear control.'],
+                        ['hasSearch', 'Shows a search field.'],
+                        ['isDisabled', 'Disables the field.'],
+                        ['isRequired', 'Marks the field as required.'],
+                        ['isOptional', 'Marks the field as optional.'],
+                        ['isLabelHidden', 'Visually hides the label.'],
+                        ['isLoading', 'Shows a loading state.'],
+                        ['isDefaultOpen', 'Opens the options layer initially.'],
+                        ['if', 'Conditional rendering expression.'],
+                        ['slot', 'Named child slot.'],
+                    ].map(([parameter, description]) => ({ parameter, description }))}
+                    columns={[
+                        { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                        { key: 'description', header: 'Description', width: proportional(3) },
+                    ]}
+                    density="compact"
+                    dividers="rows"
+                />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

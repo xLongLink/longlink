@@ -3,6 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { proportional, Table } from '@astryxdesign/core/Table';
 
 export const metadata = {
     path: '/docs/sdk/pages/action',
@@ -32,6 +33,18 @@ export default function DocsArticleRoute() {
                         'Use Action to run requests and state changes in order when someone presses a Button or Link. A control with to navigates and ends the action.'
                     }
                 </Text>
+                <Table
+                    data={[['if', 'Conditionally renders the action.']].map(([parameter, description]) => ({
+                        parameter,
+                        description,
+                    }))}
+                    columns={[
+                        { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                        { key: 'description', header: 'Description', width: proportional(3) },
+                    ]}
+                    density="compact"
+                    dividers="rows"
+                />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

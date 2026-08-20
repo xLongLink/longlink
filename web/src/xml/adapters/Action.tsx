@@ -12,9 +12,9 @@ import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../co
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
 type ActionStep =
-    | { kind: 'button'; node: ASTNode }
-    | { kind: 'link'; node: ASTNode }
-    | { kind: 'patch' | 'request'; props: ASTProps };
+    | { kind: 'control'; node: ASTNode }
+    | { kind: 'patch'; props: ASTProps }
+    | { kind: 'request'; props: ASTProps };
 
 const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
@@ -74,7 +74,7 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
 
         if (node.name === 'Button' || node.name === 'Link') {
             controls.push(node);
-            return node.name === 'Button' ? { kind: 'button', node } : { kind: 'link', node };
+            return { kind: 'control', node };
         }
 
         throw new Error(`Action does not support direct ${node.name} children`);
@@ -108,10 +108,6 @@ async function executeAction(
 
         if (step.kind === 'patch') {
             await executePatch(step.props, ctx, services);
-            continue;
-        }
-
-        if (step.kind !== 'button' && step.kind !== 'link') {
             continue;
         }
 
@@ -168,18 +164,18 @@ async function executeRequest(
         throw new Error('GET requests cannot send payloads');
     }
 
-    const init: RequestInit = { method };
+    const headers = new Headers({ Accept: 'application/json' });
+    let body: FormData | string | undefined;
+
     if (formValue !== undefined) {
-        init.body = createActionFormData(formValue);
+        body = createActionFormData(formValue);
     } else if (jsonValue !== undefined) {
-        init.body = JSON.stringify(jsonValue);
-        init.headers = { 'Content-Type': 'application/json' };
+        body = JSON.stringify(jsonValue);
+        headers.set('Content-Type', 'application/json');
     }
 
     const requestUrl = resolveRequestUrl(requestBaseUrl, url);
-    const headers = new Headers(init.headers);
-    headers.set('Accept', 'application/json');
-    const response = await fetch(requestUrl, { ...init, credentials: 'include', headers });
+    const response = await fetch(requestUrl, { body, credentials: 'include', headers, method });
     if (!response.ok) {
         throw new ApiError(`API request failed (${response.status})`, response.status);
     }
@@ -194,7 +190,15 @@ async function executeRequest(
 
 /** Updates a State value or invalidates one State or Query setup slot. */
 async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServices): Promise<void> {
-    const state = requireLiteralId(props, 'state', 'Patch');
+    const stateAttribute = readXmlProp(props, 'state');
+    if (
+        stateAttribute?.kind !== 'text' ||
+        !stateAttribute.value.trim() ||
+        !isSafePropertyName(stateAttribute.value.trim())
+    ) {
+        throw new Error('Patch requires a literal state ID');
+    }
+    const state = stateAttribute.value.trim();
     const valueAttribute = readXmlProp(props, 'value');
     const invalidate = resolveXml(props, 'invalidate', ctx);
     if ((valueAttribute != null) === (invalidate === true)) {
@@ -218,7 +222,12 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
 
     const value = resolveXmlValue(props, 'value', ctx);
-    if (!isPlainObject(value)) {
+    if (
+        value == null ||
+        typeof value !== 'object' ||
+        Array.isArray(value) ||
+        (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
+    ) {
         throw new Error('Patch value must evaluate to an object');
     }
 
@@ -229,26 +238,6 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
 
         target[key] = entry;
     }
-}
-
-/** Requires a literal XML setup ID without evaluating a runtime expression. */
-function requireLiteralId(props: ASTProps, name: string, componentName: string): string {
-    const attribute = readXmlProp(props, name);
-    if (attribute?.kind !== 'text' || !attribute.value.trim() || !isSafePropertyName(attribute.value.trim())) {
-        throw new Error(`${componentName} requires a literal ${name} ID`);
-    }
-
-    return attribute.value.trim();
-}
-
-/** Returns whether a value can safely be merged into a State proxy. */
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
-        return false;
-    }
-
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
 }
 
 /** Rejects attributes outside an XML component's public contract. */

@@ -3,10 +3,10 @@ import { renderNode } from './core/node';
 import { isValtioProxy } from './core/state';
 import { XmlErrorBoundary } from './core/errors';
 import { Stack } from '@astryxdesign/core/Stack';
-import { isSafePropertyName } from './expressions/resolve';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { setupContext, XmlContext } from './core/context';
+import { isSafePropertyName } from './expressions/resolve';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 type RenderXMLProps = {

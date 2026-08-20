@@ -3,6 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { proportional, Table } from '@astryxdesign/core/Table';
 
 export const metadata = {
     path: '/docs/sdk/pages/for',
@@ -29,6 +30,20 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     {'Use For to turn a collection, such as a list of orders, into repeated content on a page.'}
                 </Text>
+                <Table
+                    data={[
+                        ['each', 'Array expression to iterate.'],
+                        ['as', 'Name for each array item.'],
+                        ['if', 'Conditional rendering expression.'],
+                        ['slot', 'Named child slot.'],
+                    ].map(([parameter, description]) => ({ parameter, description }))}
+                    columns={[
+                        { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                        { key: 'description', header: 'Description', width: proportional(3) },
+                    ]}
+                    density="compact"
+                    dividers="rows"
+                />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

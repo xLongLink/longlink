@@ -1,7 +1,7 @@
 import { renderNode } from './node';
-import { resolveXml, resolveXmlValue } from './props';
 import type { Props } from '../types';
 import { useXmlRuntime, XmlContext } from './context';
+import { resolveXml, resolveXmlValue } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, nodes }: Props) {
