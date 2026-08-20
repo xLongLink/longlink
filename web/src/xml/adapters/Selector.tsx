@@ -29,14 +29,12 @@ export function Selector({ props, nodes }: Props) {
 
     const hasClear = resolveXml(props, 'hasClear', ctx) === true;
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const hasSearch = resolveXml(props, 'hasSearch', ctx);
     const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placement = resolveXml(props, 'placement', ctx);
     const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
-    const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
     if (!isXmlEnum(size, [undefined, ...SIZES])) {
         throw new Error(`Unsupported Selector size '${String(size)}'`);
@@ -62,14 +60,12 @@ export function Selector({ props, nodes }: Props) {
         options,
         variant,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
-        hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
         placement,
         isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
         statusVariant,
-        searchPlaceholder: typeof searchPlaceholder === 'string' ? searchPlaceholder : undefined,
     };
 
     // Astryx uses a discriminated value contract for clearable selectors.

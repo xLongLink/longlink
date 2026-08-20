@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="SelectorType">
     <xsd:sequence>
       <xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded"/>
@@ -33,11 +32,6 @@
     <xsd:attribute name="placeholder" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Placeholder text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="searchPlaceholder" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Search field placeholder.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="htmlName" type="xsd:string">
@@ -78,11 +72,6 @@
     <xsd:attribute name="hasClear" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Shows a clear control.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="hasSearch" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Shows a search field.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="isDefaultOpen" type="xsd:boolean">

@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="MenuType">
     <xsd:sequence>
       <xsd:element ref="MenuSection" minOccurs="1" maxOccurs="unbounded"/>
     </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Conditionally renders the menu.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuSectionType">
     <xsd:sequence>
@@ -28,11 +23,7 @@
         <xsd:documentation>Sets the isHeaderHidden property.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="if" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Conditional rendering expression.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuItemType">
     <xsd:sequence>
@@ -48,11 +39,7 @@
         <xsd:documentation>Sets the icon property.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="if" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Conditional rendering expression.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuSubSectionType">
     <xsd:sequence>
@@ -68,11 +55,7 @@
         <xsd:documentation>Sets the icon property.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="if" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Conditional rendering expression.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Menu" type="MenuType">
     <xsd:annotation>

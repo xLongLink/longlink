@@ -4,7 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
-import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS, SWITCH_LABEL_SPACINGS } from '../constants';
+import { COMPACT_SIZES, SWITCH_LABEL_POSITIONS } from '../constants';
 
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -13,16 +13,11 @@ export function Switch({ props }: Props) {
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const labelSpacing = resolveXml(props, 'labelSpacing', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const labelPosition = resolveXml(props, 'labelPosition', ctx);
 
     if (!isXmlEnum(labelPosition, [undefined, ...SWITCH_LABEL_POSITIONS])) {
         throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
-    }
-
-    if (!isXmlEnum(labelSpacing, [undefined, ...SWITCH_LABEL_SPACINGS])) {
-        throw new Error(`Unsupported Switch labelSpacing '${String(labelSpacing)}'`);
     }
 
     if (!isXmlEnum(size, [undefined, ...COMPACT_SIZES])) {
@@ -39,7 +34,6 @@ export function Switch({ props }: Props) {
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
             description={typeof description === 'string' ? description : undefined}
-            labelSpacing={labelSpacing}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             labelPosition={labelPosition}
         />

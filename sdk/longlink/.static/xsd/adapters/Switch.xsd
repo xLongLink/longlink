@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="SwitchType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required">
       <xsd:annotation>
@@ -40,11 +39,6 @@
     <xsd:attribute name="labelPosition" type="SwitchLabelPositionType">
       <xsd:annotation>
         <xsd:documentation>Position of the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType">
-      <xsd:annotation>
-        <xsd:documentation>Spacing between label and switch.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="status" type="InputStatusType">

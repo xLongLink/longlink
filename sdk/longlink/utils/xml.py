@@ -3,7 +3,7 @@ from lxml import etree
 from functools import cache
 from longlink.constants import ROOT
 
-UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[", re.IGNORECASE)
+UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*DOCTYPE\b|<!\[CDATA\[", re.IGNORECASE)
 
 
 def _create_xml_parser() -> etree.XMLParser:
@@ -25,7 +25,7 @@ def validate_xml(content: str) -> etree._Element:
 
     # Reject XML constructs that the web runtime parser does not support.
     if UNSUPPORTED_XML_MARKUP_PATTERN.search(content):
-        raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
+        raise ValueError("XML DOCTYPE and CDATA constructs are not supported")
 
     # Parse user XML once for validation and downstream metadata extraction.
     try:

@@ -9,18 +9,11 @@ import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, (value): File | File[] | null =>
-        value == null ||
-        typeof File === 'undefined' ||
-        (!(value instanceof File) && !(Array.isArray(value) && value.every((entry) => entry instanceof File)))
-            ? null
-            : value
+    const binding = useBindableValue<File | null>(props, 'value', ctx, (value) =>
+        typeof File !== 'undefined' && value instanceof File ? value : null
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const isMultiple = resolveXml(props, 'isMultiple', ctx);
-    const maxFiles = resolveXml(props, 'maxFiles', ctx);
-    const maxSize = resolveXml(props, 'maxSize', ctx);
     const mode = resolveXml(props, 'mode', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
@@ -35,13 +28,10 @@ export function FileInput({ props }: Props) {
         <AstryxFileInput
             accept={typeof accept === 'string' ? accept : undefined}
             description={typeof description === 'string' ? description : undefined}
-            isMultiple={typeof isMultiple === 'boolean' ? isMultiple : undefined}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
-            maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}
-            maxSize={typeof maxSize === 'number' ? maxSize : undefined}
             mode={mode === 'dropzone' ? mode : 'input'}
-            onChange={(value) => binding.setValue(value == null ? value : ref(value))}
+            onChange={(value) => binding.setValue(value instanceof File ? ref(value) : null)}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
             statusVariant={statusVariant}

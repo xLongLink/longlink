@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="FileInputType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required">
       <xsd:annotation>
@@ -32,16 +31,6 @@
         <xsd:documentation>File picker mode: dropzone or input.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="maxSize" type="xsd:positiveInteger">
-      <xsd:annotation>
-        <xsd:documentation>Maximum file size.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="maxFiles" type="xsd:positiveInteger">
-      <xsd:annotation>
-        <xsd:documentation>Maximum number of files.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="width" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Control width.</xsd:documentation>
@@ -67,16 +56,11 @@
         <xsd:documentation>Presentation of the status message.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isMultiple" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Allows multiple files.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="FileInput" type="FileInputType">
     <xsd:annotation>
-      <xsd:documentation>FileInput provides file upload with optional drag-and-drop support. Use it for single or multiple file selection with built-in validation for file type, size, and count. Pair with validation status for upload feedback.</xsd:documentation>
+      <xsd:documentation>FileInput provides single-file upload with optional drag-and-drop support. Pair it with validation status for upload feedback.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21" source="adapters/FileInput.xsd"/>
         <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>

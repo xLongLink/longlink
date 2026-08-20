@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="SliderType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required">
       <xsd:annotation>
@@ -47,11 +46,6 @@
         <xsd:documentation>How to display the value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="minStepsBetweenThumbs" type="xsd:nonNegativeInteger">
-      <xsd:annotation>
-        <xsd:documentation>Minimum increments between thumbs.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="width" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Control width.</xsd:documentation>
@@ -76,7 +70,7 @@
   </xsd:complexType>
   <xsd:element name="Slider" type="SliderType">
     <xsd:annotation>
-      <xsd:documentation>A draggable control for selecting a numeric value or range within defined bounds. Supports single value and range selection, tick marks, custom value formatting, and vertical orientation. Use it when users need to explore a continuous range, such as volume, price, or percentage.</xsd:documentation>
+      <xsd:documentation>A draggable control for selecting a numeric value within defined bounds. Use it when users need to explore a continuous range, such as volume, price, or percentage.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="slider" category="Form" lastUpdated="2026-07-21" source="adapters/Slider.xsd"/>
         <longlink:example>&lt;Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" /&gt;</longlink:example>

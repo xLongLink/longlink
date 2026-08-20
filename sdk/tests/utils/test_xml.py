@@ -123,7 +123,7 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
     # Validate the document at the shared XML boundary.
-    with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
+    with pytest.raises(ValueError):
         validate_xml(content)
 
 

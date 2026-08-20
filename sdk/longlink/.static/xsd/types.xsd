@@ -174,12 +174,6 @@
       <xsd:enumeration value="end"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="SwitchLabelSpacingType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="hug"/>
-      <xsd:enumeration value="spread"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="TabLayoutType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="hug"/>

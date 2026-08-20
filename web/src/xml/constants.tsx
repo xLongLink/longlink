@@ -46,4 +46,3 @@ export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'aroun
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;
 export const STACK_ITEM_SIZES = ['static', 'fill'] as const;
 export const SWITCH_LABEL_POSITIONS = ['start', 'end'] as const;
-export const SWITCH_LABEL_SPACINGS = ['hug', 'spread'] as const;

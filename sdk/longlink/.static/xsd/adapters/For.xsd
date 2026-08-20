@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
-  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="ForType" mixed="true">
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>

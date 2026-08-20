@@ -8,9 +8,7 @@ import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/Checkbo
 
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue<boolean | 'indeterminate'>(props, 'value', ctx, (value) =>
-        value === 'indeterminate' ? value : value === true || value === 'true'
-    );
+    const binding = useBindableValue<boolean>(props, 'value', ctx, (value) => value === true || value === 'true');
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);

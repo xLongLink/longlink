@@ -6,21 +6,12 @@ import { ORIENTATIONS, SLIDER_VALUE_DISPLAYS } from '../constants';
 import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 
-type SliderValue = number | [number, number];
-
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue<SliderValue>(props, 'value', ctx, (value) => {
-        if (Array.isArray(value) && value.length === 2 && value.every((entry) => typeof entry === 'number')) {
-            return [value[0], value[1]];
-        }
-
-        return typeof value === 'number' ? value : 0;
-    });
+    const binding = useBindableValue<number>(props, 'value', ctx, (value) => (typeof value === 'number' ? value : 0));
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const valueDisplayValue = resolveXml(props, 'valueDisplay', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
-    const minStepsBetweenThumbs = resolveXml(props, 'minStepsBetweenThumbs', ctx);
     const width = resolveXml(props, 'width', ctx);
 
     if (!isXmlEnum(orientationValue, [undefined, ...ORIENTATIONS])) {
@@ -29,15 +20,6 @@ export function Slider({ props }: Props) {
 
     if (!isXmlEnum(valueDisplayValue, [undefined, ...SLIDER_VALUE_DISPLAYS])) {
         throw new Error(`Unsupported Slider valueDisplay '${String(valueDisplayValue)}'`);
-    }
-
-    if (
-        minStepsBetweenThumbs != null &&
-        (typeof minStepsBetweenThumbs !== 'number' ||
-            !Number.isInteger(minStepsBetweenThumbs) ||
-            minStepsBetweenThumbs < 0)
-    ) {
-        throw new Error('Slider minStepsBetweenThumbs must be a non-negative integer');
     }
 
     const description = resolveXml(props, 'description', ctx);
@@ -59,17 +41,6 @@ export function Slider({ props }: Props) {
         valueDisplay: valueDisplayValue,
         width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
     };
-
-    if (Array.isArray(binding.value)) {
-        return (
-            <AstryxSlider
-                {...commonProps}
-                minStepsBetweenThumbs={minStepsBetweenThumbs}
-                onChange={binding.setValue}
-                value={binding.value}
-            />
-        );
-    }
 
     return <AstryxSlider {...commonProps} onChange={binding.setValue} value={binding.value} />;
 }
