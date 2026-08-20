@@ -5,8 +5,8 @@ import { BUTTON_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { ActionHandlerContext } from './Action';
 import { resolveNavigationUrl } from '../core/url';
-import { Button as AstryxButton } from '@astryxdesign/core/Button';
 import { isXmlEnum, resolveXml } from '../core/props';
+import { Button as AstryxButton } from '@astryxdesign/core/Button';
 
 export function Button({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();

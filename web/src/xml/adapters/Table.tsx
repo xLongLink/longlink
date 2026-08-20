@@ -2,8 +2,8 @@ import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
 import { readSafeProperty } from '../expressions/resolve';
 import { useXmlRuntime, XmlContext } from '../core/context';
-import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 import { readXmlProp, isVisibleXmlNode, resolveXml, resolveXmlValue } from '../core/props';
+import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 
 type TableRow = Record<string, unknown>;
 

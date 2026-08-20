@@ -13,9 +13,5 @@ export function Heading({ props, nodes }: Props) {
         throw new Error('Heading requires a level from 1 to 6');
     }
 
-    return (
-        <AstryxHeading level={level}>
-            {renderNode(nodes, ctx)}
-        </AstryxHeading>
-    );
+    return <AstryxHeading level={level}>{renderNode(nodes, ctx)}</AstryxHeading>;
 }

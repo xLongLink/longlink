@@ -21,12 +21,12 @@ import { GridSpan } from '../adapters/GridSpan';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
 import { FileInput } from '../adapters/FileInput';
+import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
 import { Bold, Italic, Text } from '../adapters/Text';
 import { CheckboxInput } from '../adapters/CheckboxInput';
-import { RadioList } from '../adapters/RadioList';
 
 /** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {

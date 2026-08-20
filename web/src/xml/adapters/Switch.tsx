@@ -1,8 +1,8 @@
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
+import { requireXmlString } from '../core/props';
 import { useBindableValue } from '../core/binding';
 import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
-import { requireXmlString } from '../core/props';
 
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();

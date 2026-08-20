@@ -2,7 +2,7 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, requireXmlString } from '../core/props';
 import { Tab as ApplicationTab, Tabs as ApplicationTabs } from '@/components/ui/Tabs';
 
 export function Tabs({ props, nodes }: Props) {
