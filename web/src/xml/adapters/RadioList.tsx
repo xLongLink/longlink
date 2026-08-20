@@ -16,9 +16,6 @@ export function RadioList({ props, nodes }: Props) {
     const size = isXmlEnum(sizeValue, COMPACT_SIZES) ? sizeValue : 'md';
     const description = resolveXml(props, 'description', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const width = resolveXml(props, 'width', ctx);
 
@@ -26,9 +23,6 @@ export function RadioList({ props, nodes }: Props) {
         <AstryxRadioList
             description={typeof description === 'string' ? description : undefined}
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
-            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
-            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
-            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             label={requireXmlString(props, 'label', ctx, 'RadioList')}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             onChange={binding.setValue}

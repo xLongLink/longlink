@@ -1,4 +1,4 @@
-import { evaluate } from '../expressions';
+import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
 
 export type XmlScalar = number | boolean | string | undefined;

@@ -42,9 +42,6 @@ export function Slider({ props }: Props) {
 
     const description = resolveXml(props, 'description', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const max = resolveXml(props, 'max', ctx);
     const min = resolveXml(props, 'min', ctx);
     const step = resolveXml(props, 'step', ctx);
@@ -52,9 +49,6 @@ export function Slider({ props }: Props) {
     const commonProps = {
         description: typeof description === 'string' ? description : undefined,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
-        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
-        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
-        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
         label: requireXmlString(props, 'label', ctx, 'Slider'),
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
         max: typeof max === 'number' ? max : undefined,

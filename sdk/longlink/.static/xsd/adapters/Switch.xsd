@@ -57,26 +57,6 @@
         <xsd:documentation>Validation status message.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Marks the field as required.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isOptional" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Marks the field as optional.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isLabelHidden" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Visually hides the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="isLoading" type="xsd:boolean">
-      <xsd:annotation>
-        <xsd:documentation>Shows a loading state.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">

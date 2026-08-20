@@ -30,15 +30,11 @@ export function Selector({ props, nodes }: Props) {
     const hasClear = resolveXml(props, 'hasClear', ctx) === true;
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const hasSearch = resolveXml(props, 'hasSearch', ctx);
-    const isLoading = resolveXml(props, 'isLoading', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placement = resolveXml(props, 'placement', ctx);
     const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
     const searchPlaceholder = resolveXml(props, 'searchPlaceholder', ctx);
 
@@ -67,15 +63,11 @@ export function Selector({ props, nodes }: Props) {
         variant,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         hasSearch: typeof hasSearch === 'boolean' ? hasSearch : undefined,
-        isLoading: typeof isLoading === 'boolean' ? isLoading : undefined,
-        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
-        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
         placement,
         isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
-        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
         statusVariant,
         searchPlaceholder: typeof searchPlaceholder === 'string' ? searchPlaceholder : undefined,
     };

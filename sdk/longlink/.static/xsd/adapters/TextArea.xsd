@@ -27,11 +27,6 @@
         <xsd:documentation>Maximum text length.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Marks the field as required.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="TextArea" type="TextAreaType">

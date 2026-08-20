@@ -53,29 +53,20 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     let control: ASTNode | undefined;
 
     for (const node of nodes) {
-        if (node.name === 'Request') {
+        if (node.name === 'Request' || node.name === 'Patch') {
             if (control) {
                 throw new Error('Action effects must precede its Button or Link trigger');
             }
             if (node.children.length > 0) {
-                throw new Error('Request cannot have children');
+                throw new Error(`${node.name} cannot have children`);
             }
 
-            assertAllowedProps(node.params, REQUEST_ALLOWED_PROPS, 'Request');
-            steps.push({ kind: 'request', props: node.params });
-            continue;
-        }
-
-        if (node.name === 'Patch') {
-            if (control) {
-                throw new Error('Action effects must precede its Button or Link trigger');
-            }
-            if (node.children.length > 0) {
-                throw new Error('Patch cannot have children');
-            }
-
-            assertAllowedProps(node.params, PATCH_ALLOWED_PROPS, 'Patch');
-            steps.push({ kind: 'patch', props: node.params });
+            assertAllowedProps(
+                node.params,
+                node.name === 'Request' ? REQUEST_ALLOWED_PROPS : PATCH_ALLOWED_PROPS,
+                node.name
+            );
+            steps.push({ kind: node.name === 'Request' ? 'request' : 'patch', props: node.params });
             continue;
         }
 
@@ -117,10 +108,7 @@ async function executeAction(
             continue;
         }
 
-        if (step.kind === 'patch') {
-            await executePatch(step.props, ctx, services);
-            continue;
-        }
+        await executePatch(step.props, ctx, services);
     }
 
     const url = resolveActionNavigationUrl(plan.control, ctx, services);

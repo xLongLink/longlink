@@ -18,11 +18,7 @@ export function FileInput({ props }: Props) {
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
-    const isLoading = resolveXml(props, 'isLoading', ctx);
     const isMultiple = resolveXml(props, 'isMultiple', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const maxFiles = resolveXml(props, 'maxFiles', ctx);
     const maxSize = resolveXml(props, 'maxSize', ctx);
     const mode = resolveXml(props, 'mode', ctx);
@@ -39,11 +35,7 @@ export function FileInput({ props }: Props) {
         <AstryxFileInput
             accept={typeof accept === 'string' ? accept : undefined}
             description={typeof description === 'string' ? description : undefined}
-            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
-            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
             isMultiple={typeof isMultiple === 'boolean' ? isMultiple : undefined}
-            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
-            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}

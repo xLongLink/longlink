@@ -1,6 +1,7 @@
 import type { Scope } from '@/xml/types';
 import { describe, expect, it } from 'vitest';
-import { compileAttribute, evaluate } from '@/xml/expressions';
+import { evaluate } from '@/xml/expressions/evaluate';
+import { compileAttribute } from '@/xml/expressions/compile';
 
 describe('evaluate', () => {
     it('resolves expressions against flat context values', () => {

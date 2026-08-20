@@ -15,7 +15,7 @@ VALID_FRAGMENTS = [
     ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
-        '<CheckboxInput label="Archive" value="$form.archive" size="sm" isLoading="true" />',
+        '<CheckboxInput label="Archive" value="$form.archive" size="sm" />',
     ),
     (
         "dialog",
@@ -49,14 +49,14 @@ VALID_FRAGMENTS = [
     ),
     (
         "selector",
-        '<Selector label="View" value="$filters.view" variant="ghost" isLoading="true" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view" variant="ghost" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",
-        '<Switch label="Notifications" value="$settings.notifications" size="sm" isLoading="true" labelTooltip="Toggle notifications" labelPosition="start" />',
+        '<Switch label="Notifications" value="$settings.notifications" size="sm" labelTooltip="Toggle notifications" labelPosition="start" />',
     ),
     (
         "table",

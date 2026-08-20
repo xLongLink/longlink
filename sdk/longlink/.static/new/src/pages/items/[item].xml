@@ -11,7 +11,7 @@
         </Stack>
         <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
             <Stack>
-                <FileInput label="Attachment" value="$attachment.file" isRequired="true" />
+                <FileInput label="Attachment" value="$attachment.file" />
                 <Action>
                     <Request
                         url="/api/items/${params.item}/attachments"

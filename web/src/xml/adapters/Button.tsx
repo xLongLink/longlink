@@ -15,11 +15,6 @@ export function Button({ props, nodes }: Props) {
         throw new Error('Button requires child content');
     }
 
-    const label = nodes
-        .filter((node) => node.name === '$text')
-        .map((node) => resolveXml(node.params, 'value', ctx))
-        .filter((value): value is string => typeof value === 'string')
-        .join(' ');
     const variant = resolveXml(props, 'variant', ctx);
     const to = resolveXml(props, 'to', ctx);
     const actionHandler = useContext(ActionHandlerContext);
@@ -31,7 +26,7 @@ export function Button({ props, nodes }: Props) {
 
     return (
         <AstryxButton
-            label={label}
+            label=""
             variant={variant}
             clickAction={actionHandler ?? (navigationUrl ? () => services.navigate(navigationUrl) : undefined)}
         >

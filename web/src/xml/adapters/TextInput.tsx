@@ -9,7 +9,6 @@ export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const type = resolveXml(props, 'type', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
 
     if (!isXmlEnum(type, [undefined, ...TEXT_INPUT_TYPES])) {
@@ -22,7 +21,6 @@ export function TextInput({ props }: Props) {
             label={requireXmlString(props, 'label', ctx, 'TextInput')}
             value={binding.value}
             onChange={binding.setValue}
-            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
         />
     );

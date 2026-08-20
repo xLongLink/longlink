@@ -1,7 +1,7 @@
 import { proxy } from 'valtio';
 import { api } from '@/lib/api';
-import { evaluate } from '../expressions';
 import { resolveRequestUrl } from './url';
+import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, XmlRuntime } from '../types';
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
 

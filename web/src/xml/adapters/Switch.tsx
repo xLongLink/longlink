@@ -12,14 +12,10 @@ export function Switch({ props }: Props) {
     const size = resolveXml(props, 'size', ctx);
     const width = resolveXml(props, 'width', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
-    const isLoading = resolveXml(props, 'isLoading', ctx);
-    const isOptional = resolveXml(props, 'isOptional', ctx);
-    const isRequired = resolveXml(props, 'isRequired', ctx);
     const description = resolveXml(props, 'description', ctx);
     const labelSpacing = resolveXml(props, 'labelSpacing', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const labelPosition = resolveXml(props, 'labelPosition', ctx);
-    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
 
     if (!isXmlEnum(labelPosition, [undefined, ...SWITCH_LABEL_POSITIONS])) {
         throw new Error(`Unsupported Switch labelPosition '${String(labelPosition)}'`);
@@ -42,14 +38,10 @@ export function Switch({ props }: Props) {
             status={resolveInputStatus(props, ctx)}
             htmlName={typeof htmlName === 'string' ? htmlName : undefined}
             onChange={binding.setValue}
-            isLoading={typeof isLoading === 'boolean' ? isLoading : undefined}
-            isOptional={typeof isOptional === 'boolean' ? isOptional : undefined}
-            isRequired={typeof isRequired === 'boolean' ? isRequired : undefined}
             description={typeof description === 'string' ? description : undefined}
             labelSpacing={labelSpacing}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             labelPosition={labelPosition}
-            isLabelHidden={typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined}
         />
     );
 }

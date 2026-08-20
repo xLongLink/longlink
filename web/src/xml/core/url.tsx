@@ -5,7 +5,6 @@ const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 function resolveUrl(baseUrl: string, path: string): string {
     const base = new URL(baseUrl, RELATIVE_URL_ORIGIN);
     const pathUrl = new URL(path, RELATIVE_URL_ORIGIN);
-    const baseOrigin = base.origin === RELATIVE_URL_ORIGIN ? '' : base.origin;
     const baseSegments = base.pathname.split('/').filter(Boolean);
     const pathEnd = path.search(/[?#]/);
     const pathSegments = (pathEnd === -1 ? path : path.slice(0, pathEnd)).split('/');
@@ -28,7 +27,7 @@ function resolveUrl(baseUrl: string, path: string): string {
         resolvedSegments.push(segment);
     }
 
-    return `${baseOrigin}/${resolvedSegments.join('/')}${pathUrl.search}${pathUrl.hash}`;
+    return `${base.origin === RELATIVE_URL_ORIGIN ? '' : base.origin}/${resolvedSegments.join('/')}${pathUrl.search}${pathUrl.hash}`;
 }
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
@@ -58,8 +57,7 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
     }
 
     // Reject encoded separators and dot segments before browser URL normalization can escape the proxy prefix.
-    const requestPath = value.split(/[?#]/, 1)[0];
-    if (/(?:^|\/)(?=[^/]*%2e)(?:\.|%2e){1,2}(?=\/|$)|%2f|%5c/i.test(requestPath)) {
+    if (/(?:^|\/)(?=[^/]*%2e)(?:\.|%2e){1,2}(?=\/|$)|%2f|%5c/i.test(value.split(/[?#]/, 1)[0])) {
         throw new Error('XML request URL must remain within the application');
     }
 
@@ -78,7 +76,7 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 
 /** Resolves an application navigation URL or omits invalid destinations. */
 export function resolveNavigationUrl(baseUrl: string, path: string): string {
-    return path && isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
+    return isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
 }
 
 /** Resolves an XML anchor URL while blocking unsafe browser protocols. */
