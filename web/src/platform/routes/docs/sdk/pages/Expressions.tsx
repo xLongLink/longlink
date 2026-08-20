@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<TextInput label="Name" value="$form.name" />\n<Button label="Save" />\n<Link to="/orders/${params.order}" label="Open order" />'
+                        '<TextInput label="Name" value="$form.name" />\n<Button label="Save" />\n<Link to="/orders/${params.order}">Open order</Link>'
                     }
                     language="xml"
                 />

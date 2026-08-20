@@ -1,16 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<?xml version='1.0' encoding='UTF-8'?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="DialogType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="title" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="subtitle" type="xsd:string" />
-    <xsd:attribute name="isOpen" type="xsd:string" />
-    <xsd:attribute name="triggerLabel" type="NonBlankStringType" />
-    <xsd:attribute name="purpose" type="DialogPurposeType" default="info" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
+    <xsd:attribute name="title" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Dialog title.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="subtitle" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting dialog text.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="isOpen" type="xsd:string"><xsd:annotation><xsd:documentation>Controls whether the dialog is open.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="triggerLabel" type="NonBlankStringType"><xsd:annotation><xsd:documentation>Label for the optional trigger.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="purpose" type="DialogPurposeType" default="info"><xsd:annotation><xsd:documentation>Dialog purpose: required, form, or info.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">
-    <xsd:annotation><xsd:documentation>Renders a controlled Astryx dialog with an optional trigger.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders a modal workflow from one flat owner element.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Dialog title="Edit order" isOpen="$dialog.open"&gt;
+  &lt;TextInput label="Name" value="$form.name" /&gt;
+&lt;/Dialog&gt;</longlink:example></xsd:appinfo></xsd:annotation>
   </xsd:element>
 </xsd:schema>

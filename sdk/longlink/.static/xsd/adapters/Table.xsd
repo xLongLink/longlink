@@ -1,23 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<?xml version='1.0' encoding='UTF-8'?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="TableType">
-    <xsd:sequence><xsd:element ref="TableColumn" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="data" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="idKey" type="FieldPathType" />
-    <xsd:attribute name="emptyLabel" type="NonBlankStringType" default="No data" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence><xsd:element ref="TableColumn" minOccurs="1" maxOccurs="unbounded"/></xsd:sequence>
+    <xsd:attribute name="data" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Data expression providing table rows.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="idKey" type="FieldPathType"><xsd:annotation><xsd:documentation>Row field path used as the identifier.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="emptyLabel" type="NonBlankStringType" default="No data"><xsd:annotation><xsd:documentation>Text shown when there are no rows.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="field" type="FieldPathType" use="required" />
-    <xsd:attribute name="header" type="xsd:string" />
-    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
+    <xsd:attribute name="field" type="FieldPathType" use="required"><xsd:annotation><xsd:documentation>Row field path.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="header" type="xsd:string"><xsd:annotation><xsd:documentation>Column header text.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Table" type="TableType">
-    <xsd:annotation><xsd:documentation>Renders row data with the Astryx Table API.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Displays tabular data from an array.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Table data="$orders.items"&gt;
+  &lt;TableColumn field="number" header="Number" /&gt;
+  &lt;TableColumn field="status" header="Status" /&gt;
+&lt;/Table&gt;</longlink:example></xsd:appinfo></xsd:annotation>
   </xsd:element>
   <xsd:element name="TableColumn" type="TableColumnType">
-    <xsd:annotation><xsd:documentation>Defines an Astryx column by its row field path; children form renderCell content.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Displays tabular data from an array.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Table data="$orders.items"&gt;
+  &lt;TableColumn field="number" header="Number" /&gt;
+  &lt;TableColumn field="status" header="Status" /&gt;
+&lt;/Table&gt;</ns2:example></xsd:appinfo></xsd:annotation>
   </xsd:element>
 </xsd:schema>

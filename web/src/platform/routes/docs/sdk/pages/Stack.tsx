@@ -50,7 +50,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Stack direction="horizontal" gap="2" align="center">\n  $order.number\n  <StackItem size="fill">Order details</StackItem>\n  <Button label="Open" />\n</Stack>'
+                        '<Stack direction="horizontal" align="center">\n  $order.number\n  <StackItem size="fill">Order details</StackItem>\n  <Button label="Open" />\n</Stack>'
                     }
                     language="xml"
                 />

@@ -1,37 +1,73 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="../types.xsd" />
+<?xml version='1.0' encoding='UTF-8'?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="MenuType">
-    <xsd:sequence><xsd:element ref="MenuSection" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:sequence><xsd:element ref="MenuSection" minOccurs="1" maxOccurs="unbounded"/></xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string"><xsd:annotation><xsd:documentation>Conditionally renders the menu.</xsd:documentation></xsd:annotation></xsd:attribute>
   </xsd:complexType>
   <xsd:complexType name="MenuSectionType">
     <xsd:sequence>
       <xsd:choice minOccurs="1" maxOccurs="unbounded">
-        <xsd:element ref="MenuItem" />
-        <xsd:element ref="MenuSubSection" />
+        <xsd:element ref="MenuItem"/>
+        <xsd:element ref="MenuSubSection"/>
       </xsd:choice>
     </xsd:sequence>
-    <xsd:attribute name="title" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="isHeaderHidden" type="xsd:string" />
-    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:attribute name="title" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Sets the title property.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="isHeaderHidden" type="xsd:string"><xsd:annotation><xsd:documentation>Sets the isHeaderHidden property.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="if" type="xsd:string"><xsd:annotation><xsd:documentation>Conditional rendering expression.</xsd:documentation></xsd:annotation></xsd:attribute>
   </xsd:complexType>
   <xsd:complexType name="MenuItemType">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="icon" type="xsd:string" />
-    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Accessible label.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="icon" type="xsd:string"><xsd:annotation><xsd:documentation>Sets the icon property.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="if" type="xsd:string"><xsd:annotation><xsd:documentation>Conditional rendering expression.</xsd:documentation></xsd:annotation></xsd:attribute>
   </xsd:complexType>
   <xsd:complexType name="MenuSubSectionType">
-    <xsd:sequence><xsd:element ref="MenuItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required" />
-    <xsd:attribute name="icon" type="xsd:string" />
-    <xsd:attribute name="if" type="xsd:string" />
+    <xsd:sequence><xsd:element ref="MenuItem" minOccurs="1" maxOccurs="unbounded"/></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Accessible label.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="icon" type="xsd:string"><xsd:annotation><xsd:documentation>Sets the icon property.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="if" type="xsd:string"><xsd:annotation><xsd:documentation>Conditional rendering expression.</xsd:documentation></xsd:annotation></xsd:attribute>
   </xsd:complexType>
   <xsd:element name="Menu" type="MenuType">
-    <xsd:annotation><xsd:documentation>Renders the application menu with hash-selected item content.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders hash-selected application sections in the shared menu layout.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Menu&gt;
+  &lt;MenuSection title="Settings"&gt;
+    &lt;MenuItem label="General" icon="viewColumns"&gt;
+      &lt;Heading id="general" level="2"&gt;General&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+    &lt;MenuItem label="Workflow" icon="arrowsUpDown"&gt;
+      &lt;Heading id="workflow" level="2"&gt;Workflow&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+  &lt;/MenuSection&gt;
+&lt;/Menu&gt;</longlink:example></xsd:appinfo></xsd:annotation>
   </xsd:element>
-  <xsd:element name="MenuSection" type="MenuSectionType" />
-  <xsd:element name="MenuItem" type="MenuItemType" />
-  <xsd:element name="MenuSubSection" type="MenuSubSectionType" />
+  <xsd:element name="MenuSection" type="MenuSectionType"><xsd:annotation><xsd:documentation>Renders hash-selected application sections in the shared menu layout.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Menu&gt;
+  &lt;MenuSection title="Settings"&gt;
+    &lt;MenuItem label="General" icon="viewColumns"&gt;
+      &lt;Heading id="general" level="2"&gt;General&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+    &lt;MenuItem label="Workflow" icon="arrowsUpDown"&gt;
+      &lt;Heading id="workflow" level="2"&gt;Workflow&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+  &lt;/MenuSection&gt;
+&lt;/Menu&gt;</longlink:example></xsd:appinfo></xsd:annotation></xsd:element>
+  <xsd:element name="MenuItem" type="MenuItemType"><xsd:annotation><xsd:documentation>Renders hash-selected application sections in the shared menu layout.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Menu&gt;
+  &lt;MenuSection title="Settings"&gt;
+    &lt;MenuItem label="General" icon="viewColumns"&gt;
+      &lt;Heading id="general" level="2"&gt;General&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+    &lt;MenuItem label="Workflow" icon="arrowsUpDown"&gt;
+      &lt;Heading id="workflow" level="2"&gt;Workflow&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+  &lt;/MenuSection&gt;
+&lt;/Menu&gt;</longlink:example></xsd:appinfo></xsd:annotation></xsd:element>
+  <xsd:element name="MenuSubSection" type="MenuSubSectionType"><xsd:annotation><xsd:documentation>Renders hash-selected application sections in the shared menu layout.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Menu&gt;
+  &lt;MenuSection title="Settings"&gt;
+    &lt;MenuItem label="General" icon="viewColumns"&gt;
+      &lt;Heading id="general" level="2"&gt;General&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+    &lt;MenuItem label="Workflow" icon="arrowsUpDown"&gt;
+      &lt;Heading id="workflow" level="2"&gt;Workflow&lt;/Heading&gt;
+    &lt;/MenuItem&gt;
+  &lt;/MenuSection&gt;
+&lt;/Menu&gt;</longlink:example></xsd:appinfo></xsd:annotation></xsd:element>
 </xsd:schema>
