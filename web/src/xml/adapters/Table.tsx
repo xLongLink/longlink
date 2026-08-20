@@ -1,10 +1,9 @@
 import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
-import { Text } from '@astryxdesign/core/Text';
 import { readSafeProperty } from '../expressions/resolve';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
-import { readXmlProp, isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
+import { readXmlProp, isVisibleXmlNode, resolveXml, resolveXmlValue } from '../core/props';
 
 type TableRow = Record<string, unknown>;
 
@@ -78,11 +77,7 @@ export function Table({ props, nodes }: Props) {
         <AstryxTable
             columns={columns}
             data={rows}
-            emptyState={
-                <Text type="supporting">
-                    {props.emptyLabel == null ? 'No data' : requireXmlString(props, 'emptyLabel', ctx, 'Table')}
-                </Text>
-            }
+            emptyState={false}
             idKey={typeof idKey === 'string' ? idKey : undefined}
         />
     );

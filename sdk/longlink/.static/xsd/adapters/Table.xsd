@@ -14,11 +14,6 @@
         <xsd:documentation>Row field path used as the identifier.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="emptyLabel" type="NonBlankStringType" default="No data">
-      <xsd:annotation>
-        <xsd:documentation>Text shown when there are no rows.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">

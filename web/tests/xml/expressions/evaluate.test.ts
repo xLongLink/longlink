@@ -46,6 +46,18 @@ describe('evaluate', () => {
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
     });
 
+    it('rejects unknown optional calls', () => {
+        const ctx: Scope = { bindings: {} };
+
+        expect(() => evaluate(compileAttribute('${unknown?.()}'), ctx)).toThrow('Function call not allowed');
+    });
+
+    it('allows optional calls to whitelisted helpers', () => {
+        const ctx: Scope = { bindings: {} };
+
+        expect(evaluate(compileAttribute('${Boolean?.(1)}'), ctx)).toBe(true);
+    });
+
     it('ignores unsafe object literal keys', () => {
         const ctx: Scope = { bindings: {} };
         const result = evaluate(

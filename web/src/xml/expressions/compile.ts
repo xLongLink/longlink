@@ -7,7 +7,7 @@ export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
     // Keep standalone expressions typed when they are evaluated.
-    if (input.startsWith('${')) {
+    if (input.startsWith('${') && input.endsWith('}')) {
         const segment = readInterpolationSegment(input, 0);
 
         if (segment.end === input.length - 1) return { kind: 'expression', node: segment.node };
@@ -18,11 +18,7 @@ export function compileAttribute(value: string): ASTAttribute {
     if (reference && (reference[1] || input.includes('.'))) {
         const parts = input.slice(reference[1] ? 1 : 0).split('.') as [string, ...string[]];
 
-        return {
-            kind: 'path',
-            parts,
-            isBinding: Boolean(reference[1]),
-        };
+        return reference[1] ? { kind: 'path', parts, isBinding: true } : { kind: 'path', parts };
     }
 
     // Compile mixed text and expressions into segments that render as text.

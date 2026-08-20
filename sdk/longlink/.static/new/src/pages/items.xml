@@ -28,7 +28,7 @@
         </Dialog>
     </Stack>
 
-    <Table data="$items" idKey="id" emptyLabel="No items yet.">
+    <Table data="$items" idKey="id">
         <TableColumn field="name" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">

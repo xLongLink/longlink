@@ -26,7 +26,6 @@ export default [
                     index('./routes/docs/sdk/Pages.tsx'),
                     route('bindings', './routes/docs/sdk/pages/Bindings.tsx'),
                     route('expressions', './routes/docs/sdk/pages/Expressions.tsx'),
-                    route('if', './routes/docs/sdk/pages/If.tsx'),
                     route(':component', './routes/docs/sdk/pages/Component.tsx'),
                 ]),
             ]),

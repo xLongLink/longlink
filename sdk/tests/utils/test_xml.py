@@ -59,7 +59,7 @@ VALID_FRAGMENTS = [
     ),
     (
         "table",
-        '<Table data="$items" emptyLabel="No items"><TableColumn field="sku" header="SKU" /></Table>',
+        '<Table data="$items"><TableColumn field="sku" header="SKU" /></Table>',
     ),
     (
         "tabs",

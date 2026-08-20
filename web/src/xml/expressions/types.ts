@@ -24,7 +24,6 @@ type CallExpressionNode = {
     type: 'CallExpression';
     callee: ExpressionNode;
     arguments: ExpressionNode[];
-    optional?: boolean;
 };
 
 type ObjectExpressionNode = {

@@ -43,7 +43,6 @@ const publicPagePaths = [
     '/docs/sdk/pages/grid',
     '/docs/sdk/pages/heading',
     '/docs/sdk/pages/icon',
-    '/docs/sdk/pages/if',
     '/docs/sdk/pages/link',
     '/docs/sdk/pages/menu',
     '/docs/sdk/pages/number-input',

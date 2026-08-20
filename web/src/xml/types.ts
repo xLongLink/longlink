@@ -2,7 +2,7 @@ import type { ExpressionNode } from './expressions/types';
 
 export type ASTAttribute =
     | { kind: 'text'; value: string }
-    | { kind: 'path'; parts: [string, ...string[]]; isBinding: boolean }
+    | { kind: 'path'; parts: [string, ...string[]]; isBinding?: true }
     | { kind: 'expression'; node: ExpressionNode }
     | {
           kind: 'interpolation';

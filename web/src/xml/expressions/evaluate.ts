@@ -22,11 +22,6 @@ const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
 
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
-    // Unwrap optional chains before resolving the callee.
-    if (callee.type === 'ChainExpression') {
-        return resolveSafeCall(callee.expression);
-    }
-
     // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
         return readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
@@ -172,9 +167,6 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
             // Reject calls outside the allowlist.
             const callback = resolveSafeCall(node.callee);
             if (!callback) {
-                // Optional calls resolve to undefined when missing.
-                if (node.optional) return undefined;
-
                 throw new Error('Function call not allowed');
             }
 

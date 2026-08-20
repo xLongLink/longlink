@@ -49,7 +49,11 @@ function SummaryCard({
     return (
         <Stack className="relative" gap={2}>
             <Card aria-hidden="true" inert padding={padding} variant="muted">
-                <Center axis={padding === 3 ? 'vertical' : 'both'} minHeight={padding === 3 ? 166 : 190}>
+                <Center
+                    className="scale-90"
+                    axis={padding === 3 ? 'vertical' : 'both'}
+                    minHeight={padding === 3 ? 166 : 190}
+                >
                     {children}
                 </Center>
             </Card>
@@ -72,7 +76,6 @@ export const metadata = {
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
-        { id: 'longlink-state-elements', label: 'State', level: 2 },
         { id: 'action', label: 'Action', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
         { id: 'form', label: 'Form', level: 2 },
@@ -103,22 +106,12 @@ export default function DocsArticleRoute() {
                         Runtime
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="if" path="/docs/sdk/pages/if">
-                            <Code>{'if="${order.open}"'}</Code>
-                        </SummaryCard>
                         <SummaryCard name="Expressions" path="/docs/sdk/pages/expressions">
                             <Code>{'${order.total > 0}'}</Code>
                         </SummaryCard>
                         <SummaryCard name="Bindings" path="/docs/sdk/pages/bindings">
                             <Code>{'value="$form.name"'}</Code>
                         </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="longlink-state-elements" level={2}>
-                        State
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="State" path="/docs/sdk/pages/state">
                             <Code>{'<State />'}</Code>
                         </SummaryCard>
@@ -217,7 +210,7 @@ export default function DocsArticleRoute() {
                             />
                         </SummaryCard>
                         <SummaryCard name="RadioList" path="/docs/sdk/pages/radio-list">
-                            <Stack width={150}>
+                            <Stack width={170}>
                                 <RadioList
                                     label="Plan"
                                     orientation="horizontal"
@@ -258,7 +251,7 @@ export default function DocsArticleRoute() {
                                 <TextArea
                                     isLabelHidden
                                     label="Notes"
-                                    rows={1}
+                                    rows={2}
                                     size="sm"
                                     value="Review complete"
                                     onChange={noop}
@@ -296,14 +289,12 @@ export default function DocsArticleRoute() {
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" padding={3} path="/docs/sdk/pages/menu">
-                            <Stack className="scale-90" width="100%">
-                                <Menu>
-                                    <MenuSection title="Settings">
-                                        <MenuItem label="General" />
-                                        <MenuItem label="Workflow" />
-                                    </MenuSection>
-                                </Menu>
-                            </Stack>
+                            <Menu>
+                                <MenuSection title="Settings">
+                                    <MenuItem label="General" />
+                                    <MenuItem label="Workflow" />
+                                </MenuSection>
+                            </Menu>
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
                             <Stack align="center" gap={2} width="100%">

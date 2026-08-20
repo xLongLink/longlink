@@ -26,7 +26,7 @@
         </Dialog>
     </Stack>
 
-    <Table data="$attachments" idKey="id" emptyLabel="No attachments uploaded yet.">
+    <Table data="$attachments" idKey="id">
         <TableColumn field="name" header="File" />
     </Table>
 </longlink>
