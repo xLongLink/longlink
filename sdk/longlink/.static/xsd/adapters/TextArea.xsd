@@ -11,21 +11,6 @@
         <xsd:documentation>Text field value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="rows" type="xsd:positiveInteger">
-      <xsd:annotation>
-        <xsd:documentation>Visible text rows.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="maxLength" type="xsd:nonNegativeInteger">
-      <xsd:annotation>
-        <xsd:documentation>Maximum text length.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="TextArea" type="TextAreaType">
@@ -33,7 +18,7 @@
       <xsd:documentation>TextArea is a multi-line text input for collecting longer-form content like comments, descriptions, or messages. Use it when the expected input spans multiple lines. For shorter, single-line values, use TextInput.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="text-area" category="Form" lastUpdated="2026-07-21" source="adapters/TextArea.xsd"/>
-        <longlink:example>&lt;TextArea label="Notes" value="$form.notes" rows="4" /&gt;</longlink:example>
+        <longlink:example>&lt;TextArea label="Notes" value="$form.notes" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

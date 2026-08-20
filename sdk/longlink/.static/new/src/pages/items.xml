@@ -12,7 +12,7 @@
             <Stack>
                 <Stack>
                     <TextInput label="Name" value="$draft.name" />
-                    <NumberInput label="Price" units="CHF" value="$draft.price" min="0" />
+                    <NumberInput label="Price" value="$draft.price" min="0" />
                 </Stack>
                 <Action>
                     <Request

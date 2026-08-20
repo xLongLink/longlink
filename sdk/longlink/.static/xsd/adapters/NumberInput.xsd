@@ -11,16 +11,6 @@
         <xsd:documentation>Numeric field value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="units" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Units shown with the value.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="min" type="xsd:decimal">
       <xsd:annotation>
         <xsd:documentation>Minimum allowed value.</xsd:documentation>
@@ -36,11 +26,6 @@
         <xsd:documentation>Increment between allowed values.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isIntegerOnly" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Restricts values to integers.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="NumberInput" type="NumberInputType">
@@ -48,7 +33,7 @@
       <xsd:documentation>A form input for numeric values with built-in validation, min/max constraints, and step controls. Use NumberInput for quantities, measurements, percentages, and similar inputs.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="number-input" category="Form" lastUpdated="2026-07-21" source="adapters/NumberInput.xsd"/>
-        <longlink:example>&lt;NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" /&gt;</longlink:example>
+        <longlink:example>&lt;NumberInput label="Quantity" value="$form.quantity" min="1" step="1" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

@@ -9,7 +9,6 @@ export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const type = resolveXml(props, 'type', ctx);
-    const description = resolveXml(props, 'description', ctx);
 
     if (!isXmlEnum(type, [undefined, ...TEXT_INPUT_TYPES])) {
         throw new Error(`Unsupported TextInput type '${String(type)}'`);
@@ -21,7 +20,6 @@ export function TextInput({ props }: Props) {
             label={requireXmlString(props, 'label', ctx, 'TextInput')}
             value={binding.value}
             onChange={binding.setValue}
-            description={typeof description === 'string' ? description : undefined}
         />
     );
 }

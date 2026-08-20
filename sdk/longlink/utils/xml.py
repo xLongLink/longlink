@@ -34,10 +34,8 @@ def validate_xml(content: str) -> etree._Element:
     except etree.XMLSyntaxError as error:
         raise ValueError(f"XML syntax is invalid: {error}") from error
 
-    # Reuse the compiled schema only after parsing user XML successfully.
+    # Reuse the compiled schema while surfacing its validation details.
     schema = _load_xml_schema()
-
-    # Surface schema validation details instead of a generic lxml failure.
     if not schema.validate(xml_doc):
         raise ValueError("XML is invalid: " + "; ".join(f"Line {error.line}: {error.message}" for error in schema.error_log))
 

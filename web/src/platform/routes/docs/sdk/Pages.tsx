@@ -33,13 +33,25 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 const noop = () => undefined;
 
-function SummaryCard({ children, name, path }: { children: React.ReactNode; name: string; path: string }) {
+function SummaryCard({
+    children,
+    name,
+    padding = 0,
+    path,
+}: {
+    children: React.ReactNode;
+    name: string;
+    padding?: 0 | 3;
+    path: string;
+}) {
     const component = componentDocumentation.find((candidate) => candidate.name === name);
 
     return (
         <Stack className="relative" gap={2}>
-            <Card aria-hidden="true" inert minHeight={190} padding={0} variant="muted">
-                <Center minHeight={190}>{children}</Center>
+            <Card aria-hidden="true" inert padding={padding} variant="muted">
+                <Center axis={padding === 3 ? 'vertical' : 'both'} minHeight={padding === 3 ? 166 : 190}>
+                    {children}
+                </Center>
             </Card>
             <Text color="secondary" type="supporting">
                 {name}
@@ -283,7 +295,7 @@ export default function DocsArticleRoute() {
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Grid>
                         </SummaryCard>
-                        <SummaryCard name="Menu" path="/docs/sdk/pages/menu">
+                        <SummaryCard name="Menu" padding={3} path="/docs/sdk/pages/menu">
                             <Menu>
                                 <MenuSection title="Settings">
                                     <MenuItem label="General" />

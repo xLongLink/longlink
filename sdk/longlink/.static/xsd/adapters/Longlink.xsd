@@ -7,11 +7,7 @@
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
-    <xsd:attribute name="name" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Sets the name property.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attribute name="name" type="xsd:string"/>
     <xsd:attribute name="icon" type="xsd:string"/>
   </xsd:complexType>
   <xsd:element name="longlink" type="LonglinkType">

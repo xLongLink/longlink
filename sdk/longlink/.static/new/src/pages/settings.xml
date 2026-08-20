@@ -29,18 +29,9 @@
                     </Stack>
                 </Card>
                 <Stack>
-                    <TextInput
-                        label="Workflow owner"
-                        description="This state is bound directly from XML."
-                        value="$profile.owner"
-                    />
+                    <TextInput label="Workflow owner" value="$profile.owner" />
                     <TextInput label="Cost center" value="$profile.costCenter" />
-                    <TextArea
-                        label="Approval note"
-                        description="Visible to reviewers"
-                        rows="4"
-                        value="$profile.note"
-                    />
+                    <TextArea label="Approval note" value="$profile.note" />
                 </Stack>
             </Stack>
         </MenuItem>
@@ -50,16 +41,8 @@
                 <Heading id="preferences" level="2">Preferences</Heading>
                 Toggle notification controls and adjust a slider-backed approval threshold.
                 <Stack>
-                    <CheckboxInput
-                        label="Email updates"
-                        description="Send a digest when item status changes."
-                        value="$emailUpdates"
-                    />
-                    <Switch
-                        label="In-app notifications"
-                        description="Show reminders for stale items."
-                        value="$notifications"
-                    />
+                    <CheckboxInput label="Email updates" value="$emailUpdates" />
+                    <Switch label="In-app notifications" value="$notifications" />
                     <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
                 </Stack>
                 ${`Auto-approve up to CHF ${budgetLimit.value}`}
