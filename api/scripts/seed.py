@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
@@ -102,8 +103,10 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
         raise ValueError("Application database URL has invalid connection settings") from None
 
 
-async def seed_local_development(settings: SeedSettings) -> None:
-    """Register local development desired state from seed settings."""
+async def seed_infrastructure(
+    settings: SeedSettings, *, compute_name: str, database_name: str, storage_name: str
+) -> tuple[ComputeRegistry, DatabaseRegistry, StorageRegistry]:
+    """Register the configured infrastructure and return its registries."""
 
     # Validate the configured Kubernetes compute before mutating Platform state.
     compute_config = ComputeRegistryCreate.model_validate(
@@ -116,7 +119,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, compute_config.name, compute_config.kubeconfig)
+            await compute.create(session, compute_name, compute_config.kubeconfig)
             await session.commit()
 
     # Register the configured database unless it already exists.
@@ -124,7 +127,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         async with session_scope() as session:
             await database.create(
                 session,
-                "development database",
+                database_name,
                 database_config.host,
                 database_config.port,
                 database_config.username,
@@ -138,24 +141,38 @@ async def seed_local_development(settings: SeedSettings) -> None:
         async with session_scope() as session:
             await storage.create(
                 session,
-                "local storage",
+                storage_name,
                 settings.EXOSCALE_STORAGE_ENDPOINT_URL,
                 settings.EXOSCALE_API_KEY,
                 settings.EXOSCALE_API_SECRET,
             )
             await session.commit()
 
-    # Queue the sample Organization and Application after their registries exist, without waiting for reconciliation.
     async with session_scope() as session:
+        compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == compute_name))
+        database_registry = await session.scalar(select(DatabaseRegistry).where(col(DatabaseRegistry.name) == database_name))
+        storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == storage_name))
+        if compute_registry is None or database_registry is None or storage_registry is None:
+            raise RuntimeError("Configured infrastructure is not available")
+        return compute_registry, database_registry, storage_registry
+
+
+async def seed_local_development(settings: SeedSettings) -> None:
+    """Register local infrastructure and create the local example Organization and Application."""
+
+    compute_registry, database_registry, storage_registry = await seed_infrastructure(
+        settings,
+        compute_name="development compute",
+        database_name="development database",
+        storage_name="local storage",
+    )
+
+    # The init workflow has no running API replica to create the administrator first.
+    async with session_scope() as session:
+        await users.ensure_administrator(session)
         administrator = await users.by_email(session, env.ADMIN_EMAIL)
         if administrator is None:
             raise RuntimeError("Configured administrator is not available")
-
-        compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == "development compute"))
-        database_registry = await session.scalar(select(DatabaseRegistry).where(col(DatabaseRegistry.name) == "development database"))
-        storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == "local storage"))
-        if compute_registry is None or database_registry is None or storage_registry is None:
-            raise RuntimeError("Development infrastructure is not available")
 
         organization = await session.scalar(select(Organization).where(col(Organization.slug) == "development"))
         if organization is None:
@@ -188,10 +205,34 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
 
 def main() -> None:
-    """Seed local development resources from a synchronous entrypoint."""
+    """Seed either local example data or cloud infrastructure from a synchronous entrypoint."""
 
-    # Load the configured infrastructure before registering it.
-    asyncio.run(seed_local_development(SeedSettings()))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cloud", action="store_true", help="register cloud infrastructure without local example data")
+    arguments = parser.parse_args()
+    if arguments.cloud:
+        asyncio.run(seed_cloud(CloudSeedSettings()))
+    else:
+        asyncio.run(seed_local_development(SeedSettings()))
+
+
+class CloudSeedSettings(SeedSettings):
+    """Define the infrastructure connections registered by a cloud deployment."""
+
+    APPLICATION_DATABASE_URL: str
+
+    model_config = SettingsConfigDict(extra="ignore")
+
+
+async def seed_cloud(settings: CloudSeedSettings) -> None:
+    """Register cloud infrastructure without creating local example data."""
+
+    await seed_infrastructure(
+        settings,
+        compute_name="cloud compute",
+        database_name="cloud database",
+        storage_name="cloud storage",
+    )
 
 
 if __name__ == "__main__":

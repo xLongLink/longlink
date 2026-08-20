@@ -148,7 +148,7 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Seed the configured Kubernetes compute without preparing local infrastructure.
+# Seed local infrastructure and create the local example Organization and Application.
 seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
