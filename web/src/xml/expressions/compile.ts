@@ -12,10 +12,12 @@ type InterpolationSegment = {
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
-    const standaloneExpression = readStandaloneExpression(input);
-
     // Keep standalone expressions typed when they are evaluated.
-    if (standaloneExpression) return { kind: 'expression', node: standaloneExpression };
+    if (input.startsWith('${')) {
+        const segment = readInterpolationSegment(input, 0);
+
+        if (segment.end === input.length - 1) return { kind: 'expression', node: segment.node };
+    }
 
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
@@ -77,14 +79,4 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
     } catch {}
 
     throw new Error('Unclosed XML expression interpolation');
-}
-
-/** Returns one standalone expression when the entire value is wrapped in `${...}`. */
-function readStandaloneExpression(input: string): ExpressionNode | null {
-    // Only wrapped values can be standalone expressions.
-    if (!input.startsWith('${')) return null;
-
-    const segment = readInterpolationSegment(input, 0);
-
-    return segment.end === input.length - 1 ? segment.node : null;
 }

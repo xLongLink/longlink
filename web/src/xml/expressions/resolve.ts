@@ -21,10 +21,8 @@ export function resolveValue(scope: Scope, key: string): unknown {
 
     // Walk lexical scopes from child to parent.
     for (let currentScope: Scope | undefined = scope; currentScope; currentScope = currentScope.parent) {
-        const bindings = currentScope.bindings;
-
         // Read only bindings declared in the lexical scope.
-        if (Object.prototype.hasOwnProperty.call(bindings, key)) return bindings[key];
+        if (Object.prototype.hasOwnProperty.call(currentScope.bindings, key)) return currentScope.bindings[key];
     }
 
     return undefined;

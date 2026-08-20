@@ -4,7 +4,7 @@
   <xsd:complexType name="CheckboxInputType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="CompactSizeType" default="md" />
+    <xsd:attribute name="size" type="CompactSizeType" />
     <xsd:attribute name="description" type="xsd:string" />
     <xsd:attribute name="htmlName" type="xsd:string" />
     <xsd:attribute name="width" type="xsd:string" />

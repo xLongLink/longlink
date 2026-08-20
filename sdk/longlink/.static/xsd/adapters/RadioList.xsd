@@ -5,8 +5,8 @@
     <xsd:sequence><xsd:element ref="RadioListItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="CompactSizeType" default="md" />
-    <xsd:attribute name="orientation" type="OrientationType" default="vertical" />
+    <xsd:attribute name="size" type="CompactSizeType" />
+    <xsd:attribute name="orientation" type="OrientationType" />
     <xsd:attribute name="description" type="xsd:string" />
     <xsd:attribute name="htmlName" type="xsd:string" />
     <xsd:attribute name="width" type="xsd:string" />

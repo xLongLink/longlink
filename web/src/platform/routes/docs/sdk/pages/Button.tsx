@@ -3,6 +3,13 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { proportional, Table } from '@astryxdesign/core/Table';
+
+const parameters = [
+    { description: 'The visible button text.', name: 'label' },
+    { description: 'An application-relative destination to navigate to.', name: 'to' },
+    { description: 'The visual emphasis: primary, secondary, ghost, or destructive.', name: 'variant' },
+];
 
 export const metadata = {
     path: '/docs/sdk/pages/button',
@@ -28,6 +35,15 @@ export default function DocsArticleRoute() {
                     </Heading>
                 </Stack>
                 <Text as="p">{metadata.description}</Text>
+                <Table
+                    columns={[
+                        { header: 'Parameter', key: 'name', width: proportional(1) },
+                        { header: 'Description', key: 'description', width: proportional(3) },
+                    ]}
+                    data={parameters}
+                    density="compact"
+                    dividers="rows"
+                />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

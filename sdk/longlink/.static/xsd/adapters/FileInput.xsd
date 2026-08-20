@@ -7,7 +7,7 @@
     <xsd:attribute name="accept" type="xsd:string" />
     <xsd:attribute name="description" type="xsd:string" />
     <xsd:attribute name="placeholder" type="xsd:string" />
-    <xsd:attribute name="mode" type="FileInputModeType" default="input" />
+    <xsd:attribute name="mode" type="FileInputModeType" />
     <xsd:attribute name="maxSize" type="xsd:positiveInteger" />
     <xsd:attribute name="maxFiles" type="xsd:positiveInteger" />
     <xsd:attribute name="width" type="xsd:string" />

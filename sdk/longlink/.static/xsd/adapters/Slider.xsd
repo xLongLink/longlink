@@ -9,8 +9,8 @@
     <xsd:attribute name="min" type="xsd:decimal" />
     <xsd:attribute name="max" type="xsd:decimal" />
     <xsd:attribute name="step" type="PositiveDecimalType" />
-    <xsd:attribute name="orientation" type="OrientationType" default="horizontal" />
-    <xsd:attribute name="valueDisplay" type="SliderValueDisplayType" default="tooltip" />
+    <xsd:attribute name="orientation" type="OrientationType" />
+    <xsd:attribute name="valueDisplay" type="SliderValueDisplayType" />
     <xsd:attribute name="minStepsBetweenThumbs" type="xsd:nonNegativeInteger" />
     <xsd:attribute name="width" type="xsd:string" />
     <xsd:attribute name="labelTooltip" type="xsd:string" />

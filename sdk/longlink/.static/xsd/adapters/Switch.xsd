@@ -10,8 +10,8 @@
     <xsd:attribute name="size" type="CompactSizeType" />
     <xsd:attribute name="labelTooltip" type="xsd:string" />
     <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType" default="end" />
-    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType" default="hug" />
+    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType" />
+    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType" />
     <xsd:attribute name="status" type="InputStatusType" />
     <xsd:attribute name="statusMessage" type="xsd:string" />
     <xsd:attribute name="isDisabled" type="xsd:string" />

@@ -1,7 +1,6 @@
 import { renderNode } from './node';
-import { resolveXml } from './props';
+import { resolveXml, resolveXmlValue } from './props';
 import type { Props } from '../types';
-import { evaluate } from '../expressions';
 import { useXmlRuntime, XmlContext } from './context';
 
 /** Iterates over an array and renders children in a scoped context. */
@@ -10,7 +9,7 @@ export function For({ props, nodes }: Props) {
     const ctx = runtime.scope;
     const resolvedAs = resolveXml(props, 'as', ctx);
     const as = typeof resolvedAs === 'string' ? resolvedAs : '';
-    const each = evaluate(props.each, ctx);
+    const each = resolveXmlValue(props, 'each', ctx);
 
     // Skip loop rendering when the source is not an array.
     if (!Array.isArray(each)) return null;
