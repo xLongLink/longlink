@@ -10,9 +10,9 @@ VALID_FRAGMENTS = [
     ("badge", '<Badge>$item.status<Icon slot="icon" icon="check" /></Badge>'),
     (
         "button",
-        '<Button label="Save" type="submit" variant="primary" size="sm" elevation="low" isInterruptible="true" if="${canSave}" />',
+        '<Button label="Save" variant="primary" if="${canSave}" />',
     ),
-    ("card", '<Card>Card content</Card>'),
+    ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
         '<CheckboxInput label="Archive" value="$form.archive" isDisabled="false" size="sm" isLoading="true" />',
@@ -21,7 +21,7 @@ VALID_FRAGMENTS = [
         "dialog",
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form">This action cannot be undone.</Dialog>',
     ),
-    ("divider", '<Divider>or</Divider>'),
+    ("divider", "<Divider>or</Divider>"),
     ("divider-runtime-attributes", '<Divider if="show" slot="content" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
@@ -66,7 +66,7 @@ VALID_FRAGMENTS = [
         "tabs",
         '<Tabs value="$tabs.value"><Tab value="overview" label="Overview">Overview panel</Tab></Tabs>',
     ),
-    ("text", '<Text>Normal <b>bold</b> and <i>italic</i> text.</Text>'),
+    ("text", "<Text>Normal <b>bold</b> and <i>italic</i> text.</Text>"),
     (
         "text-area",
         '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />',
@@ -95,11 +95,12 @@ INVALID_FRAGMENTS = [
     ("missing-state-id", '<State value="[]" />'),
     ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
-    ("malformed-longlink", '<longlink>Dashboard</longlink'),
+    ("malformed-longlink", "<longlink>Dashboard</longlink"),
 ]
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
     ("doctype", "<!DOCTYPE longlink><longlink />"),
+    ("entity", '<!ENTITY hidden "value"><longlink>&hidden;</longlink>'),
     ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
 ]
 
@@ -121,7 +122,7 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
     # Validate the document at the shared XML boundary.
-    with pytest.raises(ValueError, match="DOCTYPE and CDATA"):
+    with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
         validate_xml(content)
 
 
