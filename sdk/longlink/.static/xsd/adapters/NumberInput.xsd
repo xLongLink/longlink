@@ -4,28 +4,14 @@
   <xsd:complexType name="NumberInputType">
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="value" type="xsd:string" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
     <xsd:attribute name="description" type="xsd:string" />
-    <xsd:attribute name="placeholder" type="xsd:string" />
-    <xsd:attribute name="htmlName" type="xsd:string" />
-    <xsd:attribute name="autoComplete" type="xsd:string" />
     <xsd:attribute name="units" type="xsd:string" />
     <xsd:attribute name="min" type="xsd:decimal" />
     <xsd:attribute name="max" type="xsd:decimal" />
     <xsd:attribute name="step" type="PositiveDecimalType" />
-    <xsd:attribute name="width" type="xsd:string" />
-    <xsd:attribute name="labelTooltip" type="xsd:string" />
-    <xsd:attribute name="disabledMessage" type="xsd:string" />
-    <xsd:attribute name="status" type="InputStatusType" />
-    <xsd:attribute name="statusMessage" type="xsd:string" />
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType" />
     <xsd:attribute name="isDisabled" type="xsd:string" />
     <xsd:attribute name="isRequired" type="xsd:string" />
-    <xsd:attribute name="isOptional" type="xsd:string" />
-    <xsd:attribute name="isLabelHidden" type="xsd:string" />
     <xsd:attribute name="isIntegerOnly" type="xsd:string" />
-    <xsd:attribute name="hasClear" type="xsd:string" />
-    <xsd:attribute name="hasAutoFocus" type="xsd:boolean" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="NumberInput" type="NumberInputType">

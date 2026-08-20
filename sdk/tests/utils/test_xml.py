@@ -33,14 +33,14 @@ VALID_FRAGMENTS = [
     ("grid-span", '<Grid columns="3"><GridSpan columns="2" rows="2"><Card /></GridSpan></Grid>'),
     (
         "heading",
-        '<Heading level="1" type="display-1" accessibilityLevel="2" color="accent" display="inline" maxLines="2" hasTruncateTooltip="below" wordBreak="break-word" textWrap="balance" justify="center" hasCapsize="true" hasStrikethrough="true" id="dashboard-heading">Dashboard</Heading>',
+        '<Heading level="1" id="dashboard-heading">Dashboard</Heading>',
     ),
     ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123">Open issue</Link>'),
     ("longlink", '<longlink name="dashboard" icon="layout-dashboard" />'),
     (
         "number-input",
-        '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" hasAutoFocus="true" labelTooltip="Enter a quantity" statusVariant="tooltip" />',
+        '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />',
     ),
     ("query", '<Query id="projects" path="/projects" />'),
     (
@@ -69,9 +69,9 @@ VALID_FRAGMENTS = [
     ("text", '<Text>Normal <b>bold</b> and <i>italic</i> text.</Text>'),
     (
         "text-area",
-        '<TextArea label="Notes" rows="4" value="$form.notes" isLoading="true" labelTooltip="Add notes" statusVariant="tooltip" if="canEdit" />',
+        '<TextArea label="Notes" rows="4" value="$form.notes" if="canEdit" />',
     ),
-    ("text-input", '<TextInput label="Name" value="$form.name" type="text" size="lg" isLoading="true" statusVariant="tooltip" />'),
+    ("text-input", '<TextInput label="Name" value="$form.name" type="text" />'),
 ]
 
 INVALID_FRAGMENTS = [

@@ -6,19 +6,12 @@
     <xsd:attribute name="data" type="NonBlankStringType" use="required" />
     <xsd:attribute name="idKey" type="FieldPathType" />
     <xsd:attribute name="emptyLabel" type="NonBlankStringType" default="No data" />
-    <xsd:attribute name="density" type="TableDensityType" default="balanced" />
-    <xsd:attribute name="dividers" type="TableDividersType" default="rows" />
-    <xsd:attribute name="verticalAlign" type="TableVerticalAlignType" default="middle" />
-    <xsd:attribute name="textOverflow" type="TableTextOverflowType" default="wrap" />
-    <xsd:attribute name="isStriped" type="xsd:string" />
-    <xsd:attribute name="hasHover" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="field" type="FieldPathType" use="required" />
     <xsd:attribute name="header" type="xsd:string" />
-    <xsd:attribute name="align" type="AlignType" default="start" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Table" type="TableType">

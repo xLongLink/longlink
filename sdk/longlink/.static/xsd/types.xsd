@@ -154,47 +154,6 @@
       <xsd:maxInclusive value="6" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="HeadingTypeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="display-1" />
-      <xsd:enumeration value="display-2" />
-      <xsd:enumeration value="display-3" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TruncateTooltipType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="true" />
-      <xsd:enumeration value="false" />
-      <xsd:enumeration value="above" />
-      <xsd:enumeration value="below" />
-      <xsd:enumeration value="start" />
-      <xsd:enumeration value="end" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="WordBreakType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="break-word" />
-      <xsd:enumeration value="break-all" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TextWrapType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="wrap" />
-      <xsd:enumeration value="nowrap" />
-      <xsd:enumeration value="balance" />
-      <xsd:enumeration value="pretty" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TextColorType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="primary" />
-      <xsd:enumeration value="secondary" />
-      <xsd:enumeration value="disabled" />
-      <xsd:enumeration value="placeholder" />
-      <xsd:enumeration value="accent" />
-      <xsd:enumeration value="inherit" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="SliderValueDisplayType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="tooltip" />
@@ -231,34 +190,6 @@
       <xsd:enumeration value="spread" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="TableDensityType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="compact" />
-      <xsd:enumeration value="balanced" />
-      <xsd:enumeration value="spacious" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TableDividersType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="rows" />
-      <xsd:enumeration value="columns" />
-      <xsd:enumeration value="grid" />
-      <xsd:enumeration value="none" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TableVerticalAlignType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="middle" />
-      <xsd:enumeration value="top" />
-      <xsd:enumeration value="bottom" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TableTextOverflowType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="wrap" />
-      <xsd:enumeration value="truncate" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="TabLayoutType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="hug" />
@@ -284,12 +215,6 @@
       <xsd:enumeration value="medium" />
       <xsd:enumeration value="semibold" />
       <xsd:enumeration value="bold" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TextDisplayType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="inline" />
-      <xsd:enumeration value="block" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TextElementType">

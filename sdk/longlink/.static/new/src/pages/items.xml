@@ -32,7 +32,7 @@
         </Dialog>
     </Stack>
 
-    <Table data="$items" idKey="id" density="compact" emptyLabel="No items yet." hasHover="true">
+    <Table data="$items" idKey="id" emptyLabel="No items yet.">
         <TableColumn field="name" header="Item">
             <Stack>
                 <Link to="/items/${row.id}">

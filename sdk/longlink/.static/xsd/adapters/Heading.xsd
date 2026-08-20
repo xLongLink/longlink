@@ -4,17 +4,6 @@
   <xsd:complexType name="HeadingType" mixed="true">
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="level" type="HeadingLevelType" use="required" />
-    <xsd:attribute name="type" type="HeadingTypeType" />
-    <xsd:attribute name="accessibilityLevel" type="HeadingLevelType" />
-    <xsd:attribute name="color" type="TextColorType" default="primary" />
-    <xsd:attribute name="display" type="TextDisplayType" default="block" />
-    <xsd:attribute name="justify" type="AlignType" default="start" />
-    <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" />
-    <xsd:attribute name="hasTruncateTooltip" type="TruncateTooltipType" />
-    <xsd:attribute name="wordBreak" type="WordBreakType" />
-    <xsd:attribute name="textWrap" type="TextWrapType" />
-    <xsd:attribute name="hasCapsize" type="xsd:boolean" default="false" />
-    <xsd:attribute name="hasStrikethrough" type="xsd:boolean" default="false" />
     <xsd:attribute name="id" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
