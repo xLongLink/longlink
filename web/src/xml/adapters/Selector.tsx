@@ -22,31 +22,12 @@ export function Selector({ props, nodes }: Props) {
         throw new Error('Selector requires at least one SelectorOption');
     }
 
-    const hasClear = resolveXml(props, 'hasClear', ctx) === true;
-    const htmlName = resolveXml(props, 'htmlName', ctx);
-    const description = resolveXml(props, 'description', ctx);
-    const placeholder = resolveXml(props, 'placeholder', ctx);
-    const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
-    const common = {
-        label: requireXmlString(props, 'label', ctx, 'Selector'),
-        options,
-        htmlName: typeof htmlName === 'string' ? htmlName : undefined,
-        description: typeof description === 'string' ? description : undefined,
-        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
-        labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-    };
-
-    // Astryx uses a discriminated value contract for clearable selectors.
-    if (hasClear) {
-        return (
-            <AstryxSelector
-                {...common}
-                hasClear
-                onChange={(value) => binding.setValue(value ?? undefined)}
-                value={binding.value ?? null}
-            />
-        );
-    }
-
-    return <AstryxSelector {...common} onChange={binding.setValue} value={binding.value} />;
+    return (
+        <AstryxSelector
+            label={requireXmlString(props, 'label', ctx, 'Selector')}
+            onChange={binding.setValue}
+            options={options}
+            value={binding.value}
+        />
+    );
 }

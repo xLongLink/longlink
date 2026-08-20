@@ -50,13 +50,6 @@
       <xsd:enumeration value="vertical"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="InputStatusType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="warning"/>
-      <xsd:enumeration value="error"/>
-      <xsd:enumeration value="success"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="ButtonVariantType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="primary"/>
@@ -156,32 +149,6 @@
       <xsd:enumeration value="medium"/>
       <xsd:enumeration value="semibold"/>
       <xsd:enumeration value="bold"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TextElementType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="span"/>
-      <xsd:enumeration value="p"/>
-      <xsd:enumeration value="div"/>
-      <xsd:enumeration value="label"/>
-      <xsd:enumeration value="h1"/>
-      <xsd:enumeration value="h2"/>
-      <xsd:enumeration value="h3"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TextSizeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="4xs"/>
-      <xsd:enumeration value="3xs"/>
-      <xsd:enumeration value="2xs"/>
-      <xsd:enumeration value="xsm"/>
-      <xsd:enumeration value="sm"/>
-      <xsd:enumeration value="base"/>
-      <xsd:enumeration value="lg"/>
-      <xsd:enumeration value="xl"/>
-      <xsd:enumeration value="2xl"/>
-      <xsd:enumeration value="3xl"/>
-      <xsd:enumeration value="4xl"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TextInputKindType">

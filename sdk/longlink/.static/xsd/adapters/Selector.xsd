@@ -14,31 +14,6 @@
         <xsd:documentation>Selected option value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="placeholder" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Placeholder text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>HTML form field name.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Tooltip for the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="hasClear" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Shows a clear control.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="SelectorOptionType">
@@ -59,7 +34,7 @@
       <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="selector" category="Form" lastUpdated="2026-07-21" source="adapters/Selector.xsd"/>
-        <longlink:example>&lt;Selector label="Status" value="$filters.status" hasClear="true"&gt;
+        <longlink:example>&lt;Selector label="Status" value="$filters.status"&gt;
   &lt;SelectorOption value="open" label="Open" /&gt;
   &lt;SelectorOption value="closed" label="Closed" /&gt;
 &lt;/Selector&gt;</longlink:example>

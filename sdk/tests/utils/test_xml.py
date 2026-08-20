@@ -97,15 +97,12 @@ INVALID_FRAGMENTS = [
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
 ]
 
-MALFORMED_ENTITY = '<!ENTITY hidden "value"><longlink>&hidden;</longlink>'
-
-
 def test_xml_validation_rejects_malformed_entity() -> None:
     """Reject malformed entity declarations through the secure parser."""
 
     # Validate the malformed document at the shared XML boundary.
     with pytest.raises(ValueError, match="XML syntax is invalid"):
-        validate_xml(MALFORMED_ENTITY)
+        validate_xml('<!ENTITY hidden "value"><longlink>&hidden;</longlink>')
 
 
 @pytest.mark.parametrize("content", [content for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS])

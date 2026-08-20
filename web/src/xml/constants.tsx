@@ -31,9 +31,7 @@ export const ICON_NAMES = [
     'stop',
     'microphone',
 ] as const;
-export const COMPACT_SIZES = ['sm', 'md'] as const;
 export const ORIENTATIONS = ['horizontal', 'vertical'] as const;
-export const INPUT_STATUSES = ['warning', 'error', 'success'] as const;
 export const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
