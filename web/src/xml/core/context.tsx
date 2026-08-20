@@ -42,7 +42,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
         const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
 
         if (node.name === 'State') {
-            // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
+            // Preserve local state across renderer refreshes; invalidation deletes it before setup runs.
             services.setups[id] = () => {
                 // Only seed state that is not already present.
                 if (!(id in scope.bindings)) {

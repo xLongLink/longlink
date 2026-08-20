@@ -199,7 +199,7 @@ async function executeRequest(
     return { closeDialog: closeDialog === true, status: response.status };
 }
 
-/** Updates a State value or invalidates one State or Query setup slot. */
+/** Updates a State value or invalidates one State or Query setup. */
 async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServices): Promise<void> {
     const stateAttribute = readXmlProp(props, 'state');
     if (stateAttribute?.kind !== 'text') {

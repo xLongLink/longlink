@@ -5,7 +5,7 @@ import { createContext, setupContext } from '@/xml/core/context';
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it('preserves state across setup reruns until the slot is invalidated', async () => {
+    it('preserves state across setup reruns until invalidation', async () => {
         const ctx = createContext();
         const ast = [
             {

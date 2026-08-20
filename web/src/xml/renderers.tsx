@@ -51,7 +51,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             unsubscribers = [];
         }
 
-        /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
+        /** Subscribes the renderer to every Valtio-backed state in the current page context. */
         function subscribeToStateValues() {
             // Remove previous subscriptions before rebuilding them.
             unsubscribeAll();

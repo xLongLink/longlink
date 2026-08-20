@@ -117,7 +117,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Assert
     assert updated is True
-    assert missing is False
+    assert missing is None
     assert updated_membership.role == OrganizationRoles.maintain
 
 
@@ -242,7 +242,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     async with session_scope() as session:
         result = await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
-        deleted_organization = await organizations.get_tombstone(session, organization.id)
+        deleted_organization = await session.get(Organization, organization.id)
         deleted_application = await session.get(Application, application.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)

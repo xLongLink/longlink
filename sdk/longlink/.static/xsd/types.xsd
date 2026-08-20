@@ -9,11 +9,6 @@
         <xsd:documentation>Conditional rendering expression.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="slot" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Named child slot.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
   </xsd:attributeGroup>
   <xsd:simpleType name="NonBlankStringType">
     <xsd:restriction base="xsd:string">

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
-    it('keeps direct icon children as the unambiguous icon slot', () => {
+    it('renders a direct Icon child', () => {
         const output = renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" /></Badge>'));
 
         expect(output).toContain('svg');
@@ -12,6 +12,6 @@ describe('Badge', () => {
     it('rejects duplicate icons', () => {
         expect(() =>
             renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" /><Icon icon="x" /></Badge>'))
-        ).toThrow('Badge icon slot accepts one child');
+        ).toThrow('Badge accepts one Icon child');
     });
 });

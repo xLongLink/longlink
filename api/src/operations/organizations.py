@@ -10,7 +10,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def reconcile(organization_id: UUID) -> str | None:
+async def reconcile(organization_id: UUID) -> None:
     """Converge one Organization's shared providers and Kubernetes boundary."""
 
     # Skip removed Organizations.

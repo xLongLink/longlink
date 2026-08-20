@@ -7,7 +7,7 @@ VALID_FRAGMENTS = [
         '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button label="Save" /></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", '<Badge>$item.status<Icon slot="icon" icon="check" /></Badge>'),
+    ("badge", '<Badge>$item.status<Icon icon="check" /></Badge>'),
     (
         "button",
         '<Button label="Save" variant="primary" if="${canSave}" />',
@@ -22,7 +22,7 @@ VALID_FRAGMENTS = [
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form">This action cannot be undone.</Dialog>',
     ),
     ("divider", "<Divider>or</Divider>"),
-    ("divider-runtime-attributes", '<Divider if="show" slot="content" />'),
+    ("divider-runtime-attributes", '<Divider if="show" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
@@ -80,6 +80,7 @@ INVALID_FRAGMENTS = [
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-label-attribute", '<Badge label="Active" />'),
+    ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
     ("missing-button-label", "<Button />"),
     ("missing-for-as", '<For each="items" />'),
     ("forbidden-style-through-root", '<longlink><Button label="Save" style="color: red" /></longlink>'),

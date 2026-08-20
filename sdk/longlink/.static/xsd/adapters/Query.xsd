@@ -4,7 +4,7 @@
   <xsd:complexType name="QueryType">
     <xsd:attribute name="id" type="xsd:string" use="required">
       <xsd:annotation>
-        <xsd:documentation>Literal runtime slot identifier.</xsd:documentation>
+        <xsd:documentation>Literal runtime identifier.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attribute name="path" type="xsd:string" use="required">

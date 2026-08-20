@@ -28,7 +28,7 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
                 return;
             }
 
-            // Write named properties or the direct binding value slot.
+            // Write named properties or the direct binding value.
             if (target.key || 'value' in target.state) {
                 target.state[target.key ?? 'value'] = nextValue;
             }
