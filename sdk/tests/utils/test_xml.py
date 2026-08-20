@@ -15,7 +15,7 @@ VALID_FRAGMENTS = [
     ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
-        '<CheckboxInput label="Archive" value="$form.archive" size="sm" />',
+        '<CheckboxInput label="Archive" value="$form.archive" />',
     ),
     (
         "dialog",
@@ -23,7 +23,7 @@ VALID_FRAGMENTS = [
     ),
     ("divider", "<Divider>or</Divider>"),
     ("divider-runtime-attributes", '<Divider if="show" />'),
-    ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" mode="dropzone" />'),
+    ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
         "form-layout",
@@ -49,7 +49,7 @@ VALID_FRAGMENTS = [
     ),
     (
         "selector",
-        '<Selector label="View" value="$filters.view" variant="ghost" isDefaultOpen="true" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
@@ -101,9 +101,10 @@ INVALID_FRAGMENTS = [
 
 UNSUPPORTED_MARKUP_FRAGMENTS = [
     ("doctype", "<!DOCTYPE longlink><longlink />"),
-    ("entity", '<!ENTITY hidden "value"><longlink>&hidden;</longlink>'),
     ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
 ]
+
+MALFORMED_ENTITY = '<!ENTITY hidden "value"><longlink>&hidden;</longlink>'
 
 
 def root_document(content: str) -> str:
@@ -123,8 +124,16 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
     """Reject XML markup unsupported by the browser runtime."""
 
     # Validate the document at the shared XML boundary.
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="DOCTYPE and CDATA"):
         validate_xml(content)
+
+
+def test_xml_validation_rejects_malformed_entity() -> None:
+    """Reject malformed entity declarations through the secure parser."""
+
+    # Validate the malformed document at the shared XML boundary.
+    with pytest.raises(ValueError, match="XML syntax is invalid"):
+        validate_xml(MALFORMED_ENTITY)
 
 
 @pytest.mark.parametrize("content", [content for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS])

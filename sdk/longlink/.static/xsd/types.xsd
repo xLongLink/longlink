@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:attributeGroup name="XmlRuntimeAttributes">
-    <xsd:annotation>
-      <xsd:documentation>XML runtime attributes. Every other attribute must match the corresponding Astryx component prop.</xsd:documentation>
-    </xsd:annotation>
     <xsd:attribute name="if" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Conditional rendering expression.</xsd:documentation>
@@ -38,12 +35,6 @@
       <xsd:enumeration value="below"/>
       <xsd:enumeration value="start"/>
       <xsd:enumeration value="end"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="SelectorVariantType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="input"/>
-      <xsd:enumeration value="ghost"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="ActionMethodType">
@@ -96,12 +87,6 @@
       <xsd:enumeration value="info"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="FileInputModeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="dropzone"/>
-      <xsd:enumeration value="input"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="GridRepeatType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="fill"/>
@@ -142,13 +127,6 @@
     <xsd:restriction base="xsd:integer">
       <xsd:minInclusive value="1"/>
       <xsd:maxInclusive value="6"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="SliderValueDisplayType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="tooltip"/>
-      <xsd:enumeration value="text"/>
-      <xsd:enumeration value="none"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="StackJustifyType">

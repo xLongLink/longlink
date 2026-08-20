@@ -11,36 +11,6 @@
         <xsd:documentation>Selected boolean value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="size" type="CompactSizeType">
-      <xsd:annotation>
-        <xsd:documentation>Control size.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>HTML form field name.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Control width.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType">
-      <xsd:annotation>
-        <xsd:documentation>Validation status.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Validation status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="CheckboxInput" type="CheckboxInputType">

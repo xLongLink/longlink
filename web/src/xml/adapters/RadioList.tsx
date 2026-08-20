@@ -12,8 +12,8 @@ export function RadioList({ props, nodes }: Props) {
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
     const orientationValue = resolveXml(props, 'orientation', ctx);
     const sizeValue = resolveXml(props, 'size', ctx);
-    const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : 'vertical';
-    const size = isXmlEnum(sizeValue, COMPACT_SIZES) ? sizeValue : 'md';
+    const orientation = isXmlEnum(orientationValue, ORIENTATIONS) ? orientationValue : undefined;
+    const size = isXmlEnum(sizeValue, COMPACT_SIZES) ? sizeValue : undefined;
     const description = resolveXml(props, 'description', ctx);
     const htmlName = resolveXml(props, 'htmlName', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);

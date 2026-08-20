@@ -13,7 +13,7 @@ def _create_xml_parser() -> etree.XMLParser:
 
 
 @cache
-def load_xml_schema() -> etree.XMLSchema:
+def _load_xml_schema() -> etree.XMLSchema:
     """Compile and cache the bundled XML schema."""
 
     # Load bundled schemas with external entities and network access disabled.
@@ -34,7 +34,7 @@ def validate_xml(content: str) -> etree._Element:
         raise ValueError(f"XML syntax is invalid: {error}") from error
 
     # Reuse the compiled schema only after parsing user XML successfully.
-    schema = load_xml_schema()
+    schema = _load_xml_schema()
 
     # Surface schema validation details instead of a generic lxml failure.
     if not schema.validate(xml_doc):

@@ -36,16 +36,6 @@
         <xsd:documentation>Increment between allowed values.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="orientation" type="OrientationType">
-      <xsd:annotation>
-        <xsd:documentation>Slider orientation.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="valueDisplay" type="SliderValueDisplayType">
-      <xsd:annotation>
-        <xsd:documentation>How to display the value.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="width" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Control width.</xsd:documentation>

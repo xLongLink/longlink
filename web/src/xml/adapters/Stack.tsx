@@ -11,7 +11,7 @@ export function Stack({ props, nodes }: Props) {
     const justifyValue = resolveXml(props, 'justify', ctx);
     const alignValue = resolveXml(props, 'align', ctx);
     const wrapValue = resolveXml(props, 'wrap', ctx);
-    const direction = isXmlEnum(directionValue, ORIENTATIONS) ? directionValue : 'vertical';
+    const direction = isXmlEnum(directionValue, ORIENTATIONS) ? directionValue : undefined;
     const justify = isXmlEnum(justifyValue, STACK_JUSTIFICATIONS) ? justifyValue : 'start';
     const align = isXmlEnum(alignValue, BOX_ALIGNS) ? alignValue : 'stretch';
     const wrap = isXmlEnum(wrapValue, STACK_WRAPS) ? wrapValue : 'nowrap';

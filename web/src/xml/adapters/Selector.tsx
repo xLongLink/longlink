@@ -4,14 +4,11 @@ import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
 import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
-import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS, SELECTOR_VARIANTS, SIZES } from '../constants';
+import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS } from '../constants';
 
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : String(value)));
-    const size = resolveXml(props, 'size', ctx);
-    const width = resolveXml(props, 'width', ctx);
-    const variant = resolveXml(props, 'variant', ctx);
     const options = nodes
         .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
         .map((node) => {
@@ -33,12 +30,7 @@ export function Selector({ props, nodes }: Props) {
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placement = resolveXml(props, 'placement', ctx);
-    const isDefaultOpen = resolveXml(props, 'isDefaultOpen', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
-
-    if (!isXmlEnum(size, [undefined, ...SIZES])) {
-        throw new Error(`Unsupported Selector size '${String(size)}'`);
-    }
 
     if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
         throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
@@ -48,23 +40,15 @@ export function Selector({ props, nodes }: Props) {
         throw new Error(`Unsupported Selector placement '${String(placement)}'`);
     }
 
-    if (!isXmlEnum(variant, [undefined, ...SELECTOR_VARIANTS])) {
-        throw new Error(`Unsupported Selector variant '${String(variant)}'`);
-    }
     const common = {
-        size,
         label: requireXmlString(props, 'label', ctx, 'Selector'),
-        value: binding.value,
-        width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
         status: resolveInputStatus(props, ctx),
         options,
-        variant,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
         placement,
-        isDefaultOpen: typeof isDefaultOpen === 'boolean' ? isDefaultOpen : undefined,
         statusVariant,
     };
 

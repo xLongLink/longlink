@@ -26,11 +26,6 @@
         <xsd:documentation>Placeholder text.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="mode" type="FileInputModeType">
-      <xsd:annotation>
-        <xsd:documentation>File picker mode: dropzone or input.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="width" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Control width.</xsd:documentation>
@@ -60,7 +55,7 @@
   </xsd:complexType>
   <xsd:element name="FileInput" type="FileInputType">
     <xsd:annotation>
-      <xsd:documentation>FileInput provides single-file upload with optional drag-and-drop support. Pair it with validation status for upload feedback.</xsd:documentation>
+      <xsd:documentation>FileInput provides single-file upload. Pair it with validation status for upload feedback.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21" source="adapters/FileInput.xsd"/>
         <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>

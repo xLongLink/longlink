@@ -14,7 +14,6 @@ export function FileInput({ props }: Props) {
     );
     const accept = resolveXml(props, 'accept', ctx);
     const description = resolveXml(props, 'description', ctx);
-    const mode = resolveXml(props, 'mode', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const statusVariant = resolveXml(props, 'statusVariant', ctx);
@@ -30,7 +29,6 @@ export function FileInput({ props }: Props) {
             description={typeof description === 'string' ? description : undefined}
             label={requireXmlString(props, 'label', ctx, 'FileInput')}
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
-            mode={mode === 'dropzone' ? mode : 'input'}
             onChange={(value) => binding.setValue(value instanceof File ? ref(value) : null)}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}
