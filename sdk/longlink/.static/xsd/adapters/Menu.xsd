@@ -18,11 +18,7 @@
         <xsd:documentation>Sets the title property.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isHeaderHidden" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Sets the isHeaderHidden property.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attribute name="isHeaderHidden" type="xsd:string"/>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuItemType">
@@ -34,11 +30,7 @@
         <xsd:documentation>Accessible label.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="icon" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Sets the icon property.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attribute name="icon" type="xsd:string"/>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuSubSectionType">
@@ -50,11 +42,7 @@
         <xsd:documentation>Accessible label.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="icon" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Sets the icon property.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
+    <xsd:attribute name="icon" type="xsd:string"/>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Menu" type="MenuType">

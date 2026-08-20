@@ -16,46 +16,11 @@
         <xsd:documentation>Accepted file types.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="placeholder" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Placeholder text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Control width.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Tooltip for the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType">
-      <xsd:annotation>
-        <xsd:documentation>Validation status.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Validation status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType">
-      <xsd:annotation>
-        <xsd:documentation>Presentation of the status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="FileInput" type="FileInputType">
     <xsd:annotation>
-      <xsd:documentation>FileInput provides single-file upload. Pair it with validation status for upload feedback.</xsd:documentation>
+      <xsd:documentation>FileInput provides single-file upload.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21" source="adapters/FileInput.xsd"/>
         <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>

@@ -34,26 +34,6 @@
         <xsd:documentation>Tooltip for the label.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="placement" type="LayerPlacementType">
-      <xsd:annotation>
-        <xsd:documentation>Options layer placement.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType">
-      <xsd:annotation>
-        <xsd:documentation>Validation status.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Validation status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType">
-      <xsd:annotation>
-        <xsd:documentation>Presentation of the status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="hasClear" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Shows a clear control.</xsd:documentation>

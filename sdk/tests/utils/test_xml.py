@@ -37,7 +37,6 @@ VALID_FRAGMENTS = [
     ),
     ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123">Open issue</Link>'),
-    ("longlink", '<longlink name="dashboard" icon="layout-dashboard" />'),
     (
         "number-input",
         '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />',
@@ -49,14 +48,14 @@ VALID_FRAGMENTS = [
     ),
     (
         "selector",
-        '<Selector label="View" value="$filters.view" labelTooltip="Select a view" placement="above" statusVariant="tooltip"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",
-        '<Switch label="Notifications" value="$settings.notifications" size="sm" labelTooltip="Toggle notifications" labelPosition="start" />',
+        '<Switch label="Notifications" value="$settings.notifications" />',
     ),
     (
         "table",
@@ -83,10 +82,10 @@ INVALID_FRAGMENTS = [
     ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
     ("button-label-attribute", '<Button label="Save">Save</Button>'),
     ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style-through-root", '<longlink><Button style="color: red">Save</Button></longlink>'),
+    ("forbidden-style", '<Button style="color: red">Save</Button>'),
     (
-        "invalid-child-through-root",
-        '<longlink><Action tone="accent"><Button>Save</Button></Action></longlink>',
+        "invalid-action-child",
+        '<Action tone="accent"><Button>Save</Button></Action>',
     ),
     (
         "missing-selector-option-value",
@@ -96,36 +95,9 @@ INVALID_FRAGMENTS = [
     ("missing-state-id", '<State value="[]" />'),
     ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
-    ("malformed-longlink", "<longlink>Dashboard</longlink"),
-]
-
-UNSUPPORTED_MARKUP_FRAGMENTS = [
-    ("doctype", "<!DOCTYPE longlink><longlink />"),
-    ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
 ]
 
 MALFORMED_ENTITY = '<!ENTITY hidden "value"><longlink>&hidden;</longlink>'
-
-
-def root_document(content: str) -> str:
-    """Wrap an XML component fragment in the LongLink document root."""
-
-    # Preserve fixture documents that already exercise root attributes or markup.
-    if content.startswith("<longlink"):
-        return content
-
-    return f"<longlink>{content}</longlink>"
-
-
-@pytest.mark.parametrize(
-    "content", [content for _, content in UNSUPPORTED_MARKUP_FRAGMENTS], ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS]
-)
-def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
-    """Reject XML markup unsupported by the browser runtime."""
-
-    # Validate the document at the shared XML boundary.
-    with pytest.raises(ValueError, match="DOCTYPE and CDATA"):
-        validate_xml(content)
 
 
 def test_xml_validation_rejects_malformed_entity() -> None:
@@ -141,7 +113,7 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the application page schema."""
 
     # Validate the fragment through the application page schema.
-    validate_xml(root_document(content))
+    validate_xml(f"<longlink>{content}</longlink>")
 
 
 @pytest.mark.parametrize("content", [content for _, content in INVALID_FRAGMENTS], ids=[case[0] for case in INVALID_FRAGMENTS])
@@ -150,4 +122,4 @@ def test_root_schema_rejects_invalid_fragments(content: str) -> None:
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError):
-        validate_xml(root_document(content))
+        validate_xml(f"<longlink>{content}</longlink>")

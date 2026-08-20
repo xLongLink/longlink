@@ -1,10 +1,8 @@
 import type { Props } from '../types';
-import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
-import { isVisibleXmlNode, isXmlEnum, requireXmlString, resolveXml } from '../core/props';
-import { FIELD_STATUS_VARIANTS, LAYER_PLACEMENTS } from '../constants';
+import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -29,27 +27,13 @@ export function Selector({ props, nodes }: Props) {
     const description = resolveXml(props, 'description', ctx);
     const placeholder = resolveXml(props, 'placeholder', ctx);
     const labelTooltip = resolveXml(props, 'labelTooltip', ctx);
-    const placement = resolveXml(props, 'placement', ctx);
-    const statusVariant = resolveXml(props, 'statusVariant', ctx);
-
-    if (!isXmlEnum(statusVariant, [undefined, ...FIELD_STATUS_VARIANTS])) {
-        throw new Error(`Unsupported Selector statusVariant '${String(statusVariant)}'`);
-    }
-
-    if (!isXmlEnum(placement, [undefined, ...LAYER_PLACEMENTS])) {
-        throw new Error(`Unsupported Selector placement '${String(placement)}'`);
-    }
-
     const common = {
         label: requireXmlString(props, 'label', ctx, 'Selector'),
-        status: resolveInputStatus(props, ctx),
         options,
         htmlName: typeof htmlName === 'string' ? htmlName : undefined,
         description: typeof description === 'string' ? description : undefined,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-        placement,
-        statusVariant,
     };
 
     // Astryx uses a discriminated value contract for clearable selectors.

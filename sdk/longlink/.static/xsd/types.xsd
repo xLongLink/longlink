@@ -22,21 +22,6 @@
       <xsd:minExclusive value="0"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="FieldStatusVariantType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="attached"/>
-      <xsd:enumeration value="detached"/>
-      <xsd:enumeration value="tooltip"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="LayerPlacementType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="above"/>
-      <xsd:enumeration value="below"/>
-      <xsd:enumeration value="start"/>
-      <xsd:enumeration value="end"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="ActionMethodType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="DELETE"/>
@@ -144,12 +129,6 @@
       <xsd:enumeration value="nowrap"/>
       <xsd:enumeration value="wrap"/>
       <xsd:enumeration value="wrap-reverse"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="SwitchLabelPositionType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="start"/>
-      <xsd:enumeration value="end"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TabLayoutType">

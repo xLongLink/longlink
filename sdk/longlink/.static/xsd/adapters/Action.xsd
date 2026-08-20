@@ -15,21 +15,9 @@
                 <xsd:documentation>HTTP request method.</xsd:documentation>
               </xsd:annotation>
             </xsd:attribute>
-            <xsd:attribute name="form" type="xsd:string">
-              <xsd:annotation>
-                <xsd:documentation>Sets the form property.</xsd:documentation>
-              </xsd:annotation>
-            </xsd:attribute>
-            <xsd:attribute name="json" type="xsd:string">
-              <xsd:annotation>
-                <xsd:documentation>Sets the json property.</xsd:documentation>
-              </xsd:annotation>
-            </xsd:attribute>
-            <xsd:attribute name="closeDialog" type="xsd:string">
-              <xsd:annotation>
-                <xsd:documentation>Sets the closeDialog property.</xsd:documentation>
-              </xsd:annotation>
-            </xsd:attribute>
+            <xsd:attribute name="form" type="xsd:string"/>
+            <xsd:attribute name="json" type="xsd:string"/>
+            <xsd:attribute name="closeDialog" type="xsd:string"/>
           </xsd:complexType>
         </xsd:element>
         <xsd:element name="Patch">

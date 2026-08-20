@@ -6,18 +6,17 @@ from longlink.constants import ROOT
 UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*DOCTYPE\b|<!\[CDATA\[", re.IGNORECASE)
 
 
-def _create_xml_parser() -> etree.XMLParser:
-    """Create an XML parser with external entity resolution disabled."""
-
-    return etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
-
-
 @cache
 def _load_xml_schema() -> etree.XMLSchema:
     """Compile and cache the bundled XML schema."""
 
     # Load bundled schemas with external entities and network access disabled.
-    return etree.XMLSchema(etree.parse(str(ROOT / ".static" / "xsd" / "schema.xsd"), _create_xml_parser()))
+    return etree.XMLSchema(
+        etree.parse(
+            str(ROOT / ".static" / "xsd" / "schema.xsd"),
+            etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False),
+        )
+    )
 
 
 def validate_xml(content: str) -> etree._Element:
@@ -29,7 +28,9 @@ def validate_xml(content: str) -> etree._Element:
 
     # Parse user XML once for validation and downstream metadata extraction.
     try:
-        xml_doc = etree.XML(content.encode("utf-8"), _create_xml_parser())
+        xml_doc = etree.XML(
+            content.encode("utf-8"), etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        )
     except etree.XMLSyntaxError as error:
         raise ValueError(f"XML syntax is invalid: {error}") from error
 

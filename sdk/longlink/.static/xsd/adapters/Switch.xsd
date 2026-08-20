@@ -11,51 +11,11 @@
         <xsd:documentation>Selected boolean value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>HTML form field name.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Control width.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="size" type="CompactSizeType">
-      <xsd:annotation>
-        <xsd:documentation>Control size.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Tooltip for the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType">
-      <xsd:annotation>
-        <xsd:documentation>Position of the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType">
-      <xsd:annotation>
-        <xsd:documentation>Validation status.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Validation status message.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">
     <xsd:annotation>
-      <xsd:documentation>A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
+      <xsd:documentation>A toggle control for on/off states that take effect immediately. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="switch" category="Form" lastUpdated="2026-07-21" source="adapters/Switch.xsd"/>
         <longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example>

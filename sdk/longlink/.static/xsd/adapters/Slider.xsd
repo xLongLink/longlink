@@ -11,16 +11,6 @@
         <xsd:documentation>Numeric field value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Supporting field text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>HTML form field name.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="min" type="xsd:decimal">
       <xsd:annotation>
         <xsd:documentation>Minimum allowed value.</xsd:documentation>
@@ -34,26 +24,6 @@
     <xsd:attribute name="step" type="PositiveDecimalType">
       <xsd:annotation>
         <xsd:documentation>Increment between allowed values.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Control width.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Tooltip for the label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType">
-      <xsd:annotation>
-        <xsd:documentation>Validation status.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Validation status message.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
