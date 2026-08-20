@@ -4,13 +4,13 @@ from longlink.utils.xml import validate_xml
 VALID_FRAGMENTS = [
     (
         "action",
-        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button label="Save" /></Action>',
+        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button>Save</Button></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
     ("badge", '<Badge>$item.status<Icon icon="check" /></Badge>'),
     (
         "button",
-        '<Button label="Save" variant="primary" if="${canSave}" />',
+        '<Button variant="primary" if="${canSave}">Save</Button>',
     ),
     ("card", "<Card>Card content</Card>"),
     (
@@ -75,18 +75,18 @@ VALID_FRAGMENTS = [
 ]
 
 INVALID_FRAGMENTS = [
-    ("invalid-action-effect-order", '<Action><Button label="Save" /><Request url="/profile" method="PATCH" /></Action>'),
-    ("invalid-action-multiple-controls", '<Action><Button label="Save" /><Link to="/profile">Profile</Link></Action>'),
+    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>'),
+    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-label-attribute", '<Badge label="Active" />'),
     ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
-    ("missing-button-label", "<Button />"),
+    ("button-label-attribute", '<Button label="Save">Save</Button>'),
     ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style-through-root", '<longlink><Button label="Save" style="color: red" /></longlink>'),
+    ("forbidden-style-through-root", '<longlink><Button style="color: red">Save</Button></longlink>'),
     (
         "invalid-child-through-root",
-        '<longlink><Action tone="accent"><Button label="Save" /></Action></longlink>',
+        '<longlink><Action tone="accent"><Button>Save</Button></Action></longlink>',
     ),
     (
         "missing-selector-option-value",

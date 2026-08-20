@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
-  <xsd:complexType name="ButtonType">
+  <xsd:complexType name="ButtonType" mixed="true">
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required">
-      <xsd:annotation>
-        <xsd:documentation>Visible button text.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="variant" type="ButtonVariantType" default="secondary">
       <xsd:annotation>
         <xsd:documentation>Visual emphasis: primary, secondary, ghost, or destructive.</xsd:documentation>
@@ -29,10 +24,10 @@
         <longlink:docs slug="button" category="Action" lastUpdated="2026-07-21" source="adapters/Button.xsd"/>
         <longlink:example>&lt;Action&gt;
   &lt;Request url="/api/orders" method="POST" /&gt;
-  &lt;Button label="Save" variant="primary" /&gt;
+  &lt;Button variant="primary"&gt;Save&lt;/Button&gt;
 &lt;/Action&gt;
 
-&lt;Button label="View orders" to="/orders" /&gt;</longlink:example>
+ &lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

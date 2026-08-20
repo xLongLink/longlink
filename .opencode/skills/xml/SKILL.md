@@ -22,7 +22,7 @@ Keep improving the XML:
   <Action>
     <Request url="/issues/${issue.id}" method="PATCH" json="${{ status: 'closed' }}" />
     <Patch state="issues" invalidate="true" />
-    <Button label="Close" />
+    <Button>Close</Button>
   </Action>
 
   <Badge>Active

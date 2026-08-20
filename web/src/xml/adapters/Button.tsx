@@ -6,11 +6,20 @@ import { useXmlRuntime } from '../core/context';
 import { ActionHandlerContext } from './Action';
 import { resolveNavigationUrl } from '../core/url';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { isXmlEnum, resolveXml } from '../core/props';
 
 export function Button({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const label = requireXmlString(props, 'label', ctx, 'Button');
+
+    if (nodes.length === 0) {
+        throw new Error('Button requires child content');
+    }
+
+    const label = nodes
+        .filter((node) => node.name === '$text')
+        .map((node) => resolveXml(node.params, 'value', ctx))
+        .filter((value): value is string => typeof value === 'string')
+        .join(' ');
     const variant = resolveXml(props, 'variant', ctx);
     const to = resolveXml(props, 'to', ctx);
     const actionHandler = useContext(ActionHandlerContext);

@@ -37,16 +37,16 @@ describe('core/context', () => {
         let requestedUrl = '';
 
         ctx.scope.bindings.params = { issue: '123' };
-        ctx.services.requestBaseUrl = '/proxy';
+        ctx.services.requestBaseUrl = 'http://localhost/proxy';
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-            requestedUrl = String(input);
+            requestedUrl = input instanceof Request ? input.url : String(input);
 
             return new Response(JSON.stringify({ id: '123' }));
         });
 
         await setupContext(ast, ctx);
 
-        expect(requestedUrl).toBe('/proxy/api/issues/123');
+        expect(requestedUrl).toBe('http://localhost/proxy/api/issues/123');
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 

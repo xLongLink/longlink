@@ -40,10 +40,9 @@ function isAppRelativeUrl(path: string): boolean {
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const base = new URL(RELATIVE_URL_ORIGIN);
-        const url = new URL(value, base);
+        const url = new URL(value, RELATIVE_URL_ORIGIN);
 
-        return url.origin === base.origin;
+        return url.origin === RELATIVE_URL_ORIGIN;
     } catch {
         return false;
     }

@@ -26,7 +26,7 @@
                         json="${{ name: draft.name, price: draft.price }}"
                     />
                     <Patch state="items" invalidate="true" />
-                    <Button variant="primary" label="Create item" />
+                    <Button variant="primary">Create item</Button>
                 </Action>
             </Stack>
         </Dialog>

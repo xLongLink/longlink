@@ -20,7 +20,7 @@
                         form="${{ file: attachment.file }}"
                     />
                     <Patch state="attachments" invalidate="true" />
-                    <Button variant="primary" label="Upload attachment" />
+                    <Button variant="primary">Upload attachment</Button>
                 </Action>
             </Stack>
         </Dialog>

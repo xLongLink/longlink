@@ -1,4 +1,4 @@
-import { ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
@@ -191,10 +191,7 @@ async function executeRequest(
     }
 
     const requestUrl = resolveRequestUrl(requestBaseUrl, url);
-    const response = await fetch(requestUrl, { body, credentials: 'include', headers, method });
-    if (!response.ok) {
-        throw new ApiError(`API request failed (${response.status})`, response.status);
-    }
+    const response = await api(requestUrl, { body, headers, method });
 
     return { closeDialog: closeDialog === true, status: response.status };
 }

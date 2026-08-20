@@ -28,7 +28,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             return { error: error instanceof Error ? error : new Error('XML setup validation failed'), nodes: [] };
         }
     }, [ast]);
-    const initializedAst = useRef<ASTNode | null>(setup.nodes.length ? null : ast);
+    const initializedAst = useRef<ASTNode | null>(null);
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; baseUrl: string; error: unknown } | null>(null);
     const [, setRenderVersion] = useState(0);
     const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;

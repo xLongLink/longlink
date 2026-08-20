@@ -29,7 +29,7 @@
         <longlink:example><![CDATA[<Stack direction="horizontal" align="center">
   $order.number
   <StackItem size="fill">Order details</StackItem>
-  <Button label="Open" />
+  <Button>Open</Button>
 </Stack>]]></longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

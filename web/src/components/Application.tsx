@@ -2,13 +2,13 @@ import { api } from '@/lib/api';
 import startCase from 'lodash/startCase';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
-import { resolveRequestUrl } from '@/xml/core/url';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { pageSchema, type RuntimePage } from '@/xml/pages';
 import { useEffect, useMemo, type ReactNode } from 'react';
+import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 
@@ -99,7 +99,7 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
         }
 
         tabs.set(page.tab, {
-            href: `${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${page.route}`,
+            href: resolveNavigationUrl(navigationBaseUrl, page.route),
             icon: page.icon ? getIconComponent(page.icon) : undefined,
             label: page.name || startCase(page.tab),
         });
@@ -111,7 +111,7 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
             return;
         }
 
-        navigate(`${navigationBaseUrl === '/' ? '' : navigationBaseUrl}/${firstTabPage.route}`, { replace: true });
+        navigate(resolveNavigationUrl(navigationBaseUrl, firstTabPage.route), { replace: true });
     }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
 
     let content: ReactNode;

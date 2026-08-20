@@ -15,4 +15,3 @@ export function parseXML(xml: string): ASTNode {
 
 export { createContext } from './core/context';
 export { RenderXML } from './renderers';
-export type { ASTNode, RuntimeServices, Scope, XmlRuntime } from './types';
