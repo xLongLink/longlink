@@ -9,11 +9,6 @@
         <xsd:documentation>Semantic heading level from 1 to 6.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="id" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Heading identifier.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Heading" type="HeadingType">

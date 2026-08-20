@@ -33,7 +33,7 @@ VALID_FRAGMENTS = [
     ("grid-span", '<Grid columns="3"><GridSpan columns="2" rows="2"><Card /></GridSpan></Grid>'),
     (
         "heading",
-        '<Heading level="1" id="dashboard-heading">Dashboard</Heading>',
+        '<Heading level="1">Dashboard</Heading>',
     ),
     ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123">Open issue</Link>'),
@@ -77,6 +77,7 @@ INVALID_FRAGMENTS = [
     ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>'),
     ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
+    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-label-attribute", '<Badge label="Active" />'),
     ("slot-attribute", '<Badge slot="icon">Active</Badge>'),

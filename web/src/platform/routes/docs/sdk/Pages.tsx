@@ -296,12 +296,14 @@ export default function DocsArticleRoute() {
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" padding={3} path="/docs/sdk/pages/menu">
-                            <Menu>
-                                <MenuSection title="Settings">
-                                    <MenuItem label="General" />
-                                    <MenuItem label="Workflow" />
-                                </MenuSection>
-                            </Menu>
+                            <Stack className="scale-90" width="100%">
+                                <Menu>
+                                    <MenuSection title="Settings">
+                                        <MenuItem label="General" />
+                                        <MenuItem label="Workflow" />
+                                    </MenuSection>
+                                </Menu>
+                            </Stack>
                         </SummaryCard>
                         <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
                             <Stack align="center" gap={2} width="100%">

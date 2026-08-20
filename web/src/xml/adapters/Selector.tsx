@@ -8,18 +8,18 @@ export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : String(value)));
     const options = nodes
-        .filter((node) => node.name === 'SelectorOption' && isVisibleXmlNode(node, ctx))
+        .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx))
         .map((node) => {
-            const value = requireXmlString(node.params, 'value', ctx, 'SelectorOption');
+            const value = requireXmlString(node.params, 'value', ctx, 'Option');
             const labelValue = resolveXml(node.params, 'label', ctx);
             const label = typeof labelValue === 'string' ? labelValue : value;
 
             return { value, label };
         });
 
-    // Selectors require at least one serializable option.
+    // Selectors require at least one visible option.
     if (options.length === 0) {
-        throw new Error('Selector requires at least one SelectorOption');
+        throw new Error('Selector requires at least one Option');
     }
 
     return (

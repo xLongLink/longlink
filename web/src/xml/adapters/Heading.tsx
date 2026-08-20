@@ -6,7 +6,6 @@ import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const id = resolveXml(props, 'id', ctx);
     const level = resolveXml(props, 'level', ctx);
 
     // Heading levels define document semantics and must be integral and bounded.
@@ -15,7 +14,7 @@ export function Heading({ props, nodes }: Props) {
     }
 
     return (
-        <AstryxHeading id={typeof id === 'string' ? id : undefined} level={level}>
+        <AstryxHeading level={level}>
             {renderNode(nodes, ctx)}
         </AstryxHeading>
     );

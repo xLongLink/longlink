@@ -53,10 +53,10 @@
         <longlink:example>&lt;Menu&gt;
   &lt;MenuSection title="Settings"&gt;
     &lt;MenuItem label="General" icon="viewColumns"&gt;
-      &lt;Heading id="general" level="2"&gt;General&lt;/Heading&gt;
+      &lt;Heading level="2"&gt;General&lt;/Heading&gt;
     &lt;/MenuItem&gt;
     &lt;MenuItem label="Workflow" icon="arrowsUpDown"&gt;
-      &lt;Heading id="workflow" level="2"&gt;Workflow&lt;/Heading&gt;
+      &lt;Heading level="2"&gt;Workflow&lt;/Heading&gt;
     &lt;/MenuItem&gt;
   &lt;/MenuSection&gt;
 &lt;/Menu&gt;</longlink:example>

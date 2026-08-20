@@ -16,7 +16,7 @@
         <MenuSection title="Settings sections">
         <MenuItem icon="viewColumns" label="Application">
             <Stack>
-                <Heading id="application" level="2">Application</Heading>
+                <Heading level="2">Application</Heading>
                 Edit the sample application's local owner, cost-center, and reviewer note fields.
                 <Card>
                     <Stack direction="horizontal" align="center">
@@ -38,7 +38,7 @@
 
         <MenuItem icon="wrench" label="Preferences">
             <Stack>
-                <Heading id="preferences" level="2">Preferences</Heading>
+                <Heading level="2">Preferences</Heading>
                 Toggle notification controls and adjust a slider-backed approval threshold.
                 <Stack>
                     <CheckboxInput label="Email updates" value="$emailUpdates" />
@@ -51,18 +51,18 @@
 
         <MenuItem icon="arrowsUpDown" label="Workflow">
             <Stack>
-                <Heading id="workflow" level="2">Workflow</Heading>
+                <Heading level="2">Workflow</Heading>
                 Use radio lists and selectors to model workflow defaults.
                 <Stack>
                     <RadioList label="Default approver" value="$workflow.owner">
-                        <RadioListItem value="manager" label="Manager" />
-                        <RadioListItem value="finance" label="Finance" />
-                        <RadioListItem value="owner" label="Owner" />
+                        <Option value="manager" label="Manager" />
+                        <Option value="finance" label="Finance" />
+                        <Option value="owner" label="Owner" />
                     </RadioList>
                     <Selector label="Risk level" value="$workflow.risk">
-                        <SelectorOption value="low" label="Low" />
-                        <SelectorOption value="medium" label="Medium" />
-                        <SelectorOption value="high" label="High" />
+                        <Option value="low" label="Low" />
+                        <Option value="medium" label="Medium" />
+                        <Option value="high" label="High" />
                     </Selector>
                 </Stack>
             </Stack>

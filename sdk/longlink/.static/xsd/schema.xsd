@@ -27,6 +27,7 @@
   <xsd:include schemaLocation="adapters/CheckboxInput.xsd" />
   <xsd:include schemaLocation="adapters/Switch.xsd" />
   <xsd:include schemaLocation="adapters/Slider.xsd" />
+  <xsd:include schemaLocation="adapters/Option.xsd" />
   <xsd:include schemaLocation="adapters/Selector.xsd" />
   <xsd:include schemaLocation="adapters/RadioList.xsd" />
   <xsd:include schemaLocation="adapters/Dialog.xsd" />

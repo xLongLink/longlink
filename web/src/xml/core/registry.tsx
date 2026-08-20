@@ -26,7 +26,7 @@ import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
 import { Bold, Italic, Text } from '../adapters/Text';
 import { CheckboxInput } from '../adapters/CheckboxInput';
-import { RadioList, RadioListItem } from '../adapters/RadioList';
+import { RadioList } from '../adapters/RadioList';
 
 /** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
@@ -49,7 +49,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Menu,
     NumberInput,
     RadioList,
-    RadioListItem,
     Selector,
     Slider,
     Stack,
