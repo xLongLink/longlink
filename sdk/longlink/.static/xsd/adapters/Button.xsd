@@ -26,6 +26,7 @@
     <xsd:annotation>
       <xsd:documentation>Button triggers an action when clicked. Use it for form submissions, confirmations, or simple application navigation with to.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="button" category="Action" lastUpdated="2026-07-21" source="adapters/Button.xsd"/>
         <longlink:example>&lt;Action&gt;
   &lt;Request url="/api/orders" method="POST" /&gt;
   &lt;Button label="Save" variant="primary" /&gt;

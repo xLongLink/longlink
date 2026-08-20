@@ -88,6 +88,7 @@
     <xsd:annotation>
       <xsd:documentation>Use Action to run requests and state changes in order when someone presses its one terminal Button or Link. A control with to navigates and ends the action.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="action" category="State" lastUpdated="2026-07-21" source="adapters/Action.xsd"/>
         <ns3:example xmlns:ns3="urn:longlink:xsd-docs">&lt;Action&gt;
   &lt;Request url="/api/orders/${order.id}/complete" method="PATCH" /&gt;
   &lt;Patch state="orders" invalidate="true" /&gt;

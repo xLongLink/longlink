@@ -21,6 +21,7 @@
     <xsd:annotation>
       <xsd:documentation>Semantic heading component that renders h1-h6 elements with themed styling, themed sizing via type scale tokens, and line-clamp truncation.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="heading" category="Content" lastUpdated="2026-07-21" source="adapters/Heading.xsd"/>
         <longlink:example>&lt;Heading level="1"&gt;Orders&lt;/Heading&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

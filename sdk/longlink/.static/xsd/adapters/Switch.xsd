@@ -93,6 +93,7 @@
     <xsd:annotation>
       <xsd:documentation>A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="switch" category="Form" lastUpdated="2026-07-21" source="adapters/Switch.xsd"/>
         <longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

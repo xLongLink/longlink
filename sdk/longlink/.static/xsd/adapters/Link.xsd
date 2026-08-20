@@ -26,6 +26,7 @@
     <xsd:annotation>
       <xsd:documentation>A styled anchor for inline and standalone text navigation. Inside Action, it can follow requests and patches as the terminal navigation step.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="link" category="Action" lastUpdated="2026-07-21" source="adapters/Link.xsd"/>
         <longlink:example>&lt;Link to="/orders/${order.id}"&gt;Open order&lt;/Link&gt;
 
 &lt;Action&gt;

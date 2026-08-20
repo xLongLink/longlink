@@ -108,6 +108,7 @@
     <xsd:annotation>
       <xsd:documentation>FileInput provides file upload with optional drag-and-drop support. Use it for single or multiple file selection with built-in validation for file type, size, and count. Pair with validation status for upload feedback.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21" source="adapters/FileInput.xsd"/>
         <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

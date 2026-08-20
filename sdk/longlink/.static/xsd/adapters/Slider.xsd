@@ -103,6 +103,7 @@
     <xsd:annotation>
       <xsd:documentation>A draggable control for selecting a numeric value or range within defined bounds. Supports single value and range selection, tick marks, custom value formatting, and vertical orientation. Use it when users need to explore a continuous range, such as volume, price, or percentage.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="slider" category="Form" lastUpdated="2026-07-21" source="adapters/Slider.xsd"/>
         <longlink:example>&lt;Slider label="Budget" value="$form.budget" min="500" max="10000" step="500" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

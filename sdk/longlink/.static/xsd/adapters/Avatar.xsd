@@ -28,6 +28,7 @@
     <xsd:annotation>
       <xsd:documentation>Avatar represents a person or team with a profile photo, initials, or a default icon. Use it in comment headers, contact lists, chat messages, user cards, and anywhere you need to identify someone visually.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="avatar" category="Content" lastUpdated="2026-07-21" source="adapters/Avatar.xsd"/>
         <longlink:example>&lt;Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

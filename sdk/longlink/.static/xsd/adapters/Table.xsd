@@ -42,6 +42,7 @@
     <xsd:annotation>
       <xsd:documentation>Displays tabular data from an array.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="table" category="Layout" lastUpdated="2026-07-21" source="adapters/Table.xsd"/>
         <longlink:example>&lt;Table data="$orders.items"&gt;
   &lt;TableColumn field="number" header="Number" /&gt;
   &lt;TableColumn field="status" header="Status" /&gt;

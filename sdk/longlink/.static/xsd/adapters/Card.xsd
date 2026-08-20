@@ -11,6 +11,7 @@
     <xsd:annotation>
       <xsd:documentation>Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are not the default layout tool. Most content groups do not need a container; spacing and alignment create visual grouping naturally. Only use a Card when items need clear interaction boundaries or visual comparison in a grid.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="card" category="Layout" lastUpdated="2026-07-21" source="adapters/Card.xsd"/>
         <longlink:example>&lt;Card&gt;
   Lorem ipsum dolor sit amet.
 &lt;/Card&gt;</longlink:example>

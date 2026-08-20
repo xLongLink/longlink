@@ -43,6 +43,7 @@
     <xsd:annotation>
       <xsd:documentation>TextArea is a multi-line text input for collecting longer-form content like comments, descriptions, or messages. Use it when the expected input spans multiple lines. For shorter, single-line values, use TextInput.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="text-area" category="Form" lastUpdated="2026-07-21" source="adapters/TextArea.xsd"/>
         <longlink:example>&lt;TextArea label="Notes" value="$form.notes" rows="4" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

@@ -10,6 +10,7 @@ import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
+import { componentDocumentation } from '@/lib/xsd';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -33,6 +34,8 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 const noop = () => undefined;
 
 function SummaryCard({ children, name, path }: { children: React.ReactNode; name: string; path: string }) {
+    const component = componentDocumentation.find((candidate) => candidate.name === name);
+
     return (
         <Stack className="relative" gap={2}>
             <Card aria-hidden="true" inert minHeight={190} padding={0} variant="muted">
@@ -44,7 +47,7 @@ function SummaryCard({ children, name, path }: { children: React.ReactNode; name
             <RouterLink
                 aria-label={`Open ${name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={path}
+                to={component ? `/docs/sdk/pages/${component.slug}` : path}
             />
         </Stack>
     );

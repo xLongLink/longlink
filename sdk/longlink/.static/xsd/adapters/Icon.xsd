@@ -18,6 +18,7 @@
     <xsd:annotation>
       <xsd:documentation>Icons are small visual symbols that represent actions, objects, or concepts. They improve scannability and reinforce meaning alongside text. Supports both direct SVG components and semantic icon names that adapt to the active theme.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="icon" category="Content" lastUpdated="2026-07-21" source="adapters/Icon.xsd"/>
         <longlink:example>&lt;Icon icon="info" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

@@ -144,6 +144,7 @@
     <xsd:annotation>
       <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="selector" category="Form" lastUpdated="2026-07-21" source="adapters/Selector.xsd"/>
         <longlink:example>&lt;Selector label="Status" value="$filters.status" hasClear="true"&gt;
   &lt;SelectorOption value="open" label="Open" /&gt;
   &lt;SelectorOption value="closed" label="Closed" /&gt;

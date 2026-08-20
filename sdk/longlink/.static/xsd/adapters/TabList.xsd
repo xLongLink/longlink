@@ -52,6 +52,7 @@
     <xsd:annotation>
       <xsd:documentation>Displays tab navigation and the active tab content.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="tabs" category="Layout" lastUpdated="2026-07-21" source="adapters/TabList.xsd"/>
         <longlink:example>&lt;Tabs value="$tabs.value"&gt;
   &lt;Tab value="overview" label="Overview"&gt;Overview content&lt;/Tab&gt;
   &lt;Tab value="activity" label="Activity"&gt;Activity content&lt;/Tab&gt;

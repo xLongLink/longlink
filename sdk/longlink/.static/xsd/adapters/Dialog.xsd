@@ -36,6 +36,7 @@
     <xsd:annotation>
       <xsd:documentation>Renders a modal workflow from one flat owner element.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="dialog" category="Layout" lastUpdated="2026-07-21" source="adapters/Dialog.xsd"/>
         <longlink:example>&lt;Dialog title="Edit order" isOpen="$dialog.open"&gt;
   &lt;TextInput label="Name" value="$form.name" /&gt;
 &lt;/Dialog&gt;</longlink:example>

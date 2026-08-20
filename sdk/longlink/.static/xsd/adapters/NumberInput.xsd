@@ -58,6 +58,7 @@
     <xsd:annotation>
       <xsd:documentation>A form input for numeric values with built-in validation, min/max constraints, and step controls. Use NumberInput for quantities, measurements, percentages, and similar inputs.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="number-input" category="Form" lastUpdated="2026-07-21" source="adapters/NumberInput.xsd"/>
         <longlink:example>&lt;NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

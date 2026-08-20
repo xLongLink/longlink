@@ -11,6 +11,7 @@
     <xsd:annotation>
       <xsd:documentation>A visual separator that divides content into distinct sections. Use it to create clear boundaries between groups of related content, or to demarcate interactive regions within a layout.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="divider" category="Content" lastUpdated="2026-07-21" source="adapters/Divider.xsd"/>
         <longlink:example>&lt;Divider&gt;Or&lt;/Divider&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
