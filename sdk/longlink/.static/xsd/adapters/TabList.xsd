@@ -9,21 +9,6 @@
         <xsd:documentation>Selected tab value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="size" type="SizeType" default="md">
-      <xsd:annotation>
-        <xsd:documentation>Tab size.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="layout" type="TabLayoutType" default="hug">
-      <xsd:annotation>
-        <xsd:documentation>Tab layout: hug or fill.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="hasDivider" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Shows a divider below the tabs.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="TabType" mixed="true">
@@ -38,11 +23,6 @@
     <xsd:attribute name="label" type="NonBlankStringType" use="required">
       <xsd:annotation>
         <xsd:documentation>Accessible label.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="to" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>App-relative navigation destination.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>

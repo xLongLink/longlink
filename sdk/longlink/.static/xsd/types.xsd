@@ -31,13 +31,6 @@
       <xsd:enumeration value="PUT"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="SizeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="sm"/>
-      <xsd:enumeration value="md"/>
-      <xsd:enumeration value="lg"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="CompactSizeType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="sm"/>
@@ -122,12 +115,6 @@
       <xsd:enumeration value="nowrap"/>
       <xsd:enumeration value="wrap"/>
       <xsd:enumeration value="wrap-reverse"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="TabLayoutType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="hug"/>
-      <xsd:enumeration value="fill"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TypographyType">
