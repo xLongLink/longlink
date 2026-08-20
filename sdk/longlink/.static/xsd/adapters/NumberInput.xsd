@@ -1,20 +1,65 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="NumberInputType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Visible field label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="value" type="xsd:string"><xsd:annotation><xsd:documentation>Numeric field value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting field text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="units" type="xsd:string"><xsd:annotation><xsd:documentation>Units shown with the value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="min" type="xsd:decimal"><xsd:annotation><xsd:documentation>Minimum allowed value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="max" type="xsd:decimal"><xsd:annotation><xsd:documentation>Maximum allowed value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="step" type="PositiveDecimalType"><xsd:annotation><xsd:documentation>Increment between allowed values.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables the field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as required.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isIntegerOnly" type="xsd:string"><xsd:annotation><xsd:documentation>Restricts values to integers.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Numeric field value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting field text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="units" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Units shown with the value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="min" type="xsd:decimal">
+      <xsd:annotation>
+        <xsd:documentation>Minimum allowed value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="max" type="xsd:decimal">
+      <xsd:annotation>
+        <xsd:documentation>Maximum allowed value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="step" type="PositiveDecimalType">
+      <xsd:annotation>
+        <xsd:documentation>Increment between allowed values.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables the field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isIntegerOnly" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Restricts values to integers.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="NumberInput" type="NumberInputType">
-    <xsd:annotation><xsd:documentation>A form input for numeric values with built-in validation, min/max constraints, and step controls. Use NumberInput for quantities, measurements, percentages, and similar inputs.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" /&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A form input for numeric values with built-in validation, min/max constraints, and step controls. Use NumberInput for quantities, measurements, percentages, and similar inputs.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;NumberInput label="Quantity" value="$form.quantity" min="1" step="1" units="items" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

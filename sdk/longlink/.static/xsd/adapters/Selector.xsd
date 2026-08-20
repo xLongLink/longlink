@@ -1,46 +1,162 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="SelectorType">
-    <xsd:sequence><xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded"/></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Visible field label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="value" type="xsd:string"><xsd:annotation><xsd:documentation>Selected option value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="size" type="SizeType" default="md"><xsd:annotation><xsd:documentation>Control size.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="variant" type="SelectorVariantType"><xsd:annotation><xsd:documentation>Control variant.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting field text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="placeholder" type="xsd:string"><xsd:annotation><xsd:documentation>Placeholder text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="searchPlaceholder" type="xsd:string"><xsd:annotation><xsd:documentation>Search field placeholder.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string"><xsd:annotation><xsd:documentation>HTML form field name.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string"><xsd:annotation><xsd:documentation>Control width.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string"><xsd:annotation><xsd:documentation>Tooltip for the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="placement" type="LayerPlacementType"><xsd:annotation><xsd:documentation>Options layer placement.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="disabledMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Message shown when disabled.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType"><xsd:annotation><xsd:documentation>Validation status.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Validation status message.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="statusVariant" type="FieldStatusVariantType"><xsd:annotation><xsd:documentation>Presentation of the status message.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="hasClear" type="xsd:string"><xsd:annotation><xsd:documentation>Shows a clear control.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="hasSearch" type="xsd:string"><xsd:annotation><xsd:documentation>Shows a search field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables the field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as required.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isOptional" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as optional.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isLabelHidden" type="xsd:string"><xsd:annotation><xsd:documentation>Visually hides the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isLoading" type="xsd:boolean"><xsd:annotation><xsd:documentation>Shows a loading state.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDefaultOpen" type="xsd:boolean"><xsd:annotation><xsd:documentation>Opens the options layer initially.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:sequence>
+      <xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected option value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="size" type="SizeType" default="md">
+      <xsd:annotation>
+        <xsd:documentation>Control size.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="variant" type="SelectorVariantType">
+      <xsd:annotation>
+        <xsd:documentation>Control variant.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting field text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="placeholder" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Placeholder text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="searchPlaceholder" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Search field placeholder.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="htmlName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>HTML form field name.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="width" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Control width.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="labelTooltip" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Tooltip for the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="placement" type="LayerPlacementType">
+      <xsd:annotation>
+        <xsd:documentation>Options layer placement.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="disabledMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Message shown when disabled.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="status" type="InputStatusType">
+      <xsd:annotation>
+        <xsd:documentation>Validation status.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="statusMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Validation status message.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="statusVariant" type="FieldStatusVariantType">
+      <xsd:annotation>
+        <xsd:documentation>Presentation of the status message.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="hasClear" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Shows a clear control.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="hasSearch" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Shows a search field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables the field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isOptional" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as optional.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isLabelHidden" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Visually hides the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isLoading" type="xsd:boolean">
+      <xsd:annotation>
+        <xsd:documentation>Shows a loading state.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDefaultOpen" type="xsd:boolean">
+      <xsd:annotation>
+        <xsd:documentation>Opens the options layer initially.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="SelectorOptionType">
-    <xsd:attribute name="value" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Current value or binding expression.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="label" type="NonBlankStringType"><xsd:annotation><xsd:documentation>Accessible label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables interaction.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="value" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Current value or binding expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType">
+      <xsd:annotation>
+        <xsd:documentation>Accessible label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables interaction.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Selector" type="SelectorType">
-    <xsd:annotation><xsd:documentation>A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Selector label="Status" value="$filters.status" hasClear="true"&gt;
+    <xsd:annotation>
+      <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Selector label="Status" value="$filters.status" hasClear="true"&gt;
   &lt;SelectorOption value="open" label="Open" /&gt;
   &lt;SelectorOption value="closed" label="Closed" /&gt;
-&lt;/Selector&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/Selector&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
   <xsd:element name="SelectorOption" type="SelectorOptionType">
-    <xsd:annotation><xsd:documentation>A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;SelectorOption value="open" label="Open" /&gt;</ns2:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Supports labels, validation, descriptions, and required or optional states. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;SelectorOption value="open" label="Open" /&gt;</ns2:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

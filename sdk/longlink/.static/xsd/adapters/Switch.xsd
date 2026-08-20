@@ -1,27 +1,100 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="SwitchType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Visible field label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="value" type="xsd:string"><xsd:annotation><xsd:documentation>Selected boolean value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting field text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string"><xsd:annotation><xsd:documentation>HTML form field name.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string"><xsd:annotation><xsd:documentation>Control width.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="size" type="CompactSizeType"><xsd:annotation><xsd:documentation>Control size.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string"><xsd:annotation><xsd:documentation>Tooltip for the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="disabledMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Message shown when disabled.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType"><xsd:annotation><xsd:documentation>Position of the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType"><xsd:annotation><xsd:documentation>Spacing between label and switch.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType"><xsd:annotation><xsd:documentation>Validation status.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Validation status message.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables the field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as required.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isOptional" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as optional.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isLabelHidden" type="xsd:string"><xsd:annotation><xsd:documentation>Visually hides the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isLoading" type="xsd:boolean"><xsd:annotation><xsd:documentation>Shows a loading state.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected boolean value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting field text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="htmlName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>HTML form field name.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="width" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Control width.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="size" type="CompactSizeType">
+      <xsd:annotation>
+        <xsd:documentation>Control size.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="labelTooltip" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Tooltip for the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="disabledMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Message shown when disabled.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="labelPosition" type="SwitchLabelPositionType">
+      <xsd:annotation>
+        <xsd:documentation>Position of the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="labelSpacing" type="SwitchLabelSpacingType">
+      <xsd:annotation>
+        <xsd:documentation>Spacing between label and switch.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="status" type="InputStatusType">
+      <xsd:annotation>
+        <xsd:documentation>Validation status.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="statusMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Validation status message.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables the field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isOptional" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as optional.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isLabelHidden" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Visually hides the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isLoading" type="xsd:boolean">
+      <xsd:annotation>
+        <xsd:documentation>Shows a loading state.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Switch" type="SwitchType">
-    <xsd:annotation><xsd:documentation>A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Switch label="Notifications" value="$settings.notifications" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

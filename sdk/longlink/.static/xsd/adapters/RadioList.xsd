@@ -1,39 +1,127 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="RadioListType">
-    <xsd:sequence><xsd:element ref="RadioListItem" minOccurs="1" maxOccurs="unbounded"/></xsd:sequence>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Visible field label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="value" type="xsd:string"><xsd:annotation><xsd:documentation>Selected option value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="size" type="CompactSizeType"><xsd:annotation><xsd:documentation>Control size.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="orientation" type="OrientationType"><xsd:annotation><xsd:documentation>Option layout direction.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting field text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="htmlName" type="xsd:string"><xsd:annotation><xsd:documentation>HTML form field name.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="width" type="xsd:string"><xsd:annotation><xsd:documentation>Control width.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="labelTooltip" type="xsd:string"><xsd:annotation><xsd:documentation>Tooltip for the label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="disabledMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Message shown when disabled.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="status" type="InputStatusType"><xsd:annotation><xsd:documentation>Validation status.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="statusMessage" type="xsd:string"><xsd:annotation><xsd:documentation>Validation status message.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables the field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as required.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isOptional" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as optional.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isLabelHidden" type="xsd:string"><xsd:annotation><xsd:documentation>Visually hides the label.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:sequence>
+      <xsd:element ref="RadioListItem" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Selected option value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="size" type="CompactSizeType">
+      <xsd:annotation>
+        <xsd:documentation>Control size.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="orientation" type="OrientationType">
+      <xsd:annotation>
+        <xsd:documentation>Option layout direction.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting field text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="htmlName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>HTML form field name.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="width" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Control width.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="labelTooltip" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Tooltip for the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="disabledMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Message shown when disabled.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="status" type="InputStatusType">
+      <xsd:annotation>
+        <xsd:documentation>Validation status.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="statusMessage" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Validation status message.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables the field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isOptional" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as optional.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isLabelHidden" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Visually hides the label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="RadioListItemType">
-    <xsd:attribute name="value" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Current value or binding expression.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Accessible label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting description.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables interaction.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="value" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Current value or binding expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Accessible label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting description.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables interaction.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="RadioList" type="RadioListType">
-    <xsd:annotation><xsd:documentation>A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;RadioList label="Plan" value="$form.plan" orientation="horizontal"&gt;
+    <xsd:annotation>
+      <xsd:documentation>A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;RadioList label="Plan" value="$form.plan" orientation="horizontal"&gt;
   &lt;RadioListItem value="solo" label="Solo" /&gt;
   &lt;RadioListItem value="team" label="Team" /&gt;
-&lt;/RadioList&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/RadioList&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
   <xsd:element name="RadioListItem" type="RadioListItemType">
-    <xsd:annotation><xsd:documentation>A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;RadioListItem value="team" label="Team" description="Shared workspace" /&gt;</ns2:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A group of options where only one can be selected at a time. All options are visible at once, making it easy to compare choices. Use it when users need to pick one option from a small set.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;RadioListItem value="team" label="Team" description="Shared workspace" /&gt;</ns2:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

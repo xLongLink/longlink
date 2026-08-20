@@ -7,10 +7,17 @@ describe('core/context', () => {
 
     it('preserves state across setup reruns until the slot is invalidated', async () => {
         const ctx = createContext();
-        const ast = [{ name: 'State', params: compileProps({ id: 'filter', value: 'day' }), children: [] }];
+        const ast = [
+            {
+                name: 'State',
+                params: compileProps({ id: 'filter', value: 'day', score: '10', list: '[]' }),
+                children: [],
+            },
+        ];
 
         await setupContext(ast, ctx);
-        const filter = ctx.scope.bindings.filter as { value: string };
+        const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
+        expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
         await setupContext(ast, ctx);
 
@@ -19,7 +26,7 @@ describe('core/context', () => {
         delete ctx.scope.bindings.filter;
         await ctx.services.setups.filter();
 
-        expect((ctx.scope.bindings.filter as { value: string }).value).toBe('day');
+        expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
     });
 
     it('evaluates query paths against route params', async () => {

@@ -2,12 +2,6 @@ import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute } from '../types';
 import type { ExpressionNode } from './types';
 
-type InterpolationSegment = {
-    start: number;
-    end: number;
-    node: ExpressionNode;
-};
-
 /** Compiles an XML attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
@@ -61,7 +55,7 @@ export function compileAttribute(value: string): ASTAttribute {
 }
 
 /** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
-function readInterpolationSegment(input: string, start: number): InterpolationSegment {
+function readInterpolationSegment(input: string, start: number) {
     // Parse the interpolation body to find its boundary.
     try {
         const node = parseExpressionAt(input, start + 2, {

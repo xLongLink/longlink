@@ -1,11 +1,18 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="DividerType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Divider" type="DividerType">
-    <xsd:annotation><xsd:documentation>A visual separator that divides content into distinct sections. Use it to create clear boundaries between groups of related content, or to demarcate interactive regions within a layout.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Divider&gt;Or&lt;/Divider&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>A visual separator that divides content into distinct sections. Use it to create clear boundaries between groups of related content, or to demarcate interactive regions within a layout.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Divider&gt;Or&lt;/Divider&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

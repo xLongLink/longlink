@@ -1,19 +1,42 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="StackType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
-    <xsd:attribute name="direction" type="OrientationType" default="vertical"><xsd:annotation><xsd:documentation>Stack direction.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="justify" type="StackJustifyType" default="start"><xsd:annotation><xsd:documentation>Main-axis alignment.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="align" type="BoxAlignType" default="stretch"><xsd:annotation><xsd:documentation>Cross-axis alignment.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="wrap" type="StackWrapType" default="nowrap"><xsd:annotation><xsd:documentation>Wrapping behavior.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="direction" type="OrientationType" default="vertical">
+      <xsd:annotation>
+        <xsd:documentation>Stack direction.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="justify" type="StackJustifyType" default="start">
+      <xsd:annotation>
+        <xsd:documentation>Main-axis alignment.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="align" type="BoxAlignType" default="stretch">
+      <xsd:annotation>
+        <xsd:documentation>Cross-axis alignment.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="wrap" type="StackWrapType" default="nowrap">
+      <xsd:annotation>
+        <xsd:documentation>Wrapping behavior.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Stack" type="StackType">
-    <xsd:annotation><xsd:documentation>Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Stack direction="horizontal" align="center"&gt;
+    <xsd:annotation>
+      <xsd:documentation>Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Stack direction="horizontal" align="center"&gt;
   $order.number
   &lt;StackItem size="fill"&gt;Order details&lt;/StackItem&gt;
   &lt;Button label="Open" /&gt;
-&lt;/Stack&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/Stack&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

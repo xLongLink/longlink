@@ -4,11 +4,6 @@ import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from 
 
 type SafeExpressionCall = (...args: unknown[]) => unknown;
 
-/** Converts evaluated XML interpolation values to rendered text. */
-function stringifyInterpolationValue(value: unknown): string {
-    return String(value ?? '');
-}
-
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
@@ -219,7 +214,7 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
                 if (index < node.expressions.length) {
                     const expression = node.expressions[index];
 
-                    output += stringifyInterpolationValue(evaluateNode(expression, ctx));
+                    output += String(evaluateNode(expression, ctx) ?? '');
                 }
             }
 
@@ -246,9 +241,7 @@ export function evaluate(attribute: ASTAttribute, ctx: Scope): unknown {
         case 'interpolation':
             return attribute.segments
                 .map((segment) =>
-                    segment.kind === 'text'
-                        ? segment.value
-                        : stringifyInterpolationValue(evaluateNode(segment.node, ctx))
+                    segment.kind === 'text' ? segment.value : String(evaluateNode(segment.node, ctx) ?? '')
                 )
                 .join('');
     }

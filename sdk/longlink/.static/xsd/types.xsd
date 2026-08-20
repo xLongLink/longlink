@@ -1,9 +1,19 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:attributeGroup name="XmlRuntimeAttributes">
-    <xsd:annotation><xsd:documentation>XML runtime attributes. Every other attribute must match the corresponding Astryx component prop.</xsd:documentation></xsd:annotation>
-    <xsd:attribute name="if" type="xsd:string"><xsd:annotation><xsd:documentation>Conditional rendering expression.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="slot" type="xsd:string"><xsd:annotation><xsd:documentation>Named child slot.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:annotation>
+      <xsd:documentation>XML runtime attributes. Every other attribute must match the corresponding Astryx component prop.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:attribute name="if" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Conditional rendering expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="slot" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Named child slot.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
   </xsd:attributeGroup>
   <xsd:simpleType name="NonBlankStringType">
     <xsd:restriction base="xsd:string">

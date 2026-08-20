@@ -1,19 +1,32 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="ForType" mixed="true">
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
-    <xsd:attribute name="each" type="xsd:string" use="required"><xsd:annotation><xsd:documentation>Array expression to iterate.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="as" type="xsd:string" use="required"><xsd:annotation><xsd:documentation>Name for each array item.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="each" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Array expression to iterate.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="as" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Name for each array item.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="For" type="ForType">
-    <xsd:annotation><xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content on a page.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;For each="$orders.items" as="order"&gt;
+    <xsd:annotation>
+      <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content on a page.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;For each="$orders.items" as="order"&gt;
   &lt;Card&gt;
     $order.number
   &lt;/Card&gt;
-&lt;/For&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/For&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

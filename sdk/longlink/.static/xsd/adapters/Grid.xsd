@@ -1,16 +1,37 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="GridType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
-    <xsd:attribute name="columns" type="xsd:positiveInteger"><xsd:annotation><xsd:documentation>Number of fixed columns.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="minColumnWidth" type="PositiveDecimalType"><xsd:annotation><xsd:documentation>Minimum width for responsive columns.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="maxColumns" type="xsd:positiveInteger"><xsd:annotation><xsd:documentation>Maximum responsive column count.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="repeat" type="GridRepeatType" default="fill"><xsd:annotation><xsd:documentation>Responsive repeat mode: fill or fit.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="columns" type="xsd:positiveInteger">
+      <xsd:annotation>
+        <xsd:documentation>Number of fixed columns.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="minColumnWidth" type="PositiveDecimalType">
+      <xsd:annotation>
+        <xsd:documentation>Minimum width for responsive columns.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="maxColumns" type="xsd:positiveInteger">
+      <xsd:annotation>
+        <xsd:documentation>Maximum responsive column count.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="repeat" type="GridRepeatType" default="fill">
+      <xsd:annotation>
+        <xsd:documentation>Responsive repeat mode: fill or fit.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Grid" type="GridType">
-    <xsd:annotation><xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
+    <xsd:annotation>
+      <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
   &lt;Card&gt;First&lt;/Card&gt;
   &lt;Card&gt;Second&lt;/Card&gt;
 &lt;/Grid&gt;
@@ -18,6 +39,8 @@
 &lt;Grid columns="3"&gt;
   &lt;GridSpan columns="2"&gt;&lt;Card&gt;Featured&lt;/Card&gt;&lt;/GridSpan&gt;
   &lt;Card&gt;Standard&lt;/Card&gt;
-&lt;/Grid&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/Grid&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

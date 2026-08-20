@@ -1,13 +1,20 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="CardType" mixed="true">
-    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/></xsd:sequence>
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Card" type="CardType">
-    <xsd:annotation><xsd:documentation>Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are not the default layout tool. Most content groups do not need a container; spacing and alignment create visual grouping naturally. Only use a Card when items need clear interaction boundaries or visual comparison in a grid.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;Card&gt;
+    <xsd:annotation>
+      <xsd:documentation>Card is a bordered, elevated container for discrete, self-contained items: things you could reorder, remove, or interact with independently. Cards are not the default layout tool. Most content groups do not need a container; spacing and alignment create visual grouping naturally. Only use a Card when items need clear interaction boundaries or visual comparison in a grid.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;Card&gt;
   Lorem ipsum dolor sit amet.
-&lt;/Card&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+&lt;/Card&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

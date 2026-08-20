@@ -1,16 +1,45 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:include schemaLocation="../types.xsd"/>
   <xsd:complexType name="TextInputType">
-    <xsd:attribute name="label" type="NonBlankStringType" use="required"><xsd:annotation><xsd:documentation>Visible field label.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="value" type="xsd:string"><xsd:annotation><xsd:documentation>Text field value.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="type" type="TextInputKindType" default="text"><xsd:annotation><xsd:documentation>Input type: text, password, or email.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="description" type="xsd:string"><xsd:annotation><xsd:documentation>Supporting field text.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string"><xsd:annotation><xsd:documentation>Disables the field.</xsd:documentation></xsd:annotation></xsd:attribute>
-    <xsd:attribute name="isRequired" type="xsd:string"><xsd:annotation><xsd:documentation>Marks the field as required.</xsd:documentation></xsd:annotation></xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Visible field label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Text field value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="type" type="TextInputKindType" default="text">
+      <xsd:annotation>
+        <xsd:documentation>Input type: text, password, or email.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting field text.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Disables the field.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="TextInput" type="TextInputType">
-    <xsd:annotation><xsd:documentation>TextInput collects short-form text like names, emails, or search queries. Use it for single-line values where the expected input is brief. Pair it with validation status to guide users through required or formatted fields.</xsd:documentation><xsd:appinfo source="urn:longlink:xml-example"><longlink:example>&lt;TextInput label="Customer name" value="$form.name" isRequired="true" /&gt;</longlink:example></xsd:appinfo></xsd:annotation>
+    <xsd:annotation>
+      <xsd:documentation>TextInput collects short-form text like names, emails, or search queries. Use it for single-line values where the expected input is brief. Pair it with validation status to guide users through required or formatted fields.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:example>&lt;TextInput label="Customer name" value="$form.name" isRequired="true" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
   </xsd:element>
 </xsd:schema>

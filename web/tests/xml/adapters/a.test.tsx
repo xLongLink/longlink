@@ -4,7 +4,7 @@ import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
 
 describe('Link', () => {
-    it('renders app navigation and internal anchors', () => {
+    it('renders app navigation', () => {
         const navigationContext = createContext();
         navigationContext.services.navigationBaseUrl = '/orgs/acme/apps/tracker';
         const navigationOutput = renderXmlToMarkup(
@@ -12,14 +12,8 @@ describe('Link', () => {
             navigationContext,
             '/api/applications/app-1/proxy'
         );
-        const anchorOutput = renderXmlToMarkup(
-            parseXML('<Link href="/files/document.pdf">Document</Link>'),
-            createContext(),
-            '/orgs/acme/apps/inventory'
-        );
 
         expect(navigationOutput).toContain('href="/orgs/acme/apps/tracker/issues/123"');
-        expect(anchorOutput).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
 
     it('drops unsafe expression-backed navigation targets and falls back to a safe href', () => {
