@@ -55,11 +55,9 @@ function resolveBindableTarget(
         throw new Error('XML binding path must use safe property names');
     }
 
-    // Resolve direct state references.
+    // Direct references were already resolved above and were not reactive.
     if (parts.length === 1) {
-        const state = resolvePath(ctx, parts);
-
-        return isValtioProxy(state) ? { state } : undefined;
+        return undefined;
     }
 
     const parent = resolvePath(ctx, [parts[0], ...parts.slice(1, -1)]);

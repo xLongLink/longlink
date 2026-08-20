@@ -50,7 +50,7 @@ export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar
 
 /** Returns whether a value is one of an adapter's supported XML values. */
 export function isXmlEnum<const T extends XmlScalar>(value: unknown, values: readonly T[]): value is T {
-    return values.includes(value as T);
+    return values.some((item) => item === value);
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */

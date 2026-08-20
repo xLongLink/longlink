@@ -160,19 +160,17 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
 
 /** Validates a single setup-only runtime declaration. */
 function validateSetupNode(node: ASTNode): void {
+    // Setup declarations require a static safe key.
+    if (!node.params.id) throw new Error(`${node.name} requires a string id`);
+
+    if (node.params.id.kind !== 'text') throw new Error(`${node.name} id must be literal text`);
+
+    if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
+        throw new Error(`${node.name} id must be a safe property name`);
+    }
+
     // Validate state declarations.
     if (node.name === 'State') {
-        // Require a declared state key.
-        if (!node.params.id) throw new Error('State requires a string id');
-
-        // Keep state keys static.
-        if (node.params.id.kind !== 'text') throw new Error('State id must be literal text');
-
-        // Prevent unsafe state property names.
-        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
-            throw new Error('State id must be a safe property name');
-        }
-
         const unsafeAttributes = Object.keys(node.params).filter((name) => name !== 'id' && !isSafePropertyName(name));
 
         // Reject unsafe state attribute names.
@@ -186,21 +184,10 @@ function validateSetupNode(node: ASTNode): void {
 
     // Validate query declarations.
     else {
-        // Require a declared query key.
-        if (!node.params.id) throw new Error('Query requires a string id');
-
         // Require a query source path.
         if (!node.params.path) throw new Error('Query requires a string path');
 
         // Keep Query declarations leaf-only.
         if (node.children.length > 0) throw new Error('Query cannot have children');
-
-        // Keep query keys static.
-        if (node.params.id.kind !== 'text') throw new Error('Query id must be literal text');
-
-        // Prevent unsafe query property names.
-        if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
-            throw new Error('Query id must be a safe property name');
-        }
     }
 }

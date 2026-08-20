@@ -1,15 +1,14 @@
-import { hasProtocol, parsePath, parseURL } from 'ufo';
-
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const RELATIVE_URL_ORIGIN = 'http://longlink.local';
 
 /** Resolves an app-relative URL against a base URL string. */
 function resolveUrl(baseUrl: string, path: string): string {
-    const base = parseURL(baseUrl);
-    const parsedPath = parsePath(path);
-    const baseOrigin = base.protocol && base.host ? `${base.protocol}//${base.host}` : '';
+    const base = new URL(baseUrl, RELATIVE_URL_ORIGIN);
+    const pathUrl = new URL(path, RELATIVE_URL_ORIGIN);
+    const baseOrigin = base.origin === RELATIVE_URL_ORIGIN ? '' : base.origin;
     const baseSegments = base.pathname.split('/').filter(Boolean);
-    const pathSegments = parsedPath.pathname.split('/');
+    const pathEnd = path.search(/[?#]/);
+    const pathSegments = (pathEnd === -1 ? path : path.slice(0, pathEnd)).split('/');
     const resolvedSegments = [...baseSegments];
 
     // Apply relative path segments on top of the base path.
@@ -29,15 +28,15 @@ function resolveUrl(baseUrl: string, path: string): string {
         resolvedSegments.push(segment);
     }
 
-    return `${baseOrigin}/${resolvedSegments.join('/')}${parsedPath.search}${parsedPath.hash}`;
+    return `${baseOrigin}/${resolvedSegments.join('/')}${pathUrl.search}${pathUrl.hash}`;
 }
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
 function isAppRelativeUrl(path: string): boolean {
     const value = path.trim();
 
-    // Block Windows separators and explicit protocols.
-    if (value.includes('\\') || hasProtocol(value)) return false;
+    // Block Windows separators before URL parsing.
+    if (value.includes('\\')) return false;
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
@@ -90,20 +89,13 @@ export function resolveAnchorUrl(baseUrl: string, path: string): string {
     // Drop empty and backslash-containing anchors.
     if (!value || value.includes('\\')) return '';
 
-    // Validate absolute browser links before returning them.
-    if (hasProtocol(value)) {
-        // Parse protocols using the platform URL implementation.
-        try {
-            const url = new URL(value);
+    // Preserve allowed absolute browser links.
+    try {
+        const url = new URL(value);
 
-            return SAFE_ANCHOR_PROTOCOLS.has(url.protocol) ? value : '';
-        } catch {
-            return '';
-        }
+        return SAFE_ANCHOR_PROTOCOLS.has(url.protocol) ? value : '';
+    } catch {
+        // Resolve only safe app-relative links.
+        return isAppRelativeUrl(value) ? resolveUrl(baseUrl, value) : '';
     }
-
-    // Drop relative anchors that resolve outside the app.
-    if (!isAppRelativeUrl(value)) return '';
-
-    return resolveUrl(baseUrl, value);
 }
