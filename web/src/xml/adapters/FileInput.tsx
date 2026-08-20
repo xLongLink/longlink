@@ -3,7 +3,7 @@ import type { Props } from '../types';
 import { resolveInputStatus } from '../input';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { FIELD_STATUS_VARIANTS, FILE_INPUT_MODES } from '../constants';
+import { FIELD_STATUS_VARIANTS } from '../constants';
 import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
 import { FileInput as AstryxFileInput } from '@astryxdesign/core/FileInput';
 
@@ -52,7 +52,7 @@ export function FileInput({ props }: Props) {
             labelTooltip={typeof labelTooltip === 'string' ? labelTooltip : undefined}
             maxFiles={typeof maxFiles === 'number' ? maxFiles : undefined}
             maxSize={typeof maxSize === 'number' ? maxSize : undefined}
-            mode={isXmlEnum(mode, FILE_INPUT_MODES) ? mode : 'input'}
+            mode={mode === 'dropzone' ? mode : 'input'}
             onChange={(value) => binding.setValue(value == null ? value : ref(value))}
             placeholder={typeof placeholder === 'string' ? placeholder : undefined}
             status={resolveInputStatus(props, ctx)}

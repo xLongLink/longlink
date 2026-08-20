@@ -11,17 +11,14 @@ import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types'
 import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
-type ActionStep =
-    | { kind: 'control'; node: ASTNode }
-    | { kind: 'patch'; props: ASTProps }
-    | { kind: 'request'; props: ASTProps };
+type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
 
 const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 type ActionPlan = {
-    controls: ASTNode[];
+    control: ASTNode;
     steps: ActionStep[];
 };
 
@@ -43,7 +40,7 @@ export function Action({ props, nodes }: Props) {
 
     return (
         <ActionHandlerContext.Provider value={handleAction}>
-            {renderNode(plan.controls, ctx)}
+            {renderNode([plan.control], ctx)}
         </ActionHandlerContext.Provider>
     );
 }
@@ -52,39 +49,53 @@ export function Action({ props, nodes }: Props) {
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     assertAllowedProps(props, ACTION_ALLOWED_PROPS, 'Action');
 
-    const controls: ASTNode[] = [];
-    const steps = nodes.map((node): ActionStep => {
+    const steps: ActionStep[] = [];
+    let control: ASTNode | undefined;
+
+    for (const node of nodes) {
         if (node.name === 'Request') {
+            if (control) {
+                throw new Error('Action effects must precede its Button or Link trigger');
+            }
             if (node.children.length > 0) {
                 throw new Error('Request cannot have children');
             }
 
             assertAllowedProps(node.params, REQUEST_ALLOWED_PROPS, 'Request');
-            return { kind: 'request', props: node.params };
+            steps.push({ kind: 'request', props: node.params });
+            continue;
         }
 
         if (node.name === 'Patch') {
+            if (control) {
+                throw new Error('Action effects must precede its Button or Link trigger');
+            }
             if (node.children.length > 0) {
                 throw new Error('Patch cannot have children');
             }
 
             assertAllowedProps(node.params, PATCH_ALLOWED_PROPS, 'Patch');
-            return { kind: 'patch', props: node.params };
+            steps.push({ kind: 'patch', props: node.params });
+            continue;
         }
 
         if (node.name === 'Button' || node.name === 'Link') {
-            controls.push(node);
-            return { kind: 'control', node };
+            if (control) {
+                throw new Error('Action requires exactly one direct Button or Link trigger');
+            }
+
+            control = node;
+            continue;
         }
 
         throw new Error(`Action does not support direct ${node.name} children`);
-    });
-
-    if (controls.length === 0) {
-        throw new Error('Action requires at least one direct Button or Link trigger');
     }
 
-    return { controls, steps };
+    if (!control) {
+        throw new Error('Action requires exactly one direct Button or Link trigger');
+    }
+
+    return { control, steps };
 }
 
 /** Executes one Action plan in document order. */
@@ -110,12 +121,12 @@ async function executeAction(
             await executePatch(step.props, ctx, services);
             continue;
         }
+    }
 
-        const url = resolveActionNavigationUrl(step.node, ctx, services);
-        if (url) {
-            services.navigate(url);
-            return;
-        }
+    const url = resolveActionNavigationUrl(plan.control, ctx, services);
+    if (url) {
+        services.navigate(url);
+        return;
     }
 
     if (closeOnSuccess) {
@@ -164,6 +175,11 @@ async function executeRequest(
         throw new Error('GET requests cannot send payloads');
     }
 
+    const closeDialog = resolveXml(props, 'closeDialog', ctx);
+    if (closeDialog !== undefined && typeof closeDialog !== 'boolean') {
+        throw new Error('Request closeDialog must resolve to a boolean');
+    }
+
     const headers = new Headers({ Accept: 'application/json' });
     let body: FormData | string | undefined;
 
@@ -180,25 +196,19 @@ async function executeRequest(
         throw new ApiError(`API request failed (${response.status})`, response.status);
     }
 
-    const closeDialog = resolveXml(props, 'closeDialog', ctx);
-    if (closeDialog !== undefined && typeof closeDialog !== 'boolean') {
-        throw new Error('Request closeDialog must resolve to a boolean');
-    }
-
     return { closeDialog: closeDialog === true, status: response.status };
 }
 
 /** Updates a State value or invalidates one State or Query setup slot. */
 async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServices): Promise<void> {
     const stateAttribute = readXmlProp(props, 'state');
-    if (
-        stateAttribute?.kind !== 'text' ||
-        !stateAttribute.value.trim() ||
-        !isSafePropertyName(stateAttribute.value.trim())
-    ) {
+    if (stateAttribute?.kind !== 'text') {
         throw new Error('Patch requires a literal state ID');
     }
     const state = stateAttribute.value.trim();
+    if (!state || !isSafePropertyName(state)) {
+        throw new Error('Patch requires a literal state ID');
+    }
     const valueAttribute = readXmlProp(props, 'value');
     const invalidate = resolveXml(props, 'invalidate', ctx);
     if ((valueAttribute != null) === (invalidate === true)) {
@@ -222,12 +232,12 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
 
     const value = resolveXmlValue(props, 'value', ctx);
-    if (
-        value == null ||
-        typeof value !== 'object' ||
-        Array.isArray(value) ||
-        (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
-    ) {
+    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error('Patch value must evaluate to an object');
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) {
         throw new Error('Patch value must evaluate to an object');
     }
 

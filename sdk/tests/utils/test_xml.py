@@ -76,6 +76,7 @@ VALID_FRAGMENTS = [
 
 INVALID_FRAGMENTS = [
     ("invalid-action-effect-order", '<Action><Button label="Save" /><Request url="/profile" method="PATCH" /></Action>'),
+    ("invalid-action-multiple-controls", '<Action><Button label="Save" /><Link to="/profile">Profile</Link></Action>'),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
     ("badge-label-attribute", '<Badge label="Active" />'),

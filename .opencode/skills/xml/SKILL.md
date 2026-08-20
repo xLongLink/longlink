@@ -26,7 +26,7 @@ Keep improving the XML:
   </Action>
 
   <Badge>Active
-    <Icon slot="icon" icon="check" />
+    <Icon icon="check" />
   </Badge>
 </longlink>
 ```

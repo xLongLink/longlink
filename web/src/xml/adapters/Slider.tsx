@@ -40,21 +40,32 @@ export function Slider({ props }: Props) {
         throw new Error('Slider minStepsBetweenThumbs must be a non-negative integer');
     }
 
+    const description = resolveXml(props, 'description', ctx);
+    const disabledMessage = resolveXml(props, 'disabledMessage', ctx);
+    const htmlName = resolveXml(props, 'htmlName', ctx);
+    const isDisabled = resolveXml(props, 'isDisabled', ctx);
+    const isLabelHidden = resolveXml(props, 'isLabelHidden', ctx);
+    const isOptional = resolveXml(props, 'isOptional', ctx);
+    const isRequired = resolveXml(props, 'isRequired', ctx);
+    const max = resolveXml(props, 'max', ctx);
+    const min = resolveXml(props, 'min', ctx);
+    const step = resolveXml(props, 'step', ctx);
+
     const commonProps = {
-        description: resolveStringProp(props, 'description', ctx),
-        disabledMessage: resolveStringProp(props, 'disabledMessage', ctx),
-        htmlName: resolveStringProp(props, 'htmlName', ctx),
-        isDisabled: resolveBooleanProp(props, 'isDisabled', ctx),
-        isLabelHidden: resolveBooleanProp(props, 'isLabelHidden', ctx),
-        isOptional: resolveBooleanProp(props, 'isOptional', ctx),
-        isRequired: resolveBooleanProp(props, 'isRequired', ctx),
+        description: typeof description === 'string' ? description : undefined,
+        disabledMessage: typeof disabledMessage === 'string' ? disabledMessage : undefined,
+        htmlName: typeof htmlName === 'string' ? htmlName : undefined,
+        isDisabled: typeof isDisabled === 'boolean' ? isDisabled : undefined,
+        isLabelHidden: typeof isLabelHidden === 'boolean' ? isLabelHidden : undefined,
+        isOptional: typeof isOptional === 'boolean' ? isOptional : undefined,
+        isRequired: typeof isRequired === 'boolean' ? isRequired : undefined,
         label: requireXmlString(props, 'label', ctx, 'Slider'),
         labelTooltip: typeof labelTooltip === 'string' ? labelTooltip : undefined,
-        max: resolveNumberProp(props, 'max', ctx),
-        min: resolveNumberProp(props, 'min', ctx),
+        max: typeof max === 'number' ? max : undefined,
+        min: typeof min === 'number' ? min : undefined,
         orientation: orientationValue,
         status: resolveInputStatus(props, ctx),
-        step: resolveNumberProp(props, 'step', ctx),
+        step: typeof step === 'number' ? step : undefined,
         valueDisplay: valueDisplayValue,
         width: typeof width === 'string' || typeof width === 'number' ? width : undefined,
     };
@@ -71,22 +82,4 @@ export function Slider({ props }: Props) {
     }
 
     return <AstryxSlider {...commonProps} onChange={binding.setValue} value={binding.value} />;
-}
-
-/** Resolves an optional XML boolean prop. */
-function resolveBooleanProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
-    const value = resolveXml(props, name, ctx);
-    return typeof value === 'boolean' ? value : undefined;
-}
-
-/** Resolves an optional XML number prop. */
-function resolveNumberProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
-    const value = resolveXml(props, name, ctx);
-    return typeof value === 'number' ? value : undefined;
-}
-
-/** Resolves an optional XML string prop. */
-function resolveStringProp(props: Props['props'], name: string, ctx: ReturnType<typeof useXmlRuntime>['scope']) {
-    const value = resolveXml(props, name, ctx);
-    return typeof value === 'string' ? value : undefined;
 }

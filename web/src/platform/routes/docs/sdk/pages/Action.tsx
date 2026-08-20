@@ -9,7 +9,7 @@ export const metadata = {
     path: '/docs/sdk/pages/action',
     title: 'Action',
     description:
-        'Use Action to run requests and state changes in order when someone presses a Button or Link. A control with to navigates and ends the action.',
+        'Use Action to run requests and state changes in order when someone presses its one terminal Button or Link. A control with to navigates and ends the action.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -30,7 +30,7 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <Text as="p">
                     {
-                        'Use Action to run requests and state changes in order when someone presses a Button or Link. A control with to navigates and ends the action.'
+                        'Use Action to run requests and state changes in order when someone presses its one terminal Button or Link. A control with to navigates and ends the action.'
                     }
                 </Text>
                 <Table

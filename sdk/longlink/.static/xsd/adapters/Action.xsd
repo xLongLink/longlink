@@ -3,7 +3,7 @@
   <xsd:include schemaLocation="../types.xsd" />
   <xsd:complexType name="ActionType">
     <xsd:sequence>
-      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
         <xsd:element name="Request">
           <xsd:complexType>
             <xsd:attribute name="url" type="xsd:string" use="required" />
@@ -20,6 +20,8 @@
             <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true" />
           </xsd:complexType>
         </xsd:element>
+      </xsd:choice>
+      <xsd:choice>
         <xsd:element ref="Button" />
         <xsd:element ref="Link" />
       </xsd:choice>

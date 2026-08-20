@@ -6,6 +6,6 @@
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">
-    <xsd:annotation><xsd:documentation>Renders a status or category badge from child content. Its optional Icon child fills the icon slot and may declare slot="icon".</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders a status or category badge from child content. Its optional direct Icon child fills the icon slot.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

@@ -30,10 +30,10 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <Text as="p">{metadata.description}</Text>
                 <Table
-                    data={[
-                        ['if', 'Conditional rendering expression.'],
-                        ['slot', 'Named child slot.'],
-                    ].map(([parameter, description]) => ({ parameter, description }))}
+                    data={[['if', 'Conditional rendering expression.']].map(([parameter, description]) => ({
+                        parameter,
+                        description,
+                    }))}
                     columns={[
                         { key: 'parameter', header: 'Parameter', width: proportional(1) },
                         { key: 'description', header: 'Description', width: proportional(3) },
