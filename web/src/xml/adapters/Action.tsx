@@ -4,27 +4,30 @@ import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
-import { resolveRequestUrl } from '../core/url';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
+import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
 import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
-type ActionEffect = { kind: 'request' | 'patch'; props: ASTProps };
+type ActionStep =
+    | { kind: 'button'; node: ASTNode }
+    | { kind: 'link'; node: ASTNode }
+    | { kind: 'patch' | 'request'; props: ASTProps };
 
 const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 type ActionPlan = {
-    button: ASTNode;
-    effects: ActionEffect[];
+    controls: ASTNode[];
+    steps: ActionStep[];
 };
 
 export const ActionHandlerContext = createContext<(() => void) | null>(null);
 
-/** Runs ordered request and state effects from its direct child button. */
+/** Runs ordered effects from any child Button or Link trigger. */
 export function Action({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const closeDialog = useContext(DialogCloseContext);
@@ -40,43 +43,48 @@ export function Action({ props, nodes }: Props) {
 
     return (
         <ActionHandlerContext.Provider value={handleAction}>
-            {renderNode([plan.button], ctx)}
+            {renderNode(plan.controls, ctx)}
         </ActionHandlerContext.Provider>
     );
 }
 
-/** Validates the direct Action children and converts them into executable effects. */
+/** Validates direct Action children and converts them into ordered executable steps. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     assertAllowedProps(props, ACTION_ALLOWED_PROPS, 'Action');
 
-    const button = nodes.at(-1);
-    if (!button || button.name !== 'Button') {
-        throw new Error('Action requires one direct Button trigger after its effects');
-    }
-
-    const effects: ActionEffect[] = nodes.slice(0, -1).map((node): ActionEffect => {
-        if (node.children.length > 0) {
-            throw new Error(`${node.name} cannot have children`);
-        }
-
+    const controls: ASTNode[] = [];
+    const steps = nodes.map((node): ActionStep => {
         if (node.name === 'Request') {
+            if (node.children.length > 0) {
+                throw new Error('Request cannot have children');
+            }
+
             assertAllowedProps(node.params, REQUEST_ALLOWED_PROPS, 'Request');
             return { kind: 'request', props: node.params };
         }
 
         if (node.name === 'Patch') {
+            if (node.children.length > 0) {
+                throw new Error('Patch cannot have children');
+            }
+
             assertAllowedProps(node.params, PATCH_ALLOWED_PROPS, 'Patch');
             return { kind: 'patch', props: node.params };
+        }
+
+        if (node.name === 'Button' || node.name === 'Link') {
+            controls.push(node);
+            return node.name === 'Button' ? { kind: 'button', node } : { kind: 'link', node };
         }
 
         throw new Error(`Action does not support direct ${node.name} children`);
     });
 
-    if (effects.length === 0) {
-        throw new Error('Action requires at least one Request or Patch effect');
+    if (controls.length === 0) {
+        throw new Error('Action requires at least one direct Button or Link trigger');
     }
 
-    return { button, effects };
+    return { controls, steps };
 }
 
 /** Executes one Action plan in document order. */
@@ -90,13 +98,27 @@ async function executeAction(
     let closeOnSuccess = false;
     let status: number | null = null;
 
-    for (const effect of plan.effects) {
-        if (effect.kind === 'request') {
-            const result = await executeRequest(effect.props, ctx, services.requestBaseUrl);
+    for (const step of plan.steps) {
+        if (step.kind === 'request') {
+            const result = await executeRequest(step.props, ctx, services.requestBaseUrl);
             closeOnSuccess ||= result.closeDialog;
             status = result.status;
-        } else {
-            await executePatch(effect.props, ctx, services);
+            continue;
+        }
+
+        if (step.kind === 'patch') {
+            await executePatch(step.props, ctx, services);
+            continue;
+        }
+
+        if (step.kind !== 'button' && step.kind !== 'link') {
+            continue;
+        }
+
+        const url = resolveActionNavigationUrl(step.node, ctx, services);
+        if (url) {
+            services.navigate(url);
+            return;
         }
     }
 
@@ -107,6 +129,22 @@ async function executeAction(
     if (status !== null) {
         toast({ body: `Request completed with status ${status}` });
     }
+}
+
+/** Resolves a terminal navigation destination from one Action control. */
+function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: RuntimeServices): string {
+    const to = resolveXml(node.params, 'to', ctx);
+    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
+    if (navigationUrl) {
+        return navigationUrl;
+    }
+
+    if (node.name !== 'Link') {
+        return '';
+    }
+
+    const href = resolveXml(node.params, 'href', ctx);
+    return resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
 }
 
 /** Sends one configured app-relative request. */

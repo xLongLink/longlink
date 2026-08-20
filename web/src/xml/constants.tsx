@@ -1,5 +1,4 @@
 /** Enumerated XML values mirrored from sdk/longlink/.static/xsd/types.xsd. */
-export const ELEVATIONS = ['none', 'low', 'med', 'high'] as const;
 export const FIELD_STATUS_VARIANTS = ['attached', 'detached', 'tooltip'] as const;
 export const LAYER_PLACEMENTS = ['above', 'below', 'start', 'end'] as const;
 export const SELECTOR_VARIANTS = ['input', 'ghost'] as const;
@@ -40,7 +39,6 @@ export const COMPACT_SIZES = ['sm', 'md'] as const;
 export const ORIENTATIONS = ['horizontal', 'vertical'] as const;
 export const INPUT_STATUSES = ['warning', 'error', 'success'] as const;
 export const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as const;
-export const BUTTON_HTML_TYPES = ['button', 'submit', 'reset'] as const;
 export const FILE_INPUT_MODES = ['dropzone', 'input'] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;

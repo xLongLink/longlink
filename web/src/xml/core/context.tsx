@@ -13,6 +13,7 @@ export function createContext(params: Record<string, string> = {}): XmlRuntime {
         scope: { bindings: { params } },
         services: {
             invalidate: async () => {},
+            navigate: () => {},
             navigationBaseUrl: '',
             requestBaseUrl: '',
             setups: {},

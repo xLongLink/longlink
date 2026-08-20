@@ -8,7 +8,7 @@ export const metadata = {
     path: '/docs/sdk/pages/link',
     title: 'Link',
     description:
-        'A styled anchor for inline and standalone text navigation. Supports external links, underline variants, tooltips, and custom link components for router integration. Use it for navigating between pages or to external URLs.',
+        'A styled anchor for inline and standalone text navigation. Inside Action, it can follow requests and patches as the terminal navigation step.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -31,7 +31,12 @@ export default function DocsArticleRoute() {
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
-                <CodeBlock code={'<Link to="/orders/${order.id}">Open order</Link>'} language="xml" />
+                <CodeBlock
+                    code={
+                        '<Link to="/orders/${order.id}">Open order</Link>\n\n<Action>\n  <Request method="POST" url="/api/orders" json="${order}" />\n  <Link to="/orders/${order.id}">Create and open order</Link>\n</Action>'
+                    }
+                    language="xml"
+                />
             </Stack>
         </Article>
     );

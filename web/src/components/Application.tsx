@@ -63,9 +63,20 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
 
         const context = createXmlContext(activeRouteMatch?.params ?? {});
 
+        // Keep XML-triggered application navigation within the client router.
+        context.services.navigate = (url) => {
+            const destination = new URL(url, window.location.origin);
+
+            if (destination.origin === window.location.origin) {
+                navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+                return;
+            }
+
+            window.location.assign(url);
+        };
         context.services.navigationBaseUrl = navigationBaseUrl;
         return context;
-    }, [activePage, activeRouteMatch?.params, navigationBaseUrl]);
+    }, [activePage, activeRouteMatch?.params, navigate, navigationBaseUrl]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
         queryKey: ['application-page', pagesUrl, activePage?.path],

@@ -8,7 +8,7 @@ export const metadata = {
     path: '/docs/sdk/pages/action',
     title: 'Action',
     description:
-        'Use Action to carry out a task after someone submits a form or presses a button, such as saving changes.',
+        'Use Action to run requests and state changes in order when someone presses a Button or Link. A control with to navigates and ends the action.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -29,7 +29,7 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <Text as="p">
                     {
-                        'Use Action to carry out a task after someone submits a form or presses a button, such as saving changes.'
+                        'Use Action to run requests and state changes in order when someone presses a Button or Link. A control with to navigates and ends the action.'
                     }
                 </Text>
                 <Heading id="usage" level={2}>
@@ -37,7 +37,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Action>\n  <Request url="/api/orders/${order.id}/complete" method="PATCH" />\n  <Patch state="pager" value="${{ page: pager.page + 1 }}" />\n  <Patch state="orders" invalidate="true" />\n  <Button label="Complete" />\n</Action>'
+                        '<Action>\n  <Request url="/api/orders/${order.id}/complete" method="PATCH" />\n  <Patch state="orders" invalidate="true" />\n  <Button label="Complete and view order" to="/orders/${order.id}" />\n</Action>'
                     }
                     language="xml"
                 />

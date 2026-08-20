@@ -26,7 +26,7 @@
                         json="${{ name: draft.name, price: draft.price }}"
                     />
                     <Patch state="items" invalidate="true" />
-                    <Button isDisabled="${draft.name === ''}" variant="primary" label="Create item" />
+                    <Button variant="primary" label="Create item" />
                 </Action>
             </Stack>
         </Dialog>

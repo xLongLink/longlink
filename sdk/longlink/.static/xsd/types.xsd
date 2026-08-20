@@ -20,14 +20,6 @@
       <xsd:minExclusive value="0" />
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="ElevationType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="none" />
-      <xsd:enumeration value="low" />
-      <xsd:enumeration value="med" />
-      <xsd:enumeration value="high" />
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="FieldStatusVariantType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="attached" />
@@ -90,13 +82,6 @@
       <xsd:enumeration value="secondary" />
       <xsd:enumeration value="ghost" />
       <xsd:enumeration value="destructive" />
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="ButtonHtmlType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="button" />
-      <xsd:enumeration value="submit" />
-      <xsd:enumeration value="reset" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="DialogPurposeType">

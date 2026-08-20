@@ -8,7 +8,7 @@ export const metadata = {
     path: '/docs/sdk/pages/button',
     title: 'Button',
     description:
-        'Button triggers an action when clicked. Use it for form submissions, confirmations, navigation, or any interaction that needs a clear call to action.',
+        'Button triggers an action when clicked. Use it for form submissions, confirmations, or simple application navigation with to.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -33,7 +33,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <CodeBlock
                     code={
-                        '<Action>\n  <Request url="/api/orders" method="POST" />\n  <Button label="Save" variant="primary" />\n</Action>'
+                        '<Action>\n  <Request url="/api/orders" method="POST" />\n  <Button label="Save" variant="primary" />\n</Action>\n\n<Button label="View orders" to="/orders" />'
                     }
                     language="xml"
                 />

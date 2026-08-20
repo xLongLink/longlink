@@ -5,14 +5,7 @@
     <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" /></xsd:sequence>
     <xsd:attribute name="label" type="NonBlankStringType" use="required" />
     <xsd:attribute name="variant" type="ButtonVariantType" default="secondary" />
-    <xsd:attribute name="size" type="SizeType" default="md" />
-    <xsd:attribute name="type" type="ButtonHtmlType" default="button" />
-    <xsd:attribute name="isDisabled" type="xsd:string" />
-    <xsd:attribute name="isLoading" type="xsd:string" />
-    <xsd:attribute name="isIconOnly" type="xsd:string" />
-    <xsd:attribute name="tooltip" type="xsd:string" />
-    <xsd:attribute name="elevation" type="ElevationType" />
-    <xsd:attribute name="isInterruptible" type="xsd:boolean" />
+    <xsd:attribute name="to" type="xsd:string" />
     <xsd:attributeGroup ref="XmlRuntimeAttributes" />
   </xsd:complexType>
   <xsd:element name="Button" type="ButtonType">

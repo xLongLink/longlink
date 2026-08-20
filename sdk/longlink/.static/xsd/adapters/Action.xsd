@@ -20,12 +20,13 @@
             <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true" />
           </xsd:complexType>
         </xsd:element>
+        <xsd:element ref="Button" />
+        <xsd:element ref="Link" />
       </xsd:choice>
-      <xsd:element ref="Button" />
     </xsd:sequence>
     <xsd:attribute name="if" type="xsd:string" />
   </xsd:complexType>
   <xsd:element name="Action" type="ActionType">
-    <xsd:annotation><xsd:documentation>Runs ordered request and state effects from its child button.</xsd:documentation></xsd:annotation>
+    <xsd:annotation><xsd:documentation>Runs ordered request, state, and navigation effects from child buttons and links.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>
