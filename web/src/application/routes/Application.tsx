@@ -6,7 +6,7 @@ import { ApplicationRuntime } from '@/components/Application';
 /** Renders an SDK application from its local page manifest. */
 export default function Application() {
     return (
-        <ApplicationRuntime navigationBaseUrl="/" pagesUrl="/pages.json" requestBaseUrl="/">
+        <ApplicationRuntime>
             {({ content, tabs }) => (
                 <Platform
                     action={

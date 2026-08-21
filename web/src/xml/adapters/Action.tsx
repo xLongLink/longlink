@@ -14,7 +14,6 @@ import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema 
 
 type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
 
-const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
@@ -65,7 +64,7 @@ export function Action({ props, nodes }: Props) {
 
 /** Validates direct Action children and converts them into ordered executable steps. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
-    assertAllowedProps(props, ACTION_ALLOWED_PROPS, 'Action');
+    assertAllowedProps(props, new Set(), 'Action');
 
     const steps: ActionStep[] = [];
     let control: ASTNode | undefined;

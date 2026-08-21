@@ -11,7 +11,7 @@ export function compileProps(props: Record<string, string>): ASTProps {
 
 /** Renders XML AST to static markup. */
 export function renderXmlToMarkup(ast: ASTNode[], ctx: XmlRuntime = createContext(), baseUrl = ''): string {
-    return renderToStaticMarkup(
-        <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} baseUrl={baseUrl} ctx={ctx} />
-    );
+    ctx.services.requestBaseUrl = baseUrl;
+
+    return renderToStaticMarkup(<RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={ctx} />);
 }

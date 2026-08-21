@@ -8,28 +8,27 @@ import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { pageSchema, type RuntimePage } from '@/xml/pages';
 import { useEffect, useMemo, type ReactNode } from 'react';
+import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 
 type ApplicationRuntimeProps = {
-    children: (application: { content: ReactNode; tabs: readonly ApplicationTab[] }) => ReactNode;
-    navigationBaseUrl: string;
-    pagesUrl: string;
-    requestBaseUrl: string;
-};
-
-type ApplicationTab = {
-    href: string;
-    icon?: ReturnType<typeof getIconComponent>;
-    label: string;
+    children: (application: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
+    navigationBaseUrl?: string;
+    pagesUrl?: string;
+    requestBaseUrl?: string;
 };
 
 /** Resolves and renders the current manifest-defined application page. */
-export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requestBaseUrl }: ApplicationRuntimeProps) {
-    const { '*': wildcardPath } = useParams();
+export function ApplicationRuntime({
+    children,
+    navigationBaseUrl = '/',
+    pagesUrl = '/pages.json',
+    requestBaseUrl = '/',
+}: ApplicationRuntimeProps) {
+    const { '*': routePath = '' } = useParams();
     const navigate = useNavigate();
-    const routePath = wildcardPath ?? '';
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
@@ -75,8 +74,9 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
             window.location.assign(url);
         };
         context.services.navigationBaseUrl = navigationBaseUrl;
+        context.services.requestBaseUrl = requestBaseUrl;
         return context;
-    }, [activePage, activeRouteMatch?.params, navigate, navigationBaseUrl]);
+    }, [activePage, activeRouteMatch?.params, navigate, navigationBaseUrl, requestBaseUrl]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
         queryKey: ['application-page', pagesUrl, activePage?.path],
@@ -90,7 +90,7 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
         },
         retry: false,
     });
-    const tabs = new Map<string, ApplicationTab>();
+    const tabs = new Map<string, NavigationTab>();
 
     // Build one static navigation target per runtime tab.
     for (const page of staticPages) {
@@ -126,7 +126,7 @@ export function ApplicationRuntime({ children, navigationBaseUrl, pagesUrl, requ
             />
         );
     } else if (activePageAst && runtimeContext) {
-        content = <RenderXML ast={activePageAst} baseUrl={requestBaseUrl} ctx={runtimeContext} />;
+        content = <RenderXML ast={activePageAst} ctx={runtimeContext} />;
     } else if (!activePage) {
         content = (
             <PageError
