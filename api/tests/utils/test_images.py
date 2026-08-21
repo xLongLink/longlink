@@ -27,14 +27,21 @@ async def test_metadata_fetches_digest_image_references(
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Capture GHCR requests and return the matching public image resource."""
 
+        if request.url.path == "/token":
+            captured["token"] = {"url": str(request.url)}
+            return httpx2.Response(200, json={"token": "pull-token"})
         if "/manifests/" in request.url.path:
-            captured["manifest"] = {"url": str(request.url), "accept": request.headers["Accept"]}
+            captured["manifest"] = {
+                "url": str(request.url),
+                "accept": request.headers["Accept"],
+                "authorization": request.headers["Authorization"],
+            }
             return httpx2.Response(
                 200,
                 json={"config": {"digest": "sha256:config"}},
                 headers={"Docker-Content-Digest": manifest_digest},
             )
-        captured["blob"] = {"url": str(request.url)}
+        captured["blob"] = {"url": str(request.url), "authorization": request.headers["Authorization"]}
         return httpx2.Response(
             200,
             json={
@@ -70,11 +77,16 @@ async def test_metadata_fetches_digest_image_references(
     assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]
     assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
+        "token": {
+            "url": "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull",
+        },
         "manifest": {
             "url": "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
             "accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
+            "authorization": "Bearer pull-token",
         },
         "blob": {
             "url": "https://ghcr.io/v2/longlink/dashboard/blobs/sha256:config",
+            "authorization": "Bearer pull-token",
         },
     }
