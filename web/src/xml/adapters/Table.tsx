@@ -8,8 +8,8 @@ import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@as
 
 type TableRow = Record<string, unknown>;
 
-const tablePropsSchema = z.object({ data: z.unknown().optional(), idKey: z.string().optional().catch(undefined) });
-const tableColumnPropsSchema = z.object({ header: z.string().optional().catch(undefined) });
+const tablePropsSchema = z.object({ data: z.unknown().optional(), idKey: z.string().optional() });
+const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 
 export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
@@ -20,7 +20,7 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires a data attribute');
     }
 
-    const { data } = resolveXmlProps(props, ctx, { data: 'raw' }, tablePropsSchema);
+    const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
     const rows = Array.isArray(data)
         ? data.filter((row): row is TableRow => row != null && typeof row === 'object' && !Array.isArray(row))
         : [];
@@ -81,6 +81,5 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    const { idKey } = resolveXmlProps(props, ctx, { idKey: 'scalar' }, tablePropsSchema);
     return <AstryxTable columns={columns} data={rows} emptyState={false} idKey={idKey} />;
 }

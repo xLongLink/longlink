@@ -6,17 +6,9 @@ from src.database.services import operations
 async def schedule_reconciliation() -> None:
     """Schedule deployment reconciliation for every current resource desired state."""
 
-    # Discover deployment reconciliation targets in dependency order.
+    # Schedule deployment reconciliation targets in dependency order.
     async with session_scope() as session:
-        # Create or reuse every desired-state operation in one transaction.
-        for kind, target_id, compute_id in await operations.discover(session):
-            # Skip targets whose Compute was deleted after release discovery.
-            await operations.enqueue(
-                session,
-                compute_id,
-                kind=kind,
-                target_id=target_id,
-            )
+        await operations.schedule_reconciliation(session)
         await session.commit()
 
 

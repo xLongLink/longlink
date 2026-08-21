@@ -86,7 +86,6 @@ async def create(
 
     await operations.enqueue(
         session,
-        organization.compute_id,
         kind=OperationKind.application_create,
         target_id=application.id,
     )
@@ -125,7 +124,6 @@ async def release(
     application.updated_id = user_id
     await operations.enqueue(
         session,
-        compute_id,
         kind=OperationKind.application_create,
         target_id=application.id,
     )
@@ -163,7 +161,6 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
 
     await operations.enqueue(
         session,
-        compute_id,
         kind=OperationKind.application_delete,
         target_id=application.id,
     )

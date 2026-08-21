@@ -56,7 +56,7 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
 
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
-    await queue_operation(infrastructure.compute.id, target_id=infrastructure.compute.id)
+    await queue_operation(target_id=infrastructure.compute.id)
     claimed = await claim_operation()
     assert claimed is not None
     await complete_operation(claimed.id)

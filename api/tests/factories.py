@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from sqlmodel import col
 from sqlalchemy import update
 from dataclasses import dataclass
+from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -25,13 +26,12 @@ class Infrastructure:
     storage: StorageRegistry
 
 
-async def queue_operation(compute_id: UUID, *, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
+async def queue_operation(*, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
     """Queue one standalone Operation through an explicit test transaction."""
 
     # Tests without a resource command transaction commit their queued work here.
     async with session_scope() as session:
-        operation = await operations.enqueue(session, compute_id, kind=kind, target_id=target_id)
-        assert operation is not None
+        operation = await operations.enqueue(session, kind=kind, target_id=target_id)
         await session.commit()
         return operation
 
@@ -63,7 +63,7 @@ async def fail_operation(operation_id: UUID) -> Operation | None:
         return operation
 
 
-async def fetch_operations() -> list[Operation]:
+async def fetch_operations() -> Sequence[Operation]:
     """Fetch queued Operations through an explicit test session."""
 
     async with session_scope() as session:

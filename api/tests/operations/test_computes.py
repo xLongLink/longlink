@@ -52,20 +52,14 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    await queue_operation(
-        compute_registry.id,
-        target_id=compute_registry.id,
-    )
+    await queue_operation(target_id=compute_registry.id)
     claimed = await claim_operation()
     assert claimed is not None
 
     completed = await execute(claimed, compute_operations.create)
 
     # Reconcile the Compute again after a deployment schedules another pass.
-    await queue_operation(
-        compute_registry.id,
-        target_id=compute_registry.id,
-    )
+    await queue_operation(target_id=compute_registry.id)
     recreated_claim = await claim_operation()
     assert recreated_claim is not None
     recreated = await execute(recreated_claim, compute_operations.create)
@@ -101,10 +95,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
-    await queue_operation(
-        compute_registry.id,
-        target_id=compute_registry.id,
-    )
+    await queue_operation(target_id=compute_registry.id)
     claimed = await claim_operation()
     assert claimed is not None
 

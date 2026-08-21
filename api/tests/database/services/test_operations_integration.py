@@ -44,13 +44,10 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
 
         # Race duplicate operation creations, then add unrelated work on another compute.
         duplicates = await asyncio.gather(
-            queue_operation(first_compute.id, target_id=first_compute.id),
-            queue_operation(first_compute.id, target_id=first_compute.id),
+            queue_operation(target_id=first_compute.id),
+            queue_operation(target_id=first_compute.id),
         )
-        waiting = await queue_operation(
-            second_compute.id,
-            target_id=second_compute.id,
-        )
+        waiting = await queue_operation(target_id=second_compute.id)
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
         claims = await asyncio.gather(claim_operation(), claim_operation())

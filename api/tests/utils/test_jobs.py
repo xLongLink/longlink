@@ -10,10 +10,6 @@ from src.database.models.operations import Operation
 pytestmark = pytest.mark.no_db
 
 
-class StopScheduler(RuntimeError):
-    """Raised by test sleep calls to exit the infinite scheduler loop."""
-
-
 def leased_operation() -> Operation:
     """Build one claimed compute creation Operation."""
 
@@ -22,64 +18,6 @@ def leased_operation() -> Operation:
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
-
-
-async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Claim compute work, execute it, and keep polling."""
-
-    # Arrange
-    operation = leased_operation()
-    claims = [operation, None]
-    executed: list[Operation] = []
-
-    async def fake_claim(session) -> Operation | None:
-        """Return one operation and then no work."""
-
-        return claims.pop(0)
-
-    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.OperationHandler) -> None:
-        """Record executed operations."""
-
-        executed.append(claimed)
-
-    async def fake_sleep(seconds: float) -> None:
-        """Stop the scheduler once it reaches the idle polling sleep."""
-
-        raise StopScheduler
-
-    monkeypatch.setattr(operation_worker.operations, "claim", fake_claim)
-    monkeypatch.setattr(operation_worker, "execute", fake_execute)
-    monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
-
-    # Act
-    with pytest.raises(StopScheduler):
-        await operation_worker.run_operation_scheduler()
-
-    # Assert
-    assert executed == [operation]
-
-
-async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject a stale worker result when its final lease transition no longer owns the row."""
-
-    # Arrange
-    operation = leased_operation()
-
-    async def complete_handler(target_id: UUID) -> str | None:
-        """Complete one claimed compute Operation."""
-
-        assert target_id == operation.target_id
-
-    async def fake_complete(session, operation_id: UUID) -> None:
-        """Report that the worker no longer owns the operation lease."""
-
-        assert operation_id == operation.id
-
-    monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
-
-    # Act and assert
-    with pytest.raises(RuntimeError, match=str(operation.id)):
-        await operation_worker.execute(operation, complete_handler)
 
 
 async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:

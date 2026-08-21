@@ -7,7 +7,7 @@ import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../c
 
 const selectorPropsSchema = z.object({ label: xmlNonblankStringSchema });
 const optionPropsSchema = z.object({
-    label: z.string().optional().catch(undefined),
+    label: z.string().optional(),
     value: xmlNonblankStringSchema,
 });
 
