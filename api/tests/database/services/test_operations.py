@@ -1,4 +1,3 @@
-from src import release as platform_release
 from uuid import uuid4
 from datetime import timedelta
 from factories import create_compute, fail_operation, claim_operation, fetch_operations, complete_operation
@@ -9,7 +8,6 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
-from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
@@ -23,8 +21,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     # Seed two operations with explicit creation timestamps.
     older_compute = await create_compute("older")
     newer_compute = await create_compute("newer")
-    older_operation = await queue(older_compute.id, target_id=older_compute.id)
-    newer_operation = await queue(newer_compute.id, target_id=newer_compute.id)
+    older_operation = await queue(target_id=older_compute.id)
+    newer_operation = await queue(target_id=newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -46,17 +44,14 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
 
     # Create duplicate and independent work for one compute.
     application = await queue(
-        compute.id,
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
     duplicate = await queue(
-        compute.id,
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
     await queue(
-        compute.id,
         kind=OperationKind.organization_create,
         target_id=organization_id,
     )
@@ -76,7 +71,6 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     assert claimed.id == application.id
     completed = await complete_operation(claimed.id)
     replacement = await queue(
-        compute.id,
         kind=OperationKind.application_create,
         target_id=first_application_id,
     )
@@ -85,7 +79,7 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     assert replacement.id != application.id
 
 
-async def test_release_schedules_all_active_application_creation_once() -> None:
+async def test_operations_service_schedules_all_active_application_creation_once() -> None:
     """Queue one reconciliation Operation for every Application lifecycle state."""
 
     compute = await create_compute("local")
@@ -144,7 +138,9 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
         session.add_all([running, pending, deleted])
         await session.commit()
 
-    await platform_release.schedule_reconciliation()
+    async with session_scope() as session:
+        await operations.schedule_reconciliation(session)
+        await session.commit()
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
@@ -156,33 +152,14 @@ async def test_release_schedules_all_active_application_creation_once() -> None:
     }
 
 
-async def test_operations_service_enqueue_ignores_missing_compute() -> None:
-    """Avoid creating work when its assigned Compute no longer exists."""
-
-    # Enqueue against an unavailable Compute registry.
-    compute_id = uuid4()
-    async with session_scope() as session:
-        operation = await operations.enqueue(
-            session,
-            compute_id,
-            kind=OperationKind.compute_create,
-            target_id=compute_id,
-        )
-        await session.commit()
-
-    # The missing Compute produces no durable Operation.
-    assert operation is None
-    assert await fetch_operations() == []
-
-
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
     """Claim the oldest available compute creation first."""
 
     # Seed two operations with explicit creation order.
     older_compute = await create_compute("older")
     newer_compute = await create_compute("newer")
-    older_operation = await queue(older_compute.id, target_id=older_compute.id)
-    await queue(newer_compute.id, target_id=newer_compute.id)
+    older_operation = await queue(target_id=older_compute.id)
+    await queue(target_id=newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -204,8 +181,8 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     # Seed active and waiting work.
     compute = await create_compute("local")
     waiting_compute = await create_compute("waiting")
-    await queue(compute.id, target_id=compute.id)
-    waiting = await queue(waiting_compute.id, target_id=waiting_compute.id)
+    await queue(target_id=compute.id)
+    waiting = await queue(target_id=waiting_compute.id)
 
     # Exercise serialization and terminal states.
     active_claim = await claim_operation()
@@ -218,21 +195,16 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     finished_claim = await claim_operation()
 
     expired_compute = await create_compute("expired")
-    expired = await queue(expired_compute.id, target_id=expired_compute.id)
+    expired = await queue(target_id=expired_compute.id)
     expired_claim = await claim_operation()
     assert expired_claim is not None
     async with session_scope() as session:
         row = await session.get(Operation, expired.id)
-        expired_compute_row = await session.get(ComputeRegistry, expired_compute.id)
         assert row is not None
-        assert expired_compute_row is not None
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
-        expired_compute_row.status = Status.running
         await session.commit()
     replacement_claim = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
-    async with session_scope() as session:
-        expired_compute_row = await session.get(ComputeRegistry, expired_compute.id)
 
     # Verify only eligible waiting work was claimed.
     assert second_active_claim is None
@@ -241,8 +213,6 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     assert replacement_claim is None
     assert expired_row.status == OperationStatus.failed
     assert expired_row.lease_expires_at is None
-    assert expired_compute_row is not None
-    assert expired_compute_row.status == Status.running
 
 
 async def test_operations_service_expired_leases_cannot_complete() -> None:
@@ -250,7 +220,7 @@ async def test_operations_service_expired_leases_cannot_complete() -> None:
 
     # Claim an operation and expire its only lease.
     compute = await create_compute("local")
-    operation = await queue(compute.id, target_id=compute.id)
+    operation = await queue(target_id=compute.id)
     claimed = await claim_operation()
     assert claimed is not None
 
@@ -276,13 +246,13 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
 
     # Seed and claim one operation.
     compute = await create_compute("local")
-    operation = await queue(compute.id, target_id=compute.id)
+    operation = await queue(target_id=compute.id)
     claimed = await claim_operation()
     assert claimed is not None
 
     # Create duplicate desired state while the claimed Operation remains immutable.
-    follow_up = await queue(compute.id, target_id=compute.id)
-    duplicate = await queue(compute.id, target_id=compute.id)
+    follow_up = await queue(target_id=compute.id)
+    duplicate = await queue(target_id=compute.id)
 
     # Verify one separate unclaimed follow-up represents the newer request.
     assert claimed.id == operation.id

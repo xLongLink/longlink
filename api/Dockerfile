@@ -5,6 +5,7 @@ COPY --chown=vp:vp web/package.json web/bun.lock ./
 RUN vp install --frozen-lockfile
 COPY --chown=vp:vp web/ ./
 COPY --chown=vp:vp api/ /repo/api/
+COPY --chown=vp:vp sdk/ /repo/sdk/
 ARG VERSION=v0.0.0
 ENV VERSION=${VERSION}
 RUN vp run build:api

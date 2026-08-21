@@ -358,7 +358,7 @@ async def create(
     except IntegrityError as exc:
         raise ConflictError("Organization already exists") from exc
 
-    await operations.enqueue(session, organization.compute_id, kind=OperationKind.organization_create, target_id=organization.id)
+    await operations.enqueue(session, kind=OperationKind.organization_create, target_id=organization.id)
     return organization
 
 
@@ -421,6 +421,6 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         )
 
     # Keep tombstones and Organization cleanup in one transaction.
-    await operations.enqueue(session, organization.compute_id, kind=OperationKind.organization_delete, target_id=organization.id)
+    await operations.enqueue(session, kind=OperationKind.organization_delete, target_id=organization.id)
 
     return organization

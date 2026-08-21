@@ -20,54 +20,48 @@ async def fetch(session: AsyncSession) -> Sequence[Operation]:
     return result.all()
 
 
-async def discover(session: AsyncSession) -> list[tuple[OperationKind, UUID, UUID]]:
-    """Discover release reconciliation targets in dependency order."""
+async def schedule_reconciliation(session: AsyncSession) -> None:
+    """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
+    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)).with_for_update())
     compute_ids = result.scalars().all()
     result = await session.execute(
-        select(col(Organization.id), col(Organization.deleted_at).is_not(None), col(Organization.compute_id)).order_by(
-            col(Organization.compute_id), col(Organization.id)
-        )
+        select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )
     organization_rows = result.all()
     result = await session.execute(
-        select(col(Application.id), col(Application.deleted_at).is_not(None), col(Organization.compute_id))
+        select(col(Application.id), col(Application.deleted_at).is_not(None))
         .join(Organization, col(Organization.id) == col(Application.organization_id))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.compute_id), col(Application.id))
     )
     application_rows = result.all()
 
-    return [
-        *((OperationKind.compute_create, compute_id, compute_id) for compute_id in compute_ids),
-        *(
-            (OperationKind.organization_delete if deleted else OperationKind.organization_create, organization_id, compute_id)
-            for organization_id, deleted, compute_id in organization_rows
-        ),
-        *(
-            (OperationKind.application_delete if deleted else OperationKind.application_create, application_id, compute_id)
-            for application_id, deleted, compute_id in application_rows
-        ),
-    ]
+    # Create or reuse every desired-state operation in one transaction.
+    for compute_id in compute_ids:
+        await enqueue(session, kind=OperationKind.compute_create, target_id=compute_id)
+    for organization_id, deleted in organization_rows:
+        await enqueue(
+            session,
+            kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
+            target_id=organization_id,
+        )
+    for application_id, deleted in application_rows:
+        await enqueue(
+            session,
+            kind=OperationKind.application_delete if deleted else OperationKind.application_create,
+            target_id=application_id,
+        )
 
 
 async def enqueue(
     session: AsyncSession,
-    compute_id: UUID,
     *,
     kind: OperationKind,
     target_id: UUID,
-) -> Operation | None:
+) -> Operation:
     """Add one Platform operation to an existing command transaction."""
-
-    if kind == OperationKind.compute_create and target_id != compute_id:
-        raise ValueError("Compute operations must target their compute registry")
-
-    # Require the assigned compute before scheduling its resource work.
-    if await session.scalar(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update()) is None:
-        return None
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     operation = await session.scalar(
