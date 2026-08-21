@@ -27,13 +27,10 @@ import type {
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
 
-const ORGANIZATION_ROLE_LABELS: Record<OrganizationRoles, string> = {
-    read: 'read',
-    write: 'write',
-    maintain: 'maintainer',
-    admin: 'admin',
-    owner: 'owner',
-};
+/** Returns the user-facing label for an organization role. */
+function roleLabel(role: OrganizationRoles) {
+    return role === 'maintain' ? 'maintainer' : role;
+}
 
 /** Renders the organization people lists for settings sections. */
 export default function People({
@@ -64,8 +61,6 @@ export default function People({
         role: OrganizationRoles;
     } | null>(null);
     const { inviteMember, changeMemberRole } = useOrganizationMembers(organizationId);
-    const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
-
     const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [
         {
             key: 'member',
@@ -98,7 +93,7 @@ export default function People({
                     size="sm"
                     isDisabled={!canManageMembers}
                     items={ROLE_NAMES.filter((role) => role !== member.role).map((role) => ({
-                        label: `Grant ${ORGANIZATION_ROLE_LABELS[role]} permission`,
+                        label: `Grant ${roleLabel(role)} permission`,
                         onClick: () => {
                             setRoleChangeTarget({ member, role });
                         },
@@ -195,7 +190,7 @@ export default function People({
                 title="Change member role"
                 description={
                     roleChangeTarget
-                        ? `Grant ${roleChangeTargetLabel} permission to ${roleChangeTarget.member.user.name} in this organization?`
+                        ? `Grant ${roleLabel(roleChangeTarget.role)} permission to ${roleChangeTarget.member.user.name} in this organization?`
                         : 'Change this member role?'
                 }
                 cancelLabel="Cancel"
@@ -215,7 +210,7 @@ export default function People({
                             role: roleChangeTarget.role,
                         });
                         toast({
-                            body: `${roleChangeTarget.member.user.name} now has ${roleChangeTargetLabel} permission`,
+                            body: `${roleChangeTarget.member.user.name} now has ${roleLabel(roleChangeTarget.role)} permission`,
                         });
                         setRoleChangeTarget(null);
                     } catch (mutationError) {

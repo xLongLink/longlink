@@ -196,84 +196,84 @@ export default function OrganizationSettings() {
                         />
                     </MenuItem>
                     {hasOrganizationApplicationAccess ? (
-                        <MenuItem icon="database" label="Database">
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Database</Heading>
-                                    <Text type="supporting">Review database usage for this organization.</Text>
+                        <>
+                            <MenuItem icon="database" label="Database">
+                                <VStack gap={4}>
+                                    <VStack gap={1}>
+                                        <Heading level={2}>Database</Heading>
+                                        <Text type="supporting">Review database usage for this organization.</Text>
+                                    </VStack>
+                                    {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
+                                        <Banner status="error" title={databaseResourceError.message} />
+                                    ) : databaseUsage === null || databaseUsage === undefined ? (
+                                        <EmptyState title="No results." isCompact />
+                                    ) : (
+                                        <Table
+                                            data={[{ name: 'PostgreSQL', usage: databaseUsage }]}
+                                            density="compact"
+                                            idKey="name"
+                                        >
+                                            <TableColumn<{ name: string; usage: number }>
+                                                field="database"
+                                                header="Database"
+                                                width={proportional(2)}
+                                            >
+                                                {(database) => (
+                                                    <HStack gap={3} align="center">
+                                                        <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
+                                                        <Text weight="semibold">{database.name}</Text>
+                                                    </HStack>
+                                                )}
+                                            </TableColumn>
+                                            <TableColumn<{ name: string; usage: number }>
+                                                align="end"
+                                                field="usage"
+                                                header="Usage"
+                                                width={proportional(1)}
+                                            >
+                                                {(database) => formatBytes(database.usage)}
+                                            </TableColumn>
+                                        </Table>
+                                    )}
                                 </VStack>
-                                {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
-                                    <Banner status="error" title={databaseResourceError.message} />
-                                ) : databaseUsage === null || databaseUsage === undefined ? (
-                                    <EmptyState title="No results." isCompact />
-                                ) : (
-                                    <Table
-                                        data={[{ name: 'PostgreSQL', usage: databaseUsage }]}
-                                        density="compact"
-                                        idKey="name"
-                                    >
-                                        <TableColumn<{ name: string; usage: number }>
-                                            field="database"
-                                            header="Database"
-                                            width={proportional(2)}
-                                        >
-                                            {(database) => (
-                                                <HStack gap={3} align="center">
-                                                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
-                                                    <Text weight="semibold">{database.name}</Text>
-                                                </HStack>
-                                            )}
-                                        </TableColumn>
-                                        <TableColumn<{ name: string; usage: number }>
-                                            align="end"
-                                            field="usage"
-                                            header="Usage"
-                                            width={proportional(1)}
-                                        >
-                                            {(database) => formatBytes(database.usage)}
-                                        </TableColumn>
-                                    </Table>
-                                )}
-                            </VStack>
-                        </MenuItem>
-                    ) : null}
-                    {hasOrganizationApplicationAccess ? (
-                        <MenuItem icon="hardDrive" label="Storage">
-                            <VStack gap={4}>
-                                <VStack gap={1}>
-                                    <Heading level={2}>Storage</Heading>
-                                    <Text type="supporting">Review storage usage for this organization.</Text>
+                            </MenuItem>
+                            <MenuItem icon="hardDrive" label="Storage">
+                                <VStack gap={4}>
+                                    <VStack gap={1}>
+                                        <Heading level={2}>Storage</Heading>
+                                        <Text type="supporting">Review storage usage for this organization.</Text>
+                                    </VStack>
+                                    {isLoading || isStorageLoading ? null : storageResourceError ? (
+                                        <Banner status="error" title={storageResourceError.message} />
+                                    ) : storageUsage === null || storageUsage === undefined ? (
+                                        <EmptyState title="No storage resources found." isCompact />
+                                    ) : (
+                                        <Table data={[storageUsage]} density="compact" idKey="bucket_name">
+                                            <TableColumn<OrganizationStorageUsageResponse>
+                                                field="storage"
+                                                header="Storage"
+                                                width={proportional(2)}
+                                            >
+                                                {(storage) => (
+                                                    <HStack gap={3} align="center">
+                                                        <S3 aria-hidden="true" className="shrink-0" />
+                                                        <Text weight="semibold">{storage.bucket_name}</Text>
+                                                    </HStack>
+                                                )}
+                                            </TableColumn>
+                                            <TableColumn<OrganizationStorageUsageResponse>
+                                                align="end"
+                                                field="usage"
+                                                header="Usage"
+                                                width={proportional(1)}
+                                            >
+                                                {(storage) => formatBytes(storage.space_used)}
+                                            </TableColumn>
+                                        </Table>
+                                    )}
                                 </VStack>
-                                {isLoading || isStorageLoading ? null : storageResourceError ? (
-                                    <Banner status="error" title={storageResourceError.message} />
-                                ) : storageUsage === null || storageUsage === undefined ? (
-                                    <EmptyState title="No storage resources found." isCompact />
-                                ) : (
-                                    <Table data={[storageUsage]} density="compact" idKey="bucket_name">
-                                        <TableColumn<OrganizationStorageUsageResponse>
-                                            field="storage"
-                                            header="Storage"
-                                            width={proportional(2)}
-                                        >
-                                            {(storage) => (
-                                                <HStack gap={3} align="center">
-                                                    <S3 aria-hidden="true" className="shrink-0" />
-                                                    <Text weight="semibold">{storage.bucket_name}</Text>
-                                                </HStack>
-                                            )}
-                                        </TableColumn>
-                                        <TableColumn<OrganizationStorageUsageResponse>
-                                            align="end"
-                                            field="usage"
-                                            header="Usage"
-                                            width={proportional(1)}
-                                        >
-                                            {(storage) => formatBytes(storage.space_used)}
-                                        </TableColumn>
-                                    </Table>
-                                )}
-                            </VStack>
-                        </MenuItem>
+                            </MenuItem>
+                        </>
                     ) : null}
                 </MenuSection>
             </Menu>

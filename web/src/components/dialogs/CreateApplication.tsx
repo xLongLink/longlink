@@ -65,7 +65,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 await handleInspectImage(value);
             } else if (step === 'metadata') {
                 // Advance only after required metadata is present.
-                if (value.image.trim().length > 0 && value.name.trim().length > 0) {
+                if (value.name.trim().length > 0) {
                     setStep('envs');
                 }
             } else {
