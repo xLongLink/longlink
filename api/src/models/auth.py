@@ -32,9 +32,6 @@ class RegistrationComplete(BaseModel):
     # Profile
     name: str = Field(min_length=1, max_length=255)
 
-    # Identity
-    email: Email = Field(max_length=254)
-
     # Authentication
     password: str = Field(min_length=1, max_length=1024)
 

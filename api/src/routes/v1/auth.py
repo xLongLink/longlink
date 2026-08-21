@@ -246,13 +246,6 @@ async def complete_registration(
             detail="This registration link is invalid or expired. Request a new link to continue.",
         ) from exc
 
-    # Prevent another browser tab's setup cookie from changing the displayed account identity.
-    if payload.email != email:
-        raise HTTPException(
-            status_code=409,
-            detail="Another registration was verified in this browser. Reopen the link for this email to continue safely.",
-        )
-
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         user = await users.register(session, payload.name, email, payload.password)

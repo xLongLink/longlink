@@ -100,7 +100,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
         field_name = statement.target.id
         field_info = resolve_field_info(statement.value)
         env_entry: dict[str, object] = {
-            "name": field_info.pop("env_name") or field_name,
+            "name": field_info.get("env_name") or field_name,
             "required": bool(field_info.get("required", False)),
         }
 
@@ -239,19 +239,19 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
         source_pyproject_data = root_pyproject_data if source_root == root else read_pyproject(source_root)
 
         # Read the tool table while ignoring malformed values.
-        tool_data = source_pyproject_data.get("tool", {})
+        tool_data = source_pyproject_data.get("tool")
         if not isinstance(tool_data, dict):
-            tool_data = {}
+            continue
 
         # Read the uv table while ignoring malformed values.
-        uv_data = tool_data.get("uv", {})
+        uv_data = tool_data.get("uv")
         if not isinstance(uv_data, dict):
-            uv_data = {}
+            continue
 
         # Read the source table while ignoring malformed values.
-        uv_sources = uv_data.get("sources", {})
+        uv_sources = uv_data.get("sources")
         if not isinstance(uv_sources, dict):
-            uv_sources = {}
+            continue
 
         # Add local path dependencies to the context.
         for source_config in uv_sources.values():
@@ -443,17 +443,18 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         try:
 
             # Build from a context that includes local path dependencies referenced by uv.
-            command = [docker_command, "build"]
-            command.extend(
+            subprocess.run(
                 [
+                    docker_command,
+                    "build",
                     "-f",
                     str(dockerfile_path),
                     "-t",
                     image_tag,
                     str(build_context),
-                ]
+                ],
+                check=True,
             )
-            subprocess.run(command, check=True)
 
             # Push the tag only when requested.
             if push:

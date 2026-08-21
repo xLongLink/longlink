@@ -42,7 +42,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     email = "registered@example.com"
     completion_payload = {
         "name": "Registered User",
-        "email": email,
         "password": TEST_PASSWORD,
     }
     login_payload = {"email": email, "password": TEST_PASSWORD}
@@ -81,10 +80,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     # Complete profile and password setup in the same transaction as the first session.
     unauthenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
     restored_setup = await client.get("/api/v1/auth/register/setup")
-    mismatched_setup = await client.post(
-        "/api/v1/auth/register/complete",
-        json={**completion_payload, "email": "another@example.com"},
-    )
     complete_response = await client.post(
         "/api/v1/auth/register/complete",
         json=completion_payload,
@@ -95,10 +90,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert restored_setup.status_code == 200
     assert restored_setup.json() == {"email": email}
-    assert mismatched_setup.status_code == 409
-    assert mismatched_setup.json() == {
-        "detail": "Another registration was verified in this browser. Reopen the link for this email to continue safely."
-    }
     assert complete_response.status_code == 201
     registered_user = complete_response.json()
     assert registered_user["name"] == "Registered User"

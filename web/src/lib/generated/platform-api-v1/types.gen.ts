@@ -547,10 +547,6 @@ export type RegistrationComplete = {
      */
     name: string;
     /**
-     * Email
-     */
-    email: string;
-    /**
      * Password
      */
     password: string;
