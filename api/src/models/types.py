@@ -5,8 +5,6 @@ from typing import Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*")
-IMAGE_TAG_PATTERN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
 IMAGE_DIGEST_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+")
 
 
@@ -62,7 +60,7 @@ class Image(str):
             repository, separator, tag_or_digest = remainder.rpartition(":")
             if not separator:
                 raise ValueError("Image reference tag or digest is required")
-            if not IMAGE_TAG_PATTERN.fullmatch(tag_or_digest):
+            if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}", tag_or_digest):
                 raise ValueError("Image tag is invalid")
 
         parsed_registry = urllib.parse.urlsplit(f"//{registry}")
@@ -76,7 +74,9 @@ class Image(str):
             raise ValueError("Image registry port is invalid") from exc
 
         # Require valid repository path components.
-        if not repository or any(not IMAGE_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository.split("/")):
+        if not repository or any(
+            not re.fullmatch(r"[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*", component) for component in repository.split("/")
+        ):
             raise ValueError("Image repository is invalid")
 
         reference = str.__new__(cls, value)

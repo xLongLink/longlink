@@ -103,8 +103,8 @@ async def release(
     """Record one desired Application release and queue its deployment."""
 
     # Lock the Application and its Organization assignment before changing its desired release.
-    result = await session.execute(
-        select(Application, Organization.compute_id)
+    result = await session.scalars(
+        select(Application)
         .join(Application.organization)
         .where(
             Application.id == application_id,
@@ -113,10 +113,9 @@ async def release(
         )
         .with_for_update()
     )
-    row = result.one_or_none()
-    if row is None:
+    application = result.one_or_none()
+    if application is None:
         return None
-    application, compute_id = row
 
     # Persist the image-derived desired release before scheduling its convergence.
     application.image_desired = image
@@ -135,7 +134,7 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
 
     # Lock active application access before changing its lifecycle state.
     result = await session.execute(
-        select(Application, Organization.compute_id, UserOrganization.role)
+        select(Application, UserOrganization.role)
         .join(Application.organization)
         .join(UserOrganization, UserOrganization.organization_id == Organization.id)
         .where(
@@ -150,7 +149,7 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
     row = result.one_or_none()
     if row is None:
         raise ForbiddenError("Access required")
-    application, compute_id, role = row
+    application, role = row
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise ForbiddenError("Permission required")
 
