@@ -7,14 +7,12 @@ import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
 const iconPropsSchema = z.object({
     icon: xmlNonblankStringSchema.pipe(z.enum(ICON_NAMES)),
-    label: z.string().optional().catch(undefined),
+    label: z.string().optional(),
 });
-
-type IconProps = z.infer<typeof iconPropsSchema>;
 
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { icon, label }: IconProps = resolveXmlProps(props, ctx, { icon: 'raw', label: 'scalar' }, iconPropsSchema);
+    const { icon, label } = resolveXmlProps(props, ctx, { icon: 'raw', label: 'scalar' }, iconPropsSchema);
 
     return <AstryxIcon icon={icon} label={label} />;
 }

@@ -8,11 +8,9 @@ import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '../core/props';
 
 const cardPropsSchema = z.object({ gap: xmlSpacingWithDefaultSchema });
 
-type CardProps = z.infer<typeof cardPropsSchema>;
-
 export function Card({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { gap }: CardProps = resolveXmlProps(props, ctx, { gap: 'scalar' }, cardPropsSchema);
+    const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, cardPropsSchema);
 
     return (
         <AstryxCard>

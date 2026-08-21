@@ -6,13 +6,11 @@ import { resolveXmlProps } from '../core/props';
 import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
 
 const avatarPropsSchema = z.object({
-    alt: z.string().optional().catch(undefined),
-    fallbackSrc: z.string().optional().catch(undefined),
-    name: z.string().optional().catch(undefined),
-    src: z.string().optional().catch(undefined),
+    alt: z.string().optional(),
+    fallbackSrc: z.string().optional(),
+    name: z.string().optional(),
+    src: z.string().optional(),
 });
-
-type AvatarProps = z.infer<typeof avatarPropsSchema>;
 
 export function Avatar({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -21,7 +19,7 @@ export function Avatar({ props }: Props) {
         fallbackSrc: fallbackSource,
         name,
         src: source,
-    }: AvatarProps = resolveXmlProps(
+    } = resolveXmlProps(
         props,
         ctx,
         { alt: 'scalar', fallbackSrc: 'scalar', name: 'scalar', src: 'scalar' },

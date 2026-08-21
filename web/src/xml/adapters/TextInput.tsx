@@ -11,17 +11,10 @@ const textInputPropsSchema = z.object({
     type: z.enum(TEXT_INPUT_TYPES).optional(),
 });
 
-type TextInputProps = z.infer<typeof textInputPropsSchema>;
-
 export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const { label, type }: TextInputProps = resolveXmlProps(
-        props,
-        ctx,
-        { label: 'raw', type: 'scalar' },
-        textInputPropsSchema
-    );
+    const { label, type } = resolveXmlProps(props, ctx, { label: 'raw', type: 'scalar' }, textInputPropsSchema);
 
     return <AstryxTextInput type={type} label={label} value={binding.value} onChange={binding.setValue} />;
 }

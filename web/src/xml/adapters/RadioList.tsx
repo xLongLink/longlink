@@ -7,7 +7,7 @@ import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } fr
 
 const radioListPropsSchema = z.object({ label: xmlNonblankStringSchema });
 const optionPropsSchema = z.object({
-    label: z.string().optional().catch(undefined),
+    label: z.string().optional(),
     value: xmlNonblankStringSchema,
 });
 

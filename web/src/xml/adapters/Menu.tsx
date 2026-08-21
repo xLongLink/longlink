@@ -51,8 +51,7 @@ function renderSection(node: ASTNode, ctx: Scope) {
 
 /** Converts an XML menu item or subsection into an application menu marker. */
 function renderEntry(node: ASTNode, ctx: Scope) {
-    const { label } = resolveXmlProps(node.params, ctx, { label: 'raw' }, menuEntryPropsSchema);
-    const icon = resolveIcon(node, ctx);
+    const { icon, label } = resolveXmlProps(node.params, ctx, { icon: 'scalar', label: 'raw' }, menuEntryPropsSchema);
 
     if (node.name === 'MenuItem') {
         return (
@@ -79,13 +78,6 @@ function renderEntry(node: ASTNode, ctx: Scope) {
     }
 
     throw new Error(`MenuSection does not support ${node.name} children`);
-}
-
-/** Resolves one supported application menu icon. */
-function resolveIcon(node: ASTNode, ctx: Scope): StoneIconName | undefined {
-    const { icon } = resolveXmlProps(node.params, ctx, { icon: 'scalar', label: 'raw' }, menuEntryPropsSchema);
-
-    return icon;
 }
 
 /** Returns whether a value identifies an icon supported by the application menu. */

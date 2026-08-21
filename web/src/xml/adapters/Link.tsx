@@ -9,12 +9,10 @@ import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
 const linkPropsSchema = z.object({
-    href: z.string().optional().catch(undefined),
-    isDisabled: z.boolean().optional().catch(undefined),
-    to: z.string().optional().catch(undefined),
+    href: z.string().optional(),
+    isDisabled: z.boolean().optional(),
+    to: z.string().optional(),
 });
-
-type LinkProps = z.infer<typeof linkPropsSchema>;
 
 export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -23,7 +21,7 @@ export function Link({ props, nodes }: Props) {
         throw new Error('Link requires child content');
     }
 
-    const { href, isDisabled, to }: LinkProps = resolveXmlProps(
+    const { href, isDisabled, to } = resolveXmlProps(
         props,
         ctx,
         { href: 'scalar', isDisabled: 'scalar', to: 'scalar' },

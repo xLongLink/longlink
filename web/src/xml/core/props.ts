@@ -5,14 +5,14 @@ import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
 export type XmlScalar = number | boolean | string | undefined;
 export type XmlSpacing = (typeof SPACING_VALUES)[number];
-export const XML_PROP_MODES = ['scalar', 'raw', 'literal'] as const;
-export type XmlPropMode = (typeof XML_PROP_MODES)[number];
+export type XmlPropMode = 'scalar' | 'raw' | 'literal';
 export type XmlPropFields = Record<string, XmlPropMode>;
 
 export const xmlNonblankStringSchema = z
     .union([z.string(), z.number(), z.boolean()])
     .transform(String)
     .refine((value) => value.trim().length > 0, 'must not be blank');
+export const xmlLabelPropsSchema = z.object({ label: xmlNonblankStringSchema });
 export const xmlPositiveNumberSchema = z.number().positive('must be a positive number');
 export const xmlPositiveIntegerSchema = z.number().int('must be an integer').positive('must be positive');
 export const xmlSpacingSchema = z

@@ -13,7 +13,7 @@ import { resolveXmlProps, xmlNonblankStringSchema, xmlSpacingWithDefaultSchema }
 const dialogPropsSchema = z.object({
     gap: xmlSpacingWithDefaultSchema,
     purpose: z.enum(['required', 'form', 'info']).optional().catch('info').default('info'),
-    subtitle: z.string().optional().catch(undefined),
+    subtitle: z.string().optional(),
     title: xmlNonblankStringSchema,
     triggerLabel: xmlNonblankStringSchema.optional(),
 });

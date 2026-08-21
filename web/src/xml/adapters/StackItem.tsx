@@ -8,15 +8,13 @@ import { StackItem as AstryxStackItem } from '@astryxdesign/core/Stack';
 
 const stackItemPropsSchema = z.object({
     crossAlignSelf: z.enum(BOX_ALIGNS).optional(),
-    isScrollable: z.boolean().optional().catch(undefined),
+    isScrollable: z.boolean().optional(),
     size: z.enum(STACK_ITEM_SIZES).optional(),
 });
 
-type StackItemProps = z.infer<typeof stackItemPropsSchema>;
-
 export function StackItem({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { crossAlignSelf, isScrollable, size }: StackItemProps = resolveXmlProps(
+    const { crossAlignSelf, isScrollable, size } = resolveXmlProps(
         props,
         ctx,
         { crossAlignSelf: 'scalar', isScrollable: 'scalar', size: 'scalar' },

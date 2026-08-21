@@ -8,7 +8,7 @@ import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../
 
 const stackPropsSchema = z.object({
     align: z.enum(BOX_ALIGNS).optional().catch('stretch').default('stretch'),
-    direction: z.enum(ORIENTATIONS).optional().catch(undefined),
+    direction: z.enum(ORIENTATIONS).optional(),
     gap: xmlSpacingWithDefaultSchema,
     justify: z.enum(STACK_JUSTIFICATIONS).optional().catch('start').default('start'),
     wrap: z.enum(STACK_WRAPS).optional().catch('nowrap').default('nowrap'),
