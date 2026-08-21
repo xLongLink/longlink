@@ -89,8 +89,17 @@ jobs:
                       ghcr.io/xlonglink/longlink:latest
                       ghcr.io/xlonglink/longlink:${{ github.ref_name }}
 
-    publish-github-release:
+    sync-sample:
         needs: [publish-sdk, publish-api-image]
+        permissions:
+            contents: read
+        uses: ./.github/workflows/sync-sample.yml
+        with:
+            channel: main
+        secrets: inherit
+
+    publish-github-release:
+        needs: [publish-sdk, publish-api-image, sync-sample]
         runs-on: ubuntu-latest
 
         permissions:

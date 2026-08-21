@@ -9,8 +9,8 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
+import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
 
 type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
 
@@ -27,7 +27,6 @@ const requestPropsSchema = z.object({
 });
 
 const patchPropsSchema = z.object({
-    value: z.unknown().optional(),
     invalidate: z.boolean().optional(),
 });
 
@@ -212,7 +211,8 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch requires a literal state ID');
     }
     const valueAttribute = readXmlProp(props, 'value');
-    const { value, invalidate } = resolveXmlProps(props, ctx, { value: 'raw', invalidate: 'scalar' }, patchPropsSchema);
+    const value = resolveXmlValue(props, 'value', ctx);
+    const { invalidate } = resolveXmlProps(props, ctx, { invalidate: 'scalar' }, patchPropsSchema);
     if ((valueAttribute != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');
     }

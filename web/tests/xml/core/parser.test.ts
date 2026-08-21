@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {
-        expect(parseXML('<Button isDisabled="false" count="5">Save</Button>')).toEqual([
+        expect(parseXML('<Button isDisabled="false" count="5" />')).toEqual([
             {
                 name: 'Button',
                 params: {
                     count: { kind: 'text', value: '5' },
                     isDisabled: { kind: 'text', value: 'false' },
                 },
-                children: [{ name: '$text', params: { value: { kind: 'text', value: 'Save' } }, children: [] }],
+                children: [],
             },
         ]);
     });
