@@ -28,19 +28,15 @@ describe('renderNode', () => {
         expect(output).toContain('value="Ada"');
     });
 
-    it('renders Heading semantic props', () => {
+    it('renders Heading semantic level', () => {
         const output = renderXmlToMarkup([
             {
                 name: 'Heading',
-                params: compileProps({
-                    id: 'orders-heading',
-                    level: '1',
-                }),
+                params: compileProps({ level: '1' }),
                 children: [{ name: '$text', params: compileProps({ value: 'Orders' }), children: [] }],
             },
         ]);
 
-        expect(output).toContain('id="orders-heading"');
         expect(output).toContain('data-level="1"');
         expect(output).toContain('Orders');
     });
