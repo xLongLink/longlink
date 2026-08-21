@@ -44,11 +44,11 @@ VALID_FRAGMENTS = [
     ("query", '<Query id="projects" path="/projects" />'),
     (
         "radio-list",
-        '<RadioList label="Priority" value="$form.priority"><RadioListItem value="high" label="High" /></RadioList>',
+        '<RadioList label="Priority" value="$form.priority"><Option value="high" label="High" /></RadioList>',
     ),
     (
         "selector",
-        '<Selector label="View" value="$filters.view"><SelectorOption value="overview" label="Overview" /></Selector>',
+        '<Selector label="View" value="$filters.view"><Option value="overview" label="Overview" /></Selector>',
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
@@ -89,8 +89,8 @@ INVALID_FRAGMENTS = [
         '<Action tone="accent"><Button>Save</Button></Action>',
     ),
     (
-        "missing-selector-option-value",
-        '<Selector label="View"><SelectorOption label="Overview" /></Selector>',
+        "missing-option-value",
+        '<Selector label="View"><Option label="Overview" /></Selector>',
     ),
     ("missing-query-path", '<Query id="projects" />'),
     ("missing-state-id", '<State value="[]" />'),
