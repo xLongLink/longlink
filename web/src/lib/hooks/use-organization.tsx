@@ -1,17 +1,17 @@
 import { api, ApiError } from '@/lib/api';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-    zOrganizationApplicationSummary,
-    zOrganizationDetails,
-    zOrganizationSummary,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 import type {
     ApplicationCreate,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
+import {
+    zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse,
+    zOrganizationDetails,
+    zOrganizationSummary,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Returns current-user membership data for one organization route slug. */
 function useOrganizationMembership(organizationSlug: string) {
@@ -47,7 +47,6 @@ export function useOrganization(organizationSlug: string) {
             organizationPath === null
                 ? skipToken
                 : async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json()),
-        refetchInterval: 5000,
         retry: false,
     });
 
@@ -75,7 +74,9 @@ export function useOrganizationApplications(organizationSlug: string) {
             applicationsPath === null
                 ? skipToken
                 : async ({ signal }) =>
-                      zOrganizationApplicationSummary.array().parse(await api(applicationsPath, { signal }).json()),
+                      zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse.parse(
+                          await api(applicationsPath, { signal }).json()
+                      ),
         refetchInterval: 5000,
         retry: false,
     });

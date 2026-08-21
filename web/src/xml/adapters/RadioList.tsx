@@ -14,7 +14,6 @@ const optionPropsSchema = z.object({
 export function RadioList({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const options = nodes.filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx));
 
     return (
         <AstryxRadioList
@@ -23,17 +22,19 @@ export function RadioList({ props, nodes }: Props) {
             size="sm"
             value={binding.value}
         >
-            {options.map((node, index) => {
-                const { label: labelValue, value } = resolveXmlProps(
-                    node.params,
-                    ctx,
-                    { label: 'scalar', value: 'raw' },
-                    optionPropsSchema
-                );
-                const label = labelValue ?? value;
+            {nodes
+                .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx))
+                .map((node, index) => {
+                    const { label: labelValue, value } = resolveXmlProps(
+                        node.params,
+                        ctx,
+                        { label: 'scalar', value: 'raw' },
+                        optionPropsSchema
+                    );
+                    const label = labelValue ?? value;
 
-                return <AstryxRadioListItem key={index} label={label} value={value} />;
-            })}
+                    return <AstryxRadioListItem key={index} label={label} value={value} />;
+                })}
         </AstryxRadioList>
     );
 }

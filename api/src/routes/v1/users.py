@@ -46,6 +46,6 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     await session.commit()
 
     # Keep every organization database synchronized after profile update requests.
-    for membership in await users.memberships(session, user.id):
-        await organizations.sync_users(session, membership.organization_id)
+    for organization_id in await users.organization_ids(session, user.id):
+        await organizations.sync_users(session, organization_id)
     return user

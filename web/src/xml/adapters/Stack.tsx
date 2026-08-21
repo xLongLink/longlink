@@ -7,11 +7,11 @@ import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '../core/props';
 import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 
 const stackPropsSchema = z.object({
-    align: z.enum(BOX_ALIGNS).optional().catch('stretch').default('stretch'),
+    align: z.enum(BOX_ALIGNS).optional(),
     direction: z.enum(ORIENTATIONS).optional(),
     gap: xmlSpacingWithDefaultSchema,
-    justify: z.enum(STACK_JUSTIFICATIONS).optional().catch('start').default('start'),
-    wrap: z.enum(STACK_WRAPS).optional().catch('nowrap').default('nowrap'),
+    justify: z.enum(STACK_JUSTIFICATIONS).optional(),
+    wrap: z.enum(STACK_WRAPS).optional(),
 });
 
 export function Stack({ props, nodes }: Props) {

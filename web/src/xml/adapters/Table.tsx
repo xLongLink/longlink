@@ -8,7 +8,7 @@ import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@as
 
 type TableRow = Record<string, unknown>;
 
-const tablePropsSchema = z.object({ data: z.unknown().optional(), idKey: z.string().optional() });
+const tablePropsSchema = z.object({ data: z.array(z.record(z.string(), z.unknown())), idKey: z.string().optional() });
 const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 
 export function Table({ props, nodes }: Props) {
@@ -21,23 +21,17 @@ export function Table({ props, nodes }: Props) {
     }
 
     const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
-    const rows = Array.isArray(data)
-        ? data.filter((row): row is TableRow => row != null && typeof row === 'object' && !Array.isArray(row))
-        : [];
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
         .map((node): AstryxTableColumn<TableRow> => {
             const columnProps = node.params;
             const fieldAttribute = readXmlProp(columnProps, 'field');
-            if (fieldAttribute?.kind !== 'text' || !fieldAttribute.value.trim()) {
+
+            // Column field paths are literal identifiers, not expressions.
+            if (fieldAttribute?.kind !== 'text' || !/^[^.\s]+(?:\.[^.\s]+)*$/.test(fieldAttribute.value)) {
                 throw new Error('TableColumn requires a usable field path');
             }
             const field = fieldAttribute.value;
-
-            // Column field paths are literal identifiers, not expressions.
-            if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
-                throw new Error('TableColumn requires a usable field path');
-            }
             const fieldParts = field.split('.');
             const { header: headerValue } = resolveXmlProps(
                 columnProps,
@@ -64,7 +58,7 @@ export function Table({ props, nodes }: Props) {
 
                     const rowCtx: Scope = {
                         parent: ctx,
-                        bindings: { index: rows.indexOf(row), row, value },
+                        bindings: { index: data.indexOf(row), row, value },
                     };
 
                     return (
@@ -81,5 +75,5 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    return <AstryxTable columns={columns} data={rows} emptyState={false} idKey={idKey} />;
+    return <AstryxTable columns={columns} data={data} emptyState={false} idKey={idKey} />;
 }

@@ -58,7 +58,7 @@ export default function VerifyEmail() {
     const completion = useMutation({
         mutationFn: async (payload: RegistrationCompleteValues) => {
             const response = await api('/api/v1/auth/register/complete', {
-                json: { ...payload, email: verification.data?.email },
+                json: payload,
                 method: 'POST',
             });
 
@@ -127,7 +127,7 @@ export default function VerifyEmail() {
         );
     }
 
-    // Account races and cross-tab setup changes cannot succeed by resubmitting the same form.
+    // Account races cannot succeed by resubmitting the same form.
     if (completion.error instanceof ApiError && completion.error.status === 409) {
         return (
             <AuthLayout title="Complete your account" description={completion.error.message}>

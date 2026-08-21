@@ -55,13 +55,10 @@ export default function OrganizationApplication() {
         );
     }
 
-    const navigationBaseUrl = `/orgs/${organization}/apps/${application}`;
-    const pagesUrl = `/api/v1/applications/${applicationAccess.id}/proxy/pages.json`;
-
     return (
         <ApplicationRuntime
-            navigationBaseUrl={navigationBaseUrl}
-            pagesUrl={pagesUrl}
+            navigationBaseUrl={`/orgs/${organization}/apps/${application}`}
+            pagesUrl={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
             requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
         >
             {({ content, tabs }) => (

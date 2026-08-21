@@ -10,7 +10,5 @@ def main() -> None:
     """LongLink command line interface."""
 
 
-main.add_command(build_command)
-main.add_command(dev_command)
-main.add_command(init_command)
-main.add_command(migrate_command)
+for command in (build_command, dev_command, init_command, migrate_command):
+    main.add_command(command)

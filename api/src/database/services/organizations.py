@@ -50,8 +50,7 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
             Organization.deleted_at.is_(None),
         )
     )
-    result = await session.execute(statement)
-    return result.scalar_one_or_none()
+    return await session.scalar(statement)
 
 
 async def application_runtime_access(

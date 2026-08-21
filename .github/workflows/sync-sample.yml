@@ -1,0 +1,50 @@
+name: Sync Sample
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - sdk/longlink/.static/new/**
+            - sdk/longlink/.static/ci/github/**
+            - sdk/longlink/cli/init.py
+    workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+    group: sync-sample
+    cancel-in-progress: true
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout LongLink
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Python
+              uses: ./.github/actions/setup-python
+
+            - name: Generate scaffold
+              run: |
+                  set -euo pipefail
+                  uv sync --locked --project sdk
+                  uv run --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
+
+            - name: Replace sample history
+              env:
+                  SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  : "${SAMPLE_REPOSITORY_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
+
+                  git clone "https://x-access-token:${SAMPLE_REPOSITORY_TOKEN}@github.com/xlongLink/sample.git" sample
+                  cd sample
+                  git switch --orphan scaffold
+                  git rm -rf . || true
+                  git clean -ffdx
+                  cp -a "$RUNNER_TEMP/sample/." .
+                  git add --all
+                  git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
+                  git push --force origin HEAD:main

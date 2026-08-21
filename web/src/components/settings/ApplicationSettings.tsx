@@ -58,26 +58,27 @@ export default function ApplicationSettings({
                 </HStack>
             ),
         },
+        ...(canManageApplications
+            ? [
+                  {
+                      key: 'action',
+                      header: 'Action',
+                      width: pixel(96),
+                      align: 'end' as const,
+                      renderCell: (application: OrganizationApplicationSummary) => (
+                          <MoreMenu
+                              label={`Open actions for ${application.name}`}
+                              size="sm"
+                              items={[
+                                  { label: 'Logs', onClick: () => setLogsTarget(application) },
+                                  { label: 'Delete', onClick: () => deleteDialog.openFor(application) },
+                              ]}
+                          />
+                      ),
+                  },
+              ]
+            : []),
     ];
-
-    if (canManageApplications) {
-        appColumns.push({
-            key: 'action',
-            header: 'Action',
-            width: pixel(96),
-            align: 'end',
-            renderCell: (application) => (
-                <MoreMenu
-                    label={`Open actions for ${application.name}`}
-                    size="sm"
-                    items={[
-                        { label: 'Logs', onClick: () => setLogsTarget(application) },
-                        { label: 'Delete', onClick: () => deleteDialog.openFor(application) },
-                    ]}
-                />
-            ),
-        });
-    }
 
     return (
         <>

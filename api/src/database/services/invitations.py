@@ -1,9 +1,10 @@
 from uuid import UUID
 from sqlalchemy import func, select
-from src.errors import ConflictError, NotFoundError
+from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
+from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -11,30 +12,22 @@ from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
-async def create(session: AsyncSession, organization_id: UUID, email: str, role: OrganizationRoles) -> OrganizationInvitation:
+async def create(session: AsyncSession, organization_id: UUID, email: Email, role: OrganizationRoles) -> OrganizationInvitation:
     """Create or replace one active email grant for an organization."""
 
-    normalized_email = email.strip().lower()
-
-    # Require an active target organization.
-    if await session.scalar(
-        select(Organization.id).where(
-            Organization.id == organization_id,
-            Organization.deleted_at.is_(None),
-        )
-    ) is None:
-        raise NotFoundError("Organization not found")
-
     # Reject emails that already belong to the organization.
-    if await session.scalar(
-        select(User.id)
-        .join(UserOrganization, UserOrganization.user_id == User.id)
-        .where(
-            UserOrganization.organization_id == organization_id,
-            UserOrganization.deleted_at.is_(None),
-            func.lower(User.email) == normalized_email,
+    if (
+        await session.scalar(
+            select(User.id)
+            .join(UserOrganization, UserOrganization.user_id == User.id)
+            .where(
+                UserOrganization.organization_id == organization_id,
+                UserOrganization.deleted_at.is_(None),
+                func.lower(User.email) == email,
+            )
         )
-    ) is not None:
+        is not None
+    ):
         raise ConflictError("User is already a member")
 
     # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
@@ -42,7 +35,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
         select(OrganizationInvitation)
         .where(
             OrganizationInvitation.organization_id == organization_id,
-            OrganizationInvitation.email == normalized_email,
+            OrganizationInvitation.email == email,
         )
         .with_for_update()
     )
@@ -52,7 +45,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
     if invitation is None:
         try:
             async with session.begin_nested():
-                invitation = OrganizationInvitation(organization_id=organization_id, email=normalized_email, role=role)
+                invitation = OrganizationInvitation(organization_id=organization_id, email=email, role=role)
                 session.add(invitation)
                 await session.flush()
         except IntegrityError as exc:
@@ -60,7 +53,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: str, role:
                 select(OrganizationInvitation)
                 .where(
                     OrganizationInvitation.organization_id == organization_id,
-                    OrganizationInvitation.email == normalized_email,
+                    OrganizationInvitation.email == email,
                 )
                 .with_for_update()
             )

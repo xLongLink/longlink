@@ -3,7 +3,7 @@ import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import type { ASTNode, Props, Scope } from '../types';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingWithDefaultSchema } from '../core/props';
+import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 import {
     Menu as ApplicationMenu,
     MenuItem as ApplicationMenuItem,
@@ -11,7 +11,6 @@ import {
     MenuSubSection as ApplicationMenuSubSection,
 } from '@/components/ui/Menu';
 
-const menuPropsSchema = z.object({ gap: xmlSpacingWithDefaultSchema });
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
 const menuEntryPropsSchema = z.object({
     icon: z.string().refine(isStoneIconName, 'must be a supported icon name').optional(),
@@ -19,9 +18,8 @@ const menuEntryPropsSchema = z.object({
 });
 
 /** Renders the application menu from XML sections and items. */
-export function Menu({ props, nodes }: Props) {
+export function Menu({ nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, menuPropsSchema);
     const sections = nodes.filter((node) => isVisibleXmlNode(node, ctx));
 
     for (const section of sections) {
@@ -30,7 +28,7 @@ export function Menu({ props, nodes }: Props) {
         }
     }
 
-    return <ApplicationMenu gap={gap}>{sections.map((section) => renderSection(section, ctx))}</ApplicationMenu>;
+    return <ApplicationMenu>{sections.map((section) => renderSection(section, ctx))}</ApplicationMenu>;
 }
 
 /** Converts an XML menu section into the application menu marker. */

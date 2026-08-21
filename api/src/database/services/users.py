@@ -61,6 +61,23 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
     return result.all()
 
 
+async def organization_ids(session: AsyncSession, user_id: UUID) -> Sequence[UUID]:
+    """Return active Organization IDs for one user."""
+
+    # Resolve synchronization targets without loading membership or Organization objects.
+    statement = (
+        select(col(UserOrganization.organization_id))
+        .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
+        .where(
+            col(UserOrganization.user_id) == user_id,
+            col(UserOrganization.deleted_at).is_(None),
+            col(Organization.deleted_at).is_(None),
+        )
+    )
+    result = await session.scalars(statement)
+    return result.all()
+
+
 async def ensure_administrator(session: AsyncSession) -> None:
     """Reconcile the configured account as the sole Platform administrator."""
 

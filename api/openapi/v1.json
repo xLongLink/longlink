@@ -3263,12 +3263,6 @@
             "minLength": 1,
             "title": "Name"
           },
-          "email": {
-            "type": "string",
-            "maxLength": 254,
-            "format": "email",
-            "title": "Email"
-          },
           "password": {
             "type": "string",
             "maxLength": 1024,
@@ -3279,7 +3273,6 @@
         "type": "object",
         "required": [
           "name",
-          "email",
           "password"
         ],
         "title": "RegistrationComplete",
