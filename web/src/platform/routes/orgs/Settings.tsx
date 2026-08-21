@@ -25,8 +25,11 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
-import { zOrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import {
+    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
+    zOrganizationStorageUsageResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 const organizationAvatarSchema = z.union([
     z.literal(''),
@@ -78,11 +81,9 @@ export default function OrganizationSettings() {
             databasePath === null
                 ? skipToken
                 : async ({ signal }) =>
-                      z
-                          .int()
-                          .gte(0)
-                          .nullable()
-                          .parse(await api(databasePath, { signal }).json()),
+                      zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse.parse(
+                          await api(databasePath, { signal }).json()
+                      ),
         retry: false,
     });
     const databaseResourceError = error ?? databaseError;

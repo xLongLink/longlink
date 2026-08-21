@@ -1,5 +1,57 @@
 # Template for one desired LongLink Application workload.
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: $migration_id
+    namespace: '$namespace'
+    labels:
+        $application_id_label: $application_id
+        longlink.io/component: migration
+spec:
+    backoffLimit: 0
+    template:
+        metadata:
+            labels:
+                $application_id_label: $application_id
+                longlink.io/component: migration
+        spec:
+            automountServiceAccountToken: false
+            restartPolicy: Never
+            securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                    type: RuntimeDefault
+            containers:
+                - name: migration
+                  image: $image
+                  command:
+                      - python
+                      - -m
+                      - longlink.database.migrations
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 128Mi
+                      limits:
+                          cpu: 500m
+                          memory: 256Mi
+                  envFrom:
+                      - secretRef:
+                            name: $application_id
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - ALL
+                      readOnlyRootFilesystem: true
+                  volumeMounts:
+                      - name: tmp
+                        mountPath: /tmp
+            volumes:
+                - name: tmp
+                  emptyDir: {}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,6 +79,15 @@ spec:
             containers:
                 - name: application
                   image: $image
+                  command:
+                      - uvicorn
+                      - main:app
+                      - --host
+                      - 0.0.0.0
+                      - --port
+                      - '8000'
+                      - --log-level
+                      - info
                   resources:
                       requests:
                           cpu: 100m

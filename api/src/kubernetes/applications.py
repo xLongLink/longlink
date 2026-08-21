@@ -6,7 +6,7 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
-from kr8s.asyncio.objects import Pod, Secret, Service, Namespace, Deployment, new_class
+from kr8s.asyncio.objects import Job, Pod, Secret, Service, Namespace, Deployment, new_class
 from src.kubernetes.utils import apply, deployment_is_ready
 
 if TYPE_CHECKING:
@@ -43,14 +43,27 @@ class Applications:
         )
 
         # Render workload resources before the first cluster mutation.
-        deployment, service, route = templates.readyml_list(
+        migration, deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=hashlib.sha256(json.dumps(secrets, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            migration_id=f"{application_id}-migration-{hashlib.sha256(image.encode()).hexdigest()[:8]}",
         )
+
+        # Apply migrations once without restarting a failed migration container.
+        migration_job = Job(migration, api=api)
+        await apply(migration_job)
+        while True:
+            await migration_job.refresh()
+            status = migration_job.raw.get("status")
+            if isinstance(status, dict) and status.get("succeeded") == 1:
+                break
+            if isinstance(status, dict) and status.get("failed") == 1:
+                raise RuntimeError("Application migrations failed")
+            await asyncio.sleep(1)
 
         # Create the Service and its owned HTTPRoute before starting Application Pods.
         await apply(Service(service, api=api))
@@ -115,11 +128,15 @@ class Applications:
                     if resource.metadata.get("deletionTimestamp") is None:
                         await resource.delete()
 
+            # Delete retained migration Jobs only when their Application is being removed.
+            async for job in Job.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                remaining = True
+                if job.metadata.get("deletionTimestamp") is None:
+                    await job.delete()
+
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining:
-                async for pod in Pod.list(
-                    api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}
-                ):
+                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
                     if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}:
                         break
                 else:
@@ -132,14 +149,20 @@ class Applications:
         # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
-            pod = None
+            running_pod = None
+            failed_migration_pod = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
-                if candidate.raw["status"].get("phase") in {"Succeeded", "Failed"}:
-                    continue
-                if pod is None or candidate.name < pod.name:
-                    pod = candidate
-            if pod is None:
-                raise RuntimeError("Application logs unavailable")
-            return [line async for line in pod.logs(tail_lines=200)]
+                status = candidate.raw.get("status")
+                phase = status.get("phase") if isinstance(status, dict) else None
+                component = candidate.metadata.get("labels", {}).get("longlink.io/component")
+                if component == "migration" and phase == "Failed":
+                    failed_migration_pod = candidate
+                elif component != "migration" and phase not in {"Succeeded", "Failed"}:
+                    running_pod = candidate
+            if running_pod is not None:
+                return [line async for line in running_pod.logs(tail_lines=200)]
+            if failed_migration_pod is not None:
+                return ["Migration logs:", *[line async for line in failed_migration_pod.logs(tail_lines=200)]]
+            raise RuntimeError("Application logs unavailable")
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
             raise RuntimeError("Application logs unavailable") from exc

@@ -28,7 +28,7 @@ export function Table<Row extends TableRow>({ children, data, ...props }: TableP
             return {
                 ...columnProps,
                 key: field,
-                renderCell: renderCell ? (row: Row) => renderCell(row) : undefined,
+                renderCell,
             };
         });
 

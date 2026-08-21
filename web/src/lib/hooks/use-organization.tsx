@@ -47,7 +47,6 @@ export function useOrganization(organizationSlug: string) {
             organizationPath === null
                 ? skipToken
                 : async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json()),
-        refetchInterval: 5000,
         retry: false,
     });
 
