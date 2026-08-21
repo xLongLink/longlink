@@ -43,7 +43,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
 
         if (node.name === 'State') {
             // Preserve local state across renderer refreshes; invalidation deletes it before setup runs.
-            services.setups[id] = () => {
+            const setup = () => {
                 // Only seed state that is not already present.
                 if (!(id in scope.bindings)) {
                     // Seed a proxied object from all attributes except `id`.
@@ -59,12 +59,13 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
                     scope.bindings[id] = proxy(initialValue);
                 }
             };
-            services.setups[id]();
+            services.setups[id] = setup;
+            setup();
         } else {
             const pathAttribute = params.path;
 
             // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
-            services.setups[id] = async () => {
+            const setup = async () => {
                 const path = evaluate(pathAttribute, scope);
 
                 // Query paths may interpolate route params, but must still resolve to a URL string.
@@ -76,7 +77,8 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
 
                 scope.bindings[id] = await api(url).json();
             };
-            await services.setups[id]();
+            services.setups[id] = setup;
+            await setup();
         }
     }
 }

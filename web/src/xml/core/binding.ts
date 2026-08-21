@@ -13,11 +13,14 @@ type BindingTarget = {
 export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
     const value = resolveXmlValue(props, name, ctx);
     const target = resolveBindableTarget(props[name], value, ctx);
-    const currentValue = target?.key
-        ? target.state[target.key]
-        : target && 'value' in target.state
-          ? target.state.value
-          : '';
+    let currentValue: unknown = '';
+
+    if (target?.key) {
+        currentValue = target.state[target.key];
+    } else if (target && 'value' in target.state) {
+        currentValue = target.state.value;
+    }
+
     const [localValue, setLocalValue] = useState(() => coerce(value));
 
     return {

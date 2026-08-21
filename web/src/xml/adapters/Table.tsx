@@ -29,15 +29,12 @@ export function Table({ props, nodes }: Props) {
         .map((node): AstryxTableColumn<TableRow> => {
             const columnProps = node.params;
             const fieldAttribute = readXmlProp(columnProps, 'field');
-            if (fieldAttribute?.kind !== 'text' || !fieldAttribute.value.trim()) {
+
+            // Column field paths are literal identifiers, not expressions.
+            if (fieldAttribute?.kind !== 'text' || !/^[^.\s]+(?:\.[^.\s]+)*$/.test(fieldAttribute.value)) {
                 throw new Error('TableColumn requires a usable field path');
             }
             const field = fieldAttribute.value;
-
-            // Column field paths are literal identifiers, not expressions.
-            if (!/^[^.\s]+(?:\.[^.\s]+)*$/.test(field)) {
-                throw new Error('TableColumn requires a usable field path');
-            }
             const fieldParts = field.split('.');
             const { header: headerValue } = resolveXmlProps(
                 columnProps,

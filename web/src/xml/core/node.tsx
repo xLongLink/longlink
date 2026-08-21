@@ -2,7 +2,7 @@ import { For } from './for';
 import type { ReactNode } from 'react';
 import type { ASTNode, Scope } from '../types';
 import { xmlComponentRegistry } from './registry';
-import { isVisibleXmlNode, resolveXml } from './props';
+import { isVisibleXmlNode, resolveXmlValue } from './props';
 
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
@@ -11,7 +11,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
 
         // Render parser-generated text directly rather than through a public XML component.
         if (node.name === '$text') {
-            const value = resolveXml(props, 'value', ctx);
+            const value = resolveXmlValue(props, 'value', ctx);
 
             return value == null ? null : String(value);
         }
