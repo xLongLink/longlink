@@ -1,30 +1,30 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, resolveXml } from '../core/props';
+import { resolveXmlProps } from '../core/props';
 import { BOX_ALIGNS, STACK_ITEM_SIZES } from '../constants';
 import { StackItem as AstryxStackItem } from '@astryxdesign/core/Stack';
 
+const stackItemPropsSchema = z.object({
+    crossAlignSelf: z.enum(BOX_ALIGNS).optional(),
+    isScrollable: z.boolean().optional().catch(undefined),
+    size: z.enum(STACK_ITEM_SIZES).optional(),
+});
+
+type StackItemProps = z.infer<typeof stackItemPropsSchema>;
+
 export function StackItem({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const size = resolveXml(props, 'size', ctx);
-    const isScrollable = resolveXml(props, 'isScrollable', ctx);
-    const crossAlignSelf = resolveXml(props, 'crossAlignSelf', ctx);
-
-    if (!isXmlEnum(size, [undefined, ...STACK_ITEM_SIZES])) {
-        throw new Error(`Unsupported StackItem size '${String(size)}'`);
-    }
-
-    if (!isXmlEnum(crossAlignSelf, [undefined, ...BOX_ALIGNS])) {
-        throw new Error(`Unsupported StackItem crossAlignSelf '${String(crossAlignSelf)}'`);
-    }
+    const { crossAlignSelf, isScrollable, size }: StackItemProps = resolveXmlProps(
+        props,
+        ctx,
+        { crossAlignSelf: 'scalar', isScrollable: 'scalar', size: 'scalar' },
+        stackItemPropsSchema
+    );
 
     return (
-        <AstryxStackItem
-            crossAlignSelf={crossAlignSelf}
-            isScrollable={typeof isScrollable === 'boolean' ? isScrollable : undefined}
-            size={size}
-        >
+        <AstryxStackItem crossAlignSelf={crossAlignSelf} isScrollable={isScrollable} size={size}>
             {renderNode(nodes, ctx)}
         </AstryxStackItem>
     );

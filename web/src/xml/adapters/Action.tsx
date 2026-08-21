@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { api } from '@/lib/api';
 import { renderNode } from '../core/node';
 import { ACTION_METHODS } from '../constants';
@@ -8,14 +9,32 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
+import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
-import { isXmlEnum, readXmlProp, requireXmlString, resolveXml, resolveXmlValue } from '../core/props';
 
 type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
 
 const ACTION_ALLOWED_PROPS = new Set(['if']);
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
+
+const requestPropsSchema = z.object({
+    url: xmlNonblankStringSchema,
+    method: xmlNonblankStringSchema.transform((value) => value.toUpperCase()).pipe(z.enum(ACTION_METHODS)),
+    form: z.unknown().optional(),
+    json: z.unknown().optional(),
+    closeDialog: z.boolean().optional(),
+});
+
+const patchPropsSchema = z.object({
+    value: z.unknown().optional(),
+    invalidate: z.boolean().optional(),
+});
+
+const navigationPropsSchema = z.object({
+    to: z.string().optional(),
+    href: z.string().optional(),
+});
 
 type ActionPlan = {
     control: ASTNode;
@@ -128,8 +147,8 @@ async function executeAction(
 
 /** Resolves a terminal navigation destination from one Action control. */
 function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: RuntimeServices): string {
-    const to = resolveXml(node.params, 'to', ctx);
-    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
+    const { to, href } = resolveXmlProps(node.params, ctx, { to: 'scalar', href: 'scalar' }, navigationPropsSchema);
+    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
     if (navigationUrl) {
         return navigationUrl;
     }
@@ -138,8 +157,7 @@ function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: Runtime
         return '';
     }
 
-    const href = resolveXml(node.params, 'href', ctx);
-    return resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '');
+    return resolveAnchorUrl(services.requestBaseUrl, href ?? '');
 }
 
 /** Sends one configured app-relative request. */
@@ -148,24 +166,23 @@ async function executeRequest(
     ctx: Scope,
     requestBaseUrl: string
 ): Promise<{ closeDialog: boolean; status: number }> {
-    const url = requireXmlString(props, 'url', ctx, 'Request');
-    const method = requireXmlString(props, 'method', ctx, 'Request').trim().toUpperCase();
-    if (!isXmlEnum(method, ACTION_METHODS)) {
-        throw new Error(`Unsupported request method ${method}`);
-    }
-
-    const formValue = resolveXmlValue(props, 'form', ctx);
-    const jsonValue = resolveXmlValue(props, 'json', ctx);
+    const {
+        url,
+        method,
+        form: formValue,
+        json: jsonValue,
+        closeDialog,
+    } = resolveXmlProps(
+        props,
+        ctx,
+        { url: 'scalar', method: 'scalar', form: 'raw', json: 'raw', closeDialog: 'scalar' },
+        requestPropsSchema
+    );
     if (formValue !== undefined && jsonValue !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
     }
     if (method === 'GET' && (formValue !== undefined || jsonValue !== undefined)) {
         throw new Error('GET requests cannot send payloads');
-    }
-
-    const closeDialog = resolveXml(props, 'closeDialog', ctx);
-    if (closeDialog !== undefined && typeof closeDialog !== 'boolean') {
-        throw new Error('Request closeDialog must resolve to a boolean');
     }
 
     const headers = new Headers({ Accept: 'application/json' });
@@ -195,12 +212,9 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch requires a literal state ID');
     }
     const valueAttribute = readXmlProp(props, 'value');
-    const invalidate = resolveXml(props, 'invalidate', ctx);
+    const { value, invalidate } = resolveXmlProps(props, ctx, { value: 'raw', invalidate: 'scalar' }, patchPropsSchema);
     if ((valueAttribute != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');
-    }
-    if (invalidate !== undefined && typeof invalidate !== 'boolean') {
-        throw new Error('Patch invalidate must resolve to a boolean');
     }
     if (!(state in services.setups)) {
         throw new Error(`Patch state "${state}" does not reference a declared State or Query`);
@@ -216,7 +230,6 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error(`Patch state "${state}" must reference a declared State`);
     }
 
-    const value = resolveXmlValue(props, 'value', ctx);
     if (value == null || typeof value !== 'object' || Array.isArray(value)) {
         throw new Error('Patch value must evaluate to an object');
     }

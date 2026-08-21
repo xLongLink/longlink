@@ -1,8 +1,15 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
+import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+
+const selectorPropsSchema = z.object({ label: xmlNonblankStringSchema });
+const optionPropsSchema = z.object({
+    label: z.string().optional().catch(undefined),
+    value: xmlNonblankStringSchema,
+});
 
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -10,9 +17,13 @@ export function Selector({ props, nodes }: Props) {
     const options = nodes
         .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx))
         .map((node) => {
-            const value = requireXmlString(node.params, 'value', ctx, 'Option');
-            const labelValue = resolveXml(node.params, 'label', ctx);
-            const label = typeof labelValue === 'string' ? labelValue : value;
+            const { label: labelValue, value } = resolveXmlProps(
+                node.params,
+                ctx,
+                { label: 'scalar', value: 'raw' },
+                optionPropsSchema
+            );
+            const label = labelValue ?? value;
 
             return { value, label };
         });
@@ -24,7 +35,7 @@ export function Selector({ props, nodes }: Props) {
 
     return (
         <AstryxSelector
-            label={requireXmlString(props, 'label', ctx, 'Selector')}
+            label={resolveXmlProps(props, ctx, { label: 'raw' }, selectorPropsSchema).label}
             onChange={binding.setValue}
             options={options}
             value={binding.value}

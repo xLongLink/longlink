@@ -7,6 +7,7 @@ type AstryxTabListProps = ComponentProps<typeof AstryxTabList>;
 
 type TabsProps = Omit<AstryxTabListProps, 'children' | 'onChange' | 'value'> & {
     children?: ReactNode;
+    gap?: ComponentProps<typeof Stack>['gap'];
     onChange?: AstryxTabListProps['onChange'];
     value?: AstryxTabListProps['value'];
 };
@@ -16,7 +17,7 @@ type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon'> & {
 };
 
 /** Renders tabs and the selected tab's content. */
-export function Tabs({ children, ...props }: TabsProps) {
+export function Tabs({ children, gap = 3, ...props }: TabsProps) {
     const tabs = Children.toArray(children).filter(
         (child): child is ReactElement<TabProps> => isValidElement(child) && child.type === Tab
     );
@@ -30,7 +31,7 @@ export function Tabs({ children, ...props }: TabsProps) {
     }
 
     return (
-        <Stack gap={0}>
+        <Stack gap={gap}>
             <AstryxTabList
                 {...tabListProps}
                 onChange={(nextValue) => {
@@ -55,7 +56,7 @@ export function Tabs({ children, ...props }: TabsProps) {
                     );
                 })}
             </AstryxTabList>
-            {activeTab.props.children}
+            <Stack gap={gap}>{activeTab.props.children}</Stack>
         </Stack>
     );
 }

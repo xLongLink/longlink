@@ -1,11 +1,20 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
+import { resolveXmlProps } from '../core/props';
 import { ActionHandlerContext } from './Action';
 import { useContext, type MouseEvent } from 'react';
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
 import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
+
+const linkPropsSchema = z.object({
+    href: z.string().optional().catch(undefined),
+    isDisabled: z.boolean().optional().catch(undefined),
+    to: z.string().optional().catch(undefined),
+});
+
+type LinkProps = z.infer<typeof linkPropsSchema>;
 
 export function Link({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -14,9 +23,12 @@ export function Link({ props, nodes }: Props) {
         throw new Error('Link requires child content');
     }
 
-    const href = resolveXml(props, 'href', ctx);
-    const to = resolveXml(props, 'to', ctx);
-    const isDisabled = resolveXml(props, 'isDisabled', ctx);
+    const { href, isDisabled, to }: LinkProps = resolveXmlProps(
+        props,
+        ctx,
+        { href: 'scalar', isDisabled: 'scalar', to: 'scalar' },
+        linkPropsSchema
+    );
     const actionHandler = useContext(ActionHandlerContext);
 
     /** Starts an Action only for ordinary primary clicks. */
@@ -40,11 +52,11 @@ export function Link({ props, nodes }: Props) {
     return (
         <AstryxLink
             href={
-                resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '') ||
-                resolveAnchorUrl(services.requestBaseUrl, typeof href === 'string' ? href : '') ||
+                resolveNavigationUrl(services.navigationBaseUrl, to ?? '') ||
+                resolveAnchorUrl(services.requestBaseUrl, href ?? '') ||
                 undefined
             }
-            isDisabled={typeof isDisabled === 'boolean' ? isDisabled : undefined}
+            isDisabled={isDisabled}
             onClick={actionHandler ? handleClick : undefined}
         >
             {renderNode(nodes, ctx)}

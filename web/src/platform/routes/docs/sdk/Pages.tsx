@@ -244,7 +244,7 @@ export default function DocsArticleRoute() {
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Switch" path="/docs/sdk/pages/switch">
-                            <Switch label="Enabled" value onChange={noop} />
+                            <Switch label="Enabled" size="sm" value onChange={noop} />
                         </SummaryCard>
                         <SummaryCard name="TextArea" path="/docs/sdk/pages/text-area">
                             <Stack width={150}>

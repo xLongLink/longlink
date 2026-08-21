@@ -1,11 +1,15 @@
+import { z } from 'zod';
 import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
 import { readSafeProperty } from '../expressions/resolve';
 import { useXmlRuntime, XmlContext } from '../core/context';
-import { readXmlProp, isVisibleXmlNode, resolveXml, resolveXmlValue } from '../core/props';
+import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 
 type TableRow = Record<string, unknown>;
+
+const tablePropsSchema = z.object({ data: z.unknown().optional(), idKey: z.string().optional().catch(undefined) });
+const tableColumnPropsSchema = z.object({ header: z.string().optional().catch(undefined) });
 
 export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
@@ -16,7 +20,7 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires a data attribute');
     }
 
-    const data = resolveXmlValue(props, 'data', ctx);
+    const { data } = resolveXmlProps(props, ctx, { data: 'raw' }, tablePropsSchema);
     const rows = Array.isArray(data)
         ? data.filter((row): row is TableRow => row != null && typeof row === 'object' && !Array.isArray(row))
         : [];
@@ -35,8 +39,13 @@ export function Table({ props, nodes }: Props) {
                 throw new Error('TableColumn requires a usable field path');
             }
             const fieldParts = field.split('.');
-            const headerValue = resolveXml(columnProps, 'header', ctx);
-            const header = typeof headerValue === 'string' ? headerValue : field;
+            const { header: headerValue } = resolveXmlProps(
+                columnProps,
+                ctx,
+                { header: 'scalar' },
+                tableColumnPropsSchema
+            );
+            const header = headerValue ?? field;
             const cellNodes = node.children;
 
             return {
@@ -72,13 +81,6 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    const idKey = resolveXml(props, 'idKey', ctx);
-    return (
-        <AstryxTable
-            columns={columns}
-            data={rows}
-            emptyState={false}
-            idKey={typeof idKey === 'string' ? idKey : undefined}
-        />
-    );
+    const { idKey } = resolveXmlProps(props, ctx, { idKey: 'scalar' }, tablePropsSchema);
+    return <AstryxTable columns={columns} data={rows} emptyState={false} idKey={idKey} />;
 }

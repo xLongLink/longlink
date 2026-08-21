@@ -1,19 +1,23 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { isVisibleXmlNode, requireXmlString } from '../core/props';
 import { Tab as ApplicationTab, Tabs as ApplicationTabs } from '@/components/ui/Tabs';
+import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingWithDefaultSchema } from '../core/props';
+
+const tabsPropsSchema = z.object({ gap: xmlSpacingWithDefaultSchema });
+const tabPropsSchema = z.object({ label: xmlNonblankStringSchema, value: xmlNonblankStringSchema });
 
 export function Tabs({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
-        .map((node) => ({
-            label: requireXmlString(node.params, 'label', ctx, 'Tab'),
-            nodes: node.children,
-            value: requireXmlString(node.params, 'value', ctx, 'Tab'),
-        }));
+        .map((node) => {
+            const { label, value } = resolveXmlProps(node.params, ctx, { label: 'raw', value: 'raw' }, tabPropsSchema);
+
+            return { label, nodes: node.children, value };
+        });
 
     // Tab navigation without options is not meaningful or accessible.
     if (tabs.length === 0) {
@@ -21,9 +25,10 @@ export function Tabs({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
+    const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, tabsPropsSchema);
 
     return (
-        <ApplicationTabs onChange={binding.setValue} value={binding.value}>
+        <ApplicationTabs gap={gap} onChange={binding.setValue} value={binding.value}>
             {tabs.map((tab) => (
                 <ApplicationTab key={tab.value} label={tab.label} value={tab.value}>
                     {renderNode(tab.nodes, ctx)}
