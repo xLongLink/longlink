@@ -4,6 +4,11 @@
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
+    <xsd:attribute name="gap" type="SpacingType" default="3">
+      <xsd:annotation>
+        <xsd:documentation>Space between child elements.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Card" type="CardType">

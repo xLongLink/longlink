@@ -1,5 +1,6 @@
 import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
+import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
 export type XmlScalar = number | boolean | string | undefined;
 
@@ -51,6 +52,18 @@ export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar
 /** Returns whether a value is one of an adapter's supported XML values. */
 export function isXmlEnum<const T extends XmlScalar>(value: unknown, values: readonly T[]): value is T {
     return values.some((item) => item === value);
+}
+
+/** Resolves a layout gap from the Astryx spacing scale. */
+export function resolveXmlGap(props: ASTProps, ctx: Scope, componentName: string) {
+    const gap = resolveXml(props, 'gap', ctx);
+
+    if (gap === undefined) return XML_LAYOUT_GAP;
+    if (!isXmlEnum(gap, SPACING_VALUES)) {
+        throw new Error(`${componentName} gap must use the spacing scale`);
+    }
+
+    return gap;
 }
 
 /** Resolves a raw value XML prop for bindings and object literals. */

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { AuthLayout } from './AuthLayout';
-import { TermsNotice } from './TermsNotice';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -134,8 +133,6 @@ export default function Login() {
                         );
                     }}
                 </form.Subscribe>
-
-                <TermsNotice />
             </Stack>
         </AuthLayout>
     );

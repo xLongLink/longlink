@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { useEffect } from 'react';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useNavigate } from 'react-router';
-import { TermsNotice } from './TermsNotice';
-import { useEffect, useState } from 'react';
 import { passwordSchema } from './validation';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@/components/ui/Divider';
@@ -31,7 +32,6 @@ export default function VerifyEmail() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
-    const [lastVerifiedSetup, setLastVerifiedSetup] = useState<z.infer<typeof zEmailPayload> | null>(null);
     const form = useForm({
         defaultValues: { name: '', password: '' },
         validationLogic: revalidateLogic(),
@@ -47,9 +47,6 @@ export default function VerifyEmail() {
             const response = await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST' });
 
             return zEmailPayload.parse(await response.json());
-        },
-        onSuccess: (setup) => {
-            setLastVerifiedSetup(setup);
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
@@ -82,6 +79,7 @@ export default function VerifyEmail() {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
                 verification.mutate('');
+                return;
             }
             if (error instanceof ApiError && error.status === 409) {
                 return;
@@ -98,10 +96,10 @@ export default function VerifyEmail() {
         verifyToken(token);
     }, [token, verifyToken]);
 
-    const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoverySearch = recoverySetup?.email ? `?${new URLSearchParams({ email: recoverySetup.email })}` : '';
+    const recoverySearch = verification.data?.email
+        ? `?${new URLSearchParams({ email: verification.data.email })}`
+        : '';
     const recoveryRegisterHref = `/auth/register${recoverySearch}`;
-    const completionError = completion.error instanceof ApiError ? completion.error : null;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -130,9 +128,9 @@ export default function VerifyEmail() {
     }
 
     // Account races and cross-tab setup changes cannot succeed by resubmitting the same form.
-    if (completionError?.status === 409) {
+    if (completion.error instanceof ApiError && completion.error.status === 409) {
         return (
-            <AuthLayout title="Complete your account" description={completionError?.message ?? 'error'}>
+            <AuthLayout title="Complete your account" description={completion.error.message}>
                 <Button href={recoveryRegisterHref} label="Request a new registration link" />
             </AuthLayout>
         );
@@ -193,7 +191,17 @@ export default function VerifyEmail() {
                     <Button isLoading={completion.isPending} label="Create account" type="submit" variant="primary" />
                 </Stack>
                 <Divider />
-                <TermsNotice />
+                <Text as="p" color="secondary" justify="center" type="supporting">
+                    By continuing, you agree to our <br />
+                    <Link href="/terms" hasUnderline type="inherit">
+                        Terms of Service
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" hasUnderline type="inherit">
+                        Privacy Policy
+                    </Link>
+                    .
+                </Text>
             </Stack>
         </AuthLayout>
     );

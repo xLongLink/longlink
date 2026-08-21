@@ -2,10 +2,11 @@ import type { Props } from '../types';
 import { createContext } from 'react';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
+import { Stack } from '@astryxdesign/core/Stack';
 import { useBindableValue } from '../core/binding';
 import { Button } from '@astryxdesign/core/Button';
-import { requireXmlString, resolveXml } from '../core/props';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { requireXmlString, resolveXml, resolveXmlGap } from '../core/props';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 
 export const DialogCloseContext = createContext<(() => void) | null>(null);
@@ -20,6 +21,7 @@ export function Dialog({ props, nodes }: Props) {
     const purpose =
         purposeValue === 'required' || purposeValue === 'form' || purposeValue === 'info' ? purposeValue : 'info';
     const subtitle = resolveXml(props, 'subtitle', ctx);
+    const gap = resolveXmlGap(props, ctx, 'Dialog');
 
     return (
         <>
@@ -34,7 +36,11 @@ export function Dialog({ props, nodes }: Props) {
                                 title={title}
                             />
                         }
-                        content={<LayoutContent>{renderNode(nodes, ctx)}</LayoutContent>}
+                        content={
+                            <LayoutContent>
+                                <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
+                            </LayoutContent>
+                        }
                     />
                 </AstryxDialog>
             </DialogCloseContext.Provider>

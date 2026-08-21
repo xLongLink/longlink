@@ -22,6 +22,21 @@
       <xsd:minExclusive value="0"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="SpacingType">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:enumeration value="0"/>
+      <xsd:enumeration value="0.5"/>
+      <xsd:enumeration value="1"/>
+      <xsd:enumeration value="1.5"/>
+      <xsd:enumeration value="2"/>
+      <xsd:enumeration value="3"/>
+      <xsd:enumeration value="4"/>
+      <xsd:enumeration value="5"/>
+      <xsd:enumeration value="6"/>
+      <xsd:enumeration value="8"/>
+      <xsd:enumeration value="10"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="ActionMethodType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="DELETE"/>

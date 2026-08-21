@@ -1,8 +1,8 @@
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import type { ASTNode, Props, Scope } from '../types';
-import { isVisibleXmlNode, requireXmlString, resolveXml } from '../core/props';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
+import { isVisibleXmlNode, requireXmlString, resolveXml, resolveXmlGap } from '../core/props';
 import {
     Menu as ApplicationMenu,
     MenuItem as ApplicationMenuItem,
@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/Menu';
 
 /** Renders the application menu from XML sections and items. */
-export function Menu({ nodes }: Props) {
+export function Menu({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
+    const gap = resolveXmlGap(props, ctx, 'Menu');
     const sections = nodes.filter((node) => isVisibleXmlNode(node, ctx));
 
     for (const section of sections) {
@@ -21,7 +22,7 @@ export function Menu({ nodes }: Props) {
         }
     }
 
-    return <ApplicationMenu>{sections.map((section) => renderSection(section, ctx))}</ApplicationMenu>;
+    return <ApplicationMenu gap={gap}>{sections.map((section) => renderSection(section, ctx))}</ApplicationMenu>;
 }
 
 /** Converts an XML menu section into the application menu marker. */

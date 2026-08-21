@@ -13,6 +13,7 @@ export function RadioList({ props, nodes }: Props) {
         <AstryxRadioList
             label={requireXmlString(props, 'label', ctx, 'RadioList')}
             onChange={binding.setValue}
+            size="sm"
             value={binding.value}
         >
             {options.map((node, index) => {

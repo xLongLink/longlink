@@ -24,6 +24,11 @@
         <xsd:documentation>Wrapping behavior.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="gap" type="SpacingType" default="3">
+      <xsd:annotation>
+        <xsd:documentation>Space between child elements.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Stack" type="StackType">

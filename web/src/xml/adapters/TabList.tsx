@@ -2,7 +2,7 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { isVisibleXmlNode, requireXmlString } from '../core/props';
+import { isVisibleXmlNode, requireXmlString, resolveXmlGap } from '../core/props';
 import { Tab as ApplicationTab, Tabs as ApplicationTabs } from '@/components/ui/Tabs';
 
 export function Tabs({ props, nodes }: Props) {
@@ -21,9 +21,10 @@ export function Tabs({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
+    const gap = resolveXmlGap(props, ctx, 'Tabs');
 
     return (
-        <ApplicationTabs onChange={binding.setValue} value={binding.value}>
+        <ApplicationTabs gap={gap} onChange={binding.setValue} value={binding.value}>
             {tabs.map((tab) => (
                 <ApplicationTab key={tab.value} label={tab.label} value={tab.value}>
                     {renderNode(tab.nodes, ctx)}

@@ -2,8 +2,8 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, readXmlProp, resolveXml } from '../core/props';
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
+import { isXmlEnum, readXmlProp, resolveXml, resolveXmlGap } from '../core/props';
 
 export function Grid({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -11,6 +11,7 @@ export function Grid({ props, nodes }: Props) {
     const columnCount = resolveXml(props, 'columns', ctx);
     const minWidth = resolveXml(props, 'minColumnWidth', ctx);
     const maxColumns = resolveXml(props, 'maxColumns', ctx);
+    const gap = resolveXmlGap(props, ctx, 'Grid');
 
     // Reject dynamic values that cannot produce valid CSS grid tracks.
     if (
@@ -55,5 +56,9 @@ export function Grid({ props, nodes }: Props) {
 
     const columns: GridColumns | undefined = minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount;
 
-    return <AstryxGrid columns={columns}>{renderNode(nodes, ctx)}</AstryxGrid>;
+    return (
+        <AstryxGrid columns={columns} gap={gap}>
+            {renderNode(nodes, ctx)}
+        </AstryxGrid>
+    );
 }

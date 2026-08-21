@@ -4,6 +4,11 @@
     <xsd:sequence>
       <xsd:element ref="MenuSection" minOccurs="1" maxOccurs="unbounded"/>
     </xsd:sequence>
+    <xsd:attribute name="gap" type="SpacingType" default="3">
+      <xsd:annotation>
+        <xsd:documentation>Space between selected menu content elements.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="MenuSectionType">

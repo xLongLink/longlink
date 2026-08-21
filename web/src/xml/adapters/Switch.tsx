@@ -7,9 +7,11 @@ import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => value !== 'false' && Boolean(value));
+
     return (
         <AstryxSwitch
             label={requireXmlString(props, 'label', ctx, 'Switch')}
+            size="sm"
             value={binding.value}
             onChange={binding.setValue}
         />
