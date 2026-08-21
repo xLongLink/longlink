@@ -1,17 +1,19 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { isXmlEnum, resolveXml } from '../core/props';
+import { resolveXmlProps } from '../core/props';
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
+
+const headingPropsSchema = z.object({
+    level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
+});
+
+type HeadingProps = z.infer<typeof headingPropsSchema>;
 
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const level = resolveXml(props, 'level', ctx);
-
-    // Heading levels define document semantics and must be integral and bounded.
-    if (!isXmlEnum(level, [1, 2, 3, 4, 5, 6] as const)) {
-        throw new Error('Heading requires a level from 1 to 6');
-    }
+    const { level }: HeadingProps = resolveXmlProps(props, ctx, { level: 'scalar' }, headingPropsSchema);
 
     return <AstryxHeading level={level}>{renderNode(nodes, ctx)}</AstryxHeading>;
 }

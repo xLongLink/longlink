@@ -1,13 +1,18 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveXmlGap } from '../core/props';
 import { useXmlRuntime } from '../core/context';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Card as AstryxCard } from '@astryxdesign/core/Card';
+import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '../core/props';
+
+const cardPropsSchema = z.object({ gap: xmlSpacingWithDefaultSchema });
+
+type CardProps = z.infer<typeof cardPropsSchema>;
 
 export function Card({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const gap = resolveXmlGap(props, ctx, 'Card');
+    const { gap }: CardProps = resolveXmlProps(props, ctx, { gap: 'scalar' }, cardPropsSchema);
 
     return (
         <AstryxCard>

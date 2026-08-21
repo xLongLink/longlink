@@ -1,12 +1,20 @@
+import { z } from 'zod';
 import { useContext } from 'react';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { BUTTON_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
+import { resolveXmlProps } from '../core/props';
 import { ActionHandlerContext } from './Action';
 import { resolveNavigationUrl } from '../core/url';
-import { isXmlEnum, resolveXml } from '../core/props';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
+
+const buttonPropsSchema = z.object({
+    to: z.string().optional().catch(undefined),
+    variant: z.enum(BUTTON_VARIANTS).optional(),
+});
+
+type ButtonProps = z.infer<typeof buttonPropsSchema>;
 
 export function Button({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -15,14 +23,14 @@ export function Button({ props, nodes }: Props) {
         throw new Error('Button requires child content');
     }
 
-    const variant = resolveXml(props, 'variant', ctx);
-    const to = resolveXml(props, 'to', ctx);
+    const { to, variant }: ButtonProps = resolveXmlProps(
+        props,
+        ctx,
+        { to: 'scalar', variant: 'scalar' },
+        buttonPropsSchema
+    );
     const actionHandler = useContext(ActionHandlerContext);
-    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, typeof to === 'string' ? to : '');
-
-    if (!isXmlEnum(variant, [undefined, ...BUTTON_VARIANTS])) {
-        throw new Error(`Unsupported Button variant '${String(variant)}'`);
-    }
+    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
 
     return (
         <AstryxButton

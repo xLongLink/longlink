@@ -1,25 +1,18 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
-import { resolveXml } from '../core/props';
 import { useXmlRuntime } from '../core/context';
 import { GridSpan as AstryxGridSpan } from '@astryxdesign/core/Grid';
+import { resolveXmlProps, xmlPositiveIntegerSchema } from '../core/props';
+
+const gridSpanPropsSchema = z.object({
+    columns: z.union([z.literal('full'), xmlPositiveIntegerSchema]).optional(),
+    rows: xmlPositiveIntegerSchema.optional(),
+});
 
 export function GridSpan({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const columns = resolveXml(props, 'columns', ctx);
-    const rows = resolveXml(props, 'rows', ctx);
-
-    if (
-        columns != null &&
-        columns !== 'full' &&
-        (typeof columns !== 'number' || !Number.isFinite(columns) || !Number.isInteger(columns) || columns <= 0)
-    ) {
-        throw new Error("GridSpan columns must be a positive integer or 'full'");
-    }
-
-    if (rows != null && (typeof rows !== 'number' || !Number.isFinite(rows) || !Number.isInteger(rows) || rows <= 0)) {
-        throw new Error('GridSpan rows must be a positive integer');
-    }
+    const { columns, rows } = resolveXmlProps(props, ctx, { columns: 'scalar', rows: 'scalar' }, gridSpanPropsSchema);
 
     return (
         <AstryxGridSpan columns={columns} rows={rows}>

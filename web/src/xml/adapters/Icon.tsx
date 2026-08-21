@@ -1,17 +1,20 @@
+import { z } from 'zod';
 import type { Props } from '../types';
 import { ICON_NAMES } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
-import { isXmlEnum, requireXmlString, resolveXml } from '../core/props';
+import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+
+const iconPropsSchema = z.object({
+    icon: xmlNonblankStringSchema.pipe(z.enum(ICON_NAMES)),
+    label: z.string().optional().catch(undefined),
+});
+
+type IconProps = z.infer<typeof iconPropsSchema>;
 
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const icon = requireXmlString(props, 'icon', ctx, 'Icon');
-    const label = resolveXml(props, 'label', ctx);
+    const { icon, label }: IconProps = resolveXmlProps(props, ctx, { icon: 'raw', label: 'scalar' }, iconPropsSchema);
 
-    if (!isXmlEnum(icon, ICON_NAMES)) {
-        throw new Error(`Unsupported Icon icon '${icon}'`);
-    }
-
-    return <AstryxIcon icon={icon} label={typeof label === 'string' ? label : undefined} />;
+    return <AstryxIcon icon={icon} label={label} />;
 }
