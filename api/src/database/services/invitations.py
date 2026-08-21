@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import func, select
+from sqlalchemy import delete, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
@@ -12,7 +12,7 @@ from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
-async def create(session: AsyncSession, organization_id: UUID, email: Email, role: OrganizationRoles) -> OrganizationInvitation:
+async def create(session: AsyncSession, organization_id: UUID, email: Email, role: OrganizationRoles) -> None:
     """Create or replace one active email grant for an organization."""
 
     # Reject emails that already belong to the organization.
@@ -23,7 +23,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
             .where(
                 UserOrganization.organization_id == organization_id,
                 UserOrganization.deleted_at.is_(None),
-                func.lower(User.email) == email,
+                User.email == email,
             )
         )
         is not None
@@ -31,7 +31,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
         raise ConflictError("User is already a member")
 
     # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
-    invitation = await session.scalar(
+    invitation_statement = (
         select(OrganizationInvitation)
         .where(
             OrganizationInvitation.organization_id == organization_id,
@@ -39,6 +39,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
         )
         .with_for_update()
     )
+    invitation = await session.scalar(invitation_statement)
     is_reinvite = invitation is not None
 
     # Resolve concurrent re-invites to the one database-enforced active grant.
@@ -49,14 +50,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
                 session.add(invitation)
                 await session.flush()
         except IntegrityError as exc:
-            invitation = await session.scalar(
-                select(OrganizationInvitation)
-                .where(
-                    OrganizationInvitation.organization_id == organization_id,
-                    OrganizationInvitation.email == email,
-                )
-                .with_for_update()
-            )
+            invitation = await session.scalar(invitation_statement)
             if invitation is None:
                 raise ConflictError("Invitation could not be created") from exc
             is_reinvite = True
@@ -64,8 +58,6 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
     if is_reinvite:
         invitation.role = role
         invitation.created_at = utcnow()
-
-    return invitation
 
 
 async def accept(session: AsyncSession, user: User) -> set[UUID]:
@@ -121,7 +113,9 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
             membership.deleted_id = None
             changed_organization_ids.add(invitation.organization_id)
 
-        # Consumed grants no longer need an active or audit record.
-        await session.delete(invitation)
+    # Consumed grants no longer need an active or audit record.
+    await session.execute(
+        delete(OrganizationInvitation).where(OrganizationInvitation.id.in_([invitation.id for invitation in invitations]))
+    )
 
     return changed_organization_ids

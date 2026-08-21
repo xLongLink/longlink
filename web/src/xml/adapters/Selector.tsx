@@ -3,9 +3,8 @@ import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+import { isVisibleXmlNode, resolveXmlProps, xmlLabelPropsSchema, xmlNonblankStringSchema } from '../core/props';
 
-const selectorPropsSchema = z.object({ label: xmlNonblankStringSchema });
 const optionPropsSchema = z.object({
     label: z.string().optional(),
     value: xmlNonblankStringSchema,
@@ -35,7 +34,7 @@ export function Selector({ props, nodes }: Props) {
 
     return (
         <AstryxSelector
-            label={resolveXmlProps(props, ctx, { label: 'raw' }, selectorPropsSchema).label}
+            label={resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema).label}
             onChange={binding.setValue}
             options={options}
             value={binding.value}

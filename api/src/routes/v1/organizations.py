@@ -172,9 +172,9 @@ async def create_organization_invitation(
     if not roles.atleast(membership.role, payload.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    invitation = await invitations.create(session, membership.organization_id, payload.email, payload.role)
+    await invitations.create(session, membership.organization_id, payload.email, payload.role)
     await session.commit()
-    await mail.send_organization_invitation_email(invitation.email, membership.organization.name, invitation.role)
+    await mail.send_organization_invitation_email(payload.email, membership.organization.name, payload.role)
 
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)

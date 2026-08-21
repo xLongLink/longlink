@@ -10,7 +10,7 @@ import { AppShell } from '@astryxdesign/core/AppShell';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
-type NavigationTab = {
+export type NavigationTab = {
     href: string;
     icon?: LucideIcon;
     label: string;

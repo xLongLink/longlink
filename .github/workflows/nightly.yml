@@ -91,3 +91,12 @@ jobs:
                   package-type: container
                   min-versions-to-keep: 3
                   delete-only-untagged-versions: true
+
+    sync-sample:
+        needs: publish-api-image
+        permissions:
+            contents: read
+        uses: ./.github/workflows/sync-sample.yml
+        with:
+            channel: nightly
+        secrets: inherit

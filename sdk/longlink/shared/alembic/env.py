@@ -32,7 +32,6 @@ def do_run_migrations(connection: Connection) -> None:
 
     # Alembic creates its version table before revisions, so create the schema first.
     connection.execute(text("CREATE SCHEMA IF NOT EXISTS shared"))
-    connection.commit()
     connection.execute(text("SET search_path TO shared"))
     connection.commit()
     context.configure(connection=connection, version_table_schema="shared")
@@ -58,19 +57,13 @@ async def run_async_migrations(database_url: str) -> None:
         await connectable.dispose()
 
 
-def run_migrations_online() -> None:
-    """Run shared-schema migrations in online mode."""
-
+# Select migration execution from the active Alembic context.
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
     # Require the organization database URL supplied by the control-plane migration runner.
     database_url = config.get_main_option("sqlalchemy.url")
     if database_url is None:
         raise RuntimeError("Alembic sqlalchemy.url is not configured")
 
     asyncio.run(run_async_migrations(database_url))
-
-
-# Select migration execution from the active Alembic context.
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()

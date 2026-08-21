@@ -2,10 +2,9 @@ import { z } from 'zod';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+import { isVisibleXmlNode, resolveXmlProps, xmlLabelPropsSchema, xmlNonblankStringSchema } from '../core/props';
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
 
-const radioListPropsSchema = z.object({ label: xmlNonblankStringSchema });
 const optionPropsSchema = z.object({
     label: z.string().optional(),
     value: xmlNonblankStringSchema,
@@ -17,7 +16,7 @@ export function RadioList({ props, nodes }: Props) {
 
     return (
         <AstryxRadioList
-            label={resolveXmlProps(props, ctx, { label: 'raw' }, radioListPropsSchema).label}
+            label={resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema).label}
             onChange={binding.setValue}
             size="sm"
             value={binding.value}

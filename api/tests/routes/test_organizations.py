@@ -1,5 +1,6 @@
 import pytest
 from httpx2 import AsyncClient
+from sqlmodel import select
 from factories import create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
@@ -8,6 +9,7 @@ from src.database.services import operations, invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -362,8 +364,10 @@ async def test_get_organization_returns_invitations(
     owner, invitee, regular_member = users
     organization = await create_organization(owner)
     async with session_scope() as session:
-        invitation = await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
         await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        assert invitation is not None
 
     async with session_scope() as session:
         session.add(

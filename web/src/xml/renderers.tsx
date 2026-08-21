@@ -13,14 +13,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 type RenderXMLProps = {
     ast: ASTNode;
     ctx: XmlRuntime;
-    baseUrl: string;
 };
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
-    ctx.services.requestBaseUrl = baseUrl;
+export function RenderXML({ ast, ctx }: RenderXMLProps) {
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {
@@ -30,9 +28,9 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
         }
     }, [ast]);
     const initializedAst = useRef<ASTNode | null>(null);
-    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; baseUrl: string; error: unknown } | null>(null);
+    const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; error: unknown } | null>(null);
     const [, setRenderVersion] = useState(0);
-    const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
+    const setupError = setupFailure?.ast === ast ? setupFailure.error : null;
 
     useEffect(() => {
         // Do not initialize an invalid document.
@@ -102,7 +100,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             })
             .catch((error) => {
                 // Report setup failures only while mounted.
-                if (mounted) setSetupFailure({ ast, baseUrl, error });
+                if (mounted) setSetupFailure({ ast, error });
             });
 
         return () => {
@@ -111,7 +109,7 @@ export function RenderXML({ ast, ctx, baseUrl }: RenderXMLProps) {
             // Remove state subscriptions on unmount.
             unsubscribeAll();
         };
-    }, [ast, ctx, baseUrl, setup]);
+    }, [ast, ctx, setup]);
 
     // Show setup failures before rendering XML nodes.
     if (setup.error || setupError) {

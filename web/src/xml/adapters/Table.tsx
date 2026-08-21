@@ -46,10 +46,7 @@ export function Table({ props, nodes }: Props) {
                 header,
                 key: field,
                 renderCell: (row) => {
-                    const value = fieldParts.reduce<unknown>(
-                        (current, segment) => readSafeProperty(current, segment),
-                        row
-                    );
+                    const value = fieldParts.reduce(readSafeProperty, row);
 
                     // Shorthand columns render the resolved field value directly.
                     if (cellNodes.length === 0) {

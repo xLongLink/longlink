@@ -22,7 +22,7 @@ class OrganizationInvitation(PlatformModel, table=True):
     email: str = Field(max_length=320)
 
     # Relationships
-    organization_id: UUID = Field(foreign_key="organizations.id")
+    organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE")
 
     # State
     role: OrganizationRoles = Field(
