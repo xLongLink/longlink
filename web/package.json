@@ -56,12 +56,12 @@
         "@types/topojson-client": "^3.1.5",
         "eslint-plugin-perfectionist": "^5.10.1",
         "typescript": "5.9.3",
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.8",
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
         "vite-plus": "0.2.9"
     },
     "overrides": {
         "@babel/core": "7.29.7",
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.8"
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9"
     },
     "devEngines": {
         "packageManager": {
