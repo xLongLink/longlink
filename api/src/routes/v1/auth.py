@@ -15,6 +15,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(tags=["auth"])
 
 
+def set_auth_session(response: Response, credential: str) -> None:
+    """Apply the browser response policy for one signed authentication credential."""
+
+    # Publish authentication as a private, browser-only session.
+    response.headers["Cache-Control"] = "no-store"
+    response.set_cookie(
+        "longlink_auth",
+        credential,
+        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+
+
 @router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
@@ -38,16 +54,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
-    response.headers["Cache-Control"] = "no-store"
-    response.set_cookie(
-        "longlink_auth",
-        credential,
-        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
-        path="/",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    set_auth_session(response, credential)
 
 
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
@@ -263,16 +270,7 @@ async def complete_registration(
     credential = token.create_auth_token(user)
 
     # Publish browser authentication only after both persistent records commit.
-    response.headers["Cache-Control"] = "no-store"
-    response.set_cookie(
-        "longlink_auth",
-        credential,
-        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
-        path="/",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    set_auth_session(response, credential)
     response.delete_cookie(
         "longlink_registration",
         path="/api/v1/auth/register",
