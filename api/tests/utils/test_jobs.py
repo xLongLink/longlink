@@ -25,8 +25,6 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
     # Arrange
     operation = leased_operation()
-    completed = leased_operation()
-    completed.finished_at = utcnow()
     started = asyncio.Event()
     release = asyncio.Event()
 
@@ -41,7 +39,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
         assert operation_id == operation.id
         started.set()
         await release.wait()
-        return completed
+        return operation
 
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
 

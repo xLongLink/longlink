@@ -24,7 +24,7 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)).with_for_update())
+    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
     compute_ids = result.scalars().all()
     result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
@@ -111,7 +111,7 @@ async def claim(session: AsyncSession) -> Operation | None:
         await fail(session, operation.id)
         return None
 
-    # Acquire the lease conditionally because SQLite ignores the row locks above.
+    # Acquire the lease conditionally so concurrent workers cannot claim the same operation.
     if (
         await session.execute(
             update(Operation)

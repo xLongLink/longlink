@@ -38,7 +38,6 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     """Coalesce unfinished work by target and create successors after completion."""
 
     # Seed duplicate and independent resource lifecycle targets.
-    compute = await create_compute("local")
     first_application_id = uuid4()
     organization_id = uuid4()
 
