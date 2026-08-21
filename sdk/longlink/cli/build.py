@@ -53,7 +53,7 @@ RUN groupadd --system --gid 10001 longlink \
 
 USER 10001:10001
 
-CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 8000 --log-level info"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
 """
 
 

@@ -9,15 +9,12 @@ const schema = z.object({
     kubeconfig: z.string().refine((value) => value.trim().length > 0),
 });
 
-type Values = z.infer<typeof schema>;
-
 /** Registers one compute target. */
 export default function CreateCompute() {
-    const dialog = useRegistryDialog<Values>({
+    const dialog = useRegistryDialog<z.infer<typeof schema>>({
         defaultValues: { name: '', kubeconfig: '' },
         endpoint: '/api/v1/computes',
         errorMessage: 'Failed to connect compute',
-        queryKey: ['api', '/api/v1/computes'],
         schema,
     });
 

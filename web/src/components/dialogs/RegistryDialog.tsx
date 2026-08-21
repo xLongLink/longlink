@@ -13,7 +13,6 @@ type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     defaultValues: TValues;
     endpoint: string;
     errorMessage: string;
-    queryKey: readonly unknown[];
     schema: z.ZodType<TValues, TValues>;
 };
 
@@ -31,7 +30,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     defaultValues,
     endpoint,
     errorMessage,
-    queryKey,
     schema,
 }: RegistryDialogOptions<TValues>) {
     const toast = useToast();
@@ -45,7 +43,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         onSuccess: () => {
             setOpen(false);
             form.reset();
-            void queryClient.invalidateQueries({ queryKey });
+            void queryClient.invalidateQueries({ queryKey: ['api', endpoint] });
         },
     });
     const form = useForm({
