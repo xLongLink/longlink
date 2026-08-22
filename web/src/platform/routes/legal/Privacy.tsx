@@ -8,8 +8,6 @@ import { List, ListItem } from '@astryxdesign/core/List';
 
 export const metadata = {
     path: '/privacy',
-    title: 'Privacy',
-    description: 'Read the LongLink privacy policy.',
     toc: [
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },

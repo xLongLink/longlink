@@ -6,9 +6,9 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@astryxdesign/core/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
+import { Divider } from '@astryxdesign/core/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -144,7 +144,7 @@ export default function VerifyEmail() {
                         name="name"
                         children={(field) => (
                             <TextInput
-                                {...{ autoComplete: 'name' }}
+                                autoComplete="name"
                                 hasAutoFocus
                                 htmlName="name"
                                 isRequired

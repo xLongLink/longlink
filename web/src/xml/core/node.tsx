@@ -1,4 +1,3 @@
-import { For } from './for';
 import type { ReactNode } from 'react';
 import type { ASTNode, Scope } from '../types';
 import { xmlComponentRegistry } from './registry';
@@ -29,17 +28,6 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
         // Render registered XML components directly.
         if (RegisteredComponent) {
             return <RegisteredComponent key={index} props={props} nodes={node.children} />;
-        }
-
-        // Delegate loop nodes to the scoped core renderer.
-        if (node.name === 'For') {
-            // Require a loop item alias.
-            if (!props.as) throw new Error(`For requires an "as" parameter`);
-
-            // Require a loop source expression.
-            if (!props.each) throw new Error(`For requires an "each" parameter`);
-
-            return <For key={index} props={props} nodes={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

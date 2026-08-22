@@ -7,9 +7,9 @@ import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
+import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '../core/url';
 import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
 
 type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
@@ -146,16 +146,12 @@ async function executeAction(
 /** Resolves a terminal navigation destination from one Action control. */
 function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: RuntimeServices): string {
     const { to, href } = resolveXmlProps(node.params, ctx, { to: 'scalar', href: 'scalar' }, navigationPropsSchema);
-    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
-    if (navigationUrl) {
-        return navigationUrl;
-    }
-
-    if (node.name !== 'Link') {
-        return '';
-    }
-
-    return resolveAnchorUrl(services.requestBaseUrl, href ?? '');
+    return resolveControlUrl(
+        services.navigationBaseUrl,
+        services.requestBaseUrl,
+        to ?? '',
+        node.name === 'Link' ? (href ?? '') : ''
+    );
 }
 
 /** Sends one configured app-relative request. */

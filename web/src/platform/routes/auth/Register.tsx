@@ -3,10 +3,10 @@ import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@astryxdesign/core/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
+import { Divider } from '@astryxdesign/core/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
@@ -40,7 +40,7 @@ export default function Register() {
                         name="email"
                         children={(field) => (
                             <TextInput
-                                {...{ autoComplete: 'email' }}
+                                autoComplete="email"
                                 htmlName="email"
                                 isRequired
                                 label="Email"

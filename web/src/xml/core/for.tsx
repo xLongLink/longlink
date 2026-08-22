@@ -7,6 +7,11 @@ import { resolveXml, resolveXmlValue } from './props';
 export function For({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;
+
+    // Require the loop alias and source before resolving them.
+    if (!props.as) throw new Error('For requires an "as" parameter');
+    if (!props.each) throw new Error('For requires an "each" parameter');
+
     const resolvedAs = resolveXml(props, 'as', ctx);
     const as = typeof resolvedAs === 'string' ? resolvedAs : '';
     const each = resolveXmlValue(props, 'each', ctx);

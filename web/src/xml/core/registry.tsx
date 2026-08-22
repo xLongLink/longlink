@@ -1,3 +1,4 @@
+import { For } from './for';
 import type { Props } from '../types';
 import { Card } from '../adapters/Card';
 import { Grid } from '../adapters/Grid';
@@ -40,6 +41,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Dialog,
     Divider,
     FileInput,
+    For,
     Grid,
     GridSpan,
     Heading,

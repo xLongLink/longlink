@@ -20,12 +20,18 @@ export function Table({ props, nodes }: Props) {
             const columnProps = node.params;
             const fieldAttribute = readXmlProp(columnProps, 'field');
 
-            // Column field paths are literal identifiers, not expressions.
-            if (fieldAttribute?.kind !== 'text' || !/^[^.\s]+(?:\.[^.\s]+)*$/.test(fieldAttribute.value)) {
+            // Column field paths are static identifiers, not runtime values.
+            if (
+                (fieldAttribute?.kind !== 'text' && fieldAttribute?.kind !== 'path') ||
+                (fieldAttribute?.kind === 'path' && fieldAttribute.isBinding)
+            ) {
                 throw new Error('TableColumn requires a usable field path');
             }
-            const field = fieldAttribute.value;
-            const fieldParts = field.split('.');
+            const fieldParts = fieldAttribute.kind === 'text' ? fieldAttribute.value.split('.') : fieldAttribute.parts;
+            if (fieldParts.some((part) => !part || /\s/.test(part))) {
+                throw new Error('TableColumn requires a usable field path');
+            }
+            const field = fieldParts.join('.');
             const { header: headerValue } = resolveXmlProps(
                 columnProps,
                 ctx,

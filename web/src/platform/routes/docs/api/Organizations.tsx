@@ -31,8 +31,6 @@ const organizationRoles = [
 
 export const metadata = {
     path: '/docs/api/organizations',
-    title: 'Organizations',
-    description: 'Learn how LongLink organizations, memberships, and access boundaries work.',
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },

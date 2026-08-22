@@ -7,8 +7,6 @@ import { List, ListItem } from '@astryxdesign/core/List';
 
 export const metadata = {
     path: '/terms',
-    title: 'Terms of Service',
-    description: 'Read the LongLink terms of service.',
     toc: [
         { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
         {

@@ -5,8 +5,8 @@ import { renderNode } from '../core/node';
 import { BUTTON_VARIANTS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
+import { resolveControlUrl } from '../core/url';
 import { ActionHandlerContext } from './Action';
-import { resolveNavigationUrl } from '../core/url';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
 
 const buttonPropsSchema = z.object({
@@ -23,7 +23,7 @@ export function Button({ props, nodes }: Props) {
 
     const { to, variant } = resolveXmlProps(props, ctx, { to: 'scalar', variant: 'scalar' }, buttonPropsSchema);
     const actionHandler = useContext(ActionHandlerContext);
-    const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
+    const navigationUrl = resolveControlUrl(services.navigationBaseUrl, services.requestBaseUrl, to ?? '');
 
     return (
         <AstryxButton

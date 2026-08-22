@@ -3,7 +3,7 @@ import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
 import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
-export type XmlScalar = number | boolean | string | undefined;
+type XmlScalar = number | boolean | string | undefined;
 export type XmlSpacing = (typeof SPACING_VALUES)[number];
 
 export const xmlNonblankStringSchema = z
@@ -34,12 +34,13 @@ export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar
     const value = evaluate(attribute, ctx);
     if (value == null || value === '') return undefined;
     if (typeof value === 'number') return value;
+    if (typeof value === 'boolean') return value;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
 
     const numberValue = Number(value);
 
     if (!Number.isNaN(numberValue)) return numberValue;
-    if (value === 'true') return true;
-    if (value === 'false') return false;
 
     return String(value);
 }
@@ -53,22 +54,11 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope): unkn
     return evaluate(attribute, ctx);
 }
 
-/** Resolves a static text XML prop without evaluating bindings or expressions. */
-export function resolveXmlLiteral(props: ASTProps, name: string): string | undefined {
-    const attribute = readXmlProp(props, name);
-    if (attribute == null) return undefined;
-    if (attribute.kind !== 'text') {
-        throw new Error(`XML prop "${name}" must be a literal value`);
-    }
-
-    return attribute.value;
-}
-
 /** Resolves named XML props by mode and validates the result with an object schema. */
 export function resolveXmlProps<T extends z.ZodObject>(
     props: ASTProps,
     ctx: Scope,
-    fields: Record<string, 'scalar' | 'raw' | 'literal'>,
+    fields: Record<string, 'scalar' | 'raw'>,
     schema: T
 ): z.output<T> {
     const values: Record<string, unknown> = {};
@@ -81,9 +71,6 @@ export function resolveXmlProps<T extends z.ZodObject>(
                 break;
             case 'raw':
                 values[name] = resolveXmlValue(props, name, ctx);
-                break;
-            case 'literal':
-                values[name] = resolveXmlLiteral(props, name);
                 break;
         }
     }

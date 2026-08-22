@@ -6,8 +6,6 @@ import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
     path: '/impressum',
-    title: 'Impressum',
-    description: 'Read the LongLink legal notice and company information.',
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },

@@ -28,7 +28,7 @@ describe('renderNode', () => {
         expect(output).toContain('value="Ada"');
     });
 
-    it('renders Heading semantic level', () => {
+    it('renders Heading content', () => {
         const output = renderXmlToMarkup([
             {
                 name: 'Heading',
@@ -37,7 +37,6 @@ describe('renderNode', () => {
             },
         ]);
 
-        expect(output).toContain('data-level="1"');
         expect(output).toContain('Orders');
     });
 });

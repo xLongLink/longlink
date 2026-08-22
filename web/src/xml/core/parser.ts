@@ -96,8 +96,7 @@ function collectParams(input: unknown): ASTProps {
         // Compile string attributes without resolving runtime values.
         const name = key.slice(2);
 
-        // Table fields are literal paths rather than runtime values.
-        params[name] = name === 'field' ? { kind: 'text', value: entry } : compileAttribute(entry);
+        params[name] = compileAttribute(entry);
     }
 
     return params;

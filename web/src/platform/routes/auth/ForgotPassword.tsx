@@ -50,7 +50,7 @@ export default function ForgotPassword() {
                             name="email"
                             children={(field) => (
                                 <TextInput
-                                    {...{ autoComplete: 'email' }}
+                                    autoComplete="email"
                                     htmlName="email"
                                     isRequired
                                     label="Email"
