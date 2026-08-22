@@ -29,11 +29,6 @@
         <xsd:documentation>Dialog purpose: required, form, or info.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="gap" type="SpacingType" default="3">
-      <xsd:annotation>
-        <xsd:documentation>Space between dialog content elements.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">
@@ -42,7 +37,9 @@
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="dialog" category="Layout" lastUpdated="2026-07-21" source="adapters/Dialog.xsd"/>
         <longlink:example>&lt;Dialog title="Edit order" isOpen="$dialog.open"&gt;
-  &lt;TextInput label="Name" value="$form.name" /&gt;
+  &lt;Stack&gt;
+    &lt;TextInput label="Name" value="$form.name" /&gt;
+  &lt;/Stack&gt;
 &lt;/Dialog&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

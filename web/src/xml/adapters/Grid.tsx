@@ -3,7 +3,7 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
-import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
+import { Grid as AstryxGrid } from '@astryxdesign/core/Grid';
 import {
     resolveXmlProps,
     xmlPositiveIntegerSchema,
@@ -44,10 +44,8 @@ export function Grid({ props, nodes }: Props) {
         gridPropsSchema
     );
 
-    const columns: GridColumns | undefined = minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount;
-
     return (
-        <AstryxGrid columns={columns} gap={gap}>
+        <AstryxGrid columns={minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount} gap={gap}>
             {renderNode(nodes, ctx)}
         </AstryxGrid>
     );

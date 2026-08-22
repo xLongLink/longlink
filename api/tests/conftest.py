@@ -77,14 +77,19 @@ async def reset_db(
         await engine.dispose()
 
 
+def authenticated_cookies(user: User) -> Cookies:
+    """Build browser authentication cookies for a persisted test user."""
+
+    # Match the signed browser credential used by authenticated API clients.
+    cookies = Cookies()
+    cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
+    return cookies
+
+
 def create_client(user: User | None = None) -> AsyncClient:
     """Build an in-process API client with optional authentication cookies."""
 
-    # Match the signed browser credential used by authenticated API clients.
-    cookies: Cookies | None = None
-    if user is not None:
-        cookies = Cookies()
-        cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
+    cookies = authenticated_cookies(user) if user is not None else None
 
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", cookies=cookies, follow_redirects=True)
 

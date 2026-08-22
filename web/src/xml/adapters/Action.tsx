@@ -64,7 +64,9 @@ export function Action({ props, nodes }: Props) {
 
 /** Validates direct Action children and converts them into ordered executable steps. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
-    assertAllowedProps(props, new Set(), 'Action');
+    for (const name of Object.keys(props)) {
+        throw new Error(`Action does not support ${name}`);
+    }
 
     const steps: ActionStep[] = [];
     let control: ASTNode | undefined;
@@ -78,11 +80,12 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
                 throw new Error(`${node.name} cannot have children`);
             }
 
-            assertAllowedProps(
-                node.params,
-                node.name === 'Request' ? REQUEST_ALLOWED_PROPS : PATCH_ALLOWED_PROPS,
-                node.name
-            );
+            const allowedProps = node.name === 'Request' ? REQUEST_ALLOWED_PROPS : PATCH_ALLOWED_PROPS;
+            for (const name of Object.keys(node.params)) {
+                if (!allowedProps.has(name)) {
+                    throw new Error(`${node.name} does not support ${name}`);
+                }
+            }
             steps.push({ kind: node.name === 'Request' ? 'request' : 'patch', props: node.params });
             continue;
         }
@@ -128,7 +131,18 @@ async function executeAction(
         await executePatch(step.props, ctx, services);
     }
 
-    const url = resolveActionNavigationUrl(plan.control, ctx, services);
+    const { to, href } = resolveXmlProps(
+        plan.control.params,
+        ctx,
+        { to: 'scalar', href: 'scalar' },
+        navigationPropsSchema
+    );
+    const url = resolveControlUrl(
+        services.navigationBaseUrl,
+        services.requestBaseUrl,
+        to ?? '',
+        plan.control.name === 'Link' ? (href ?? '') : ''
+    );
     if (url) {
         services.navigate(url);
         return;
@@ -141,17 +155,6 @@ async function executeAction(
     if (status !== null) {
         toast({ body: `Request completed with status ${status}` });
     }
-}
-
-/** Resolves a terminal navigation destination from one Action control. */
-function resolveActionNavigationUrl(node: ASTNode, ctx: Scope, services: RuntimeServices): string {
-    const { to, href } = resolveXmlProps(node.params, ctx, { to: 'scalar', href: 'scalar' }, navigationPropsSchema);
-    return resolveControlUrl(
-        services.navigationBaseUrl,
-        services.requestBaseUrl,
-        to ?? '',
-        node.name === 'Link' ? (href ?? '') : ''
-    );
 }
 
 /** Sends one configured app-relative request. */
@@ -240,15 +243,6 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         }
 
         target[key] = entry;
-    }
-}
-
-/** Rejects attributes outside an XML component's public contract. */
-function assertAllowedProps(props: ASTProps, allowed: Set<string>, componentName: string): void {
-    for (const name of Object.keys(props)) {
-        if (!allowed.has(name)) {
-            throw new Error(`${componentName} does not support ${name}`);
-        }
     }
 }
 
