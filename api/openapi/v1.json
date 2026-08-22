@@ -410,6 +410,29 @@
         "operationId": "list_applications_api_v1_applications_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -432,11 +455,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApplicationResponse"
-                  },
-                  "title": "Response List Applications Api V1 Applications Get"
+                  "$ref": "#/components/schemas/Page_ApplicationResponse_"
                 }
               }
             }
@@ -556,73 +575,6 @@
                     "$ref": "#/components/schemas/OrganizationApplicationSummary"
                   },
                   "title": "Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/applications/{application_id}/releases": {
-      "post": {
-        "summary": "Release Application",
-        "description": "Record one desired Application release and queue its deployment.",
-        "operationId": "release_application_api_v1_applications__application_id__releases_post",
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Application Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApplicationRelease"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApplicationResponse"
                 }
               }
             }
@@ -813,6 +765,29 @@
         "operationId": "list_compute_registries_api_v1_computes_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -835,11 +810,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ComputeRegistryResponse"
-                  },
-                  "title": "Response List Compute Registries Api V1 Computes Get"
+                  "$ref": "#/components/schemas/Page_ComputeRegistryResponse_"
                 }
               }
             }
@@ -1024,6 +995,29 @@
         "operationId": "list_database_registries_api_v1_databases_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -1046,11 +1040,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DatabaseRegistryResponse"
-                  },
-                  "title": "Response List Database Registries Api V1 Databases Get"
+                  "$ref": "#/components/schemas/Page_DatabaseRegistryResponse_"
                 }
               }
             }
@@ -1391,6 +1381,29 @@
         "operationId": "list_operations_api_v1_operations_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -1413,11 +1426,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OperationResponse"
-                  },
-                  "title": "Response List Operations Api V1 Operations Get"
+                  "$ref": "#/components/schemas/Page_OperationResponse_"
                 }
               }
             }
@@ -1442,6 +1451,29 @@
         "operationId": "list_organizations_api_v1_organizations_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -1464,11 +1496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OrganizationSummary"
-                  },
-                  "title": "Response List Organizations Api V1 Organizations Get"
+                  "$ref": "#/components/schemas/Page_OrganizationSummary_"
                 }
               }
             }
@@ -2040,6 +2068,29 @@
         "operationId": "list_storage_registries_api_v1_storages_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -2062,11 +2113,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StorageRegistryResponse"
-                  },
-                  "title": "Response List Storage Registries Api V1 Storages Get"
+                  "$ref": "#/components/schemas/Page_StorageRegistryResponse_"
                 }
               }
             }
@@ -2349,6 +2396,29 @@
         "operationId": "list_users_api_v1_users_get",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Page Size"
+            }
+          },
+          {
             "name": "longlink_auth",
             "in": "cookie",
             "required": false,
@@ -2371,11 +2441,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserSummary"
-                  },
-                  "title": "Response List Users Api V1 Users Get"
+                  "$ref": "#/components/schemas/Page_UserSummary_"
                 }
               }
             }
@@ -2403,16 +2469,6 @@
             "maxLength": 100,
             "minLength": 1,
             "title": "Name"
-          },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "image": {
             "type": "string",
@@ -2446,32 +2502,6 @@
         "title": "ApplicationCreate",
         "description": "Validate application creation payloads."
       },
-      "ApplicationRelease": {
-        "properties": {
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          }
-        },
-        "type": "object",
-        "required": [
-          "image"
-        ],
-        "title": "ApplicationRelease",
-        "description": "Validate a requested Application release."
-      },
       "ApplicationResponse": {
         "properties": {
           "id": {
@@ -2489,16 +2519,6 @@
           "slug": {
             "type": "string",
             "title": "Slug"
-          },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "description": {
             "anyOf": [
@@ -2530,7 +2550,6 @@
           "organization",
           "name",
           "slug",
-          "icon",
           "description",
           "image_desired",
           "status",
@@ -2931,16 +2950,6 @@
             "type": "string",
             "title": "Slug"
           },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "description": {
             "anyOf": [
               {
@@ -3215,6 +3224,160 @@
         ],
         "title": "OrganizationUpdate",
         "description": "Validate mutable organization settings."
+      },
+      "Page_ApplicationResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[ApplicationResponse]"
+      },
+      "Page_ComputeRegistryResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ComputeRegistryResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[ComputeRegistryResponse]"
+      },
+      "Page_DatabaseRegistryResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DatabaseRegistryResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[DatabaseRegistryResponse]"
+      },
+      "Page_OperationResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OperationResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[OperationResponse]"
+      },
+      "Page_OrganizationSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[OrganizationSummary]"
+      },
+      "Page_StorageRegistryResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StorageRegistryResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[StorageRegistryResponse]"
+      },
+      "Page_UserSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[UserSummary]"
       },
       "PasswordLogin": {
         "properties": {

@@ -3,18 +3,20 @@ from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
-from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
+from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
-    """Return all registered database backends."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[DatabaseRegistry], int]:
+    """Return one ordered page of database registries."""
 
-    result = await session.scalars(
-        select(DatabaseRegistry).options(
+    # Load only the fields exposed by the administrator response.
+    statement = (
+        select(DatabaseRegistry)
+        .options(
             load_only(
                 DatabaseRegistry.id,
                 DatabaseRegistry.name,
@@ -24,8 +26,15 @@ async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
                 DatabaseRegistry.username,
             )
         )
+        .order_by(DatabaseRegistry.name, DatabaseRegistry.id)
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
     )
-    return result.all()
+    result = await session.scalars(statement)
+
+    # Count every registered database target.
+    count_result = await session.execute(select(func.count()).select_from(DatabaseRegistry))
+    return list(result.all()), count_result.scalar_one()
 
 
 async def available(session: AsyncSession) -> UUID | None:

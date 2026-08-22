@@ -7,5 +7,3 @@ export const pageSchema = z.object({
     icon: z.string().trim().min(1).optional(),
     route: z.string().trim(),
 });
-
-export type RuntimePage = z.infer<typeof pageSchema>;

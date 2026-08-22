@@ -9,6 +9,11 @@ type BindingTarget = {
     key?: string;
 };
 
+/** Coerces XML values using the runtime's boolean semantics. */
+export function coerceXmlBoolean(value: unknown): boolean {
+    return value !== 'false' && Boolean(value);
+}
+
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
 export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
     const value = resolveXmlValue(props, name, ctx);

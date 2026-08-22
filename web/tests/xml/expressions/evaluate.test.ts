@@ -46,10 +46,28 @@ describe('evaluate', () => {
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
     });
 
+    it.each(['${[value]}', '${value ? 1 : 0}'])('rejects unsupported expression nodes: %s', (value) => {
+        const ctx: Scope = { bindings: { value: 1 } };
+
+        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Unsupported node');
+    });
+
+    it('rejects object spread expressions', () => {
+        const ctx: Scope = { bindings: { value: 1 } };
+
+        expect(() => evaluate(compileAttribute('${{ ...value }}'), ctx)).toThrow('Object spread not allowed');
+    });
+
     it('rejects unknown optional calls', () => {
         const ctx: Scope = { bindings: {} };
 
         expect(() => evaluate(compileAttribute('${unknown?.()}'), ctx)).toThrow('Function call not allowed');
+    });
+
+    it.each(['${Array.isArray(value)}', '${Math.floor(value)}'])('rejects removed static helpers: %s', (value) => {
+        const ctx: Scope = { bindings: { value: 1 } };
+
+        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Function call not allowed');
     });
 
     it('allows optional calls to whitelisted helpers', () => {

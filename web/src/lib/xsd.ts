@@ -82,8 +82,7 @@ function parseDocument(source: string, path: string): XsdRecord {
         throw new Error(`Cannot parse ${path}: ${validation.err.msg}`);
     }
 
-    const parsed = record(parser.parse(source))?.['xsd:schema'];
-    const schema = record(parsed);
+    const schema = record(record(parser.parse(source))?.['xsd:schema']);
     if (!schema) {
         throw new Error(`Cannot parse ${path}: Missing xsd:schema root.`);
     }

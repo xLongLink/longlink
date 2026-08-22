@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
-import { passwordSchema } from './validation';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { fieldErrorStatus, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 
@@ -29,8 +29,7 @@ export default function ResetPassword() {
         validators: { onDynamic: resetPasswordSchema },
         onSubmit: ({ value }) => handleResetPassword(value),
     });
-    const isBadTokenError = (error: unknown) =>
-        error instanceof ApiError && error.message === 'RESET_PASSWORD_BAD_TOKEN';
+    const isBadTokenError = (error: unknown) => error instanceof ApiError && error.status === 400;
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {
@@ -108,14 +107,7 @@ export default function ResetPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <Stack
-                    as="form"
-                    gap={4}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void form.handleSubmit();
-                    }}
-                >
+                <AuthForm gap={4} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
                         name="password"
                         children={(field) => (
@@ -125,11 +117,7 @@ export default function ResetPassword() {
                                 label="New password"
                                 onBlur={field.handleBlur}
                                 onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
+                                status={fieldErrorStatus(field.state.meta.errors)}
                                 value={field.state.value}
                                 width="100%"
                                 type="password"
@@ -142,7 +130,7 @@ export default function ResetPassword() {
                         type="submit"
                         variant="primary"
                     />
-                </Stack>
+                </AuthForm>
             )}
         </AuthLayout>
     );

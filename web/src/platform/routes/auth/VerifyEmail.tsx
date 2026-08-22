@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { useNavigate } from 'react-router';
-import { passwordSchema } from './validation';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
 import { Button } from '@astryxdesign/core/Button';
+import { AuthForm, AuthLayout } from './AuthLayout';
+import { Divider } from '@astryxdesign/core/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { fieldErrorStatus, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -137,32 +137,21 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>Email verified. Complete your profile.</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
-                <Stack
-                    as="form"
-                    gap={3}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void form.handleSubmit();
-                    }}
-                >
+                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
                         name="name"
                         children={(field) => (
                             <TextInput
-                                {...{ autoComplete: 'name' }}
+                                autoComplete="name"
                                 hasAutoFocus
                                 htmlName="name"
                                 isRequired
                                 label="Name"
                                 onBlur={field.handleBlur}
                                 onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
+                                status={fieldErrorStatus(field.state.meta.errors)}
                                 value={field.state.value}
                                 width="100%"
                             />
@@ -177,11 +166,7 @@ export default function VerifyEmail() {
                                 label="Password"
                                 onBlur={field.handleBlur}
                                 onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
+                                status={fieldErrorStatus(field.state.meta.errors)}
                                 value={field.state.value}
                                 width="100%"
                                 type="password"
@@ -189,7 +174,7 @@ export default function VerifyEmail() {
                         )}
                     />
                     <Button isLoading={completion.isPending} label="Create account" type="submit" variant="primary" />
-                </Stack>
+                </AuthForm>
                 <Divider />
                 <Text as="p" color="secondary" justify="center" type="supporting">
                     By continuing, you agree to our <br />

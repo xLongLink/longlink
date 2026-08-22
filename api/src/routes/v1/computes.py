@@ -4,6 +4,7 @@ from src.auth import authadmin, get_session
 from sqlalchemy.orm import load_only
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 
@@ -19,11 +20,12 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
     return registry
 
 
-@router.get("/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(session: AsyncSession = Depends(get_session)):
+@router.get("/computes", response_model=Page[ComputeRegistryResponse])
+async def list_compute_registries(pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)):
     """Return all registered compute backends."""
 
-    return await compute.fetch(session)
+    items, total = await compute.fetch_page(session, pagination)
+    return {"items": items, "total": total}
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)

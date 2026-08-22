@@ -6,18 +6,24 @@ from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
+from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 
 router = APIRouter()
 
 
-@router.get("/applications", response_model=list[ApplicationResponse])
-async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
+@router.get("/applications", response_model=Page[ApplicationResponse])
+async def list_applications(
+    _user: User = Depends(authadmin),
+    pagination: Pagination = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     """Return all applications for administrator views."""
 
-    return await applications.fetch(session)
+    items, total = await applications.fetch_page(session, pagination)
+    return {"items": items, "total": total}
 
 
 @router.post("/organizations/{organization_id}/applications", status_code=204)
@@ -55,52 +61,9 @@ async def create_application(
         payload.name,
         image=metadata.image,
         description=payload.description,
-        icon=payload.icon,
-        user_id=user.id,
         secrets=payload.envs,
     )
     await session.commit()
-
-
-@router.post("/applications/{application_id}/releases", response_model=ApplicationResponse, status_code=202)
-async def release_application(
-    application_id: UUID,
-    payload: ApplicationRelease,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
-):
-    """Record one desired Application release and queue its deployment."""
-
-    # Application releases require Organization maintenance authority.
-    access = await organizations.application_runtime_access(session, user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, _, role, _ = access
-    if not roles.atleast(role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    # Resolve immutable image metadata before changing durable desired state.
-    metadata = await images.metadata(payload.image)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
-    missing_envs = images.missing_envs(metadata, application.secrets)
-    if missing_envs:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
-        )
-
-    result = await applications.release(
-        session,
-        application_id,
-        metadata.image,
-        payload.description,
-        user.id,
-    )
-    if result is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-    await session.commit()
-    return result
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
@@ -111,13 +74,11 @@ async def get_application_logs(
 ):
     """Return recent pod logs for one managed application."""
 
-    # Resolve active Application access before inspecting its runtime logs.
+    # Resolve active Application access before enforcing runtime permissions.
     access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
     application, organization, role, registry = access
-
-    # Application logs require Organization maintenance authority.
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 

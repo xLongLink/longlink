@@ -1,8 +1,8 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_session
-from sqlalchemy import select
 from src.models.users import UserUpdate, UserSummary, UserOrganizationMembership
 from src.database.services import users, organizations
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
@@ -24,12 +24,16 @@ async def get_my_organizations(user: User = Depends(authuser), session: AsyncSes
     return await users.memberships(session, user.id)
 
 
-@router.get("/users", response_model=list[UserSummary])
-async def list_users(_: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
+@router.get("/users", response_model=Page[UserSummary])
+async def list_users(
+    _: User = Depends(authadmin),
+    pagination: Pagination = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     """Return all user summaries for administrator views."""
 
-    result = await session.scalars(select(User))
-    return result.all()
+    items, total = await users.fetch_page(session, pagination)
+    return {"items": items, "total": total}
 
 
 @router.patch("/me", response_model=UserSummary)

@@ -1,20 +1,9 @@
-import { feature } from 'topojson-client';
-import worldAtlas from 'world-atlas/land-110m.json';
-import { geoOrthographic, geoPath, type GeoPermissibleObjects } from 'd3-geo';
+import { LAND_PATH } from '@/components/globe-land-path';
 
 const centerX = 700;
 const centerY = 720;
 const radiusX = 900;
 const radiusY = 535;
-
-// Cast the static TopoJSON import at the data boundary; world-atlas exposes a borderless land object.
-const land = feature(worldAtlas as unknown as Parameters<typeof feature>[0], 'land') as GeoPermissibleObjects;
-
-// Project the land once because the hero globe is a static background asset.
-const landPath =
-    geoPath<typeof land>(
-        geoOrthographic().translate([centerX, centerY]).scale(radiusY).rotate([35, -18]).clipAngle(90)
-    )(land) ?? '';
 
 /** Renders the projected world landmass inside the landing-page globe. */
 export function Globe() {
@@ -78,7 +67,7 @@ export function Globe() {
                     mask="url(#hero-globe-land-mask)"
                     transform={`translate(${centerX} ${centerY}) scale(${radiusX / radiusY} 1) translate(${-centerX} ${-centerY})`}
                 >
-                    <path className="homepage-hero-globe-land fill-none stroke-current" d={landPath} />
+                    <path className="homepage-hero-globe-land fill-none stroke-current" d={LAND_PATH} />
                 </g>
             </g>
             <ellipse

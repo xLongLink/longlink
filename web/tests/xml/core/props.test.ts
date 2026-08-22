@@ -5,15 +5,15 @@ import { createContext } from '@/xml/core/context';
 import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '@/xml/core/props';
 
 describe('resolveXmlProps', () => {
-    it('resolves scalar, raw, and literal props with schema defaults', () => {
+    it('resolves scalar and raw props with schema defaults', () => {
         const values = resolveXmlProps(
-            compileProps({ count: '2', label: 'Ready', state: 'filters' }),
+            compileProps({ count: '2', label: 'Ready' }),
             createContext().scope,
-            { count: 'scalar', label: 'raw', state: 'literal' },
-            z.object({ count: z.number(), gap: xmlSpacingWithDefaultSchema, label: z.string(), state: z.string() })
+            { count: 'scalar', label: 'raw' },
+            z.object({ count: z.number(), gap: xmlSpacingWithDefaultSchema, label: z.string() })
         );
 
-        expect(values).toEqual({ count: 2, gap: 3, label: 'Ready', state: 'filters' });
+        expect(values).toEqual({ count: 2, gap: 3, label: 'Ready' });
     });
 
     it('rejects values outside the declared schema', () => {

@@ -1,7 +1,6 @@
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from src.models.statuses import Status
-from longlink.models.icons import Icon
 
 
 class OrganizationIdentity(BaseModel):
@@ -29,7 +28,6 @@ class OrganizationApplicationSummary(BaseModel):
     # Metadata
     name: str
     slug: str
-    icon: Icon | None = None
     description: str | None = None
 
     # State

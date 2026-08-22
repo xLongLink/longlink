@@ -10,8 +10,6 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 
 export const metadata = {
     path: '/docs/sdk/storage',
-    title: 'Storage',
-    description: 'Use LongLink storage abstractions across local filesystems, tests, and production object storage.',
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

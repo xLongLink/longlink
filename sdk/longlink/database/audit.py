@@ -24,12 +24,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
     user_id = _current_identity.get()
 
     # Apply audit fields to newly tracked rows.
-    for obj in session.new:
-
-        # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, AuditTable):
-            continue
-
+    for obj in (obj for obj in session.new if isinstance(obj, AuditTable)):
         # Preserve explicitly assigned creation timestamps.
         if obj.created_at is None:
             obj.created_at = now
@@ -47,12 +42,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
             obj.updated_id = user_id
 
     # Refresh audit timestamps for modified tracked rows.
-    for obj in session.dirty:
-
-        # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, AuditTable):
-            continue
-
+    for obj in (obj for obj in session.dirty if isinstance(obj, AuditTable)):
         # Skip rows without column-level changes.
         if not session.is_modified(obj, include_collections=False):
             continue
@@ -65,12 +55,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
             obj.deleted_id = user_id
 
     # Convert hard deletes into soft deletes.
-    for obj in list(session.deleted):
-
-        # Ignore rows that do not use LongLink audit fields.
-        if not isinstance(obj, AuditTable):
-            continue
-
+    for obj in [obj for obj in session.deleted if isinstance(obj, AuditTable)]:
         session.add(obj)
 
         obj.deleted_at = now

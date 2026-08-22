@@ -1,7 +1,5 @@
-import { api } from '@/lib/api';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
 import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -9,7 +7,7 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { zOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin operations page. */
@@ -28,16 +26,11 @@ export default function AdminOperations() {
         'organization.delete': 'Organization deletion',
     };
     const {
-        data: operations = [],
+        items: operations,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/operations'],
-        queryFn: async ({ signal }) =>
-            zOperationResponse.array().parse(await api('/api/v1/operations', { signal }).json()),
-        refetchInterval: 5000,
-    });
-    const { pageItems, pagination } = usePaginate(operations);
+        pagination,
+    } = usePaginate('/api/v1/operations', zPageOperationResponse, 5000);
 
     if (isLoading && operations.length === 0) {
         return <PageLoading label="Loading operations" />;
@@ -56,7 +49,7 @@ export default function AdminOperations() {
                 </Text>
             </VStack>
             <Table
-                data={pageItems}
+                data={operations}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

@@ -3,28 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('setup adapters', () => {
-    it('renders setup validation errors', () => {
-        const cases = [
-            {
-                xml: '<State id="filter" value="day"><Button>Ready</Button></State>',
-                expectedError: 'State cannot have children',
-            },
-            {
-                xml: '<State value="x" />',
-                expectedError: 'State requires a string id',
-            },
-            {
-                xml: '<Query id="user" path="/api/user"><Button>Ready</Button></Query>',
-                expectedError: 'Query cannot have children',
-            },
-            {
-                xml: '<Query path="/api/user" />',
-                expectedError: 'Query requires a string id',
-            },
-        ];
-
-        for (const testCase of cases) {
-            expect(renderXmlToMarkup(parseXML(testCase.xml))).toContain(testCase.expectedError);
-        }
+    it.each([
+        ['<State id="filter" value="day"><Button>Ready</Button></State>', 'State cannot have children'],
+        ['<State value="x" />', 'State requires a string id'],
+        ['<Query id="user" path="/api/user"><Button>Ready</Button></Query>', 'Query cannot have children'],
+        ['<Query path="/api/user" />', 'Query requires a string id'],
+    ])('renders validation error: %s', (xml, expectedError) => {
+        expect(renderXmlToMarkup(parseXML(xml))).toContain(expectedError);
     });
 });

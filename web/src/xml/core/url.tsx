@@ -79,6 +79,11 @@ export function resolveNavigationUrl(baseUrl: string, path: string): string {
     return isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
 }
 
+/** Resolves an application destination with an optional browser-link fallback. */
+export function resolveControlUrl(navigationBaseUrl: string, requestBaseUrl: string, to: string, href = ''): string {
+    return resolveNavigationUrl(navigationBaseUrl, to) || resolveAnchorUrl(requestBaseUrl, href);
+}
+
 /** Resolves an XML anchor URL while blocking unsafe browser protocols. */
 export function resolveAnchorUrl(baseUrl: string, path: string): string {
     const value = path.trim();

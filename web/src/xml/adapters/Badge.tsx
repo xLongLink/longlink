@@ -1,7 +1,7 @@
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { Badge as UiBadge } from '@/components/ui/Badge';
+import { Badge as AstryxBadge } from '@astryxdesign/core/Badge';
 
 export function Badge({ nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -12,5 +12,5 @@ export function Badge({ nodes }: Props) {
         throw new Error('Badge accepts one Icon child');
     }
 
-    return <UiBadge icon={renderNode(iconNodes, ctx)}>{renderNode(contentNodes, ctx)}</UiBadge>;
+    return <AstryxBadge icon={renderNode(iconNodes, ctx)} label={renderNode(contentNodes, ctx)} />;
 }

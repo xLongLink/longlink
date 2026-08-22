@@ -4,6 +4,7 @@ from src.auth import authadmin, get_session
 from sqlalchemy.orm import load_only
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.storages import StorageRegistry
 
@@ -25,11 +26,12 @@ async def create_storage_registry(payload: StorageRegistryCreate, session: Async
     return registry
 
 
-@router.get("/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(session: AsyncSession = Depends(get_session)):
+@router.get("/storages", response_model=Page[StorageRegistryResponse])
+async def list_storage_registries(pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)):
     """Return all registered storage backends."""
 
-    return await storage.fetch(session)
+    items, total = await storage.fetch_page(session, pagination)
+    return {"items": items, "total": total}
 
 
 @router.get("/storages/{registry_id}", response_model=StorageRegistryResponse)

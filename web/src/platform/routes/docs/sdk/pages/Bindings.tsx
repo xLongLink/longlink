@@ -6,8 +6,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
     path: '/docs/sdk/pages/bindings',
-    title: 'Bindings',
-    description: 'Connects writable control values to State objects declared in the XML runtime.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

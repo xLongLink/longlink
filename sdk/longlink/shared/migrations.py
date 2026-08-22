@@ -1,20 +1,8 @@
 import asyncio
 from alembic import command
-from pathlib import Path
 from alembic.config import Config
 from sqlalchemy.engine import URL, make_url
 from importlib.resources import files
-
-
-def alembic_script_location() -> Path:
-    """Return the SDK-owned shared-schema Alembic directory."""
-
-    # Shared migrations ship with the SDK package that defines the shared contract.
-    packaged_location = Path(str(files("longlink.shared").joinpath("alembic")))
-    if (packaged_location / "env.py").exists() and (packaged_location / "versions").is_dir():
-        return packaged_location
-
-    raise RuntimeError("LongLink shared-schema Alembic migrations could not be located")
 
 
 def migration_config(database_url: str | URL) -> Config:
@@ -24,8 +12,14 @@ def migration_config(database_url: str | URL) -> Config:
     url = make_url(database_url)
     if url.drivername != "postgresql+asyncpg":
         raise ValueError("Shared migrations require a postgresql+asyncpg database URL")
+
+    # Shared migrations ship with the SDK package that defines the shared contract.
+    packaged_location = files("longlink.shared").joinpath("alembic")
+    if not packaged_location.joinpath("env.py").is_file() or not packaged_location.joinpath("versions").is_dir():
+        raise RuntimeError("LongLink shared-schema Alembic migrations could not be located")
+
     config = Config()
-    config.set_main_option("script_location", str(alembic_script_location()))
+    config.set_main_option("script_location", str(packaged_location))
 
     # Alembic uses ConfigParser, where percent-encoded URL characters must be escaped.
     config.set_main_option("sqlalchemy.url", url.render_as_string(hide_password=False).replace("%", "%%"))

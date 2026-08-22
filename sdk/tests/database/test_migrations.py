@@ -19,9 +19,9 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
         "from sqlmodel import Field, SQLModel\n"
         "\n\n"
         "class NestedInventoryItem(SQLModel, table=True):\n"
-        "    \"\"\"Nested inventory table.\"\"\"\n"
+        '    """Nested inventory table."""\n'
         "\n"
-        f"    __tablename__ = \"{table_name}\"\n"
+        f'    __tablename__ = "{table_name}"\n'
         "\n"
         "    id: int | None = Field(default=None, primary_key=True)\n",
         encoding="utf-8",
@@ -34,8 +34,50 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
 
         assert table_name in database_metadata.tables
     finally:
-
         # Remove global metadata and import state even if discovery fails.
+        table = database_metadata.tables.get(table_name)
+        if table is not None:
+            database_metadata.remove(table)
+        sys.modules.pop(module_name, None)
+
+
+def test_migration_loader_removes_failed_model_import_before_retry(tmp_path, monkeypatch) -> None:
+    """Allow a corrected model module to load after its first import fails."""
+
+    # Arrange
+    table_name = "retry_inventory_items"
+    module_name = "src.database.models.inventory"
+    model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
+    model_path.parent.mkdir(parents=True)
+    model_path.write_text('raise RuntimeError("broken model")\n', encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    try:
+        # Act
+        with pytest.raises(RuntimeError, match="broken model"):
+            database_migrations.load_application_models()
+
+        # Assert
+        assert module_name not in sys.modules
+
+        # Act
+        model_path.write_text(
+            "from sqlmodel import Field, SQLModel\n"
+            "\n\n"
+            "class RetryInventoryItem(SQLModel, table=True):\n"
+            '    """Retry inventory table."""\n'
+            "\n"
+            f'    __tablename__ = "{table_name}"\n'
+            "\n"
+            "    id: int | None = Field(default=None, primary_key=True)\n",
+            encoding="utf-8",
+        )
+        database_migrations.load_application_models()
+
+        # Assert
+        assert table_name in database_metadata.tables
+    finally:
+        # Remove global metadata and import state even if retry fails.
         table = database_metadata.tables.get(table_name)
         if table is not None:
             database_metadata.remove(table)
@@ -76,12 +118,11 @@ def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path,
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
 
-    def fake_upgrade(_cfg: object, _revision: str) -> None:
-        """Fail when an upgrade is attempted without application migrations."""
-
-        raise AssertionError("Alembic upgrade must not run without application migrations")
-
-    monkeypatch.setattr(database_migrations.command, "upgrade", fake_upgrade)
+    monkeypatch.setattr(
+        database_migrations.command,
+        "upgrade",
+        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
+    )
 
     # Reject missing revisions without handing control to Alembic.
     with pytest.raises(RuntimeError, match="require migrations"):

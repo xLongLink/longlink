@@ -42,22 +42,18 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
         const id = params.id?.kind === 'text' ? params.id.value.trim() : '';
 
         if (node.name === 'State') {
-            // Preserve local state across renderer refreshes; invalidation deletes it before setup runs.
             const setup = () => {
-                // Only seed state that is not already present.
-                if (!(id in scope.bindings)) {
-                    // Seed a proxied object from all attributes except `id`.
-                    const initialValue: Record<string, unknown> = {};
+                // Seed a proxied object from all attributes except `id`.
+                const initialValue: Record<string, unknown> = {};
 
-                    // Copy declared attributes into the initial state object.
-                    for (const [key, attribute] of Object.entries(params)) {
-                        if (key === 'id') continue;
+                // Copy declared attributes into the initial state object.
+                for (const [key, attribute] of Object.entries(params)) {
+                    if (key === 'id') continue;
 
-                        initialValue[key] = evaluate(attribute, scope);
-                    }
-
-                    scope.bindings[id] = proxy(initialValue);
+                    initialValue[key] = evaluate(attribute, scope);
                 }
+
+                scope.bindings[id] = proxy(initialValue);
             };
             services.setups[id] = setup;
             setup();

@@ -10,15 +10,10 @@ import { setupContext, XmlContext } from './core/context';
 import { isSafePropertyName } from './expressions/resolve';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-type RenderXMLProps = {
-    ast: ASTNode;
-    ctx: XmlRuntime;
-};
-
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx }: RenderXMLProps) {
+export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {
@@ -73,13 +68,10 @@ export function RenderXML({ ast, ctx }: RenderXMLProps) {
         ctx.scope.bindings = { params: ctx.scope.bindings.params };
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        ctx.services.invalidate = async (ids) => {
-            // Refresh each requested setup value.
-            for (const id of ids) {
-                // Skip unknown invalidation targets.
-                const setup = ctx.services.setups[id];
-                if (!setup) continue;
-
+        ctx.services.invalidate = async (id) => {
+            // Skip unknown invalidation targets.
+            const setup = ctx.services.setups[id];
+            if (setup) {
                 delete ctx.scope.bindings[id];
                 await setup();
             }

@@ -6,12 +6,12 @@ import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/Registry
 
 const schema = z.object({
     name: z.string().trim().min(1),
-    kubeconfig: z.string().refine((value) => value.trim().length > 0),
+    kubeconfig: z.string().trim().min(1),
 });
 
 /** Registers one compute target. */
 export default function CreateCompute() {
-    const dialog = useRegistryDialog<z.infer<typeof schema>>({
+    const dialog = useRegistryDialog({
         defaultValues: { name: '', kubeconfig: '' },
         endpoint: '/api/v1/computes',
         errorMessage: 'Failed to connect compute',

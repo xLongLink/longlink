@@ -9,9 +9,6 @@ import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTo
 
 export const metadata = {
     path: '/docs/sdk',
-    title: 'Overview',
-    description:
-        'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
     toc: [
         { id: 'application-sdk', label: 'Applications', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },

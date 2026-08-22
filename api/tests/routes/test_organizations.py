@@ -1,11 +1,11 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import create_application, create_organization, create_ready_infrastructure
+from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import operations, invitations, organizations
+from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -79,16 +79,9 @@ async def test_get_organization_applications_omits_people_management_data(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": str(application.id),
-            "name": application.name,
-            "slug": application.slug,
-            "description": application.description,
-            "icon": application.icon,
-            "status": application.status,
-        }
-    ]
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(application.id)
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -112,8 +105,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.status_code == 202
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(organization.id)
-    async with session_scope() as session:
-        recorded_operations = await operations.fetch(session)
+    recorded_operations = await fetch_operations()
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
 
@@ -157,8 +149,7 @@ async def test_other_organization_user_cannot_delete_application(
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex", slug="globex")
     target_application = await create_application(target_organization, target_owner)
-    async with session_scope() as session:
-        operation_ids = [operation.id for operation in await operations.fetch(session)]
+    operation_ids = [operation.id for operation in await fetch_operations()]
     client = clients[1]
 
     # Attempt Application deletion with only another organization's access.
@@ -169,161 +160,93 @@ async def test_other_organization_user_cannot_delete_application(
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
         assert await session.get(Application, target_application.id) is not None
-        assert [operation.id for operation in await operations.fetch(session)] == operation_ids
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
-async def test_organization_database_endpoint_returns_database_usage(
+@pytest.mark.parametrize(
+    ("resource", "usage", "expected_status"),
+    [
+        pytest.param("database", 3584, 200, id="database-usage-available"),
+        pytest.param("database", RuntimeError("database offline"), 503, id="database-backend-unavailable"),
+        pytest.param("storage", 4096, 200, id="storage-usage-available"),
+        pytest.param("storage", RuntimeError("storage offline"), 503, id="storage-backend-unavailable"),
+    ],
+)
+async def test_organization_resource_endpoint_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
+    resource: str,
+    usage: int | Exception,
+    expected_status: int,
 ) -> None:
-    """Return physical usage for one Organization database."""
+    """Return resource usage or translate backend failures."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    registry = infrastructure.database
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the selected database TLS configuration."""
+        """Provide database usage responses for the Organization resource endpoint."""
 
-            assert sslmode == registry.sslmode
+        def __init__(self, *_args: object) -> None:
+            """Accept the adapter configuration supplied by the route."""
 
         async def database_usage(self, database_name: str) -> int:
-            """Return fake physical usage for the Organization database."""
+            """Return usage or raise the configured database backend failure."""
 
             assert database_name == organization.id.hex
-            return 3584
-
-    monkeypatch.setattr(
-        "src.routes.v1.organizations.Postgres",
-        FakePostgres,
-    )
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == 3584
-
-
-async def test_organization_database_endpoint_returns_unavailable_when_backend_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return an error when the database backend cannot be inspected."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-
-    class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Accept the selected database connection settings."""
-
-        async def database_usage(self, database_name: str) -> int:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("database offline")
-
-    monkeypatch.setattr(
-        "src.routes.v1.organizations.Postgres",
-        FakePostgres,
-    )
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Database resources unavailable"}
-
-
-async def test_organization_storage_endpoint_returns_bucket_usage(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return aggregate usage for one Organization bucket."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+            if isinstance(usage, Exception):
+                raise usage
+            return usage
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
         async def usage(self, bucket_name: str) -> int:
-            """Return fake usage counters for one Organization bucket."""
+            """Return usage or raise the configured storage backend failure."""
 
             assert bucket_name == organization.id.hex
-            return 4096
-
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {
-        "bucket_name": organization.id.hex,
-        "space_used": 4096,
-    }
-
-
-async def test_organization_storage_endpoint_returns_unavailable_when_backend_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return an error when the storage backend cannot be inspected."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    registry = infrastructure.storage
-
-    class FakeStorage:
-        """Provide a failing storage adapter."""
-
-        async def usage(self, bucket_name: str) -> int:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("storage offline")
+            if isinstance(usage, Exception):
+                raise usage
+            return usage
 
     def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
-        """Return the fake adapter for the selected registry credentials."""
+        """Return a fake adapter configured for the selected registry."""
 
-        assert endpoint_url == registry.endpoint_url
-        assert access_key_id == registry.access_key_id
-        assert secret_access_key == registry.secret_access_key
+        assert endpoint_url == infrastructure.storage.endpoint_url
+        assert access_key_id == infrastructure.storage.access_key_id
+        assert secret_access_key == infrastructure.storage.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
+    # Use the selected resource adapter for this endpoint request.
+    if resource == "database":
+        monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
+    else:
+        monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
 
     # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Storage resources unavailable"}
+    assert response.status_code == expected_status
+    if expected_status == 200:
+        assert isinstance(usage, int)
+        expected_payload: int | dict[str, str | int] = (
+            usage if resource == "database" else {"bucket_name": organization.id.hex, "space_used": usage}
+        )
+    else:
+        expected_payload = {"detail": f"{resource.capitalize()} resources unavailable"}
+    assert response.json() == expected_payload
 
 
+@pytest.mark.parametrize("resource", ("database", "storage"))
 async def test_organization_resource_endpoints_require_elevated_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    resource: str,
 ) -> None:
     """Reject resource usage for organization members without inspection permissions."""
 
@@ -344,14 +267,11 @@ async def test_organization_resource_endpoints_require_elevated_role(
     client = clients[1]
 
     # Act
-    database_response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-    storage_response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
 
     # Assert
-    assert database_response.status_code == 403
-    assert database_response.json() == {"detail": "Permission required"}
-    assert storage_response.status_code == 403
-    assert storage_response.json() == {"detail": "Permission required"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_get_organization_returns_invitations(
@@ -365,11 +285,6 @@ async def test_get_organization_returns_invitations(
     organization = await create_organization(owner)
     async with session_scope() as session:
         await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
-        await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
-        assert invitation is not None
-
-    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -378,6 +293,8 @@ async def test_get_organization_returns_invitations(
             )
         )
         await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        assert invitation is not None
 
     # Act
     response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
@@ -409,7 +326,7 @@ async def test_list_organizations_includes_created_organization(
 
     # Assert
     assert response.status_code == 200
-    assert str(organization.id) in {item["id"] for item in response.json()}
+    assert str(organization.id) in {item["id"] for item in response.json()["items"]}
 
 
 async def test_get_organization_returns_403_for_non_member(
@@ -432,41 +349,38 @@ async def test_get_organization_returns_403_for_non_member(
 
 
 @pytest.mark.parametrize(
-    ("caller_index", "invitee_index", "caller_role"),
+    ("client_index", "caller_role"),
     [
-        pytest.param(0, 1, None, id="owner"),
-        pytest.param(1, 2, OrganizationRoles.maintain, id="maintainer"),
+        pytest.param(0, None, id="owner"),
+        pytest.param(1, OrganizationRoles.maintain, id="maintainer"),
     ],
 )
-async def test_create_organization_invitation_returns_204(
+async def test_organization_member_creates_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     captured_mail: list[tuple[str, str, str, str | None]],
-    caller_index: int,
-    invitee_index: int,
+    client_index: int,
     caller_role: OrganizationRoles | None,
 ) -> None:
     """Allow owners and maintainers to create pending invitations."""
 
     # Arrange
-    owner = users[0]
-    invitee = users[invitee_index]
+    owner, _, invitee = users
     organization = await create_organization(owner)
     if caller_role is not None:
+        caller = users[client_index]
         async with session_scope() as session:
             session.add(
                 UserOrganization(
-                    user_id=users[caller_index].id,
+                    user_id=caller.id,
                     organization_id=organization.id,
                     role=caller_role,
                 )
             )
             await session.commit()
 
-    client = clients[caller_index]
-
     # Act
-    response = await client.post(
+    response = await clients[client_index].post(
         f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )

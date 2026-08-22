@@ -30,14 +30,13 @@ def run_migrations_offline() -> None:
 def do_run_migrations(connection: Connection) -> None:
     """Run shared-schema migrations on one synchronous connection."""
 
-    # Alembic creates its version table before revisions, so create the schema first.
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS shared"))
-    connection.execute(text("SET search_path TO shared"))
-    connection.commit()
+    # Alembic creates its version table before revisions, so configure the target schema first.
     context.configure(connection=connection, version_table_schema="shared")
 
-    # Keep Alembic in charge of the migration transaction.
+    # Bootstrap the schema and apply revisions in one transaction.
     with context.begin_transaction():
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS shared"))
+        connection.execute(text("SET search_path TO shared"))
         context.run_migrations()
 
 

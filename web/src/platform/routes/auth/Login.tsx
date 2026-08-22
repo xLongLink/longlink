@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
 import { Button } from '@astryxdesign/core/Button';
+import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
+import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { emailSchema, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
+import { emailSchema, fieldErrorStatus, passwordSchema } from './validation';
 
 const loginSchema = z.object({
     email: emailSchema,
@@ -57,16 +57,9 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>Sign in with your email and password.</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider label="Sign in with your email and password." />}>
             <Stack gap={4}>
-                <Stack
-                    as="form"
-                    gap={3}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void form.handleSubmit();
-                    }}
-                >
+                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
                         name="email"
                         children={(field) => (
@@ -75,11 +68,7 @@ export default function Login() {
                                 isRequired
                                 label="Email"
                                 onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
+                                status={fieldErrorStatus(field.state.meta.errors)}
                                 type="email"
                                 value={field.state.value}
                                 width="100%"
@@ -103,11 +92,7 @@ export default function Login() {
                                     label="Password"
                                     onBlur={field.handleBlur}
                                     onChange={field.handleChange}
-                                    status={
-                                        field.state.meta.errors.length > 0
-                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                            : undefined
-                                    }
+                                    status={fieldErrorStatus(field.state.meta.errors)}
                                     value={field.state.value}
                                     width="100%"
                                     type="password"
@@ -116,7 +101,7 @@ export default function Login() {
                         />
                     </Stack>
                     <Button isLoading={login.isPending} label="Sign In" type="submit" variant="primary" width="100%" />
-                </Stack>
+                </AuthForm>
 
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {
@@ -124,12 +109,16 @@ export default function Login() {
                         const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
                         return (
-                            <Divider>
-                                New to LongLink?{' '}
-                                <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
-                                    Create account
-                                </Link>
-                            </Divider>
+                            <Divider
+                                label={
+                                    <>
+                                        New to LongLink?{' '}
+                                        <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
+                                            Create account
+                                        </Link>
+                                    </>
+                                }
+                            />
                         );
                     }}
                 </form.Subscribe>

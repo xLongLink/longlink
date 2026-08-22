@@ -1,16 +1,16 @@
 import { api } from '@/lib/api';
-import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
 import { Button } from '@astryxdesign/core/Button';
+import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
+import { Divider } from '@astryxdesign/core/Divider';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { emailPayloadSchema, type EmailPayload } from './validation';
+import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './validation';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -33,31 +33,20 @@ export default function Register() {
     });
 
     return (
-        <AuthLayout description={<Divider>Please enter your email</Divider>} title={<WelcomeTitle />}>
+        <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <Stack gap={3}>
-                <Stack
-                    as="form"
-                    gap={3}
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void form.handleSubmit();
-                    }}
-                >
+                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
                         name="email"
                         children={(field) => (
                             <TextInput
-                                {...{ autoComplete: 'email' }}
+                                autoComplete="email"
                                 htmlName="email"
                                 isRequired
                                 label="Email"
                                 onBlur={field.handleBlur}
                                 onChange={field.handleChange}
-                                status={
-                                    field.state.meta.errors.length > 0
-                                        ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                        : undefined
-                                }
+                                status={fieldErrorStatus(field.state.meta.errors)}
                                 type="email"
                                 value={field.state.value}
                                 width="100%"
@@ -70,19 +59,23 @@ export default function Register() {
                         type="submit"
                         variant="primary"
                     />
-                </Stack>
+                </AuthForm>
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {
                         const trimmedEmail = email.trim();
                         const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
                         return (
-                            <Divider>
-                                Already have an account?{' '}
-                                <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
-                                    Sign In
-                                </Link>
-                            </Divider>
+                            <Divider
+                                label={
+                                    <>
+                                        Already have an account?{' '}
+                                        <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
+                                            Sign In
+                                        </Link>
+                                    </>
+                                }
+                            />
                         );
                     }}
                 </form.Subscribe>

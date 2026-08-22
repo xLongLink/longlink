@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import type { DeleteConfirmationProps } from '@/components/dialogs/DeleteConfirmation';
 
 export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
@@ -13,16 +14,7 @@ export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     second: 'numeric',
     year: 'numeric',
 });
-export const numberFormatter = new Intl.NumberFormat();
-
-export type DeleteConfirmationProps = {
-    open: boolean;
-    title: string;
-    description: ReactNode;
-    isPending: boolean;
-    onConfirm: () => void;
-    onOpenChange: (open: boolean) => void;
-};
+const numberFormatter = new Intl.NumberFormat();
 
 type UseDeleteDialogOptions<TItem> = {
     title: string;
@@ -48,6 +40,29 @@ export function formatBytes(bytes: number): string {
     }
 
     return `${numberFormatter.format(Math.round(value))} ${units[unit]}`;
+}
+
+/** Converts kebab-case, snake_case, or camelCase text into space-separated words with leading capitals. */
+export function startCase(value: string): string {
+    const spaced = value.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+    return spaced
+        .split(/[^a-zA-Z0-9]+/)
+        .filter((word) => word.length > 0)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+/** Creates an open-change handler that ignores close attempts while a request is pending. */
+export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open: boolean) => void) {
+    return (nextOpen: boolean) => {
+        // Protect an in-flight request from being dismissed.
+        if (!nextOpen && isPending) {
+            return;
+        }
+
+        onOpenChange(nextOpen);
+    };
 }
 
 /** Manages the shared delete confirmation dialog state and confirm action. */

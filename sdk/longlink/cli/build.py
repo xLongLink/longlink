@@ -88,13 +88,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
     # Read annotated settings fields from the configured class.
     for statement in class_node.body:
-
-        # Ignore non-field statements.
-        if not isinstance(statement, ast.AnnAssign):
-            continue
-
-        # Ignore assignments without a named field.
-        if not isinstance(statement.target, ast.Name):
+        # Ignore statements that do not declare a named annotated field.
+        if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
             continue
 
         field_name = statement.target.id
@@ -133,26 +128,21 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
 
     # Missing values indicate required fields.
     if value is None:
-        return {"required": True, "env_name": None}
+        return {"required": True}
 
     # Inspect pydantic Field calls for metadata.
     if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
-        info: dict[str, object] = {"required": True, "env_name": None}
+        info: dict[str, object] = {"required": True}
 
         # Positional Field defaults use ellipsis for required values and any other value as optional.
         if value.args:
             first_argument = value.args[0]
-            info["required"] = (
-                isinstance(first_argument, ast.Constant)
-                and first_argument.value is Ellipsis
-            )
+            info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
 
         # Inspect Field keyword arguments.
         for keyword in value.keywords:
-
             # Use explicit aliases as environment names.
             if keyword.arg == "validation_alias":
-
                 # Safely evaluate static alias expressions.
                 try:
                     alias = ast.literal_eval(keyword.value)
@@ -163,13 +153,8 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
                 if isinstance(alias, str):
                     info["env_name"] = alias
 
-            # Defaults make the field optional.
-            elif keyword.arg == "default":
-                info["required"] = False
-
             # Capture static descriptions.
             elif keyword.arg == "description":
-
                 # Safely evaluate static descriptions.
                 try:
                     description = ast.literal_eval(keyword.value)
@@ -180,44 +165,32 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
                 if isinstance(description, str):
                     info["description"] = description
 
-            # Factories make the field optional.
-            elif keyword.arg == "default_factory":
+            # Defaults and factories make the field optional.
+            elif keyword.arg in ("default", "default_factory"):
                 info["required"] = False
 
         return info
 
-    return {"required": False, "env_name": None}
-
-
-def encode_label_value(value: object) -> str:
-    """Serialize a Docker label value as a quoted string."""
-
-    # Preserve nested metadata as JSON strings.
-    if isinstance(value, (dict, list)):
-        return json.dumps(json.dumps(value, separators=(",", ":")))
-
-    return json.dumps(value)
+    return {"required": False}
 
 
 def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={encode_label_value(description)}"]
+    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={json.dumps(description)}"]
 
     # Include environment requirements only when declared.
     if environments:
-        rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
+        rendered_labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
     return "\n".join(rendered_labels)
 
 
-def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None = None) -> tuple[Path, str, list[Path]]:
+def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
     # Validate the application root and initialize local dependency traversal.
-    root_pyproject_data = pyproject_data if pyproject_data is not None else read_pyproject(root)
-    source_paths: list[Path] = [root]
     pending_paths: list[Path] = [root]
     seen_paths: set[Path] = set()
 
@@ -236,7 +209,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
         if not pyproject_path.is_file():
             continue
 
-        source_pyproject_data = root_pyproject_data if source_root == root else read_pyproject(source_root)
+        source_pyproject_data = pyproject_data if source_root == root else read_pyproject(source_root)
 
         # Read the tool table while ignoring malformed values.
         tool_data = source_pyproject_data.get("tool")
@@ -255,19 +228,17 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
 
         # Add local path dependencies to the context.
         for source_config in uv_sources.values():
-
             # Only mapping source entries can contain paths.
             if isinstance(source_config, dict):
-
                 # Follow only string path sources.
                 source_path = source_config.get("path")
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
-                    source_paths.append(resolved_source_path)
-                    pending_paths.append(resolved_source_path)
+                    if resolved_source_path not in pending_paths:
+                        pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
-    common_root = Path(os.path.commonpath(source_paths))
+    common_root = Path(os.path.commonpath(seen_paths))
     workdir = "/workspace"
 
     # Use a nested workdir when the app is below the common root.
@@ -275,17 +246,16 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
         relative_root = root.relative_to(common_root)
         workdir = f"/workspace/{relative_root.as_posix()}"
 
-    return common_root, workdir, sorted(seen_paths)
+    return common_root, workdir, sorted(seen_paths - {root})
 
 
-def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
+def build_app(build_context: Path) -> tuple[str, str]:
     """Create Docker build artifacts for the current app."""
 
     # Resolve build paths and collect project metadata for the image.
-    root = (base_path or Path.cwd()).resolve()
+    root = Path.cwd().resolve()
     pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
-    env_spec = read_env_spec(root, pyproject_data)
     project_data = pyproject_data.get("project")
     if not isinstance(project_data, dict):
         raise click.ClickException("[project] metadata is required")
@@ -305,11 +275,10 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     except PackageNotFoundError:
         sdk_version = "0.0.0"
 
-    # Resolve the image version and render its metadata labels.
-    version = tag or project_version
+    # Render image metadata labels.
     labels = render_image_labels(
         project_description,
-        env_spec,
+        read_env_spec(root, pyproject_data),
     )
 
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
@@ -334,12 +303,9 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     # Apply the closest repository ignore rules when Docker uploads the context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = source.read_text(encoding="utf-8") if source is not None else ""
-    build_context.joinpath(".dockerignore").write_text(
-        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8"
-    )
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
-    dockerfile_path = build_context / "Dockerfile"
     dependency_source = workdir.removeprefix("/workspace/")
     if dependency_source:
         dependency_source += "/"
@@ -347,9 +313,8 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
         f"/workspace/{source_path.relative_to(source_root).as_posix()}/"
         for source_path in local_source_paths
-        if source_path != root
     )
-    dockerfile_path.write_text(
+    build_context.joinpath("Dockerfile").write_text(
         DOCKERFILE_TEMPLATE.format(
             dependency_source=dependency_source,
             local_dependency_manifests=local_dependency_manifests,
@@ -360,7 +325,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         encoding="utf-8",
     )
 
-    return dockerfile_path, version, project_name
+    return project_version, project_name
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
@@ -371,34 +336,25 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
-        raise ValueError(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
+        raise click.ClickException(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
 
     # Reject invalid Docker tags.
     if not DOCKER_TAG_PATTERN.fullmatch(version):
-        raise ValueError(f"Invalid Docker image tag '{version}'")
+        raise click.ClickException(f"Invalid Docker image tag '{version}'")
 
     # Add a registry prefix when requested.
     if registry_prefix:
-        # Reject URL-style registry prefixes and invalid characters.
-        if registry_prefix.startswith("//") or "://" in registry_prefix:
-            raise ValueError("Docker registry prefix must not be a URL")
-        if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
-            raise ValueError("Docker registry prefix contains invalid characters")
-
         # Restrict production registries to GHCR while allowing localhost development registries.
         registry_host = registry_prefix.split("/", 1)[0]
-        if "@" in registry_host:
-            raise ValueError("Docker registry prefix is invalid")
-
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
-            raise ValueError("Docker registry port is invalid")
+            raise click.ClickException("Docker registry port is invalid")
         if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
-            raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
+            raise click.ClickException("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
         if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
-            raise ValueError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
+            raise click.ClickException(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
         return f"{registry_prefix}/{image_name}:{version}"
 
     return f"{image_name}:{version}"
@@ -426,13 +382,11 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        dockerfile_path, version, app_name = build_app(build_context, tag=tag)
+        project_version, app_name = build_app(build_context)
 
         # Resolve and validate the final image tag.
-        try:
-            image_tag = resolve_image_tag(app_name, version, registry)
-        except ValueError as exc:
-            raise click.ClickException(str(exc)) from exc
+        version = tag or project_version
+        image_tag = resolve_image_tag(app_name, version, registry)
 
         # Require a Docker client on PATH.
         docker_command = shutil.which("docker")
@@ -441,14 +395,13 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
 
         # Run the Docker build and optional push.
         try:
-
             # Build from a context that includes local path dependencies referenced by uv.
             subprocess.run(
                 [
                     docker_command,
                     "build",
                     "-f",
-                    str(dockerfile_path),
+                    str(build_context / "Dockerfile"),
                     "-t",
                     image_tag,
                     str(build_context),
@@ -462,12 +415,8 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         except subprocess.CalledProcessError as error:
             raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
 
-    click.echo(f"Build completed for version {version}")
     click.echo(f"- Built image: {image_tag}")
 
     # Report pushed images only when requested.
     if push:
         click.echo(f"- Pushed image: {image_tag}")
-    click.echo(f"- View it with: docker image inspect {image_tag}")
-    click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
-    click.echo(f"- Remove it with: docker rmi {image_tag}")

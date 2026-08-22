@@ -1,5 +1,4 @@
 import { Info } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -7,8 +6,8 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
 import { Link as RouterLink } from 'react-router';
 import { componentDocumentation } from '@/lib/xsd';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -17,6 +16,7 @@ import { Center } from '@astryxdesign/core/Center';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -71,8 +71,6 @@ function SummaryCard({
 
 export const metadata = {
     path: '/docs/sdk/pages',
-    title: 'Pages',
-    description: 'Build LongLink application pages with XML components, data bindings, and runtime metadata.',
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
@@ -167,11 +165,11 @@ export default function DocsArticleRoute() {
                             <Info aria-hidden="true" className="text-accent" size={20} />
                         </SummaryCard>
                         <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
-                            <Badge variant="info">Open</Badge>
+                            <Badge label="Open" variant="info" />
                         </SummaryCard>
                         <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
                             <Stack justify="center" minHeight={150} width="100%">
-                                <Divider>{'Or'}</Divider>
+                                <Divider label="Or" />
                             </Stack>
                         </SummaryCard>
                     </Grid>

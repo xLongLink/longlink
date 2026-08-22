@@ -4,6 +4,23 @@ from longlink.cli import build
 from click.testing import CliRunner
 
 
+@pytest.fixture
+def build_project(tmp_path: Path) -> Path:
+    """Create one minimal application project that can generate Docker artifacts."""
+
+    # Write the project metadata and configured environment model.
+    root = tmp_path / "app"
+    root.mkdir()
+    root.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        encoding="utf-8",
+    )
+    envs_path = root / "src" / "envs.py"
+    envs_path.parent.mkdir()
+    envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
+    return root
+
+
 def test_build_reports_missing_project_file_before_docker() -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -11,7 +28,6 @@ def test_build_reports_missing_project_file_before_docker() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
-
         # Act
         result = runner.invoke(build.build_command)
 
@@ -76,52 +92,35 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
-def test_build_app_generates_dockerignore_from_project_gitignore(tmp_path: Path) -> None:
+def test_build_app_generates_dockerignore_from_project_gitignore(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Use the project's Git ignore policy for the Docker build context."""
 
     # Arrange
-    root = tmp_path / "app"
-    root.mkdir()
-    (root / "pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n'
-    )
-    (root / "main.py").write_text("app = object()\n")
-    (root / ".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
-    envs_path = root / "src" / "envs.py"
-    envs_path.parent.mkdir()
-    envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
-    build_context = tmp_path / "context"
+    build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
 
     # Act
-    build.build_app(build_context, base_path=root, tag="dev")
+    build.build_app(build_context)
 
     # Assert
-    assert (build_context / "main.py").is_file()
-    assert (build_context / "pyproject.toml").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
         ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
     )
 
 
-def test_build_app_does_not_follow_out_of_tree_symlinks(tmp_path: Path) -> None:
+def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Exclude linked files whose resolved targets are outside the build root."""
 
     # Create a minimal application and a file outside its Docker build context.
-    root = tmp_path / "app"
-    root.mkdir()
-    (root / "pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
-        encoding="utf-8",
-    )
-    (root / "src").mkdir()
-    (root / "src" / "envs.py").write_text("class Env:\n    pass\n", encoding="utf-8")
-    outside_file = tmp_path / "outside-secret.txt"
+    outside_file = build_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
-    (root / "linked-secret.txt").symlink_to(outside_file)
-    build_context = tmp_path / "context"
+    build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
 
     # Build the temporary context.
-    build.build_app(build_context, base_path=root, tag="dev")
+    build.build_app(build_context)
 
     # Never materialize an out-of-tree linked file in the build context.
     assert not (build_context / "linked-secret.txt").exists()
@@ -132,41 +131,39 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
     # Arrange
     commands: list[list[str]] = []
+    temporary_context: Path | None = None
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path, _base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
+    def fake_build_app(build_context: Path) -> tuple[str, str]:
         """Create fake Docker artifacts for the build command."""
 
-        assert tag == "dev"
-        return build_context / "Dockerfile", "dev", "Demo App"
-
-
-    def fake_run(command: list[str], check: bool) -> None:
-        """Capture Docker commands."""
-
-        commands.append(command)
-
-
-    def fake_which(command: str) -> str | None:
-        """Resolve only the Docker executable."""
-
-        return "/usr/bin/docker" if command == "docker" else None
+        nonlocal temporary_context
+        temporary_context = build_context
+        return "0.1.0", "Demo App"
 
     # Replace Docker boundaries with deterministic local fakes.
     monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", fake_which)
-    monkeypatch.setattr(build.subprocess, "run", fake_run)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
     result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])
 
     # Assert
     assert result.exit_code == 0
-    assert len(commands) == 2
-    assert commands[0][0:2] == ["/usr/bin/docker", "build"]
-    assert commands[0][commands[0].index("-t") + 1] == "localhost:15000/demo-app:dev"
-    assert commands[1][0:2] == ["/usr/bin/docker", "push"]
-    assert commands[1][-1] == "localhost:15000/demo-app:dev"
+    assert temporary_context is not None
+    assert commands == [
+        [
+            "/usr/bin/docker",
+            "build",
+            "-f",
+            str(temporary_context / "Dockerfile"),
+            "-t",
+            "localhost:15000/demo-app:dev",
+            str(temporary_context),
+        ],
+        ["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"],
+    ]
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
 

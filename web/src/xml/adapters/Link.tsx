@@ -3,10 +3,10 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
+import { resolveControlUrl } from '../core/url';
 import { ActionHandlerContext } from './Action';
 import { useContext, type MouseEvent } from 'react';
 import { Link as AstryxLink } from '@astryxdesign/core/Link';
-import { resolveAnchorUrl, resolveNavigationUrl } from '../core/url';
 
 const linkPropsSchema = z.object({
     href: z.string().optional(),
@@ -28,6 +28,7 @@ export function Link({ props, nodes }: Props) {
         linkPropsSchema
     );
     const actionHandler = useContext(ActionHandlerContext);
+    const controlUrl = resolveControlUrl(services.navigationBaseUrl, services.requestBaseUrl, to ?? '', href ?? '');
 
     /** Starts an Action only for ordinary primary clicks. */
     function handleClick(event: MouseEvent<HTMLAnchorElement>): void {
@@ -49,11 +50,7 @@ export function Link({ props, nodes }: Props) {
 
     return (
         <AstryxLink
-            href={
-                resolveNavigationUrl(services.navigationBaseUrl, to ?? '') ||
-                resolveAnchorUrl(services.requestBaseUrl, href ?? '') ||
-                undefined
-            }
+            href={controlUrl || undefined}
             isDisabled={isDisabled}
             onClick={actionHandler ? handleClick : undefined}
         >

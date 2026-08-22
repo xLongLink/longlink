@@ -4,12 +4,11 @@ import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Selector } from '@astryxdesign/core/Selector';
+import { createGuardedOpenChange } from '@/lib/utils';
 import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
-import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
@@ -20,19 +19,7 @@ const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
     name: z.string().trim(),
     description: z.string().trim(),
-    icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
-    envs: z.record(z.string(), z.string().optional()).transform((envs) =>
-        Object.entries(envs).reduce<Record<string, string>>((configured, [name, value]) => {
-            if (value !== undefined) {
-                configured[name] = value;
-            }
-            return configured;
-        }, {})
-    ),
-});
-
-const createApplicationSubmitSchema = createApplicationFormSchema.extend({
-    name: z.string().trim().min(1),
+    envs: z.record(z.string(), z.string().optional()),
 });
 
 type CreateApplicationInput = z.input<typeof createApplicationFormSchema>;
@@ -41,7 +28,6 @@ const defaultCreateApplicationValues: CreateApplicationInput = {
     image: '',
     name: '',
     description: '',
-    icon: '',
     envs: {},
 };
 
@@ -128,23 +114,21 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     async function handleCreateApp(payload: CreateApplicationInput) {
         setError(null);
 
-        const application = createApplicationSubmitSchema.safeParse(payload);
-        // Stop before submission when required fields are invalid.
-        if (!application.success) {
-            setError('Failed to create application');
-            return;
-        }
+        // Collect configured environment values, dropping unset and empty fields.
+        const envs: Record<string, string> = {};
 
-        // Collect configured environment values while skipping optional empty fields.
-        const envs = Object.fromEntries(Object.entries(application.data.envs).filter(([, value]) => value.length > 0));
+        for (const [name, value] of Object.entries(payload.envs)) {
+            if (value !== undefined && value.length > 0) {
+                envs[name] = value;
+            }
+        }
 
         // Submit the new app and close the dialog on success.
         try {
             await createApplication.mutateAsync({
-                name: application.data.name,
-                image: application.data.image,
-                description: application.data.description.length > 0 ? application.data.description : null,
-                icon: application.data.icon || null,
+                name: payload.name,
+                image: payload.image,
+                description: payload.description.length > 0 ? payload.description : null,
                 envs,
             });
             setOpen(false);
@@ -157,25 +141,21 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         }
     }
 
-    /** Updates dialog state while protecting image inspection or application creation. */
-    function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && (isInspecting || createApplication.isPending)) {
-            return;
-        }
+    const handleOpenChange = createGuardedOpenChange(isInspecting || createApplication.isPending, (nextOpen) => {
         setOpen(nextOpen);
+
+        // Reset the wizard once the dialog is fully closed.
         if (!nextOpen) {
             resetDialogState();
         }
-    }
+    });
 
     return (
         <>
             <Button label="Create" isDisabled={organizationId.length === 0} clickAction={() => setOpen(true)} />
 
-            <form.Subscribe
-                selector={(state) => [state.values.image, state.values.name, state.values.icon, state.isValid] as const}
-            >
-                {([image, name, icon, isValid]) => {
+            <form.Subscribe selector={(state) => [state.values.image, state.values.name, state.isValid] as const}>
+                {([image, name, isValid]) => {
                     const hasImage = image.trim().length > 0;
                     const hasName = name.trim().length > 0;
 
@@ -251,22 +231,6 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                                    <Selector
-                                                        label="Icon"
-                                                        options={[
-                                                            { value: '__none__', label: 'None' },
-                                                            ...ICON_NAMES.map((name) => ({
-                                                                value: name,
-                                                                label: name,
-                                                            })),
-                                                        ]}
-                                                        value={icon}
-                                                        placeholder="Choose an icon"
-                                                        isOptional
-                                                        onChange={(value) =>
-                                                            form.setFieldValue('icon', isIconName(value) ? value : '')
-                                                        }
-                                                    />
                                                     {errorStatus}
                                                 </FormLayout>
                                             </form>

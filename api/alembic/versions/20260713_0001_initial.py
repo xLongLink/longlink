@@ -139,7 +139,6 @@ def upgrade() -> None:
         sa.Column("organization_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("slug", sa.String(length=100), nullable=False),
-        sa.Column("icon", sa.String(length=50), nullable=True),
         sa.Column("image_desired", sa.String(length=512), nullable=False),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column("secrets", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
@@ -172,6 +171,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["updated_id"],
@@ -225,6 +225,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["updated_id"],

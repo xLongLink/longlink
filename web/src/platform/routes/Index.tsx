@@ -16,7 +16,7 @@ const paths = [
         description:
             'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
         action: 'Explore existing apps',
-        href: '/marketplace',
+        href: '/docs',
         isComingSoon: true,
     },
     {

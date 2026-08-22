@@ -7,8 +7,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
     path: '/docs/sdk/environments',
-    title: 'Environments',
-    description: 'Configure LongLink applications for local development, testing, and production environments.',
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

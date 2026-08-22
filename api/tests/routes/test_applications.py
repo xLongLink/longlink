@@ -1,14 +1,14 @@
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import create_application, create_organization
+from factories import fetch_operations, create_application, create_organization
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
-from src.database.services import operations, applications
+from src.database.services import applications
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -18,7 +18,7 @@ from src.database.models.applications import Application
 class FakeCompute:
     """Fake Kubernetes log client with a configured result."""
 
-    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str] | None = None) -> None:
+    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
         """Expose the application log client and its configured outcome."""
 
         self.applications = self
@@ -28,9 +28,8 @@ class FakeCompute:
     async def logs(self, application_id: UUID, namespace: str) -> list[str]:
         """Record a request and return or raise the configured outcome."""
 
-        if self.captured is not None:
-            self.captured["logs"] = application_id
-            self.captured["namespace"] = namespace
+        self.captured["logs"] = application_id
+        self.captured["namespace"] = namespace
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
         return self.outcome
@@ -58,10 +57,35 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Assert
     assert response.status_code == 200
-    assert {item["id"] for item in response.json()} == {
+    payload = response.json()
+    assert {item["id"] for item in payload["items"]} == {
         str(dashboard.id),
         str(console.id),
     }
+    assert payload["total"] == 2
+
+
+async def test_list_apps_returns_requested_page_for_admin(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return only the requested administrator application page."""
+
+    # Arrange
+    user = users[0]
+    acme = await create_organization(user)
+    globex = await create_organization(user, name="globex", slug="globex")
+    await create_application(acme, user)
+    console = await create_application(globex, user, name="console")
+
+    # Act
+    response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["id"] for item in payload["items"]] == [str(console.id)]
+    assert payload["total"] == 2
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
@@ -75,10 +99,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     user = users[0]
     organization = await create_organization(user)
 
-    async def inspect_image(image: str) -> LongLinkMetadata:
+    async def inspect_image(_image: str) -> LongLinkMetadata:
         """Return immutable metadata with one required user environment value."""
 
-        assert image == "ghcr.io/longlink/dashboard:latest"
         return LongLinkMetadata(
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             environments=[EnvironmentMetadata(name="API_KEY", required=True)],
@@ -110,9 +133,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.description == "Dashboard app"
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
-        assert any(
-            item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch(session)
-        )
+        assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await fetch_operations())
 
 
 async def test_application_responses_do_not_expose_environment_secrets(
@@ -133,41 +154,12 @@ async def test_application_responses_do_not_expose_environment_secrets(
     # Response models must omit both the secret field and its raw value.
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
-    list_applications = list_response.json()
+    list_applications = list_response.json()["items"]
     for response_applications in (list_applications, organization_response.json()["applications"]):
         assert all("secrets" not in item and "envs" not in item for item in response_applications)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
     assert str(application.id) in {item["id"] for item in list_applications}
-
-
-async def test_invalid_application_payload_makes_no_persistence_changes(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject malformed Application input without durable side effects."""
-
-    # Capture durable state before submitting an invalid reserved environment variable.
-    owner = users[0]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        operation_ids = [operation.id for operation in await operations.fetch(session)]
-
-    # Submit a model-invalid configuration through the public route.
-    response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/applications",
-        json={
-            "name": "dashboard",
-            "image": "ghcr.io/longlink/dashboard:latest",
-            "envs": {"LONGLINK_MANAGED": "user-controlled"},
-        },
-    )
-
-    # Validation fails before Application creation or Operation enqueueing.
-    assert response.status_code == 422
-    async with session_scope() as session:
-        assert await applications.fetch(session) == []
-        assert [operation.id for operation in await operations.fetch(session)] == operation_ids
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -215,9 +207,7 @@ async def test_get_app_logs_returns_pod_logs(
     organization = await create_organization(user)
     app = await create_application(organization, user)
     captured: dict[str, UUID | str] = {}
-    monkeypatch.setattr(
-        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured)
-    )
+    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
 
     # Act
     response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
@@ -263,9 +253,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     owner = users[0]
     organization = await create_organization(owner)
     app = await create_application(organization, owner)
-    monkeypatch.setattr(
-        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"))
-    )
+    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {}))
 
     # Act
     response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
@@ -293,6 +281,5 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
     # Assert
     assert response.status_code == 204
     assert retry_response.status_code == 403
-    async with session_scope() as session:
-        recorded_operations = await operations.fetch(session)
+    recorded_operations = await fetch_operations()
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

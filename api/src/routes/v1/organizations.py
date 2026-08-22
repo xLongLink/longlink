@@ -10,6 +10,7 @@ from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
     OrganizationCreate,
@@ -29,11 +30,16 @@ from src.database.models.organizations import Organization
 router = APIRouter()
 
 
-@router.get("/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
+@router.get("/organizations", response_model=Page[OrganizationSummary])
+async def list_organizations(
+    _user: User = Depends(authadmin),
+    pagination: Pagination = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     """Return all organizations for administrator views."""
 
-    return await organizations.fetch(session)
+    items, total = await organizations.fetch_page(session, pagination)
+    return {"items": items, "total": total}
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)
@@ -84,8 +90,6 @@ async def update_organization(
     organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    if not session.is_modified(organization):
-        return organization
     await session.commit()
     return organization
 
@@ -198,10 +202,9 @@ async def update_organization_member(
         user,
         membership.role,
     )
-    if changed is None:
-        raise HTTPException(status_code=404, detail="Organization member not found")
     if changed:
         await session.commit()
+        await organizations.sync_users(session, membership.organization_id)
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)

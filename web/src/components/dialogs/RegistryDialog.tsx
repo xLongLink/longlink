@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { createGuardedOpenChange } from '@/lib/utils';
 import { useId, useState, type ReactNode } from 'react';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     endpoint: string;
     errorMessage: string;
     schema: z.ZodType<TValues, TValues>;
+    invalidateKeys?: string[][];
 };
 
 type RegistryDialogProps<TValues extends Record<string, unknown>> = {
@@ -31,6 +33,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     endpoint,
     errorMessage,
     schema,
+    invalidateKeys = [['api', endpoint]],
 }: RegistryDialogOptions<TValues>) {
     const toast = useToast();
     const queryClient = useQueryClient();
@@ -43,7 +46,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         onSuccess: () => {
             setOpen(false);
             form.reset();
-            void queryClient.invalidateQueries({ queryKey: ['api', endpoint] });
+            void Promise.all(invalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
         },
     });
     const form = useForm({
@@ -51,18 +54,14 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         validators: { onChange: schema },
         onSubmit: ({ value }) => mutation.mutate(value),
     });
-
-    /** Updates dialog state while protecting an in-flight registration. */
-    function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && mutation.isPending) {
-            return;
-        }
-
+    const handleOpenChange = createGuardedOpenChange(mutation.isPending, (nextOpen) => {
         setOpen(nextOpen);
+
+        // Reset the form once the dialog is fully closed.
         if (!nextOpen) {
             form.reset();
         }
-    }
+    });
 
     return {
         form,

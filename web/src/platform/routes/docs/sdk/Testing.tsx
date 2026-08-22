@@ -7,8 +7,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
     path: '/docs/sdk/testing',
-    title: 'Testing',
-    description: 'Test LongLink applications with isolated runtime configuration and Python testing workflows.',
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

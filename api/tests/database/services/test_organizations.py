@@ -1,15 +1,15 @@
 import pytest
 from uuid import uuid4
 from sqlmodel import col
-from factories import create_organization, create_ready_infrastructure
+from factories import fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
-from src.errors import ConflictError, UnavailableError
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations, invitations, applications, organizations
+from src.database.services import invitations, applications, organizations
+from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
@@ -80,17 +80,18 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
         await session.commit()
 
         # Act
-        fetched = await organizations.fetch(session)
+        fetched, total = await organizations.fetch_page(session, Pagination())
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
+    assert total == 1
 
 
 async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
     """Update an active organization member role."""
 
     # Arrange
-    owner, member, non_member = users
+    owner, member = users[:2]
     organization = await create_organization(owner)
 
     async with session_scope() as session:
@@ -109,16 +110,27 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
             session, organization.id, member.id, OrganizationRoles.maintain, owner, OrganizationRoles.owner
         )
         await session.commit()
-        missing = await organizations.update_member_role(
-            session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
-        )
         memberships = await organizations.members(session, organization.id)
         updated_membership = next(item for item in memberships if item.user_id == member.id)
 
     # Assert
     assert updated is True
-    assert missing is None
     assert updated_membership.role == OrganizationRoles.maintain
+
+
+async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
+    """Reject role changes for absent organization members."""
+
+    # Arrange
+    owner, _, non_member = users
+    organization = await create_organization(owner)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(NotFoundError):
+            await organizations.update_member_role(
+                session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
+            )
 
 
 async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
@@ -142,47 +154,6 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     assert membership.role == OrganizationRoles.owner
 
 
-async def test_members_can_include_deleted_memberships(users: tuple[User, User, User]) -> None:
-    """Return every organization membership when deleted rows are requested."""
-
-    # Arrange
-    owner, member, deleted_member = users
-    deleted_at = utcnow()
-    organization = await create_organization(owner)
-
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        session.add(
-            UserOrganization(
-                user_id=deleted_member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-                deleted_at=deleted_at,
-            )
-        )
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        members = await organizations.members(session, organization.id, include_deleted=True)
-
-    # Assert
-    memberships = {membership.user.email: membership for membership in members}
-    assert set(memberships) == {owner.email, member.email, deleted_member.email}
-    assert memberships[owner.email].role == OrganizationRoles.owner
-    assert memberships[member.email].role == OrganizationRoles.write
-    assert memberships[deleted_member.email].role == OrganizationRoles.read
-    assert memberships[owner.email].deleted_at is None
-    assert memberships[member.email].deleted_at is None
-    assert memberships[deleted_member.email].deleted_at is not None
-
-
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
     """Create Organizations queued behind their creating compute target."""
 
@@ -200,35 +171,31 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
 
     # Assert
     async with session_scope() as session:
-        assert await organizations.fetch(session) == [organization]
+        fetched, total = await organizations.fetch_page(session, Pagination())
+        assert fetched == [organization]
+        assert total == 1
         reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
-        assert len(await operations.fetch(session)) == 1
+        assert len(await fetch_operations()) == 1
 
 
-async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:
-    """Soft-delete an organization and its nested application and access rows."""
+async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
+    """Tombstone applications while retaining Organization memberships until purge."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
-    async with session_scope() as session:
         application = await applications.create(
             session,
             organization.id,
             "Dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
-            owner.id,
             {},
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
-        await session.commit()
-
-    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -254,11 +221,13 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_organization is not None
     assert deleted_organization.deleted_id == owner.id
     async with session_scope() as session:
-        assert await organizations.members(session, organization.id) == []
+        members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
+        assert all(operation.target_id != application.id for operation in await fetch_operations())
+    assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_application is not None
-    assert deleted_application.deleted_id == owner.id
+    assert deleted_application.deleted_at is not None
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None

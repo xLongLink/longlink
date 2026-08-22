@@ -13,9 +13,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin database page. */
@@ -30,15 +30,11 @@ export default function AdminDatabase() {
         },
     });
     const {
-        data: databases = [],
+        items: databases,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/databases'],
-        queryFn: async ({ signal }) =>
-            zDatabaseRegistryResponse.array().parse(await api('/api/v1/databases', { signal }).json()),
-    });
-    const { pageItems, pagination } = usePaginate(databases);
+        pagination,
+    } = usePaginate('/api/v1/databases', zPageDatabaseRegistryResponse);
     const deleteDialog = useDeleteDialog({
         title: 'Delete database',
         mutation: deleteDatabase,
@@ -68,7 +64,7 @@ export default function AdminDatabase() {
                 <CreateDatabase />
             </HStack>
             <Table
-                data={pageItems}
+                data={databases}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

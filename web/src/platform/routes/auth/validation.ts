@@ -7,4 +7,17 @@ export const passwordSchema = z
     .min(1, 'Password is required')
     .max(1024, 'Password cannot exceed 1024 characters');
 
+/** Converts React Form validation errors into an Astryx input status. */
+export function fieldErrorStatus(errors: readonly unknown[]) {
+    const error = errors[0];
+    if (error == null) return undefined;
+
+    const message =
+        typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+            ? error.message
+            : undefined;
+
+    return { type: 'error' as const, message };
+}
+
 export type EmailPayload = z.infer<typeof emailPayloadSchema>;

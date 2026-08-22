@@ -78,12 +78,20 @@ async def reset_db(
 
 
 def authenticated_cookies(user: User) -> Cookies:
-    """Build an authentication cookie for one user."""
+    """Build browser authentication cookies for a persisted test user."""
 
     # Match the signed browser credential used by authenticated API clients.
     cookies = Cookies()
     cookies.set("longlink_auth", token.create_auth_token(user), domain="testserver.local", path="/")
     return cookies
+
+
+def create_client(user: User | None = None) -> AsyncClient:
+    """Build an in-process API client with optional authentication cookies."""
+
+    cookies = authenticated_cookies(user) if user is not None else None
+
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", cookies=cookies, follow_redirects=True)
 
 
 @pytest.fixture(scope="session")
@@ -119,7 +127,7 @@ async def users(password_hash: str) -> tuple[User, User, User]:
 async def client() -> AsyncIterator[AsyncClient]:
     """Build one unauthenticated API test client."""
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", follow_redirects=True) as test_client:
+    async with create_client() as test_client:
         yield test_client
 
 
@@ -129,15 +137,5 @@ async def clients(users: tuple[User, User, User]) -> AsyncIterator[tuple[AsyncCl
 
     # Give every identity an isolated cookie jar while sharing the in-process application.
     async with AsyncExitStack() as stack:
-        clients = [
-            await stack.enter_async_context(
-                AsyncClient(
-                    transport=ASGITransport(app=app),
-                    base_url="http://testserver",
-                    cookies=authenticated_cookies(user),
-                    follow_redirects=True,
-                )
-            )
-            for user in users
-        ]
+        clients = [await stack.enter_async_context(create_client(user)) for user in users]
         yield clients[0], clients[1], clients[2]

@@ -1,31 +1,14 @@
-import { z } from 'zod';
 import type { Props } from '../types';
+import { resolveOptions } from './options';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
+import { resolveXmlProps, xmlLabelPropsSchema } from '../core/props';
 import { Selector as AstryxSelector } from '@astryxdesign/core/Selector';
-import { isVisibleXmlNode, resolveXmlProps, xmlLabelPropsSchema, xmlNonblankStringSchema } from '../core/props';
-
-const optionPropsSchema = z.object({
-    label: z.string().optional(),
-    value: xmlNonblankStringSchema,
-});
 
 export function Selector({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : String(value)));
-    const options = nodes
-        .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx))
-        .map((node) => {
-            const { label: labelValue, value } = resolveXmlProps(
-                node.params,
-                ctx,
-                { label: 'scalar', value: 'raw' },
-                optionPropsSchema
-            );
-            const label = labelValue ?? value;
-
-            return { value, label };
-        });
+    const options = resolveOptions(nodes, ctx);
 
     // Selectors require at least one visible option.
     if (options.length === 0) {

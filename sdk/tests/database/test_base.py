@@ -1,7 +1,9 @@
 import pytest
+import asyncio
 from typing import ClassVar
 from sqlmodel import Field
 from longlink.database import base as database_base
+from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
@@ -20,25 +22,20 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         name: str
 
     # Inspect the inherited columns and their foreign-key targets.
-    table = getattr(FeatureAuditItem, "__table__")
+    table = database_base.database_metadata.tables[FeatureAuditItem.__tablename__]
     try:
-        foreign_key_targets = {
-            column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
-            for column_name in ("created_id", "updated_id", "deleted_id")
-        }
-
         # Verify audit fields and user relationships are available to Applications.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
-        assert foreign_key_targets == {
+        assert {
+            column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
+            for column_name in ("created_id", "updated_id", "deleted_id")
+        } == {
             "created_id": {"audit.id"},
             "updated_id": {"audit.id"},
             "deleted_id": {"audit.id"},
         }
-        assert hasattr(FeatureAuditItem, "created_by")
-        assert hasattr(FeatureAuditItem, "updated_by")
-        assert hasattr(FeatureAuditItem, "deleted_by")
+        assert all(hasattr(FeatureAuditItem, relationship) for relationship in ("created_by", "updated_by", "deleted_by"))
     finally:
-
         # Remove the temporary table from shared metadata.
         database_base.database_metadata.remove(table)
 
@@ -104,3 +101,34 @@ def test_create_engine_selects_database_url_and_options(
 
     # Verify the selected URL and connection options.
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}
+
+
+async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Initialize the lazy database session factory only once."""
+
+    # Arrange
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    create_count = 0
+
+    def counted_create_engine(_env: Envs):
+        """Return the isolated engine while recording initialization attempts."""
+        nonlocal create_count
+        create_count += 1
+        return engine
+
+    monkeypatch.setattr(database_base, "Session", None)
+    monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
+
+    async def open_session() -> None:
+        """Open and close one SDK-managed database session."""
+        async with database_base.session():
+            pass
+
+    try:
+        # Act
+        await asyncio.gather(open_session(), open_session())
+
+        # Assert
+        assert create_count == 1
+    finally:
+        await engine.dispose()

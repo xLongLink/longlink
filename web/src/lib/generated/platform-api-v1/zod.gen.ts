@@ -3,13 +3,15 @@
 import * as z from 'zod';
 
 /**
- * ApplicationRelease
+ * ApplicationCreate
  *
- * Validate a requested Application release.
+ * Validate application creation payloads.
  */
-export const zApplicationRelease = z.object({
+export const zApplicationCreate = z.object({
+    name: z.string().min(1).max(100),
     image: z.string(),
-    description: z.string().max(255).nullish()
+    description: z.string().max(255).nullish(),
+    envs: z.record(z.string(), z.string()).optional()
 });
 
 /**
@@ -137,19 +139,6 @@ export const zIcon = z.enum([
     'users',
     'x'
 ]);
-
-/**
- * ApplicationCreate
- *
- * Validate application creation payloads.
- */
-export const zApplicationCreate = z.object({
-    name: z.string().min(1).max(100),
-    icon: zIcon.nullish(),
-    image: z.string(),
-    description: z.string().max(255).nullish(),
-    envs: z.record(z.string(), z.string()).optional()
-});
 
 /**
  * LongLinkMetadata
@@ -300,6 +289,30 @@ export const zOrganizationUpdate = z.object({
 });
 
 /**
+ * Page[DatabaseRegistryResponse]
+ */
+export const zPageDatabaseRegistryResponse = z.object({
+    items: z.array(zDatabaseRegistryResponse),
+    total: z.int().gte(0)
+});
+
+/**
+ * Page[OperationResponse]
+ */
+export const zPageOperationResponse = z.object({
+    items: z.array(zOperationResponse),
+    total: z.int().gte(0)
+});
+
+/**
+ * Page[OrganizationSummary]
+ */
+export const zPageOrganizationSummary = z.object({
+    items: z.array(zOrganizationSummary),
+    total: z.int().gte(0)
+});
+
+/**
  * PasswordLogin
  *
  * Validate one local password login request.
@@ -345,7 +358,6 @@ export const zApplicationResponse = z.object({
     organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
-    icon: zIcon.nullable(),
     description: z.string().nullable(),
     image_desired: z.string(),
     status: zStatus,
@@ -373,9 +385,24 @@ export const zOrganizationApplicationSummary = z.object({
     id: z.uuid(),
     name: z.string(),
     slug: z.string(),
-    icon: zIcon.nullish(),
     description: z.string().nullish(),
     status: zStatus
+});
+
+/**
+ * Page[ApplicationResponse]
+ */
+export const zPageApplicationResponse = z.object({
+    items: z.array(zApplicationResponse),
+    total: z.int().gte(0)
+});
+
+/**
+ * Page[ComputeRegistryResponse]
+ */
+export const zPageComputeRegistryResponse = z.object({
+    items: z.array(zComputeRegistryResponse),
+    total: z.int().gte(0)
 });
 
 /**
@@ -399,6 +426,14 @@ export const zStorageRegistryResponse = z.object({
     id: z.uuid(),
     name: z.string(),
     endpoint_url: z.string()
+});
+
+/**
+ * Page[StorageRegistryResponse]
+ */
+export const zPageStorageRegistryResponse = z.object({
+    items: z.array(zStorageRegistryResponse),
+    total: z.int().gte(0)
 });
 
 /**
@@ -465,6 +500,14 @@ export const zUserSummary = z.object({
     email: z.email(),
     avatar: z.string(),
     administrator: z.boolean()
+});
+
+/**
+ * Page[UserSummary]
+ */
+export const zPageUserSummary = z.object({
+    items: z.array(zUserSummary),
+    total: z.int().gte(0)
 });
 
 /**
@@ -544,12 +587,15 @@ export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrat
  */
 export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserSummary;
 
+export const zListApplicationsApiV1ApplicationsGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
 /**
- * Response List Applications Api V1 Applications Get
- *
  * Successful Response
  */
-export const zListApplicationsApiV1ApplicationsGetResponse = z.array(zApplicationResponse);
+export const zListApplicationsApiV1ApplicationsGetResponse = zPageApplicationResponse;
 
 export const zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetPath = z.object({
     organization_id: z.uuid()
@@ -573,17 +619,6 @@ export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostP
  */
 export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = z.void();
 
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostBody = zApplicationRelease;
-
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostPath = z.object({
-    application_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = zApplicationResponse;
-
 export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.object({
     application_id: z.uuid()
 });
@@ -604,12 +639,15 @@ export const zDeleteApplicationApiV1ApplicationsApplicationIdDeletePath = z.obje
  */
 export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = z.void();
 
+export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
 /**
- * Response List Compute Registries Api V1 Computes Get
- *
  * Successful Response
  */
-export const zListComputeRegistriesApiV1ComputesGetResponse = z.array(zComputeRegistryResponse);
+export const zListComputeRegistriesApiV1ComputesGetResponse = zPageComputeRegistryResponse;
 
 export const zCreateComputeRegistryApiV1ComputesPostBody = zComputeRegistryCreate;
 
@@ -636,12 +674,15 @@ export const zGetComputeRegistryApiV1ComputesRegistryIdGetPath = z.object({
  */
 export const zGetComputeRegistryApiV1ComputesRegistryIdGetResponse = zComputeRegistryResponse;
 
+export const zListDatabaseRegistriesApiV1DatabasesGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
 /**
- * Response List Database Registries Api V1 Databases Get
- *
  * Successful Response
  */
-export const zListDatabaseRegistriesApiV1DatabasesGetResponse = z.array(zDatabaseRegistryResponse);
+export const zListDatabaseRegistriesApiV1DatabasesGetResponse = zPageDatabaseRegistryResponse;
 
 export const zCreateDatabaseRegistryApiV1DatabasesPostBody = zDatabaseRegistryCreate;
 
@@ -709,19 +750,25 @@ export const zInspectImageApiV1ImageGetQuery = z.object({
  */
 export const zInspectImageApiV1ImageGetResponse = zLongLinkMetadata;
 
-/**
- * Response List Operations Api V1 Operations Get
- *
- * Successful Response
- */
-export const zListOperationsApiV1OperationsGetResponse = z.array(zOperationResponse);
+export const zListOperationsApiV1OperationsGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
 
 /**
- * Response List Organizations Api V1 Organizations Get
- *
  * Successful Response
  */
-export const zListOrganizationsApiV1OrganizationsGetResponse = z.array(zOrganizationSummary);
+export const zListOperationsApiV1OperationsGetResponse = zPageOperationResponse;
+
+export const zListOrganizationsApiV1OrganizationsGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
+/**
+ * Successful Response
+ */
+export const zListOrganizationsApiV1OrganizationsGetResponse = zPageOrganizationSummary;
 
 export const zCreateOrganizationApiV1OrganizationsPostBody = zOrganizationCreate;
 
@@ -804,12 +851,15 @@ export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMem
  */
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = z.void();
 
+export const zListStorageRegistriesApiV1StoragesGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
 /**
- * Response List Storage Registries Api V1 Storages Get
- *
  * Successful Response
  */
-export const zListStorageRegistriesApiV1StoragesGetResponse = z.array(zStorageRegistryResponse);
+export const zListStorageRegistriesApiV1StoragesGetResponse = zPageStorageRegistryResponse;
 
 export const zCreateStorageRegistryApiV1StoragesPostBody = zStorageRegistryCreate;
 
@@ -855,9 +905,12 @@ export const zPatchMeApiV1MePatchResponse = zUserSummary;
  */
 export const zGetMyOrganizationsApiV1MeOrganizationsGetResponse = z.array(zUserOrganizationMembership);
 
+export const zListUsersApiV1UsersGetQuery = z.object({
+    page: z.int().gte(1).optional().default(1),
+    page_size: z.int().gte(1).lte(100).optional().default(25)
+});
+
 /**
- * Response List Users Api V1 Users Get
- *
  * Successful Response
  */
-export const zListUsersApiV1UsersGetResponse = z.array(zUserSummary);
+export const zListUsersApiV1UsersGetResponse = zPageUserSummary;

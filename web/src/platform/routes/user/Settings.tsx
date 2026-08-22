@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/Badge';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -158,7 +158,7 @@ export default function Settings() {
                                         header="Role"
                                         width={pixel(128)}
                                     >
-                                        {(membership) => <Badge>{membership.role}</Badge>}
+                                        {(membership) => <Badge label={membership.role} />}
                                     </TableColumn>
                                     <TableColumn<(typeof memberships)[number]>
                                         field="actions"

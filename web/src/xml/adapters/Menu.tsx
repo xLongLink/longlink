@@ -22,13 +22,17 @@ export function Menu({ nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const sections = nodes.filter((node) => isVisibleXmlNode(node, ctx));
 
-    for (const section of sections) {
-        if (section.name !== 'MenuSection') {
-            throw new Error('Menu only supports MenuSection children');
-        }
-    }
+    return (
+        <ApplicationMenu>
+            {sections.map((section) => {
+                if (section.name !== 'MenuSection') {
+                    throw new Error('Menu only supports MenuSection children');
+                }
 
-    return <ApplicationMenu>{sections.map((section) => renderSection(section, ctx))}</ApplicationMenu>;
+                return renderSection(section, ctx);
+            })}
+        </ApplicationMenu>
+    );
 }
 
 /** Converts an XML menu section into the application menu marker. */

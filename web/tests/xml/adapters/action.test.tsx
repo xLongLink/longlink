@@ -3,17 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Action', () => {
-    it('requires one terminal Button or Link trigger', () => {
-        expect(() =>
-            renderXmlToMarkup(parseXML('<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'))
-        ).toThrow('Action requires exactly one direct Button or Link trigger');
-    });
-
-    it('rejects effects after its trigger', () => {
-        expect(() =>
-            renderXmlToMarkup(
-                parseXML('<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>')
-            )
-        ).toThrow('Action effects must precede its Button or Link trigger');
+    it.each([
+        {
+            error: 'Action requires exactly one direct Button or Link trigger',
+            xml: '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>',
+        },
+        {
+            error: 'Action effects must precede its Button or Link trigger',
+            xml: '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>',
+        },
+    ])('rejects invalid structure: $error', ({ error, xml }) => {
+        expect(() => renderXmlToMarkup(parseXML(xml))).toThrow(error);
     });
 });

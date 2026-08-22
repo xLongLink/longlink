@@ -4,7 +4,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.gateway import generate_gateway_tls
+from src.kubernetes.gateway import generate_gateway_tls, generate_gateway_bootstrap_tls
 from src.database.models.computes import ComputeRegistry
 
 
@@ -42,7 +42,7 @@ async def create(compute_id: UUID) -> str | None:
         return None
 
     # Generate mTLS credentials only while bootstrapping an unpublished Compute.
-    tls = generate_gateway_tls(registry.id, None)
+    tls = generate_gateway_bootstrap_tls(registry.id)
 
     # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
     gateway_address = await cluster.gateway.apply(tls)

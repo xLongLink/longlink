@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
-    it('renders a direct Icon child', () => {
-        const output = renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" /></Badge>'));
+    it('renders direct icon content', () => {
+        const output = renderXmlToMarkup(parseXML('<Badge>Active<Icon icon="check" label="Confirmed" /></Badge>'));
 
-        expect(output).toContain('svg');
+        expect(output).toContain('Active');
+        expect(output).toContain('Confirmed');
     });
 
     it('rejects duplicate icons', () => {

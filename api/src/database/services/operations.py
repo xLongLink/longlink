@@ -1,11 +1,12 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import case, select, update
+from sqlalchemy import case, func, select, update
 from src.logger import logger
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -13,11 +14,18 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[Operation]:
-    """Return all operations ordered by newest first."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
+    """Return one newest-first page of platform operations."""
 
-    result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
-    return result.all()
+    # Query one stable page of operation history.
+    statement = (
+        select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc()).offset(pagination.offset).limit(pagination.page_size)
+    )
+    result = await session.scalars(statement)
+
+    # Count all operation history rows.
+    count_result = await session.execute(select(func.count()).select_from(Operation))
+    return result.all(), count_result.scalar_one()
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

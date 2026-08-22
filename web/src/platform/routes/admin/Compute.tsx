@@ -13,9 +13,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin compute page. */
@@ -30,16 +30,11 @@ export default function AdminCompute() {
         },
     });
     const {
-        data: computes = [],
+        items: computes,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/computes'],
-        queryFn: async ({ signal }) =>
-            zComputeRegistryResponse.array().parse(await api('/api/v1/computes', { signal }).json()),
-        refetchInterval: 5000,
-    });
-    const { pageItems, pagination } = usePaginate(computes);
+        pagination,
+    } = usePaginate('/api/v1/computes', zPageComputeRegistryResponse, 5000);
     const deleteDialog = useDeleteDialog({
         title: 'Delete compute',
         mutation: deleteCompute,
@@ -71,7 +66,7 @@ export default function AdminCompute() {
                 <CreateCompute />
             </HStack>
             <Table
-                data={pageItems}
+                data={computes}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

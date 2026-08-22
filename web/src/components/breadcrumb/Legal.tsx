@@ -1,4 +1,4 @@
-import startCase from 'lodash/startCase';
+import { startCase } from '@/lib/utils';
 import { useLocation } from 'react-router';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 

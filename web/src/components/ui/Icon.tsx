@@ -141,11 +141,9 @@ export const ICON_NAMES = [
     'x',
 ] as const;
 
-export type IconName = (typeof ICON_NAMES)[number];
-
 const iconNameSet = new Set<string>(ICON_NAMES);
 
-const iconComponents: Record<IconName, LucideIcon> = {
+const iconComponents: Record<(typeof ICON_NAMES)[number], LucideIcon> = {
     activity: Activity,
     'arrow-right': ArrowRight,
     banknote: Banknote,
@@ -184,7 +182,7 @@ export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps
 }
 
 /** Returns whether a string is a supported application icon slug. */
-export function isIconName(name: string): name is IconName {
+export function isIconName(name: string): name is (typeof ICON_NAMES)[number] {
     return iconNameSet.has(name);
 }
 

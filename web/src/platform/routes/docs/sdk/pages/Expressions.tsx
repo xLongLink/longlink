@@ -6,8 +6,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
     path: '/docs/sdk/pages/expressions',
-    title: 'Expressions',
-    description: 'Evaluates a safe JavaScript expression subset against the XML runtime scope.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

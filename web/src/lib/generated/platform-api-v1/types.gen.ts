@@ -14,7 +14,6 @@ export type ApplicationCreate = {
      * Name
      */
     name: string;
-    icon?: Icon | null;
     /**
      * Image
      */
@@ -29,22 +28,6 @@ export type ApplicationCreate = {
     envs?: {
         [key: string]: string;
     };
-};
-
-/**
- * ApplicationRelease
- *
- * Validate a requested Application release.
- */
-export type ApplicationRelease = {
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Description
-     */
-    description?: string | null;
 };
 
 /**
@@ -66,7 +49,6 @@ export type ApplicationResponse = {
      * Slug
      */
     slug: string;
-    icon: Icon | null;
     /**
      * Description
      */
@@ -331,7 +313,6 @@ export type OrganizationApplicationSummary = {
      * Slug
      */
     slug: string;
-    icon?: Icon | null;
     /**
      * Description
      */
@@ -506,6 +487,104 @@ export type OrganizationUpdate = {
      * Avatar
      */
     avatar: string | '';
+};
+
+/**
+ * Page[ApplicationResponse]
+ */
+export type PageApplicationResponse = {
+    /**
+     * Items
+     */
+    items: Array<ApplicationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[ComputeRegistryResponse]
+ */
+export type PageComputeRegistryResponse = {
+    /**
+     * Items
+     */
+    items: Array<ComputeRegistryResponse>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[DatabaseRegistryResponse]
+ */
+export type PageDatabaseRegistryResponse = {
+    /**
+     * Items
+     */
+    items: Array<DatabaseRegistryResponse>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[OperationResponse]
+ */
+export type PageOperationResponse = {
+    /**
+     * Items
+     */
+    items: Array<OperationResponse>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[OrganizationSummary]
+ */
+export type PageOrganizationSummary = {
+    /**
+     * Items
+     */
+    items: Array<OrganizationSummary>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[StorageRegistryResponse]
+ */
+export type PageStorageRegistryResponse = {
+    /**
+     * Items
+     */
+    items: Array<StorageRegistryResponse>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[UserSummary]
+ */
+export type PageUserSummary = {
+    /**
+     * Items
+     */
+    items: Array<UserSummary>;
+    /**
+     * Total
+     */
+    total: number;
 };
 
 /**
@@ -945,7 +1024,16 @@ export type CompleteRegistrationApiV1AuthRegisterCompletePostResponse = Complete
 export type ListApplicationsApiV1ApplicationsGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/applications';
 };
 
@@ -960,11 +1048,9 @@ export type ListApplicationsApiV1ApplicationsGetError = ListApplicationsApiV1App
 
 export type ListApplicationsApiV1ApplicationsGetResponses = {
     /**
-     * Response List Applications Api V1 Applications Get
-     *
      * Successful Response
      */
-    200: Array<ApplicationResponse>;
+    200: PageApplicationResponse;
 };
 
 export type ListApplicationsApiV1ApplicationsGetResponse = ListApplicationsApiV1ApplicationsGetResponses[keyof ListApplicationsApiV1ApplicationsGetResponses];
@@ -1031,36 +1117,6 @@ export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostRes
 
 export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
 
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostData = {
-    body: ApplicationRelease;
-    path: {
-        /**
-         * Application Id
-         */
-        application_id: string;
-    };
-    query?: never;
-    url: '/api/v1/applications/{application_id}/releases';
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostError = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors];
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses = {
-    /**
-     * Successful Response
-     */
-    202: ApplicationResponse;
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses];
-
 export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetData = {
     body?: never;
     path: {
@@ -1126,7 +1182,16 @@ export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = Dele
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/computes';
 };
 
@@ -1141,11 +1206,9 @@ export type ListComputeRegistriesApiV1ComputesGetError = ListComputeRegistriesAp
 
 export type ListComputeRegistriesApiV1ComputesGetResponses = {
     /**
-     * Response List Compute Registries Api V1 Computes Get
-     *
      * Successful Response
      */
-    200: Array<ComputeRegistryResponse>;
+    200: PageComputeRegistryResponse;
 };
 
 export type ListComputeRegistriesApiV1ComputesGetResponse = ListComputeRegistriesApiV1ComputesGetResponses[keyof ListComputeRegistriesApiV1ComputesGetResponses];
@@ -1238,7 +1301,16 @@ export type GetComputeRegistryApiV1ComputesRegistryIdGetResponse = GetComputeReg
 export type ListDatabaseRegistriesApiV1DatabasesGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/databases';
 };
 
@@ -1253,11 +1325,9 @@ export type ListDatabaseRegistriesApiV1DatabasesGetError = ListDatabaseRegistrie
 
 export type ListDatabaseRegistriesApiV1DatabasesGetResponses = {
     /**
-     * Response List Database Registries Api V1 Databases Get
-     *
      * Successful Response
      */
-    200: Array<DatabaseRegistryResponse>;
+    200: PageDatabaseRegistryResponse;
 };
 
 export type ListDatabaseRegistriesApiV1DatabasesGetResponse = ListDatabaseRegistriesApiV1DatabasesGetResponses[keyof ListDatabaseRegistriesApiV1DatabasesGetResponses];
@@ -1479,7 +1549,16 @@ export type InspectImageApiV1ImageGetResponse = InspectImageApiV1ImageGetRespons
 export type ListOperationsApiV1OperationsGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/operations';
 };
 
@@ -1494,11 +1573,9 @@ export type ListOperationsApiV1OperationsGetError = ListOperationsApiV1Operation
 
 export type ListOperationsApiV1OperationsGetResponses = {
     /**
-     * Response List Operations Api V1 Operations Get
-     *
      * Successful Response
      */
-    200: Array<OperationResponse>;
+    200: PageOperationResponse;
 };
 
 export type ListOperationsApiV1OperationsGetResponse = ListOperationsApiV1OperationsGetResponses[keyof ListOperationsApiV1OperationsGetResponses];
@@ -1506,7 +1583,16 @@ export type ListOperationsApiV1OperationsGetResponse = ListOperationsApiV1Operat
 export type ListOrganizationsApiV1OrganizationsGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/organizations';
 };
 
@@ -1521,11 +1607,9 @@ export type ListOrganizationsApiV1OrganizationsGetError = ListOrganizationsApiV1
 
 export type ListOrganizationsApiV1OrganizationsGetResponses = {
     /**
-     * Response List Organizations Api V1 Organizations Get
-     *
      * Successful Response
      */
-    200: Array<OrganizationSummary>;
+    200: PageOrganizationSummary;
 };
 
 export type ListOrganizationsApiV1OrganizationsGetResponse = ListOrganizationsApiV1OrganizationsGetResponses[keyof ListOrganizationsApiV1OrganizationsGetResponses];
@@ -1776,7 +1860,16 @@ export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMembe
 export type ListStorageRegistriesApiV1StoragesGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/storages';
 };
 
@@ -1791,11 +1884,9 @@ export type ListStorageRegistriesApiV1StoragesGetError = ListStorageRegistriesAp
 
 export type ListStorageRegistriesApiV1StoragesGetResponses = {
     /**
-     * Response List Storage Registries Api V1 Storages Get
-     *
      * Successful Response
      */
-    200: Array<StorageRegistryResponse>;
+    200: PageStorageRegistryResponse;
 };
 
 export type ListStorageRegistriesApiV1StoragesGetResponse = ListStorageRegistriesApiV1StoragesGetResponses[keyof ListStorageRegistriesApiV1StoragesGetResponses];
@@ -1965,7 +2056,16 @@ export type GetMyOrganizationsApiV1MeOrganizationsGetResponse = GetMyOrganizatio
 export type ListUsersApiV1UsersGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
     url: '/api/v1/users';
 };
 
@@ -1980,11 +2080,9 @@ export type ListUsersApiV1UsersGetError = ListUsersApiV1UsersGetErrors[keyof Lis
 
 export type ListUsersApiV1UsersGetResponses = {
     /**
-     * Response List Users Api V1 Users Get
-     *
      * Successful Response
      */
-    200: Array<UserSummary>;
+    200: PageUserSummary;
 };
 
 export type ListUsersApiV1UsersGetResponse = ListUsersApiV1UsersGetResponses[keyof ListUsersApiV1UsersGetResponses];

@@ -1,7 +1,7 @@
 from uuid import UUID
-from sqlalchemy import delete, select
+from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
-from src.errors import ConflictError, ForbiddenError, UnavailableError
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, joinedload, contains_eager
@@ -13,12 +13,14 @@ from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -72,11 +74,7 @@ async def application_runtime_access(
             UserOrganization.deleted_at.is_(None),
         )
     )
-    row = result.one_or_none()
-    if row is None:
-        return None
-    application, organization, role, compute = row
-    return application, organization, role, compute
+    return result.tuples().one_or_none()
 
 
 async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
@@ -116,13 +114,22 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def fetch(session: AsyncSession) -> Sequence[Organization]:
-    """Return all organizations in the database."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
+    """Return one ordered page of active organizations for administrator views."""
 
-    # Load active organizations.
-    statement = select(Organization).where(Organization.deleted_at.is_(None))
+    # Query active organization rows using a stable page order.
+    statement = (
+        select(Organization)
+        .where(Organization.deleted_at.is_(None))
+        .order_by(Organization.name, Organization.id)
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
+    )
     result = await session.scalars(statement)
-    return result.all()
+
+    # Count only active organizations visible in the listing.
+    count_result = await session.execute(select(func.count()).select_from(Organization).where(Organization.deleted_at.is_(None)))
+    return result.all(), count_result.scalar_one()
 
 
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
@@ -134,7 +141,6 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
         return
     if organization.deleted_at is None:
         raise RuntimeError("Active organizations cannot be purged")
-    await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
     await session.delete(organization)
 
 
@@ -172,17 +178,18 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     return result.all()
 
 
-async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
-    """Return organization member rows for one organization."""
+async def members(session: AsyncSession, organization_id: UUID) -> Sequence[UserOrganization]:
+    """Return active organization member rows for one organization."""
 
     # Query memberships with their users so detached callers can shape API payloads.
     statement = (
-        select(UserOrganization).options(joinedload(UserOrganization.user)).where(UserOrganization.organization_id == organization_id)
+        select(UserOrganization)
+        .options(joinedload(UserOrganization.user))
+        .where(
+            UserOrganization.organization_id == organization_id,
+            UserOrganization.deleted_at.is_(None),
+        )
     )
-
-    # Include deleted memberships only when requested by control-plane orchestration.
-    if not include_deleted:
-        statement = statement.where(UserOrganization.deleted_at.is_(None))
 
     result = await session.scalars(statement)
     return result.all()
@@ -207,25 +214,29 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     organization, database = assigned
     db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
+    # Include deleted memberships so the Organization database receives tombstones.
+    memberships_statement = (
+        select(UserOrganization).options(joinedload(UserOrganization.user)).where(UserOrganization.organization_id == organization.id)
+    )
+    memberships_result = await session.scalars(memberships_statement)
+    memberships = memberships_result.all()
+
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    memberships = await members(session, organization.id, include_deleted=True)
-    rows: list[Audit] = []
-    for membership in memberships:
-        user = membership.user
-        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
-        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
-        rows.append(
-            Audit(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar,
-                role=membership.role.value,
-                created_at=membership.created_at,
-                updated_at=updated_at,
-                deleted_at=deleted_at,
-            )
+    rows = [
+        Audit(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+            avatar=membership.user.avatar,
+            role=membership.role.value,
+            created_at=membership.created_at,
+            deleted_at=(
+                deleted_at := max((item for item in (membership.user.deleted_at, membership.deleted_at) if item is not None), default=None)
+            ),
+            updated_at=max(membership.user.updated_at, membership.updated_at, deleted_at or membership.user.updated_at),
         )
+        for membership in memberships
+    ]
 
     # The Platform is authoritative over Organization user projections.
     await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
@@ -238,8 +249,8 @@ async def update_member_role(
     role: OrganizationRoles,
     user: User,
     caller_role: OrganizationRoles,
-) -> bool | None:
-    """Change one active Organization membership and synchronize its user projection."""
+) -> bool:
+    """Change one active Organization membership role."""
 
     # Update the member role inside one transaction.
     statement = (
@@ -257,7 +268,7 @@ async def update_member_role(
     result = await session.scalars(statement)
     membership = result.one_or_none()
     if membership is None:
-        return None
+        raise NotFoundError("Organization member not found")
 
     # Only owners may grant or change owner access.
     if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
@@ -288,8 +299,6 @@ async def update_member_role(
     membership.updated_id = user.id
     membership.role = role
 
-    # Project the membership change into the Organization database.
-    await sync_users(session, organization_id)
     return True
 
 
@@ -392,28 +401,24 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.updated_at = now
         organization.updated_id = user.id
 
-        # Apply the same deletion audit state to every active nested row without loading each object.
-        tombstone = {
-            "deleted_at": now,
-            "deleted_id": user.id,
-            "updated_at": now,
-            "updated_id": user.id,
-        }
+        # Tombstone every active Application without loading each object.
         await session.execute(
             sql_update(Application)
             .where(
                 Application.organization_id == organization_id,
                 Application.deleted_at.is_(None),
             )
-            .values(**tombstone)
+            .values(deleted_at=now, updated_at=now)
         )
+
+        # Organization cleanup supersedes unleased Application lifecycle work.
         await session.execute(
-            sql_update(UserOrganization)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
+            delete(Operation).where(
+                Operation.kind.in_((OperationKind.application_create, OperationKind.application_delete)),
+                Operation.target_id.in_(select(Application.id).where(Application.organization_id == organization_id)),
+                Operation.finished_at.is_(None),
+                Operation.lease_expires_at.is_(None),
             )
-            .values(**tombstone)
         )
 
     # Keep tombstones and Organization cleanup in one transaction.
