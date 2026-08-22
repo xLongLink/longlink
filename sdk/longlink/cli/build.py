@@ -212,12 +212,10 @@ def render_image_labels(description: str | None, environments: Sequence[Mapping[
     return "\n".join(rendered_labels)
 
 
-def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None = None) -> tuple[Path, str, list[Path]]:
+def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
     # Validate the application root and initialize local dependency traversal.
-    root_pyproject_data = pyproject_data if pyproject_data is not None else read_pyproject(root)
-    source_paths: list[Path] = [root]
     pending_paths: list[Path] = [root]
     seen_paths: set[Path] = set()
 
@@ -236,7 +234,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
         if not pyproject_path.is_file():
             continue
 
-        source_pyproject_data = root_pyproject_data if source_root == root else read_pyproject(source_root)
+        source_pyproject_data = pyproject_data if source_root == root else read_pyproject(source_root)
 
         # Read the tool table while ignoring malformed values.
         tool_data = source_pyproject_data.get("tool")
@@ -264,11 +262,10 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
                     if resolved_source_path not in seen_paths and resolved_source_path not in pending_paths:
-                        source_paths.append(resolved_source_path)
                         pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
-    common_root = Path(os.path.commonpath(source_paths))
+    common_root = Path(os.path.commonpath(seen_paths))
     workdir = "/workspace"
 
     # Use a nested workdir when the app is below the common root.
@@ -279,7 +276,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
     return common_root, workdir, sorted(seen_paths)
 
 
-def build_app(build_context: Path) -> tuple[Path, str, str]:
+def build_app(build_context: Path) -> tuple[str, str]:
     """Create Docker build artifacts for the current app."""
 
     # Resolve build paths and collect project metadata for the image.
@@ -339,7 +336,6 @@ def build_app(build_context: Path) -> tuple[Path, str, str]:
     )
 
     # Write the generated Dockerfile into the temporary build context.
-    dockerfile_path = build_context / "Dockerfile"
     dependency_source = workdir.removeprefix("/workspace/")
     if dependency_source:
         dependency_source += "/"
@@ -349,7 +345,7 @@ def build_app(build_context: Path) -> tuple[Path, str, str]:
         for source_path in local_source_paths
         if source_path != root
     )
-    dockerfile_path.write_text(
+    build_context.joinpath("Dockerfile").write_text(
         DOCKERFILE_TEMPLATE.format(
             dependency_source=dependency_source,
             local_dependency_manifests=local_dependency_manifests,
@@ -360,7 +356,7 @@ def build_app(build_context: Path) -> tuple[Path, str, str]:
         encoding="utf-8",
     )
 
-    return dockerfile_path, project_version, project_name
+    return project_version, project_name
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
@@ -379,17 +375,8 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     # Add a registry prefix when requested.
     if registry_prefix:
-        # Reject URL-style registry prefixes and invalid characters.
-        if registry_prefix.startswith("//") or "://" in registry_prefix:
-            raise click.ClickException("Docker registry prefix must not be a URL")
-        if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
-            raise click.ClickException("Docker registry prefix contains invalid characters")
-
         # Restrict production registries to GHCR while allowing localhost development registries.
         registry_host = registry_prefix.split("/", 1)[0]
-        if "@" in registry_host:
-            raise click.ClickException("Docker registry prefix is invalid")
-
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
             raise click.ClickException("Docker registry port is invalid")
@@ -426,7 +413,7 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        dockerfile_path, project_version, app_name = build_app(build_context)
+        project_version, app_name = build_app(build_context)
 
         # Resolve and validate the final image tag.
         version = tag or project_version
@@ -446,7 +433,7 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
                     docker_command,
                     "build",
                     "-f",
-                    str(dockerfile_path),
+                    str(build_context / "Dockerfile"),
                     "-t",
                     image_tag,
                     str(build_context),
@@ -460,12 +447,8 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         except subprocess.CalledProcessError as error:
             raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
 
-    click.echo(f"Build completed for version {version}")
     click.echo(f"- Built image: {image_tag}")
 
     # Report pushed images only when requested.
     if push:
         click.echo(f"- Pushed image: {image_tag}")
-    click.echo(f"- View it with: docker image inspect {image_tag}")
-    click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
-    click.echo(f"- Remove it with: docker rmi {image_tag}")

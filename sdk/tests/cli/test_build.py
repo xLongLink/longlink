@@ -137,15 +137,15 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
     # Arrange
     commands: list[list[str]] = []
-    dockerfile_path: Path | None = None
+    temporary_context: Path | None = None
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path) -> tuple[Path, str, str]:
+    def fake_build_app(build_context: Path) -> tuple[str, str]:
         """Create fake Docker artifacts for the build command."""
 
-        nonlocal dockerfile_path
-        dockerfile_path = build_context / "Dockerfile"
-        return dockerfile_path, "0.1.0", "Demo App"
+        nonlocal temporary_context
+        temporary_context = build_context
+        return "0.1.0", "Demo App"
 
 
     def fake_run(command: list[str], check: bool) -> None:
@@ -169,9 +169,17 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
     # Assert
     assert result.exit_code == 0
-    assert dockerfile_path is not None
+    assert temporary_context is not None
     assert commands == [
-        ["/usr/bin/docker", "build", "-f", str(dockerfile_path), "-t", "localhost:15000/demo-app:dev", str(dockerfile_path.parent)],
+        [
+            "/usr/bin/docker",
+            "build",
+            "-f",
+            str(temporary_context / "Dockerfile"),
+            "-t",
+            "localhost:15000/demo-app:dev",
+            str(temporary_context),
+        ],
         ["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"],
     ]
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
