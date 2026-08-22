@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from sqlalchemy import select
 from dataclasses import dataclass
 from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
@@ -65,7 +66,8 @@ async def fetch_operations() -> Sequence[Operation]:
     """Fetch queued Operations through an explicit test session."""
 
     async with session_scope() as session:
-        return await operations.fetch(session)
+        result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
+        return result.all()
 
 
 async def create_compute(name: str = "Local compute") -> ComputeRegistry:

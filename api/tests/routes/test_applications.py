@@ -1,14 +1,14 @@
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import create_application, create_organization
+from factories import fetch_operations, create_application, create_organization
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
 from src.database.session import get_session, session_scope
-from src.database.services import operations, applications
+from src.database.services import applications
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -133,9 +133,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.description == "Dashboard app"
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
-        assert any(
-            item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await operations.fetch(session)
-        )
+        assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await fetch_operations())
 
 
 async def test_application_responses_do_not_expose_environment_secrets(
@@ -283,6 +281,5 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
     # Assert
     assert response.status_code == 204
     assert retry_response.status_code == 403
-    async with session_scope() as session:
-        recorded_operations = await operations.fetch(session)
+    recorded_operations = await fetch_operations()
     assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)

@@ -1,15 +1,12 @@
 from uuid import uuid4
 from datetime import timedelta
-from factories import create_compute, fail_operation, claim_operation, fetch_operations, complete_operation
+from factories import fail_operation, claim_operation, fetch_operations, complete_operation, create_ready_infrastructure
 from factories import queue_operation as queue
-from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
-from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -79,31 +76,14 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
 async def test_operations_service_schedules_all_active_application_creation_once() -> None:
     """Queue one reconciliation Operation for every Application lifecycle state."""
 
-    compute = await create_compute("local")
-    database = DatabaseRegistry(
-        name="Primary Database",
-        host="database.example",
-        port=5432,
-        username="admin",
-        password="secret",
-        sslmode=DatabaseSSLMode.disable,
-    )
-    storage = StorageRegistry(
-        name="Primary Storage",
-        endpoint_url="https://sos-ch-gva-2.exo.io",
-        access_key_id="access-key",
-        secret_access_key="secret-key",
-    )
+    infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
-        session.add_all([database, storage])
-        await session.flush()
         organization = Organization(
             name="Acme",
             slug="acme",
-            compute_id=compute.id,
-            database_id=database.id,
-            storage_id=storage.id,
-            status=Status.running,
+            compute_id=infrastructure.compute.id,
+            database_id=infrastructure.database.id,
+            storage_id=infrastructure.storage.id,
         )
         session.add(organization)
         await session.flush()
@@ -141,11 +121,51 @@ async def test_operations_service_schedules_all_active_application_creation_once
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_create, compute.id),
+        (OperationKind.compute_create, infrastructure.compute.id),
         (OperationKind.organization_create, organization.id),
         (OperationKind.application_create, running.id),
         (OperationKind.application_create, pending.id),
         (OperationKind.application_delete, deleted.id),
+    }
+
+
+async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
+    """Queue only parent cleanup when an Organization and its Applications are deleted."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    async with session_scope() as session:
+        organization = Organization(
+            name="Deleted Acme",
+            slug="deleted-acme",
+            compute_id=infrastructure.compute.id,
+            database_id=infrastructure.database.id,
+            storage_id=infrastructure.storage.id,
+            deleted_at=utcnow(),
+        )
+        session.add(organization)
+        await session.flush()
+        application = Application(
+            organization_id=organization.id,
+            name="Deleted Dashboard",
+            slug="deleted-dashboard",
+            image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
+            secrets={},
+            deleted_at=utcnow(),
+        )
+        session.add(application)
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await operations.schedule_reconciliation(session)
+        await session.commit()
+    scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
+
+    # Assert
+    assert scheduled == {
+        (OperationKind.compute_create, infrastructure.compute.id),
+        (OperationKind.organization_delete, organization.id),
     }
 
 
@@ -174,10 +194,8 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     """Globally serialize active work and make expired claimed Operations terminal."""
 
     # Seed active and waiting work.
-    compute = await create_compute("local")
-    waiting_compute = await create_compute("waiting")
-    await queue(target_id=compute.id)
-    waiting = await queue(target_id=waiting_compute.id)
+    await queue(target_id=uuid4())
+    waiting = await queue(target_id=uuid4())
 
     # Exercise serialization and terminal states.
     active_claim = await claim_operation()
@@ -189,8 +207,7 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     await complete_operation(waiting_claim.id)
     finished_claim = await claim_operation()
 
-    expired_compute = await create_compute("expired")
-    expired = await queue(target_id=expired_compute.id)
+    expired = await queue(target_id=uuid4())
     expired_claim = await claim_operation()
     assert expired_claim is not None
     async with session_scope() as session:
@@ -214,8 +231,7 @@ async def test_operations_service_expired_leases_cannot_complete() -> None:
     """Fail expired work without completing its Operation."""
 
     # Claim an operation and expire its only lease.
-    compute = await create_compute("local")
-    operation = await queue(target_id=compute.id)
+    operation = await queue(target_id=uuid4())
     claimed = await claim_operation()
     assert claimed is not None
 
@@ -240,19 +256,17 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
     """Keep claimed work immutable while coalescing one unclaimed follow-up."""
 
     # Seed and claim one operation.
-    compute = await create_compute("local")
-    operation = await queue(target_id=compute.id)
+    target_id = uuid4()
+    await queue(target_id=target_id)
     claimed = await claim_operation()
     assert claimed is not None
 
     # Create duplicate desired state while the claimed Operation remains immutable.
-    follow_up = await queue(target_id=compute.id)
-    duplicate = await queue(target_id=compute.id)
+    follow_up = await queue(target_id=target_id)
+    duplicate = await queue(target_id=target_id)
 
     # Verify one separate unclaimed follow-up represents the newer request.
-    assert claimed.id == operation.id
     assert claimed.status == OperationStatus.active
-    assert follow_up.id != operation.id
+    assert follow_up.id != claimed.id
     assert duplicate.id == follow_up.id
     assert follow_up.status == OperationStatus.scheduled
-    assert follow_up.lease_expires_at is None

@@ -1,11 +1,11 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import create_application, create_organization, create_ready_infrastructure
+from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import operations, invitations, organizations
+from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -105,8 +105,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.status_code == 202
     assert retry_response.json()["id"] == payload["id"]
     assert payload["id"] == str(organization.id)
-    async with session_scope() as session:
-        recorded_operations = await operations.fetch(session)
+    recorded_operations = await fetch_operations()
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
 
@@ -150,8 +149,7 @@ async def test_other_organization_user_cannot_delete_application(
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex", slug="globex")
     target_application = await create_application(target_organization, target_owner)
-    async with session_scope() as session:
-        operation_ids = [operation.id for operation in await operations.fetch(session)]
+    operation_ids = [operation.id for operation in await fetch_operations()]
     client = clients[1]
 
     # Attempt Application deletion with only another organization's access.
@@ -162,7 +160,7 @@ async def test_other_organization_user_cannot_delete_application(
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
         assert await session.get(Application, target_application.id) is not None
-        assert [operation.id for operation in await operations.fetch(session)] == operation_ids
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
 @pytest.mark.parametrize(

@@ -1,14 +1,14 @@
 import pytest
 from uuid import uuid4
 from sqlmodel import col
-from factories import create_organization, create_ready_infrastructure
+from factories import fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations, invitations, applications, organizations
+from src.database.services import invitations, applications, organizations
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -177,7 +177,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
         reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
-        assert len(await operations.fetch(session)) == 1
+        assert len(await fetch_operations()) == 1
 
 
 async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
@@ -224,7 +224,7 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
         members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
-        assert all(operation.target_id != application.id for operation in await operations.fetch(session))
+        assert all(operation.target_id != application.id for operation in await fetch_operations())
     assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_application is not None
     assert deleted_application.deleted_at is not None

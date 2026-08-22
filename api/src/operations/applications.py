@@ -1,6 +1,6 @@
 import secrets
-from uuid import UUID
 import sqlalchemy
+from uuid import UUID
 from sqlalchemy import update
 from src.models.statuses import Status
 from src.database.session import session_scope

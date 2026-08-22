@@ -114,7 +114,7 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[Organization], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
     """Return one ordered page of active organizations for administrator views."""
 
     # Query active organization rows using a stable page order.
@@ -129,7 +129,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
 
     # Count only active organizations visible in the listing.
     count_result = await session.execute(select(func.count()).select_from(Organization).where(Organization.deleted_at.is_(None)))
-    return list(result.all()), count_result.scalar_one()
+    return result.all(), count_result.scalar_one()
 
 
 async def purge(session: AsyncSession, organization_id: UUID) -> None:

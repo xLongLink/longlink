@@ -3,8 +3,8 @@
 # Revision ID: 20260822_0002
 # Revises: 20260713_0001
 # Create Date: 2026-08-22 00:00:00.000000
-from collections.abc import Sequence
 from alembic import op
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = "20260822_0002"

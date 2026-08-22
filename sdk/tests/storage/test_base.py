@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 
@@ -93,3 +94,16 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
         "path": "acme/applications/dashboard",
         "filesystem": backing_filesystem,
     }
+
+
+@pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])
+def test_production_settings_reject_blank_required_values(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
+    """Reject blank values in the production runtime contract."""
+
+    # Arrange
+    configure_production_environment(monkeypatch, "acme", "applications/dashboard")
+    monkeypatch.setenv(f"LONGLINK_{name}", "   ")
+
+    # Act
+    with pytest.raises(ValidationError, match=name):
+        Envs()

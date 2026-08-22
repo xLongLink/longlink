@@ -14,14 +14,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[Operation]:
-    """Return all operations ordered by newest first."""
-
-    result = await session.scalars(select(Operation).order_by(Operation.created_at.desc()))
-    return result.all()
-
-
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[Operation], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
     """Return one newest-first page of platform operations."""
 
     # Query one stable page of operation history.
@@ -32,7 +25,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
-    return list(result.all()), count_result.scalar_one()
+    return result.all(), count_result.scalar_one()
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

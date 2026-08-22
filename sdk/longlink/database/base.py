@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 from datetime import datetime
 from sqlmodel import Field
@@ -34,6 +35,7 @@ class AuditTable(Base):
 
 
 Session: async_sessionmaker[AsyncSession] | None = None
+_session_initialization_lock = asyncio.Lock()
 
 
 def create_engine(env: Envs) -> AsyncEngine:
@@ -84,22 +86,24 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
     """Yield an Application database session."""
     global Session
 
-    # Initialize the engine lazily when sessions are requested first.
+    # Initialize the engine once when concurrent requests arrive before startup completes.
     if Session is None:
-        engine = create_engine(Envs())
+        async with _session_initialization_lock:
+            if Session is None:
+                engine = create_engine(Envs())
 
-        # Auto-create tables for SQLite only.
-        if str(engine.url).startswith("sqlite+"):
-            # Create tables through a transactional SQLite connection.
-            async with engine.begin() as conn:
-                await conn.run_sync(database_metadata.create_all)
-        else:
-            # Verify non-SQLite connections before exposing the session factory.
-            async with engine.connect():
-                pass
+                # Auto-create tables for SQLite only.
+                if str(engine.url).startswith("sqlite+"):
+                    # Create tables through a transactional SQLite connection.
+                    async with engine.begin() as conn:
+                        await conn.run_sync(database_metadata.create_all)
+                else:
+                    # Verify non-SQLite connections before exposing the session factory.
+                    async with engine.connect():
+                        pass
 
-        # Cache the session factory after the engine connection succeeds.
-        Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+                # Cache the session factory after the engine connection succeeds.
+                Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # Open one session from the lazily initialized session factory.
     async with Session() as session:

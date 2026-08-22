@@ -1,7 +1,9 @@
 import pytest
+import asyncio
 from typing import ClassVar
 from sqlmodel import Field
 from longlink.database import base as database_base
+from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
@@ -99,3 +101,34 @@ def test_create_engine_selects_database_url_and_options(
 
     # Verify the selected URL and connection options.
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}
+
+
+async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Initialize the lazy database session factory only once."""
+
+    # Arrange
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    create_count = 0
+
+    def counted_create_engine(_env: Envs):
+        """Return the isolated engine while recording initialization attempts."""
+        nonlocal create_count
+        create_count += 1
+        return engine
+
+    monkeypatch.setattr(database_base, "Session", None)
+    monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
+
+    async def open_session() -> None:
+        """Open and close one SDK-managed database session."""
+        async with database_base.session():
+            pass
+
+    try:
+        # Act
+        await asyncio.gather(open_session(), open_session())
+
+        # Assert
+        assert create_count == 1
+    finally:
+        await engine.dispose()
