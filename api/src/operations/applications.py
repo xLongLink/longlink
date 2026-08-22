@@ -4,10 +4,30 @@ from sqlalchemy import update
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
-from src.database.services import applications, organizations
+from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.applications import Application
+
+
+def _providers(infrastructure: organizations.Infrastructure) -> tuple[Postgres, Exoscale]:
+    """Create database and object-storage clients for one Organization infrastructure assignment."""
+
+    # Build clients from immutable Organization infrastructure assignments.
+    return (
+        Postgres(
+            infrastructure.database.host,
+            infrastructure.database.port,
+            infrastructure.database.username,
+            infrastructure.database.password,
+            infrastructure.database.sslmode,
+        ),
+        Exoscale(
+            infrastructure.storage.endpoint_url,
+            infrastructure.storage.access_key_id,
+            infrastructure.storage.secret_access_key,
+        ),
+    )
 
 
 async def create(application_id: UUID) -> str | None:
@@ -28,18 +48,7 @@ async def create(application_id: UUID) -> str | None:
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
         # Resolve the Application's immutable provider assignments.
-        db = Postgres(
-            infrastructure.database.host,
-            infrastructure.database.port,
-            infrastructure.database.username,
-            infrastructure.database.password,
-            infrastructure.database.sslmode,
-        )
-        object_storage = Exoscale(
-            infrastructure.storage.endpoint_url,
-            infrastructure.storage.access_key_id,
-            infrastructure.storage.secret_access_key,
-        )
+        db, object_storage = _providers(infrastructure)
 
         # Generate fresh credentials for the initial creation attempt.
         bucket = organization.id.hex
@@ -111,21 +120,16 @@ async def delete(application_id: UUID) -> str | None:
     await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
-    db = Postgres(
-        infrastructure.database.host,
-        infrastructure.database.port,
-        infrastructure.database.username,
-        infrastructure.database.password,
-        infrastructure.database.sslmode,
-    )
-    object_storage = Exoscale(
-        infrastructure.storage.endpoint_url,
-        infrastructure.storage.access_key_id,
-        infrastructure.storage.secret_access_key,
-    )
+    db, object_storage = _providers(infrastructure)
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     async with session_scope() as session:
-        await applications.purge(session, application.id)
+        # Hard-delete the completed tombstone while preventing concurrent lifecycle workers from racing.
+        persisted_application = await session.get(Application, application.id, with_for_update=True)
+        if persisted_application is None:
+            return None
+        if persisted_application.deleted_at is None:
+            raise RuntimeError("Active applications cannot be purged")
+        await session.delete(persisted_application)
         await session.commit()

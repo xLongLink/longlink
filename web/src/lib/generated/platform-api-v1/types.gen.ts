@@ -517,14 +517,6 @@ export type PageApplicationResponse = {
      */
     items: Array<ApplicationResponse>;
     /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
-    /**
      * Total
      */
     total: number;
@@ -538,14 +530,6 @@ export type PageComputeRegistryResponse = {
      * Items
      */
     items: Array<ComputeRegistryResponse>;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
     /**
      * Total
      */
@@ -561,14 +545,6 @@ export type PageDatabaseRegistryResponse = {
      */
     items: Array<DatabaseRegistryResponse>;
     /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
-    /**
      * Total
      */
     total: number;
@@ -582,14 +558,6 @@ export type PageOperationResponse = {
      * Items
      */
     items: Array<OperationResponse>;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
     /**
      * Total
      */
@@ -605,14 +573,6 @@ export type PageOrganizationSummary = {
      */
     items: Array<OrganizationSummary>;
     /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
-    /**
      * Total
      */
     total: number;
@@ -627,14 +587,6 @@ export type PageStorageRegistryResponse = {
      */
     items: Array<StorageRegistryResponse>;
     /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
-    /**
      * Total
      */
     total: number;
@@ -648,14 +600,6 @@ export type PageUserSummary = {
      * Items
      */
     items: Array<UserSummary>;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Page Size
-     */
-    page_size: number;
     /**
      * Total
      */

@@ -3,7 +3,6 @@ from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
-from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +10,7 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[DatabaseRegistry], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[DatabaseRegistry], int]:
     """Return one ordered page of database registries."""
 
     # Load only the fields exposed by the administrator response.
@@ -32,10 +31,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    items = list(result.all())
 
     # Count every registered database target.
-    total = await session.scalar(select(func.count()).select_from(DatabaseRegistry))
-    return result.all(), total or 0
+    count_result = await session.execute(select(func.count()).select_from(DatabaseRegistry))
+    return items, count_result.scalar_one()
 
 
 async def available(session: AsyncSession) -> UUID | None:

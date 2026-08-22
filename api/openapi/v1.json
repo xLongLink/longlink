@@ -3358,14 +3358,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3375,8 +3367,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[ApplicationResponse]"
@@ -3390,14 +3380,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3407,8 +3389,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[ComputeRegistryResponse]"
@@ -3422,14 +3402,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3439,8 +3411,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[DatabaseRegistryResponse]"
@@ -3454,14 +3424,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3471,8 +3433,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[OperationResponse]"
@@ -3486,14 +3446,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3503,8 +3455,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[OrganizationSummary]"
@@ -3518,14 +3468,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3535,8 +3477,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[StorageRegistryResponse]"
@@ -3550,14 +3490,6 @@
             "type": "array",
             "title": "Items"
           },
-          "page": {
-            "type": "integer",
-            "title": "Page"
-          },
-          "page_size": {
-            "type": "integer",
-            "title": "Page Size"
-          },
           "total": {
             "type": "integer",
             "minimum": 0.0,
@@ -3567,8 +3499,6 @@
         "type": "object",
         "required": [
           "items",
-          "page",
-          "page_size",
           "total"
         ],
         "title": "Page[UserSummary]"

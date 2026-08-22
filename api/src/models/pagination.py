@@ -21,7 +21,4 @@ class Page[T](BaseModel):
     # Results
     items: list[T]
 
-    # Pagination
-    page: int
-    page_size: int
     total: int = Field(ge=0)

@@ -3,14 +3,13 @@ from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
-from collections.abc import Sequence
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.storages import StorageRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[StorageRegistry], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[StorageRegistry], int]:
     """Return one ordered page of storage registries."""
 
     # Load only the fields exposed by the administrator response.
@@ -28,10 +27,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    items = list(result.all())
 
     # Count every registered storage target.
-    total = await session.scalar(select(func.count()).select_from(StorageRegistry))
-    return result.all(), total or 0
+    count_result = await session.execute(select(func.count()).select_from(StorageRegistry))
+    return items, count_result.scalar_one()
 
 
 async def available(session: AsyncSession) -> UUID | None:

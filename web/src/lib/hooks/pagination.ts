@@ -10,14 +10,10 @@ type Page<T> = {
     total: number;
 };
 
-type PageSchema<T> = {
-    parse: (value: unknown) => Page<T>;
-};
-
 /** Fetches and paginates one administrator table through its API endpoint. */
 export function usePaginate<T extends Record<string, unknown>>(
     path: string,
-    schema: PageSchema<T>,
+    schema: { parse: (value: unknown) => Page<T> },
     refetchInterval?: number
 ) {
     const [page, setPage] = useState(1);
@@ -50,6 +46,5 @@ export function usePaginate<T extends Record<string, unknown>>(
         ...query,
         items,
         pagination,
-        total,
     };
 }

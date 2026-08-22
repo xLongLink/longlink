@@ -33,7 +33,7 @@ async def list_users(
     """Return all user summaries for administrator views."""
 
     items, total = await users.fetch_page(session, pagination)
-    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
+    return Page(items=items, total=total)
 
 
 @router.patch("/me", response_model=UserSummary)

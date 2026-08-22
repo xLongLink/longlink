@@ -10,8 +10,26 @@ from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 router = APIRouter()
+
+
+async def _maintainer_runtime_access(
+    session: AsyncSession, user_id: UUID, application_id: UUID
+) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry]:
+    """Return one Application runtime after requiring Organization maintenance authority."""
+
+    # Resolve active Application access before enforcing runtime permissions.
+    access = await organizations.application_runtime_access(session, user_id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    if not roles.atleast(access[2], OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    return access
 
 
 @router.get("/applications", response_model=Page[ApplicationResponse])
@@ -23,7 +41,7 @@ async def list_applications(
     """Return all applications for administrator views."""
 
     items, total = await applications.fetch_page(session, pagination)
-    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
+    return Page(items=items, total=total)
 
 
 @router.post("/organizations/{organization_id}/applications", status_code=204)
@@ -77,13 +95,7 @@ async def release_application(
 ):
     """Record one desired Application release and queue its deployment."""
 
-    # Application releases require Organization maintenance authority.
-    access = await organizations.application_runtime_access(session, user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, _, role, _ = access
-    if not roles.atleast(role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
+    application, _, _, _ = await _maintainer_runtime_access(session, user.id, application_id)
 
     # Resolve immutable image metadata before changing durable desired state.
     metadata = await images.metadata(payload.image)
@@ -117,15 +129,7 @@ async def get_application_logs(
 ):
     """Return recent pod logs for one managed application."""
 
-    # Resolve active Application access before inspecting its runtime logs.
-    access = await organizations.application_runtime_access(session, user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role, registry = access
-
-    # Application logs require Organization maintenance authority.
-    if not roles.atleast(role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
+    application, organization, _, registry = await _maintainer_runtime_access(session, user.id, application_id)
 
     # Map expected cluster log failures to a service-unavailable response.
     try:

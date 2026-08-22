@@ -17,7 +17,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Application], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[Application], int]:
     """Return one ordered page of active applications for administrator views."""
 
     # Load page response data without loading encrypted application secrets.
@@ -31,22 +31,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    items = list(result.all())
 
     # Count only rows eligible for the administrator listing.
-    total = await session.scalar(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
-    return result.all(), total or 0
-
-
-async def purge(session: AsyncSession, application_id: UUID) -> None:
-    """Hard-delete one application after all external runtime resources are gone."""
-
-    # The tombstone remains the retry marker until cleanup can finish with this transaction.
-    application = await session.get(Application, application_id, with_for_update=True)
-    if application is None:
-        return
-    if application.deleted_at is None:
-        raise RuntimeError("Active applications cannot be purged")
-    await session.delete(application)
+    count_result = await session.execute(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
+    return items, count_result.scalar_one()
 
 
 async def create(

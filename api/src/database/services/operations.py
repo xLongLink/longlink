@@ -21,7 +21,7 @@ async def fetch(session: AsyncSession) -> Sequence[Operation]:
     return result.all()
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[Operation], int]:
     """Return one newest-first page of platform operations."""
 
     # Query one stable page of operation history.
@@ -29,10 +29,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc()).offset(pagination.offset).limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    items = list(result.all())
 
     # Count all operation history rows.
-    total = await session.scalar(select(func.count()).select_from(Operation))
-    return result.all(), total or 0
+    count_result = await session.execute(select(func.count()).select_from(Operation))
+    return items, count_result.scalar_one()
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

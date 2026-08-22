@@ -304,8 +304,6 @@ export const zOrganizationUpdate = z.object({
  */
 export const zPageDatabaseRegistryResponse = z.object({
     items: z.array(zDatabaseRegistryResponse),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -314,8 +312,6 @@ export const zPageDatabaseRegistryResponse = z.object({
  */
 export const zPageOperationResponse = z.object({
     items: z.array(zOperationResponse),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -324,8 +320,6 @@ export const zPageOperationResponse = z.object({
  */
 export const zPageOrganizationSummary = z.object({
     items: z.array(zOrganizationSummary),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -413,8 +407,6 @@ export const zOrganizationApplicationSummary = z.object({
  */
 export const zPageApplicationResponse = z.object({
     items: z.array(zApplicationResponse),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -423,8 +415,6 @@ export const zPageApplicationResponse = z.object({
  */
 export const zPageComputeRegistryResponse = z.object({
     items: z.array(zComputeRegistryResponse),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -456,8 +446,6 @@ export const zStorageRegistryResponse = z.object({
  */
 export const zPageStorageRegistryResponse = z.object({
     items: z.array(zStorageRegistryResponse),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 
@@ -532,8 +520,6 @@ export const zUserSummary = z.object({
  */
 export const zPageUserSummary = z.object({
     items: z.array(zUserSummary),
-    page: z.int(),
-    page_size: z.int(),
     total: z.int().gte(0)
 });
 

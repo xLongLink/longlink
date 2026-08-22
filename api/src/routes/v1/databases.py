@@ -35,7 +35,7 @@ async def list_database_registries(pagination: Pagination = Depends(), session: 
     """Return all registered database backends."""
 
     items, total = await database.fetch_page(session, pagination)
-    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
+    return Page(items=items, total=total)
 
 
 @router.get("/databases/{registry_id}", response_model=DatabaseRegistryResponse)
