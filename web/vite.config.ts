@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     const devServerPort = env.VITE_DEV_PORT ? Number.parseInt(env.VITE_DEV_PORT, 10) : 5173;
 
     return {
-        plugins: lazyPlugins(() => [...tailwindcss(), ...reactRouter()]),
+        plugins: lazyPlugins(() => [...tailwindcss(), ...(mode === 'test' ? [] : reactRouter())]),
 
         fmt: {
             arrowParens: 'always',

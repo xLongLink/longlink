@@ -49,3 +49,14 @@ def test_database_url_preserves_ssl_and_other_query_params(
 
     assert normalized.startswith("postgresql+asyncpg://")
     assert dict(parsed_query) == {**dict(expected_query), "ssl": "disable"}
+
+
+def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options() -> None:
+    """Move MySQL TLS configuration to connect arguments without losing other URL options."""
+
+    # Normalize explicit disabled TLS while retaining an unrelated driver option.
+    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=DISABLED&charset=utf8mb4")
+
+    # TLS values are consumed by the adapter and non-TLS query options remain in the URL.
+    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink?charset=utf8mb4"
+    assert connection.connect_args == {"init_command": "SET time_zone = '+00:00'"}

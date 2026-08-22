@@ -259,3 +259,108 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
     with pytest.raises(RuntimeError, match="key generation failed"):
         await storage.credentials("dashboard", "acme", "apps/dashboard/")
     assert calls == ["list-api-keys", "list-api-keys"]
+
+
+async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove every destructive S3 resource type before deleting a bucket."""
+
+    # Provide one page of each resource type followed by its empty terminal page.
+    calls: list[tuple[str, object]] = []
+
+    class Client:
+        def __init__(self) -> None:
+            """Initialize terminal listing state."""
+
+            self.uploads = False
+            self.objects = False
+            self.versions = False
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
+            """Return one incomplete upload then completion."""
+
+            if self.uploads:
+                return {"Uploads": []}
+            self.uploads = True
+            return {"Uploads": [{"Key": "apps/dashboard/a", "UploadId": "upload"}]}
+
+        async def abort_multipart_upload(self, **kwargs: object) -> None:
+            """Record upload aborts."""
+
+            calls.append(("abort", kwargs))
+
+        async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+            """Return one current object then completion."""
+
+            if self.objects:
+                return {"Contents": []}
+            self.objects = True
+            return {"Contents": [{"Key": "apps/dashboard/a"}]}
+
+        async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
+            """Return one version and marker then completion."""
+
+            if self.versions:
+                return {"Versions": [], "DeleteMarkers": []}
+            self.versions = True
+            return {
+                "Versions": [{"Key": "apps/dashboard/a", "VersionId": "version"}],
+                "DeleteMarkers": [{"Key": "apps/dashboard/b", "VersionId": "marker"}],
+            }
+
+        async def delete_objects(self, **kwargs: object) -> dict[str, object]:
+            """Record successful bulk deletion."""
+
+            calls.append(("delete", kwargs["Delete"]))
+            return {}
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    # Delete only the requested Application prefix across all S3 resource types.
+    await storage.delete_prefix("acme", "apps/dashboard/")
+    assert calls == [
+        ("abort", {"Bucket": "acme", "Key": "apps/dashboard/a", "UploadId": "upload"}),
+        ("delete", {"Objects": [{"Key": "apps/dashboard/a"}], "Quiet": True}),
+        (
+            "delete",
+            {"Objects": [{"Key": "apps/dashboard/a", "VersionId": "version"}, {"Key": "apps/dashboard/b", "VersionId": "marker"}], "Quiet": True},
+        ),
+    ]
+
+
+async def test_exoscale_delete_tolerates_absent_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat a bucket removed by an earlier cleanup attempt as deleted."""
+
+    # Simulate the terminal absent-bucket response from the provider.
+    class Client:
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def delete_bucket(self, Bucket: str) -> None:
+            """Report the already-removed bucket."""
+
+            raise ClientError({"Error": {"Code": "NoSuchBucket"}, "ResponseMetadata": {"HTTPStatusCode": 404}}, "DeleteBucket")
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+
+    async def delete_prefix(bucket: str, prefix: str) -> None:
+        """Skip already-completed object cleanup."""
+
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+    monkeypatch.setattr(storage, "delete_prefix", delete_prefix)
+
+    # The idempotent bucket deletion path must not expose a missing bucket.
+    await storage.delete("acme")

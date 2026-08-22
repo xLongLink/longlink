@@ -8,6 +8,7 @@ describe('setup adapters', () => {
         ['<State value="x" />', 'State requires a string id'],
         ['<Query id="user" path="/api/user"><Button>Ready</Button></Query>', 'Query cannot have children'],
         ['<Query path="/api/user" />', 'Query requires a string id'],
+        ['<State id="data" value="first" /><Query id="data" path="/api/data" />', 'Duplicate State or Query id'],
     ])('renders validation error: %s', (xml, expectedError) => {
         expect(renderXmlToMarkup(parseXML(xml))).toContain(expectedError);
     });

@@ -234,7 +234,13 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
                 source_path = source_config.get("path")
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
-                    if resolved_source_path not in pending_paths:
+
+                    # Include only project directories; invalid paths must not expand the Docker context.
+                    if (
+                        resolved_source_path != Path(resolved_source_path.anchor)
+                        and (resolved_source_path / "pyproject.toml").is_file()
+                        and resolved_source_path not in pending_paths
+                    ):
                         pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.

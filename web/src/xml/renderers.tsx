@@ -127,6 +127,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 /** Finds and validates State and Query declarations in document order. */
 function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
     const setupNodes: ASTNode[] = [];
+    const setupIds = new Set<string>();
 
     function walk(currentNodes: ASTNode[]): void {
         // Validate setup declarations before checking descendants.
@@ -134,6 +135,16 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
             // Collect setup declarations outside loop-local scope.
             if (node.name === 'State' || node.name === 'Query') {
                 validateSetupNode(node);
+
+                const idAttribute = node.params.id;
+                if (!idAttribute || idAttribute.kind !== 'text') continue;
+
+                const id = idAttribute.value.trim();
+                if (setupIds.has(id)) {
+                    throw new Error(`Duplicate State or Query id "${id}"`);
+                }
+
+                setupIds.add(id);
                 setupNodes.push(node);
                 continue;
             }

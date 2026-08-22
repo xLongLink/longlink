@@ -163,32 +163,26 @@ async function executeRequest(
     ctx: Scope,
     requestBaseUrl: string
 ): Promise<{ closeDialog: boolean; status: number }> {
-    const {
-        url,
-        method,
-        form: formValue,
-        json: jsonValue,
-        closeDialog,
-    } = resolveXmlProps(
+    const { url, method, form, json, closeDialog } = resolveXmlProps(
         props,
         ctx,
         { url: 'scalar', method: 'scalar', form: 'raw', json: 'raw', closeDialog: 'scalar' },
         requestPropsSchema
     );
-    if (formValue !== undefined && jsonValue !== undefined) {
+    if (form !== undefined && json !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
     }
-    if (method === 'GET' && (formValue !== undefined || jsonValue !== undefined)) {
+    if (method === 'GET' && (form !== undefined || json !== undefined)) {
         throw new Error('GET requests cannot send payloads');
     }
 
     const headers = new Headers({ Accept: 'application/json' });
     let body: FormData | string | undefined;
 
-    if (formValue !== undefined) {
-        body = createActionFormData(formValue);
-    } else if (jsonValue !== undefined) {
-        body = JSON.stringify(jsonValue);
+    if (form !== undefined) {
+        body = createActionFormData(form);
+    } else if (json !== undefined) {
+        body = JSON.stringify(json);
         headers.set('Content-Type', 'application/json');
     }
 

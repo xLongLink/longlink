@@ -17,8 +17,10 @@ class GatewayResponse:
         """Close the streamed response and its HTTP client."""
 
         # Release both resources after response streaming ends or is interrupted.
-        await self.response.aclose()
-        await self.client.aclose()
+        try:
+            await self.response.aclose()
+        finally:
+            await self.client.aclose()
 
 
 class GatewayClient:
@@ -71,7 +73,7 @@ class GatewayClient:
                 client.build_request(method, url, content=content, headers=headers),
                 stream=True,
             )
-        except Exception:
+        except BaseException:
             await client.aclose()
             raise
         return GatewayResponse(client, response)
