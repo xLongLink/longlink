@@ -31,11 +31,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
-    items = list(result.all())
 
     # Count every registered database target.
     count_result = await session.execute(select(func.count()).select_from(DatabaseRegistry))
-    return items, count_result.scalar_one()
+    return list(result.all()), count_result.scalar_one()
 
 
 async def available(session: AsyncSession) -> UUID | None:

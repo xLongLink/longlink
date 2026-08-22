@@ -13,4 +13,4 @@ async def list_operations(pagination: Pagination = Depends(), session: AsyncSess
     """Return Platform reconciliation history for administrators."""
 
     items, total = await operations.fetch_page(session, pagination)
-    return Page(items=items, total=total)
+    return {"items": items, "total": total}

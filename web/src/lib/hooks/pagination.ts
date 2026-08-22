@@ -5,15 +5,10 @@ import { useTablePagination } from '@astryxdesign/core/Table';
 
 const PAGE_SIZE = 25;
 
-type Page<T> = {
-    items: T[];
-    total: number;
-};
-
 /** Fetches and paginates one administrator table through its API endpoint. */
 export function usePaginate<T extends Record<string, unknown>>(
     path: string,
-    schema: { parse: (value: unknown) => Page<T> },
+    schema: { parse: (value: unknown) => { items: T[]; total: number } },
     refetchInterval?: number
 ) {
     const [page, setPage] = useState(1);

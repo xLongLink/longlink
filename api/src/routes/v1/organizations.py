@@ -39,7 +39,7 @@ async def list_organizations(
     """Return all organizations for administrator views."""
 
     items, total = await organizations.fetch_page(session, pagination)
-    return Page(items=items, total=total)
+    return {"items": items, "total": total}
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)

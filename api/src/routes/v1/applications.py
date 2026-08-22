@@ -41,7 +41,7 @@ async def list_applications(
     """Return all applications for administrator views."""
 
     items, total = await applications.fetch_page(session, pagination)
-    return Page(items=items, total=total)
+    return {"items": items, "total": total}
 
 
 @router.post("/organizations/{organization_id}/applications", status_code=204)

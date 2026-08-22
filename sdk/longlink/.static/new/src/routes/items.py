@@ -35,9 +35,7 @@ async def item_get_endpoint(item_id: int) -> Item:
     return await _require_item(item_id)
 
 
-@router.get(
-    "/items/{item_id}/attachments", response_model=list[ItemAttachmentRead]
-)
+@router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
 async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(data)):
     """Return files attached to one catalog item."""
 
@@ -51,33 +49,37 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
         return []
 
     # Derive display names from the generated storage ids.
-    attachments = []
-    for path in entries:
-        attachment_id = PurePosixPath(path).name
-        attachments.append(
-            {"id": attachment_id, "name": attachment_id.split("-", 1)[-1]}
-        )
-
-    return attachments
+    return [
+        {
+            "id": (attachment_id := PurePosixPath(path).name),
+            "name": attachment_id.split("-", 1)[-1],
+        }
+        for path in entries
+    ]
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
-async def item_attachments_post_endpoint(item_id: int, file: UploadFile, ctx: Context = Depends(data)):
+async def item_attachments_post_endpoint(
+    item_id: int, file: UploadFile, ctx: Context = Depends(data)
+):
     """Upload one file attachment for a catalog item."""
 
     # Validate the item before accepting attachment content.
     await _require_item(item_id)
 
     # Keep the uploaded basename beneath the item-specific storage directory.
-    file_name = PurePosixPath(file.filename or "attachment.bin").name or "attachment.bin"
+    file_name = (
+        PurePosixPath(file.filename or "attachment.bin").name or "attachment.bin"
+    )
     file_id = f"{uuid4().hex}-{file_name}"
-    storage_path = f"{ATTACHMENTS_DIRECTORY}/{item_id}/{file_id}"
 
     # Create the attachment directory and close the upload after storage completes.
     try:
         ctx.storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{item_id}", exist_ok=True)
 
-        with ctx.storage.open(storage_path, "wb") as stored_file:
+        with ctx.storage.open(
+            f"{ATTACHMENTS_DIRECTORY}/{item_id}/{file_id}", "wb"
+        ) as stored_file:
             # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(1024 * 1024):
                 stored_file.write(chunk)

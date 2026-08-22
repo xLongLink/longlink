@@ -4,7 +4,6 @@ from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, contains_eager
-from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
@@ -31,11 +30,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
-    items = list(result.all())
 
     # Count only rows eligible for the administrator listing.
     count_result = await session.execute(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
-    return items, count_result.scalar_one()
+    return list(result.all()), count_result.scalar_one()
 
 
 async def create(

@@ -29,11 +29,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
         select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc()).offset(pagination.offset).limit(pagination.page_size)
     )
     result = await session.scalars(statement)
-    items = list(result.all())
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
-    return items, count_result.scalar_one()
+    return list(result.all()), count_result.scalar_one()
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

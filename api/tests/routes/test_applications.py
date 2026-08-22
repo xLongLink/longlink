@@ -57,11 +57,12 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Assert
     assert response.status_code == 200
-    assert {item["id"] for item in response.json()["items"]} == {
+    payload = response.json()
+    assert {item["id"] for item in payload["items"]} == {
         str(dashboard.id),
         str(console.id),
     }
-    assert response.json()["total"] == 2
+    assert payload["total"] == 2
 
 
 async def test_list_apps_returns_requested_page_for_admin(

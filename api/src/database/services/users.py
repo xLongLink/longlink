@@ -33,11 +33,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
     # Preserve the existing administrator list visibility, including tombstoned users.
     statement = select(User).order_by(User.name, User.id).offset(pagination.offset).limit(pagination.page_size)
     result = await session.scalars(statement)
-    items = list(result.all())
 
     # Count every Platform user visible in the administrator list.
     count_result = await session.execute(select(func.count()).select_from(User))
-    return items, count_result.scalar_one()
+    return list(result.all()), count_result.scalar_one()
 
 
 async def by_email(session: AsyncSession, email: Email) -> User | None:

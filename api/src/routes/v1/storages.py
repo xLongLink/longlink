@@ -31,7 +31,7 @@ async def list_storage_registries(pagination: Pagination = Depends(), session: A
     """Return all registered storage backends."""
 
     items, total = await storage.fetch_page(session, pagination)
-    return Page(items=items, total=total)
+    return {"items": items, "total": total}
 
 
 @router.get("/storages/{registry_id}", response_model=StorageRegistryResponse)

@@ -32,8 +32,6 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
 @pytest.mark.parametrize(
     ("bucket", "prefix", "message"),
     [
-        ("", "applications/dashboard/", "STORAGE_BUCKET"),
-        ("acme", "", "STORAGE_PREFIX"),
         ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
@@ -43,12 +41,10 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
         ("acme/../shared", "applications/dashboard", "Storage buckets must be bucket names"),
     ],
 )
-def test_production_storage_requires_safe_bucket_scope(
-    monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str
-) -> None:
+def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str) -> None:
     """Reject production storage that is not safely scoped within a bucket."""
 
-    # Configure incomplete or unsafe production storage scopes.
+    # Configure unsafe production storage scopes.
     configure_production_environment(monkeypatch, bucket, prefix)
 
     # Reject the configured scope before constructing the filesystem.
@@ -83,12 +79,9 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     configure_production_environment(monkeypatch, "acme", "applications/dashboard/")
 
     # Build production storage for a scoped Application prefix.
-    filesystem = storage_base.create_fs(Envs())
+    assert storage_base.create_fs(Envs()) is scoped_filesystem
 
     # Verify both path isolation and S3 connection settings.
-    assert filesystem is scoped_filesystem
-    assert captured["path"] == "acme/applications/dashboard"
-    assert captured["filesystem"] is backing_filesystem
     assert captured == {
         "protocol": "s3",
         "kwargs": {

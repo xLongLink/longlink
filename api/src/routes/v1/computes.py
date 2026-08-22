@@ -25,7 +25,7 @@ async def list_compute_registries(pagination: Pagination = Depends(), session: A
     """Return all registered compute backends."""
 
     items, total = await compute.fetch_page(session, pagination)
-    return Page(items=items, total=total)
+    return {"items": items, "total": total}
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
