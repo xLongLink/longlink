@@ -60,7 +60,6 @@ async def test_register_verify_and_password_login(client: AsyncClient, captured_
         if line.startswith("Continue account setup: ")
     )
     verification_token = parse_qs(urlparse(verification_url).fragment)["token"][0]
-    assert verification_token
     assert captured_mail[0][3] is not None
     assert verification_token in captured_mail[0][3]
     assert "/auth/verify-email#token=" in captured_mail[0][3]
@@ -183,6 +182,28 @@ async def test_authenticated_logout_rejects_cross_origin_request(
     assert response.status_code == 403
     assert "set-cookie" not in response.headers
     assert profile_response.status_code == 200
+
+
+async def test_authenticated_logout_clears_browser_session(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Allow a same-origin browser session to be removed."""
+
+    # Arrange
+    client = clients[0]
+
+    # Act
+    response = await client.post("/api/v1/auth/logout")
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 204
+    assert "longlink_auth=" in response.headers["set-cookie"]
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "Max-Age=0" in response.headers["set-cookie"]
+    assert "Path=/" in response.headers["set-cookie"]
+    assert "SameSite=lax" in response.headers["set-cookie"]
+    assert profile_response.status_code == 401
 
 
 async def test_password_login_sets_production_session_security_and_cache_attributes(

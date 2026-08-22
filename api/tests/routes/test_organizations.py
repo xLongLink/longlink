@@ -208,23 +208,20 @@ async def test_other_organization_user_cannot_delete_application(
 
 
 @pytest.mark.parametrize(
-    ("resource", "usage", "expected_status"),
+    ("usage", "expected_status"),
     [
-        pytest.param("database", 3584, 200, id="database-usage-available"),
-        pytest.param("database", RuntimeError("database offline"), 503, id="database-backend-unavailable"),
-        pytest.param("storage", 4096, 200, id="storage-usage-available"),
-        pytest.param("storage", RuntimeError("storage offline"), 503, id="storage-backend-unavailable"),
+        pytest.param(3584, 200, id="available"),
+        pytest.param(RuntimeError("database offline"), 503, id="backend-unavailable"),
     ],
 )
-async def test_organization_resource_endpoint_returns_usage_or_unavailable(
+async def test_organization_database_usage_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
-    resource: str,
     usage: int | Exception,
     expected_status: int,
 ) -> None:
-    """Return resource usage or translate backend failures."""
+    """Return database usage or translate a backend failure."""
 
     # Arrange
     owner = users[0]
@@ -246,6 +243,43 @@ async def test_organization_resource_endpoint_returns_usage_or_unavailable(
                 raise usage
             return usage
 
+    monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
+
+    # Act
+    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
+
+    # Assert
+    assert response.status_code == expected_status
+    if expected_status == 200:
+        assert isinstance(usage, int)
+        expected_payload = usage
+    else:
+        expected_payload = {"detail": "Database resources unavailable"}
+    assert response.json() == expected_payload
+
+
+@pytest.mark.parametrize(
+    ("usage", "expected_status"),
+    [
+        pytest.param(4096, 200, id="available"),
+        pytest.param(RuntimeError("storage offline"), 503, id="backend-unavailable"),
+    ],
+)
+async def test_organization_storage_usage_returns_usage_or_unavailable(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+    usage: int | Exception,
+    expected_status: int,
+) -> None:
+    """Return storage usage or translate a backend failure."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner, infrastructure=infrastructure)
+
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
@@ -265,24 +299,18 @@ async def test_organization_resource_endpoint_returns_usage_or_unavailable(
         assert secret_access_key == infrastructure.storage.secret_access_key
         return FakeStorage()
 
-    # Use the selected resource adapter for this endpoint request.
-    if resource == "database":
-        monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
-    else:
-        monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
+    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
         assert isinstance(usage, int)
-        expected_payload: int | dict[str, str | int] = (
-            usage if resource == "database" else {"bucket_name": organization.id.hex, "space_used": usage}
-        )
+        expected_payload = {"bucket_name": organization.id.hex, "space_used": usage}
     else:
-        expected_payload = {"detail": f"{resource.capitalize()} resources unavailable"}
+        expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
 
 

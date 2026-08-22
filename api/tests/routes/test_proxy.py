@@ -57,7 +57,7 @@ async def set_application_running(application_id: UUID) -> None:
         await session.commit()
 
 
-async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
+async def test_application_proxy_forwards_safe_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
@@ -180,11 +180,67 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert "x-custom-feature" not in headers
     assert "x-forwarded-for" not in headers
 
-    # Active documents must not cross the authenticated proxy boundary.
-    captured["response_content_type"] = "image/svg+xml; charset=utf-8"
-    root_response = await client.get(f"/api/v1/applications/{app.id}/proxy")
-    assert root_response.status_code == 502
-    assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
+
+async def test_application_proxy_rejects_active_content(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject active upstream documents and close their gateway resources."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    application = await create_application(organization, users[0], image="ghcr.io/xlonglink/sample:latest")
+    await set_application_running(application.id)
+    captured: dict[str, bool] = {"response_closed": False, "client_closed": False}
+
+    class FakeTLS:
+        """Accept the temporary Platform client identity."""
+
+        def load_cert_chain(self, certfile: str) -> None:
+            """Accept the configured identity file."""
+
+    class FakeProxyResponse:
+        """Represent an active document returned by the upstream application."""
+
+        status_code = 200
+        headers = {"content-type": "image/svg+xml; charset=utf-8"}
+
+        async def aclose(self) -> None:
+            """Record response cleanup."""
+
+            captured["response_closed"] = True
+
+    class ActiveContentProxyClient(FakeProxyClient):
+        """Return an active upstream document without streaming it to the browser."""
+
+        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
+            """Build the request accepted by the fake client."""
+
+            return SimpleNamespace()
+
+        async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
+            """Return the active document response."""
+
+            assert stream
+            return FakeProxyResponse()
+
+        async def aclose(self) -> None:
+            """Record client cleanup."""
+
+            captured["client_closed"] = True
+
+    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context(FakeTLS()))
+    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", ActiveContentProxyClient)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Application proxy returned an unsupported content type"}
+    assert captured == {"response_closed": True, "client_closed": True}
 
 
 async def test_application_proxy_rejects_oversized_request_body(

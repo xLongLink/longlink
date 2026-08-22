@@ -32,7 +32,7 @@ type Page = {
     path: string;
     route: string;
     tab: string;
-    name?: string;
+    name: string;
 };
 
 describe('ApplicationRuntime', () => {
@@ -74,6 +74,21 @@ describe('ApplicationRuntime', () => {
         expect(output.querySelector('[data-path]')?.getAttribute('data-route-path')).toBe('');
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'));
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
+    });
+
+    it('renders a page failure after loading the manifest', async () => {
+        // Arrange
+        stubFetch((url) => {
+            if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home')]);
+            return new Response(JSON.stringify({ detail: 'Page unavailable' }), { status: 503 });
+        });
+
+        // Act
+        const output = await renderRuntime('/home');
+
+        // Assert
+        await waitFor(() => expect(output.textContent).toContain('Unable to load this page'));
+        expect(output.textContent).toContain('Page unavailable');
     });
 
     it('renders dynamic route parameters and rejects unmatched routes', async () => {

@@ -32,6 +32,7 @@ To improve coverage:
 2. Add the smallest test at the lowest suitable level that verifies that behavior.
 3. Rerun the relevant coverage command and confirm the new test passes and covers the intended lines or branch.
 
+After completing the task, return the coverage to the user.
 
 ## Testing
 

@@ -17,14 +17,13 @@ async def test_platform_user_cannot_access_administrator_collections(
 
 
 @pytest.mark.parametrize(
-    ("path", "registry", "expected_fields", "secret_fields", "secret_values"),
+    ("path", "registry", "expected_fields", "secret_fields"),
     [
         pytest.param(
             "computes",
             "compute",
             {"gateway_url": "https://gateway.example", "status": "running"},
             ["kubeconfig"],
-            [],
             id="compute",
         ),
         pytest.param(
@@ -32,14 +31,12 @@ async def test_platform_user_cannot_access_administrator_collections(
             "database",
             {"host": "database.example", "sslmode": "disable"},
             ["password"],
-            [],
             id="database",
         ),
         pytest.param(
             "storages",
             "storage",
             {"endpoint_url": "https://sos-ch-gva-2.exo.io"},
-            ["access_key_id", "secret_access_key"],
             ["access_key_id", "secret_access_key"],
             id="storage",
         ),
@@ -51,7 +48,6 @@ async def test_registry_endpoints_return_registered_backend(
     registry: str,
     expected_fields: dict[str, str],
     secret_fields: list[str],
-    secret_values: list[str],
 ) -> None:
     """Return each independently registered backend without its secrets."""
 
@@ -69,7 +65,7 @@ async def test_registry_endpoints_return_registered_backend(
     assert payload["name"] == backend.name
     assert {field: payload[field] for field in expected_fields} == expected_fields
     assert all(field not in payload for field in secret_fields)
-    for secret_field in secret_values:
+    for secret_field in secret_fields:
         assert str(getattr(backend, secret_field)) not in list_response.text
         assert str(getattr(backend, secret_field)) not in get_response.text
 

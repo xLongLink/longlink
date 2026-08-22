@@ -22,8 +22,6 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], expected_p
     runner = CliRunner()
 
     with runner.isolated_filesystem():
-
-        # Act
         result = runner.invoke(init_command, arguments)
 
         # Assert

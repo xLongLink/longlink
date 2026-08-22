@@ -9,6 +9,7 @@ from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
+from src.database.models.organizations import Organization
 
 
 async def test_create_stores_canonical_invitation_email(
@@ -169,3 +170,29 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     assert membership is not None
     assert membership.role == OrganizationRoles.read
     assert invitation is None
+
+
+async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple[User, User, User]) -> None:
+    """Keep invitations untouched when their organization has been deleted."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        organization_row = await session.get(Organization, organization.id)
+        assert organization_row is not None
+        organization_row.deleted_at = datetime.now(UTC)
+        organization_row.deleted_id = owner.id
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+
+    # Assert
+    assert changed_organization_ids == set()
+    assert membership is None
+    assert invitation is not None

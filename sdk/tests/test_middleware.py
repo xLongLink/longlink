@@ -12,12 +12,7 @@ from longlink.middleware import accepts_gzip, install_frontend_middleware
 def test_accepts_gzip_respects_explicit_and_wildcard_quality_values(header: str, expected: bool) -> None:
     """Honor gzip's explicit quality value before a wildcard fallback."""
 
-    # Arrange
-    # Act
-    accepted = accepts_gzip(header)
-
-    # Assert
-    assert accepted is expected
+    assert accepts_gzip(header) is expected
 
 
 def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> None:

@@ -1,21 +1,50 @@
 import sys
 import pytest
 from types import SimpleNamespace
-from collections.abc import Callable
+from pathlib import Path
+from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
 from alembic.operations.ops import UpgradeOps, DowngradeOps, MigrationScript
 from longlink.database.base import database_metadata
 
 
-def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch) -> None:
+@pytest.fixture
+def isolated_model(tmp_path, monkeypatch) -> Generator[tuple[Path, Callable[[str, str], None]], None, None]:
+    """Provide an isolated application model file and clean up its global import state."""
+
+    # Create the model path in a temporary application project.
+    root = tmp_path / "src" / "database" / "models"
+    model_path = root / "inventory.py"
+    root.mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+    table_names: list[str] = []
+
+    def write(table_name: str, source: str) -> None:
+        """Write a model source file and track its metadata table for cleanup."""
+
+        table_names.append(table_name)
+        model_path.write_text(source, encoding="utf-8")
+
+    yield model_path, write
+
+    # Remove temporary metadata and module state even if model discovery fails.
+    for table_name in table_names:
+        table = database_metadata.tables.get(table_name)
+        if table is not None:
+            database_metadata.remove(table)
+    sys.modules.pop("src.database.models.inventory", None)
+
+
+def test_migration_loader_discovers_nested_database_models(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+) -> None:
     """Load nested application model modules for Alembic metadata."""
 
     # Create a nested Application model in an isolated project tree.
     table_name = "nested_inventory_items"
-    module_name = "src.database.models.inventory"
-    model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
-    model_path.parent.mkdir(parents=True)
-    model_path.write_text(
+    _model_path, write_model = isolated_model
+    write_model(
+        table_name,
         "from sqlmodel import Field, SQLModel\n"
         "\n\n"
         "class NestedInventoryItem(SQLModel, table=True):\n"
@@ -24,64 +53,48 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
         f'    __tablename__ = "{table_name}"\n'
         "\n"
         "    id: int | None = Field(default=None, primary_key=True)\n",
-        encoding="utf-8",
     )
-    monkeypatch.chdir(tmp_path)
 
     # Load project models and verify their metadata registration.
-    try:
-        database_migrations.load_application_models()
+    database_migrations.load_application_models()
 
-        assert table_name in database_metadata.tables
-    finally:
-        # Remove global metadata and import state even if discovery fails.
-        table = database_metadata.tables.get(table_name)
-        if table is not None:
-            database_metadata.remove(table)
-        sys.modules.pop(module_name, None)
+    assert table_name in database_metadata.tables
 
 
-def test_migration_loader_removes_failed_model_import_before_retry(tmp_path, monkeypatch) -> None:
+def test_migration_loader_removes_failed_model_import_before_retry(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+) -> None:
     """Allow a corrected model module to load after its first import fails."""
 
     # Arrange
     table_name = "retry_inventory_items"
     module_name = "src.database.models.inventory"
-    model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
-    model_path.parent.mkdir(parents=True)
-    model_path.write_text('raise RuntimeError("broken model")\n', encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
+    model_path, write_model = isolated_model
+    write_model(table_name, 'raise RuntimeError("broken model")\n')
 
-    try:
-        # Act
-        with pytest.raises(RuntimeError, match="broken model"):
-            database_migrations.load_application_models()
-
-        # Assert
-        assert module_name not in sys.modules
-
-        # Act
-        model_path.write_text(
-            "from sqlmodel import Field, SQLModel\n"
-            "\n\n"
-            "class RetryInventoryItem(SQLModel, table=True):\n"
-            '    """Retry inventory table."""\n'
-            "\n"
-            f'    __tablename__ = "{table_name}"\n'
-            "\n"
-            "    id: int | None = Field(default=None, primary_key=True)\n",
-            encoding="utf-8",
-        )
+    # Act
+    with pytest.raises(RuntimeError, match="broken model"):
         database_migrations.load_application_models()
 
-        # Assert
-        assert table_name in database_metadata.tables
-    finally:
-        # Remove global metadata and import state even if retry fails.
-        table = database_metadata.tables.get(table_name)
-        if table is not None:
-            database_metadata.remove(table)
-        sys.modules.pop(module_name, None)
+    # Assert
+    assert module_name not in sys.modules
+
+    # Act
+    write_model(
+        table_name,
+        "from sqlmodel import Field, SQLModel\n"
+        "\n\n"
+        "class RetryInventoryItem(SQLModel, table=True):\n"
+        '    """Retry inventory table."""\n'
+        "\n"
+        f'    __tablename__ = "{table_name}"\n'
+        "\n"
+        "    id: int | None = Field(default=None, primary_key=True)\n",
+    )
+    database_migrations.load_application_models()
+
+    # Assert
+    assert table_name in database_metadata.tables
 
 
 def test_make_migrations_skips_empty_autogenerated_revisions(tmp_path, monkeypatch) -> None:

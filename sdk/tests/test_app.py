@@ -18,11 +18,14 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     # Exercise runtime metadata and frontend fallback routes.
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+    health_response = client.get("/health")
     # Verify each runtime route.
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
 
 
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:

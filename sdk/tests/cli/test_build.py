@@ -1,5 +1,6 @@
 import click
 import pytest
+import subprocess
 from pathlib import Path
 from longlink.cli import build
 from click.testing import CliRunner
@@ -252,6 +253,38 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     ]
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
+
+
+def test_build_command_reports_docker_build_failure_without_pushing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Translate a failed Docker build into a CLI error before a push starts."""
+
+    # Arrange
+    commands: list[list[str]] = []
+    runner = CliRunner()
+
+    def fake_build_app(_build_context: Path) -> tuple[str, str]:
+        """Return deterministic project metadata without writing Docker artifacts."""
+
+        return "0.1.0", "Demo App"
+
+    def fail_build(command: list[str], check: bool) -> None:
+        """Record and fail the Docker build command."""
+
+        commands.append(command)
+        raise subprocess.CalledProcessError(23, command)
+
+    monkeypatch.setattr(build, "build_app", fake_build_app)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    monkeypatch.setattr(build.subprocess, "run", fail_build)
+
+    # Act
+    result = runner.invoke(build.build_command, ["--push"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker command failed with exit code 23" in result.output
+    assert len(commands) == 1
+    assert commands[0][1] == "build"
 
 
 def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
