@@ -17,18 +17,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class AuditTable(Base):
     """Base SQLModel for Application tables that track Platform users."""
 
-    # SQLAlchemy configuration
-    __allow_unmapped__ = True
-
     # Audit timestamps
-    created_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    updated_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    created_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    updated_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # Audit user identifiers
-    created_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
-    updated_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
-    deleted_id: UUID | None = Field(default=None, foreign_key="audit.id", nullable=True)
+    created_id: UUID | None = Field(default=None, foreign_key="audit.id")
+    updated_id: UUID | None = Field(default=None, foreign_key="audit.id")
+    deleted_id: UUID | None = Field(default=None, foreign_key="audit.id")
 
     # Audit user relationships
     created_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.created_id], lazy="selectin"))
@@ -52,7 +49,6 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     # Production builds the URL from injected database settings.
     else:
-
         # Production runtimes receive database connection components from the LongLink Platform.
         dburl = URL.create(
             "postgresql+asyncpg",
@@ -76,8 +72,8 @@ def create_engine(env: Envs) -> AsyncEngine:
     # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
     engine_kwargs["connect_args"] = urls.connect_args(
         dburl,
-        schema=env.DATABASE_SCHEMA if dburl.startswith("postgresql+asyncpg") else None,
-        **({"ssl": env.DATABASE_SSLMODE} if dburl.startswith("postgresql+asyncpg") else {}),
+        schema=env.DATABASE_SCHEMA,
+        ssl=env.DATABASE_SSLMODE,
     )
 
     return create_async_engine(dburl, **engine_kwargs)
@@ -94,12 +90,10 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
 
         # Auto-create tables for SQLite only.
         if str(engine.url).startswith("sqlite+"):
-
             # Create tables through a transactional SQLite connection.
             async with engine.begin() as conn:
                 await conn.run_sync(database_metadata.create_all)
         else:
-
             # Verify non-SQLite connections before exposing the session factory.
             async with engine.connect():
                 pass

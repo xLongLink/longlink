@@ -105,8 +105,3 @@ def apply_migrations() -> None:
     cfg.set_main_option("version_locations", str(migrations_path))
 
     command.upgrade(cfg, "head")
-
-
-# Run migrations when invoked as a script.
-if __name__ == "__main__":
-    apply_migrations()

@@ -28,14 +28,11 @@ type CallExpressionNode = {
 
 type ObjectExpressionNode = {
     type: 'ObjectExpression';
-    properties: (
-        | {
-              type: 'Property';
-              key: ExpressionNode;
-              value: ExpressionNode;
-          }
-        | { type: 'SpreadElement' }
-    )[];
+    properties: {
+        type: 'Property';
+        key: ExpressionNode;
+        value: ExpressionNode;
+    }[];
 };
 
 type TemplateLiteralNode = {
@@ -64,18 +61,6 @@ type UnaryExpressionNode = {
     argument: ExpressionNode;
 };
 
-type ConditionalExpressionNode = {
-    type: 'ConditionalExpression';
-    test: ExpressionNode;
-    consequent: ExpressionNode;
-    alternate: ExpressionNode;
-};
-
-type ArrayExpressionNode = {
-    type: 'ArrayExpression';
-    elements: (ExpressionNode | null)[];
-};
-
 export type ExpressionNode =
     | LiteralNode
     | IdentifierNode
@@ -85,7 +70,5 @@ export type ExpressionNode =
     | BinaryExpressionNode
     | LogicalExpressionNode
     | UnaryExpressionNode
-    | ConditionalExpressionNode
-    | ArrayExpressionNode
     | ObjectExpressionNode
     | TemplateLiteralNode;

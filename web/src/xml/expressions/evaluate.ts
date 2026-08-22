@@ -10,39 +10,11 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     String,
 };
 
-const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
-    abs: (value) => Math.abs(Number(value)),
-    ceil: (value) => Math.ceil(Number(value)),
-    floor: (value) => Math.floor(Number(value)),
-    max: (...values) => Math.max(...values.map((value) => Number(value))),
-    min: (...values) => Math.min(...values.map((value) => Number(value))),
-    round: (value) => Math.round(Number(value)),
-    trunc: (value) => Math.trunc(Number(value)),
-};
-
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
     // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
         return readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
-    }
-
-    // Allow selected static helper namespaces.
-    if (
-        callee.type === 'MemberExpression' &&
-        !callee.computed &&
-        callee.object.type === 'Identifier' &&
-        callee.property.type === 'Identifier'
-    ) {
-        // Resolve safe Array helpers.
-        if (callee.object.name === 'Array') {
-            return callee.property.name === 'isArray' ? Array.isArray : undefined;
-        }
-
-        // Resolve safe Math helpers.
-        if (callee.object.name === 'Math') {
-            return readSafeProperty(SAFE_MATH_CALLS, callee.property.name);
-        }
     }
 
     return undefined;
@@ -158,11 +130,6 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
             throw new Error('Operator not allowed');
         }
 
-        case 'ConditionalExpression':
-            return evaluateNode(node.test, ctx)
-                ? evaluateNode(node.consequent, ctx)
-                : evaluateNode(node.alternate, ctx);
-
         case 'CallExpression': {
             // Reject calls outside the allowlist.
             const callback = resolveSafeCall(node.callee);
@@ -173,15 +140,13 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
             return callback(...node.arguments.map((argument) => evaluateNode(argument, ctx)));
         }
 
-        case 'ArrayExpression':
-            return node.elements.map((element) => (element ? evaluateNode(element, ctx) : null));
-
         case 'ObjectExpression': {
             const result: Record<string, unknown> = Object.create(null);
 
             for (const property of node.properties) {
-                // Ignore entries that are not plain properties.
-                if (property.type !== 'Property') continue;
+                if (!('key' in property) || !('value' in property)) {
+                    throw new Error('Object spread not allowed');
+                }
 
                 const key =
                     property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
