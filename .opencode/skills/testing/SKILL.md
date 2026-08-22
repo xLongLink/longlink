@@ -13,6 +13,25 @@ Return a numeric list of cleanup options:
 5. Whether it affects any shared contract or requires updating call sites.
 
 
+## LongLink Coverage
+
+Run coverage from the repository root:
+
+```bash
+make api:test  # API: main.py and src
+make sdk:test  # SDK: longlink
+make test      # Both packages
+```
+
+Coverage is CLI-only. Each command prints branch coverage, a `TOTAL` percentage, and the uncovered lines. Do not create or commit HTML coverage reports.
+
+To improve coverage:
+
+1. Run the relevant coverage command and identify an uncovered production behavior.
+2. Add the smallest test at the lowest suitable level that verifies that behavior.
+3. Rerun the relevant coverage command and confirm the new test passes and covers the intended lines or branch.
+
+
 ## Testing
 
 Test observable behavior and important boundaries. Use the lowest test level that provides confidence:

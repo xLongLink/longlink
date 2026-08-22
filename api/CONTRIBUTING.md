@@ -11,6 +11,7 @@ uv run python -m src.release       # Schedule deployment reconciliation once
 uv run python -m scripts.seed      # Register local infrastructure and example data
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run ruff check --fix .           # Format imports and apply safe lint fixes
+uv run pytest --cov=main --cov=src --cov-report=term-missing  # Run tests with branch coverage
 ```
 
 Production images start the Platform API without applying schema changes. Before every API rollout, the deployment pipeline must run `alembic upgrade head` and then `python -m src.release` once with the shared database before starting replicas.

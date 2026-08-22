@@ -38,7 +38,7 @@ This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to
 
 ```bash
 uv sync --group dev
-uv run pytest tests
+uv run pytest --cov --cov-report=term-missing
 ```
 
 <br/>

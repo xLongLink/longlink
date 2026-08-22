@@ -46,6 +46,7 @@ dev = [
     'ruff>=0.16.2',
     'pytest>=9.0.3',
     'pytest-asyncio>=1.4.0',
+    'pytest-cov>=7.0.0',
     'docker>=7.2.0',
     'types-aiobotocore-s3==3.9.0',
 ]
@@ -99,3 +100,11 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
