@@ -1,9 +1,19 @@
+import type { ReactNode } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import type { DeleteConfirmationProps } from '@/lib/utils';
+import { createGuardedOpenChange } from '@/lib/utils';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+
+export type DeleteConfirmationProps = {
+    open: boolean;
+    title: string;
+    description: ReactNode;
+    isPending: boolean;
+    onConfirm: () => void;
+    onOpenChange: (open: boolean) => void;
+};
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmation({
@@ -14,14 +24,7 @@ export function DeleteConfirmation({
     onConfirm,
     onOpenChange,
 }: DeleteConfirmationProps) {
-    /** Prevent closing while the destructive request is in flight. */
-    function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && isPending) {
-            return;
-        }
-
-        onOpenChange(nextOpen);
-    }
+    const handleOpenChange = createGuardedOpenChange(isPending, onOpenChange);
 
     return (
         <Dialog isOpen={open} onOpenChange={handleOpenChange} purpose={isPending ? 'required' : 'form'}>

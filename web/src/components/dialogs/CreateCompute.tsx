@@ -6,7 +6,7 @@ import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/Registry
 
 const schema = z.object({
     name: z.string().trim().min(1),
-    kubeconfig: z.string().refine((value) => value.trim().length > 0),
+    kubeconfig: z.string().trim().min(1),
 });
 
 /** Registers one compute target. */

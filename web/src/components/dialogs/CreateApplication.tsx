@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { createGuardedOpenChange } from '@/lib/utils';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -21,14 +22,7 @@ const createApplicationFormSchema = z.object({
     name: z.string().trim(),
     description: z.string().trim(),
     icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
-    envs: z.record(z.string(), z.string().optional()).transform((envs) =>
-        Object.entries(envs).reduce<Record<string, string>>((configured, [name, value]) => {
-            if (value !== undefined) {
-                configured[name] = value;
-            }
-            return configured;
-        }, {})
-    ),
+    envs: z.record(z.string(), z.string().optional()),
 });
 
 const createApplicationSubmitSchema = createApplicationFormSchema.extend({
@@ -135,8 +129,14 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             return;
         }
 
-        // Collect configured environment values while skipping optional empty fields.
-        const envs = Object.fromEntries(Object.entries(application.data.envs).filter(([, value]) => value.length > 0));
+        // Collect configured environment values, dropping unset and empty fields.
+        const envs: Record<string, string> = {};
+
+        for (const [name, value] of Object.entries(application.data.envs)) {
+            if (value !== undefined && value.length > 0) {
+                envs[name] = value;
+            }
+        }
 
         // Submit the new app and close the dialog on success.
         try {
@@ -157,16 +157,14 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         }
     }
 
-    /** Updates dialog state while protecting image inspection or application creation. */
-    function handleOpenChange(nextOpen: boolean) {
-        if (!nextOpen && (isInspecting || createApplication.isPending)) {
-            return;
-        }
+    const handleOpenChange = createGuardedOpenChange(isInspecting || createApplication.isPending, (nextOpen) => {
         setOpen(nextOpen);
+
+        // Reset the wizard once the dialog is fully closed.
         if (!nextOpen) {
             resetDialogState();
         }
-    }
+    });
 
     return (
         <>

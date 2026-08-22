@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import type { DeleteConfirmationProps } from '@/components/dialogs/DeleteConfirmation';
 
 export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
@@ -14,15 +15,6 @@ export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
 });
 export const numberFormatter = new Intl.NumberFormat();
-
-export type DeleteConfirmationProps = {
-    open: boolean;
-    title: string;
-    description: ReactNode;
-    isPending: boolean;
-    onConfirm: () => void;
-    onOpenChange: (open: boolean) => void;
-};
 
 type UseDeleteDialogOptions<TItem> = {
     title: string;
@@ -59,6 +51,18 @@ export function startCase(value: string): string {
         .filter((word) => word.length > 0)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+}
+
+/** Creates an open-change handler that ignores close attempts while a request is pending. */
+export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open: boolean) => void) {
+    return (nextOpen: boolean) => {
+        // Protect an in-flight request from being dismissed.
+        if (!nextOpen && isPending) {
+            return;
+        }
+
+        onOpenChange(nextOpen);
+    };
 }
 
 /** Manages the shared delete confirmation dialog state and confirm action. */
