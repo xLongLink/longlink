@@ -4,9 +4,9 @@ import { createContext } from 'react';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useBindableValue } from '../core/binding';
 import { Button } from '@astryxdesign/core/Button';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { coerceXmlBoolean, useBindableValue } from '../core/binding';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { resolveXmlProps, xmlNonblankStringSchema, xmlSpacingWithDefaultSchema } from '../core/props';
 
@@ -22,7 +22,7 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'isOpen', ctx, (value) => value !== 'false' && Boolean(value));
+    const binding = useBindableValue(props, 'isOpen', ctx, coerceXmlBoolean);
     const { gap, purpose, subtitle, title, triggerLabel } = resolveXmlProps(
         props,
         ctx,

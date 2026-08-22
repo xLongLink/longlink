@@ -5,7 +5,7 @@ import tempfile
 import ipaddress
 from kr8s import ServerError
 from uuid import UUID
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
 from dataclasses import dataclass
@@ -32,11 +32,17 @@ GatewayClassResource = new_class(
 
 @dataclass(slots=True)
 class GatewayTLS:
-    """Keep the Gateway server and Platform client identities issued by one private CA."""
+    """Keep one Gateway server identity and its private certificate authority."""
 
     ca_certificate: str
     server_certificate: str
     server_private_key: str
+
+
+@dataclass(slots=True)
+class GatewayClientTLS(GatewayTLS):
+    """Keep the Platform client identity issued by a Gateway certificate authority."""
+
     client_certificate: str
     client_private_key: str
 
@@ -110,14 +116,21 @@ def leaf_certificate_builder(
     )
 
 
-def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
-    """Generate a private CA with Gateway server and Platform client identities."""
+@overload
+def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: Literal[False]) -> GatewayTLS: ...
 
-    # Create a private CA and independent server and client identities for this Compute.
+
+@overload
+def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: Literal[True]) -> GatewayClientTLS: ...
+
+
+def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool) -> GatewayTLS | GatewayClientTLS:
+    """Generate a private CA with a Gateway server identity and optional Platform client identity."""
+
+    # Create a private CA and Gateway server identity for this Compute.
     now = datetime.now(UTC)
     ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    client_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
     ca_certificate = (
         x509.CertificateBuilder()
@@ -164,7 +177,20 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
         builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
     server_certificate = builder.sign(ca_key, hashes.SHA256())
 
+    tls = GatewayTLS(
+        ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
+        server_private_key=server_key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        ).decode("ascii"),
+    )
+    if not client:
+        return tls
+
     # Bind the Platform client identity to this Compute CA without exposing the CA private key.
+    client_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     client_certificate = leaf_certificate_builder(
         ca_name,
         ca_key,
@@ -174,14 +200,10 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
         now,
     ).sign(ca_key, hashes.SHA256())
 
-    return GatewayTLS(
-        ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_private_key=server_key.private_bytes(
-            serialization.Encoding.PEM,
-            serialization.PrivateFormat.PKCS8,
-            serialization.NoEncryption(),
-        ).decode("ascii"),
+    return GatewayClientTLS(
+        ca_certificate=tls.ca_certificate,
+        server_certificate=tls.server_certificate,
+        server_private_key=tls.server_private_key,
         client_certificate=client_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
         client_private_key=client_key.private_bytes(
             serialization.Encoding.PEM,
@@ -189,6 +211,18 @@ def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
             serialization.NoEncryption(),
         ).decode("ascii"),
     )
+
+
+def generate_gateway_bootstrap_tls(compute_id: UUID) -> GatewayTLS:
+    """Generate server-only TLS material used until the Gateway receives its endpoint."""
+
+    return _generate_gateway_tls(compute_id, None, client=False)
+
+
+def generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS:
+    """Generate endpoint-bound Gateway and Platform client TLS identities."""
+
+    return _generate_gateway_tls(compute_id, address, client=True)
 
 
 class Gateway:

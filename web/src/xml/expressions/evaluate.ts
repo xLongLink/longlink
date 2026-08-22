@@ -10,16 +10,6 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     String,
 };
 
-/** Resolves a whitelisted global helper call without exposing runtime objects. */
-function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
-    // Allow direct calls to whitelisted helpers.
-    if (callee.type === 'Identifier') {
-        return readSafeProperty(SAFE_IDENTIFIER_CALLS, callee.name);
-    }
-
-    return undefined;
-}
-
 /** Evaluates a supported AST node against the current scope. */
 function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
     // Dispatch by supported AST node type.
@@ -132,7 +122,10 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
 
         case 'CallExpression': {
             // Reject calls outside the allowlist.
-            const callback = resolveSafeCall(node.callee);
+            const callback =
+                node.callee.type === 'Identifier'
+                    ? readSafeProperty(SAFE_IDENTIFIER_CALLS, node.callee.name)
+                    : undefined;
             if (!callback) {
                 throw new Error('Function call not allowed');
             }

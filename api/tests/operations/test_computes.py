@@ -6,7 +6,7 @@ from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationStatus
-from src.kubernetes.gateway import GatewayTLS
+from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
 from src.database.models.computes import ComputeRegistry
 
 
@@ -16,18 +16,28 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     compute_registry = await create_compute()
     generation = 0
 
-    def generate_tls(compute_id: UUID, address: str | None) -> GatewayTLS:
+    def generate_tls(compute_id: UUID, address: str) -> GatewayClientTLS:
         """Return distinct generated TLS material."""
 
         nonlocal generation
         assert compute_id == compute_registry.id
         generation += 1
-        return GatewayTLS(
+        return GatewayClientTLS(
             ca_certificate=f"ca-{generation}",
             server_certificate=f"server-certificate-{generation}",
             server_private_key=f"server-private-key-{generation}",
             client_certificate=f"client-certificate-{generation}",
             client_private_key=f"client-private-key-{generation}",
+        )
+
+    def generate_bootstrap_tls(compute_id: UUID) -> GatewayTLS:
+        """Return server-only bootstrap TLS material."""
+
+        assert compute_id == compute_registry.id
+        return GatewayTLS(
+            ca_certificate="bootstrap-ca",
+            server_certificate="bootstrap-server-certificate",
+            server_private_key="bootstrap-server-private-key",
         )
 
     class FakeGateway:
@@ -44,7 +54,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     class FakeKubernetes:
         """Expose the fake gateway abstraction."""
 
-        def __init__(self, kubeconfig: str) -> None:
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Validate the selected compute registry."""
 
             assert kubeconfig == compute_registry.kubeconfig
@@ -52,6 +62,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
+    monkeypatch.setattr(compute_operations, "generate_gateway_bootstrap_tls", generate_bootstrap_tls)
     await queue_operation(target_id=compute_registry.id)
     claimed = await claim_operation()
     assert claimed is not None
@@ -71,8 +82,8 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert refreshed is not None
     assert refreshed.status == Status.running
     assert refreshed.gateway_url == "https://192.0.2.1"
-    assert refreshed.gateway_certificate == "ca-2"
-    assert refreshed.gateway_client_identity == "client-certificate-2\nclient-private-key-2"
+    assert refreshed.gateway_certificate == "ca-1"
+    assert refreshed.gateway_client_identity == "client-certificate-1\nclient-private-key-1"
 
 
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -91,7 +102,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     class FailingKubernetes:
         """Expose the failing gateway abstraction."""
 
-        def __init__(self, kubeconfig: str) -> None:
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
             self.gateway = FailingGateway()
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)

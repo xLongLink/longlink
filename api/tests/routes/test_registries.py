@@ -23,7 +23,7 @@ async def test_platform_user_cannot_access_administrator_collections(
             "computes",
             "compute",
             {"gateway_url": "https://gateway.example", "status": "running"},
-            ["kubeconfig", "proxy_secret"],
+            ["kubeconfig"],
             [],
             id="compute",
         ),

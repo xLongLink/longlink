@@ -3,7 +3,6 @@ import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
 import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
-type XmlScalar = number | boolean | string | undefined;
 export type XmlSpacing = (typeof SPACING_VALUES)[number];
 
 export const xmlNonblankStringSchema = z
@@ -27,14 +26,13 @@ export function readXmlProp(props: ASTProps, name: string): ASTProps[string] | u
 }
 
 /** Resolves an XML scalar prop. */
-export function resolveXml(props: ASTProps, name: string, ctx: Scope): XmlScalar {
+export function resolveXml(props: ASTProps, name: string, ctx: Scope): number | boolean | string | undefined {
     const attribute = readXmlProp(props, name);
     if (attribute == null) return undefined;
 
     const value = evaluate(attribute, ctx);
     if (value == null || value === '') return undefined;
-    if (typeof value === 'number') return value;
-    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return value;
     if (value === 'true') return true;
     if (value === 'false') return false;
 
