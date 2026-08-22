@@ -50,6 +50,7 @@ async def create(application_id: UUID) -> str | None:
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {
+            **runtime_secrets,
             "LONGLINK_ENV": "production",
             "LONGLINK_DATABASE_HOST": connection["host"],
             "LONGLINK_DATABASE_NAME": connection["database_name"],
@@ -72,7 +73,7 @@ async def create(application_id: UUID) -> str | None:
                 return None
 
             # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-            persisted_application.secrets = {**persisted_application.secrets, **runtime_secrets}
+            persisted_application.secrets = runtime_secrets
             await session.commit()
 
     # Apply the captured desired release so reconciliation repairs workload drift.

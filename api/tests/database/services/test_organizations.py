@@ -221,6 +221,7 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
         members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
+        assert all(operation.target_id != application.id for operation in await operations.fetch(session))
     assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id

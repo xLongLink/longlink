@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -19,6 +19,7 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -402,6 +403,17 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
                 Application.deleted_at.is_(None),
             )
             .values(deleted_at=now, deleted_id=user.id, updated_at=now, updated_id=user.id)
+        )
+
+        # Organization cleanup supersedes unleased Application lifecycle work.
+        await session.execute(
+            delete(Operation)
+            .where(
+                Operation.kind.in_((OperationKind.application_create, OperationKind.application_delete)),
+                Operation.target_id.in_(select(Application.id).where(Application.organization_id == organization_id)),
+                Operation.finished_at.is_(None),
+                Operation.lease_expires_at.is_(None),
+            )
         )
 
     # Keep tombstones and Organization cleanup in one transaction.
