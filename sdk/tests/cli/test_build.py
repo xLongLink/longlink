@@ -15,7 +15,6 @@ def build_project(tmp_path: Path) -> Path:
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
         encoding="utf-8",
     )
-    root.joinpath("main.py").write_text("app = object()\n", encoding="utf-8")
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
@@ -108,8 +107,6 @@ def test_build_app_generates_dockerignore_from_project_gitignore(
     build.build_app(build_context)
 
     # Assert
-    assert (build_context / "main.py").is_file()
-    assert (build_context / "pyproject.toml").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
         ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
     )

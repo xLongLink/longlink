@@ -10,22 +10,32 @@ settings = Envs()
 engine = create_engine(settings)
 
 # Keep Application migration state out of the shared schema resolved by the production search path.
-version_table_schema = settings.DATABASE_SCHEMA if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+") else None
+version_table_schema = settings.DATABASE_SCHEMA if settings.ENV == "production" else None
 
 
-def run_migrations_offline() -> None:
-    """Run Alembic migrations in offline mode."""
+def _configure_migrations(
+    *, connection: Connection | None = None, url: str | None = None, literal_binds: bool = False
+) -> None:
+    """Configure shared application migration behavior for one Alembic execution mode."""
 
-    # Configure Alembic to emit migration SQL without a live connection.
+    # Keep online and offline schema comparison behavior aligned.
     context.configure(
-        url=str(engine.url),
-        literal_binds=True,
+        connection=connection,
+        url=url,
+        literal_binds=literal_binds,
         target_metadata=database_metadata,
         include_object=include_object,
         compare_type=True,
         render_as_batch=True,
         version_table_schema=version_table_schema,
     )
+
+
+def run_migrations_offline() -> None:
+    """Run Alembic migrations in offline mode."""
+
+    # Configure Alembic to emit migration SQL without a live connection.
+    _configure_migrations(url=str(engine.url), literal_binds=True)
 
     # Wrap offline migration output in Alembic's transaction context.
     with context.begin_transaction():
@@ -36,14 +46,7 @@ def do_run_migrations(connection: Connection) -> None:
     """Run Alembic migrations using a synchronous migration connection."""
 
     # Configure Alembic with the synchronous connection exposed by SQLAlchemy.
-    context.configure(
-        connection=connection,
-        target_metadata=database_metadata,
-        include_object=include_object,
-        compare_type=True,
-        render_as_batch=True,
-        version_table_schema=version_table_schema,
-    )
+    _configure_migrations(connection=connection)
 
     # Wrap online migration work in Alembic's transaction context.
     with context.begin_transaction():

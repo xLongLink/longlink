@@ -118,8 +118,6 @@ async def delete(application_id: UUID) -> str | None:
         if target is None:
             return None
         application, infrastructure = target
-        if application.deleted_at is None:
-            return "Active Applications cannot be deleted by lifecycle cleanup"
     organization = infrastructure.organization
     # Remove Application Kubernetes resources before revoking provider credentials.
     await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)
@@ -134,7 +132,5 @@ async def delete(application_id: UUID) -> str | None:
         persisted_application = await session.get(Application, application.id, with_for_update=True)
         if persisted_application is None:
             return None
-        if persisted_application.deleted_at is None:
-            raise RuntimeError("Active applications cannot be purged")
         await session.delete(persisted_application)
         await session.commit()

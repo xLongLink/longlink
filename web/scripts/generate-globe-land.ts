@@ -13,8 +13,7 @@ const centerY = 720;
 const radiusY = 535;
 const rotate = [35, -18] as const;
 
-// Cast the static TopoJSON import at the data boundary; world-atlas exposes a borderless land object.
-const land = feature(land110m as unknown as Parameters<typeof feature>[0], 'land');
+const land = feature(land110m, 'land');
 
 // Project the land once because the hero globe is a static background asset.
 const landPath =

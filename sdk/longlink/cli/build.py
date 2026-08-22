@@ -89,12 +89,8 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     # Read annotated settings fields from the configured class.
     for statement in class_node.body:
 
-        # Ignore non-field statements.
-        if not isinstance(statement, ast.AnnAssign):
-            continue
-
-        # Ignore assignments without a named field.
-        if not isinstance(statement.target, ast.Name):
+        # Ignore statements that do not declare a named annotated field.
+        if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
             continue
 
         field_name = statement.target.id
@@ -133,19 +129,16 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
 
     # Missing values indicate required fields.
     if value is None:
-        return {"required": True, "env_name": None}
+        return {"required": True}
 
     # Inspect pydantic Field calls for metadata.
     if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
-        info: dict[str, object] = {"required": True, "env_name": None}
+        info: dict[str, object] = {"required": True}
 
         # Positional Field defaults use ellipsis for required values and any other value as optional.
         if value.args:
             first_argument = value.args[0]
-            info["required"] = (
-                isinstance(first_argument, ast.Constant)
-                and first_argument.value is Ellipsis
-            )
+            info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
 
         # Inspect Field keyword arguments.
         for keyword in value.keywords:
@@ -163,13 +156,8 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
                 if isinstance(alias, str):
                     info["env_name"] = alias
 
-            # Defaults make the field optional.
-            elif keyword.arg == "default":
-                info["required"] = False
-
             # Capture static descriptions.
             elif keyword.arg == "description":
-
                 # Safely evaluate static descriptions.
                 try:
                     description = ast.literal_eval(keyword.value)
@@ -180,13 +168,13 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
                 if isinstance(description, str):
                     info["description"] = description
 
-            # Factories make the field optional.
-            elif keyword.arg == "default_factory":
+            # Defaults and factories make the field optional.
+            elif keyword.arg in ("default", "default_factory"):
                 info["required"] = False
 
         return info
 
-    return {"required": False, "env_name": None}
+    return {"required": False}
 
 
 def encode_label_value(value: object) -> str:

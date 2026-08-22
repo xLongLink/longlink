@@ -76,12 +76,11 @@ def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path,
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
 
-    def fake_upgrade(_cfg: object, _revision: str) -> None:
-        """Fail when an upgrade is attempted without application migrations."""
-
-        raise AssertionError("Alembic upgrade must not run without application migrations")
-
-    monkeypatch.setattr(database_migrations.command, "upgrade", fake_upgrade)
+    monkeypatch.setattr(
+        database_migrations.command,
+        "upgrade",
+        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
+    )
 
     # Reject missing revisions without handing control to Alembic.
     with pytest.raises(RuntimeError, match="require migrations"):
