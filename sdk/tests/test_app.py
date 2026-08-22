@@ -12,7 +12,7 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
 
     # Initialize the development runtime and its in-process client.
     app = FastAPI()
-    LongLink(app, env="development")
+    LongLink(app)
     client = TestClient(app)
 
     # Exercise runtime metadata and frontend fallback routes.

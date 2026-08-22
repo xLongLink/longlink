@@ -1,9 +1,10 @@
 from uuid import UUID
+from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
-from src.database.services import applications, organizations
+from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.applications import Application
@@ -97,7 +98,6 @@ async def delete(organization_id: UUID) -> str | None:
     await db.delete_database(infrastructure.organization.id)
     await object_storage.delete(infrastructure.organization.id.hex)
     async with session_scope() as session:
-        for application_id in application_ids:
-            await applications.purge(session, application_id)
+        await session.execute(sql_delete(Application).where(Application.organization_id == infrastructure.organization.id))
         await organizations.purge(session, infrastructure.organization.id)
         await session.commit()

@@ -23,9 +23,7 @@ export default function AdminStorage() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteStorage = useMutation({
-        mutationFn: async (storageId: string) => {
-            await api(`/api/v1/storages/${storageId}`, { method: 'DELETE' });
-        },
+        mutationFn: (storageId: string) => api(`/api/v1/storages/${storageId}`, { method: 'DELETE' }),
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/storages'] });
             toast({ body: 'Storage deleted' });

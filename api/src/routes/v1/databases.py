@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, get_session
 from src.logger import logger
+from sqlalchemy.orm import load_only
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.adapters.postgres import Postgres
 from src.database.services import database
@@ -40,7 +41,20 @@ async def get_database_registry(registry_id: UUID, session: AsyncSession = Depen
     """Return one database backend registration."""
 
     # Resolve the requested database registry.
-    registry = await session.get(DatabaseRegistry, registry_id)
+    registry = await session.get(
+        DatabaseRegistry,
+        registry_id,
+        options=[
+            load_only(
+                DatabaseRegistry.id,
+                DatabaseRegistry.name,
+                DatabaseRegistry.host,
+                DatabaseRegistry.port,
+                DatabaseRegistry.sslmode,
+                DatabaseRegistry.username,
+            )
+        ],
+    )
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 

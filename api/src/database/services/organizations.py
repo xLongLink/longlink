@@ -55,7 +55,7 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
 
 async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry | None] | None:
+) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry] | None:
     """Return one user's active application access with its compute registry."""
 
     # Resolve the requested runtime and its active Organization membership in one scoped query.
@@ -63,7 +63,7 @@ async def application_runtime_access(
         select(Application, Organization, UserOrganization.role, ComputeRegistry)
         .join(Organization, Organization.id == Application.organization_id)
         .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-        .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+        .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
         .where(
             Application.id == application_id,
             Application.deleted_at.is_(None),
@@ -96,16 +96,16 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def application_infrastructure(session: AsyncSession, application_id: UUID) -> tuple[Application, Infrastructure | None] | None:
-    """Return one Application and its assigned infrastructure when all assignments exist."""
+async def application_infrastructure(session: AsyncSession, application_id: UUID) -> tuple[Application, Infrastructure] | None:
+    """Return one Application and its assigned infrastructure."""
 
     # Load the Application and its infrastructure in one lifecycle query.
     statement = (
         select(Application, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
         .join(Organization, Organization.id == Application.organization_id)
-        .outerjoin(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
-        .outerjoin(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
-        .outerjoin(StorageRegistry, StorageRegistry.id == Organization.storage_id)
+        .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
+        .join(DatabaseRegistry, DatabaseRegistry.id == Organization.database_id)
+        .join(StorageRegistry, StorageRegistry.id == Organization.storage_id)
         .where(Application.id == application_id)
     )
     result = await session.execute(statement)
@@ -113,8 +113,6 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     if row is None:
         return None
     application, organization, compute, database, storage = row
-    if compute is None or database is None or storage is None:
-        return application, None
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 

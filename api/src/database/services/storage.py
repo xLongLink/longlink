@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.storages import StorageRegistry
@@ -11,7 +12,15 @@ from src.database.models.organizations import Organization
 async def fetch(session: AsyncSession) -> Sequence[StorageRegistry]:
     """Return all registered storage backends."""
 
-    result = await session.scalars(select(StorageRegistry))
+    result = await session.scalars(
+        select(StorageRegistry).options(
+            load_only(
+                StorageRegistry.id,
+                StorageRegistry.name,
+                StorageRegistry.endpoint_url,
+            )
+        )
+    )
     return result.all()
 
 

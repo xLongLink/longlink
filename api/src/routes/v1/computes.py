@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, get_session
+from sqlalchemy.orm import load_only
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +31,18 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
-    registry = await session.get(ComputeRegistry, registry_id)
+    registry = await session.get(
+        ComputeRegistry,
+        registry_id,
+        options=[
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.name,
+                ComputeRegistry.gateway_url,
+                ComputeRegistry.status,
+            )
+        ],
+    )
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 

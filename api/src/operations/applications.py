@@ -21,8 +21,6 @@ async def create(application_id: UUID) -> str | None:
         application, infrastructure = target
     if application.deleted_at is not None:
         return None
-    if infrastructure is None:
-        return "Application Organization not found"
     organization = infrastructure.organization
     runtime_secrets = application.secrets
 
@@ -110,8 +108,6 @@ async def delete(application_id: UUID) -> str | None:
         application, infrastructure = target
         if application.deleted_at is None:
             return "Active Applications cannot be deleted by lifecycle cleanup"
-    if infrastructure is None:
-        return "Application Organization not found"
     organization = infrastructure.organization
     # Remove Application Kubernetes resources before revoking provider credentials.
     await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)

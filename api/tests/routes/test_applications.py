@@ -106,7 +106,6 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     async with session_scope() as session:
         persisted = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
         assert persisted is not None
-        assert persisted.organization_id == organization.id
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"

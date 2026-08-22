@@ -5,12 +5,11 @@ from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
 
-def create_fs() -> AbstractFileSystem:
+def create_fs(settings: Envs) -> AbstractFileSystem:
     """Create the active Application filesystem from runtime settings."""
 
-    env = Envs()
-    bucket = env.STORAGE_BUCKET or ""
-    prefix = env.STORAGE_PREFIX or ""
+    bucket = settings.STORAGE_BUCKET or ""
+    prefix = settings.STORAGE_PREFIX or ""
 
     # Reject bucket paths that could alter or escape the configured storage scope.
     bucket_path = PurePosixPath(bucket)
@@ -24,24 +23,18 @@ def create_fs() -> AbstractFileSystem:
     if prefix and not bucket:
         raise ValueError("Storage prefixes require a bucket")
 
-    # Tests use isolated in-memory storage so they never touch local files or remote services.
-    if env.ENV == "testing":
-        filesystem = fsspec.filesystem("memory")
-
-    # Development uses the local filesystem so generated files remain easy to inspect.
-    elif env.ENV == "development":
-        filesystem = fsspec.filesystem("file")
-
     # Production uses remote object storage supplied by the platform.
-    else:
-
+    if settings.ENV == "production":
         filesystem = fsspec.filesystem(
             "s3",
-            endpoint_url=env.STORAGE_ENDPOINT_URL,
-            key=env.STORAGE_USERNAME,
-            secret=env.STORAGE_PASSWORD,
-            client_kwargs={"region_name": env.STORAGE_REGION},
+            endpoint_url=settings.STORAGE_ENDPOINT_URL,
+            key=settings.STORAGE_USERNAME,
+            secret=settings.STORAGE_PASSWORD,
+            client_kwargs={"region_name": settings.STORAGE_REGION},
         )
+    else:
+        # Tests use memory storage while development keeps generated files locally inspectable.
+        filesystem = fsspec.filesystem("memory" if settings.ENV == "testing" else "file")
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
     if bucket:

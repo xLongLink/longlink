@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.models.statuses import Status
 from src.database.services import operations
@@ -16,7 +17,16 @@ async def fetch(session: AsyncSession) -> Sequence[ComputeRegistry]:
     """Return registered compute backends."""
 
     # Return every registered compute target.
-    result = await session.scalars(select(ComputeRegistry))
+    result = await session.scalars(
+        select(ComputeRegistry).options(
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.name,
+                ComputeRegistry.gateway_url,
+                ComputeRegistry.status,
+            )
+        )
+    )
     return result.all()
 
 

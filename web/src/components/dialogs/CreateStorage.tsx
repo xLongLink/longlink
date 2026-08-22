@@ -10,11 +10,9 @@ const schema = z.object({
     secret_access_key: z.string().min(1),
 });
 
-type Values = z.infer<typeof schema>;
-
 /** Registers one Exoscale SOS backend. */
 export default function CreateStorage() {
-    const dialog = useRegistryDialog<Values>({
+    const dialog = useRegistryDialog<z.infer<typeof schema>>({
         defaultValues: {
             name: '',
             endpoint_url: '',
@@ -23,7 +21,6 @@ export default function CreateStorage() {
         },
         endpoint: '/api/v1/storages',
         errorMessage: 'Failed to connect storage',
-        queryKey: ['api', '/api/v1/storages'],
         schema,
     });
 

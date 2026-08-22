@@ -28,8 +28,7 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     for _ in range(2):
         setup_operation = await claim_operation()
         assert setup_operation is not None
-        completed = await complete_operation(setup_operation.id)
-        assert completed is not None
+        assert await complete_operation(setup_operation.id) is not None
 
     claimed = await claim_operation()
     assert claimed is not None

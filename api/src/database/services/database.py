@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,18 @@ from src.database.models.organizations import Organization
 async def fetch(session: AsyncSession) -> Sequence[DatabaseRegistry]:
     """Return all registered database backends."""
 
-    result = await session.scalars(select(DatabaseRegistry))
+    result = await session.scalars(
+        select(DatabaseRegistry).options(
+            load_only(
+                DatabaseRegistry.id,
+                DatabaseRegistry.name,
+                DatabaseRegistry.host,
+                DatabaseRegistry.port,
+                DatabaseRegistry.sslmode,
+                DatabaseRegistry.username,
+            )
+        )
+    )
     return result.all()
 
 

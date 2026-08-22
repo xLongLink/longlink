@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import { createElement, type ComponentProps } from 'react';
 import type { IconRegistry } from '@astryxdesign/core/Icon';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
 import {
@@ -104,7 +104,7 @@ export type StoneIconName = keyof typeof stoneIconComponents;
 export const stoneIconRegistry: IconRegistry = Object.fromEntries(
     Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
         name,
-        <IconComponent aria-hidden={true} key={name} size="1em" />,
+        createElement(IconComponent, { 'aria-hidden': true, key: name, size: '1em' }),
     ])
 ) as IconRegistry;
 

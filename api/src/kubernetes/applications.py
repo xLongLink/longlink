@@ -43,27 +43,26 @@ class Applications:
         )
 
         # Render workload resources before the first cluster mutation.
+        revision = hashlib.sha256(
+            json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
         migration, deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
             application_id_label=APPLICATION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
-            runtime_revision=hashlib.sha256(json.dumps(secrets, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
-            migration_id=f"{application_id}-migration-{hashlib.sha256(image.encode()).hexdigest()[:8]}",
+            runtime_revision=revision,
+            migration_id=f"{application_id}-migration-{revision[:8]}",
         )
 
         # Apply migrations once without restarting a failed migration container.
         migration_job = Job(migration, api=api)
         await apply(migration_job)
-        while True:
-            await migration_job.refresh()
-            status = migration_job.raw.get("status")
-            if isinstance(status, dict) and status.get("succeeded") == 1:
-                break
-            if isinstance(status, dict) and status.get("failed") == 1:
-                raise RuntimeError("Application migrations failed")
-            await asyncio.sleep(1)
+        await migration_job.wait(["condition=Complete", "condition=Failed"])
+        status = migration_job.raw.get("status")
+        if isinstance(status, dict) and status.get("failed") == 1:
+            raise RuntimeError("Application migrations failed")
 
         # Create the Service and its owned HTTPRoute before starting Application Pods.
         await apply(Service(service, api=api))
@@ -149,18 +148,15 @@ class Applications:
         # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
-            running_pod = None
             failed_migration_pod = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
                 status = candidate.raw.get("status")
                 phase = status.get("phase") if isinstance(status, dict) else None
                 component = candidate.metadata.get("labels", {}).get("longlink.io/component")
+                if component != "migration" and phase not in {"Succeeded", "Failed"}:
+                    return [line async for line in candidate.logs(tail_lines=200)]
                 if component == "migration" and phase == "Failed":
                     failed_migration_pod = candidate
-                elif component != "migration" and phase not in {"Succeeded", "Failed"}:
-                    running_pod = candidate
-            if running_pod is not None:
-                return [line async for line in running_pod.logs(tail_lines=200)]
             if failed_migration_pod is not None:
                 return ["Migration logs:", *[line async for line in failed_migration_pod.logs(tail_lines=200)]]
             raise RuntimeError("Application logs unavailable")

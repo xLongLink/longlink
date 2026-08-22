@@ -24,7 +24,7 @@
         "test": "vp test tests/xml"
     },
     "dependencies": {
-        "@astryxdesign/core": "0.3.0",
+        "@astryxdesign/core": "0.4.3",
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/react-form": "^1.33.5",
         "@tanstack/react-query": "^5.101.4",
@@ -45,7 +45,7 @@
         "zod": "^4.4.3"
     },
     "devDependencies": {
-        "@astryxdesign/cli": "0.3.0",
+        "@astryxdesign/cli": "0.4.3",
         "@hey-api/openapi-ts": "0.99.0",
         "@react-router/dev": "8.3.0",
         "@types/d3-geo": "^3.1.1",

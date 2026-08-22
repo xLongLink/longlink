@@ -56,8 +56,7 @@ async def create(
     """Create an Organization-owned LongLink Application."""
 
     # Lock the Organization before creating an Application against its assignment.
-    result = await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
-    organization = result.scalar_one_or_none()
+    organization = await session.scalar(select(Organization).where(Organization.id == organization_id).with_for_update())
     if organization is None:
         raise NotFoundError("Organization not found")
     if organization.deleted_at is not None:

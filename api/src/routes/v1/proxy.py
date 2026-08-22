@@ -50,9 +50,6 @@ async def proxy_application_request(
     if application.status != Status.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    # The immutable compute assignment owns the only gateway this Application can use.
-    if registry is None:
-        raise RuntimeError("Application Organization compute registry is missing")
     if registry.gateway_url is None or registry.gateway_certificate is None or registry.gateway_client_identity is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
