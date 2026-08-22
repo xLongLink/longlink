@@ -15,6 +15,7 @@ environment = "src.envs:Env"
 
 [dependency-groups]
 dev = [
+  "httpx2",
   "pytest",
   "pytest-asyncio",
   "ruff",

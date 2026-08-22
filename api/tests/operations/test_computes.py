@@ -5,6 +5,7 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.database.services import compute
 from src.models.operations import OperationStatus
 from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
 from src.database.models.computes import ComputeRegistry
@@ -117,3 +118,32 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
         refreshed = await session.get(ComputeRegistry, compute_registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.creating
+
+
+async def test_record_success_rejects_stale_compute_lifecycle_writer() -> None:
+    """Preserve unpublished gateway state when its expected lifecycle has changed."""
+
+    # Arrange
+    registry = await create_compute()
+
+    # Act
+    async with session_scope() as session:
+        recorded = await compute.record_success(
+            session,
+            registry.id,
+            "https://gateway.example",
+            "certificate",
+            "client-identity",
+            Status.running,
+        )
+        await session.commit()
+
+    # Assert
+    assert recorded is False
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+    assert persisted is not None
+    assert persisted.status == Status.creating
+    assert persisted.gateway_url is None
+    assert persisted.gateway_certificate is None
+    assert persisted.gateway_client_identity is None

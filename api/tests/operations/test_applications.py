@@ -1,5 +1,11 @@
 import pytest
-from factories import claim_operation, complete_operation, create_application, create_organization, create_ready_infrastructure
+from factories import (
+    claim_operation,
+    complete_operation,
+    create_application,
+    create_organization,
+    create_ready_infrastructure,
+)
 from src.operations import applications as application_operations
 from src.utils.jobs import execute
 from src.models.types import DatabaseSSLMode
@@ -8,6 +14,21 @@ from src.database.services import applications
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.applications import Application
+from src.database.models.organizations import Organization
+
+
+async def create_deleted_application(owner: User) -> tuple[Organization, Application]:
+    """Create one Application tombstone with assigned infrastructure."""
+
+    # Persist the complete deletion target used by Application cleanup tests.
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner, infrastructure=infrastructure)
+    application = await create_application(organization)
+    async with session_scope() as session:
+        await applications.delete(session, application.id, owner.id)
+        await session.commit()
+
+    return organization, application
 
 
 async def test_application_delete_failure_stops_before_provider_credential_cleanup(
@@ -18,12 +39,7 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
 
     # Queue deletion for an Application with real persisted infrastructure assignments.
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    application = await create_application(organization, owner)
-    async with session_scope() as session:
-        await applications.delete(session, application.id, owner.id)
-        await session.commit()
+    organization, application = await create_deleted_application(owner)
 
     # Complete the known Organization and Application creation operations before deletion.
     for kind, target_id in (
@@ -79,12 +95,7 @@ async def test_application_delete_removes_provider_state_and_tombstone(
     """Remove the workload, provider state, and tombstone after successful cleanup."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(organization, users[0])
-    async with session_scope() as session:
-        await applications.delete(session, application.id, users[0].id)
-        await session.commit()
+    _, application = await create_deleted_application(users[0])
     calls: list[tuple[str, object]] = []
 
     class FakeKubernetes:
@@ -143,6 +154,8 @@ async def test_application_delete_removes_provider_state_and_tombstone(
     ]
     async with session_scope() as session:
         assert await session.get(Application, application.id) is None
+
+
 async def test_application_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -153,7 +166,7 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    application = await create_application(organization, owner, secrets={"API_KEY": "runtime-secret"})
+    application = await create_application(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
 
     class FakePostgres:
@@ -223,7 +236,6 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
     organization = await create_organization(users[0], infrastructure=infrastructure)
     application = await create_application(
         organization,
-        users[0],
         secrets={"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"},
     )
     captured: dict[str, dict[str, str]] = {}

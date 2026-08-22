@@ -7,7 +7,11 @@ from longlink.cli.init import init_command
 @pytest.mark.parametrize(
     ("arguments", "expected_paths"),
     [
-        pytest.param(["--folder", "sample-app"], ["pyproject.toml", "main.py", "src", "tests"], id="default"),
+        pytest.param(
+            ["--folder", "sample-app"],
+            ["pyproject.toml", "main.py", "src", "tests/test_app.py"],
+            id="default",
+        ),
         pytest.param(
             ["--folder", "sample-app", "--ci", "github"],
             [".github/workflows/release.yml", ".github/workflows/tests.yml"],

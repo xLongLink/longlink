@@ -364,3 +364,58 @@ async def test_exoscale_delete_tolerates_absent_bucket(monkeypatch: pytest.Monke
 
     # The idempotent bucket deletion path must not expose a missing bucket.
     await storage.delete("acme")
+
+
+@pytest.mark.parametrize(
+    ("api_keys", "roles", "expected"),
+    [
+        pytest.param([], [], False, id="absent"),
+        pytest.param([{"name": "longlink-dashboard"}], [], True, id="api-key"),
+        pytest.param([], [{"name": "longlink-dashboard"}], True, id="iam-role"),
+    ],
+)
+async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
+    monkeypatch: pytest.MonkeyPatch,
+    api_keys: list[dict[str, str]],
+    roles: list[dict[str, str]],
+    expected: bool,
+) -> None:
+    """Treat either generated credential resource as remaining Application state."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Client:
+        """Return deterministic credential inventories."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept Exoscale client configuration."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake API client context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake API client context."""
+
+        async def list_api_keys(self) -> dict[str, list[dict[str, str]]]:
+            """Return generated API key inventory."""
+
+            calls.append("api-keys")
+            return {"api-keys": api_keys}
+
+        async def list_iam_roles(self) -> dict[str, list[dict[str, str]]]:
+            """Return generated IAM role inventory."""
+
+            calls.append("iam-roles")
+            return {"iam-roles": roles}
+
+    monkeypatch.setattr(exoscale, "AsyncClient", Client)
+
+    # Act
+    exists = await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").credentials_exist("dashboard")
+
+    # Assert
+    assert exists is expected
+    assert calls == ["api-keys", "iam-roles"]

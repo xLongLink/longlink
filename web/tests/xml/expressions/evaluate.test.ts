@@ -76,6 +76,21 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${Boolean?.(1)}'), ctx)).toBe(true);
     });
 
+    it.each([
+        ['${false && unknown()}', false],
+        ['${true || unknown()}', true],
+        ['${"value" ?? unknown()}', 'value'],
+    ])('short-circuits unsafe right operands: %s', (value, expected) => {
+        // Arrange
+        const ctx: Scope = { bindings: {} };
+
+        // Act
+        const result = evaluate(compileAttribute(value), ctx);
+
+        // Assert
+        expect(result).toBe(expected);
+    });
+
     it('ignores unsafe object literal keys', () => {
         const ctx: Scope = { bindings: {} };
         const result = evaluate(

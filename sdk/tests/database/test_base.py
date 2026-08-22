@@ -7,6 +7,32 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
+@pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
+def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
+    """Reject production database schemas that are not PostgreSQL identifiers."""
+
+    # Arrange
+    settings = {
+        "ENV": "production",
+        "DATABASE_HOST": "db",
+        "DATABASE_NAME": "longlink",
+        "DATABASE_PORT": 5432,
+        "DATABASE_SCHEMA": database_schema,
+        "DATABASE_PASSWORD": "secret",
+        "DATABASE_USERNAME": "app",
+        "STORAGE_BUCKET": "organization",
+        "STORAGE_PREFIX": "applications/application",
+        "STORAGE_REGION": "region",
+        "STORAGE_PASSWORD": "secret",
+        "STORAGE_USERNAME": "key",
+        "STORAGE_ENDPOINT_URL": "https://storage.example.com",
+    }
+
+    # Act and assert
+    with pytest.raises(ValueError, match="DATABASE_SCHEMA must be a valid PostgreSQL identifier"):
+        Envs(**settings)
+
+
 def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
 

@@ -2,6 +2,7 @@ import httpx2
 from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
+from typing import TypedDict
 from pathlib import Path
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
@@ -15,11 +16,30 @@ from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 
 
+class ForwardedRequest(TypedDict):
+    """Represent request fields captured by the proxy transport fake."""
+
+    method: str
+    url: str
+    content: bytes
+    headers: dict[str, str]
+
+
+class ProxyCapture(TypedDict, total=False):
+    """Represent values observed by the proxy transport fakes."""
+
+    cadata: str
+    client_identity: str
+    client_kwargs: dict[str, object]
+    request: ForwardedRequest
+    response_content_type: str
+
+
 def fake_ssl_context(
     tls: object,
     *,
     expected_ca_certificate: str | None = None,
-    captured: dict[str, object] | None = None,
+    captured: ProxyCapture | None = None,
 ) -> Callable[..., object]:
     """Build one fake SSL context factory with optional CA verification and capture."""
 
@@ -66,12 +86,12 @@ async def test_application_proxy_forwards_safe_content(
 
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
-    remote_infrastructure = await create_ready_infrastructure(name="Remote testing")
+    remote_infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user, infrastructure=remote_infrastructure)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
     registry = remote_infrastructure.compute
-    captured: dict[str, object] = {}
+    captured: ProxyCapture = {}
 
     class FakeTLS:
         """Capture the Platform client identity loaded into the TLS context."""
@@ -159,17 +179,15 @@ async def test_application_proxy_forwards_safe_content(
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert captured["cadata"] == registry.gateway_certificate
-    assert isinstance(captured["client_kwargs"], dict)
-    assert captured["client_kwargs"]["follow_redirects"] is False
-    assert captured["client_identity"] == registry.gateway_client_identity
-    forwarded = captured["request"]
-    assert isinstance(forwarded, dict)
+    assert captured.get("cadata") == registry.gateway_certificate
+    assert captured.get("client_kwargs", {}).get("follow_redirects") is False
+    assert captured.get("client_identity") == registry.gateway_client_identity
+    forwarded = captured.get("request")
+    assert forwarded is not None
     assert forwarded["method"] == "POST"
     assert forwarded["url"] == "https://gateway.example/anything?answer=42"
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
-    assert isinstance(headers, dict)
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
@@ -191,7 +209,7 @@ async def test_application_proxy_rejects_active_content(
     # Arrange
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(organization, users[0], image="ghcr.io/xlonglink/sample:latest")
+    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(application.id)
     closed = False
 
@@ -239,7 +257,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
 
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
@@ -286,7 +304,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
     Session = await get_session()
     async with Session() as session:
@@ -314,7 +332,7 @@ async def test_application_proxy_allows_organization_read_members(
     owner = users[0]
     user = users[1]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     Session = await get_session()
     async with Session() as session:
         session.add(
@@ -343,7 +361,7 @@ async def test_application_proxy_rejects_cross_organization_access(
     # Create an Application owned by a separate Organization.
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
@@ -364,7 +382,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     user = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user, infrastructure=infrastructure)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
 
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
@@ -403,7 +421,7 @@ async def test_application_proxy_enforces_method_role(
     # Restrict the caller to Organization read access.
     user = users[0]
     organization = await create_organization(user)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
 
     Session = await get_session()
@@ -432,7 +450,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     # Prepare an Application whose reconciliation is still pending.
     owner = users[0]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner)
+    app = await create_application(organization)
     client = clients[0]
 
     # Request runtime content before the Application is ready.

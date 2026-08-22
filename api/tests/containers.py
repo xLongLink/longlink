@@ -106,7 +106,7 @@ class DockerRuntimeContainer:
         return int(bindings[0]["HostPort"])
 
 
-def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int) -> None:
+def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str) -> None:
     """Wait until a PostgreSQL container accepts connections."""
 
     deadline = time.monotonic() + 60
@@ -117,7 +117,7 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
             with (
                 psycopg.connect(
                     host=container.host(),
-                    port=container.port(port),
+                    port=container.port(5432),
                     user=username,
                     password=password,
                     dbname=database,
@@ -133,14 +133,14 @@ def wait_for_postgres(container: DockerRuntimeContainer, username: str, password
     pytest.fail("PostgreSQL container did not become ready")
 
 
-def start_postgres(username: str, password: str, database: str, port: int) -> DockerRuntimeContainer:
+def start_postgres(username: str, password: str, database: str) -> DockerRuntimeContainer:
     """Start a ready PostgreSQL container for one integration test."""
 
     # Verify Docker availability before creating the test database container.
     require_docker_daemon()
     container = DockerRuntimeContainer(
         "postgres:16-alpine",
-        ports=[port],
+        ports=[5432],
         environment={
             "POSTGRES_USER": username,
             "POSTGRES_PASSWORD": password,
@@ -148,5 +148,5 @@ def start_postgres(username: str, password: str, database: str, port: int) -> Do
         },
     )
     container.start()
-    wait_for_postgres(container, username, password, database, port)
+    wait_for_postgres(container, username, password, database)
     return container

@@ -1,9 +1,12 @@
 import pytest
+import logging
 from pytest import MonkeyPatch
 from fastapi import FastAPI
 from pathlib import Path
+from longlink import app as longlink_app
 from pydantic import ValidationError
 from longlink.app import LongLink
+from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
 
 
@@ -38,6 +41,23 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     # Reject startup before the application begins serving requests.
     with pytest.raises(ValidationError, match="DATABASE_HOST"):
         LongLink(FastAPI())
+
+
+def test_production_startup_installs_one_access_filter(application_source: Path, monkeypatch: MonkeyPatch) -> None:
+    """Avoid duplicate Uvicorn access filtering across Application instances."""
+
+    # Arrange
+    access_logger = logging.getLogger("uvicorn.access")
+    monkeypatch.setattr(longlink_app, "Envs", lambda: type("Settings", (), {"ENV": "production"})())
+    monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
+    monkeypatch.setattr(access_logger, "filters", [])
+
+    # Act
+    LongLink(FastAPI())
+    LongLink(FastAPI())
+
+    # Assert
+    assert len([item for item in access_logger.filters if isinstance(item, ApiAccessFilter)]) == 1
 
 
 @pytest.mark.parametrize(

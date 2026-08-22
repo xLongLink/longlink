@@ -12,14 +12,13 @@ from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db
-POSTGRES_PORT = 5432
 
 
 @pytest.mark.integration
 async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cleanup() -> None:
     """Exercise the PostgreSQL adapter against a real PostgreSQL container."""
 
-    container = start_postgres("longlink", "secret", "postgres", POSTGRES_PORT)
+    container = start_postgres("longlink", "secret", "postgres")
 
     adapter: Postgres | None = None
     runtime_engine = None
@@ -29,7 +28,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
     try:
         adapter = Postgres(
             host=container.host(),
-            port=container.port(POSTGRES_PORT),
+            port=container.port(5432),
             username="longlink",
             password="secret",
             sslmode=DatabaseSSLMode.disable,

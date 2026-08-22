@@ -71,14 +71,10 @@ describe('parseXML', () => {
         expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
     });
 
-    it('rejects styling and event handler attributes on XML nodes', () => {
-        const cases = [
-            { name: 'className', expected: 'className is not supported in XML' },
-            { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
-        ];
-
-        for (const testCase of cases) {
-            expect(() => parseXML(`<Button ${testCase.name}="value" />`)).toThrow(testCase.expected);
-        }
+    it.each([
+        ['className', 'className is not supported in XML'],
+        ['onClick', 'Event handler attribute "onClick" is not supported in XML'],
+    ])('rejects unsupported XML attribute: %s', (name, expected) => {
+        expect(() => parseXML(`<Button ${name}="value" />`)).toThrow(expected);
     });
 });

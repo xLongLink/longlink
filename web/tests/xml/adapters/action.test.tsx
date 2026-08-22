@@ -70,6 +70,53 @@ describe('Action', () => {
         expect(ctx.services.navigate).toHaveBeenCalledWith('/orders');
     });
 
+    it('serializes Request form values as multipart entries', async () => {
+        const ctx = createContext();
+        const append = vi.spyOn(FormData.prototype, 'append');
+        const fetchRequest = vi.fn(async () => new Response('{}', { status: 201 }));
+        vi.stubGlobal('fetch', fetchRequest);
+
+        const button = await renderAction(
+            '<Action><Request url="/orders" method="POST" form="$payload" /><Button>Save</Button></Action>',
+            ctx
+        );
+        ctx.scope.bindings.payload = {
+            name: 'Ada',
+            tags: ['new', 'priority'],
+            metadata: { source: 'web' },
+            ignored: null,
+        };
+
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledOnce());
+        });
+
+        expect(append).toHaveBeenCalledTimes(4);
+        expect(append).toHaveBeenNthCalledWith(1, 'name', 'Ada');
+        expect(append).toHaveBeenNthCalledWith(2, 'tags', 'new');
+        expect(append).toHaveBeenNthCalledWith(3, 'tags', 'priority');
+        expect(append).toHaveBeenNthCalledWith(4, 'metadata', '{"source":"web"}');
+    });
+
+    it.each([
+        ['modified', new MouseEvent('click', { bubbles: true, ctrlKey: true })],
+        ['middle', new MouseEvent('click', { bubbles: true, button: 1 })],
+    ])('skips Action Link effects for %s clicks', async (_clickType, event) => {
+        const ctx = createContext();
+        const fetchRequest = vi.fn();
+        vi.stubGlobal('fetch', fetchRequest);
+
+        const link = await renderAction(
+            '<Action><Request url="/orders" method="POST" /><Link to="/orders">Save</Link></Action>',
+            ctx
+        );
+
+        await act(async () => link.dispatchEvent(event));
+
+        expect(fetchRequest).not.toHaveBeenCalled();
+    });
+
     it('does not navigate or close when a request fails', async () => {
         const ctx = createContext();
         const closeDialog = vi.fn();

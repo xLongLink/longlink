@@ -10,18 +10,17 @@ from src.database.models.base import PlatformModel
 from src.database.models.operations import Operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
-POSTGRES_PORT = 5432
 
 
 async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monkeypatch: pytest.MonkeyPatch) -> None:
     """Coalesce duplicate work and globally lease one Operation across PostgreSQL workers."""
 
-    container = start_postgres("longlink", "secret", "longlink", POSTGRES_PORT)
+    container = start_postgres("longlink", "secret", "longlink")
 
     engine: AsyncEngine | None = None
     try:
         # Build the real PostgreSQL schema and bind the production session service to it for this test only.
-        database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink"
+        database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(5432)}/longlink"
         engine = create_async_engine(database_url)
         async with engine.begin() as connection:
             await connection.run_sync(PlatformModel.metadata.create_all)

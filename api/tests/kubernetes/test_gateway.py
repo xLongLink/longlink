@@ -9,6 +9,15 @@ from src.kubernetes.gateway import generate_gateway_tls
 pytestmark = pytest.mark.no_db
 
 
+class FakeKubernetes:
+    """Provide an opaque Kubernetes API client."""
+
+    async def api(self) -> object:
+        """Return the fake API client used by resource fakes."""
+
+        return object()
+
+
 def test_gateway_tls_covers_the_compute_address() -> None:
     """Generate server and Platform client certificates trusted by one Compute CA."""
 
@@ -46,16 +55,10 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
         async def refresh(self) -> None:
             """Keep the accepted status current."""
 
-    class Kubernetes:
-        async def api(self) -> object:
-            """Return an opaque Kubernetes API client."""
-
-            return object()
-
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
 
     # The accepted terminal state returns before any network manifest fetch.
-    await gateway.Gateway(Kubernetes()).install_controller()  # type: ignore[arg-type]
+    await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 
 async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,12 +103,6 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
 
             return Response()
 
-    class Kubernetes:
-        async def api(self) -> object:
-            """Return an opaque Kubernetes API client."""
-
-            return object()
-
     async def unexpected_objects_from_files(*_args: object, **_kwargs: object) -> object:
         """Fail if parsing begins before checksum verification."""
 
@@ -117,7 +114,7 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
 
     # Act and assert
     with pytest.raises(ValueError, match="Envoy Gateway v1.8.3 manifest checksum does not match"):
-        await gateway.Gateway(Kubernetes()).install_controller()  # type: ignore[arg-type]
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: pytest.MonkeyPatch) -> None:
     """Issue GatewayClass deletion once and stop when its terminal absence is observed."""
 

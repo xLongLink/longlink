@@ -1,85 +1,78 @@
+import pytest
 from uuid import UUID
 from fastapi import FastAPI
 from longlink import context
 from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 from starlette.requests import Request
 
 
-async def test_data_resolves_authenticated_audit_user_and_request_services(monkeypatch) -> None:
-    """Yield the shared user, storage, and database session for an authenticated request."""
+def create_request(storage: object, identity: UUID | None) -> Request:
+    """Build one SDK request with runtime storage and Platform identity."""
 
-    # Arrange
-    user_id = UUID("00000000-0000-0000-0000-000000000001")
-    user = object()
-    storage = object()
-
-    class Database:
-        """Return the requested shared audit user."""
-
-        async def get(self, model: object, identity: UUID) -> object:
-            """Record the audit model and identity lookup."""
-
-            assert model is context.Audit
-            assert identity == user_id
-            return user
-
-    database = Database()
-
-    @asynccontextmanager
-    async def session():
-        """Yield the request-scoped database session."""
-
-        yield database
-
+    # Attach the runtime services and trusted identity used by the dependency.
     app = FastAPI()
     app.state.longlink = type("Runtime", (), {"storage": storage})()
     request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
-    request.state.longlink_identity = user_id
-    monkeypatch.setattr(context, "session", session)
+    request.state.longlink_identity = identity
+    return request
+
+
+@asynccontextmanager
+async def fake_session(database: object) -> AsyncIterator[object]:
+    """Yield one fake request-scoped database session."""
+
+    yield database
+
+
+@pytest.mark.parametrize(
+    ("identity", "expected_user", "expected_lookups"),
+    [
+        pytest.param(
+            UUID("00000000-0000-0000-0000-000000000001"),
+            object(),
+            [(context.Audit, UUID("00000000-0000-0000-0000-000000000001"))],
+            id="authenticated",
+        ),
+        pytest.param(None, None, [], id="anonymous"),
+    ],
+)
+async def test_data_resolves_request_services(
+    monkeypatch: pytest.MonkeyPatch,
+    identity: UUID | None,
+    expected_user: object | None,
+    expected_lookups: list[tuple[object, UUID]],
+) -> None:
+    """Yield request services and look up an audit user only for authenticated requests."""
+
+    # Arrange
+    storage = object()
+
+    class Database:
+        """Record audit-user lookups for the request."""
+
+        def __init__(self) -> None:
+            """Initialize recorded audit lookups."""
+
+            self.lookups: list[tuple[object, UUID]] = []
+
+        async def get(self, model: object, user_id: UUID) -> object | None:
+            """Record an audit lookup and return the configured result."""
+
+            self.lookups.append((model, user_id))
+            return expected_user
+
+    database = Database()
+
+    request = create_request(storage, identity)
+    monkeypatch.setattr(context, "session", lambda: fake_session(database))
 
     # Act
     values = context.data(request)
     value = await anext(values)
 
     # Assert
-    assert value.user is user
+    assert value.user is expected_user
     assert value.storage is storage
     assert value.database is database
-
-
-async def test_data_does_not_lookup_user_for_anonymous_request(monkeypatch) -> None:
-    """Yield an anonymous context without querying the audit table."""
-
-    # Arrange
-    storage = object()
-
-    class Database:
-        """Reject unexpected user lookups."""
-
-        async def get(self, *_args: object) -> object:
-            """Fail if an anonymous request looks up an audit user."""
-
-            raise AssertionError("anonymous request queried Audit")
-
-    database = Database()
-
-    @asynccontextmanager
-    async def session():
-        """Yield the request-scoped database session."""
-
-        yield database
-
-    app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage})()
-    request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
-    request.state.longlink_identity = None
-    monkeypatch.setattr(context, "session", session)
-
-    # Act
-    values = context.data(request)
-    value = await anext(values)
-
-    # Assert
-    assert value.user is None
-    assert value.storage is storage
-    assert value.database is database
+    assert database.lookups == expected_lookups

@@ -197,7 +197,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(
     # Arrange a tombstoned Organization with one Application to clean up.
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(organization, users[0])
+    application = await create_application(organization)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None

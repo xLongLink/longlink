@@ -1,3 +1,4 @@
+import pytest
 from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
@@ -96,3 +97,32 @@ async def test_patch_me_updates_authenticated_user_profile(
     assert response.status_code == 200
 
     assert response.json()["name"] == "Updated User"
+
+
+async def test_patch_me_syncs_every_active_organization_after_profile_change(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Project changed user profile data to each active organization database."""
+
+    # Arrange
+    user = users[0]
+    first_organization = await create_organization(user, name="acme", slug="acme")
+    second_organization = await create_organization(user, name="globex", slug="globex")
+    synchronized_organization_ids = []
+
+    async def sync_users(_session: object, organization_id: object) -> None:
+        """Record organization user-projection requests without a database adapter."""
+
+        synchronized_organization_ids.append(organization_id)
+
+    monkeypatch.setattr("src.routes.v1.users.organizations.sync_users", sync_users)
+
+    # Act
+    response = await clients[0].patch("/api/v1/me", json={"name": "Updated User"})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["name"] == "Updated User"
+    assert set(synchronized_organization_ids) == {first_organization.id, second_organization.id}

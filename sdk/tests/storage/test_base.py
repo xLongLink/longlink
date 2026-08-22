@@ -94,6 +94,18 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     }
 
 
+def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require a bucket before constructing a scoped storage prefix."""
+
+    # Arrange
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", lambda *_args, **_kwargs: pytest.fail("filesystem was constructed"))
+    settings = Envs(ENV="testing", STORAGE_PREFIX="generated")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Storage prefixes require a bucket"):
+        storage_base.create_fs(settings)
+
+
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])
 def test_production_settings_reject_blank_required_values(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
     """Reject blank values in the production runtime contract."""

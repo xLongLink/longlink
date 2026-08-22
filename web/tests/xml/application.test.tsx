@@ -36,17 +36,11 @@ type Page = {
 };
 
 describe('ApplicationRuntime', () => {
-    let container: HTMLDivElement | undefined;
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        if (root) {
-            const renderedRoot = root;
-            await act(async () => renderedRoot.unmount());
-        }
+        await unmountRuntime();
         vi.unstubAllGlobals();
-        container = undefined;
-        root = undefined;
     });
 
     it('renders a manifest failure', async () => {
@@ -102,6 +96,28 @@ describe('ApplicationRuntime', () => {
         await waitFor(() => expect(output.textContent).toContain('Unable to load this page'));
         expect(output.textContent).toContain('Page unavailable');
     });
+
+    it.each(['https://example.com/page.xml', '//example.com/page.xml'])(
+        'rejects external manifest page paths before fetching the page: %s',
+        async (path) => {
+            // Arrange
+            const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
+                const url = input instanceof Request ? input.url : String(input);
+
+                if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home', path)]);
+                throw new Error('Page fetch must not occur');
+            });
+            vi.stubGlobal('fetch', fetchRequest);
+
+            // Act
+            const output = await renderRuntime('/home');
+
+            // Assert
+            await waitFor(() => expect(output.textContent).toContain('Unable to load this page'));
+            expect(output.textContent).toContain('XML request URL must be app-relative');
+            expect(fetchRequest).toHaveBeenCalledOnce();
+        }
+    );
 
     it('renders dynamic route parameters and rejects unmatched routes', async () => {
         // Arrange
@@ -160,7 +176,7 @@ describe('ApplicationRuntime', () => {
     });
 
     async function renderRuntime(initialPath = '/'): Promise<HTMLDivElement> {
-        container = document.createElement('div');
+        const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -197,7 +213,6 @@ describe('ApplicationRuntime', () => {
             const renderedRoot = root;
             await act(async () => renderedRoot.unmount());
         }
-        container = undefined;
         root = undefined;
     }
 });
@@ -222,16 +237,16 @@ function Location({ tabs }: { tabs: string }) {
 }
 
 /** Creates a minimal manifest page. */
-function page(tab: string, route: string): Page {
-    return { name: tab, path: `${tab}.xml`, route, tab };
+function page(tab: string, route: string, path = `${tab}.xml`): Page {
+    return { name: tab, path, route, tab };
 }
 
 /** Stubs fetch at the runtime's HTTP boundary. */
 function stubFetch(response: (url: string) => Response): void {
-    vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
         const url = input instanceof Request ? input.url : String(input);
 
-        return new Promise<Response>((resolve) => setTimeout(() => resolve(response(url))));
+        return response(url);
     });
 }
 

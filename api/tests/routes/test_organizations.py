@@ -1,9 +1,11 @@
 import pytest
+from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import select
 from factories import Infrastructure, fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
@@ -32,7 +34,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
 
     # Arrange
     client = clients[0]
-    await create_ready_infrastructure()
+    infrastructure = await create_ready_infrastructure()
 
     # Act
     response = await client.post(
@@ -44,19 +46,46 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert response.status_code == 202
     payload = response.json()
     assert payload["name"] == "acme"
+    async with session_scope() as session:
+        organization = await session.get(Organization, UUID(payload["id"]))
+    assert organization is not None
+    assert organization.compute_id == infrastructure.compute.id
+    assert organization.database_id == infrastructure.database.id
+    assert organization.storage_id == infrastructure.storage.id
+    assert organization.status == Status.creating
+    operations = await fetch_operations()
+    assert len(operations) == 1
+    assert operations[0].kind == OperationKind.organization_create
+    assert operations[0].target_id == organization.id
 
 
-async def test_create_organization_rejects_when_no_compute_registry_is_ready(
+@pytest.mark.parametrize(
+    ("registry", "expected_detail"),
+    [
+        pytest.param("compute", "No ready compute registry available", id="compute"),
+        pytest.param("database", "No database registry available", id="database"),
+        pytest.param("storage", "No storage registry available", id="storage"),
+    ],
+)
+async def test_create_organization_rejects_when_required_registry_is_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    registry: str,
+    expected_detail: str,
 ) -> None:
-    """Reject Organization creation before any ready compute registry exists."""
+    """Reject Organization creation when a required registry is unavailable."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    async with session_scope() as session:
+        await session.delete(getattr(infrastructure, registry))
+        await session.commit()
 
     # Act
     response = await clients[0].post("/api/v1/organizations", json={"name": "acme"})
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": "No ready compute registry available"}
+    assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await session.scalar(select(Organization)) is None
     assert await fetch_operations() == []
@@ -71,7 +100,7 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, owner)
+    application = await create_application(organization)
 
     client = clients[0]
 
@@ -99,7 +128,7 @@ async def test_get_organization_applications_omits_people_management_data(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, owner)
+    application = await create_application(organization)
 
     # Act
     response = await clients[0].get(f"/api/v1/organizations/{organization.id}/applications")
@@ -219,7 +248,7 @@ async def test_other_organization_user_cannot_delete_application(
     target_owner, other_owner, _ = users
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex", slug="globex")
-    target_application = await create_application(target_organization, target_owner)
+    target_application = await create_application(target_organization)
     operation_ids = [operation.id for operation in await fetch_operations()]
     client = clients[1]
 

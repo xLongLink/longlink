@@ -94,6 +94,42 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
+@pytest.mark.parametrize(
+    ("project_config", "module_path", "module_source", "message"),
+    [
+        pytest.param("", None, None, r"\[tool\.longlink\]\.environment", id="missing-config"),
+        pytest.param(
+            '[tool.longlink]\nenvironment = "invalid"\n',
+            None,
+            None,
+            r"\[tool\.longlink\]\.environment",
+            id="invalid-import",
+        ),
+        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
+        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', "src/envs.py", "class Other:\n    pass\n", "Environment model must define Env", id="missing-class"),
+    ],
+)
+def test_read_env_spec_rejects_invalid_environment_model_configuration(
+    tmp_path: Path,
+    project_config: str,
+    module_path: str | None,
+    module_source: str | None,
+    message: str,
+) -> None:
+    """Reject environment model configuration before Docker build preparation."""
+
+    # Arrange
+    (tmp_path / "pyproject.toml").write_text(project_config, encoding="utf-8")
+    if module_path is not None and module_source is not None:
+        path = tmp_path / module_path
+        path.parent.mkdir(parents=True)
+        path.write_text(module_source, encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(click.ClickException, match=message):
+        build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
+
+
 def test_build_app_generates_dockerignore_from_project_gitignore(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Use the project's Git ignore policy for the Docker build context."""
 

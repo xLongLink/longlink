@@ -6,7 +6,31 @@ from longlink.shared import audit as shared_audit
 from sqlalchemy.engine import URL
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.shared.migrations import migrate_database
+from longlink.shared.migrations import migrate_database, migration_config
+
+
+@pytest.mark.parametrize("database_url", ["postgresql://db/longlink", "sqlite+aiosqlite:///:memory:"])
+def test_migration_config_rejects_non_asyncpg_postgresql_urls(database_url: str) -> None:
+    """Reject shared migration URLs that cannot use the asyncpg driver."""
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Shared migrations require a postgresql\\+asyncpg database URL"):
+        migration_config(database_url)
+
+
+async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat empty shared audit synchronization as a no-op."""
+
+    # Arrange
+    def fail_to_create_engine(*_args: object, **_kwargs: object) -> None:
+        """Fail if an empty synchronization attempts database access."""
+
+        pytest.fail("empty shared audit synchronization must not create an engine")
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", fail_to_create_engine)
+
+    # Act
+    await shared_audit.sync("postgresql+asyncpg://db/longlink", [])
 
 
 @pytest.mark.integration

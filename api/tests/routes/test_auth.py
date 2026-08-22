@@ -3,11 +3,27 @@ from main import app
 from httpx2 import AsyncClient, ASGITransport
 from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
+from factories import create_organization
 from urllib.parse import parse_qs, urlparse
 from src.environments import env
+from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
+from src.database.services import invitations
 from src.database.models.users import User
+from src.database.models.invitations import OrganizationInvitation
+
+
+def registration_verification_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
+    """Extract the registration token from captured verification mail."""
+
+    # Read the fragment-only credential from the registration link.
+    verification_url = next(
+        line.removeprefix("Continue account setup: ")
+        for line in captured_mail[0][2].splitlines()
+        if line.startswith("Continue account setup: ")
+    )
+    return parse_qs(urlparse(verification_url).fragment)["token"][0]
 
 
 async def register_and_verify(client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]], email: str) -> str:
@@ -16,15 +32,18 @@ async def register_and_verify(client: AsyncClient, captured_mail: list[tuple[str
     # Complete the shared unauthenticated registration setup.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
     assert register_response.status_code == 202
-    verification_url = next(
-        line.removeprefix("Continue account setup: ")
-        for line in captured_mail[0][2].splitlines()
-        if line.startswith("Continue account setup: ")
-    )
-    verification_token = parse_qs(urlparse(verification_url).fragment)["token"][0]
+    verification_token = registration_verification_token(captured_mail)
     verify_response = await client.post("/api/v1/auth/verify", json={"token": verification_token})
     assert verify_response.status_code == 200
     return verification_token
+
+
+def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
+    """Return the reset token from the latest captured password-reset email."""
+
+    # Extract browser-only proof from the password-reset link fragment.
+    reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
+    return parse_qs(urlparse(reset_url).fragment)["token"][0]
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
@@ -67,12 +86,7 @@ async def test_registration_verification_is_stateless(client: AsyncClient, captu
     assert register_response.status_code == 202
     assert pending_user is None
     assert captured_mail[0][0] == email
-    verification_url = next(
-        line.removeprefix("Continue account setup: ")
-        for line in captured_mail[0][2].splitlines()
-        if line.startswith("Continue account setup: ")
-    )
-    verification_token = parse_qs(urlparse(verification_url).fragment)["token"][0]
+    verification_token = registration_verification_token(captured_mail)
     assert captured_mail[0][3] is not None
     assert verification_token in captured_mail[0][3]
     assert "/auth/verify-email#token=" in captured_mail[0][3]
@@ -123,6 +137,50 @@ async def test_registration_completion_creates_authenticated_account(
     assert client.cookies.get("longlink_registration") is None
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == registered_user["id"]
+
+
+async def test_registration_completion_accepts_pending_organization_invitation(
+    client: AsyncClient,
+    captured_mail: list[tuple[str, str, str, str | None]],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Accept an email-bound Organization role while creating a verified account."""
+
+    # Arrange
+    email = "invited@example.com"
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        await invitations.create(session, organization.id, email, OrganizationRoles.write)
+        await session.commit()
+    synchronized_organization_ids: list[object] = []
+
+    async def sync_users(_session: object, organization_id: object) -> None:
+        """Record organization membership projection."""
+
+        synchronized_organization_ids.append(organization_id)
+
+    monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
+    await register_and_verify(client, captured_mail, email)
+
+    # Act
+    response = await client.post("/api/v1/auth/register/complete", json={"name": "Invited User", "password": TEST_PASSWORD})
+    organizations_response = await client.get("/api/v1/me/organizations")
+    async with session_scope() as session:
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+
+    # Assert
+    assert response.status_code == 201
+    assert organizations_response.status_code == 200
+    assert organizations_response.json() == [
+        {
+            "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "avatar": ""},
+            "role": "write",
+        }
+    ]
+    assert invitation is None
+    assert synchronized_organization_ids == [organization.id]
+    assert client.cookies.get("longlink_auth") is not None
 
 
 async def test_registration_completion_rejects_duplicate_account(
@@ -183,6 +241,20 @@ async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncCl
     assert "set-cookie" not in response.headers
 
 
+async def test_password_reset_verify_rejects_invalid_token_without_cookie(client: AsyncClient) -> None:
+    """Reject invalid reset proof before creating browser-only state."""
+
+    # Act
+    response = await client.post("/api/v1/auth/reset-password/verify", json={"token": "invalid"})
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
+    assert "set-cookie" not in response.headers
+    assert "cache-control" not in response.headers
+    assert client.cookies.get("longlink_password_reset") is None
+
+
 async def test_password_reset_rejects_missing_reset_cookie(
     client: AsyncClient,
     users: tuple[User, User, User],
@@ -204,6 +276,36 @@ async def test_password_reset_rejects_missing_reset_cookie(
     assert reset_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert "set-cookie" not in reset_response.headers
     assert login_response.status_code == 204
+
+
+async def test_password_reset_verify_sets_secure_browser_only_cookie_in_production(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Set a restricted secure reset cookie when production verifies reset proof."""
+
+    # Arrange
+    user = users[0]
+    forgot_response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
+    reset_token = password_reset_token(captured_mail)
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+
+    # Act
+    response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
+
+    # Assert
+    assert forgot_response.status_code == 202
+    assert response.status_code == 204
+    assert response.headers["cache-control"] == "no-store"
+    cookie = response.headers["set-cookie"]
+    assert "longlink_password_reset=" in cookie
+    assert "HttpOnly" in cookie
+    assert "Max-Age=900" in cookie
+    assert "Path=/api/v1/auth/reset-password" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Secure" in cookie
 
 
 async def test_forgot_and_reset_password(
@@ -229,7 +331,7 @@ async def test_forgot_and_reset_password(
     assert parse_qs(parsed_reset_url.query) == {}
 
     # Exchange fragment proof for an HTTP-only cookie before replacing the credential.
-    reset_token = parse_qs(parsed_reset_url.fragment)["token"][0]
+    reset_token = password_reset_token(captured_mail)
     verify_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     setup_response = await client.get("/api/v1/auth/reset-password/setup")
     reset_response = await client.post(

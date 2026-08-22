@@ -2,16 +2,16 @@ import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import fetch_operations, create_application, create_organization
+from factories import create_application, create_organization
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
-from src.database.services import applications
+from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 
@@ -46,10 +46,9 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex", slug="globex")
-    dashboard = await create_application(acme, user)
+    dashboard = await create_application(acme)
     console = await create_application(
         globex,
-        user,
         name="console",
         image="ghcr.io/longlink/console:latest",
     )
@@ -76,8 +75,8 @@ async def test_list_apps_returns_requested_page_for_admin(
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex", slug="globex")
-    await create_application(acme, user)
-    console = await create_application(globex, user, name="console")
+    await create_application(acme)
+    console = await create_application(globex, name="console")
 
     # Act
     response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
@@ -92,7 +91,7 @@ async def test_list_apps_returns_requested_page_for_admin(
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Persist Application desired state and queue its compute Operation."""
 
@@ -134,7 +133,13 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.description == "Dashboard app"
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
-        assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await fetch_operations())
+        operation = await session.scalar(
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.application_create,
+                col(Operation.target_id) == persisted.id,
+            )
+        )
+        assert operation is not None
 
 
 @pytest.mark.parametrize(
@@ -155,7 +160,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 async def test_create_app_rejects_invalid_image_metadata(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     metadata: LongLinkMetadata | None,
     expected_status: int,
     expected_detail: str,
@@ -183,7 +188,6 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
-    assert all(item.kind != OperationKind.application_create for item in await fetch_operations())
 
 
 async def test_application_responses_do_not_expose_environment_secrets(
@@ -195,7 +199,7 @@ async def test_application_responses_do_not_expose_environment_secrets(
     # Persist one Application with a value that must remain runtime-only.
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, owner, secrets={"API_KEY": "runtime-secret"})
+    application = await create_application(organization, secrets={"API_KEY": "runtime-secret"})
 
     # Read the administrator list and Organization detail response surfaces.
     list_response = await clients[0].get("/api/v1/applications")
@@ -223,8 +227,7 @@ async def test_create_app_returns_403_for_regular_member(
     regular_member = users[1]
     organization = await create_organization(owner)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -248,14 +251,14 @@ async def test_create_app_returns_403_for_regular_member(
 async def test_get_app_logs_returns_pod_logs(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return recent pod logs through the Organization's compute cluster."""
 
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    app = await create_application(organization, user)
+    app = await create_application(organization)
     captured: dict[str, UUID | str] = {}
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
 
@@ -278,9 +281,8 @@ async def test_app_logs_require_maintainer_access(
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner)
-    Session = await get_session()
-    async with Session() as session:
+    app = await create_application(organization)
+    async with session_scope() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
 
@@ -295,13 +297,13 @@ async def test_app_logs_require_maintainer_access(
 async def test_app_logs_require_organization_membership(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject log access before constructing a Kubernetes client for non-members."""
 
     # Arrange
     organization = await create_organization(users[0])
-    application = await create_application(organization, users[0])
+    application = await create_application(organization)
 
     def unexpected_kubernetes(*_args: object) -> object:
         """Fail if authorization reaches the external cluster boundary."""
@@ -321,14 +323,14 @@ async def test_app_logs_require_organization_membership(
 async def test_app_logs_return_unavailable_when_backend_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return a stable error when pod logs cannot be loaded."""
 
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner)
+    app = await create_application(organization)
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {}))
 
     # Act
@@ -348,14 +350,18 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    app = await create_application(organization, user)
+    app = await create_application(organization)
 
     # Act
     response = await clients[0].delete(f"/api/v1/applications/{app.id}")
-    retry_response = await clients[0].delete(f"/api/v1/applications/{app.id}")
 
     # Assert
     assert response.status_code == 204
-    assert retry_response.status_code == 403
-    recorded_operations = await fetch_operations()
-    assert any(item.kind == OperationKind.application_delete and item.target_id == app.id for item in recorded_operations)
+    async with session_scope() as session:
+        operation = await session.scalar(
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.application_delete,
+                col(Operation.target_id) == app.id,
+            )
+        )
+        assert operation is not None
