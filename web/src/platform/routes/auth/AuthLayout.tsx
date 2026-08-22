@@ -4,6 +4,28 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
 
+type AuthFormProps = {
+    children: ReactNode;
+    gap: 3 | 4;
+    onSubmit: () => void;
+};
+
+/** Renders a token-spaced authentication form with native navigation disabled. */
+export function AuthForm({ children, gap, onSubmit }: AuthFormProps) {
+    return (
+        <Stack
+            as="form"
+            gap={gap}
+            onSubmit={(event) => {
+                event.preventDefault();
+                onSubmit();
+            }}
+        >
+            {children}
+        </Stack>
+    );
+}
+
 /** Renders the shared standalone account page frame. */
 export function AuthLayout({
     children,

@@ -1,6 +1,4 @@
 from uuid import UUID, uuid4
-from sqlmodel import col
-from sqlalchemy import update
 from dataclasses import dataclass
 from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
@@ -149,12 +147,11 @@ async def create_application(
     image: str = "ghcr.io/longlink/dashboard:latest",
     secrets: dict[str, str] | None = None,
 ) -> Application:
-    """Create one Application after making its Organization ready."""
+    """Create one Application with the specified Organization."""
 
     parsed_image = Image(image)
     resolved_image = Image(image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
     async with session_scope() as session:
-        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
         application = await applications.create(
             session,
             organization.id,

@@ -71,9 +71,9 @@ async def create(
         image_desired=image,
         icon=icon,
         secrets=secrets,
+        created_id=user_id,
+        updated_id=user_id,
     )
-    application.created_id = user_id
-    application.updated_id = user_id
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
     try:
@@ -101,14 +101,12 @@ async def release(
 ) -> Application | None:
     """Record one desired Application release and queue its deployment."""
 
-    # Lock the Application and its Organization assignment before changing its desired release.
+    # Lock the active Application before changing its desired release.
     statement = (
         select(Application)
-        .join(Application.organization)
         .where(
             Application.id == application_id,
             Application.deleted_at.is_(None),
-            Organization.deleted_at.is_(None),
         )
         .with_for_update()
     )
@@ -134,12 +132,10 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
     # Lock active application access before changing its lifecycle state.
     result = await session.execute(
         select(Application, UserOrganization.role)
-        .join(Application.organization)
-        .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+        .join(UserOrganization, UserOrganization.organization_id == Application.organization_id)
         .where(
             Application.id == application_id,
             Application.deleted_at.is_(None),
-            Organization.deleted_at.is_(None),
             UserOrganization.user_id == user_id,
             UserOrganization.deleted_at.is_(None),
         )

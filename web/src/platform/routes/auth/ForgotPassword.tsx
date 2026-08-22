@@ -1,15 +1,15 @@
 import { api } from '@/lib/api';
-import { AuthLayout } from './AuthLayout';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { emailPayloadSchema, type EmailPayload } from './validation';
+import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './validation';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
@@ -45,14 +45,7 @@ export default function ForgotPassword() {
                 </Stack>
             ) : (
                 <>
-                    <Stack
-                        as="form"
-                        gap={4}
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            void form.handleSubmit();
-                        }}
-                    >
+                    <AuthForm gap={4} onSubmit={() => void form.handleSubmit()}>
                         <form.Field
                             name="email"
                             children={(field) => (
@@ -63,11 +56,7 @@ export default function ForgotPassword() {
                                     label="Email"
                                     onBlur={field.handleBlur}
                                     onChange={field.handleChange}
-                                    status={
-                                        field.state.meta.errors.length > 0
-                                            ? { type: 'error', message: field.state.meta.errors[0]?.message }
-                                            : undefined
-                                    }
+                                    status={fieldErrorStatus(field.state.meta.errors)}
                                     type="email"
                                     value={field.state.value}
                                     width="100%"
@@ -80,7 +69,7 @@ export default function ForgotPassword() {
                             type="submit"
                             variant="primary"
                         />
-                    </Stack>
+                    </AuthForm>
                     <Text as="p" color="secondary" justify="center" type="supporting">
                         <Link href="/login" type="inherit" weight="medium">
                             Back to sign in
