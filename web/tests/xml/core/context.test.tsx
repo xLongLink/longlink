@@ -5,7 +5,7 @@ import { createContext, setupContext } from '@/xml/core/context';
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it('preserves state across setup reruns until invalidation', async () => {
+    it('recreates state on setup reruns and invalidation', async () => {
         const ctx = createContext();
         const ast = [
             {
@@ -21,7 +21,7 @@ describe('core/context', () => {
         filter.value = 'week';
         await setupContext(ast, ctx);
 
-        expect(filter.value).toBe('week');
+        expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
 
         delete ctx.scope.bindings.filter;
         await ctx.services.setups.filter();

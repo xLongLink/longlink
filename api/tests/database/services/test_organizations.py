@@ -90,7 +90,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     """Update an active organization member role."""
 
     # Arrange
-    owner, member, non_member = users
+    owner, member = users[:2]
     organization = await create_organization(owner)
 
     async with session_scope() as session:
@@ -109,16 +109,27 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
             session, organization.id, member.id, OrganizationRoles.maintain, owner, OrganizationRoles.owner
         )
         await session.commit()
-        with pytest.raises(NotFoundError):
-            await organizations.update_member_role(
-                session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
-            )
         memberships = await organizations.members(session, organization.id)
         updated_membership = next(item for item in memberships if item.user_id == member.id)
 
     # Assert
     assert updated is True
     assert updated_membership.role == OrganizationRoles.maintain
+
+
+async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
+    """Reject role changes for absent organization members."""
+
+    # Arrange
+    owner, _, non_member = users
+    organization = await create_organization(owner)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(NotFoundError):
+            await organizations.update_member_role(
+                session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
+            )
 
 
 async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
@@ -142,8 +153,8 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     assert membership.role == OrganizationRoles.owner
 
 
-async def test_members_can_include_deleted_memberships(users: tuple[User, User, User]) -> None:
-    """Return every organization membership when deleted rows are requested."""
+async def test_all_members_returns_deleted_memberships(users: tuple[User, User, User]) -> None:
+    """Return every organization membership for lifecycle synchronization."""
 
     # Arrange
     owner, member, deleted_member = users
@@ -170,7 +181,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
 
     # Act
     async with session_scope() as session:
-        members = await organizations.members(session, organization.id, include_deleted=True)
+        members = await organizations.all_members(session, organization.id)
 
     # Assert
     memberships = {membership.user.email: membership for membership in members}
@@ -215,8 +226,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     organization = await create_organization(owner)
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        await session.commit()
-    async with session_scope() as session:
         application = await applications.create(
             session,
             organization.id,
@@ -226,9 +235,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             {},
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
-        await session.commit()
-
-    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=member.id,

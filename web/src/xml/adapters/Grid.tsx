@@ -5,7 +5,6 @@ import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
 import {
-    readXmlProp,
     resolveXmlProps,
     xmlPositiveIntegerSchema,
     xmlPositiveNumberSchema,
@@ -25,6 +24,9 @@ const gridPropsSchema = z
     })
     .refine(({ maxColumns, minColumnWidth }) => maxColumns == null || minColumnWidth != null, {
         message: 'maxColumns requires minColumnWidth',
+    })
+    .refine(({ minColumnWidth, repeat }) => repeat == null || minColumnWidth != null, {
+        message: 'repeat requires minColumnWidth',
     });
 
 export function Grid({ props, nodes }: Props) {
@@ -41,10 +43,6 @@ export function Grid({ props, nodes }: Props) {
         { columns: 'scalar', gap: 'scalar', maxColumns: 'scalar', minColumnWidth: 'scalar', repeat: 'scalar' },
         gridPropsSchema
     );
-
-    if (readXmlProp(props, 'repeat') != null && minWidth == null) {
-        throw new Error('Grid repeat requires minColumnWidth');
-    }
 
     const columns: GridColumns | undefined = minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount;
 

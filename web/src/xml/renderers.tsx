@@ -73,13 +73,10 @@ export function RenderXML({ ast, ctx }: RenderXMLProps) {
         ctx.scope.bindings = { params: ctx.scope.bindings.params };
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        ctx.services.invalidate = async (ids) => {
-            // Refresh each requested setup value.
-            for (const id of ids) {
-                // Skip unknown invalidation targets.
-                const setup = ctx.services.setups[id];
-                if (!setup) continue;
-
+        ctx.services.invalidate = async (id) => {
+            // Skip unknown invalidation targets.
+            const setup = ctx.services.setups[id];
+            if (setup) {
                 delete ctx.scope.bindings[id];
                 await setup();
             }

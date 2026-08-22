@@ -1,14 +1,9 @@
-import { z } from 'zod';
 import type { Props } from '../types';
+import { resolveOptions } from './options';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
-import { isVisibleXmlNode, resolveXmlProps, xmlLabelPropsSchema, xmlNonblankStringSchema } from '../core/props';
+import { resolveXmlProps, xmlLabelPropsSchema } from '../core/props';
 import { RadioList as AstryxRadioList, RadioListItem as AstryxRadioListItem } from '@astryxdesign/core/RadioList';
-
-const optionPropsSchema = z.object({
-    label: z.string().optional(),
-    value: xmlNonblankStringSchema,
-});
 
 export function RadioList({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
@@ -21,19 +16,9 @@ export function RadioList({ props, nodes }: Props) {
             size="sm"
             value={binding.value}
         >
-            {nodes
-                .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, ctx))
-                .map((node, index) => {
-                    const { label: labelValue, value } = resolveXmlProps(
-                        node.params,
-                        ctx,
-                        { label: 'scalar', value: 'raw' },
-                        optionPropsSchema
-                    );
-                    const label = labelValue ?? value;
-
-                    return <AstryxRadioListItem key={index} label={label} value={value} />;
-                })}
+            {resolveOptions(nodes, ctx).map(({ label, value }, index) => (
+                <AstryxRadioListItem key={index} label={label} value={value} />
+            ))}
         </AstryxRadioList>
     );
 }

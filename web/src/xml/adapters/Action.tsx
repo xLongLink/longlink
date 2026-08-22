@@ -220,7 +220,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
 
     if (invalidate === true) {
-        await services.invalidate([state]);
+        await services.invalidate(state);
         return;
     }
 

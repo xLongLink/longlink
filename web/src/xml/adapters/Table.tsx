@@ -15,11 +15,6 @@ export function Table({ props, nodes }: Props) {
     const runtime = useXmlRuntime();
     const ctx = runtime.scope;
 
-    // Require an explicit array data source.
-    if (!readXmlProp(props, 'data')) {
-        throw new Error('Table requires a data attribute');
-    }
-
     const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))

@@ -172,17 +172,26 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
     return result.all()
 
 
-async def members(session: AsyncSession, organization_id: UUID, include_deleted: bool = False) -> Sequence[UserOrganization]:
-    """Return organization member rows for one organization."""
+async def members(session: AsyncSession, organization_id: UUID) -> Sequence[UserOrganization]:
+    """Return active organization member rows for one organization."""
 
     # Query memberships with their users so detached callers can shape API payloads.
-    statement = (
-        select(UserOrganization).options(joinedload(UserOrganization.user)).where(UserOrganization.organization_id == organization_id)
+    statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
+        UserOrganization.organization_id == organization_id,
+        UserOrganization.deleted_at.is_(None),
     )
 
-    # Include deleted memberships only when requested by control-plane orchestration.
-    if not include_deleted:
-        statement = statement.where(UserOrganization.deleted_at.is_(None))
+    result = await session.scalars(statement)
+    return result.all()
+
+
+async def all_members(session: AsyncSession, organization_id: UUID) -> Sequence[UserOrganization]:
+    """Return all organization member rows for lifecycle synchronization."""
+
+    # Include deleted memberships so the Organization database receives tombstones.
+    statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
+        UserOrganization.organization_id == organization_id
+    )
 
     result = await session.scalars(statement)
     return result.all()
@@ -208,24 +217,24 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    memberships = await members(session, organization.id, include_deleted=True)
-    rows: list[Audit] = []
-    for membership in memberships:
-        user = membership.user
-        deleted_at = max((item for item in (user.deleted_at, membership.deleted_at) if item is not None), default=None)
-        updated_at = max(user.updated_at, membership.updated_at, deleted_at or user.updated_at)
-        rows.append(
-            Audit(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar,
-                role=membership.role.value,
-                created_at=membership.created_at,
-                updated_at=updated_at,
-                deleted_at=deleted_at,
-            )
+    memberships = await all_members(session, organization.id)
+    rows = [
+        Audit(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+            avatar=membership.user.avatar,
+            role=membership.role.value,
+            created_at=membership.created_at,
+            deleted_at=(
+                deleted_at := max(
+                    (item for item in (membership.user.deleted_at, membership.deleted_at) if item is not None), default=None
+                )
+            ),
+            updated_at=max(membership.user.updated_at, membership.updated_at, deleted_at or membership.user.updated_at),
         )
+        for membership in memberships
+    ]
 
     # The Platform is authoritative over Organization user projections.
     await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)

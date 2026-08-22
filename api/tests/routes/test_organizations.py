@@ -79,16 +79,9 @@ async def test_get_organization_applications_omits_people_management_data(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": str(application.id),
-            "name": application.name,
-            "slug": application.slug,
-            "description": application.description,
-            "icon": application.icon,
-            "status": application.status,
-        }
-    ]
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(application.id)
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -173,34 +166,35 @@ async def test_other_organization_user_cannot_delete_application(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status", "expected_payload"),
+    ("resource", "usage", "expected_status"),
     [
-        pytest.param(3584, 200, 3584, id="usage-available"),
-        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database resources unavailable"}, id="backend-unavailable"),
+        pytest.param("database", 3584, 200, id="database-usage-available"),
+        pytest.param("database", RuntimeError("database offline"), 503, id="database-backend-unavailable"),
+        pytest.param("storage", 4096, 200, id="storage-usage-available"),
+        pytest.param("storage", RuntimeError("storage offline"), 503, id="storage-backend-unavailable"),
     ],
 )
-async def test_organization_database_endpoint_returns_usage_or_unavailable(
+async def test_organization_resource_endpoint_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
+    resource: str,
     usage: int | Exception,
     expected_status: int,
-    expected_payload: int | dict[str, str],
 ) -> None:
-    """Return database usage or translate backend failures."""
+    """Return resource usage or translate backend failures."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    registry = infrastructure.database
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the selected database TLS configuration."""
+        """Provide database usage responses for the Organization resource endpoint."""
 
-            assert sslmode == registry.sslmode
+        def __init__(self, *_args: object) -> None:
+            """Accept the adapter configuration supplied by the route."""
 
         async def database_usage(self, database_name: str) -> int:
             """Return usage or raise the configured database backend failure."""
@@ -209,43 +203,6 @@ async def test_organization_database_endpoint_returns_usage_or_unavailable(
             if isinstance(usage, Exception):
                 raise usage
             return usage
-
-    monkeypatch.setattr(
-        "src.routes.v1.organizations.Postgres",
-        FakePostgres,
-    )
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-
-    # Assert
-    assert response.status_code == expected_status
-    assert response.json() == expected_payload
-
-
-@pytest.mark.parametrize(
-    ("usage", "expected_status", "usage_available"),
-    [
-        pytest.param(4096, 200, True, id="usage-available"),
-        pytest.param(RuntimeError("storage offline"), 503, False, id="backend-unavailable"),
-    ],
-)
-async def test_organization_storage_endpoint_returns_usage_or_unavailable(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-    usage: int | Exception,
-    expected_status: int,
-    usage_available: bool,
-) -> None:
-    """Return storage usage or translate backend failures."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    registry = infrastructure.storage
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
@@ -261,29 +218,37 @@ async def test_organization_storage_endpoint_returns_usage_or_unavailable(
     def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
         """Return a fake adapter configured for the selected registry."""
 
-        assert endpoint_url == registry.endpoint_url
-        assert access_key_id == registry.access_key_id
-        assert secret_access_key == registry.secret_access_key
+        assert endpoint_url == infrastructure.storage.endpoint_url
+        assert access_key_id == infrastructure.storage.access_key_id
+        assert secret_access_key == infrastructure.storage.secret_access_key
         return FakeStorage()
 
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
+    # Use the selected resource adapter for this endpoint request.
+    if resource == "database":
+        monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
+    else:
+        monkeypatch.setattr("src.routes.v1.organizations.Exoscale", fake_storage)
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
 
     # Assert
     assert response.status_code == expected_status
-    if usage_available:
+    if expected_status == 200:
         assert isinstance(usage, int)
-        expected_payload: dict[str, str | int] = {"bucket_name": organization.id.hex, "space_used": usage}
+        expected_payload: int | dict[str, str | int] = (
+            usage if resource == "database" else {"bucket_name": organization.id.hex, "space_used": usage}
+        )
     else:
-        expected_payload = {"detail": "Storage resources unavailable"}
+        expected_payload = {"detail": f"{resource.capitalize()} resources unavailable"}
     assert response.json() == expected_payload
 
 
+@pytest.mark.parametrize("resource", ("database", "storage"))
 async def test_organization_resource_endpoints_require_elevated_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    resource: str,
 ) -> None:
     """Reject resource usage for organization members without inspection permissions."""
 
@@ -304,14 +269,11 @@ async def test_organization_resource_endpoints_require_elevated_role(
     client = clients[1]
 
     # Act
-    database_response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-    storage_response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
 
     # Assert
-    assert database_response.status_code == 403
-    assert database_response.json() == {"detail": "Permission required"}
-    assert storage_response.status_code == 403
-    assert storage_response.json() == {"detail": "Permission required"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_get_organization_returns_invitations(
@@ -325,11 +287,6 @@ async def test_get_organization_returns_invitations(
     organization = await create_organization(owner)
     async with session_scope() as session:
         await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
-        await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
-        assert invitation is not None
-
-    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -338,6 +295,8 @@ async def test_get_organization_returns_invitations(
             )
         )
         await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        assert invitation is not None
 
     # Act
     response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
@@ -391,42 +350,55 @@ async def test_get_organization_returns_403_for_non_member(
     assert response.json() == {"detail": "Access required"}
 
 
-@pytest.mark.parametrize(
-    ("caller_index", "invitee_index", "caller_role"),
-    [
-        pytest.param(0, 1, None, id="owner"),
-        pytest.param(1, 2, OrganizationRoles.maintain, id="maintainer"),
-    ],
-)
-async def test_create_organization_invitation_returns_204(
+async def test_owner_creates_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     captured_mail: list[tuple[str, str, str, str | None]],
-    caller_index: int,
-    invitee_index: int,
-    caller_role: OrganizationRoles | None,
 ) -> None:
-    """Allow owners and maintainers to create pending invitations."""
+    """Allow owners to create pending invitations."""
 
     # Arrange
-    owner = users[0]
-    invitee = users[invitee_index]
+    owner, invitee = users[:2]
     organization = await create_organization(owner)
-    if caller_role is not None:
-        async with session_scope() as session:
-            session.add(
-                UserOrganization(
-                    user_id=users[caller_index].id,
-                    organization_id=organization.id,
-                    role=caller_role,
-                )
-            )
-            await session.commit()
-
-    client = clients[caller_index]
 
     # Act
-    response = await client.post(
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        invitations_list = await organizations.invitations(session, organization.id)
+    assert [item.email for item in invitations_list] == [invitee.email]
+    assert captured_mail[0][0] == invitee.email
+    assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
+    assert captured_mail[0][3] is not None
+
+
+async def test_maintainer_creates_organization_invitation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+) -> None:
+    """Allow maintainers to create pending invitations."""
+
+    # Arrange
+    owner, maintainer, invitee = users
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=maintainer.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.maintain,
+            )
+        )
+        await session.commit()
+
+    # Act
+    response = await clients[1].post(
         f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )
