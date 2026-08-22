@@ -139,3 +139,48 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == "generated-password"
+
+
+async def test_application_creation_retry_reuses_persisted_runtime_secrets(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Apply a retry without rotating persisted provider credentials."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    application = await create_application(
+        organization,
+        users[0],
+        secrets={"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"},
+    )
+    captured: dict[str, dict[str, str]] = {}
+
+    def unexpected_provider(*_args: object) -> object:
+        """Fail if a retry attempts credential generation."""
+
+        raise AssertionError("retry regenerated provider credentials")
+
+    class FakeKubernetes:
+        """Capture the retry workload environment."""
+
+        def __init__(self, *_args: object) -> None:
+            """Expose the application lifecycle client."""
+
+            self.applications = self
+
+        async def apply(self, _application_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+            """Capture the persisted runtime environment."""
+
+            captured["secrets"] = secrets
+
+    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
+
+    # Act
+    await application_operations.create(application.id)
+
+    # Assert
+    assert captured["secrets"] == {"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"}

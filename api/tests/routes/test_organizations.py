@@ -84,6 +84,50 @@ async def test_get_organization_applications_omits_people_management_data(
     assert payload[0]["id"] == str(application.id)
 
 
+async def test_update_organization_updates_metadata_for_administrator(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow organization owners to update shared organization metadata."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": "https://example.com/acme.png"})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["avatar"] == "https://example.com/acme.png"
+    async with session_scope() as session:
+        updated = await session.get(Organization, organization.id)
+    assert updated is not None
+    assert updated.avatar == "https://example.com/acme.png"
+    assert updated.updated_id == owner.id
+
+
+async def test_update_organization_rejects_write_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject shared metadata changes from non-administrator members."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
+        await session.commit()
+
+    # Act
+    response = await clients[1].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": "https://example.com/acme.png"})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

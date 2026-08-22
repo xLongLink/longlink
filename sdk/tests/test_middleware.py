@@ -72,3 +72,39 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     assert "content-encoding" not in response.headers
     assert response.headers["etag"] == '"text-v1"'
     assert response.headers["cache-control"] == "private"
+
+
+@pytest.mark.parametrize(
+    ("path", "media_type", "expected_cache_control"),
+    [
+        pytest.param("/dashboard", "text/html", "no-cache", id="html"),
+        pytest.param("/assets/app-abcdef12.js", "text/javascript", "public, max-age=31536000, immutable", id="hashed-asset"),
+        pytest.param("/assets/app.js", "text/javascript", "no-cache", id="unhashed-asset"),
+        pytest.param("/favicon.ico", "image/x-icon", "public, max-age=86400", id="favicon"),
+    ],
+)
+def test_frontend_middleware_applies_default_cache_policy(
+    path: str,
+    media_type: str,
+    expected_cache_control: str,
+) -> None:
+    """Apply cache defaults according to the frontend resource type."""
+
+    # Arrange
+    app = FastAPI()
+
+    @app.get("/{resource:path}")
+    def get_resource() -> Response:
+        """Return a frontend resource without an explicit cache policy."""
+
+        return Response("content", media_type=media_type)
+
+    install_frontend_middleware(app)
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get(path)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == expected_cache_control

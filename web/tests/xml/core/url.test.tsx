@@ -66,14 +66,12 @@ describe('resolveAnchorUrl', () => {
         expect(resolveAnchorUrl('/orgs/acme/apps/tracker', '/issues/123')).toBe('/orgs/acme/apps/tracker/issues/123');
     });
 
-    it('drops unsafe browser anchors', () => {
-        const unsafeUrls = [
-            'javascript:alert(1)',
-            'data:text/html,<script>alert(1)</script>',
-            '//evil.example.com/issues/123',
-            '\\evil.example.com/issues/123',
-        ];
-
-        expect(unsafeUrls.map((url) => resolveAnchorUrl('/orgs/acme/apps/tracker', url))).toEqual(['', '', '', '']);
+    it.each([
+        'javascript:alert(1)',
+        'data:text/html,<script>alert(1)</script>',
+        '//evil.example.com/issues/123',
+        '\\evil.example.com/issues/123',
+    ])('drops unsafe browser anchor: %s', (url) => {
+        expect(resolveAnchorUrl('/orgs/acme/apps/tracker', url)).toBe('');
     });
 });

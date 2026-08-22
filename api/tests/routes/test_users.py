@@ -75,9 +75,9 @@ async def test_list_users_returns_admin_user_summaries(
 
     # Assert
     assert response.status_code == 200
-
-    assert {item["id"] for item in response.json()["items"]} == {str(user.id) for user in users}
-    assert response.json()["total"] == 3
+    payload = response.json()
+    assert {item["id"] for item in payload["items"]} == {str(user.id) for user in users}
+    assert payload["total"] == 3
 
 
 async def test_patch_me_updates_authenticated_user_profile(

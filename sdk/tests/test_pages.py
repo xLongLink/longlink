@@ -15,9 +15,5 @@ from longlink.pages import page_stem_route
 def test_page_stem_route_rejects_invalid_route_segments(page_stem: str, message: str) -> None:
     """Reject filesystem page names that could create ambiguous browser routes."""
 
-    # Arrange
-    # Act
     with pytest.raises(ValueError, match=message):
         page_stem_route(page_stem)
-
-    # Assert

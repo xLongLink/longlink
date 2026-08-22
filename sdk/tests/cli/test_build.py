@@ -127,13 +127,21 @@ def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, mon
     assert not (build_context / "linked-secret.txt").exists()
 
 
-def test_resolve_docker_paths_includes_local_workspace_projects(build_project: Path) -> None:
-    """Include valid sibling uv path projects in the Docker context."""
+def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build_project: Path) -> None:
+    """Include valid transitive sibling uv path projects in the Docker context."""
 
     # Arrange
     dependency = build_project.parent / "shared"
     dependency.mkdir()
-    dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    transitive_dependency = build_project.parent / "common"
+    transitive_dependency.mkdir()
+    transitive_dependency.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "common"\nversion = "0.1.0"\n', encoding="utf-8"
+    )
+    dependency.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "shared"\nversion = "0.1.0"\n\n[tool.uv.sources]\ncommon = { path = "../common" }\n',
+        encoding="utf-8",
+    )
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nshared = { path = "../shared" }\n',
         encoding="utf-8",
@@ -145,7 +153,7 @@ def test_resolve_docker_paths_includes_local_workspace_projects(build_project: P
     # Assert
     assert source_root == build_project.parent
     assert workdir == "/workspace/app"
-    assert dependencies == [dependency]
+    assert dependencies == [transitive_dependency, dependency]
 
 
 def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) -> None:
@@ -177,11 +185,8 @@ def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) ->
 def test_resolve_image_tag_returns_valid_image_references(app_name: str, version: str, registry: str | None, expected: str) -> None:
     """Build supported Docker image references from project metadata."""
 
-    # Arrange
-    # Act
     image_tag = build.resolve_image_tag(app_name, version, registry)
 
-    # Assert
     assert image_tag == expected
 
 
@@ -203,12 +208,8 @@ def test_resolve_image_tag_rejects_invalid_image_references(
 ) -> None:
     """Reject image reference values outside the supported Docker boundary."""
 
-    # Arrange
-    # Act
     with pytest.raises(click.ClickException, match=message):
         build.resolve_image_tag(app_name, version, registry)
-
-    # Assert
 
 
 def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.MonkeyPatch) -> None:

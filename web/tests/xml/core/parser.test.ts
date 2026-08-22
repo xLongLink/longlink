@@ -63,16 +63,12 @@ describe('parseXML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
     });
 
-    it('rejects unsupported XML constructs', () => {
-        const unsupportedXml = [
-            '<!DOCTYPE longlink><longlink />',
-            '<!ENTITY hidden "value"><longlink />',
-            '<longlink><![CDATA[hidden]]></longlink>',
-        ];
-
-        for (const xml of unsupportedXml) {
-            expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
-        }
+    it.each([
+        '<!DOCTYPE longlink><longlink />',
+        '<!ENTITY hidden "value"><longlink />',
+        '<longlink><![CDATA[hidden]]></longlink>',
+    ])('rejects unsupported XML construct: %s', (xml) => {
+        expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
     });
 
     it('rejects styling and event handler attributes on XML nodes', () => {

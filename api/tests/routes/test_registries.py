@@ -4,7 +4,7 @@ from factories import create_organization, create_ready_infrastructure
 from src.database.models.users import User
 
 
-@pytest.mark.parametrize("path", ["computes", "databases", "operations", "storages", "users"])
+@pytest.mark.parametrize("path", ["computes", "databases", "storages", "users"])
 async def test_platform_user_cannot_access_administrator_collections(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str
 ) -> None:

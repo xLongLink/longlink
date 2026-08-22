@@ -95,6 +95,41 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     assert {key: page[key] for key in expected_metadata} == expected_metadata
 
 
+def test_root_redirects_to_first_static_page(application_source: Path) -> None:
+    """Redirect the application root to the first static XML page."""
+
+    # Arrange
+    (application_source / "pages" / "dashboard.xml").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app, follow_redirects=False)
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 307
+    assert response.headers["location"] == "/dashboard"
+
+
+def test_root_does_not_redirect_when_only_dynamic_pages_exist(application_source: Path) -> None:
+    """Leave the frontend responsible for a catalog without a static page."""
+
+    # Arrange
+    page_path = application_source / "pages" / "issues" / "[issue].xml"
+    page_path.parent.mkdir()
+    page_path.write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app, follow_redirects=False)
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 200
+
+
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
     """Validate SDK XML pages against the bundled schema before registering routes."""
 
@@ -129,3 +164,17 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
+
+
+def test_duplicate_dynamic_browser_routes_are_rejected(application_source: Path) -> None:
+    """Reject distinct parameter names that create the same browser route shape."""
+
+    # Arrange
+    issues_directory = application_source / "pages" / "issues"
+    issues_directory.mkdir()
+    (issues_directory / "[id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    (issues_directory / "[issue_id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Browser route 'issues/:issue_id' is already registered"):
+        LongLink(FastAPI())
