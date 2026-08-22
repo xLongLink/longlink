@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, get_session
+from sqlalchemy.orm import load_only
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,7 +37,17 @@ async def get_storage_registry(registry_id: UUID, session: AsyncSession = Depend
     """Return one storage backend registration."""
 
     # Resolve the requested storage registry.
-    registry = await session.get(StorageRegistry, registry_id)
+    registry = await session.get(
+        StorageRegistry,
+        registry_id,
+        options=[
+            load_only(
+                StorageRegistry.id,
+                StorageRegistry.name,
+                StorageRegistry.endpoint_url,
+            )
+        ],
+    )
     if registry is None:
         raise HTTPException(status_code=404, detail="Storage registry not found")
 

@@ -121,10 +121,6 @@ async def get_application_logs(
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # The Organization's compute registry is the Application's only cluster assignment.
-    if registry is None:
-        raise HTTPException(status_code=503, detail="No compute cluster configured")
-
     # Map expected cluster log failures to a service-unavailable response.
     try:
         return await Kubernetes(registry.kubeconfig).applications.logs(application.id, organization.id.hex)

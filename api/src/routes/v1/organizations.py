@@ -106,7 +106,6 @@ async def get_organization_database_usage(
 
     # Load the Organization's immutable database assignment.
     registry = await session.get(DatabaseRegistry, membership.organization.database_id)
-    assert registry is not None
 
     # Inspect the exact Organization database and return its physical size when available.
     try:
@@ -135,7 +134,6 @@ async def get_organization_storage_usage(
 
     # Load the Organization's immutable storage assignment.
     registry = await session.get(StorageRegistry, membership.organization.storage_id)
-    assert registry is not None
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
