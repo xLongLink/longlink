@@ -1,5 +1,4 @@
 import logging
-from typing import Literal
 from fastapi import FastAPI
 from pathlib import Path
 from functools import partial
@@ -35,21 +34,21 @@ class RuntimeState:
 class LongLink:
     """Install LongLink runtime services into one Application-owned FastAPI app."""
 
-    def __init__(self, app: FastAPI, env: Literal["development", "testing", "production"] | None = None) -> None:
+    def __init__(self, app: FastAPI) -> None:
         """Install runtime services, routes, and the frontend fallback into an Application app."""
 
         # Preserve Application routes so page collisions are rejected during discovery.
         self.application_routes = list(app.router.routes)
 
         # Resolve the runtime environment and initialize application storage.
-        environment = Envs().ENV if env is None else Envs(ENV=env).ENV
-        storage = create_fs()
+        settings = Envs()
+        storage = create_fs(settings)
 
         # Compress the embedded frontend and apply safe browser cache policies.
         install_frontend_middleware(app)
 
         # Production containers attach API access filtering here.
-        if environment == "production":
+        if settings.ENV == "production":
             # Built app containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
 

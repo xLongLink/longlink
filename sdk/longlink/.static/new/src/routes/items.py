@@ -51,10 +51,14 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
         return []
 
     # Derive display names from the generated storage ids.
-    return [
-        {"id": PurePosixPath(path).name, "name": PurePosixPath(path).name.split("-", 1)[-1]}
-        for path in entries
-    ]
+    attachments = []
+    for path in entries:
+        attachment_id = PurePosixPath(path).name
+        attachments.append(
+            {"id": attachment_id, "name": attachment_id.split("-", 1)[-1]}
+        )
+
+    return attachments
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
