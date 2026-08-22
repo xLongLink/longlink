@@ -350,55 +350,39 @@ async def test_get_organization_returns_403_for_non_member(
     assert response.json() == {"detail": "Access required"}
 
 
-async def test_owner_creates_organization_invitation(
+@pytest.mark.parametrize(
+    ("client_index", "caller_role"),
+    [
+        pytest.param(0, None, id="owner"),
+        pytest.param(1, OrganizationRoles.maintain, id="maintainer"),
+    ],
+)
+async def test_organization_member_creates_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     captured_mail: list[tuple[str, str, str, str | None]],
+    client_index: int,
+    caller_role: OrganizationRoles | None,
 ) -> None:
-    """Allow owners to create pending invitations."""
+    """Allow owners and maintainers to create pending invitations."""
 
     # Arrange
-    owner, invitee = users[:2]
+    owner, _, invitee = users
     organization = await create_organization(owner)
-
-    # Act
-    response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/invitations",
-        json={"email": invitee.email, "role": "write"},
-    )
-
-    # Assert
-    assert response.status_code == 204
-    async with session_scope() as session:
-        invitations_list = await organizations.invitations(session, organization.id)
-    assert [item.email for item in invitations_list] == [invitee.email]
-    assert captured_mail[0][0] == invitee.email
-    assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
-    assert captured_mail[0][3] is not None
-
-
-async def test_maintainer_creates_organization_invitation(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    captured_mail: list[tuple[str, str, str, str | None]],
-) -> None:
-    """Allow maintainers to create pending invitations."""
-
-    # Arrange
-    owner, maintainer, invitee = users
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=maintainer.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.maintain,
+    if caller_role is not None:
+        caller = users[client_index]
+        async with session_scope() as session:
+            session.add(
+                UserOrganization(
+                    user_id=caller.id,
+                    organization_id=organization.id,
+                    role=caller_role,
+                )
             )
-        )
-        await session.commit()
+            await session.commit()
 
     # Act
-    response = await clients[1].post(
+    response = await clients[client_index].post(
         f"/api/v1/organizations/{organization.id}/invitations",
         json={"email": invitee.email, "role": "write"},
     )

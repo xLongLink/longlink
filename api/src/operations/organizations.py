@@ -1,5 +1,4 @@
 from uuid import UUID
-from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -98,6 +97,5 @@ async def delete(organization_id: UUID) -> str | None:
     await db.delete_database(infrastructure.organization.id)
     await object_storage.delete(infrastructure.organization.id.hex)
     async with session_scope() as session:
-        await session.execute(sql_delete(Application).where(Application.organization_id == infrastructure.organization.id))
         await organizations.purge(session, infrastructure.organization.id)
         await session.commit()

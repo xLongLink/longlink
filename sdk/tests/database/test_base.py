@@ -20,25 +20,20 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         name: str
 
     # Inspect the inherited columns and their foreign-key targets.
-    table = getattr(FeatureAuditItem, "__table__")
+    table = database_base.database_metadata.tables[FeatureAuditItem.__tablename__]
     try:
-        foreign_key_targets = {
-            column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
-            for column_name in ("created_id", "updated_id", "deleted_id")
-        }
-
         # Verify audit fields and user relationships are available to Applications.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
-        assert foreign_key_targets == {
+        assert {
+            column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
+            for column_name in ("created_id", "updated_id", "deleted_id")
+        } == {
             "created_id": {"audit.id"},
             "updated_id": {"audit.id"},
             "deleted_id": {"audit.id"},
         }
-        assert hasattr(FeatureAuditItem, "created_by")
-        assert hasattr(FeatureAuditItem, "updated_by")
-        assert hasattr(FeatureAuditItem, "deleted_by")
+        assert all(hasattr(FeatureAuditItem, relationship) for relationship in ("created_by", "updated_by", "deleted_by"))
     finally:
-
         # Remove the temporary table from shared metadata.
         database_base.database_metadata.remove(table)
 

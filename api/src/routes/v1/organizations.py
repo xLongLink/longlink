@@ -84,8 +84,6 @@ async def update_organization(
     organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    if not session.is_modified(organization):
-        return organization
     await session.commit()
     return organization
 

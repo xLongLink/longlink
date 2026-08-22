@@ -6,7 +6,6 @@ from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations, invitations, applications, organizations
@@ -153,47 +152,6 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     assert membership.role == OrganizationRoles.owner
 
 
-async def test_all_members_returns_deleted_memberships(users: tuple[User, User, User]) -> None:
-    """Return every organization membership for lifecycle synchronization."""
-
-    # Arrange
-    owner, member, deleted_member = users
-    deleted_at = utcnow()
-    organization = await create_organization(owner)
-
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        session.add(
-            UserOrganization(
-                user_id=deleted_member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-                deleted_at=deleted_at,
-            )
-        )
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        members = await organizations.all_members(session, organization.id)
-
-    # Assert
-    memberships = {membership.user.email: membership for membership in members}
-    assert set(memberships) == {owner.email, member.email, deleted_member.email}
-    assert memberships[owner.email].role == OrganizationRoles.owner
-    assert memberships[member.email].role == OrganizationRoles.write
-    assert memberships[deleted_member.email].role == OrganizationRoles.read
-    assert memberships[owner.email].deleted_at is None
-    assert memberships[member.email].deleted_at is None
-    assert memberships[deleted_member.email].deleted_at is not None
-
-
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
     """Create Organizations queued behind their creating compute target."""
 
@@ -218,8 +176,8 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
         assert len(await operations.fetch(session)) == 1
 
 
-async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:
-    """Soft-delete an organization and its nested application and access rows."""
+async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
+    """Tombstone applications while retaining Organization memberships until purge."""
 
     # Arrange
     owner, member = users[0], users[1]
@@ -260,9 +218,10 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_organization is not None
     assert deleted_organization.deleted_id == owner.id
     async with session_scope() as session:
-        assert await organizations.members(session, organization.id) == []
+        members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []
         assert await organizations.applications(session, organization.id) == []
+    assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is not None

@@ -28,7 +28,7 @@ class Application(PlatformModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Organization
-    organization_id: UUID = Field(foreign_key="organizations.id")
+    organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE")
 
     # Metadata
     name: str = Field(max_length=100)

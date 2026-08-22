@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -134,7 +134,6 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
         return
     if organization.deleted_at is None:
         raise RuntimeError("Active organizations cannot be purged")
-    await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
     await session.delete(organization)
 
 
@@ -176,21 +175,13 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     """Return active organization member rows for one organization."""
 
     # Query memberships with their users so detached callers can shape API payloads.
-    statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
-        UserOrganization.organization_id == organization_id,
-        UserOrganization.deleted_at.is_(None),
-    )
-
-    result = await session.scalars(statement)
-    return result.all()
-
-
-async def all_members(session: AsyncSession, organization_id: UUID) -> Sequence[UserOrganization]:
-    """Return all organization member rows for lifecycle synchronization."""
-
-    # Include deleted memberships so the Organization database receives tombstones.
-    statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(
-        UserOrganization.organization_id == organization_id
+    statement = (
+        select(UserOrganization)
+        .options(joinedload(UserOrganization.user))
+        .where(
+            UserOrganization.organization_id == organization_id,
+            UserOrganization.deleted_at.is_(None),
+        )
     )
 
     result = await session.scalars(statement)
@@ -216,8 +207,14 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     organization, database = assigned
     db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
+    # Include deleted memberships so the Organization database receives tombstones.
+    memberships_statement = (
+        select(UserOrganization).options(joinedload(UserOrganization.user)).where(UserOrganization.organization_id == organization.id)
+    )
+    memberships_result = await session.scalars(memberships_statement)
+    memberships = memberships_result.all()
+
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    memberships = await all_members(session, organization.id)
     rows = [
         Audit(
             id=membership.user.id,
@@ -227,9 +224,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
             role=membership.role.value,
             created_at=membership.created_at,
             deleted_at=(
-                deleted_at := max(
-                    (item for item in (membership.user.deleted_at, membership.deleted_at) if item is not None), default=None
-                )
+                deleted_at := max((item for item in (membership.user.deleted_at, membership.deleted_at) if item is not None), default=None)
             ),
             updated_at=max(membership.user.updated_at, membership.updated_at, deleted_at or membership.user.updated_at),
         )
@@ -399,28 +394,14 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.updated_at = now
         organization.updated_id = user.id
 
-        # Apply the same deletion audit state to every active nested row without loading each object.
-        tombstone = {
-            "deleted_at": now,
-            "deleted_id": user.id,
-            "updated_at": now,
-            "updated_id": user.id,
-        }
+        # Apply the deletion audit state to every active Application without loading each object.
         await session.execute(
             sql_update(Application)
             .where(
                 Application.organization_id == organization_id,
                 Application.deleted_at.is_(None),
             )
-            .values(**tombstone)
-        )
-        await session.execute(
-            sql_update(UserOrganization)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-            )
-            .values(**tombstone)
+            .values(deleted_at=now, deleted_id=user.id, updated_at=now, updated_id=user.id)
         )
 
     # Keep tombstones and Organization cleanup in one transaction.
