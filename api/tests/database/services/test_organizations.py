@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlmodel import col
 from factories import create_organization, create_ready_infrastructure
 from sqlalchemy import update
-from src.errors import ConflictError, UnavailableError
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
@@ -109,15 +109,15 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
             session, organization.id, member.id, OrganizationRoles.maintain, owner, OrganizationRoles.owner
         )
         await session.commit()
-        missing = await organizations.update_member_role(
-            session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
-        )
+        with pytest.raises(NotFoundError):
+            await organizations.update_member_role(
+                session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
+            )
         memberships = await organizations.members(session, organization.id)
         updated_membership = next(item for item in memberships if item.user_id == member.id)
 
     # Assert
     assert updated is True
-    assert missing is None
     assert updated_membership.role == OrganizationRoles.maintain
 
 

@@ -18,7 +18,7 @@ async def reconcile(organization_id: UUID) -> None:
     async with session_scope() as session:
         infrastructure = await organizations.infrastructure(session, organization_id)
     if infrastructure is None or infrastructure.organization.deleted_at is not None:
-        return None
+        return
     organization = infrastructure.organization
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.

@@ -1,7 +1,7 @@
 from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
-from src.errors import ConflictError, ForbiddenError, UnavailableError
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, joinedload, contains_eager
@@ -238,8 +238,8 @@ async def update_member_role(
     role: OrganizationRoles,
     user: User,
     caller_role: OrganizationRoles,
-) -> bool | None:
-    """Change one active Organization membership and synchronize its user projection."""
+) -> bool:
+    """Change one active Organization membership role."""
 
     # Update the member role inside one transaction.
     statement = (
@@ -257,7 +257,7 @@ async def update_member_role(
     result = await session.scalars(statement)
     membership = result.one_or_none()
     if membership is None:
-        return None
+        raise NotFoundError("Organization member not found")
 
     # Only owners may grant or change owner access.
     if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
@@ -288,8 +288,6 @@ async def update_member_role(
     membership.updated_id = user.id
     membership.role = role
 
-    # Project the membership change into the Organization database.
-    await sync_users(session, organization_id)
     return True
 
 

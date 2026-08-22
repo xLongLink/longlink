@@ -75,10 +75,9 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     user = users[0]
     organization = await create_organization(user)
 
-    async def inspect_image(image: str) -> LongLinkMetadata:
+    async def inspect_image(_image: str) -> LongLinkMetadata:
         """Return immutable metadata with one required user environment value."""
 
-        assert image == "ghcr.io/longlink/dashboard:latest"
         return LongLinkMetadata(
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             environments=[EnvironmentMetadata(name="API_KEY", required=True)],

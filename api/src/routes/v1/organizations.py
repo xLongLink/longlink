@@ -198,10 +198,9 @@ async def update_organization_member(
         user,
         membership.role,
     )
-    if changed is None:
-        raise HTTPException(status_code=404, detail="Organization member not found")
     if changed:
         await session.commit()
+        await organizations.sync_users(session, membership.organization_id)
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)

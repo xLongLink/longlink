@@ -66,16 +66,13 @@ async def create(application_id: UUID) -> str | None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
         async with session_scope() as session:
-            # Lock the Application so only the first creation attempt writes generated credentials.
-            persisted_application = await session.get(Application, application.id, with_for_update=True)
+            # Verify the Application still accepts the generated runtime credentials.
+            persisted_application = await session.get(Application, application.id)
             if persisted_application is None or persisted_application.deleted_at is not None:
                 return None
 
-            # Reuse durable runtime values after an interrupted creation attempt.
-            if "LONGLINK_ENV" not in persisted_application.secrets:
-                # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-                persisted_application.secrets = {**persisted_application.secrets, **runtime_secrets}
-            runtime_secrets = persisted_application.secrets
+            # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
+            persisted_application.secrets = {**persisted_application.secrets, **runtime_secrets}
             await session.commit()
 
     # Apply the captured desired release so reconciliation repairs workload drift.

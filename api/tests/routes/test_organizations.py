@@ -172,12 +172,22 @@ async def test_other_organization_user_cannot_delete_application(
         assert [operation.id for operation in await operations.fetch(session)] == operation_ids
 
 
-async def test_organization_database_endpoint_returns_database_usage(
+@pytest.mark.parametrize(
+    ("usage", "expected_status", "expected_payload"),
+    [
+        pytest.param(3584, 200, 3584, id="usage-available"),
+        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database resources unavailable"}, id="backend-unavailable"),
+    ],
+)
+async def test_organization_database_endpoint_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
+    usage: int | Exception,
+    expected_status: int,
+    expected_payload: int | dict[str, str],
 ) -> None:
-    """Return physical usage for one Organization database."""
+    """Return database usage or translate backend failures."""
 
     # Arrange
     owner = users[0]
@@ -193,10 +203,12 @@ async def test_organization_database_endpoint_returns_database_usage(
             assert sslmode == registry.sslmode
 
         async def database_usage(self, database_name: str) -> int:
-            """Return fake physical usage for the Organization database."""
+            """Return usage or raise the configured database backend failure."""
 
             assert database_name == organization.id.hex
-            return 3584
+            if isinstance(usage, Exception):
+                raise usage
+            return usage
 
     monkeypatch.setattr(
         "src.routes.v1.organizations.Postgres",
@@ -207,86 +219,26 @@ async def test_organization_database_endpoint_returns_database_usage(
     response = await client.get(f"/api/v1/organizations/{organization.id}/database")
 
     # Assert
-    assert response.status_code == 200
-    assert response.json() == 3584
+    assert response.status_code == expected_status
+    assert response.json() == expected_payload
 
 
-async def test_organization_database_endpoint_returns_unavailable_when_backend_fails(
+@pytest.mark.parametrize(
+    ("usage", "expected_status", "usage_available"),
+    [
+        pytest.param(4096, 200, True, id="usage-available"),
+        pytest.param(RuntimeError("storage offline"), 503, False, id="backend-unavailable"),
+    ],
+)
+async def test_organization_storage_endpoint_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
+    usage: int | Exception,
+    expected_status: int,
+    usage_available: bool,
 ) -> None:
-    """Return an error when the database backend cannot be inspected."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-
-    class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Accept the selected database connection settings."""
-
-        async def database_usage(self, database_name: str) -> int:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("database offline")
-
-    monkeypatch.setattr(
-        "src.routes.v1.organizations.Postgres",
-        FakePostgres,
-    )
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Database resources unavailable"}
-
-
-async def test_organization_storage_endpoint_returns_bucket_usage(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return aggregate usage for one Organization bucket."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-
-    class FakeStorage:
-        """Provide storage usage responses for the Organization resource endpoint."""
-
-        async def usage(self, bucket_name: str) -> int:
-            """Return fake usage counters for one Organization bucket."""
-
-            assert bucket_name == organization.id.hex
-            return 4096
-
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {
-        "bucket_name": organization.id.hex,
-        "space_used": 4096,
-    }
-
-
-async def test_organization_storage_endpoint_returns_unavailable_when_backend_fails(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return an error when the storage backend cannot be inspected."""
+    """Return storage usage or translate backend failures."""
 
     # Arrange
     owner = users[0]
@@ -296,15 +248,18 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
     registry = infrastructure.storage
 
     class FakeStorage:
-        """Provide a failing storage adapter."""
+        """Provide storage usage responses for the Organization resource endpoint."""
 
         async def usage(self, bucket_name: str) -> int:
-            """Raise the backend error expected by the test."""
+            """Return usage or raise the configured storage backend failure."""
 
-            raise RuntimeError("storage offline")
+            assert bucket_name == organization.id.hex
+            if isinstance(usage, Exception):
+                raise usage
+            return usage
 
     def fake_storage(endpoint_url: str, access_key_id: str, secret_access_key: str) -> FakeStorage:
-        """Return the fake adapter for the selected registry credentials."""
+        """Return a fake adapter configured for the selected registry."""
 
         assert endpoint_url == registry.endpoint_url
         assert access_key_id == registry.access_key_id
@@ -317,8 +272,13 @@ async def test_organization_storage_endpoint_returns_unavailable_when_backend_fa
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Storage resources unavailable"}
+    assert response.status_code == expected_status
+    if usage_available:
+        assert isinstance(usage, int)
+        expected_payload: dict[str, str | int] = {"bucket_name": organization.id.hex, "space_used": usage}
+    else:
+        expected_payload = {"detail": "Storage resources unavailable"}
+    assert response.json() == expected_payload
 
 
 async def test_organization_resource_endpoints_require_elevated_role(
