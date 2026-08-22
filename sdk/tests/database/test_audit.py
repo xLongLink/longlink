@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import pytest_asyncio
 from uuid import UUID
 from typing import ClassVar
 from fastapi import FastAPI
@@ -7,7 +8,7 @@ from datetime import UTC, datetime
 from longlink import context as runtime_context
 from sqlmodel import Field
 from contextlib import contextmanager
-from collections.abc import Iterator
+from collections.abc import Iterator, AsyncIterator
 from longlink.database import base as database_base
 from longlink.database import audit
 from fastapi.testclient import TestClient
@@ -26,23 +27,21 @@ def identity_context(user_id: UUID) -> Iterator[None]:
         runtime_context._current_identity.reset(token)
 
 
-def create_audit_application() -> FastAPI:
-    """Create an application that exposes the request audit identity."""
+@pytest_asyncio.fixture
+async def _audit_engine(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[None]:
+    """Bind an isolated SQLite engine to the SDK session lifecycle."""
 
-    app = FastAPI()
-    runtime_context.install_context_middleware(app)
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
+    monkeypatch.setattr(database_base, "Session", None)
 
-    @app.get("/")
-    async def current_user() -> dict[str, str | None]:
-        """Return the request-local audit identity after yielding control."""
-
-        await asyncio.sleep(0)
-        user_id = runtime_context._current_identity.get()
-        return {"user_id": str(user_id) if user_id is not None else None}
-
-    return app
+    try:
+        yield
+    finally:
+        await engine.dispose()
 
 
+@pytest.mark.usefixtures("_audit_engine")
 async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch: pytest.MonkeyPatch) -> None:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
@@ -68,12 +67,6 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     deleter_id = UUID("00000000-0000-0000-0000-000000000004")
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-
-    # Isolate the real SQLite engine behind the SDK's normal session lifecycle.
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
-    monkeypatch.setattr(database_base, "Session", None)
-
     try:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.session() as session:
@@ -108,19 +101,36 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         async with database_base.session() as session:
             item = await session.get(AuditLifecycleItem, item_id)
             assert item is not None
-            assert item.name == "reviewed"
-            assert item.created_at == created_at
-            assert item.updated_at == deleted_at
-            assert item.deleted_at == deleted_at
-            assert item.created_id == creator_id
-            assert item.updated_id == deleter_id
-            assert item.deleted_id == deleter_id
+            assert (
+                item.name,
+                item.created_at,
+                item.updated_at,
+                item.deleted_at,
+                item.created_id,
+                item.updated_id,
+                item.deleted_id,
+            ) == ("reviewed", created_at, deleted_at, deleted_at, creator_id, deleter_id, deleter_id)
     finally:
         # Release test metadata and engine resources.
-        try:
-            database_base.database_metadata.remove(database_base.database_metadata.tables[AuditLifecycleItem.__tablename__])
-        finally:
-            await engine.dispose()
+        metadata = database_base.database_metadata
+        metadata.remove(metadata.tables[AuditLifecycleItem.__tablename__])
+
+
+def create_audit_application() -> FastAPI:
+    """Create an application that exposes the request audit identity."""
+
+    app = FastAPI()
+    runtime_context.install_context_middleware(app)
+
+    @app.get("/")
+    async def current_user() -> dict[str, str | None]:
+        """Return the request-local audit identity after yielding control."""
+
+        await asyncio.sleep(0)
+        user_id = runtime_context._current_identity.get()
+        return {"user_id": str(user_id) if user_id is not None else None}
+
+    return app
 
 
 @pytest.mark.parametrize(
@@ -137,7 +147,8 @@ def test_audit_middleware_binds_x_user_id_header(
     """Bind valid audit user headers and ignore malformed values."""
 
     # Send the candidate audit identity through the HTTP boundary.
-    response = TestClient(create_audit_application()).get("/", headers={"x-user-id": header_value})
+    with TestClient(create_audit_application()) as client:
+        response = client.get("/", headers={"x-user-id": header_value})
 
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
@@ -147,15 +158,14 @@ def test_audit_middleware_binds_x_user_id_header(
 async def test_audit_middleware_isolates_concurrent_request_identities() -> None:
     """Keep audit identities isolated across concurrently handled requests."""
 
-    client = TestClient(create_audit_application())
     first_id = "00000000-0000-0000-0000-000000000006"
     second_id = "00000000-0000-0000-0000-000000000007"
 
     # Dispatch two requests concurrently, each with a distinct trusted identity.
-    first_response, second_response = await asyncio.gather(
-        asyncio.to_thread(client.get, "/", headers={"x-user-id": first_id}),
-        asyncio.to_thread(client.get, "/", headers={"x-user-id": second_id}),
-    )
+    with TestClient(create_audit_application()) as client:
+        first_response, second_response = await asyncio.gather(
+            *(asyncio.to_thread(client.get, "/", headers={"x-user-id": user_id}) for user_id in (first_id, second_id))
+        )
 
     # Each handler observes only its own request identity.
     assert first_response.json() == {"user_id": first_id}

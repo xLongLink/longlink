@@ -13,6 +13,17 @@ from src.database.models.users import User
 router = APIRouter()
 
 
+def _require_environments(missing_envs: list[str]) -> None:
+    """Reject an Application request that omits required image environment variables."""
+
+    # Preserve the API's stable validation response for all application mutations.
+    if missing_envs:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
+        )
+
+
 @router.get("/applications", response_model=list[ApplicationResponse])
 async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
     """Return all applications for administrator views."""
@@ -43,11 +54,7 @@ async def create_application(
 
     # Enforce image-declared requirements while the submitted values remain at the API boundary.
     missing_envs = images.missing_envs(metadata, payload.envs)
-    if missing_envs:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
-        )
+    _require_environments(missing_envs)
 
     await applications.create(
         session,
@@ -84,11 +91,7 @@ async def release_application(
     if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
     missing_envs = images.missing_envs(metadata, application.secrets)
-    if missing_envs:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
-        )
+    _require_environments(missing_envs)
 
     result = await applications.release(
         session,

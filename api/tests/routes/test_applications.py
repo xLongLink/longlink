@@ -18,7 +18,7 @@ from src.database.models.applications import Application
 class FakeCompute:
     """Fake Kubernetes log client with a configured result."""
 
-    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str] | None = None) -> None:
+    def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
         """Expose the application log client and its configured outcome."""
 
         self.applications = self
@@ -28,9 +28,8 @@ class FakeCompute:
     async def logs(self, application_id: UUID, namespace: str) -> list[str]:
         """Record a request and return or raise the configured outcome."""
 
-        if self.captured is not None:
-            self.captured["logs"] = application_id
-            self.captured["namespace"] = namespace
+        self.captured["logs"] = application_id
+        self.captured["namespace"] = namespace
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
         return self.outcome
@@ -263,7 +262,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     organization = await create_organization(owner)
     app = await create_application(organization, owner)
     monkeypatch.setattr(
-        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"))
+        "src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {})
     )
 
     # Act

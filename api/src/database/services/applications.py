@@ -102,7 +102,7 @@ async def release(
     """Record one desired Application release and queue its deployment."""
 
     # Lock the Application and its Organization assignment before changing its desired release.
-    result = await session.scalars(
+    statement = (
         select(Application)
         .join(Application.organization)
         .where(
@@ -112,7 +112,7 @@ async def release(
         )
         .with_for_update()
     )
-    application = result.one_or_none()
+    application = await session.scalar(statement)
     if application is None:
         return None
 
