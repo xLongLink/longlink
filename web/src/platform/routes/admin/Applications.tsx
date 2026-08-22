@@ -1,11 +1,9 @@
-import { api } from '@/lib/api';
 import { Wrench } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -15,7 +13,7 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { zApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 
 const statusVariants = {
@@ -30,16 +28,11 @@ export default function AdminApplications() {
         running: 'Running',
     };
     const {
-        data: applications = [],
+        items: applications,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/applications'],
-        queryFn: async ({ signal }) =>
-            zApplicationResponse.array().parse(await api('/api/v1/applications', { signal }).json()),
-        refetchInterval: 5000,
-    });
-    const { pageItems, pagination } = usePaginate(applications);
+        pagination,
+    } = usePaginate('/api/v1/applications', zPageApplicationResponse, 5000);
 
     if (isLoading && applications.length === 0) {
         return <PageLoading label="Loading applications" />;
@@ -58,7 +51,7 @@ export default function AdminApplications() {
                 <Text type="supporting">Review all applications across organizations and deployment states.</Text>
             </VStack>
             <Table
-                data={pageItems}
+                data={applications}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

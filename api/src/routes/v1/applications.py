@@ -6,6 +6,7 @@ from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
 from src.database.models.users import User
@@ -13,11 +14,16 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-@router.get("/applications", response_model=list[ApplicationResponse])
-async def list_applications(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
+@router.get("/applications", response_model=Page[ApplicationResponse])
+async def list_applications(
+    _user: User = Depends(authadmin),
+    pagination: Pagination = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     """Return all applications for administrator views."""
 
-    return await applications.fetch(session)
+    items, total = await applications.fetch_page(session, pagination)
+    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
 
 
 @router.post("/organizations/{organization_id}/applications", status_code=204)

@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
+import { pageSchema } from '@/xml/pages';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { pageSchema, type RuntimePage } from '@/xml/pages';
 import { useEffect, useMemo, type ReactNode } from 'react';
 import type { NavigationTab } from '@/platform/layouts/Platform';
+import { matchRoutes, useNavigate, useParams } from 'react-router';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
-import { matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 
 type ApplicationRuntimeProps = {
     children: (application: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
@@ -36,7 +36,7 @@ export function ApplicationRuntime({
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                (registeredPages ?? []).map((page): RouteObject & { page: RuntimePage } => ({
+                (registeredPages ?? []).map((page) => ({
                     path: page.route || '/',
                     page,
                 })),

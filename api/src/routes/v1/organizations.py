@@ -10,6 +10,7 @@ from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
 from src.database.services import compute, storage, database, invitations, organizations
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
     OrganizationCreate,
@@ -29,11 +30,16 @@ from src.database.models.organizations import Organization
 router = APIRouter()
 
 
-@router.get("/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authadmin), session: AsyncSession = Depends(get_session)):
+@router.get("/organizations", response_model=Page[OrganizationSummary])
+async def list_organizations(
+    _user: User = Depends(authadmin),
+    pagination: Pagination = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
     """Return all organizations for administrator views."""
 
-    return await organizations.fetch(session)
+    items, total = await organizations.fetch_page(session, pagination)
+    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)

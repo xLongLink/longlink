@@ -13,9 +13,9 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin storage page. */
@@ -30,15 +30,11 @@ export default function AdminStorage() {
         },
     });
     const {
-        data: storages = [],
+        items: storages,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/storages'],
-        queryFn: async ({ signal }) =>
-            zStorageRegistryResponse.array().parse(await api('/api/v1/storages', { signal }).json()),
-    });
-    const { pageItems, pagination } = usePaginate(storages);
+        pagination,
+    } = usePaginate('/api/v1/storages', zPageStorageRegistryResponse);
     const deleteDialog = useDeleteDialog({
         title: 'Delete storage',
         mutation: deleteStorage,
@@ -68,7 +64,7 @@ export default function AdminStorage() {
                 <CreateStorage />
             </HStack>
             <Table
-                data={pageItems}
+                data={storages}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

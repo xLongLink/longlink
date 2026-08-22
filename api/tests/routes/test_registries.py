@@ -62,7 +62,7 @@ async def test_registry_endpoints_return_registered_backend(
     get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
 
     assert list_response.status_code == 200
-    assert str(backend.id) in {item["id"] for item in list_response.json()}
+    assert str(backend.id) in {item["id"] for item in list_response.json()["items"]}
     assert get_response.status_code == 200
     payload = get_response.json()
     assert payload["id"] == str(backend.id)
@@ -79,14 +79,26 @@ async def test_registry_endpoints_return_registered_backend(
     [
         pytest.param(
             "databases",
-            {"name": "Ephemeral Database", "host": "database.example", "port": 5432, "username": "admin", "password": "secret", "sslmode": "disable"},
+            {
+                "name": "Ephemeral Database",
+                "host": "database.example",
+                "port": 5432,
+                "username": "admin",
+                "password": "secret",
+                "sslmode": "disable",
+            },
             ["password"],
             "Database registry already exists",
             id="database",
         ),
         pytest.param(
             "storages",
-            {"name": "Ephemeral Storage", "endpoint_url": "https://sos-ch-gva-2.exo.io", "access_key_id": "key", "secret_access_key": "secret"},
+            {
+                "name": "Ephemeral Storage",
+                "endpoint_url": "https://sos-ch-gva-2.exo.io",
+                "access_key_id": "key",
+                "secret_access_key": "secret",
+            },
             ["access_key_id", "secret_access_key"],
             "Storage registry already exists",
             id="storage",

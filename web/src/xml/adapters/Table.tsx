@@ -6,8 +6,6 @@ import { useXmlRuntime, XmlContext } from '../core/context';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 
-type TableRow = Record<string, unknown>;
-
 const tablePropsSchema = z.object({ data: z.array(z.record(z.string(), z.unknown())), idKey: z.string().optional() });
 const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 
@@ -18,7 +16,7 @@ export function Table({ props, nodes }: Props) {
     const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node): AstryxTableColumn<TableRow> => {
+        .map((node): AstryxTableColumn<Record<string, unknown>> => {
             const columnProps = node.params;
             const fieldAttribute = readXmlProp(columnProps, 'field');
 

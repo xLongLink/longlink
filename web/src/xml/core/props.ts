@@ -5,8 +5,6 @@ import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
 export type XmlScalar = number | boolean | string | undefined;
 export type XmlSpacing = (typeof SPACING_VALUES)[number];
-export type XmlPropMode = 'scalar' | 'raw' | 'literal';
-export type XmlPropFields = Record<string, XmlPropMode>;
 
 export const xmlNonblankStringSchema = z
     .union([z.string(), z.number(), z.boolean()])
@@ -70,7 +68,7 @@ export function resolveXmlLiteral(props: ASTProps, name: string): string | undef
 export function resolveXmlProps<T extends z.ZodObject>(
     props: ASTProps,
     ctx: Scope,
-    fields: XmlPropFields,
+    fields: Record<string, 'scalar' | 'raw' | 'literal'>,
     schema: T
 ): z.output<T> {
     const values: Record<string, unknown> = {};

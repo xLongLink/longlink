@@ -1,6 +1,6 @@
 from uuid import UUID
 from src.utils import names, roles
-from sqlalchemy import select
+from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, contains_eager
@@ -10,25 +10,31 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.services import operations
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[Application]:
-    """Return all registered applications for admin views."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Application], int]:
+    """Return one ordered page of active applications for administrator views."""
 
-    # Load active applications with related response data.
+    # Load page response data without loading encrypted application secrets.
     statement = (
         select(Application)
         .join(Application.organization)
         .options(contains_eager(Application.organization), defer(Application.secrets))
         .where(Application.deleted_at.is_(None))
-        .order_by(Organization.name, Application.name)
+        .order_by(Organization.name, Application.name, Application.id)
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
-    return result.all()
+
+    # Count only rows eligible for the administrator listing.
+    total = await session.scalar(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
+    return result.all(), total or 0
 
 
 async def purge(session: AsyncSession, application_id: UUID) -> None:

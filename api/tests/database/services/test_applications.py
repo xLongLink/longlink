@@ -6,6 +6,7 @@ from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import applications, organizations
+from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.applications import Application
 
@@ -65,10 +66,11 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
         await session.commit()
 
         # Act
-        fetched = await applications.fetch(session)
+        fetched, total = await applications.fetch_page(session, Pagination())
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
+    assert total == 1
 
 
 async def test_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:

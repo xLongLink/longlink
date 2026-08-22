@@ -7,18 +7,20 @@ from collections.abc import Sequence
 from src.models.statuses import Status
 from src.database.services import operations
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch(session: AsyncSession) -> Sequence[ComputeRegistry]:
-    """Return registered compute backends."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[ComputeRegistry], int]:
+    """Return one ordered page of compute registries."""
 
-    # Return every registered compute target.
-    result = await session.scalars(
-        select(ComputeRegistry).options(
+    # Load only the fields exposed by the administrator response.
+    statement = (
+        select(ComputeRegistry)
+        .options(
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.name,
@@ -26,8 +28,15 @@ async def fetch(session: AsyncSession) -> Sequence[ComputeRegistry]:
                 ComputeRegistry.status,
             )
         )
+        .order_by(ComputeRegistry.name, ComputeRegistry.id)
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
     )
-    return result.all()
+    result = await session.scalars(statement)
+
+    # Count every registered compute target.
+    total = await session.scalar(select(func.count()).select_from(ComputeRegistry))
+    return result.all(), total or 0
 
 
 async def available(session: AsyncSession) -> UUID | None:

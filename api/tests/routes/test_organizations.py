@@ -328,7 +328,7 @@ async def test_list_organizations_includes_created_organization(
 
     # Assert
     assert response.status_code == 200
-    assert str(organization.id) in {item["id"] for item in response.json()}
+    assert str(organization.id) in {item["id"] for item in response.json()["items"]}
 
 
 async def test_get_organization_returns_403_for_non_member(

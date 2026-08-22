@@ -6,6 +6,7 @@ from sqlalchemy.orm import load_only
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.adapters.postgres import Postgres
 from src.database.services import database
+from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.databases import DatabaseRegistry
 
@@ -29,11 +30,12 @@ async def create_database_registry(payload: DatabaseRegistryCreate, session: Asy
     return registry
 
 
-@router.get("/databases", response_model=list[DatabaseRegistryResponse])
-async def list_database_registries(session: AsyncSession = Depends(get_session)):
+@router.get("/databases", response_model=Page[DatabaseRegistryResponse])
+async def list_database_registries(pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)):
     """Return all registered database backends."""
 
-    return await database.fetch(session)
+    items, total = await database.fetch_page(session, pagination)
+    return Page(items=list(items), page=pagination.page, page_size=pagination.page_size, total=total)
 
 
 @router.get("/databases/{registry_id}", response_model=DatabaseRegistryResponse)

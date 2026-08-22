@@ -17,4 +17,4 @@ async def test_operations_endpoint_returns_targeted_operations(
 
     # Assert
     assert response.status_code == 200
-    assert str(operation.id) in {item["id"] for item in response.json()}
+    assert str(operation.id) in {item["id"] for item in response.json()["items"]}

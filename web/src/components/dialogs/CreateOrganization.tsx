@@ -9,7 +9,7 @@ const schema = z.object({
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
-    const dialog = useRegistryDialog<z.infer<typeof schema>>({
+    const dialog = useRegistryDialog({
         defaultValues: { name: '' },
         endpoint: '/api/v1/organizations',
         errorMessage: 'Failed to create organization',

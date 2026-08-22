@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import delete, select
+from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -13,6 +13,7 @@ from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -117,13 +118,22 @@ async def application_infrastructure(session: AsyncSession, application_id: UUID
     return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def fetch(session: AsyncSession) -> Sequence[Organization]:
-    """Return all organizations in the database."""
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
+    """Return one ordered page of active organizations for administrator views."""
 
-    # Load active organizations.
-    statement = select(Organization).where(Organization.deleted_at.is_(None))
+    # Query active organization rows using a stable page order.
+    statement = (
+        select(Organization)
+        .where(Organization.deleted_at.is_(None))
+        .order_by(Organization.name, Organization.id)
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
+    )
     result = await session.scalars(statement)
-    return result.all()
+
+    # Count only active organizations visible in the listing.
+    total = await session.scalar(select(func.count()).select_from(Organization).where(Organization.deleted_at.is_(None)))
+    return result.all(), total or 0
 
 
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
@@ -407,8 +417,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
 
         # Organization cleanup supersedes unleased Application lifecycle work.
         await session.execute(
-            delete(Operation)
-            .where(
+            delete(Operation).where(
                 Operation.kind.in_((OperationKind.application_create, OperationKind.application_delete)),
                 Operation.target_id.in_(select(Application.id).where(Application.organization_id == organization_id)),
                 Operation.finished_at.is_(None),

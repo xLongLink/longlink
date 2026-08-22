@@ -2,11 +2,12 @@ from uuid import UUID
 from pwdlib import PasswordHash
 from typing import cast
 from sqlmodel import col
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import QueryableAttribute, contains_eager
 from collections.abc import Sequence
 from src.environments import env
+from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -24,6 +25,18 @@ async def active(session: AsyncSession, user_id: UUID) -> User | None:
             col(User.deleted_at).is_(None),
         )
     )
+
+
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[User], int]:
+    """Return one ordered page of Platform users for administrators."""
+
+    # Preserve the existing administrator list visibility, including tombstoned users.
+    statement = select(User).order_by(User.name, User.id).offset(pagination.offset).limit(pagination.page_size)
+    result = await session.scalars(statement)
+
+    # Count every Platform user visible in the administrator list.
+    total = await session.scalar(select(func.count()).select_from(User))
+    return result.all(), total or 0
 
 
 async def by_email(session: AsyncSession, email: Email) -> User | None:

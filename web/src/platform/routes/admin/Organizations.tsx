@@ -13,9 +13,9 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin organizations page. */
@@ -33,15 +33,11 @@ export default function AdminOrganizations() {
         },
     });
     const {
-        data: organizations = [],
+        items: organizations,
         error,
         isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/organizations'],
-        queryFn: async ({ signal }) =>
-            zOrganizationSummary.array().parse(await api('/api/v1/organizations', { signal }).json()),
-    });
-    const { pageItems, pagination } = usePaginate(organizations);
+        pagination,
+    } = usePaginate('/api/v1/organizations', zPageOrganizationSummary);
     const deleteDialog = useDeleteDialog({
         title: 'Delete organization',
         mutation: deleteOrganization,
@@ -73,7 +69,7 @@ export default function AdminOrganizations() {
                 <Text type="supporting">Review organization lifecycle, ownership, and access boundaries.</Text>
             </VStack>
             <Table
-                data={pageItems}
+                data={organizations}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

@@ -1,8 +1,6 @@
-import { api } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -13,21 +11,13 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zPageUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
     const toast = useToast();
-    const {
-        data: users = [],
-        error,
-        isLoading,
-    } = useQuery({
-        queryKey: ['api', '/api/v1/users'],
-        queryFn: async ({ signal }) => zUserSummary.array().parse(await api('/api/v1/users', { signal }).json()),
-    });
-    const { pageItems, pagination } = usePaginate(users);
+    const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
 
     if (isLoading && users.length === 0) {
         return <PageLoading label="Loading users" />;
@@ -44,7 +34,7 @@ export default function AdminUsers() {
                 <Text type="supporting">Review account access, elevated users, and admin onboarding.</Text>
             </VStack>
             <Table
-                data={pageItems}
+                data={users}
                 density="compact"
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover

@@ -10,15 +10,10 @@ import { setupContext, XmlContext } from './core/context';
 import { isSafePropertyName } from './expressions/resolve';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-type RenderXMLProps = {
-    ast: ASTNode;
-    ctx: XmlRuntime;
-};
-
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, ctx }: RenderXMLProps) {
+export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {

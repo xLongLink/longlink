@@ -9,6 +9,7 @@ from src.models.types import Image
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations, invitations, applications, organizations
+from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
@@ -79,10 +80,11 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
         await session.commit()
 
         # Act
-        fetched = await organizations.fetch(session)
+        fetched, total = await organizations.fetch_page(session, Pagination())
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
+    assert total == 1
 
 
 async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
@@ -169,7 +171,9 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
 
     # Assert
     async with session_scope() as session:
-        assert await organizations.fetch(session) == [organization]
+        fetched, total = await organizations.fetch_page(session, Pagination())
+        assert fetched == [organization]
+        assert total == 1
         reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating

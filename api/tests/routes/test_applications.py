@@ -57,10 +57,36 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Assert
     assert response.status_code == 200
-    assert {item["id"] for item in response.json()} == {
+    assert {item["id"] for item in response.json()["items"]} == {
         str(dashboard.id),
         str(console.id),
     }
+    assert response.json()["total"] == 2
+
+
+async def test_list_apps_returns_requested_page_for_admin(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return only the requested administrator application page."""
+
+    # Arrange
+    user = users[0]
+    acme = await create_organization(user)
+    globex = await create_organization(user, name="globex", slug="globex")
+    await create_application(acme, user)
+    console = await create_application(globex, user, name="console")
+
+    # Act
+    response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["id"] for item in payload["items"]] == [str(console.id)]
+    assert payload["page"] == 2
+    assert payload["page_size"] == 1
+    assert payload["total"] == 2
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
@@ -131,7 +157,7 @@ async def test_application_responses_do_not_expose_environment_secrets(
     # Response models must omit both the secret field and its raw value.
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
-    list_applications = list_response.json()
+    list_applications = list_response.json()["items"]
     for response_applications in (list_applications, organization_response.json()["applications"]):
         assert all("secrets" not in item and "envs" not in item for item in response_applications)
     assert "runtime-secret" not in list_response.text

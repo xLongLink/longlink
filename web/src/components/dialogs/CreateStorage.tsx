@@ -12,7 +12,7 @@ const schema = z.object({
 
 /** Registers one Exoscale SOS backend. */
 export default function CreateStorage() {
-    const dialog = useRegistryDialog<z.infer<typeof schema>>({
+    const dialog = useRegistryDialog({
         defaultValues: {
             name: '',
             endpoint_url: '',
