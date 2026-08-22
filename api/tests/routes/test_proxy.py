@@ -193,13 +193,7 @@ async def test_application_proxy_rejects_active_content(
     organization = await create_organization(users[0], infrastructure=infrastructure)
     application = await create_application(organization, users[0], image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(application.id)
-    captured: dict[str, bool] = {"response_closed": False, "client_closed": False}
-
-    class FakeTLS:
-        """Accept the temporary Platform client identity."""
-
-        def load_cert_chain(self, certfile: str) -> None:
-            """Accept the configured identity file."""
+    closed = False
 
     class FakeProxyResponse:
         """Represent an active document returned by the upstream application."""
@@ -207,32 +201,23 @@ async def test_application_proxy_rejects_active_content(
         status_code = 200
         headers = {"content-type": "image/svg+xml; charset=utf-8"}
 
-        async def aclose(self) -> None:
-            """Record response cleanup."""
+    class FakeGatewayResponse:
+        """Close the rejected upstream response without streaming it."""
 
-            captured["response_closed"] = True
-
-    class ActiveContentProxyClient(FakeProxyClient):
-        """Return an active upstream document without streaming it to the browser."""
-
-        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
-            """Build the request accepted by the fake client."""
-
-            return SimpleNamespace()
-
-        async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
-            """Return the active document response."""
-
-            assert stream
-            return FakeProxyResponse()
+        response = FakeProxyResponse()
 
         async def aclose(self) -> None:
-            """Record client cleanup."""
+            """Record gateway cleanup."""
 
-            captured["client_closed"] = True
+            nonlocal closed
+            closed = True
 
-    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context(FakeTLS()))
-    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", ActiveContentProxyClient)
+    async def fake_gateway_request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Return the rejected upstream response at the gateway boundary."""
+
+        return FakeGatewayResponse()
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request)
 
     # Act
     response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
@@ -240,7 +225,7 @@ async def test_application_proxy_rejects_active_content(
     # Assert
     assert response.status_code == 502
     assert response.json() == {"detail": "Application proxy returned an unsupported content type"}
-    assert captured == {"response_closed": True, "client_closed": True}
+    assert closed
 
 
 async def test_application_proxy_rejects_oversized_request_body(

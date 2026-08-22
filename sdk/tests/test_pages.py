@@ -3,6 +3,24 @@ from longlink.pages import page_stem_route
 
 
 @pytest.mark.parametrize(
+    ("page_stem", "route"),
+    [
+        pytest.param("index", "", id="root-index"),
+        pytest.param("admin/index", "admin", id="nested-index"),
+        pytest.param("issues/[issue]", "issues/:issue", id="dynamic-segment"),
+    ],
+)
+def test_page_stem_route_converts_filesystem_routes(page_stem: str, route: str) -> None:
+    """Convert valid filesystem page stems into browser routes."""
+
+    # Act
+    result = page_stem_route(page_stem)
+
+    # Assert
+    assert result == route
+
+
+@pytest.mark.parametrize(
     ("page_stem", "message"),
     [
         pytest.param("", "include a file name", id="empty"),

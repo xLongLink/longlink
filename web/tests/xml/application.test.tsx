@@ -41,10 +41,10 @@ describe('ApplicationRuntime', () => {
 
     afterEach(async () => {
         if (root) {
-            await act(async () => root?.unmount());
+            const renderedRoot = root;
+            await act(async () => renderedRoot.unmount());
         }
         vi.unstubAllGlobals();
-        container?.remove();
         container = undefined;
         root = undefined;
     });
@@ -74,6 +74,18 @@ describe('ApplicationRuntime', () => {
         expect(output.querySelector('[data-path]')?.getAttribute('data-route-path')).toBe('');
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'));
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
+    });
+
+    it('renders an empty manifest response', async () => {
+        // Arrange
+        stubFetch(() => jsonResponse([]));
+
+        // Act
+        const output = await renderRuntime();
+
+        // Assert
+        await waitFor(() => expect(output.textContent).toContain('Unexpected application response'));
+        expect(output.textContent).toContain('The application did not expose any pages to render.');
     });
 
     it('renders a page failure after loading the manifest', async () => {
@@ -181,8 +193,10 @@ describe('ApplicationRuntime', () => {
     }
 
     async function unmountRuntime(): Promise<void> {
-        await act(async () => root?.unmount());
-        container?.remove();
+        if (root) {
+            const renderedRoot = root;
+            await act(async () => renderedRoot.unmount());
+        }
         container = undefined;
         root = undefined;
     }

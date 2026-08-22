@@ -5,6 +5,22 @@ from fastapi.testclient import TestClient
 from longlink.middleware import accepts_gzip, install_frontend_middleware
 
 
+def create_text_app(headers: dict[str, str]) -> FastAPI:
+    """Create a frontend application serving one eligible text response."""
+
+    # Configure the response representation used by compression tests.
+    app = FastAPI()
+
+    @app.get("/text")
+    def get_text() -> Response:
+        """Return a compressible text representation."""
+
+        return Response("x" * 1000, media_type="text/plain", headers=headers)
+
+    install_frontend_middleware(app)
+    return app
+
+
 @pytest.mark.parametrize(
     ("header", "expected"),
     [("gzip;q=0, *;q=1", False), ("br;q=1, *;q=1", True)],
@@ -19,14 +35,7 @@ def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> 
     """Compress eligible text responses and vary their weak validator by encoding."""
 
     # Arrange
-    app = FastAPI()
-
-    @app.get("/text")
-    def get_text() -> Response:
-        """Return a compressible text representation."""
-        return Response("x" * 1000, media_type="text/plain", headers={"etag": '"text-v1"'})
-
-    install_frontend_middleware(app)
+    app = create_text_app({"etag": '"text-v1"'})
 
     # Act
     with TestClient(app) as client:
@@ -44,18 +53,7 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     """Keep byte-range responses uncompressed with their original validator."""
 
     # Arrange
-    app = FastAPI()
-
-    @app.get("/text")
-    def get_text() -> Response:
-        """Return a text representation with an explicit cache policy."""
-        return Response(
-            "x" * 1000,
-            media_type="text/plain",
-            headers={"cache-control": "private", "etag": '"text-v1"'},
-        )
-
-    install_frontend_middleware(app)
+    app = create_text_app({"cache-control": "private", "etag": '"text-v1"'})
 
     # Act
     with TestClient(app) as client:
@@ -70,17 +68,19 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
 
 
 @pytest.mark.parametrize(
-    ("path", "media_type", "expected_cache_control"),
+    ("path", "media_type", "status_code", "expected_cache_control"),
     [
-        pytest.param("/dashboard", "text/html", "no-cache", id="html"),
-        pytest.param("/assets/app-abcdef12.js", "text/javascript", "public, max-age=31536000, immutable", id="hashed-asset"),
-        pytest.param("/assets/app.js", "text/javascript", "no-cache", id="unhashed-asset"),
-        pytest.param("/favicon.ico", "image/x-icon", "public, max-age=86400", id="favicon"),
+        pytest.param("/dashboard", "text/html", 200, "no-cache", id="html"),
+        pytest.param("/assets/app-abcdef12.js", "text/javascript", 200, "public, max-age=31536000, immutable", id="hashed-asset"),
+        pytest.param("/assets/app.js", "text/javascript", 200, "no-cache", id="unhashed-asset"),
+        pytest.param("/assets/missing.js", "text/javascript", 404, "no-store", id="missing-asset"),
+        pytest.param("/favicon.ico", "image/x-icon", 200, "public, max-age=86400", id="favicon"),
     ],
 )
 def test_frontend_middleware_applies_default_cache_policy(
     path: str,
     media_type: str,
+    status_code: int,
     expected_cache_control: str,
 ) -> None:
     """Apply cache defaults according to the frontend resource type."""
@@ -92,7 +92,7 @@ def test_frontend_middleware_applies_default_cache_policy(
     def get_resource() -> Response:
         """Return a frontend resource without an explicit cache policy."""
 
-        return Response("content", media_type=media_type)
+        return Response("content", media_type=media_type, status_code=status_code)
 
     install_frontend_middleware(app)
 
@@ -101,5 +101,5 @@ def test_frontend_middleware_applies_default_cache_policy(
         response = client.get(path)
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == status_code
     assert response.headers["cache-control"] == expected_cache_control

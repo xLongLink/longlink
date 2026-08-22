@@ -1,3 +1,4 @@
+import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
@@ -136,18 +137,38 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert any(item.kind == OperationKind.application_create and item.target_id == persisted.id for item in await fetch_operations())
 
 
-async def test_create_app_rejects_image_without_metadata(
+@pytest.mark.parametrize(
+    ("metadata", "expected_status", "expected_detail"),
+    [
+        pytest.param(None, 404, "Image metadata not found", id="missing-metadata"),
+        pytest.param(
+            LongLinkMetadata(
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+                environments=[EnvironmentMetadata(name="API_KEY", required=True)],
+            ),
+            422,
+            "Application environment does not satisfy required image variables: API_KEY",
+            id="missing-required-environment",
+        ),
+    ],
+)
+async def test_create_app_rejects_invalid_image_metadata(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
+    metadata: LongLinkMetadata | None,
+    expected_status: int,
+    expected_detail: str,
 ) -> None:
-    """Reject an image that does not declare LongLink metadata."""
+    """Reject unavailable image metadata and missing required environment values."""
 
     # Arrange
     organization = await create_organization(users[0])
 
-    async def inspect_image(_image: Image) -> None:
-        """Report absent image metadata."""
+    async def inspect_image(_image: Image) -> LongLinkMetadata | None:
+        """Return the configured metadata response."""
+
+        return metadata
 
     monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
 
@@ -158,42 +179,8 @@ async def test_create_app_rejects_image_without_metadata(
     )
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Image metadata not found"}
-    async with session_scope() as session:
-        assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
-    assert all(item.kind != OperationKind.application_create for item in await fetch_operations())
-
-
-async def test_create_app_rejects_missing_required_environment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch,
-) -> None:
-    """Reject an application payload missing an image-required environment value."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    async def inspect_image(_image: Image) -> LongLinkMetadata:
-        """Return metadata requiring one user-owned value."""
-
-        return LongLinkMetadata(
-            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-            environments=[EnvironmentMetadata(name="API_KEY", required=True)],
-        )
-
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
-
-    # Act
-    response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/applications",
-        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
-    )
-
-    # Assert
-    assert response.status_code == 422
-    assert response.json() == {"detail": "Application environment does not satisfy required image variables: API_KEY"}
+    assert response.status_code == expected_status
+    assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
     assert all(item.kind != OperationKind.application_create for item in await fetch_operations())

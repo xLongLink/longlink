@@ -107,6 +107,15 @@ def test_xml_validation_rejects_malformed_entity() -> None:
         validate_xml('<!ENTITY hidden "value"><longlink>&hidden;</longlink>')
 
 
+@pytest.mark.parametrize("content", ['<!DOCTYPE longlink><longlink />', '<longlink><![CDATA[content]]></longlink>'])
+def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
+    """Reject markup that the web runtime parser cannot support."""
+
+    # Act
+    with pytest.raises(ValueError, match="XML DOCTYPE and CDATA constructs are not supported"):
+        validate_xml(content)
+
+
 @pytest.mark.parametrize(
     "content", [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS]
 )

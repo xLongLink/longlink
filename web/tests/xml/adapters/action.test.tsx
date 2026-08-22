@@ -21,9 +21,9 @@ describe('Action', () => {
         toast.mockClear();
 
         if (root) {
-            await act(async () => root?.unmount());
+            const renderedRoot = root;
+            await act(async () => renderedRoot.unmount());
         }
-        container?.remove();
         container = undefined;
         root = undefined;
     });
@@ -90,6 +90,39 @@ describe('Action', () => {
         expect(ctx.services.navigate).not.toHaveBeenCalled();
         expect(closeDialog).not.toHaveBeenCalled();
         expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: 'Denied', type: 'error' }));
+    });
+
+    it.each([
+        {
+            error: 'Request cannot send both form and json payloads',
+            request: 'method="POST" form="${{name: \'Ada\'}}" json="${{name: \'Ada\'}}"',
+        },
+        {
+            error: 'GET requests cannot send payloads',
+            request: 'method="GET" json="${{name: \'Ada\'}}"',
+        },
+    ])('does not execute invalid request payloads: $error', async ({ error, request }) => {
+        const ctx = createContext();
+        const closeDialog = vi.fn();
+        const fetchRequest = vi.fn();
+        ctx.services.navigate = vi.fn();
+        vi.stubGlobal('fetch', fetchRequest);
+
+        const button = await renderAction(
+            `<Action><Request url="/orders" ${request} closeDialog="true" /><Button to="/orders">Save</Button></Action>`,
+            ctx,
+            closeDialog
+        );
+
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
+        });
+
+        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
+        expect(fetchRequest).not.toHaveBeenCalled();
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
+        expect(closeDialog).not.toHaveBeenCalled();
     });
 
     it('invalidates declared State through Patch', async () => {

@@ -138,7 +138,6 @@ def test_invalid_xml_page_fails_during_registration(application_source: Path) ->
 
     # Create an invalid page in the default Application page directory.
     page_path = application_source / "pages" / "broken.xml"
-    page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text("<unknown />", encoding="utf-8")
 
     # Start registration and require schema validation to fail immediately.

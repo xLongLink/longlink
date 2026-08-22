@@ -24,10 +24,8 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_ENV", "production")
     for name, value in PRODUCTION_SETTINGS.items():
         monkeypatch.setenv(name, value)
-    for name, value in {"LONGLINK_STORAGE_BUCKET": bucket, "LONGLINK_STORAGE_PREFIX": prefix}.items():
-        monkeypatch.delenv(name, raising=False)
-        if value:
-            monkeypatch.setenv(name, value)
+    monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
+    monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
 
 
 @pytest.mark.parametrize(

@@ -3,23 +3,16 @@ import { act } from 'react';
 import { RenderXML } from '@/xml/renderers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
+import { describe, expect, it } from 'vitest';
 import { createContext } from '@/xml/core/context';
-import { afterEach, describe, expect, it } from 'vitest';
 
 describe('useBindableValue', () => {
-    let container: HTMLDivElement | undefined;
-
-    afterEach(() => {
-        container?.remove();
-        container = undefined;
-    });
-
     it('updates unbound values from reactive State', async () => {
         const ctx = createContext();
         const ast = parseXML(
             '<longlink><State id="form" value="first" /><TextInput label="Name" value="form.value" /></longlink>'
         )[0];
-        container = document.createElement('div');
+        const container = document.createElement('div');
         const root = createRoot(container);
 
         await act(async () => {
@@ -42,6 +35,6 @@ describe('useBindableValue', () => {
 
         expect(input?.value).toBe('first');
 
-        await act(async () => root.unmount());
+        act(() => root.unmount());
     });
 });

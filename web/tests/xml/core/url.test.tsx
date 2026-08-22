@@ -40,15 +40,14 @@ describe('resolveRequestUrl', () => {
         );
     });
 
-    it('rejects encoded paths that could escape the application proxy', () => {
-        const traversalPaths = ['/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'];
-
-        for (const path of traversalPaths) {
+    it.each(['/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'])(
+        'rejects encoded path that could escape the application proxy: %s',
+        (path) => {
             expect(() => resolveRequestUrl('/api/applications/123/proxy', path)).toThrow(
                 'XML request URL must remain within the application'
             );
         }
-    });
+    );
 
     it('preserves encoded query values within the application proxy', () => {
         expect(resolveRequestUrl('/api/applications/123/proxy', '/items?filter=%2Factive')).toBe(

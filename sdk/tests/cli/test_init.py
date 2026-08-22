@@ -27,7 +27,8 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], expected_p
         # Assert
         target = Path.cwd() / "sample-app"
         assert result.exit_code == 0
-        assert all((target / path).exists() for path in expected_paths)
+        for path in expected_paths:
+            assert (target / path).exists()
 
 
 def test_init_refuses_existing_folder() -> None:

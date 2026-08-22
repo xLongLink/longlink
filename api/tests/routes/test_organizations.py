@@ -1,7 +1,7 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
+from factories import Infrastructure, fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
@@ -12,6 +12,17 @@ from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+
+
+async def create_organization_resource(
+    owner: User,
+) -> tuple[Infrastructure, Organization]:
+    """Create an organization with the infrastructure required for resource inspection."""
+
+    # Provision the organization with all registry assignments used by resource routes.
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner, infrastructure=infrastructure)
+    return infrastructure, organization
 
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
@@ -33,6 +44,22 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert response.status_code == 202
     payload = response.json()
     assert payload["name"] == "acme"
+
+
+async def test_create_organization_rejects_when_no_compute_registry_is_ready(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Reject Organization creation before any ready compute registry exists."""
+
+    # Act
+    response = await clients[0].post("/api/v1/organizations", json={"name": "acme"})
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "No ready compute registry available"}
+    async with session_scope() as session:
+        assert await session.scalar(select(Organization)) is None
+    assert await fetch_operations() == []
 
 
 async def test_get_organization_returns_member_payload(
@@ -208,26 +235,27 @@ async def test_other_organization_user_cannot_delete_application(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status"),
+    ("usage", "expected_status", "expected_payload"),
     [
-        pytest.param(3584, 200, id="available"),
-        pytest.param(RuntimeError("database offline"), 503, id="backend-unavailable"),
+        pytest.param(3584, 200, 3584, id="available"),
+        pytest.param(None, 200, None, id="not-provisioned"),
+        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database resources unavailable"}, id="backend-unavailable"),
     ],
 )
 async def test_organization_database_usage_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
-    usage: int | Exception,
+    usage: int | None | Exception,
     expected_status: int,
+    expected_payload: int | None | dict[str, str],
 ) -> None:
     """Return database usage or translate a backend failure."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    infrastructure, organization = await create_organization_resource(owner)
 
     class FakePostgres:
         """Provide database usage responses for the Organization resource endpoint."""
@@ -235,7 +263,7 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
         def __init__(self, *_args: object) -> None:
             """Accept the adapter configuration supplied by the route."""
 
-        async def database_usage(self, database_name: str) -> int:
+        async def database_usage(self, database_name: str) -> int | None:
             """Return usage or raise the configured database backend failure."""
 
             assert database_name == organization.id.hex
@@ -250,40 +278,36 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
 
     # Assert
     assert response.status_code == expected_status
-    if expected_status == 200:
-        assert isinstance(usage, int)
-        expected_payload = usage
-    else:
-        expected_payload = {"detail": "Database resources unavailable"}
     assert response.json() == expected_payload
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status"),
+    ("usage", "expected_status", "expected_payload"),
     [
-        pytest.param(4096, 200, id="available"),
-        pytest.param(RuntimeError("storage offline"), 503, id="backend-unavailable"),
+        pytest.param(4096, 200, {"space_used": 4096}, id="available"),
+        pytest.param(None, 200, None, id="not-provisioned"),
+        pytest.param(RuntimeError("storage offline"), 503, {"detail": "Storage resources unavailable"}, id="backend-unavailable"),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
-    usage: int | Exception,
+    usage: int | None | Exception,
     expected_status: int,
+    expected_payload: dict[str, str | int] | None,
 ) -> None:
     """Return storage usage or translate a backend failure."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    infrastructure, organization = await create_organization_resource(owner)
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
-        async def usage(self, bucket_name: str) -> int:
+        async def usage(self, bucket_name: str) -> int | None:
             """Return usage or raise the configured storage backend failure."""
 
             assert bucket_name == organization.id.hex
@@ -306,11 +330,8 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
     # Assert
     assert response.status_code == expected_status
-    if expected_status == 200:
-        assert isinstance(usage, int)
-        expected_payload = {"bucket_name": organization.id.hex, "space_used": usage}
-    else:
-        expected_payload = {"detail": "Storage resources unavailable"}
+    if expected_payload is not None and "space_used" in expected_payload:
+        expected_payload = {"bucket_name": organization.id.hex, "space_used": expected_payload["space_used"]}
     assert response.json() == expected_payload
 
 
