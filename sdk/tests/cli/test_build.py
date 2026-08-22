@@ -199,6 +199,7 @@ def test_resolve_image_tag_returns_valid_image_references(app_name: str, version
         pytest.param("demo", "dev", "localhost:0", "Docker registry port is invalid", id="port-below-range"),
         pytest.param("demo", "dev", "localhost:65536", "Docker registry port is invalid", id="port-above-range"),
         pytest.param("demo", "dev", "ghcr.io", "Docker registry must be ghcr.io/<owner> or localhost", id="missing-ghcr-owner"),
+        pytest.param("demo", "dev", "localhost:15000/team/invalid?", "Invalid Docker image path", id="invalid-namespace"),
     ],
 )
 def test_resolve_image_tag_rejects_invalid_image_references(

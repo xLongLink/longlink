@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID
 from datetime import timedelta
 from src.utils import jobs as operation_worker
+from contextlib import asynccontextmanager
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
@@ -86,3 +87,58 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     # Assert
     assert result.status == OperationStatus.failed
     assert transitions == [operation.id]
+
+
+async def test_scheduler_recovers_from_polling_failure_and_executes_next_operation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep polling after a claim failure and execute the next leased operation."""
+
+    # Arrange
+    operation = leased_operation()
+    claims = iter((RuntimeError("database unavailable"), operation, None))
+    executed: list[Operation] = []
+    sleeps = 0
+
+    class Session:
+        """Provide the scheduler transaction boundary."""
+
+        async def commit(self) -> None:
+            """Commit a scheduler transaction."""
+
+    @asynccontextmanager
+    async def fake_session_scope():
+        """Yield a disposable scheduler session."""
+
+        yield Session()
+
+    async def claim(_session: Session) -> Operation | None:
+        """Raise once, then lease one operation, then report an empty queue."""
+
+        result = next(claims)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    async def execute(claimed: Operation, _handler: object) -> Operation:
+        """Record the operation dispatched by the scheduler."""
+
+        executed.append(claimed)
+        return claimed
+
+    async def sleep(_delay: float) -> None:
+        """Stop after the scheduler proves it returned to idle polling."""
+
+        nonlocal sleeps
+        sleeps += 1
+        if sleeps == 2:
+            raise asyncio.CancelledError
+
+    monkeypatch.setattr(operation_worker, "session_scope", fake_session_scope)
+    monkeypatch.setattr(operation_worker.operations, "claim", claim)
+    monkeypatch.setattr(operation_worker, "execute", execute)
+    monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
+
+    # Act and assert
+    with pytest.raises(asyncio.CancelledError):
+        await operation_worker.run_operation_scheduler()
+
+    assert executed == [operation]

@@ -5,7 +5,8 @@ from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from urllib.parse import parse_qs, urlparse
 from src.environments import env
-from src.database.session import get_session
+from longlink.utils.time import utcnow
+from src.database.session import get_session, session_scope
 from src.database.models.users import User
 
 
@@ -321,3 +322,25 @@ async def test_password_login_sets_production_session_security_and_cache_attribu
     assert "Path=/" in cookie
     assert "SameSite=lax" in cookie
     assert "Secure" in cookie
+
+
+async def test_deleted_user_cannot_use_existing_browser_session(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject an already-issued session after its user is soft-deleted."""
+
+    # Arrange
+    user = users[0]
+    async with session_scope() as session:
+        persisted = await session.get(User, user.id)
+        assert persisted is not None
+        persisted.deleted_at = utcnow()
+        await session.commit()
+
+    # Act
+    response = await clients[0].get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}

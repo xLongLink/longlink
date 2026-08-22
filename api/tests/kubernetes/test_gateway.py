@@ -58,6 +58,66 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
     await gateway.Gateway(Kubernetes()).install_controller()  # type: ignore[arg-type]
 
 
+async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a controller manifest that does not match its pinned checksum."""
+
+    # Arrange
+    class GatewayClass:
+        """Report that the controller is not installed."""
+
+        def __init__(self, _name: str, api: object) -> None:
+            """Accept the Kubernetes API client."""
+
+        async def exists(self) -> bool:
+            """Report no existing GatewayClass."""
+
+            return False
+
+    class Response:
+        """Return a deterministic altered manifest."""
+
+        content = b"tampered manifest"
+
+        def raise_for_status(self) -> None:
+            """Report a successful transport response."""
+
+    class HttpClient:
+        """Provide the altered manifest through the HTTP boundary."""
+
+        def __init__(self, **_kwargs: object) -> None:
+            """Accept client configuration."""
+
+        async def __aenter__(self) -> "HttpClient":
+            """Enter the HTTP client context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the HTTP client context."""
+
+        async def get(self, _url: str) -> Response:
+            """Return the altered manifest."""
+
+            return Response()
+
+    class Kubernetes:
+        async def api(self) -> object:
+            """Return an opaque Kubernetes API client."""
+
+            return object()
+
+    async def unexpected_objects_from_files(*_args: object, **_kwargs: object) -> object:
+        """Fail if parsing begins before checksum verification."""
+
+        raise AssertionError("tampered manifest was parsed")
+
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
+    monkeypatch.setattr(gateway, "objects_from_files", unexpected_objects_from_files)
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Envoy Gateway v1.8.3 manifest checksum does not match"):
+        await gateway.Gateway(Kubernetes()).install_controller()  # type: ignore[arg-type]
 async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: pytest.MonkeyPatch) -> None:
     """Issue GatewayClass deletion once and stop when its terminal absence is observed."""
 

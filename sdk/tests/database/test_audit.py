@@ -59,14 +59,16 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     # Supply one stable timestamp for each audited flush.
     created_at = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
     updated_at = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
-    deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
-    audit_times = iter((created_at, updated_at, deleted_at))
+    soft_deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
+    deleted_at = datetime(2026, 7, 14, 13, 0, tzinfo=UTC)
+    audit_times = iter((created_at, updated_at, soft_deleted_at, deleted_at))
 
     # Bind this test's clock, users, and isolated engine.
     monkeypatch.setattr(audit, "utcnow", lambda: next(audit_times))
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
-    deleter_id = UUID("00000000-0000-0000-0000-000000000004")
+    soft_deleter_id = UUID("00000000-0000-0000-0000-000000000004")
+    deleter_id = UUID("00000000-0000-0000-0000-000000000005")
     try:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.session() as session:
@@ -87,6 +89,16 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
 
             assert item.updated_at == updated_at
             assert item.updated_id == updater_id
+
+            # Persist a caller-requested soft delete with the acting identity.
+            with identity_context(soft_deleter_id):
+                item.deleted_at = soft_deleted_at
+                await session.commit()
+
+            assert item.deleted_at == soft_deleted_at
+            assert item.deleted_id == soft_deleter_id
+            assert item.updated_at == soft_deleted_at
+            assert item.updated_id == soft_deleter_id
 
         # Delete the reloaded row and commit the listener's soft-delete conversion.
         async with database_base.session() as session:

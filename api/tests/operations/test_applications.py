@@ -72,6 +72,77 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     assert retained.deleted_at is not None
 
 
+async def test_application_delete_removes_provider_state_and_tombstone(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Remove the workload, provider state, and tombstone after successful cleanup."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    application = await create_application(organization, users[0])
+    async with session_scope() as session:
+        await applications.delete(session, application.id, users[0].id)
+        await session.commit()
+    calls: list[tuple[str, object]] = []
+
+    class FakeKubernetes:
+        """Record workload deletion."""
+
+        def __init__(self, _kubeconfig: str) -> None:
+            """Expose the application lifecycle client."""
+
+            self.applications = self
+
+        async def delete(self, application_id: object, _organization_id: object) -> None:
+            """Record workload removal."""
+
+            calls.append(("workload", application_id))
+
+    class FakePostgres:
+        """Record schema deletion."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept provider configuration."""
+
+        async def delete_schema(self, _organization_id: object, application_id: object) -> None:
+            """Record schema removal."""
+
+            calls.append(("schema", application_id))
+
+    class FakeStorage:
+        """Record object-storage cleanup."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept provider configuration."""
+
+        async def revoke(self, application_id: str) -> None:
+            """Record credential revocation."""
+
+            calls.append(("revoke", application_id))
+
+        async def delete_prefix(self, _bucket: str, prefix: str) -> None:
+            """Record application file removal."""
+
+            calls.append(("prefix", prefix))
+
+    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(application_operations, "Postgres", FakePostgres)
+    monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
+
+    # Act
+    await application_operations.delete(application.id)
+
+    # Assert
+    assert calls == [
+        ("workload", application.id),
+        ("schema", application.id),
+        ("revoke", application.id.hex),
+        ("prefix", f"applications/{application.id.hex}/"),
+    ]
+    async with session_scope() as session:
+        assert await session.get(Application, application.id) is None
 async def test_application_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
