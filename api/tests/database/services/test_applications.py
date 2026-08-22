@@ -27,7 +27,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 organization.id,
                 "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-                user_id=user.id,
                 secrets={},
             )
         created = await applications.create(
@@ -35,7 +34,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
             organization.id,
             "Reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
-            user_id=user.id,
             secrets={},
         )
         await session.commit()
@@ -60,7 +58,6 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
             organization.id,
             "Reports",
             image=Image("ghcr.io/longlink/reports@sha256:test"),
-            user_id=user.id,
             secrets={},
         )
         await session.commit()
@@ -91,4 +88,4 @@ async def test_delete_marks_application_deleted(users: tuple[User, User, User]) 
 
     # Assert
     assert deleted_application is not None
-    assert deleted_application.deleted_id == user.id
+    assert deleted_application.deleted_at is not None

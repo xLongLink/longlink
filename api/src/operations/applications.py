@@ -1,5 +1,6 @@
 import secrets
 from uuid import UUID
+import sqlalchemy
 from sqlalchemy import update
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -30,17 +31,17 @@ def _providers(infrastructure: organizations.Infrastructure) -> tuple[Postgres, 
     )
 
 
-async def create(application_id: UUID) -> str | None:
+async def create(application_id: UUID) -> None:
     """Converge one Application lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
         target = await organizations.application_infrastructure(session, application_id)
         if target is None:
-            return None
+            return
         application, infrastructure = target
     if application.deleted_at is not None:
-        return None
+        return
     organization = infrastructure.organization
     runtime_secrets = application.secrets
 
@@ -86,7 +87,7 @@ async def create(application_id: UUID) -> str | None:
                 .values(secrets=runtime_secrets)
             )
             if result.rowcount != 1:
-                return None
+                return
 
             await session.commit()
 
@@ -96,27 +97,28 @@ async def create(application_id: UUID) -> str | None:
     )
 
     # Publish the applied release only after workload readiness.
-    async with session_scope() as session:
-        await session.execute(
-            update(Application)
-            .where(
-                Application.id == application.id,
-                Application.deleted_at.is_(None),
-                Application.status == Status.creating,
+    if application.status == Status.creating:
+        async with session_scope() as session:
+            await session.execute(
+                update(Application)
+                .where(
+                    Application.id == application.id,
+                    Application.deleted_at.is_(None),
+                    Application.status == Status.creating,
+                )
+                .values(status=Status.running)
             )
-            .values(status=Status.running)
-        )
-        await session.commit()
+            await session.commit()
 
 
-async def delete(application_id: UUID) -> str | None:
+async def delete(application_id: UUID) -> None:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
         target = await organizations.application_infrastructure(session, application_id)
         if target is None:
-            return None
+            return
         application, infrastructure = target
     organization = infrastructure.organization
     # Remove Application Kubernetes resources before revoking provider credentials.
@@ -128,9 +130,6 @@ async def delete(application_id: UUID) -> str | None:
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     async with session_scope() as session:
-        # Hard-delete the completed tombstone while preventing concurrent lifecycle workers from racing.
-        persisted_application = await session.get(Application, application.id, with_for_update=True)
-        if persisted_application is None:
-            return None
-        await session.delete(persisted_application)
+        # The delete statement locks the tombstone while making completed cleanup idempotent.
+        await session.execute(sqlalchemy.delete(Application).where(Application.id == application.id))
         await session.commit()

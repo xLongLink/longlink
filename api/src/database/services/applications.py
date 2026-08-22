@@ -42,7 +42,6 @@ async def create(
     organization_id: UUID,
     name: str,
     image: Image,
-    user_id: UUID,
     secrets: dict[str, str],
     description: str | None = None,
 ) -> Application:
@@ -63,8 +62,6 @@ async def create(
         description=description,
         image_desired=image,
         secrets=secrets,
-        created_id=user_id,
-        updated_id=user_id,
     )
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
@@ -108,8 +105,6 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
 
     # Record the tombstone and schedule external cleanup in one transaction.
     application.deleted_at = utcnow()
-    application.deleted_id = user_id
-    application.updated_id = user_id
 
     await operations.enqueue(
         session,

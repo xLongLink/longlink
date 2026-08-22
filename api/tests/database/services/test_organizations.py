@@ -193,7 +193,6 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
             organization.id,
             "Dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
-            owner.id,
             {},
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
@@ -228,7 +227,7 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
         assert all(operation.target_id != application.id for operation in await operations.fetch(session))
     assert {member.user_id for member in members} == {owner.id, member.id}
     assert deleted_application is not None
-    assert deleted_application.deleted_id == owner.id
+    assert deleted_application.deleted_at is not None
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None

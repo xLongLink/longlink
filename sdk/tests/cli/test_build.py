@@ -28,7 +28,6 @@ def test_build_reports_missing_project_file_before_docker() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
-
         # Act
         result = runner.invoke(build.build_command)
 
@@ -93,9 +92,7 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
-def test_build_app_generates_dockerignore_from_project_gitignore(
-    build_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_build_app_generates_dockerignore_from_project_gitignore(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Use the project's Git ignore policy for the Docker build context."""
 
     # Arrange
@@ -144,22 +141,10 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
         temporary_context = build_context
         return "0.1.0", "Demo App"
 
-
-    def fake_run(command: list[str], check: bool) -> None:
-        """Capture Docker commands."""
-
-        commands.append(command)
-
-
-    def fake_which(command: str) -> str | None:
-        """Resolve only the Docker executable."""
-
-        return "/usr/bin/docker" if command == "docker" else None
-
     # Replace Docker boundaries with deterministic local fakes.
     monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", fake_which)
-    monkeypatch.setattr(build.subprocess, "run", fake_run)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
     result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])

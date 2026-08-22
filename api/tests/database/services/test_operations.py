@@ -19,10 +19,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     """Return compute creation operations ordered by creation time descending."""
 
     # Seed two operations with explicit creation timestamps.
-    older_compute = await create_compute("older")
-    newer_compute = await create_compute("newer")
-    older_operation = await queue(target_id=older_compute.id)
-    newer_operation = await queue(target_id=newer_compute.id)
+    older_operation = await queue(target_id=uuid4())
+    newer_operation = await queue(target_id=uuid4())
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -155,10 +153,8 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     """Claim the oldest available compute creation first."""
 
     # Seed two operations with explicit creation order.
-    older_compute = await create_compute("older")
-    newer_compute = await create_compute("newer")
-    older_operation = await queue(target_id=older_compute.id)
-    await queue(target_id=newer_compute.id)
+    older_operation = await queue(target_id=uuid4())
+    await queue(target_id=uuid4())
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)

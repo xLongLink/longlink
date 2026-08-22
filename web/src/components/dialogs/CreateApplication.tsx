@@ -22,10 +22,6 @@ const createApplicationFormSchema = z.object({
     envs: z.record(z.string(), z.string().optional()),
 });
 
-const createApplicationSubmitSchema = createApplicationFormSchema.extend({
-    name: z.string().trim().min(1),
-});
-
 type CreateApplicationInput = z.input<typeof createApplicationFormSchema>;
 
 const defaultCreateApplicationValues: CreateApplicationInput = {
@@ -118,17 +114,10 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     async function handleCreateApp(payload: CreateApplicationInput) {
         setError(null);
 
-        const application = createApplicationSubmitSchema.safeParse(payload);
-        // Stop before submission when required fields are invalid.
-        if (!application.success) {
-            setError('Failed to create application');
-            return;
-        }
-
         // Collect configured environment values, dropping unset and empty fields.
         const envs: Record<string, string> = {};
 
-        for (const [name, value] of Object.entries(application.data.envs)) {
+        for (const [name, value] of Object.entries(payload.envs)) {
             if (value !== undefined && value.length > 0) {
                 envs[name] = value;
             }
@@ -137,9 +126,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         // Submit the new app and close the dialog on success.
         try {
             await createApplication.mutateAsync({
-                name: application.data.name,
-                image: application.data.image,
-                description: application.data.description.length > 0 ? application.data.description : null,
+                name: payload.name,
+                image: payload.image,
+                description: payload.description.length > 0 ? payload.description : null,
                 envs,
             });
             setOpen(false);

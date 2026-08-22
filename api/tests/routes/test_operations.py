@@ -1,5 +1,6 @@
+from uuid import uuid4
 from httpx2 import AsyncClient
-from factories import create_compute, queue_operation
+from factories import queue_operation
 
 
 async def test_operations_endpoint_returns_targeted_operations(
@@ -9,8 +10,7 @@ async def test_operations_endpoint_returns_targeted_operations(
 
     # Arrange
     client = clients[0]
-    compute = await create_compute()
-    operation = await queue_operation(target_id=compute.id)
+    operation = await queue_operation(target_id=uuid4())
 
     # Act
     response = await client.get("/api/v1/operations")

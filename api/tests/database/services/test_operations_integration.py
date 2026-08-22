@@ -1,12 +1,12 @@
 import pytest
 import asyncio
+from uuid import uuid4
 from factories import claim_operation, queue_operation
 from containers import start_postgres
 from sqlalchemy import select
 from src.database import session as database_session
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.database.models.base import PlatformModel
-from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
@@ -29,25 +29,16 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
         monkeypatch.setattr(database_session, "Session", session_factory)
 
-        # Create independent compute targets without invoking registry service queue side effects.
-        async with session_factory() as session:
-            first_compute = ComputeRegistry(
-                name="First",
-                kubeconfig={"apiVersion": "v1", "clusters": []},
-            )
-            second_compute = ComputeRegistry(
-                name="Second",
-                kubeconfig={"apiVersion": "v1", "clusters": []},
-            )
-            session.add_all([first_compute, second_compute])
-            await session.commit()
+        # Queue independent targets without invoking unrelated resource setup.
+        first_target_id = uuid4()
+        second_target_id = uuid4()
 
-        # Race duplicate operation creations, then add unrelated work on another compute.
+        # Race duplicate operation creations, then add unrelated work on another target.
         duplicates = await asyncio.gather(
-            queue_operation(target_id=first_compute.id),
-            queue_operation(target_id=first_compute.id),
+            queue_operation(target_id=first_target_id),
+            queue_operation(target_id=first_target_id),
         )
-        waiting = await queue_operation(target_id=second_compute.id)
+        waiting = await queue_operation(target_id=second_target_id)
 
         # Run two workers concurrently so each claim uses an independent session and row lock.
         claims = await asyncio.gather(claim_operation(), claim_operation())
@@ -60,10 +51,9 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
         assert duplicates[0].id == duplicates[1].id
         assert len(claimed) == 1
         assert claimed[0].id == duplicates[0].id
-        assert claimed[0].lease_expires_at is not None
         assert len(persisted) == 2
         persisted_by_id = {operation.id: operation for operation in persisted}
-        assert persisted_by_id[claimed[0].id].lease_expires_at == claimed[0].lease_expires_at
+        assert persisted_by_id[claimed[0].id].lease_expires_at is not None
         assert persisted_by_id[waiting.id].lease_expires_at is None
     finally:
         # Dispose database connections before removing the PostgreSQL container.

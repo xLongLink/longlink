@@ -134,7 +134,7 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
 
     # Run the actual lifecycle handler with fake external providers.
-    assert await application_operations.create(application.id) is None
+    await application_operations.create(application.id)
 
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"

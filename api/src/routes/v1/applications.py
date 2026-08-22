@@ -10,26 +10,8 @@ from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
-from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 
 router = APIRouter()
-
-
-async def _maintainer_runtime_access(
-    session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, ComputeRegistry]:
-    """Return one Application runtime after requiring Organization maintenance authority."""
-
-    # Resolve active Application access before enforcing runtime permissions.
-    access = await organizations.application_runtime_access(session, user_id, application_id)
-    if access is None:
-        raise HTTPException(status_code=403, detail="Access required")
-    if not roles.atleast(access[2], OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    return access[0], access[1], access[3]
 
 
 @router.get("/applications", response_model=Page[ApplicationResponse])
@@ -79,7 +61,6 @@ async def create_application(
         payload.name,
         image=metadata.image,
         description=payload.description,
-        user_id=user.id,
         secrets=payload.envs,
     )
     await session.commit()
@@ -93,7 +74,13 @@ async def get_application_logs(
 ):
     """Return recent pod logs for one managed application."""
 
-    application, organization, registry = await _maintainer_runtime_access(session, user.id, application_id)
+    # Resolve active Application access before enforcing runtime permissions.
+    access = await organizations.application_runtime_access(session, user.id, application_id)
+    if access is None:
+        raise HTTPException(status_code=403, detail="Access required")
+    application, organization, role, registry = access
+    if not roles.atleast(role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Map expected cluster log failures to a service-unavailable response.
     try:

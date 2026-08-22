@@ -401,14 +401,14 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.updated_at = now
         organization.updated_id = user.id
 
-        # Apply the deletion audit state to every active Application without loading each object.
+        # Tombstone every active Application without loading each object.
         await session.execute(
             sql_update(Application)
             .where(
                 Application.organization_id == organization_id,
                 Application.deleted_at.is_(None),
             )
-            .values(deleted_at=now, deleted_id=user.id, updated_at=now, updated_id=user.id)
+            .values(deleted_at=now, updated_at=now)
         )
 
         # Organization cleanup supersedes unleased Application lifecycle work.

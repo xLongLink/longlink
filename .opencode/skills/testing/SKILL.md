@@ -3,6 +3,16 @@ name: testing
 description: Code testing
 ---
 
+Review the repository for opportunities to remove unnecessary code, reduce complexity, improve maintainability, and increase test coverage.
+Return a numeric list of cleanup options:
+
+1. Exact file path and line range.
+2. The smallest safe implementation change.
+3. Behavior/invariant checks required before applying it.
+4. Confidence: High, Medium, or Low.
+5. Whether it affects any shared contract or requires updating call sites.
+
+
 ## Testing
 
 Test observable behavior and important boundaries. Use the lowest test level that provides confidence:

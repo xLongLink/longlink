@@ -88,7 +88,6 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
     # Read annotated settings fields from the configured class.
     for statement in class_node.body:
-
         # Ignore statements that do not declare a named annotated field.
         if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
             continue
@@ -142,10 +141,8 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
 
         # Inspect Field keyword arguments.
         for keyword in value.keywords:
-
             # Use explicit aliases as environment names.
             if keyword.arg == "validation_alias":
-
                 # Safely evaluate static alias expressions.
                 try:
                     alias = ast.literal_eval(keyword.value)
@@ -177,25 +174,15 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
     return {"required": False}
 
 
-def encode_label_value(value: object) -> str:
-    """Serialize a Docker label value as a quoted string."""
-
-    # Preserve nested metadata as JSON strings.
-    if isinstance(value, (dict, list)):
-        return json.dumps(json.dumps(value, separators=(",", ":")))
-
-    return json.dumps(value)
-
-
 def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
     """Render OCI and LongLink image labels for a Dockerfile."""
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={encode_label_value(description)}"]
+    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={json.dumps(description)}"]
 
     # Include environment requirements only when declared.
     if environments:
-        rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
+        rendered_labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
     return "\n".join(rendered_labels)
 
@@ -241,15 +228,13 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
         # Add local path dependencies to the context.
         for source_config in uv_sources.values():
-
             # Only mapping source entries can contain paths.
             if isinstance(source_config, dict):
-
                 # Follow only string path sources.
                 source_path = source_config.get("path")
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
-                    if resolved_source_path not in seen_paths and resolved_source_path not in pending_paths:
+                    if resolved_source_path not in pending_paths:
                         pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
@@ -261,7 +246,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         relative_root = root.relative_to(common_root)
         workdir = f"/workspace/{relative_root.as_posix()}"
 
-    return common_root, workdir, sorted(seen_paths)
+    return common_root, workdir, sorted(seen_paths - {root})
 
 
 def build_app(build_context: Path) -> tuple[str, str]:
@@ -271,7 +256,6 @@ def build_app(build_context: Path) -> tuple[str, str]:
     root = Path.cwd().resolve()
     pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
-    env_spec = read_env_spec(root, pyproject_data)
     project_data = pyproject_data.get("project")
     if not isinstance(project_data, dict):
         raise click.ClickException("[project] metadata is required")
@@ -294,7 +278,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
     # Render image metadata labels.
     labels = render_image_labels(
         project_description,
-        env_spec,
+        read_env_spec(root, pyproject_data),
     )
 
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
@@ -319,9 +303,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
     # Apply the closest repository ignore rules when Docker uploads the context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = source.read_text(encoding="utf-8") if source is not None else ""
-    build_context.joinpath(".dockerignore").write_text(
-        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8"
-    )
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = workdir.removeprefix("/workspace/")
@@ -331,7 +313,6 @@ def build_app(build_context: Path) -> tuple[str, str]:
         f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
         f"/workspace/{source_path.relative_to(source_root).as_posix()}/"
         for source_path in local_source_paths
-        if source_path != root
     )
     build_context.joinpath("Dockerfile").write_text(
         DOCKERFILE_TEMPLATE.format(
@@ -414,7 +395,6 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
 
         # Run the Docker build and optional push.
         try:
-
             # Build from a context that includes local path dependencies referenced by uv.
             subprocess.run(
                 [

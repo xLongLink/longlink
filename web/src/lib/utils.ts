@@ -14,7 +14,7 @@ export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     second: 'numeric',
     year: 'numeric',
 });
-export const numberFormatter = new Intl.NumberFormat();
+const numberFormatter = new Intl.NumberFormat();
 
 type UseDeleteDialogOptions<TItem> = {
     title: string;
