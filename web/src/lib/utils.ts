@@ -50,6 +50,17 @@ export function formatBytes(bytes: number): string {
     return `${numberFormatter.format(Math.round(value))} ${units[unit]}`;
 }
 
+/** Converts kebab-case, snake_case, or camelCase text into space-separated words with leading capitals. */
+export function startCase(value: string): string {
+    const spaced = value.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+    return spaced
+        .split(/[^a-zA-Z0-9]+/)
+        .filter((word) => word.length > 0)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 /** Manages the shared delete confirmation dialog state and confirm action. */
 export function useDeleteDialog<TItem>({
     title,

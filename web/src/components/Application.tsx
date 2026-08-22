@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import startCase from 'lodash/startCase';
+import { startCase } from '@/lib/utils';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
