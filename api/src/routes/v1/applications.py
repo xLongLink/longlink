@@ -8,7 +8,7 @@ from src.database.services import applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.applications import ApplicationCreate, ApplicationRelease, ApplicationResponse
+from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
@@ -19,7 +19,7 @@ router = APIRouter()
 
 async def _maintainer_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry]:
+) -> tuple[Application, Organization, ComputeRegistry]:
     """Return one Application runtime after requiring Organization maintenance authority."""
 
     # Resolve active Application access before enforcing runtime permissions.
@@ -29,7 +29,7 @@ async def _maintainer_runtime_access(
     if not roles.atleast(access[2], OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    return access
+    return access[0], access[1], access[3]
 
 
 @router.get("/applications", response_model=Page[ApplicationResponse])
@@ -79,46 +79,10 @@ async def create_application(
         payload.name,
         image=metadata.image,
         description=payload.description,
-        icon=payload.icon,
         user_id=user.id,
         secrets=payload.envs,
     )
     await session.commit()
-
-
-@router.post("/applications/{application_id}/releases", response_model=ApplicationResponse, status_code=202)
-async def release_application(
-    application_id: UUID,
-    payload: ApplicationRelease,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
-):
-    """Record one desired Application release and queue its deployment."""
-
-    application, _, _, _ = await _maintainer_runtime_access(session, user.id, application_id)
-
-    # Resolve immutable image metadata before changing durable desired state.
-    metadata = await images.metadata(payload.image)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
-    missing_envs = images.missing_envs(metadata, application.secrets)
-    if missing_envs:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
-        )
-
-    result = await applications.release(
-        session,
-        application_id,
-        metadata.image,
-        payload.description,
-        user.id,
-    )
-    if result is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-    await session.commit()
-    return result
 
 
 @router.get("/applications/{application_id}/logs", response_model=list[str])
@@ -129,7 +93,7 @@ async def get_application_logs(
 ):
     """Return recent pod logs for one managed application."""
 
-    application, organization, _, registry = await _maintainer_runtime_access(session, user.id, application_id)
+    application, organization, registry = await _maintainer_runtime_access(session, user.id, application_id)
 
     # Map expected cluster log failures to a service-unavailable response.
     try:

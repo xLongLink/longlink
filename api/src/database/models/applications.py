@@ -33,7 +33,6 @@ class Application(PlatformModel, table=True):
     # Metadata
     name: str = Field(max_length=100)
     slug: str = Field(max_length=100)
-    icon: str | None = Field(default=None, max_length=50)
     description: str | None = Field(default=None, max_length=255)
 
     # Desired release

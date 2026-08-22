@@ -5,7 +5,6 @@ from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Image
 from src.models.statuses import Status
 from src.models.resources import OrganizationIdentity
-from longlink.models.icons import Icon
 
 
 class ApplicationCreate(BaseModel):
@@ -13,7 +12,6 @@ class ApplicationCreate(BaseModel):
 
     # Metadata
     name: str = Field(min_length=1, max_length=100)
-    icon: Icon | None = None
     image: Image
     description: str | None = Field(default=None, max_length=255)
 
@@ -54,14 +52,6 @@ class ApplicationCreate(BaseModel):
         return envs
 
 
-class ApplicationRelease(BaseModel):
-    """Validate a requested Application release."""
-
-    # Metadata
-    image: Image
-    description: str | None = Field(default=None, max_length=255)
-
-
 class ApplicationResponse(BaseModel):
     """Represent one application in API responses."""
 
@@ -76,7 +66,6 @@ class ApplicationResponse(BaseModel):
     # Metadata
     name: str
     slug: str
-    icon: Icon | None
     description: str | None
 
     # Desired release

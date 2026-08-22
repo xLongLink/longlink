@@ -592,73 +592,6 @@
         }
       }
     },
-    "/api/v1/applications/{application_id}/releases": {
-      "post": {
-        "summary": "Release Application",
-        "description": "Record one desired Application release and queue its deployment.",
-        "operationId": "release_application_api_v1_applications__application_id__releases_post",
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Application Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApplicationRelease"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApplicationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/applications/{application_id}/logs": {
       "get": {
         "summary": "Get Application Logs",
@@ -2537,16 +2470,6 @@
             "minLength": 1,
             "title": "Name"
           },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "image": {
             "type": "string",
             "title": "Image"
@@ -2579,32 +2502,6 @@
         "title": "ApplicationCreate",
         "description": "Validate application creation payloads."
       },
-      "ApplicationRelease": {
-        "properties": {
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          }
-        },
-        "type": "object",
-        "required": [
-          "image"
-        ],
-        "title": "ApplicationRelease",
-        "description": "Validate a requested Application release."
-      },
       "ApplicationResponse": {
         "properties": {
           "id": {
@@ -2622,16 +2519,6 @@
           "slug": {
             "type": "string",
             "title": "Slug"
-          },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "description": {
             "anyOf": [
@@ -2663,7 +2550,6 @@
           "organization",
           "name",
           "slug",
-          "icon",
           "description",
           "image_desired",
           "status",
@@ -3063,16 +2949,6 @@
           "slug": {
             "type": "string",
             "title": "Slug"
-          },
-          "icon": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Icon"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "description": {
             "anyOf": [

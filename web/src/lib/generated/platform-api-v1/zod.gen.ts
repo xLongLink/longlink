@@ -3,13 +3,15 @@
 import * as z from 'zod';
 
 /**
- * ApplicationRelease
+ * ApplicationCreate
  *
- * Validate a requested Application release.
+ * Validate application creation payloads.
  */
-export const zApplicationRelease = z.object({
+export const zApplicationCreate = z.object({
+    name: z.string().min(1).max(100),
     image: z.string(),
-    description: z.string().max(255).nullish()
+    description: z.string().max(255).nullish(),
+    envs: z.record(z.string(), z.string()).optional()
 });
 
 /**
@@ -137,19 +139,6 @@ export const zIcon = z.enum([
     'users',
     'x'
 ]);
-
-/**
- * ApplicationCreate
- *
- * Validate application creation payloads.
- */
-export const zApplicationCreate = z.object({
-    name: z.string().min(1).max(100),
-    icon: zIcon.nullish(),
-    image: z.string(),
-    description: z.string().max(255).nullish(),
-    envs: z.record(z.string(), z.string()).optional()
-});
 
 /**
  * LongLinkMetadata
@@ -369,7 +358,6 @@ export const zApplicationResponse = z.object({
     organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
-    icon: zIcon.nullable(),
     description: z.string().nullable(),
     image_desired: z.string(),
     status: zStatus,
@@ -397,7 +385,6 @@ export const zOrganizationApplicationSummary = z.object({
     id: z.uuid(),
     name: z.string(),
     slug: z.string(),
-    icon: zIcon.nullish(),
     description: z.string().nullish(),
     status: zStatus
 });
@@ -631,17 +618,6 @@ export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostP
  * Successful Response
  */
 export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = z.void();
-
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostBody = zApplicationRelease;
-
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostPath = z.object({
-    application_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = zApplicationResponse;
 
 export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.object({
     application_id: z.uuid()

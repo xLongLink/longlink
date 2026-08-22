@@ -14,7 +14,6 @@ export type ApplicationCreate = {
      * Name
      */
     name: string;
-    icon?: Icon | null;
     /**
      * Image
      */
@@ -29,22 +28,6 @@ export type ApplicationCreate = {
     envs?: {
         [key: string]: string;
     };
-};
-
-/**
- * ApplicationRelease
- *
- * Validate a requested Application release.
- */
-export type ApplicationRelease = {
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Description
-     */
-    description?: string | null;
 };
 
 /**
@@ -66,7 +49,6 @@ export type ApplicationResponse = {
      * Slug
      */
     slug: string;
-    icon: Icon | null;
     /**
      * Description
      */
@@ -331,7 +313,6 @@ export type OrganizationApplicationSummary = {
      * Slug
      */
     slug: string;
-    icon?: Icon | null;
     /**
      * Description
      */
@@ -1135,36 +1116,6 @@ export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostRes
 };
 
 export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostData = {
-    body: ApplicationRelease;
-    path: {
-        /**
-         * Application Id
-         */
-        application_id: string;
-    };
-    query?: never;
-    url: '/api/v1/applications/{application_id}/releases';
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostError = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostErrors];
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses = {
-    /**
-     * Successful Response
-     */
-    202: ApplicationResponse;
-};
-
-export type ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponse = ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses[keyof ReleaseApplicationApiV1ApplicationsApplicationIdReleasesPostResponses];
 
 export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetData = {
     body?: never;

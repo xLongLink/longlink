@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, contains_eager
+from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
@@ -16,7 +17,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[Application], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Application], int]:
     """Return one ordered page of active applications for administrator views."""
 
     # Load page response data without loading encrypted application secrets.
@@ -33,7 +34,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
 
     # Count only rows eligible for the administrator listing.
     count_result = await session.execute(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
-    return list(result.all()), count_result.scalar_one()
+    return result.all(), count_result.scalar_one()
 
 
 async def create(
@@ -44,7 +45,6 @@ async def create(
     user_id: UUID,
     secrets: dict[str, str],
     description: str | None = None,
-    icon: str | None = None,
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
@@ -62,7 +62,6 @@ async def create(
         slug=names.slugify(name),
         description=description,
         image_desired=image,
-        icon=icon,
         secrets=secrets,
         created_id=user_id,
         updated_id=user_id,
@@ -82,40 +81,6 @@ async def create(
         target_id=application.id,
     )
 
-    return application
-
-
-async def release(
-    session: AsyncSession,
-    application_id: UUID,
-    image: Image,
-    description: str | None,
-    user_id: UUID,
-) -> Application | None:
-    """Record one desired Application release and queue its deployment."""
-
-    # Lock the active Application before changing its desired release.
-    statement = (
-        select(Application)
-        .where(
-            Application.id == application_id,
-            Application.deleted_at.is_(None),
-        )
-        .with_for_update()
-    )
-    application = await session.scalar(statement)
-    if application is None:
-        return None
-
-    # Persist the image-derived desired release before scheduling its convergence.
-    application.image_desired = image
-    application.description = description
-    application.updated_id = user_id
-    await operations.enqueue(
-        session,
-        kind=OperationKind.application_create,
-        target_id=application.id,
-    )
     return application
 
 

@@ -163,7 +163,7 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                Application and deployment data: application name, slug, icon, image reference, image
+                                Application and deployment data: application name, slug, image reference, image
                                 digest, version, SDK version, description, selected compute, database, and storage
                                 registries, environment values supplied for deployment, deployment status, operation
                                 status, operation errors, runtime status, pod, service, log, and proxy information

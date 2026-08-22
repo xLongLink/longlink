@@ -263,8 +263,9 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
                 source_path = source_config.get("path")
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
-                    source_paths.append(resolved_source_path)
-                    pending_paths.append(resolved_source_path)
+                    if resolved_source_path not in seen_paths and resolved_source_path not in pending_paths:
+                        source_paths.append(resolved_source_path)
+                        pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
     common_root = Path(os.path.commonpath(source_paths))
@@ -278,11 +279,11 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object] | None
     return common_root, workdir, sorted(seen_paths)
 
 
-def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
+def build_app(build_context: Path) -> tuple[Path, str, str]:
     """Create Docker build artifacts for the current app."""
 
     # Resolve build paths and collect project metadata for the image.
-    root = (base_path or Path.cwd()).resolve()
+    root = Path.cwd().resolve()
     pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
     env_spec = read_env_spec(root, pyproject_data)
@@ -305,8 +306,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     except PackageNotFoundError:
         sdk_version = "0.0.0"
 
-    # Resolve the image version and render its metadata labels.
-    version = tag or project_version
+    # Render image metadata labels.
     labels = render_image_labels(
         project_description,
         env_spec,
@@ -360,7 +360,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         encoding="utf-8",
     )
 
-    return dockerfile_path, version, project_name
+    return dockerfile_path, project_version, project_name
 
 
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
@@ -371,34 +371,34 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
-        raise ValueError(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
+        raise click.ClickException(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
 
     # Reject invalid Docker tags.
     if not DOCKER_TAG_PATTERN.fullmatch(version):
-        raise ValueError(f"Invalid Docker image tag '{version}'")
+        raise click.ClickException(f"Invalid Docker image tag '{version}'")
 
     # Add a registry prefix when requested.
     if registry_prefix:
         # Reject URL-style registry prefixes and invalid characters.
         if registry_prefix.startswith("//") or "://" in registry_prefix:
-            raise ValueError("Docker registry prefix must not be a URL")
+            raise click.ClickException("Docker registry prefix must not be a URL")
         if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
-            raise ValueError("Docker registry prefix contains invalid characters")
+            raise click.ClickException("Docker registry prefix contains invalid characters")
 
         # Restrict production registries to GHCR while allowing localhost development registries.
         registry_host = registry_prefix.split("/", 1)[0]
         if "@" in registry_host:
-            raise ValueError("Docker registry prefix is invalid")
+            raise click.ClickException("Docker registry prefix is invalid")
 
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
-            raise ValueError("Docker registry port is invalid")
+            raise click.ClickException("Docker registry port is invalid")
         if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
-            raise ValueError("Docker registry must be ghcr.io/<owner> or localhost")
+            raise click.ClickException("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
         if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
-            raise ValueError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
+            raise click.ClickException(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
         return f"{registry_prefix}/{image_name}:{version}"
 
     return f"{image_name}:{version}"
@@ -426,13 +426,11 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        dockerfile_path, version, app_name = build_app(build_context, tag=tag)
+        dockerfile_path, project_version, app_name = build_app(build_context)
 
         # Resolve and validate the final image tag.
-        try:
-            image_tag = resolve_image_tag(app_name, version, registry)
-        except ValueError as exc:
-            raise click.ClickException(str(exc)) from exc
+        version = tag or project_version
+        image_tag = resolve_image_tag(app_name, version, registry)
 
         # Require a Docker client on PATH.
         docker_command = shutil.which("docker")

@@ -5,12 +5,10 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
-import { Selector } from '@astryxdesign/core/Selector';
 import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
-import { ICON_NAMES, isIconName } from '@/components/ui/Icon';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
@@ -21,7 +19,6 @@ const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
     name: z.string().trim(),
     description: z.string().trim(),
-    icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
     envs: z.record(z.string(), z.string().optional()),
 });
 
@@ -35,7 +32,6 @@ const defaultCreateApplicationValues: CreateApplicationInput = {
     image: '',
     name: '',
     description: '',
-    icon: '',
     envs: {},
 };
 
@@ -144,7 +140,6 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 name: application.data.name,
                 image: application.data.image,
                 description: application.data.description.length > 0 ? application.data.description : null,
-                icon: application.data.icon || null,
                 envs,
             });
             setOpen(false);
@@ -171,9 +166,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             <Button label="Create" isDisabled={organizationId.length === 0} clickAction={() => setOpen(true)} />
 
             <form.Subscribe
-                selector={(state) => [state.values.image, state.values.name, state.values.icon, state.isValid] as const}
+                selector={(state) => [state.values.image, state.values.name, state.isValid] as const}
             >
-                {([image, name, icon, isValid]) => {
+                {([image, name, isValid]) => {
                     const hasImage = image.trim().length > 0;
                     const hasName = name.trim().length > 0;
 
@@ -249,22 +244,6 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                                    <Selector
-                                                        label="Icon"
-                                                        options={[
-                                                            { value: '__none__', label: 'None' },
-                                                            ...ICON_NAMES.map((name) => ({
-                                                                value: name,
-                                                                label: name,
-                                                            })),
-                                                        ]}
-                                                        value={icon}
-                                                        placeholder="Choose an icon"
-                                                        isOptional
-                                                        onChange={(value) =>
-                                                            form.setFieldValue('icon', isIconName(value) ? value : '')
-                                                        }
-                                                    />
                                                     {errorStatus}
                                                 </FormLayout>
                                             </form>

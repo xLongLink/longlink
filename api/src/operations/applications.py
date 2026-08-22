@@ -76,13 +76,18 @@ async def create(application_id: UUID) -> str | None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
         async with session_scope() as session:
-            # Verify the Application still accepts the generated runtime credentials.
-            persisted_application = await session.get(Application, application.id)
-            if persisted_application is None or persisted_application.deleted_at is not None:
+            # Persist credentials only while the Application remains active.
+            result = await session.execute(
+                update(Application)
+                .where(
+                    Application.id == application.id,
+                    Application.deleted_at.is_(None),
+                )
+                .values(secrets=runtime_secrets)
+            )
+            if result.rowcount != 1:
                 return None
 
-            # Assign a new mapping so SQLAlchemy persists the encrypted JSON value.
-            persisted_application.secrets = runtime_secrets
             await session.commit()
 
     # Apply the captured desired release so reconciliation repairs workload drift.
