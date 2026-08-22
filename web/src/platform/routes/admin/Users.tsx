@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -56,7 +56,7 @@ export default function AdminUsers() {
                     {(user) => <Text type="code">{user.id}</Text>}
                 </TableColumn>
                 <TableColumn<UserSummary> field="administrator" header="Access" width={pixel(128)}>
-                    {(user) => <Badge>{user.administrator ? 'Administrator' : 'User'}</Badge>}
+                    {(user) => <Badge label={user.administrator ? 'Administrator' : 'User'} />}
                 </TableColumn>
                 <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
                     {(user) => (

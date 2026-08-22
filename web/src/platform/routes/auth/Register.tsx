@@ -3,7 +3,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
@@ -33,7 +33,7 @@ export default function Register() {
     });
 
     return (
-        <AuthLayout description={<Divider>Please enter your email</Divider>} title={<WelcomeTitle />}>
+        <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <Stack gap={3}>
                 <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
@@ -66,12 +66,16 @@ export default function Register() {
                         const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
                         return (
-                            <Divider>
-                                Already have an account?{' '}
-                                <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
-                                    Sign In
-                                </Link>
-                            </Divider>
+                            <Divider
+                                label={
+                                    <>
+                                        Already have an account?{' '}
+                                        <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
+                                            Sign In
+                                        </Link>
+                                    </>
+                                }
+                            />
                         );
                     }}
                 </form.Subscribe>

@@ -6,7 +6,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { clearSessionQueries } from '@/lib/react-query';
@@ -137,7 +137,7 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>Email verified. Complete your profile.</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
                 <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field

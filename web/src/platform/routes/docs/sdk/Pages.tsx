@@ -1,5 +1,5 @@
 import { Info } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -8,7 +8,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Link as RouterLink } from 'react-router';
 import { componentDocumentation } from '@/lib/xsd';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -167,11 +167,11 @@ export default function DocsArticleRoute() {
                             <Info aria-hidden="true" className="text-accent" size={20} />
                         </SummaryCard>
                         <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
-                            <Badge variant="info">Open</Badge>
+                            <Badge label="Open" variant="info" />
                         </SummaryCard>
                         <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
                             <Stack justify="center" minHeight={150} width="100%">
-                                <Divider>{'Or'}</Divider>
+                                <Divider label="Or" />
                             </Stack>
                         </SummaryCard>
                     </Grid>

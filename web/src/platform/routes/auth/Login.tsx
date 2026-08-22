@@ -4,7 +4,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Divider } from '@/components/ui/Divider';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
@@ -57,7 +57,7 @@ export default function Login() {
     }
 
     return (
-        <AuthLayout title={<WelcomeTitle />} description={<Divider>Sign in with your email and password.</Divider>}>
+        <AuthLayout title={<WelcomeTitle />} description={<Divider label="Sign in with your email and password." />}>
             <Stack gap={4}>
                 <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
                     <form.Field
@@ -109,12 +109,16 @@ export default function Login() {
                         const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
                         return (
-                            <Divider>
-                                New to LongLink?{' '}
-                                <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
-                                    Create account
-                                </Link>
-                            </Divider>
+                            <Divider
+                                label={
+                                    <>
+                                        New to LongLink?{' '}
+                                        <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
+                                            Create account
+                                        </Link>
+                                    </>
+                                }
+                            />
                         );
                     }}
                 </form.Subscribe>
